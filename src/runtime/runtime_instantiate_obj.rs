@@ -42,6 +42,7 @@ impl Runtime {
             }
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
+            Obj::Sqrt(inner) => self.inst_sqrt(inner, param_to_arg_map, param_obj_type),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, param_obj_type),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map, param_obj_type),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map, param_obj_type),
@@ -89,13 +90,6 @@ impl Runtime {
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map, param_obj_type),
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::FamilyObj(family) => {
-                let mut params = Vec::with_capacity(family.params.len());
-                for p in family.params.iter() {
-                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
-                }
-                Ok(FamilyObj::new(family.name.clone(), params).into())
             }
             Obj::StructObj(struct_obj) => {
                 let mut params = Vec::with_capacity(struct_obj.params.len());
@@ -420,6 +414,15 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map, param_obj_type)?).into())
+    }
+
+    pub fn inst_sqrt(
+        &self,
+        sqrt: &Sqrt,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Sqrt::new(self.inst_obj(&sqrt.arg, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_log(

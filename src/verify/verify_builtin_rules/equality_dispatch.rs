@@ -60,15 +60,6 @@ impl Runtime {
             }
         }
 
-        if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
         if let Some(done) =
             self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
         {
@@ -133,6 +124,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_sqrt_equalities(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_power_addition_exponent_rule(
             left,
             right,
@@ -164,8 +161,29 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_log_reciprocal_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_log_change_of_base_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_pow_equals_by_known_log_inverse(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 

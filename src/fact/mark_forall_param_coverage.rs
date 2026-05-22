@@ -137,6 +137,9 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Abs(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }
+        Obj::Sqrt(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
         Obj::Log(binary) => {
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.arg.as_ref(), coverage_by_forall_param);
@@ -302,11 +305,6 @@ fn mark_forall_param_coverage_in_obj(
                 obj_at_index.index.as_ref(),
                 coverage_by_forall_param,
             );
-        }
-        Obj::FamilyObj(family) => {
-            for o in family.params.iter() {
-                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
-            }
         }
         Obj::StructObj(struct_obj) => {
             for o in struct_obj.params.iter() {

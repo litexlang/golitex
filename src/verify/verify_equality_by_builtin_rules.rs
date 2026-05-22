@@ -56,6 +56,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
         }
         Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Sqrt(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
         Obj::Cup(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::Cap(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
@@ -109,7 +110,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
-        Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::StructObj(so) => so.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::ObjAsStructInstanceWithFieldAccess(fa) => {
             obj_expr_mentions_bare_id(fa.obj.as_ref(), id)

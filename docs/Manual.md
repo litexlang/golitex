@@ -168,15 +168,16 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 
 Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`.
 
-#### `abs`, `log`, `max`, `min`
+#### `abs`, `sqrt`, `log`, `max`, `min`
 
-Absolute value, logarithm (base and argument follow Litex parsing rules), and binary maximum and minimum.
+Absolute value, square root, logarithm (base and argument follow Litex parsing rules), and binary maximum and minimum. `sqrt(x)` is well-defined when `x $in R` and `0 <= x`.
 
 ```litex
 forall x R:
     0 <= x
     =>:
         abs(x) = x
+        sqrt(x) = sqrt(x)
 ```
 
 #### Union, intersection, set difference
@@ -197,7 +198,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over a **family** of sets (often written with an index); in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets—see comments in `examples/litex_object_examples.lit`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets—see comments in `examples/litex_object_examples.lit`.
 
 #### Power set
 
@@ -363,11 +364,11 @@ have q set = 0 `closed_range 1
 
 #### Sequence- and matrix-style index sets
 
-Some indexed objects use **sequence** types or matrix index domains (repeated indices, `closed_range` on each axis) instead of a single `sum` index. Typical patterns appear with `family … fn(i …, j …) …` and `have fn M(i …, j …) …` (see below).
+Some indexed objects use **sequence** types or matrix index domains (repeated indices, `closed_range` on each axis) instead of a single `sum` index. Typical patterns appear with `have fn M(i …, j …) …` (see below).
 
 #### Choice (`choose`)
 
-From a family of nonempty sets, pick an element from each member once typing guarantees nonemptiness.
+From a collection of nonempty sets, pick an element from each member once typing guarantees nonemptiness.
 
 ```litex
 let s nonempty_set:
@@ -382,16 +383,6 @@ Names such as `R`, `Q`, `Z`, `N`, `N_pos`, and related signed or punctured varia
 
 ```litex
 0 $in Z
-```
-
-#### Parametric `family`
-
-A definition `family name(…) = …` is instantiated by `\name(args)` to get a concrete set or function space.
-
-```litex
-family fam(s set) = fn(x N_pos) s
-forall a \fam(R):
-    a $in fn(y N_pos) R
 ```
 
 #### Matrices
@@ -1151,24 +1142,6 @@ b < c
 
 > Hint: `let` and `know` both introduce new facts without verification. Litex allows this and warns you because these statements are useful when you intentionally add axioms or temporary assumptions, but abusing them can make the system unsound. In most cases, do not use them; use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
----
-
-### Parametric family (`family`)
-
-**`family name(params) = …`** defines a parameterized set or function space; instantiate it with **`\pf(R)`**-style syntax (backslash then the family name and arguments).
-
-A `family` is different from a function introduced by `have fn`. A function is an object that takes input values. A `family` is a template for building an object, usually a set or a function space. Because it is only a template, its parameters can use forms such as `s set`. Each time you write `\self_seq(R)`, Litex substitutes `R` for `s` in the right-hand side of the family definition and uses the resulting object.
-
-```litex
-family self_seq(s set) = fn(x N_pos) s
-
-forall a \self_seq(R):
-    a $in fn(y N_pos) R
-    a(1) = a(1)
-```
-
----
-
 ### Algorithm and evaluation (`algo` / `eval`)
 
 **`algo m(x):`** gives an executable presentation of a function (often parallel to **`have fn`**). **`eval m(…)`** runs that algorithm on concrete inputs to simplify results.
@@ -1728,14 +1701,13 @@ by closed_range as cases: x $in a...a + 10
 
 ---
 
-### Set-theoretic bridge tactics (`by fn as set`, `by family as set`, `by tuple as set`, `by fn set as set`)
+### Set-theoretic bridge tactics (`by fn as set`, `by tuple as set`, `by fn set as set`)
 
-These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, a tuple by its components and product typing, and a `family` instance by substituting arguments into its template.
+These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, and a tuple by its components and product typing.
 
 | Statement | What it connects to |
 |-----------|---------------------|
 | `by fn as set: f` | The graph-style facts behind a known function `f` |
-| `by family as set: \pf(R)` | The object obtained by substituting `R` into a `family` template |
 | `by tuple as set: u` | The set-theoretic structure of a tuple object |
 | `by fn set as set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
 
@@ -1760,7 +1732,6 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by decreasing` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
-| `family` | Define a parameterized set or function space |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `know` | Add facts or axioms to the current context |
@@ -1781,7 +1752,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by transitive_prop` | Register a binary user-defined predicate as transitive |
 | `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
 | `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
-| `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
+| `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
@@ -2416,7 +2387,7 @@ a ^ 2 = 4
 
 This is why facts like `x = 2` are so useful: they make later expressions involving `x` calculable.
 
-#### Functions And Families
+#### Functions
 
 For a named function introduced by `have fn`, Litex can instantiate the function body at the given arguments.
 
@@ -2429,14 +2400,6 @@ Anonymous functions behave the same way: applying the function substitutes the a
 
 ```litex
 'R(x){x + 1}(2) = 3
-```
-
-A parameterized `family` expands to the object it defines when instantiated.
-
-```litex
-prove:
-    family p(a set) = fn(x a) a
-    \p(R) = fn(x R) R
 ```
 
 #### Absolute Value
@@ -3517,8 +3480,6 @@ inferred for pair_value(0):
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
 
 A finite sequence literal may be applied as the finite function it denotes. For example, `[1, 2, 3](i)` means the `i`-th entry, and Litex checks `i $in N_pos` and `i <= 3`.
-
-For membership in a `family` instance such as `\name(...)`, Litex expands the family to the set it denotes, then applies the usual membership inference rules to that expanded set.
 
 ---
 

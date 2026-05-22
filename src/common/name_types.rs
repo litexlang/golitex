@@ -7,7 +7,6 @@ pub type ExistFactKey = String;
 pub type AtomicFactKey = String;
 pub type PropName = String;
 pub type AbstractPropName = String;
-pub type FamilyName = String;
 pub type AlgoName = String;
 pub type StructName = String;
 pub type IdentifierName = String;

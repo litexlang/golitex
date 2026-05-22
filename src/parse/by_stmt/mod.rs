@@ -7,7 +7,6 @@ mod closed_range_by_stmt;
 mod contra_by_stmt;
 mod enumerate_by_stmt;
 mod extension_by_stmt;
-mod family_by_stmt;
 mod fn_tuple_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
@@ -33,10 +32,9 @@ impl Runtime {
             ANTISYMMETRIC_PROP => self.parse_by_antisymmetric_prop_stmt(tb),
             CLOSED_RANGE => self.parse_by_closed_range_as_cases_stmt(tb),
             FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
-            FAMILY => self.parse_by_family_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate finite_set, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, fn as set, fn set as set, family as set, or tuple as set after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate finite_set, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, fn as set, fn set as set, or tuple as set after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

@@ -14,7 +14,6 @@ pub enum Stmt {
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
     DefLetStmt(DefLetStmt),
-    DefFamilyStmt(DefFamilyStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
     KnowStmt(KnowStmt),
@@ -34,7 +33,6 @@ pub enum Stmt {
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
     ByFnAsSetStmt(ByFnAsSetStmt),
-    ByFamilyAsSetStmt(ByFamilyAsSetStmt),
     ByTupleAsSetStmt(ByTupleAsSetStmt),
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
@@ -194,7 +192,6 @@ impl fmt::Display for Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
-            Stmt::DefFamilyStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
             Stmt::KnowStmt(x) => write!(f, "{}", x),
@@ -215,7 +212,6 @@ impl fmt::Display for Stmt {
             Stmt::ByForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
             Stmt::ByFnAsSetStmt(x) => write!(f, "{}", x),
-            Stmt::ByFamilyAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByTupleAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
@@ -242,7 +238,6 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefFamilyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             Stmt::KnowStmt(stmt) => stmt.line_file.clone(),
@@ -263,7 +258,6 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnAsSetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByFamilyAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
@@ -288,7 +282,6 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefFamilyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             Stmt::KnowStmt(stmt) => stmt.stmt_type_name(),
@@ -309,7 +302,6 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnAsSetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByFamilyAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
@@ -385,12 +377,6 @@ impl From<HaveFnByInducStmt> for Stmt {
 impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     fn from(v: HaveFnByForallExistUniqueStmt) -> Self {
         Stmt::HaveFnByForallExistUniqueStmt(v)
-    }
-}
-
-impl From<DefFamilyStmt> for Stmt {
-    fn from(v: DefFamilyStmt) -> Self {
-        Stmt::DefFamilyStmt(v)
     }
 }
 
@@ -511,12 +497,6 @@ impl From<ByExtensionStmt> for Stmt {
 impl From<ByFnAsSetStmt> for Stmt {
     fn from(v: ByFnAsSetStmt) -> Self {
         Stmt::ByFnAsSetStmt(v)
-    }
-}
-
-impl From<ByFamilyAsSetStmt> for Stmt {
-    fn from(v: ByFamilyAsSetStmt) -> Self {
-        Stmt::ByFamilyAsSetStmt(v)
     }
 }
 

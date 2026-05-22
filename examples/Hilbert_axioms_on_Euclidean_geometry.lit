@@ -1,15 +1,11 @@
 """
-This file gives a current Litex version of a Hilbert-style axiomatization
-sketch for Euclidean geometry.
+This is a current Litex version of a Hilbert-style axiomatization sketch for
+Euclidean geometry.
 
-Compared with the older draft, this version follows the current Litex style:
+Compared with the older draft, this version follows the current style:
 primitive geometric relations are introduced with `abstract_prop`, while
 uniquely determined geometric objects such as `line_of(A, B)` and
 `plane_of(A, B, C)` are introduced from `forall ... exist! ...` facts.
-
-Reference:
-https://en.wikipedia.org/wiki/Hilbert%27s_axioms
-https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
 """
 
 # Primitive domains.
