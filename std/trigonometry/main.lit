@@ -1,0 +1,128 @@
+# Basic trigonometric function axioms for problem formalization.
+# This file intentionally treats trigonometry as background mathematics: the
+# functions are declared as objects, and standard identities are recorded with
+# `know` instead of being derived from limits or power series.
+
+let sin set
+let cos set
+let tan set
+let cot set
+let sec set
+let csc set
+
+know:
+    sin $in fn(x R) R
+    cos $in fn(x R) R
+    tan $in fn(x R: cos(x) != 0) R
+    cot $in fn(x R: sin(x) != 0) R
+    sec $in fn(x R: cos(x) != 0) R
+    csc $in fn(x R: sin(x) != 0) R
+
+    sin(0) = 0
+    cos(0) = 1
+    tan(0) = 0
+
+    sin(pi / 2) = 1
+    cos(pi / 2) = 0
+    sin(pi) = 0
+    cos(pi) = -1
+    sin(2 * pi) = 0
+    cos(2 * pi) = 1
+
+    forall k Z:
+        cos(pi / 2 + k * pi) = 0
+        sin(k * pi) = 0
+
+        sin(pi / 2 + 2 * k * pi) = 1
+        sin(-pi/2 + 2 * k * pi) = -1
+
+        cos(2 * k * pi) = 1
+        cos(pi + 2 * k * pi) = -1
+    
+
+    forall x R:
+        -1 <= sin(x) <= 1
+        -1 <= cos(x) <= 1
+        sin(x)^2 + cos(x)^2 = 1
+
+    forall x R:
+        cos(x) != 0
+        =>:
+            tan(x) = sin(x) / cos(x)
+            sec(x) = 1 / cos(x)
+            1 + tan(x)^2 = sec(x)^2
+
+    forall x R:
+        sin(x) != 0
+        =>:
+            cot(x) = cos(x) / sin(x)
+            csc(x) = 1 / sin(x)
+            1 + cot(x)^2 = csc(x)^2
+
+    forall x R:
+        sin(-1 * x) = -1 * sin(x)
+        cos(-1 * x) = cos(x)
+
+    forall x R:
+        cos(x) != 0
+        cos(-1 * x) != 0
+        =>:
+            tan(-1 * x) = -1 * tan(x)
+
+    forall x R:
+        sin(x + 2 * pi) = sin(x)
+        cos(x + 2 * pi) = cos(x)
+
+    forall x R:
+        cos(x) != 0
+        cos(x + pi) != 0
+        =>:
+            tan(x + pi) = tan(x)
+
+    forall x R, k Z:
+        sin(x + 2 * pi * k) = sin(x)
+        cos(x + 2 * pi * k) = cos(x)
+
+    forall x, y R:
+        sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
+        cos(x + y) = cos(x) * cos(y) - sin(x) * sin(y)
+        sin(x - y) = sin(x) * cos(y) - cos(x) * sin(y)
+        cos(x - y) = cos(x) * cos(y) + sin(x) * sin(y)
+
+    forall x, y R:
+        cos(x) != 0
+        cos(y) != 0
+        cos(x + y) != 0
+        1 - tan(x) * tan(y) != 0
+        =>:
+            tan(x + y) = (tan(x) + tan(y)) / (1 - tan(x) * tan(y))
+
+    forall x R:
+        sin(2 * x) = 2 * sin(x) * cos(x)
+        cos(2 * x) = cos(x)^2 - sin(x)^2
+        cos(2 * x) = 2 * cos(x)^2 - 1
+        cos(2 * x) = 1 - 2 * sin(x)^2
+
+    forall x R:
+        sin(x)^2 = (1 - cos(2 * x)) / 2
+        cos(x)^2 = (1 + cos(2 * x)) / 2
+
+    forall x R:
+        sin(x) = 0
+        =>:
+            exist k Z st {x = k * pi}
+
+    forall x R, k Z:
+        x = k * pi
+        =>:
+            sin(x) = 0
+
+    forall x R:
+        cos(x) = 0
+        =>:
+            exist k Z st {x = pi / 2 + k * pi}
+
+    forall x R, k Z:
+        x = pi / 2 + k * pi
+        =>:
+            cos(x) = 0

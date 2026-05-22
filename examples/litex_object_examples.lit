@@ -2,7 +2,7 @@
 # IdentifierWithMod uses `::` between name parts (`MOD_SIGN`).
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
 # Union/Intersect/SetMinus/SetDiff, infix ` then name (e.g. `union as in lhs `union rhs), Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
-# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FamilyObj, FnObj (via `have fn`).
+# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
 # --- Obj::Number ---
@@ -130,13 +130,5 @@ prove:
         fld2 a
         <=>:
             $p(fld)
-
-# --- Obj::FamilyObj ---
-prove:
-    family fam(s set) = fn(x N_pos) s
-
-    forall a \fam(R):
-        a $in fn(y N_pos) R
-        a(1) = a(1)
 
 # --- Struct type objects are not supported. ---

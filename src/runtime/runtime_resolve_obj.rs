@@ -236,7 +236,17 @@ impl Runtime {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
                     number.into()
                 } else {
-                    obj.clone()
+                    let resolved_body: Vec<Vec<Box<Obj>>> = fn_obj
+                        .body
+                        .iter()
+                        .map(|group| {
+                            group
+                                .iter()
+                                .map(|arg| Box::new(self.resolve_obj(arg.as_ref())))
+                                .collect()
+                        })
+                        .collect();
+                    FnObj::new(*fn_obj.head.clone(), resolved_body).into()
                 }
             }
             Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
@@ -389,10 +399,6 @@ impl Runtime {
                     obj.clone()
                 }
             },
-            Obj::FamilyObj(f) => {
-                let params: Vec<Obj> = f.params.iter().map(|p| self.resolve_obj(p)).collect();
-                FamilyObj::new(f.name.clone(), params).into()
-            }
             _ => obj.clone(),
         }
     }

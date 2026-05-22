@@ -109,10 +109,18 @@ impl Runtime {
     }
 
     /// `$restrict_fn_in(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
+    /// If the RHS is a set, treat it as a unary real-valued restriction on that domain.
     pub fn infer_restrict_fact(&mut self, rf: &RestrictFact) -> Result<InferResult, RuntimeError> {
         let restrict_body = match &rf.obj_can_restrict_to_fn_set {
             Obj::FnSet(fs) => fs.body.clone(),
-            _ => return Ok(InferResult::new()),
+            domain => FnSetBody::new(
+                vec![ParamGroupWithSet::new(
+                    vec!["x".to_string()],
+                    domain.clone(),
+                )],
+                vec![],
+                StandardSet::R.into(),
+            ),
         };
         self.register_known_fn_restrict_to_for_element(
             &rf.obj,
@@ -157,72 +165,6 @@ impl Runtime {
                 );
             }
         }
-    }
-
-    // Expand a type-level `FamilyObj` to its `equal_to` set object under the given type arguments.
-    pub fn instantiate_family_member_set(
-        &mut self,
-        family_ty: &FamilyObj,
-    ) -> Result<Obj, RuntimeError> {
-        let family_name = family_ty.name.to_string();
-        let def =
-            match self.get_cloned_family_definition_by_name(&family_name) {
-                Some(d) => d,
-                None => {
-                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                        format!("family `{}` is not defined", family_name),
-                    ))
-                    .into());
-                }
-            };
-        let expected_count = def.params_def_with_type.number_of_params();
-        if family_ty.params.len() != expected_count {
-            return Err(
-                UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
-                    "family `{}` expects {} type argument(s), got {}",
-                    family_name,
-                    expected_count,
-                    family_ty.params.len()
-                )))
-                .into(),
-            );
-        }
-        let param_to_arg_map = def
-            .params_def_with_type
-            .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-        self.inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
-    }
-
-    // Param typed as `FamilyObj`: store `name $in` the instantiated member set and run membership infer.
-    pub fn infer_membership_in_family_for_param_binding(
-        &mut self,
-        name: &str,
-        family_ty: &FamilyObj,
-        binding_kind: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
-        let member_set = self.instantiate_family_member_set(family_ty)?;
-        let type_fact = InFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
-            member_set,
-            default_line_file(),
-        )
-        .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
-    }
-
-    // RHS is `FamilyObj`: instantiate to a concrete set, then infer `element $in` that set.
-    pub fn infer_membership_in_family_from_in_fact(
-        &mut self,
-        in_fact: &InFact,
-        family_obj: &FamilyObj,
-    ) -> Result<InferResult, RuntimeError> {
-        let member_set = self.instantiate_family_member_set(family_obj)?;
-        let expanded = InFact::new(
-            in_fact.element.clone(),
-            member_set,
-            in_fact.line_file.clone(),
-        );
-        self.infer_in_fact(&expanded)
     }
 
     // RHS is a function space `FnSet`: record the element in `known_objs_in_fn_sets`.
@@ -605,9 +547,6 @@ impl Runtime {
                 }
 
                 Ok(infer_result)
-            }
-            Obj::FamilyObj(family_obj) => {
-                self.infer_membership_in_family_from_in_fact(in_fact, family_obj)
             }
             // Finite sequence space: desugar to `FnSet`, then same as function-space membership.
             Obj::FiniteSeqSet(fs) => {

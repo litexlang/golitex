@@ -1,39 +1,38 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Each parameter name is pushed to [`Runtime::parsing_free_param_collection`] with `free_param_kind`
-    /// before its shared type is parsed, so later parameter types in the same group (or later groups)
-    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and `family`
-    /// headers, [`ParamObjType::Forall`] for `forall`, [`ParamObjType::Exist`] for `exist`, [`ParamObjType::Identifier`] for `let` / `have`, etc.
+    /// Each parameter group is pushed to [`Runtime::parsing_free_param_collection`] with
+    /// `free_param_kind` after its shared type is parsed, so later groups can resolve earlier
+    /// parameters without allowing same-group self references.
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
         free_param_kind: ParamObjType,
     ) -> Result<ParamGroupWithParamType, RuntimeError> {
         let param = tb.advance()?;
-        let owned = param.clone();
-        self.parsing_free_param_collection.begin_scope(
-            free_param_kind,
-            std::slice::from_ref(&owned),
-            tb.line_file.clone(),
-        )?;
         let param_def_with_param_type = if tb.current()? != COMMA {
-            ParamGroupWithParamType::new(vec![param], self.parse_param_type(tb)?)
+            let params = vec![param];
+            let param_type = self.parse_param_type(tb)?;
+            self.parsing_free_param_collection.begin_scope(
+                free_param_kind,
+                &params,
+                tb.line_file.clone(),
+            )?;
+            ParamGroupWithParamType::new(params, param_type)
         } else {
             let mut vec_of_params = vec![param];
 
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip()?;
                 let p = tb.advance()?;
-                let owned = p.clone();
-                self.parsing_free_param_collection.begin_scope(
-                    free_param_kind,
-                    std::slice::from_ref(&owned),
-                    tb.line_file.clone(),
-                )?;
                 vec_of_params.push(p);
             }
             let param_type = self.parse_param_type(tb)?;
+            self.parsing_free_param_collection.begin_scope(
+                free_param_kind,
+                &vec_of_params,
+                tb.line_file.clone(),
+            )?;
 
             ParamGroupWithParamType::new(vec_of_params, param_type)
         };
@@ -48,9 +47,6 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
-            s if s == FAMILY_OBJ_PREFIX => self
-                .parse_family_obj(tb)
-                .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
             _ => self.parse_param_type_obj(tb),
         }
     }

@@ -354,9 +354,6 @@ impl Runtime {
                     in_fact,
                 )
             }
-            (_, Obj::FamilyObj(family_ty)) => {
-                self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
-            }
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();

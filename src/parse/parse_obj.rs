@@ -278,17 +278,16 @@ impl Runtime {
                         current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                     }
 
-                    this.parsing_free_param_collection.begin_scope(
-                        ParamObjType::FnSet,
-                        &current_params,
-                        tb.line_file.clone(),
-                    )?;
-
                     let param_group = if tb.current_token_is_equal_to(COLON) {
                         ParamGroupWithSet::new(current_params, StandardSet::R.into())
                     } else {
                         ParamGroupWithSet::new(current_params, this.parse_obj(tb)?)
                     };
+                    this.parsing_free_param_collection.begin_scope(
+                        ParamObjType::FnSet,
+                        &param_group.params,
+                        tb.line_file.clone(),
+                    )?;
 
                     params_def_with_set.push(param_group);
 
@@ -322,14 +321,23 @@ impl Runtime {
                 }
 
                 tb.skip_token(RIGHT_BRACE)?;
-                let ret_set_parsed = this.parse_obj(tb)?;
-                tb.skip_token(LEFT_CURLY_BRACE)?;
-                let equal_to = this.parse_obj(tb)?;
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-                let built =
-                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
+                // Return sets are non-dependent; parse them outside the function-parameter scope.
                 this.parsing_free_param_collection
                     .end_scope(ParamObjType::FnSet, &all_fn_names);
+                let ret_set_parsed = this.parse_obj(tb)?;
+                let equal_to = this.parse_in_local_free_param_scope(
+                    ParamObjType::FnSet,
+                    &all_fn_names,
+                    tb.line_file.clone(),
+                    |inner| {
+                        tb.skip_token(LEFT_CURLY_BRACE)?;
+                        let equal_to = inner.parse_obj(tb)?;
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(equal_to)
+                    },
+                )?;
+                let built =
+                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
                 Ok(built)
             })?;
             Ok(built.into())
@@ -375,13 +383,12 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
+                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
                 this.parsing_free_param_collection.begin_scope(
                     ParamObjType::FnSet,
-                    &current_params,
+                    &param_group.params,
                     tb.line_file.clone(),
                 )?;
-
-                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
 
                 params_def_with_set.push(param_group);
 
@@ -417,10 +424,11 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            let ret_set_parsed = this.parse_obj(tb)?;
-            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
+            // Return sets are non-dependent; parse them outside the function-parameter scope.
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
+            let ret_set_parsed = this.parse_obj(tb)?;
+            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
@@ -451,6 +459,11 @@ impl Runtime {
                 }
 
                 let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
+                this.parsing_free_param_collection.begin_scope(
+                    ParamObjType::FnSet,
+                    &param_group.params,
+                    tb.line_file.clone(),
+                )?;
 
                 params_def_with_set.push(param_group);
 
@@ -472,11 +485,6 @@ impl Runtime {
             }
 
             let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-            this.parsing_free_param_collection.begin_scope(
-                ParamObjType::FnSet,
-                &all_fn_names,
-                tb.line_file.clone(),
-            )?;
 
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
@@ -491,10 +499,11 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            let ret_set_parsed = this.parse_obj(tb)?;
-            let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed);
+            // Return sets are non-dependent; parse them outside the function-parameter scope.
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
+            let ret_set_parsed = this.parse_obj(tb)?;
+            let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
@@ -616,6 +625,9 @@ impl Runtime {
                 vec![],
             ),
             Obj::FiniteSeqListObj(list) => (FnObjHead::FiniteSeqListObj(list.clone()), vec![]),
+            Obj::InstantiatedTemplateObj(t) => {
+                (FnObjHead::InstantiatedTemplateObj(t.clone()), vec![])
+            }
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -636,9 +648,8 @@ impl Runtime {
         if tok == STRUCT_VIEW_PREFIX {
             return self.parse_struct_view_obj(tb);
         }
-        if tok == FAMILY_OBJ_PREFIX {
-            let family = self.parse_family_obj(tb)?;
-            return Ok(Obj::FamilyObj(family));
+        if tok == TEMPLATE_INSTANCE_PREFIX {
+            return self.parse_instantiated_template_obj(tb);
         }
         if tok == ABS {
             tb.skip()?;
@@ -646,6 +657,13 @@ impl Runtime {
             let arg = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
+        }
+        if tok == SQRT {
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(Sqrt::new(arg).into());
         }
         if tok == MAX {
             tb.skip()?;
@@ -1414,6 +1432,30 @@ impl Runtime {
         }
     }
 
+    fn parse_instantiated_template_obj(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        tb.skip_token(TEMPLATE_INSTANCE_PREFIX)?;
+        let template_name = tb.advance()?;
+        is_valid_litex_name(&template_name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+        tb.skip_token(LEFT_CURLY_BRACE)?;
+        let mut args = Vec::new();
+        if !tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
+            args.push(self.parse_obj(tb)?);
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                args.push(self.parse_obj(tb)?);
+            }
+        }
+        tb.skip_token(RIGHT_CURLY_BRACE)?;
+        Ok(InstantiatedTemplateObj::new(template_name, args).into())
+    }
+
     /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.
     fn parse_set_builder(
         &mut self,
@@ -1530,13 +1572,6 @@ impl Runtime {
 
     pub fn parse_predicate(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
         self.parse_atomic_name(tb)
-    }
-
-    pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
-        tb.skip_token(FAMILY_OBJ_PREFIX)?;
-        let name = self.parse_atomic_name(tb)?;
-        let params = self.parse_braced_objs(tb)?;
-        Ok(FamilyObj::new(name, params))
     }
 
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {

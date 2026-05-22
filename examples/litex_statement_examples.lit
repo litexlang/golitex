@@ -55,14 +55,6 @@ prove:
 
 # --- Stmt::DefStructStmt — removed in this branch (record-like `struct`); see git history to restore. ---
 
-# --- Stmt::DefFamilyStmt — parametric type family, right-hand side fixed once parameters are fixed ---
-prove:
-    family self_seq(s set) = fn(x N_pos) s
-
-    forall a \self_seq(R):
-        a $in fn(y N_pos) R
-        a(1) = a(1)
-
 # --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
 prove:
     have fn m(x N_pos) R by cases:
@@ -252,16 +244,6 @@ prove:
     have fn f(x R) R = 1
 
     by fn as set: f
-
-# --- Stmt::ByFamilyAsSetStmt — instantiate a parametric family at given arguments ---
-prove:
-    family pf(a set) = fn(x a) a
-
-    forall a \pf(R):
-        a $in fn(y R) R
-        a(1) = a(1)
-
-    by family as set: \pf(R)
 
 # --- Stmt::DefStructStmt — define a structure shape for future struct features ---
 prove:

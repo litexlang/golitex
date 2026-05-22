@@ -1,2 +1,8 @@
-forall t cart(N, N):
-    t = (t[1], t[2])
+know forall x R:
+    exist y R st {y > x}
+    exist z R st {z < x}
+    exist w R st {w >= x}
+    exist v R st {v <= x}
+
+have by exist y R st {y > 0}: a
+

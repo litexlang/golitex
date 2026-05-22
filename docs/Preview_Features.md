@@ -10,6 +10,18 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Dependent function parameter domains (2026-05)
+
+Later function parameter domains may now cite earlier parameters, such as `fn(n N_pos, x closed_range(1, n)) R`. Function return sets remain non-dependent and cannot cite the function parameters. See **Manual — Function types and anonymous functions**.
+
+### Templates (2026-05)
+
+`template name<params: dom_facts>:` defines a one-result template around a supported `have ...` definition statement. Instantiating `\name{args}` checks that the arguments satisfy the template parameter types and domain facts, then materializes the body definition with the instantiated object as the defined result. Template instances can be ordinary objects, and if the body defines a function, the instance can be used as a function head such as `\const_zero{R}(0)`.
+
+### Restriction-only function calls (2026-05)
+
+Multiple `$restrict_fn_in(f, ...)` facts are now remembered as candidate function domains. If `f` has no declared function set, function application well-definedness tries these restrictions. A set-valued RHS such as `$restrict_fn_in(f, s)` is treated as a unary real-valued restriction on `s`.
+
 ### Tuple equality from projections (2026-05)
 
 Litex can now prove `t = (a, b, ...)` from tuple shape information and component equalities such as `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`. This also closes goals like `forall t cart(N, N): t = (t[1], t[2])`.
@@ -37,10 +49,6 @@ After you prove the standard associativity-shaped `forall` for a binary user-def
 ### `by reflexive_prop`, `by symmetric_prop`, `by antisymmetric_prop` (2026-05)
 
 These register basic relation properties for user-defined props only, not builtin predicates. Reflexive registrations can close `$p(a, a)`. Symmetric registrations retry positive atoms with the registered argument permutation. Antisymmetric registrations can close `a = b` from `$p(a, b)` and `$p(b, a)`. See the corresponding Manual sections and `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
-
-### `by … as set` implementation names (2026-05)
-
-User-facing spellings are unchanged (`by fn as set`, `by fn set as set`, `by family as set`, `by tuple as set`, …). Internal statement / `stmt_type_name` labels were aligned (e.g. `ByFnAsSetStmt`, `ByFamilyAsSetStmt`, `ByTupleAsSetStmt`, `ByFnSetAsSetStmt`).
 
 ### Explicit struct views (2026-05)
 

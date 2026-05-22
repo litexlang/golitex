@@ -100,6 +100,16 @@ jobs:
         run: |
           cp target/${{ matrix.target }}/release/litex litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}
 
+      - name: Package archive with std (unix)
+        if: matrix.os_name != 'windows'
+        run: |
+          PKG_DIR="package_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
+          mkdir -p "${PKG_DIR}"
+          cp "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}" "${PKG_DIR}/litex"
+          chmod 755 "${PKG_DIR}/litex"
+          cp -R std "${PKG_DIR}/std"
+          tar -czf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${PKG_DIR}" .
+
       - name: Rename binary (windows)
         if: matrix.os_name == 'windows'
         shell: bash
@@ -264,15 +274,15 @@ jobs:
         run: |
           BASE_URL="https://github.com/litexlang/golitex/releases/download/${VERSION}"
           for pair in "darwin_arm64" "linux_amd64" "linux_arm64"; do
-            curl -fSL -o "litex_${VERSION}_${pair}" "${BASE_URL}/litex_${VERSION}_${pair}"
+            curl -fSL -o "litex_${VERSION}_${pair}.tar.gz" "${BASE_URL}/litex_${VERSION}_${pair}.tar.gz"
           done
 
       - name: Compute SHA256
         id: sha
         run: |
-          echo "darwin_arm64=$(sha256sum litex_${VERSION}_darwin_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
-          echo "linux_amd64=$(sha256sum litex_${VERSION}_linux_amd64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
-          echo "linux_arm64=$(sha256sum litex_${VERSION}_linux_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "darwin_arm64=$(sha256sum litex_${VERSION}_darwin_arm64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_amd64=$(sha256sum litex_${VERSION}_linux_amd64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=$(sha256sum litex_${VERSION}_linux_arm64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout homebrew-tap
         uses: actions/checkout@v4
@@ -291,22 +301,23 @@ jobs:
             license "Apache-2.0"
 
             on_macos do
-              url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_arm64"
+              url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_arm64.tar.gz"
               sha256 "SHA_DARWIN_ARM64"
             end
 
             on_linux do
               if Hardware::CPU.arm?
-                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_arm64"
+                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_arm64.tar.gz"
                 sha256 "SHA_LINUX_ARM64"
               else
-                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_amd64"
+                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_amd64.tar.gz"
                 sha256 "SHA_LINUX_AMD64"
               end
             end
 
             def install
-              bin.install Dir["litex_*"].first => "litex"
+              bin.install "litex"
+              pkgshare.install "std"
             end
 
             test do

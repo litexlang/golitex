@@ -56,6 +56,14 @@ impl Runtime {
         if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
+        if let Some(result) =
+            self.verify_zero_lt_sqrt_from_positive_arg_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_log_order_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
         if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
@@ -145,24 +153,20 @@ impl Runtime {
                     ),
                 ));
             }
-            let strict_fact: Fact = LessFact::new(
+            let strict_atomic: AtomicFact = LessFact::new(
                 less_equal_fact.left.clone(),
                 less_equal_fact.right.clone(),
                 less_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_key = strict_fact.to_string();
-            let (cache_ok, _) = self.cache_known_facts_contains(&strict_key);
-            if cache_ok {
+            let strict_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            if strict_result.is_true() {
                 return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
-                            less_equal_fact.clone().into(),
-                            strict_fact,
-                            None,
-                        ),
-                        Vec::new(),
+                        "less_equal_fact_from_known_strict_order".to_string(),
+                        vec![strict_result],
                     ),
                 ));
             }
@@ -188,6 +192,25 @@ impl Runtime {
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_equality".to_string(),
                         vec![equal_result],
+                    ),
+                ));
+            }
+
+            // Strict order implies weak order. Example: from `pi > 0`, prove `pi >= 0`.
+            let strict_atomic: AtomicFact = GreaterFact::new(
+                greater_equal_fact.left.clone(),
+                greater_equal_fact.right.clone(),
+                greater_equal_fact.line_file.clone(),
+            )
+            .into();
+            let strict_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            if strict_result.is_true() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        greater_equal_fact.clone().into(),
+                        "greater_equal_fact_from_known_strict_order".to_string(),
+                        vec![strict_result],
                     ),
                 ));
             }
@@ -711,6 +734,46 @@ impl Runtime {
         )))
     }
 
+    // Principal square root preserves strict positivity: `0 < sqrt(x)` from `0 < x`.
+    // Example: `forall x R: x > 0 =>: sqrt(x) > 0`.
+    fn verify_zero_lt_sqrt_from_positive_arg_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessFact(f) = &norm else {
+            return Ok(None);
+        };
+        if f.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Sqrt(sqrt) = &f.right else {
+            return Ok(None);
+        };
+        let positive_arg: AtomicFact = LessFact::new(
+            Number::new("0".to_string()).into(),
+            sqrt.arg.as_ref().clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let positive_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &positive_arg,
+            &VerifyState::new(0, true),
+        )?;
+        if !positive_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "sqrt: 0 < sqrt(x) from 0 < x".to_string(),
+                vec![positive_result],
+            ),
+        )))
+    }
+
     // `(-1)*x` order vs 0: e.g. `x < 0` or `x <= 0` implies `(-1)*x >= 0`; `x > 0` implies `(-1)*x < 0`.
     // Also handles `0 <= (-1)*x` (equivalently `0 <= -x` when `-x` parses as `(-1)*x`).
     fn try_verify_order_opposite_sign_mul_minus_one(
@@ -897,6 +960,190 @@ impl Runtime {
                 .into(),
             ));
         }
+        Ok(None)
+    }
+
+    // Logarithm order rules:
+    // - base > 1 preserves order on positive arguments
+    // - 0 < base < 1 reverses order on positive arguments
+    // - with base > 1, log_a(x) is positive for x > 1 and negative for 0 < x < 1
+    // Examples:
+    // `forall a, x, y R_pos: a > 1, x < y =>: log(a, x) < log(a, y)`
+    // `forall a, x R_pos: a > 1, x < 1 =>: log(a, x) < 0`
+    fn verify_log_order_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let one = Self::literal_one_obj();
+        let zero = Self::literal_zero_obj();
+        let verify_state = VerifyState::new(0, true);
+
+        if let AtomicFact::LessFact(f) = &norm {
+            match (&f.left, &f.right) {
+                (Obj::Log(left_log), Obj::Log(right_log)) => {
+                    let same_base = self.verify_objs_are_equal_known_only(
+                        left_log.base.as_ref(),
+                        right_log.base.as_ref(),
+                        f.line_file.clone(),
+                    );
+                    if !same_base.is_true() {
+                        return Ok(None);
+                    }
+
+                    let base_gt_one: AtomicFact = LessFact::new(
+                        one.clone(),
+                        left_log.base.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
+                    let base_lt_one: AtomicFact = LessFact::new(
+                        left_log.base.as_ref().clone(),
+                        one.clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
+                    let forward_args: AtomicFact = LessFact::new(
+                        left_log.arg.as_ref().clone(),
+                        right_log.arg.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
+                    let reversed_args: AtomicFact = LessFact::new(
+                        right_log.arg.as_ref().clone(),
+                        left_log.arg.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
+
+                    let base_gt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &base_gt_one,
+                            &verify_state,
+                        )?;
+                    if base_gt_one_result.is_true() {
+                        let args_result = self
+                            .verify_non_equational_known_then_builtin_rules_only(
+                                &forward_args,
+                                &verify_state,
+                            )?;
+                        if args_result.is_true() {
+                            return Ok(Some(StmtResult::FactualStmtSuccess(
+                                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                    atomic_fact.clone().into(),
+                                    "log order: base > 1 preserves strict order".to_string(),
+                                    vec![same_base, base_gt_one_result, args_result],
+                                ),
+                            )));
+                        }
+                    }
+
+                    let base_lt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &base_lt_one,
+                            &verify_state,
+                        )?;
+                    if base_lt_one_result.is_true() {
+                        let args_result = self
+                            .verify_non_equational_known_then_builtin_rules_only(
+                                &reversed_args,
+                                &verify_state,
+                            )?;
+                        if args_result.is_true() {
+                            return Ok(Some(StmtResult::FactualStmtSuccess(
+                                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                    atomic_fact.clone().into(),
+                                    "log order: 0 < base < 1 reverses strict order".to_string(),
+                                    vec![same_base, base_lt_one_result, args_result],
+                                ),
+                            )));
+                        }
+                    }
+                }
+                (Obj::Number(left_number), Obj::Log(log))
+                    if left_number.normalized_value == "0" =>
+                {
+                    let base_gt_one: AtomicFact =
+                        LessFact::new(one.clone(), log.base.as_ref().clone(), f.line_file.clone())
+                            .into();
+                    let arg_gt_one: AtomicFact =
+                        LessFact::new(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
+                            .into();
+                    let base_gt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &base_gt_one,
+                            &verify_state,
+                        )?;
+                    if !base_gt_one_result.is_true() {
+                        return Ok(None);
+                    }
+                    let arg_gt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &arg_gt_one,
+                            &verify_state,
+                        )?;
+                    if !arg_gt_one_result.is_true() {
+                        return Ok(None);
+                    }
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "log sign: 0 < log(a, x) from 1 < a and 1 < x".to_string(),
+                            vec![base_gt_one_result, arg_gt_one_result],
+                        ),
+                    )));
+                }
+                (Obj::Log(log), Obj::Number(right_number))
+                    if right_number.normalized_value == "0" =>
+                {
+                    let base_gt_one: AtomicFact =
+                        LessFact::new(one, log.base.as_ref().clone(), f.line_file.clone()).into();
+                    let arg_lt_one: AtomicFact = LessFact::new(
+                        log.arg.as_ref().clone(),
+                        Self::literal_one_obj(),
+                        f.line_file.clone(),
+                    )
+                    .into();
+                    let arg_positive: AtomicFact =
+                        LessFact::new(zero, log.arg.as_ref().clone(), f.line_file.clone()).into();
+                    let base_gt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &base_gt_one,
+                            &verify_state,
+                        )?;
+                    if !base_gt_one_result.is_true() {
+                        return Ok(None);
+                    }
+                    let arg_lt_one_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &arg_lt_one,
+                            &verify_state,
+                        )?;
+                    if !arg_lt_one_result.is_true() {
+                        return Ok(None);
+                    }
+                    let arg_positive_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &arg_positive,
+                            &verify_state,
+                        )?;
+                    if !arg_positive_result.is_true() {
+                        return Ok(None);
+                    }
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "log sign: log(a, x) < 0 from 1 < a and 0 < x < 1".to_string(),
+                            vec![base_gt_one_result, arg_lt_one_result, arg_positive_result],
+                        ),
+                    )));
+                }
+                _ => {}
+            }
+        }
+
         Ok(None)
     }
 
