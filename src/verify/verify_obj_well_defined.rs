@@ -154,7 +154,7 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let mut space = match fn_obj.head.as_ref() {
+        let candidate_spaces = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(a) => {
                 self.verify_anonymous_fn_well_defined(a.as_ref(), verify_state)
                     .map_err(|well_defined_error| {
@@ -163,7 +163,7 @@ impl Runtime {
                                 fn_obj.to_string()
                             ), well_defined_error)))
                     })?;
-                FnSetSpace::Anon((**a).clone())
+                vec![FnSetSpace::Anon((**a).clone())]
             }
             FnObjHead::FiniteSeqListObj(list) => {
                 for obj in list.objs.iter() {
@@ -217,36 +217,87 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
                 let function_name_obj: Obj = template_obj.clone().into();
                 self.verify_obj_well_defined_and_store_cache(&function_name_obj, verify_state)?;
-                let body = self
-                    .get_object_in_fn_set_or_restrict(&function_name_obj)
-                    .ok_or_else(|| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                                "`{}` is not a defined function",
-                                fn_obj.head.to_string()
-                            ))),
-                        ))
-                    })?
-                    .clone();
-                FnSetSpace::Set(FnSet::from_body(body)?)
+                let bodies =
+                    self.get_cloned_object_in_fn_set_or_restrict_candidates(&function_name_obj);
+                if bodies.is_empty() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
+                            "`{}` is not a defined function",
+                            fn_obj.head.to_string()
+                        ))),
+                    )));
+                }
+                let mut spaces = Vec::with_capacity(bodies.len());
+                for body in bodies {
+                    spaces.push(FnSetSpace::Set(FnSet::from_body(body)?));
+                }
+                spaces
             }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                let body = self
-                    .get_object_in_fn_set_or_restrict(&function_name_obj)
-                    .ok_or_else(|| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                                "`{}` is not a defined function",
-                                fn_obj.head.to_string()
-                            ))),
-                        ))
-                    })?
-                    .clone();
-                FnSetSpace::Set(FnSet::from_body(body)?)
+                let bodies =
+                    self.get_cloned_object_in_fn_set_or_restrict_candidates(&function_name_obj);
+                if bodies.is_empty() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
+                            "`{}` is not a defined function",
+                            fn_obj.head.to_string()
+                        ))),
+                    )));
+                }
+                let mut spaces = Vec::with_capacity(bodies.len());
+                for body in bodies {
+                    spaces.push(FnSetSpace::Set(FnSet::from_body(body)?));
+                }
+                spaces
             }
         };
 
+        if candidate_spaces.len() == 1 {
+            return self.verify_fn_obj_well_defined_against_space(
+                fn_obj,
+                candidate_spaces[0].clone(),
+                verify_state,
+            );
+        }
+
+        let mut last_error: Option<RuntimeError> = None;
+        for space in candidate_spaces.iter() {
+            let trial = self.run_in_local_env(|rt| {
+                rt.verify_fn_obj_well_defined_against_space(fn_obj, space.clone(), verify_state)
+            });
+            match trial {
+                Ok(()) => {
+                    return self.verify_fn_obj_well_defined_against_space(
+                        fn_obj,
+                        space.clone(),
+                        verify_state,
+                    );
+                }
+                Err(e) => last_error = Some(e),
+            }
+        }
+
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "object {} is not well-defined, no restricted function domain matched.",
+                    fn_obj
+                ),
+                default_line_file(),
+                last_error,
+                vec![],
+            ),
+        )))
+    }
+
+    fn verify_fn_obj_well_defined_against_space(
+        &mut self,
+        fn_obj: &FnObj,
+        mut space: FnSetSpace,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
         for (i, args) in fn_obj.body.iter().enumerate() {
             self.verify_fn_obj_well_defined_against_fn_like_space(
                 args,

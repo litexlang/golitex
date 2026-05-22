@@ -40,6 +40,20 @@ This makes the proof script look closer to a textbook argument. The user often
 states the next mathematical fact directly instead of choosing a tactic or
 library lemma that packages the same move.
 
+Another design point is that a development can start at the abstraction level
+where the mathematics naturally lives. Litex does not force every topic to begin
+with a concrete encoding. A file can introduce domains with `have`, primitive
+relations with `abstract_prop`, derived relations with `prop`, and axioms or
+background facts with `know`. This lets users state the intended structure first
+and add concrete models or lower-level constructions later.
+
+The clearest current example is the
+[Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry)
+tutorial. It treats points, lines, planes, incidence, betweenness, and
+congruence as an abstract relational interface. Litex checks how those relations
+are used and reused; it does not require Euclidean geometry to be reduced to
+coordinates before the development can begin.
+
 ## Relation to Mature Proof Assistants
 
 Lean, Coq, and Isabelle are mature systems with deep foundations, substantial
@@ -89,6 +103,11 @@ The Chapter 8 construction of a bijection from `N^2` to `N` is especially
 important. It is large enough to exercise functions, tuples, arithmetic,
 existential witnesses, injectivity, surjectivity, and reusable facts. It is
 also still close to ordinary undergraduate mathematics.
+
+For abstract mathematics specifically, the best current demo is the
+[Hilbert geometry tutorial](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry).
+It shows how Litex can work with primitive relations and Hilbert-style axioms
+without requiring a coordinate model first.
 
 ## What to Evaluate
 

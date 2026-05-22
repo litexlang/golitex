@@ -10,8 +10,14 @@ Try these in browser:
 
 - https://litexlang.com/doc/Tutorial/Examples
 - https://litexlang.com/doc/Manual
+- https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Examples.md
+
+For an abstract mathematics example, start with the
+[Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry)
+tutorial. It shows how Litex can introduce primitive domains and relations,
+record Hilbert-style axioms, and then reason from that abstract structure.
 
 ## Example 1: A Bare Fact
 

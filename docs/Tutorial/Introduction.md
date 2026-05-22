@@ -138,6 +138,18 @@ What happens:
 
 This is one of the main reasons Litex works well for textbook-style proofs.
 
+## Starting From An Abstract Structure
+
+Litex can also start from an abstract mathematical interface. A file can name
+the domains and relations it wants to study, store axioms about them, and then
+check later facts against that context.
+
+The complete example to read first is
+[Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry).
+It introduces points, lines, planes, incidence, betweenness, and congruence
+relations directly, in the style of Hilbert-style geometry, instead of starting
+from coordinates.
+
 ## Blocks Mean “Assume This, Then Prove That”
 
 This is the most common proof shape:
