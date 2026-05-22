@@ -56,13 +56,26 @@ impl Runtime {
 
     pub fn parse_run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(RUN_FILE)?;
-        tb.skip_token(DOUBLE_QUOTE)?;
-        let mut path_parts: Vec<String> = vec![];
-        while tb.current()? != DOUBLE_QUOTE {
-            path_parts.push(tb.advance()?);
+        if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
+            tb.skip_token(DOUBLE_QUOTE)?;
+            let mut path_parts: Vec<String> = vec![];
+            while tb.current()? != DOUBLE_QUOTE {
+                path_parts.push(tb.advance()?);
+            }
+            tb.skip_token(DOUBLE_QUOTE)?;
+            let file_path = path_parts.join("");
+            return Ok(RunFileStmt::new(file_path, tb.line_file.clone()).into());
         }
-        tb.skip_token(DOUBLE_QUOTE)?;
-        let file_path = path_parts.join("");
-        Ok(RunFileStmt::new(file_path, tb.line_file.clone()).into())
+
+        let file_path = tb.advance()?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "Expected end of run_file std module name".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(RunFileInStd::new(file_path, tb.line_file.clone()).into())
     }
 }

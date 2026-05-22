@@ -15,6 +15,7 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    Sqrt(Sqrt),
     Log(Log),
     Max(Max),
     Min(Min),
@@ -45,7 +46,6 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
-    FamilyObj(FamilyObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -55,6 +55,12 @@ pub enum Obj {
     MatrixPow(MatrixPow),
     StructObj(StructObj),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+    InstantiatedTemplateObj(InstantiatedTemplateObj),
+}
+
+#[derive(Clone)]
+pub struct Sqrt {
+    pub arg: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -74,6 +80,12 @@ pub struct ObjAsStructInstanceWithFieldAccess {
     pub struct_obj: Box<StructObj>,
     pub obj: Box<Obj>,
     pub field_name: String,
+}
+
+#[derive(Clone)]
+pub struct InstantiatedTemplateObj {
+    pub template_name: String,
+    pub args: Vec<Obj>,
 }
 
 impl NameWithOrWithoutMod {
@@ -105,6 +117,15 @@ impl ObjAsStructInstanceWithFieldAccess {
             struct_obj: Box::new(struct_obj),
             obj: Box::new(obj),
             field_name,
+        }
+    }
+}
+
+impl InstantiatedTemplateObj {
+    pub fn new(template_name: String, args: Vec<Obj>) -> Self {
+        InstantiatedTemplateObj {
+            template_name,
+            args,
         }
     }
 }
@@ -163,33 +184,6 @@ pub struct MatrixSet {
 #[derive(Clone)]
 pub struct MatrixListObj {
     pub rows: Vec<Vec<Box<Obj>>>,
-}
-
-#[derive(Clone)]
-pub struct FamilyObj {
-    pub name: AtomicName,
-    pub params: Vec<Obj>,
-}
-
-impl FamilyObj {
-    pub fn new(name: AtomicName, params: Vec<Obj>) -> Self {
-        FamilyObj { name, params }
-    }
-}
-
-impl fmt::Display for FamilyObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}({})",
-            display_family_obj_head(&self.name),
-            vec_to_string_join_by_comma(&self.params)
-        )
-    }
-}
-
-fn display_family_obj_head(name: &AtomicName) -> String {
-    format!("{}{}", FAMILY_OBJ_PREFIX, name)
 }
 
 #[derive(Clone)]
@@ -470,6 +464,12 @@ impl Pow {
 impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs { arg: Box::new(arg) }
+    }
+}
+
+impl Sqrt {
+    pub fn new(arg: Obj) -> Self {
+        Sqrt { arg: Box::new(arg) }
     }
 }
 
@@ -778,6 +778,7 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
+        | Obj::Sqrt(_)
         | Obj::Log(_)
         | Obj::MatrixAdd(_)
         | Obj::MatrixSub(_)
@@ -868,6 +869,11 @@ impl Obj {
                 a.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
+            Obj::Sqrt(s) => {
+                write!(f, "{} {}", SQRT, LEFT_BRACE)?;
+                s.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
             Obj::Log(l) => {
                 write!(f, "{} {}", LOG, LEFT_BRACE)?;
                 l.base.fmt_with_precedence(f, 0)?;
@@ -921,9 +927,9 @@ impl Obj {
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
-            Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
+            Obj::InstantiatedTemplateObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -983,6 +989,7 @@ impl Obj {
             )
             .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Sqrt(x) => Sqrt::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
             Obj::Log(x) => Log::new(
                 Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.arg, from, to),
@@ -1054,7 +1061,7 @@ impl Obj {
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set = params_def_with_set
+                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
                     .into_iter()
                     .map(|pg| {
                         let params = pg
@@ -1084,7 +1091,7 @@ impl Obj {
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set = params_def_with_set
+                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
                     .into_iter()
                     .map(|pg| {
                         let params = pg
@@ -1216,14 +1223,6 @@ impl Obj {
             )
             .into(),
             Obj::StandardSet(s) => s.into(),
-            Obj::FamilyObj(f) => FamilyObj::new(
-                f.name,
-                f.params
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-            )
-            .into(),
             Obj::StructObj(s) => StructObj::new(
                 s.name,
                 s.params
@@ -1248,6 +1247,14 @@ impl Obj {
                 )
                 .into()
             }
+            Obj::InstantiatedTemplateObj(t) => InstantiatedTemplateObj::new(
+                t.template_name,
+                t.args
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            )
+            .into(),
         }
     }
 }
@@ -1369,6 +1376,13 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             DefAlgoFreeParamObj::new(name).into()
         }
+        FnObjHead::InstantiatedTemplateObj(t) => {
+            let replaced = Obj::replace_bound_identifier(t.into(), from, to);
+            let Obj::InstantiatedTemplateObj(new_t) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::InstantiatedTemplateObj(new_t)
+        }
     }
 }
 
@@ -1395,6 +1409,20 @@ impl fmt::Display for StructObj {
             )?;
         }
         Ok(())
+    }
+}
+
+impl fmt::Display for InstantiatedTemplateObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}{}{}",
+            TEMPLATE_INSTANCE_PREFIX,
+            self.template_name,
+            LEFT_CURLY_BRACE,
+            vec_to_string_join_by_comma(&self.args),
+            RIGHT_CURLY_BRACE
+        )
     }
 }
 
@@ -1703,6 +1731,12 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for Sqrt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}", SQRT, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
 impl fmt::Display for Log {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -1939,6 +1973,12 @@ impl From<Abs> for Obj {
     }
 }
 
+impl From<Sqrt> for Obj {
+    fn from(s: Sqrt) -> Self {
+        Obj::Sqrt(s)
+    }
+}
+
 impl From<Log> for Obj {
     fn from(l: Log) -> Self {
         Obj::Log(l)
@@ -2119,12 +2159,6 @@ impl From<IdentifierWithMod> for Obj {
     }
 }
 
-impl From<FamilyObj> for Obj {
-    fn from(f: FamilyObj) -> Self {
-        Obj::FamilyObj(f)
-    }
-}
-
 impl From<StructObj> for Obj {
     fn from(s: StructObj) -> Self {
         Obj::StructObj(s)
@@ -2134,6 +2168,12 @@ impl From<StructObj> for Obj {
 impl From<ObjAsStructInstanceWithFieldAccess> for Obj {
     fn from(s: ObjAsStructInstanceWithFieldAccess) -> Self {
         Obj::ObjAsStructInstanceWithFieldAccess(s)
+    }
+}
+
+impl From<InstantiatedTemplateObj> for Obj {
+    fn from(t: InstantiatedTemplateObj) -> Self {
+        Obj::InstantiatedTemplateObj(t)
     }
 }
 

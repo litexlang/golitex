@@ -1,0 +1,9 @@
+template id_on_set<s set: s = s>:
+    have id_on_set set = s
+
+\id_on_set{R} = R
+
+template const_zero<s set: s = s>:
+    have fn const_zero(x s) R = 0
+
+\const_zero{R}(0) = \const_zero{R}(0)

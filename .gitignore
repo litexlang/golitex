@@ -26,3 +26,9 @@ mathematics_in_litex/
 
 scripts/gsm8k-litex/
 .venv-mmqa/
+
+MATH-500-litex/
+
+litex-minif2f/
+
+test-litex/

@@ -16,6 +16,7 @@ pub enum FnObjHead {
     FiniteSeqListObj(FiniteSeqListObj),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
+    InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
 impl fmt::Display for FnObjHead {
@@ -32,6 +33,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::FiniteSeqListObj(v) => write!(f, "{}", v),
             FnObjHead::Induc(p) => write!(f, "{}", p),
             FnObjHead::DefAlgo(p) => write!(f, "{}", p),
+            FnObjHead::InstantiatedTemplateObj(t) => write!(f, "{}", t),
         }
     }
 }
@@ -113,6 +115,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::FiniteSeqListObj(v) => v.into(),
             FnObjHead::Induc(p) => p.into(),
             FnObjHead::DefAlgo(p) => p.into(),
+            FnObjHead::InstantiatedTemplateObj(t) => t.into(),
         }
     }
 }

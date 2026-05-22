@@ -36,9 +36,21 @@ impl DefAlgoStmt {
     }
 }
 
+impl DefTemplateStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefTemplateStmt".to_string()
+    }
+}
+
 impl RunFileStmt {
     pub fn stmt_type_name(&self) -> String {
         "RunFileStmt".to_string()
+    }
+}
+
+impl RunFileInStd {
+    pub fn stmt_type_name(&self) -> String {
+        "RunFileInStd".to_string()
     }
 }
 
@@ -135,12 +147,6 @@ impl ByFnSetAsSetStmt {
     }
 }
 
-impl ByFamilyAsSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByFamilyAsSetStmt".to_string()
-    }
-}
-
 impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleAsSetStmt".to_string()
@@ -234,11 +240,5 @@ impl HaveFnByInducStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveFnByForallExistUniqueStmt".to_string()
-    }
-}
-
-impl DefFamilyStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "DefFamilyStmt".to_string()
     }
 }

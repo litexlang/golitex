@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_function_obj_with_param_names, param_defs_with_type_from_have_fn_clause,
+    build_function_obj_with_param_names, forall_param_defs_dom_and_map_from_have_fn_clause,
 };
 
 impl Runtime {
@@ -78,9 +78,11 @@ impl Runtime {
                 )
             })?;
 
-        let param_defs_with_type = param_defs_with_type_from_have_fn_clause(
-            &have_fn_equal_case_by_case_stmt.fn_set_clause,
-        );
+        let (param_defs_with_type, base_forall_dom_facts, fn_set_param_to_forall_param) =
+            forall_param_defs_dom_and_map_from_have_fn_clause(
+                self,
+                &have_fn_equal_case_by_case_stmt.fn_set_clause,
+            )?;
         let param_names = ParamGroupWithSet::collect_param_names(
             &have_fn_equal_case_by_case_stmt
                 .fn_set_clause
@@ -95,21 +97,18 @@ impl Runtime {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            let mut forall_dom_facts: Vec<Fact> = Vec::with_capacity(
-                have_fn_equal_case_by_case_stmt
-                    .fn_set_clause
-                    .dom_facts
-                    .len()
-                    + 1,
+            let mut forall_dom_facts: Vec<Fact> =
+                Vec::with_capacity(base_forall_dom_facts.len() + 1);
+            forall_dom_facts.extend(base_forall_dom_facts.iter().cloned());
+            forall_dom_facts.push(
+                self.inst_and_chain_atomic_fact(
+                    case_fact,
+                    &fn_set_param_to_forall_param,
+                    ParamObjType::FnSet,
+                    None,
+                )?
+                .into(),
             );
-            for dom_fact in have_fn_equal_case_by_case_stmt
-                .fn_set_clause
-                .dom_facts
-                .iter()
-            {
-                forall_dom_facts.push(dom_fact.clone().into());
-            }
-            forall_dom_facts.push(case_fact.clone().into());
 
             let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
                 function_obj.clone(),

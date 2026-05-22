@@ -7,6 +7,14 @@ use crate::verify::verify_equality_by_builtin_rules::*;
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 impl Runtime {
+    fn literal_one_obj_for_log_builtin() -> Obj {
+        Obj::Number(Number::new("1".to_string()))
+    }
+
+    fn literal_neg_one_obj_for_log_builtin() -> Obj {
+        Obj::Number(Number::new("-1".to_string()))
+    }
+
     fn literal_zero_obj_for_abs_builtin() -> Obj {
         Obj::Number(Number::new("0".to_string()))
     }
@@ -235,74 +243,6 @@ impl Runtime {
         }
         if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {
             return Ok(Some(done));
-        }
-        Ok(None)
-    }
-
-    // Instantiate family `equal_to` on one or both sides, then require known-only equality on the expanded pair.
-    pub(crate) fn try_verify_objs_equal_by_expanding_family(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let (Obj::FamilyObj(fl), Obj::FamilyObj(fr)) = (left, right) {
-            if let (Ok(el), Ok(er)) = (
-                self.instantiate_family_member_set(fl),
-                self.instantiate_family_member_set(fr),
-            ) {
-                let r = self.verify_objs_are_equal_in_equality_builtin(
-                    &el,
-                    &er,
-                    line_file.clone(),
-                    verify_state,
-                )?;
-                if r.is_true() {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: expand family definition (substitute parameters into equal_to)",
-                    )));
-                }
-            }
-        }
-        if let Obj::FamilyObj(f) = left {
-            if let Ok(expanded) = self.instantiate_family_member_set(f) {
-                let r = self.verify_objs_are_equal_in_equality_builtin(
-                    &expanded,
-                    right,
-                    line_file.clone(),
-                    verify_state,
-                )?;
-                if r.is_true() {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: expand family definition (substitute parameters into equal_to)",
-                    )));
-                }
-            }
-        }
-        if let Obj::FamilyObj(f) = right {
-            if let Ok(expanded) = self.instantiate_family_member_set(f) {
-                let r = self.verify_objs_are_equal_in_equality_builtin(
-                    left,
-                    &expanded,
-                    line_file.clone(),
-                    verify_state,
-                )?;
-                if r.is_true() {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: expand family definition (substitute parameters into equal_to)",
-                    )));
-                }
-            }
         }
         Ok(None)
     }
@@ -599,6 +539,120 @@ impl Runtime {
             )
             .into(),
         ))
+    }
+
+    // Principal square-root identity: `(sqrt(x))^2 = x` for real `x >= 0`.
+    // Example: `forall x R: x >= 0 =>: (sqrt(x))^2 = x`.
+    pub(crate) fn try_verify_sqrt_square_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (pow, other) = match (left, right) {
+            (Obj::Pow(pow), other) => (pow, other),
+            (other, Obj::Pow(pow)) => (pow, other),
+            _ => return Ok(None),
+        };
+        if !Self::obj_is_builtin_literal_two(pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        let Obj::Sqrt(sqrt) = pow.base.as_ref() else {
+            return Ok(None);
+        };
+        let arg_result = self.verify_objs_are_equal_in_equality_builtin(
+            sqrt.arg.as_ref(),
+            other,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !arg_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "sqrt: (sqrt(x))^2 = x".to_string(),
+                vec![arg_result],
+            )
+            .into(),
+        ))
+    }
+
+    // Square roots of the additive and multiplicative identities stay fixed.
+    // Example: `sqrt(0) = 0` and `sqrt(1) = 1`.
+    pub(crate) fn try_verify_sqrt_zero_one_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (sqrt, other) = match (left, right) {
+            (Obj::Sqrt(sqrt), other) => (sqrt, other),
+            (other, Obj::Sqrt(sqrt)) => (sqrt, other),
+            _ => return Ok(None),
+        };
+        for literal in [
+            Number::new("0".to_string()).into(),
+            Number::new("1".to_string()).into(),
+        ] {
+            let arg_result = self.verify_objs_are_equal_in_equality_builtin(
+                sqrt.arg.as_ref(),
+                &literal,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !arg_result.is_true() {
+                continue;
+            }
+            let other_result = self.verify_objs_are_equal_in_equality_builtin(
+                other,
+                &literal,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !other_result.is_true() {
+                continue;
+            }
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "sqrt: sqrt(0) = 0 and sqrt(1) = 1".to_string(),
+                    vec![arg_result, other_result],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
+    }
+
+    pub(crate) fn try_verify_sqrt_equalities(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) =
+            self.try_verify_sqrt_square_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) =
+            self.try_verify_sqrt_zero_one_identity(left, right, line_file, verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        Ok(None)
+    }
+
+    fn obj_is_builtin_literal_two(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "2",
+            _ => false,
+        }
     }
 
     fn power_factor_matches_base_and_exponent(
@@ -1084,6 +1138,124 @@ impl Runtime {
         Ok(None)
     }
 
+    // Reciprocal rule: log_a(1 / x) = -log_a(x).
+    // Example: `forall a, x R_pos: a != 1 =>: log(a, 1 / x) = -log(a, x)`.
+    pub(crate) fn try_verify_log_reciprocal_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (log, other) = match (left, right) {
+            (Obj::Log(l), o) => (l, o),
+            (o, Obj::Log(l)) => (l, o),
+            _ => return Ok(None),
+        };
+        let Obj::Div(d) = log.arg.as_ref() else {
+            return Ok(None);
+        };
+        let one = Self::literal_one_obj_for_log_builtin();
+        let one_ok = self.verify_objs_are_equal_in_equality_builtin(
+            d.left.as_ref(),
+            &one,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !one_ok.is_true() {
+            return Ok(None);
+        }
+
+        let inner_log: Obj = Log::new((*log.base).clone(), (*d.right).clone()).into();
+        let expected1: Obj = Mul::new(
+            Self::literal_neg_one_obj_for_log_builtin(),
+            inner_log.clone(),
+        )
+        .into();
+        let expected2: Obj = Mul::new(
+            inner_log.clone(),
+            Self::literal_neg_one_obj_for_log_builtin(),
+        )
+        .into();
+        let expected3: Obj = Sub::new(Self::literal_zero_obj_for_abs_builtin(), inner_log).into();
+
+        for expected in [expected1, expected2, expected3] {
+            let ok = self.verify_objs_are_equal_in_equality_builtin(
+                other,
+                &expected,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if ok.is_true() {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: log(a, 1/x) = -log(a, x)",
+                )));
+            }
+        }
+
+        Ok(None)
+    }
+
+    // Change of base: log_a(b) = log_c(b) / log_c(a).
+    // Example: `forall a, b, c R_pos: a != 1, c != 1 =>: log(a, b) = log(c, b) / log(c, a)`.
+    pub(crate) fn try_verify_log_change_of_base_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (log_ab, other) = match (left, right) {
+            (Obj::Log(l), o) => (l, o),
+            (o, Obj::Log(l)) => (l, o),
+            _ => return Ok(None),
+        };
+        let Obj::Div(d) = other else {
+            return Ok(None);
+        };
+        let (Obj::Log(log_cb), Obj::Log(log_ca)) = (d.left.as_ref(), d.right.as_ref()) else {
+            return Ok(None);
+        };
+
+        let base_ok = self.verify_objs_are_equal_in_equality_builtin(
+            log_cb.base.as_ref(),
+            log_ca.base.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !base_ok.is_true() {
+            return Ok(None);
+        }
+        let arg_ok = self.verify_objs_are_equal_in_equality_builtin(
+            log_cb.arg.as_ref(),
+            log_ab.arg.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !arg_ok.is_true() {
+            return Ok(None);
+        }
+        let inner_ok = self.verify_objs_are_equal_in_equality_builtin(
+            log_ca.arg.as_ref(),
+            log_ab.base.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !inner_ok.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: log(a, b) = log(c, b) / log(c, a)",
+        )))
+    }
+
     // log_a(b) = c  iff  a^c = b  (Litex `log(a, b) = c`; reduces to proving `a^c = b`.)
     pub(crate) fn try_verify_log_equals_by_pow_inverse(
         &mut self,
@@ -1113,6 +1285,40 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // Exponential inverse in the other direction: a^c = b from known c = log_a(b).
+    // Example: `forall a, b R_pos, c R: log(a, b) = c =>: a^c = b`.
+    pub(crate) fn try_verify_pow_equals_by_known_log_inverse(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        _verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (pow, other) = match (left, right) {
+            (Obj::Pow(p), o) => (p, o),
+            (o, Obj::Pow(p)) => (p, o),
+            _ => return Ok(None),
+        };
+        let expected_log: Obj = Log::new((*pow.base).clone(), other.clone()).into();
+        let exponent_ok = self.verify_objs_are_equal_known_only(
+            pow.exponent.as_ref(),
+            &expected_log,
+            line_file.clone(),
+        );
+        if !exponent_ok.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: a^c = b from c = log(a, b)".to_string(),
+                vec![exponent_ok],
+            )
+            .into(),
+        ))
     }
 
     /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,

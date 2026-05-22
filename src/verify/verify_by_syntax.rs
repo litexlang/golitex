@@ -83,6 +83,10 @@ impl Runtime {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Sqrt(a) => match right {
+                Obj::Sqrt(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Log(a) => match right {
                 Obj::Log(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -259,16 +263,16 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::RNz) => true,
                 _ => false,
             },
-            Obj::FamilyObj(a) => match right {
-                Obj::FamilyObj(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::StructObj(a) => match right {
                 Obj::StructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::ObjAsStructInstanceWithFieldAccess(a) => match right {
                 Obj::ObjAsStructInstanceWithFieldAccess(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::InstantiatedTemplateObj(a) => match right {
+                Obj::InstantiatedTemplateObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.

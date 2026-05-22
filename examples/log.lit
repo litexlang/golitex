@@ -1,8 +1,95 @@
+# Current builtin logarithm support.
+
 log(2, 8) = 3
+log(10, 100) = 2
+log(3, 1) = 0
+log(5, 5) = 1
 
 forall a R_pos, b R:
-    a > 1
+    a != 1
     =>:
         log(a, a^b) = b
+
+forall a, b R_pos:
+    a != 1
+    =>:
+        a ^ log(a, b) = b
         log(a, a) = 1
         log(a, 1) = 0
+
+forall a, b, c R_pos:
+    a != 1
+    a^b != 1
+    =>:
+        log(a^b, c) = log(a, c) / b
+
+forall a, x, b R_pos:
+    a != 1
+    =>:
+        log(a, x^b) = b * log(a, x)
+
+forall a, x, y R_pos:
+    a != 1
+    =>:
+        log(a, x * y) = log(a, x) + log(a, y)
+        log(a, x / y) = log(a, x) - log(a, y)
+
+forall a, b R_pos, c R:
+    a != 1
+    a^c = b
+    =>:
+        log(a, b) = c
+
+# Useful evaluation-style examples that should stay easy.
+
+log(2, 2^5) = 5
+log(2, 32 / 4) = log(2, 32) - log(2, 4) = 5 - 2 = 3
+log(2, 8 * 4) = log(2, 8) + log(2, 4) = 3 + 2 = 5
+log(4, 64) = log(2^2, 64) = log(2, 64) / 2 = 6 / 2 = 3
+log(3, 9^2) = 2 * log(3, 9) = 2 * 2 = 4
+
+# Additional builtin logarithm rules.
+
+forall a, x R_pos:
+    a != 1
+    =>:
+        log(a, 1 / x) = -log(a, x)
+
+forall a, b, c R_pos:
+    a != 1
+    b != 1
+    c != 1
+    log(c, a) != 0
+    =>:
+        log(a, b) = log(c, b) / log(c, a)
+
+forall a, x, y R_pos:
+    a > 1
+    x < y
+    =>:
+        log(a, x) < log(a, y)
+
+forall a, x, y R_pos:
+    a < 1
+    x < y
+    =>:
+        log(a, x) > log(a, y)
+
+forall a, x R_pos:
+    a > 1
+    x > 1
+    =>:
+        log(a, x) > 0
+
+forall a, x R_pos:
+    a > 1
+    x < 1
+    =>:
+        log(a, x) < 0
+
+forall a, b R_pos, c R:
+    a != 1
+    =>:
+        log(a, b) = c
+    <=>:
+        a^c = b

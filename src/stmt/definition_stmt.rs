@@ -45,34 +45,28 @@ impl DefAbstractPropStmt {
     }
 }
 
-#[derive(Clone)]
-pub struct DefFamilyStmt {
-    pub name: String,
-    pub params_def_with_type: ParamDefWithType,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub equal_to: Obj,
-    pub line_file: LineFile,
-}
-
-/// `have fn` `{ … }` piece: parameter names match binders in dom/ret; build stored `Obj::FnSet` with [`Runtime::fn_set_from_fn_set_clause`].
+/// `have fn` `{ ... }` piece. Parameter sets may depend on earlier parameters; `ret_set` must not
+/// cite these parameters.
 #[derive(Clone)]
 pub struct FnSetClause {
-    pub params_def_with_set: Vec<ParamGroupWithSet>,
+    pub params_def_with_set: ParamDefWithSet,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Obj,
 }
 
 impl FnSetClause {
     pub fn new(
-        params_def_with_set: Vec<ParamGroupWithSet>,
+        params_def_with_set: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
-    ) -> Self {
-        FnSetClause {
+    ) -> Result<Self, RuntimeError> {
+        let params_def_with_set = params_def_with_set.into();
+        params_def_with_set.validate_obj_does_not_cite_params(&ret_set, "function return set")?;
+        Ok(FnSetClause {
             params_def_with_set,
             dom_facts,
             ret_set,
-        }
+        })
     }
 
     /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
@@ -111,6 +105,26 @@ pub struct HaveFnByForallExistUniqueStmt {
     pub fn_name: String,
     pub forall: ForallFact,
     pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct DefTemplateStmt {
+    pub template_name: String,
+    pub template_arg_def: ParamDefWithType,
+    pub template_arg_dom: Vec<OrAndChainAtomicFact>,
+    pub template_def_stmt: TemplateDefEnum,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub enum TemplateDefEnum {
+    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
+    HaveObjEqualStmt(HaveObjEqualStmt),
+    HaveByExistStmt(HaveByExistStmt),
+    HaveFnEqualStmt(HaveFnEqualStmt),
+    HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
+    HaveFnByInducStmt(HaveFnByInducStmt),
+    HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
 }
 
 // have by exist a R st {$p(a)}: a
@@ -267,6 +281,28 @@ impl fmt::Display for HaveObjEqualStmt {
     }
 }
 
+impl HaveObjInNonemptySetOrParamTypeStmt {
+    pub fn single_defined_name(&self) -> Option<String> {
+        let names = self.param_def.collect_param_names();
+        if names.len() == 1 {
+            Some(names[0].clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl HaveObjEqualStmt {
+    pub fn single_defined_name(&self) -> Option<String> {
+        let names = self.param_def.collect_param_names();
+        if names.len() == 1 {
+            Some(names[0].clone())
+        } else {
+            None
+        }
+    }
+}
+
 impl HaveByExistStmt {
     pub fn new(
         equal_tos: Vec<String>,
@@ -311,7 +347,8 @@ impl fmt::Display for HaveFnEqualStmt {
             self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
-        );
+        )
+        .expect("anonymous function signature was already validated");
         write!(
             f,
             "{} {} {}{} {} {}",
@@ -350,6 +387,95 @@ impl fmt::Display for HaveFnByForallExistUniqueStmt {
             SET,
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 1)
+        )
+    }
+}
+
+impl DefTemplateStmt {
+    pub fn new(
+        template_name: String,
+        template_arg_def: ParamDefWithType,
+        template_arg_dom: Vec<OrAndChainAtomicFact>,
+        template_def_stmt: TemplateDefEnum,
+        line_file: LineFile,
+    ) -> Self {
+        DefTemplateStmt {
+            template_name,
+            template_arg_def,
+            template_arg_dom,
+            template_def_stmt,
+            line_file,
+        }
+    }
+}
+
+impl TemplateDefEnum {
+    pub fn defined_name(&self) -> Option<String> {
+        match self {
+            TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.single_defined_name(),
+            TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.single_defined_name(),
+            TemplateDefEnum::HaveByExistStmt(stmt) => {
+                if stmt.equal_tos.len() == 1 {
+                    Some(stmt.equal_tos[0].clone())
+                } else {
+                    None
+                }
+            }
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.fn_name.clone()),
+        }
+    }
+
+    pub fn to_stmt(&self) -> Stmt {
+        match self {
+            TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveByExistStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => stmt.clone().into(),
+        }
+    }
+}
+
+impl fmt::Display for TemplateDefEnum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveObjEqualStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveByExistStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => write!(f, "{}", stmt),
+        }
+    }
+}
+
+impl fmt::Display for DefTemplateStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}{}{}{}\n{}",
+            TEMPLATE,
+            self.template_name,
+            LESS,
+            self.template_arg_def,
+            if self.template_arg_dom.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "{} {}",
+                    COLON,
+                    vec_to_string_join_by_comma(&self.template_arg_dom)
+                )
+            },
+            GREATER,
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.template_def_stmt, 1)
         )
     }
 }
@@ -547,41 +673,5 @@ impl HaveFnByInducStmt {
             }
         }
         Ok(())
-    }
-}
-
-impl DefFamilyStmt {
-    pub fn new(
-        name: String,
-        params_def_with_type: ParamDefWithType,
-        dom_facts: Vec<OrAndChainAtomicFact>,
-        equal_to: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        DefFamilyStmt {
-            name,
-            params_def_with_type,
-            dom_facts,
-            equal_to,
-            line_file,
-        }
-    }
-}
-
-impl fmt::Display for DefFamilyStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{} {} {}{} {} {}",
-            FAMILY,
-            self.name,
-            LEFT_BRACE,
-            self.params_def_with_type.to_string(),
-            COLON,
-            vec_to_string_join_by_comma(&self.dom_facts),
-            RIGHT_BRACE,
-            EQUAL,
-            self.equal_to
-        )
     }
 }

@@ -301,6 +301,51 @@ forall a set:
     }
 
     #[test]
+    fn dependent_fn_param_set_uses_previous_arg() {
+        let source_code = r#"
+have f fn(n N_pos, x closed_range(1, n)) R
+f(3, 2) = f(3, 2)
+by fn as set: f
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "dependent_fn_param_set_uses_previous_arg failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn fn_return_set_cannot_depend_on_params() {
+        let source_code = r#"
+have f fn(n N_pos) closed_range(1, n)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("fn_return_set_cannot_depend_on_params");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "dependent return set should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("function return set cannot depend on function parameters [n]"),
+            "dependent return set failure had unexpected output:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn known_equality_implies_weak_order() {
         let source_code = r#"
 have a, b R
@@ -318,6 +363,57 @@ a >= b
         assert!(
             run_succeeded,
             "known_equality_implies_weak_order failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined() {
+        let source_code = r#"
+have fn sqrt(x R: x >= 0) R = x^(1/2)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn sqrt_core_builtin_rules() {
+        let source_code = r#"
+sqrt(0) = 0
+sqrt(1) = 1
+
+forall x R:
+    x >= 0
+    =>:
+        (sqrt(x))^2 = x
+
+forall x R:
+    x > 0
+    =>:
+        sqrt(x) > 0
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "sqrt_core_builtin_rules failed:\n{}",
             run_output
         );
     }
@@ -436,6 +532,30 @@ $q(1)
     #[test]
     fn run_file_from_path() {
         run_with_large_stack("run_file_from_path_large_stack", run_file_from_path_impl);
+    }
+
+    #[test]
+    fn run_file_in_std_from_folder_name() {
+        run_with_large_stack(
+            "run_file_in_std_from_folder_name_large_stack",
+            run_file_in_std_from_folder_name_impl,
+        );
+    }
+
+    fn run_file_in_std_from_folder_name_impl() {
+        let source_code = "run_file trigonometry\n\nsin(0) = 0\ncos(0) = 1";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(run_succeeded, "run_file in std failed:\n{}", run_output);
+        assert!(run_output.contains("\"type\": \"RunFileInStd\""));
+        assert!(run_output.contains("\"stmt\": \"run_file trigonometry\""));
+        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
+        assert!(run_output.contains("\"stmt\": \"cos(0) = 1\""));
     }
 
     fn run_file_from_path_impl() {
@@ -971,6 +1091,165 @@ $q(1)
         for (label, duration_ms) in durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
+    }
+
+    #[test]
+    fn run_math500_litex_simple() {
+        run_with_large_stack(
+            "run_math500_litex_simple_large_stack",
+            run_math500_litex_simple_impl,
+        );
+    }
+
+    #[test]
+    fn run_math500_litex_all() {
+        run_with_large_stack(
+            "run_math500_litex_all_large_stack",
+            run_math500_litex_all_impl,
+        );
+    }
+
+    fn run_math500_litex_simple_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let completed_dir = manifest_dir
+            .join("MATH-500-litex")
+            .join("math-500")
+            .join("finished");
+        assert!(
+            completed_dir.is_dir(),
+            "MATH-500-litex/math-500/finished must exist at {:?}",
+            completed_dir
+        );
+        run_math500_litex_lit_dir(&completed_dir);
+    }
+
+    fn run_math500_litex_all_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let lit_dir = manifest_dir
+            .join("MATH-500-litex")
+            .join("math-500")
+            .join("unfinished");
+        assert!(
+            lit_dir.is_dir(),
+            "MATH-500-litex/math-500/unfinished must exist at {:?}",
+            lit_dir
+        );
+        run_math500_litex_lit_dir(&lit_dir);
+    }
+
+    fn run_math500_litex_lit_dir(base_dir: &Path) {
+        fn collect_lit_files(dir: &Path, out: &mut Vec<PathBuf>) {
+            let read_directory = fs::read_dir(dir)
+                .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", dir, read_error));
+            for directory_entry_result in read_directory {
+                let directory_entry = directory_entry_result.unwrap_or_else(|read_error| {
+                    panic!("failed to read directory entry: {}", read_error)
+                });
+                let path = directory_entry.path();
+                let file_type = directory_entry
+                    .file_type()
+                    .unwrap_or_else(|file_type_error| {
+                        panic!(
+                            "failed to read file type for {:?}: {}",
+                            path, file_type_error
+                        )
+                    });
+                if file_type.is_dir() {
+                    collect_lit_files(path.as_path(), out);
+                } else if path.extension().is_some_and(|ext| ext == "lit") {
+                    out.push(path);
+                }
+            }
+        }
+
+        let mut lit_paths: Vec<PathBuf> = Vec::new();
+        collect_lit_files(base_dir, &mut lit_paths);
+        lit_paths.sort();
+
+        assert!(
+            !lit_paths.is_empty(),
+            "{:?} must contain at least one .lit file",
+            base_dir
+        );
+
+        let base_dir_str = base_dir.to_string_lossy().to_string();
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        runtime.new_file_path_new_env_new_name_scope(base_dir_str.as_str());
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        for lit_path in lit_paths.iter() {
+            if total_count > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+            }
+
+            let lit_path_str = lit_path.to_string_lossy().to_string();
+            runtime.set_current_user_lit_file_path(lit_path_str.as_str());
+
+            let relative_label = match lit_path.strip_prefix(base_dir) {
+                Ok(relative_path) => relative_path.to_string_lossy().to_string(),
+                Err(_) => lit_path_str.clone(),
+            };
+
+            let litex_code = fs::read_to_string(lit_path).unwrap_or_else(|read_error| {
+                panic!("failed to read {:?}: {}", lit_path, read_error)
+            });
+            let litex_code = litex_code.trim();
+            if litex_code.is_empty() {
+                println!("--- [SKIP] empty .lit file: {} ---", relative_label);
+                continue;
+            }
+
+            let normalized_source = remove_windows_carriage_return(litex_code);
+
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            total_count += 1;
+            if !run_succeeded {
+                let label = relative_label.clone();
+                println!(
+                    "=== [FAILED] math500-litex simple at .lit file {} ({:.2} ms) ===\n{}\n",
+                    relative_label, duration_ms, run_output
+                );
+                failed_labels.push(label);
+            }
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- math500-litex simple timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- math500-litex simple: all snippets OK ---");
+            return;
+        }
+
+        println!("--- math500-litex simple failed unique_id ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "math500-litex simple failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
+        );
     }
 
     fn run_all_impl() {

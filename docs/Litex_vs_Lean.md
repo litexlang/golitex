@@ -35,6 +35,14 @@ This is a large reduction in friction for ordinary proofs. Even the largest libr
 
 This is why Litex can be described as **the language where mathematics verifies itself**.
 
+Litex also lets a development start from an abstract interface. A user can name
+domains, relations, and axioms first, then reason from that structure before
+choosing a concrete model. The current complete example is the
+[Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry)
+tutorial, where points, lines, planes, incidence, betweenness, and congruence
+are introduced as abstract mathematical data rather than reduced to coordinates
+at the start.
+
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions, and at present its ecosystem advantage is substantial. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
 This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
