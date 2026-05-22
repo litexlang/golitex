@@ -457,6 +457,15 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
+            Obj::InstantiatedTemplateObj(known) => match given_arg {
+                Obj::InstantiatedTemplateObj(given) => {
+                    if known.template_name != given.template_name {
+                        return Ok(None);
+                    }
+                    self.match_arg_vec_then_merge(&known.args, &given.args)
+                }
+                _ => Ok(None),
+            },
             Obj::Atom(AtomObj::Forall(ref p)) => {
                 self.match_arg_when_left_is_forall_param(p, given_arg)
             }

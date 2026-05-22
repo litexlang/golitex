@@ -39,6 +39,17 @@ impl Runtime {
         Ok(())
     }
 
+    pub fn store_def_template(
+        &mut self,
+        def_template_stmt: &DefTemplateStmt,
+    ) -> Result<(), RuntimeError> {
+        let name = def_template_stmt.template_name.clone();
+        self.top_level_env()
+            .defined_templates
+            .insert(name, def_template_stmt.clone());
+        Ok(())
+    }
+
     pub fn store_free_param_or_identifier_name(
         &mut self,
         name: &str,

@@ -112,6 +112,13 @@ impl Runtime {
                 )
                 .into())
             }
+            Obj::InstantiatedTemplateObj(template_obj) => {
+                let mut args = Vec::with_capacity(template_obj.args.len());
+                for arg in template_obj.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
+                }
+                Ok(InstantiatedTemplateObj::new(template_obj.template_name.clone(), args).into())
+            }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
@@ -255,6 +262,7 @@ impl Runtime {
                 )));
             }
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
+            Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];

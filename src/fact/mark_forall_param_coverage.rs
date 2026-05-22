@@ -66,6 +66,12 @@ fn mark_forall_param_coverage_in_fn_obj_head(
                 coverage_by_forall_param,
             );
         }
+        FnObjHead::InstantiatedTemplateObj(t) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::InstantiatedTemplateObj(t.clone()),
+                coverage_by_forall_param,
+            );
+        }
     }
 }
 
@@ -316,6 +322,11 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
             mark_forall_param_coverage_in_obj(field_access.obj.as_ref(), coverage_by_forall_param);
+        }
+        Obj::InstantiatedTemplateObj(template_obj) => {
+            for o in template_obj.args.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
+            }
         }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);

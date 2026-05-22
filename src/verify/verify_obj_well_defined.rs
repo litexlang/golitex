@@ -105,6 +105,9 @@ impl Runtime {
                     field_access,
                     verify_state,
                 ),
+            Obj::InstantiatedTemplateObj(template_obj) => {
+                self.verify_instantiated_template_obj_well_defined(template_obj, verify_state)
+            }
             Obj::Atom(AtomObj::Forall(_)) => Ok(()),
             Obj::Atom(AtomObj::Def(_)) => Ok(()),
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
@@ -210,6 +213,22 @@ impl Runtime {
                     )));
                 }
                 return Ok(());
+            }
+            FnObjHead::InstantiatedTemplateObj(template_obj) => {
+                let function_name_obj: Obj = template_obj.clone().into();
+                self.verify_obj_well_defined_and_store_cache(&function_name_obj, verify_state)?;
+                let body = self
+                    .get_object_in_fn_set_or_restrict(&function_name_obj)
+                    .ok_or_else(|| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
+                                "`{}` is not a defined function",
+                                fn_obj.head.to_string()
+                            ))),
+                        ))
+                    })?
+                    .clone();
+                FnSetSpace::Set(FnSet::from_body(body)?)
             }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
@@ -2526,6 +2545,14 @@ impl Runtime {
             Ok::<(), RuntimeError>(())
         })?;
         Ok(())
+    }
+
+    fn verify_instantiated_template_obj_well_defined(
+        &mut self,
+        template_obj: &InstantiatedTemplateObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.materialize_instantiated_template_obj(template_obj, verify_state)
     }
 
     fn verify_obj_as_struct_instance_with_field_access_well_defined(

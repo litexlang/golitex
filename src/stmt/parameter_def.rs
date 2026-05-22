@@ -974,6 +974,16 @@ fn collect_cited_param_indices_from_obj(
                 out,
             );
         }
+        Obj::InstantiatedTemplateObj(x) => {
+            for arg in x.args.iter() {
+                collect_cited_param_indices_from_obj(
+                    arg,
+                    previous_param_indices,
+                    shadowed_names,
+                    out,
+                );
+            }
+        }
     }
 }
 
@@ -1073,6 +1083,16 @@ fn collect_cited_param_indices_from_fn_head(
         }
         FnObjHead::DefAlgo(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
+        FnObjHead::InstantiatedTemplateObj(x) => {
+            for arg in x.args.iter() {
+                collect_cited_param_indices_from_obj(
+                    arg,
+                    previous_param_indices,
+                    shadowed_names,
+                    out,
+                );
+            }
         }
     }
 }

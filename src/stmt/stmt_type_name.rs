@@ -36,6 +36,12 @@ impl DefAlgoStmt {
     }
 }
 
+impl DefTemplateStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefTemplateStmt".to_string()
+    }
+}
+
 impl RunFileStmt {
     pub fn stmt_type_name(&self) -> String {
         "RunFileStmt".to_string()

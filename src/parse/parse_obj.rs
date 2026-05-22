@@ -625,6 +625,9 @@ impl Runtime {
                 vec![],
             ),
             Obj::FiniteSeqListObj(list) => (FnObjHead::FiniteSeqListObj(list.clone()), vec![]),
+            Obj::InstantiatedTemplateObj(t) => {
+                (FnObjHead::InstantiatedTemplateObj(t.clone()), vec![])
+            }
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -644,6 +647,9 @@ impl Runtime {
 
         if tok == STRUCT_VIEW_PREFIX {
             return self.parse_struct_view_obj(tb);
+        }
+        if tok == TEMPLATE_INSTANCE_PREFIX {
+            return self.parse_instantiated_template_obj(tb);
         }
         if tok == ABS {
             tb.skip()?;
@@ -1424,6 +1430,30 @@ impl Runtime {
         } else {
             self.parse_list_set_obj_with_leftmost_obj(tb, left)
         }
+    }
+
+    fn parse_instantiated_template_obj(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        tb.skip_token(TEMPLATE_INSTANCE_PREFIX)?;
+        let template_name = tb.advance()?;
+        is_valid_litex_name(&template_name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+        tb.skip_token(LEFT_CURLY_BRACE)?;
+        let mut args = Vec::new();
+        if !tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
+            args.push(self.parse_obj(tb)?);
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                args.push(self.parse_obj(tb)?);
+            }
+        }
+        tb.skip_token(RIGHT_CURLY_BRACE)?;
+        Ok(InstantiatedTemplateObj::new(template_name, args).into())
     }
 
     /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.

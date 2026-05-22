@@ -775,6 +775,7 @@ impl FnObj {
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
+            FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
         };
         let mut s = head;
         for group in self.body.iter() {
@@ -1995,6 +1996,7 @@ impl Obj {
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => latex_texttt_escape(&x.to_string()),
+            Obj::InstantiatedTemplateObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
@@ -2056,6 +2058,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefTemplateStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }
 }
