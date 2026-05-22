@@ -41,8 +41,10 @@ impl Runtime {
                 if let Some((body, _)) = info.fn_set.as_ref() {
                     return Some(body);
                 }
-                if let Some((rb, _)) = info.restrict_to.as_ref() {
-                    return Some(rb);
+                if let Some(restricts) = info.restrict_to.as_ref() {
+                    if let Some((rb, _)) = restricts.last() {
+                        return Some(rb);
+                    }
                 }
             }
         }
@@ -66,6 +68,24 @@ impl Runtime {
 
     pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
         self.get_object_in_fn_set_or_restrict(obj).cloned()
+    }
+
+    pub fn get_cloned_object_in_fn_set_or_restrict_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
+        let key = obj.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some((body, _)) = info.fn_set.clone() {
+                    return vec![body];
+                }
+                if let Some(restricts) = info.restrict_to.clone() {
+                    return restricts
+                        .into_iter()
+                        .map(|(body, _)| body)
+                        .collect::<Vec<FnSetBody>>();
+                }
+            }
+        }
+        Vec::new()
     }
 
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
