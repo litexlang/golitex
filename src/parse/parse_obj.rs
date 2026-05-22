@@ -321,14 +321,23 @@ impl Runtime {
                 }
 
                 tb.skip_token(RIGHT_BRACE)?;
-                let ret_set_parsed = this.parse_obj(tb)?;
-                tb.skip_token(LEFT_CURLY_BRACE)?;
-                let equal_to = this.parse_obj(tb)?;
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-                let built =
-                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
+                // Return sets are non-dependent; parse them outside the function-parameter scope.
                 this.parsing_free_param_collection
                     .end_scope(ParamObjType::FnSet, &all_fn_names);
+                let ret_set_parsed = this.parse_obj(tb)?;
+                let equal_to = this.parse_in_local_free_param_scope(
+                    ParamObjType::FnSet,
+                    &all_fn_names,
+                    tb.line_file.clone(),
+                    |inner| {
+                        tb.skip_token(LEFT_CURLY_BRACE)?;
+                        let equal_to = inner.parse_obj(tb)?;
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(equal_to)
+                    },
+                )?;
+                let built =
+                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
                 Ok(built)
             })?;
             Ok(built.into())
@@ -415,10 +424,11 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            let ret_set_parsed = this.parse_obj(tb)?;
-            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
+            // Return sets are non-dependent; parse them outside the function-parameter scope.
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
+            let ret_set_parsed = this.parse_obj(tb)?;
+            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
@@ -489,10 +499,11 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            let ret_set_parsed = this.parse_obj(tb)?;
-            let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed);
+            // Return sets are non-dependent; parse them outside the function-parameter scope.
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
+            let ret_set_parsed = this.parse_obj(tb)?;
+            let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {

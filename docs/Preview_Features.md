@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Dependent function parameter domains (2026-05)
+
+Later function parameter domains may now cite earlier parameters, such as `fn(n N_pos, x closed_range(1, n)) R`. Function return sets remain non-dependent and cannot cite the function parameters. See **Manual — Function types and anonymous functions**.
+
 ### Tuple equality from projections (2026-05)
 
 Litex can now prove `t = (a, b, ...)` from tuple shape information and component equalities such as `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`. This also closes goals like `forall t cart(N, N): t = (t[1], t[2])`.

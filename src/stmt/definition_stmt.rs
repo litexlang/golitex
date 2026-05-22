@@ -54,7 +54,8 @@ pub struct DefFamilyStmt {
     pub line_file: LineFile,
 }
 
-/// `have fn` `{ … }` piece: parameter names match binders in dom/ret; build stored `Obj::FnSet` with [`Runtime::fn_set_from_fn_set_clause`].
+/// `have fn` `{ ... }` piece. Parameter sets may depend on earlier parameters; `ret_set` must not
+/// cite these parameters.
 #[derive(Clone)]
 pub struct FnSetClause {
     pub params_def_with_set: ParamDefWithSet,
@@ -67,12 +68,14 @@ impl FnSetClause {
         params_def_with_set: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
-    ) -> Self {
-        FnSetClause {
-            params_def_with_set: params_def_with_set.into(),
+    ) -> Result<Self, RuntimeError> {
+        let params_def_with_set = params_def_with_set.into();
+        params_def_with_set.validate_obj_does_not_cite_params(&ret_set, "function return set")?;
+        Ok(FnSetClause {
+            params_def_with_set,
             dom_facts,
             ret_set,
-        }
+        })
     }
 
     /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
@@ -311,7 +314,8 @@ impl fmt::Display for HaveFnEqualStmt {
             self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
-        );
+        )
+        .expect("anonymous function signature was already validated");
         write!(
             f,
             "{} {} {}{} {} {}",

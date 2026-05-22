@@ -15,6 +15,7 @@ pub enum ParamType {
 #[derive(Clone)]
 pub struct ParamDefWithType {
     pub groups: Vec<ParamGroupWithParamType>,
+    /// For each parameter group, the flat indices of earlier parameters cited by that group's type.
     pub param_type_cited_param_indices: Vec<Vec<usize>>,
 }
 
@@ -155,6 +156,18 @@ impl From<Vec<ParamGroupWithParamType>> for ParamDefWithType {
     }
 }
 
+/// Full function parameter list with set-valued parameter domains.
+#[derive(Clone)]
+pub struct ParamDefWithSet {
+    pub groups: Vec<ParamGroupWithSet>,
+    /// For each parameter group, the flat indices of earlier parameters cited by that group's set.
+    ///
+    /// Later parameter sets may depend on earlier arguments, e.g.
+    /// `fn(n N_pos, x closed_range(1, n)) R`; function return sets are intentionally outside this
+    /// dependent parameter list and must not cite these parameters.
+    pub param_set_cited_param_indices: Vec<Vec<usize>>,
+}
+
 impl ParamDefWithSet {
     pub fn new(groups: Vec<ParamGroupWithSet>) -> Self {
         let param_set_cited_param_indices = cited_param_indices_for_param_set_groups(&groups);
@@ -222,6 +235,30 @@ impl ParamDefWithSet {
             .iter()
             .any(|indices| !indices.is_empty())
     }
+
+    pub fn validate_obj_does_not_cite_params(
+        &self,
+        obj: &Obj,
+        context: &str,
+    ) -> Result<(), RuntimeError> {
+        let cited_indices = self.cited_param_indices_in_obj_from_params(obj);
+        if cited_indices.is_empty() {
+            return Ok(());
+        }
+
+        let names = self.collect_param_names();
+        let cited_names: Vec<String> = cited_indices
+            .iter()
+            .filter_map(|index| names.get(*index).cloned())
+            .collect();
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "{} cannot depend on function parameters [{}]",
+                context,
+                cited_names.join(", ")
+            )),
+        )))
+    }
 }
 
 impl Deref for ParamDefWithSet {
@@ -260,12 +297,6 @@ impl From<Vec<ParamGroupWithSet>> for ParamDefWithSet {
 pub struct ParamGroupWithSet {
     pub params: Vec<String>,
     pub param_type: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct ParamDefWithSet {
-    pub groups: Vec<ParamGroupWithSet>,
-    pub param_set_cited_param_indices: Vec<Vec<usize>>,
 }
 
 #[derive(Clone)]
