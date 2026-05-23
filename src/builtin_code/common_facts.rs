@@ -232,5 +232,8 @@ know:
 
 let pi R:
     pi > 0
+
+let euler_e R:
+    euler_e > 0
         
 "#;
