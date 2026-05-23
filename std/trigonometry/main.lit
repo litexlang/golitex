@@ -29,15 +29,24 @@ know:
     sin(2 * pi) = 0
     cos(2 * pi) = 1
 
+    sin(1 / 2 * pi) = 1
+    cos(1 / 2 * pi) = 0
+    sin(1 * pi) = 0
+    cos(1 * pi) = -1
+
     forall k Z:
         cos(pi / 2 + k * pi) = 0
+        cos((2 * k + 1) / 2 * pi) = 0
         sin(k * pi) = 0
 
         sin(pi / 2 + 2 * k * pi) = 1
-        sin(-pi/2 + 2 * k * pi) = -1
+        sin((4 * k + 1) / 2 * pi) = 1
+        sin(-pi / 2 + 2 * k * pi) = -1
+        sin((4 * k - 1) / 2 * pi) = -1
 
         cos(2 * k * pi) = 1
         cos(pi + 2 * k * pi) = -1
+        cos((2 * k + 1) * pi) = -1
     
 
     forall x R:
@@ -76,8 +85,10 @@ know:
     forall x R:
         cos(x) != 0
         cos(x + pi) != 0
+        cos(x + 1 * pi) != 0
         =>:
             tan(x + pi) = tan(x)
+            tan(x + 1 * pi) = tan(x)
 
     forall x R, k Z:
         sin(x + 2 * pi * k) = sin(x)
@@ -121,8 +132,14 @@ know:
         cos(x) = 0
         =>:
             exist k Z st {x = pi / 2 + k * pi}
+            exist k Z st {x = (2 * k + 1) / 2 * pi}
 
     forall x R, k Z:
         x = pi / 2 + k * pi
+        =>:
+            cos(x) = 0
+
+    forall x R, k Z:
+        x = (2 * k + 1) / 2 * pi
         =>:
             cos(x) = 0
