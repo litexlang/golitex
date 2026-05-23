@@ -1,20 +1,14 @@
-floor(3 / 2) $in Z
-ceil(3 / 2) $in Z
+# Trigonometry pi-angle smoke test (see std/trigonometry/main.lit)
 
-forall x R:
-    floor(x) <= x
-    x < floor(x) + 1
-    ceil(x) - 1 < x
-    x <= ceil(x)
+let sin set
+let cos set
+let pi R
 
-forall x R, y Z:
-    0 <= x - y
-    x - y < 1
-    =>:
-        y = floor(x)
+know:
+    sin $in fn(x R) R
+    cos $in fn(x R) R
+    cos(1 / 2 * pi) = 0
+    forall k Z:
+        cos((2 * k + 1) / 2 * pi) = 0
 
-forall x R, y Z:
-    0 <= y - x
-    y - x < 1
-    =>:
-        y = ceil(x)
+cos(3 / 2 * pi) = 0

@@ -1,0 +1,174 @@
+# Elementary number-theory background for problem formalization.
+# The definitions are intentionally small; longer proofs can import this file
+# and then prove problem-specific facts in the local context.
+
+prop even(a Z):
+    exist k Z st {a = 2 * k}
+
+prop odd(a Z):
+    exist k Z st {a = 2 * k + 1}
+
+prop divides(d Z, n Z):
+    exist k Z st {n = d * k}
+
+prop dividesN(d N, n N):
+    exist k N st {n = d * k}
+
+prop mod_eq(a Z, b Z, n Z):
+    exist k Z st {a - b = n * k}
+
+prop prime(p N_pos):
+    2 <= p
+    forall d Z:
+        1 <= d
+        $divides(d, p)
+        =>:
+            d = 1 or d = p
+
+abstract_prop gcd_value(a, b, g)
+abstract_prop egcd_l_value(a, b, l)
+abstract_prop egcd_r_value(a, b, r)
+
+know:
+    forall a Z:
+        $even(a)
+        =>:
+            a % 2 = 0
+
+    forall a Z:
+        a % 2 = 0
+        =>:
+            $even(a)
+
+    forall a Z:
+        $odd(a)
+        =>:
+            a % 2 = 1
+
+    forall a Z:
+        a % 2 = 1
+        =>:
+            $odd(a)
+
+    forall a Z:
+        $even(a) or $odd(a)
+
+    forall d, n Z:
+        d != 0
+        $divides(d, n)
+        =>:
+            n % d = 0
+
+    forall d, n Z:
+        d != 0
+        n % d = 0
+        =>:
+            $divides(d, n)
+
+    forall a, b, n Z:
+        $mod_eq(a, b, n)
+        n != 0
+        =>:
+            (a - b) % n = 0
+
+    forall a, b, n Z:
+        n != 0
+        (a - b) % n = 0
+        =>:
+            $mod_eq(a, b, n)
+
+    forall a, b, n Z:
+        $mod_eq(a, b, n)
+        n != 0
+        =>:
+            a % n = b % n
+
+    forall a, b, c, d, n Z:
+        $mod_eq(a, b, n)
+        $mod_eq(c, d, n)
+        =>:
+            $mod_eq(a + c, b + d, n)
+            $mod_eq(a - c, b - d, n)
+            $mod_eq(a * c, b * d, n)
+
+    forall a, n Z:
+        $mod_eq(a, a, n)
+
+    forall a, b Z:
+        $mod_eq(a, b, 2)
+        $even(a)
+        =>:
+            $even(b)
+
+    forall a, b Z:
+        $mod_eq(a, b, 2)
+        $even(b)
+        =>:
+            $even(a)
+
+    forall a, b Z:
+        $mod_eq(a, b, 2)
+        $odd(a)
+        =>:
+            $odd(b)
+
+    forall a, b Z:
+        $mod_eq(a, b, 2)
+        $odd(b)
+        =>:
+            $odd(a)
+
+    forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+    forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+    forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+have fn gcd as set:
+    forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+have fn egcd_l as set:
+    forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+have fn egcd_r as set:
+    forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+know:
+    forall a, b Z:
+        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+    forall a, b Z:
+        $divides(gcd(a, b), a)
+        $divides(gcd(a, b), b)
+
+    forall a, b Z:
+        gcd(a, b) = gcd(b, a)
+
+    forall a, b Z:
+        gcd(a, b) = 1
+        =>:
+            exist x Z, y Z st {x * a + y * b = 1}
+
+    forall a, b, d Z:
+        $divides(d, a)
+        $divides(d, b)
+        =>:
+            $divides(d, a + b)
+            $divides(d, a - b)
+
+    forall a, b, d Z:
+        $divides(d, a)
+        =>:
+            $divides(d, a * b)
+
+    forall p N_pos, a, b Z:
+        $prime(p)
+        $divides(p, a * b)
+        =>:
+            $divides(p, a) or $divides(p, b)
