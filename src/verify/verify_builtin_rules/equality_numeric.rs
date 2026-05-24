@@ -301,6 +301,42 @@ impl Runtime {
 
     // Zero-product cancellation: from `a * b = 0` and `a != 0`, infer `b = 0` (and symmetrically).
     // Example: from `(x - 1) * y = 0` and `x - 1 != 0`, prove `y = 0`.
+    fn verify_zero_product_factor_matches_target(
+        &mut self,
+        target: &Obj,
+        factor: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        // Do not call the full equality builtin here; that would re-enter zero-product
+        // cancellation while this rule is already trying to match a factor.
+        let known_result = self.verify_objs_are_equal_known_only(target, factor, line_file.clone());
+        if known_result.is_true() {
+            return Ok(known_result);
+        }
+
+        let (calculation_result, _, _) = self
+            .verify_equality_by_they_are_the_same_and_calculation(
+                target,
+                factor,
+                line_file.clone(),
+                verify_state,
+            )?;
+        if calculation_result.is_true() {
+            return Ok(calculation_result);
+        }
+
+        if let Some(shape_result) =
+            self.try_verify_equal_by_same_shape_and_known_equality_args(target, factor, line_file)
+        {
+            if shape_result.is_true() {
+                return Ok(shape_result);
+            }
+        }
+
+        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
         &mut self,
         left: &Obj,
@@ -333,7 +369,7 @@ impl Runtime {
                     continue;
                 };
 
-                let left_target_result = self.verify_objs_are_equal_in_equality_builtin(
+                let left_target_result = self.verify_zero_product_factor_matches_target(
                     target,
                     mul.left.as_ref(),
                     line_file.clone(),
@@ -363,7 +399,7 @@ impl Runtime {
                     }
                 }
 
-                let right_target_result = self.verify_objs_are_equal_in_equality_builtin(
+                let right_target_result = self.verify_zero_product_factor_matches_target(
                     target,
                     mul.right.as_ref(),
                     line_file.clone(),

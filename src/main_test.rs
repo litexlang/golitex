@@ -393,6 +393,8 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
         let source_code = r#"
 sqrt(0) = 0
 sqrt(1) = 1
+sqrt(2) $in R
+sqrt(3) / 2 $in R
 
 forall x R:
     x >= 0
@@ -580,6 +582,30 @@ right $in info(a)
     }
 
     #[test]
+    fn typed_function_applications_return_real() {
+        let source_code = r#"
+run_file trigonometry
+
+sin(0) $in R
+cos(pi / 3) $in R
+arcsin(1 / 2) $in R
+arctan(sqrt(3)) $in R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("typed_function_applications_return_real");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "typed_function_applications_return_real failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn weak_order_does_not_recursively_prove_equality() {
         let source_code = r#"
 have a, b R
@@ -597,6 +623,32 @@ a = b
         assert!(
             !run_succeeded,
             "recursive equality/order proof should fail, but succeeded:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn zero_product_cancellation_does_not_recursively_reenter_equality() {
+        let source_code = r#"
+have a, b, k1, k2 N
+know:
+    k1 = 0
+    b = a * k1
+b = a * k1 = a * 0 = 0
+0 * k2 = 0
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "zero_product_cancellation_does_not_recursively_reenter_equality",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "zero-product cancellation recursion regression failed:\n{}",
             run_output
         );
     }
