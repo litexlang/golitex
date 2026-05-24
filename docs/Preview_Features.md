@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Function application return membership (2026-05)
+
+If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after importing trigonometry.
+
 ### Real interval objects (2026-05)
 
 Real intervals are available as `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)` for open/open, open/closed, closed/open, and closed/closed endpoints. Half-infinite real intervals use one finite endpoint: `info(a)` for `(-infinity, a)`, `infc(a)` for `(-infinity, a]`, `oinf(a)` for `(a, +infinity)`, and `cinf(a)` for `[a, +infinity)`.

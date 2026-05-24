@@ -3048,6 +3048,13 @@ prove:
     sum(1, 3, '(x Z) Z {x}) $in R
 ```
 
+If a function application is well-defined and its known return set is `R`, the application can be verified as real.
+
+```litex
+prove:
+    sqrt(2) $in R
+```
+
 ---
 
 ### Set Inclusion Rules
