@@ -1,4 +1,5 @@
 pub use crate::builtin_code::builtin_code;
+pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
     OrFactKey, PropName, StructName, TemplateName,
@@ -70,6 +71,9 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
+pub use crate::harness::{
+    resolve_litex_file_path, run_harness_for_code, run_harness_for_file, run_harness_for_repo,
+};
 pub use crate::infer::InferResult;
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;

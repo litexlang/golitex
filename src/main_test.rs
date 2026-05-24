@@ -476,6 +476,37 @@ a = b
     }
 
     #[test]
+    fn harness_success_has_done_action() {
+        let (ok, output) = run_harness_for_code("1 + 1 = 2", "-harness-test", true);
+
+        assert!(ok, "harness success run failed:\n{}", output);
+        assert!(output.contains("\"harness\": \"litex-agent-harness\""));
+        assert!(output.contains("\"result\": \"success\""));
+        assert!(output.contains("\"proof_debt_know_statements\": 0"));
+        assert!(output.contains("\"next_action\": \"done\""));
+    }
+
+    #[test]
+    fn harness_unknown_failure_suggests_intermediate_fact() {
+        let (ok, output) = run_harness_for_code("1 = 0", "-harness-test", true);
+
+        assert!(!ok, "harness unknown run should fail:\n{}", output);
+        assert!(output.contains("\"result\": \"error\""));
+        assert!(output.contains("\"error_type\": \"VerifyError\""));
+        assert!(output.contains("\"error_type\": \"UnknownError\""));
+        assert!(output.contains("\"next_action\": \"add_intermediate_fact\""));
+    }
+
+    #[test]
+    fn harness_counts_know_as_proof_debt() {
+        let (ok, output) = run_harness_for_code("know 1 = 0", "-harness-test", true);
+
+        assert!(!ok, "harness proof debt run should fail:\n{}", output);
+        assert!(output.contains("\"proof_debt_know_statements\": 1"));
+        assert!(output.contains("\"next_action\": \"reduce_proof_debt\""));
+    }
+
+    #[test]
     fn hidden_file_path_run_file_output_omits_run_file_path() {
         let run_file_path = std::env::temp_dir().join("litex-hidden-run-file-test.lit");
         fs::write(&run_file_path, "1 = 1\n").unwrap();

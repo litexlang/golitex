@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Agent harness CLI (2026-05)
+
+`litex -harness -e <code>`, `litex -harness -f <file>`, and `litex -harness -r <repo>` return one wrapper JSON object with run status, summary counts, `know` proof-debt count, failure root cause, suggested next action, and the ordinary Litex JSON trace. The harness exits nonzero on verifier failure or remaining `know` proof debt. See **Setup — Agent harness output**.
+
 ### Dependent function parameter domains (2026-05)
 
 Later function parameter domains may now cite earlier parameters, such as `fn(n N_pos, x closed_range(1, n)) R`. Function return sets remain non-dependent and cannot cite the function parameters. See **Manual — Function types and anonymous functions**.

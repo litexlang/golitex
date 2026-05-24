@@ -34,3 +34,5 @@ litex-minif2f/
 test-litex/
 
 litex_agent/
+
+tmp/
