@@ -174,6 +174,9 @@ impl Runtime {
             (_, Obj::Range(range)) => {
                 self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
             }
+            (_, Obj::IntervalObj(interval)) => {
+                self.verify_in_fact_interval_by_real_order_bounds(in_fact, interval, verify_state)
+            }
             (
                 Obj::Add(_)
                 | Obj::Sub(_)
@@ -1423,6 +1426,57 @@ impl Runtime {
             in_fact,
             "in range: a <= i and i < b",
         ))
+    }
+
+    fn verify_in_fact_interval_by_real_order_bounds(
+        &mut self,
+        in_fact: &InFact,
+        interval: &IntervalObj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let mut step_results = Vec::new();
+
+        // Real interval membership requires a real element and the endpoint inequalities.
+        // Example: `x $in oc(a,b)` follows from `x $in R`, `a < x`, and `x <= b`.
+        let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
+        let in_r_result = self.verify_non_equational_atomic_fact(&in_r, verify_state, true)?;
+        if !in_r_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(in_r_result);
+
+        let lower: AtomicFact = if interval.left_closed() {
+            LessEqualFact::new(interval.start().clone(), elem.clone(), lf.clone()).into()
+        } else {
+            LessFact::new(interval.start().clone(), elem.clone(), lf.clone()).into()
+        };
+        let lower_result = self.verify_non_equational_atomic_fact(&lower, verify_state, true)?;
+        if !lower_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(lower_result);
+
+        let upper: AtomicFact = if interval.right_closed() {
+            LessEqualFact::new(elem.clone(), interval.end().clone(), lf.clone()).into()
+        } else {
+            LessFact::new(elem.clone(), interval.end().clone(), lf.clone()).into()
+        };
+        let upper_result = self.verify_non_equational_atomic_fact(&upper, verify_state, true)?;
+        if !upper_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(upper_result);
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "in real interval: x in R and endpoint bounds".to_string(),
+                step_results,
+            )
+            .into(),
+        )
     }
 
     // When `x $in Z` and endpoints are integer literals: `lo <= x` iff `lo - 1 < x` (discrete lower).
