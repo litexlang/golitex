@@ -70,6 +70,13 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
+The `.deb` package installs the standard library at `/usr/share/litex/std`.
+To verify that `run_file` can find it, run:
+
+```bash
+litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
+```
+
 ### Upgrade Litex on Linux
 
 If you installed from the `.deb` in Releases, upgrade by downloading the latest tag and installing
@@ -85,6 +92,7 @@ Then verify:
 
 ```bash
 litex -version
+litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
 ```
 
 ---
@@ -99,13 +107,20 @@ Run this command in **PowerShell**:
 $ErrorActionPreference = 'Stop'
 $repo = 'litexlang/golitex'
 $tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
-$name = "litex_${tag}_windows_amd64.exe"
+$name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
+$zip = Join-Path $env:TEMP $name
 $exe = Join-Path $dir 'litex.exe'
+$std = Join-Path $dir 'std'
 
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $exe
+Invoke-WebRequest -Uri $url -OutFile $zip
+if (Test-Path $std) {
+    Remove-Item -Recurse -Force $std
+}
+Expand-Archive -Path $zip -DestinationPath $dir -Force
+Remove-Item -Force $zip
 
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if (-not $userPath) { $userPath = '' }
@@ -116,15 +131,17 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 Write-Host "Installed: $exe"
+Write-Host "Installed std: $std"
 Write-Host "Open a new terminal and run: litex -version"
 ```
 
 What this command changes on the user machine:
 
-1. Downloads `litex_<tag>_windows_amd64.exe` from GitHub Releases.
-2. Writes one file to `%LOCALAPPDATA%\litex\litex.exe`.
-3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
-4. Updates `Path` in the current PowerShell session.
+1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
+2. Writes `litex.exe` to `%LOCALAPPDATA%\litex\litex.exe`.
+3. Writes the standard library to `%LOCALAPPDATA%\litex\std`.
+4. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
+5. Updates `Path` in the current PowerShell session.
 
 It does **not** install services or edit firewall settings.
 
@@ -135,23 +152,31 @@ After running the command:
 
 ```powershell
 litex -version
+litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
 ```
 
 Now users can run `litex` directly in terminal.
 
-If you want a fixed tag (for example a beta tag), use:
+If you want a fixed tag, replace `<tag>` manually:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$tag = '0.9.73-beta'
+$tag = '<tag>'
 $repo = 'litexlang/golitex'
-$name = "litex_${tag}_windows_amd64.exe"
+$name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
+$zip = Join-Path $env:TEMP $name
 $exe = Join-Path $dir 'litex.exe'
+$std = Join-Path $dir 'std'
 
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $exe
+Invoke-WebRequest -Uri $url -OutFile $zip
+if (Test-Path $std) {
+    Remove-Item -Recurse -Force $std
+}
+Expand-Archive -Path $zip -DestinationPath $dir -Force
+Remove-Item -Force $zip
 
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if (-not $userPath) { $userPath = '' }
@@ -162,24 +187,32 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
+litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
 ```
 
 ### Upgrade Litex on Windows
 
 If you installed by **Option A** (PowerShell one-command install), run the same command again.
-It downloads the newer `litex.exe`, overwrites `%LOCALAPPDATA%\litex\litex.exe`, and keeps your
-existing user `Path` entry:
+It downloads the newer zip, overwrites `%LOCALAPPDATA%\litex\litex.exe`, refreshes
+`%LOCALAPPDATA%\litex\std`, and keeps your existing user `Path` entry:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
 $repo = 'litexlang/golitex'
 $tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
-$name = "litex_${tag}_windows_amd64.exe"
+$name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
+$zip = Join-Path $env:TEMP $name
 $exe = Join-Path $dir 'litex.exe'
+$std = Join-Path $dir 'std'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $exe
+Invoke-WebRequest -Uri $url -OutFile $zip
+if (Test-Path $std) {
+    Remove-Item -Recurse -Force $std
+}
+Expand-Archive -Path $zip -DestinationPath $dir -Force
+Remove-Item -Force $zip
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if (-not $userPath) { $userPath = '' }
 if ($userPath -notlike "*$dir*") {
@@ -188,6 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
+litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
 ```
 
 ---
