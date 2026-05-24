@@ -1,0 +1,29 @@
+prove:
+    have s set = oc(2, 12)
+    have t set = oc(12, 102)
+    have u set = union(oc(2, 12), oc(12, 102))
+
+prove:
+    have x R
+    know:
+        2 < x
+        x < 12
+    x $in oc(2, 12)
+    x $in union(oc(2, 12), oc(12, 102))
+
+prove:
+    have y R
+    know:
+        y < 3
+    y $in info(3)
+
+prove:
+    have z R
+    know:
+        z > 3
+    z $in oinf(3)
+
+prove:
+    oc(2, 12) = oc(2, 12)
+    info(3) = info(3)
+    union(oc(2, 12), oc(12, 102)) = union(oc(2, 12), oc(12, 102))
