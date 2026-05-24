@@ -219,6 +219,7 @@ know:
     forall x R:
         -1 < x < 1
         =>:
+            0 <= 1 - x^2
             cos(arcsin(x)) = sqrt(1 - x^2)
             cos(arcsin(x)) > 0
             sin(arccos(x)) = sqrt(1 - x^2)
@@ -235,11 +236,13 @@ know:
             arccos(cos(x)) = x
 
     forall x R:
-        -pi / 2 < arctan(x) < pi / 2
-        cos(arctan(x)) > 0
-        sin(arctan(x)) = x / sqrt(1 + x^2)
-        cos(arctan(x)) = 1 / sqrt(1 + x^2)
-        tan(arctan(x)) = x
+        0 < 1 + x^2
+        =>:
+            -pi / 2 < arctan(x) < pi / 2
+            cos(arctan(x)) > 0
+            sin(arctan(x)) = x / sqrt(1 + x^2)
+            cos(arctan(x)) = 1 / sqrt(1 + x^2)
+            tan(arctan(x)) = x
 
     forall x R:
         -pi / 2 < x < pi / 2
@@ -250,11 +253,23 @@ know:
     forall x R:
         -1 <= x <= 1
         =>:
+            -1 <= -1 * x <= 1
             arcsin(-1 * x) = -1 * arcsin(x)
             arccos(-1 * x) = pi - arccos(x)
 
     forall x R:
         arctan(-1 * x) = -1 * arctan(x)
+
+    -1 <= -sqrt(3) / 2 <= 1
+    -1 <= -sqrt(2) / 2 <= 1
+    -1 <= (-1 * sqrt(3)) / 2 <= 1
+    -1 <= (-1 * sqrt(2)) / 2 <= 1
+    -1 <= -1 / 2 <= 1
+    -1 <= 0 <= 1
+    -1 <= 1 / 2 <= 1
+    -1 <= sqrt(2) / 2 <= 1
+    -1 <= sqrt(3) / 2 <= 1
+    -1 <= 1 <= 1
 
     arcsin(-1) = -pi / 2
     arcsin(-1 / 2) = -pi / 6

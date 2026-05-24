@@ -97,7 +97,11 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 4. Run `cargo test run_all` when a change can affect examples and Mechanics snippets together.
 
-5. If a verifier failure occurs, report the exact file, snippet label, or line shown by the test output before changing code.
+5. After changing Litex kernel behavior, including parser, runtime, verifier, builtin rules, infer rules, well-definedness, or output explanation logic, make sure `cargo test run_all` passes before treating the change as complete.
+
+6. If a verifier failure occurs, report the exact file, snippet label, or line shown by the test output before changing code.
+
+7. If any verifier or CLI output looks strange, misleading, too indirect, or hard to understand, report it to the user explicitly. This applies both to error output and to successful `verified_by` / explanation output.
 
 ## Documentation Rules
 
