@@ -1,6 +1,6 @@
 [package]
 name = "litex-lang"
-version = "0.9.88-beta"
+version = "0.9.89-beta"
 edition = "2021"
 description = "The Formal Way to Write Math as It Looks"
 license = "Apache-2.0"
