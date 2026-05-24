@@ -90,6 +90,83 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
+            // Real interval nonempty rules depend on the endpoint openness.
+            // Closed/closed is nonempty from `a <= b`; the other three require `a < b`.
+            // Example: `$is_nonempty_set(cc(a, b))` from `a <= b`.
+            // Example: `$is_nonempty_set(oo(a, b))` from `a < b`.
+            Obj::IntervalObj(interval) => {
+                let order_fact: AtomicFact = if interval.left_closed() && interval.right_closed() {
+                    LessEqualFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into()
+                } else {
+                    LessFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into()
+                };
+                let order_ok = self.verify_non_equational_known_then_builtin_rules_only(
+                    &order_fact,
+                    _verify_state,
+                )?;
+                if order_ok.is_true() {
+                    let rule = match interval {
+                        IntervalObj::LeftOpenRightOpen(_) => {
+                            "oo_interval_nonempty_when_start_lt_end"
+                        }
+                        IntervalObj::LeftOpenRightClosed(_) => {
+                            "oc_interval_nonempty_when_start_lt_end"
+                        }
+                        IntervalObj::LeftClosedRightOpen(_) => {
+                            "co_interval_nonempty_when_start_lt_end"
+                        }
+                        IntervalObj::LeftClosedRightClosed(_) => {
+                            "cc_interval_nonempty_when_start_le_end"
+                        }
+                    };
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            rule.to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
+            // Half-infinite real intervals are nonempty whenever their finite endpoint is well-defined.
+            // Example: `$is_nonempty_set(cinf(a))` after `a $in R`.
+            Obj::OneSideInfinityIntervalObj(interval) => {
+                let rule = match interval {
+                    OneSideInfinityIntervalObj::LeftOpen(_) => {
+                        "oinf_interval_nonempty_with_real_endpoint"
+                    }
+                    OneSideInfinityIntervalObj::LeftClosed(_) => {
+                        "cinf_interval_nonempty_with_real_endpoint"
+                    }
+                    OneSideInfinityIntervalObj::RightOpen(_) => {
+                        "info_interval_nonempty_with_real_endpoint"
+                    }
+                    OneSideInfinityIntervalObj::RightClosed(_) => {
+                        "infc_interval_nonempty_with_real_endpoint"
+                    }
+                };
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        rule.to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                )
+            }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self

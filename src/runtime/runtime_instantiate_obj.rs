@@ -75,6 +75,12 @@ impl Runtime {
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::IntervalObj(inner) => {
+                self.inst_interval_obj(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::OneSideInfinityIntervalObj(inner) => {
+                self.inst_one_side_infinity_interval_obj(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::FiniteSeqSet(inner) => {
                 self.inst_finite_seq_set(inner, param_to_arg_map, param_obj_type)
             }
@@ -801,6 +807,53 @@ impl Runtime {
             self.inst_obj(&closed_range.end, param_to_arg_map, param_obj_type)?,
         )
         .into())
+    }
+
+    pub fn inst_interval_obj(
+        &self,
+        interval: &IntervalObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        let start = self.inst_obj(interval.start(), param_to_arg_map, param_obj_type)?;
+        let end = self.inst_obj(interval.end(), param_to_arg_map, param_obj_type)?;
+        Ok(match interval {
+            IntervalObj::LeftOpenRightOpen(_) => {
+                IntervalObj::new_left_open_right_open(start, end).into()
+            }
+            IntervalObj::LeftOpenRightClosed(_) => {
+                IntervalObj::new_left_open_right_closed(start, end).into()
+            }
+            IntervalObj::LeftClosedRightOpen(_) => {
+                IntervalObj::new_left_closed_right_open(start, end).into()
+            }
+            IntervalObj::LeftClosedRightClosed(_) => {
+                IntervalObj::new_left_closed_right_closed(start, end).into()
+            }
+        })
+    }
+
+    pub fn inst_one_side_infinity_interval_obj(
+        &self,
+        interval: &OneSideInfinityIntervalObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        let start = self.inst_obj(interval.start(), param_to_arg_map, param_obj_type)?;
+        Ok(match interval {
+            OneSideInfinityIntervalObj::LeftOpen(_) => {
+                OneSideInfinityIntervalObj::new_left_open(start).into()
+            }
+            OneSideInfinityIntervalObj::LeftClosed(_) => {
+                OneSideInfinityIntervalObj::new_left_closed(start).into()
+            }
+            OneSideInfinityIntervalObj::RightOpen(_) => {
+                OneSideInfinityIntervalObj::new_right_open(start).into()
+            }
+            OneSideInfinityIntervalObj::RightClosed(_) => {
+                OneSideInfinityIntervalObj::new_right_closed(start).into()
+            }
+        })
     }
 
     pub fn inst_finite_seq_set(

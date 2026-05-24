@@ -1033,6 +1033,72 @@ impl Runtime {
             })?;
             return Ok(ClosedRange::new(left, right).into());
         }
+        if tok == OO || tok == OC || tok == CO || tok == CC {
+            let interval_kind = tok.to_string();
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} expects 2 arguments", interval_kind),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let left = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} expects 2 arguments", interval_kind),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let right = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} expects 2 arguments", interval_kind),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return match interval_kind.as_str() {
+                OO => Ok(IntervalObj::new_left_open_right_open(left, right).into()),
+                OC => Ok(IntervalObj::new_left_open_right_closed(left, right).into()),
+                CO => Ok(IntervalObj::new_left_closed_right_open(left, right).into()),
+                CC => Ok(IntervalObj::new_left_closed_right_closed(left, right).into()),
+                _ => unreachable!(),
+            };
+        }
+        if tok == INFO || tok == INFC || tok == OINF || tok == CINF {
+            let interval_kind = tok.to_string();
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} expects 1 argument", interval_kind),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let start = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} expects 1 argument", interval_kind),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return match interval_kind.as_str() {
+                INFO => Ok(OneSideInfinityIntervalObj::new_right_open(start).into()),
+                INFC => Ok(OneSideInfinityIntervalObj::new_right_closed(start).into()),
+                OINF => Ok(OneSideInfinityIntervalObj::new_left_open(start).into()),
+                CINF => Ok(OneSideInfinityIntervalObj::new_left_closed(start).into()),
+                _ => unreachable!(),
+            };
+        }
         if tok == FINITE_SEQ {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;

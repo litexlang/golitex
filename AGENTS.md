@@ -71,6 +71,22 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 8. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
+## Dataset Translation To Litex
+
+1. When translating a dataset problem into Litex, first reason about the mathematics of the problem before writing Litex code.
+
+2. Do not mechanically translate Lean code, tactic steps, or theorem prover syntax into Litex. Use the source only as reference for the mathematical meaning.
+
+3. After understanding the mathematics, design a Litex formulation that matches the current verifier and proof style of this repository.
+
+4. The translation process should be iterative: write a small Litex proof, run it, inspect the verifier output, and make the next smallest correction.
+
+5. Before using `know` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
+
+6. If part of the formalization is temporarily blocked, it is acceptable to use `know` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
+
+7. Prefer a mathematically natural Litex proof over a source-language-shaped translation. The goal is a verifiable Litex development, not a line-by-line transcription.
+
 ## Testing And Verification
 
 1. After changing Rust kernel logic, parser logic, verifier behavior, builtin rules, infer rules, syntax, examples, or documentation snippets, run the smallest relevant test first, then the broader relevant test.

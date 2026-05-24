@@ -83,6 +83,22 @@ pub fn run_cli() {
                 main_flag_file(joined_string.as_str(), show_file_path);
                 return;
             }
+            "-harness" => {
+                index += 1;
+                let (ok, output) = match main_flag_harness(&args, &mut index, show_file_path) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
             "-latex" => {
                 index += 1;
                 if index >= args.len() {
@@ -305,6 +321,36 @@ fn main_flag_file(file_flag: &str, show_file_path: bool) {
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
+fn main_flag_harness(
+    args: &[String],
+    index: &mut usize,
+    show_file_path: bool,
+) -> Result<(bool, String), String> {
+    let target_flag = read_any_value_after_flag(args, index, "-harness")?;
+    let hide_file_paths = !show_file_path;
+    match target_flag.as_str() {
+        "-e" => {
+            let code = read_non_flag_value_after_flag(args, index, "-e")?;
+            Ok(run_harness_for_code(
+                code.as_str(),
+                "-harness -e",
+                hide_file_paths,
+            ))
+        }
+        "-f" => {
+            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
+            Ok(run_harness_for_file(file_path.as_str(), hide_file_paths))
+        }
+        "-r" => {
+            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
+            Ok(run_harness_for_repo(repo_path.as_str(), hide_file_paths))
+        }
+        _ => {
+            Err("-harness must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string())
+        }
+    }
+}
+
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
 }
@@ -376,6 +422,9 @@ fn help_message() -> String {
 litex -f <file> : run the given file
 litex -r <repo> : run the given repository
 litex -e <code> : execute the given code
+litex -harness -f <file> : run a file through the agent harness
+litex -harness -e <code> : run source code through the agent harness
+litex -harness -r <repo> : run a repository through the agent harness
 litex -latex : compile the given file or code to LaTeX interactively in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX

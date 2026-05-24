@@ -419,6 +419,167 @@ forall x R:
     }
 
     #[test]
+    fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
+        let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "direct_calculation_equality_is_reported_before_weak_order_fallback",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "direct_calculation_equality_is_reported_before_weak_order_fallback failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"rule\": \"calculation\""));
+        assert!(!run_output.contains("\"rule\": \"equality from a >= b and b >= a\""));
+    }
+
+    #[test]
+    fn real_interval_membership_rules() {
+        let source_code = r#"
+have I set = oo(0, 1)
+
+have a R
+know a $in oo(0, 1)
+a $in R
+0 < a
+a < 1
+
+have b R
+know b $in oc(0, 1)
+0 < b
+b <= 1
+
+have c R
+know c $in co(0, 1)
+0 <= c
+c < 1
+
+have d R
+know d $in cc(0, 1)
+0 <= d
+d <= 1
+
+have e R
+know e $in info(1)
+e $in R
+e < 1
+
+have f R
+know f $in infc(1)
+f $in R
+f <= 1
+
+have g R
+know g $in oinf(0)
+g $in R
+0 < g
+
+have h R
+know h $in cinf(0)
+h $in R
+0 <= h
+
+have x R
+know:
+    0 < x
+    x <= 1
+x $in oc(0, 1)
+
+have y R
+know:
+    0 <= y
+y $in cinf(0)
+
+have phi fn(t oo(0, 1)) R
+phi(a) $in R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("real_interval_membership_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "real_interval_membership_rules failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn real_interval_nonempty_and_well_defined_rules() {
+        let source_code = r#"
+have empty_like set = cc(1, 0)
+
+have a, b R
+know:
+    a <= b
+    a < b
+
+$is_nonempty_set(cc(a, b))
+$is_nonempty_set(oo(a, b))
+$is_nonempty_set(oc(a, b))
+$is_nonempty_set(co(a, b))
+$is_nonempty_set(info(a))
+$is_nonempty_set(infc(a))
+$is_nonempty_set(oinf(a))
+$is_nonempty_set(cinf(a))
+
+have x cc(a, b)
+x $in cc(a, b)
+
+have y oo(a, b)
+y $in oo(a, b)
+
+have left cinf(a)
+left $in cinf(a)
+
+have right info(a)
+right $in info(a)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("real_interval_nonempty_and_well_defined_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "real_interval_nonempty_and_well_defined_rules failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn one_side_infinity_interval_parse_arity_errors() {
+        for source_code in ["have bad set = info()", "have bad set = info(0, 1)"] {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "one_side_infinity_interval_parse_arity_errors",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(!run_succeeded);
+            assert!(
+                run_output.contains("info expects 1 argument"),
+                "unexpected arity error output:\n{}",
+                run_output
+            );
+        }
+    }
+
+    #[test]
     fn weak_order_does_not_recursively_prove_equality() {
         let source_code = r#"
 have a, b R
@@ -473,6 +634,37 @@ a = b
         assert!(!run_succeeded);
         assert!(run_output.contains("\"source\""));
         assert!(run_output.contains(path));
+    }
+
+    #[test]
+    fn harness_success_has_done_action() {
+        let (ok, output) = run_harness_for_code("1 + 1 = 2", "-harness-test", true);
+
+        assert!(ok, "harness success run failed:\n{}", output);
+        assert!(output.contains("\"harness\": \"litex-agent-harness\""));
+        assert!(output.contains("\"result\": \"success\""));
+        assert!(output.contains("\"proof_debt_know_statements\": 0"));
+        assert!(output.contains("\"next_action\": \"done\""));
+    }
+
+    #[test]
+    fn harness_unknown_failure_suggests_intermediate_fact() {
+        let (ok, output) = run_harness_for_code("1 = 0", "-harness-test", true);
+
+        assert!(!ok, "harness unknown run should fail:\n{}", output);
+        assert!(output.contains("\"result\": \"error\""));
+        assert!(output.contains("\"error_type\": \"VerifyError\""));
+        assert!(output.contains("\"error_type\": \"UnknownError\""));
+        assert!(output.contains("\"next_action\": \"add_intermediate_fact\""));
+    }
+
+    #[test]
+    fn harness_counts_know_as_proof_debt() {
+        let (ok, output) = run_harness_for_code("know 1 = 0", "-harness-test", true);
+
+        assert!(!ok, "harness proof debt run should fail:\n{}", output);
+        assert!(output.contains("\"proof_debt_know_statements\": 1"));
+        assert!(output.contains("\"next_action\": \"reduce_proof_debt\""));
     }
 
     #[test]

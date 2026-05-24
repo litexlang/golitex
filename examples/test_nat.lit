@@ -1,0 +1,15 @@
+run_file nat
+
+$even(4)
+$odd(5)
+$divides(3, 12)
+$mod_eq(11, 3, 4)
+gcd(6, 9) = gcd(9, 6)
+
+claim:
+    prove:
+        forall d, a, b Z:
+            $divides(d, a)
+            $divides(d, b)
+            =>:
+                $divides(d, a + b)

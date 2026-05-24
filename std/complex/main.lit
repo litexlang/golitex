@@ -5,5 +5,6 @@ struct C:
 have fn C_add(a, b &C) &C = (&C{a}.re + &C{b}.re, &C{a}.im + &C{b}.im)
 have fn C_neg(a &C) &C = (-&C{a}.re, -&C{a}.im)
 have fn C_sub(a, b &C) &C = (&C{a}.re - &C{b}.re, &C{a}.im - &C{b}.im)
+have fn C_mul(a, b &C) &C = (&C{a}.re * &C{b}.re - &C{a}.im * &C{b}.im, &C{a}.re * &C{b}.im + &C{a}.im * &C{b}.re)
 have fn C_conj(a &C) &C = (&C{a}.re, -&C{a}.im)
-
+have C_i &C = (0, 1)

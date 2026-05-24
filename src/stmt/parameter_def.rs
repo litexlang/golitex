@@ -845,6 +845,19 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::IntervalObj(x) => collect_cited_param_indices_from_two_objs(
+            x.interval_struct().start.as_ref(),
+            x.interval_struct().end.as_ref(),
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::OneSideInfinityIntervalObj(x) => collect_cited_param_indices_from_obj(
+            x.interval_struct().start.as_ref(),
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::FiniteSeqSet(x) => collect_cited_param_indices_from_two_objs(
             &x.set,
             &x.n,
