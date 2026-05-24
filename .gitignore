@@ -32,3 +32,7 @@ MATH-500-litex/
 litex-minif2f/
 
 test-litex/
+
+litex_agent/
+
+tmp/

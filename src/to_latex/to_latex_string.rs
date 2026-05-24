@@ -478,6 +478,49 @@ impl ClosedRange {
     }
 }
 
+impl IntervalObj {
+    pub fn to_latex_string(&self) -> String {
+        let (left, right) = match self {
+            IntervalObj::LeftOpenRightOpen(_) => ("(", ")"),
+            IntervalObj::LeftOpenRightClosed(_) => ("(", "]"),
+            IntervalObj::LeftClosedRightOpen(_) => ("[", ")"),
+            IntervalObj::LeftClosedRightClosed(_) => ("[", "]"),
+        };
+        format!(
+            r"\left{} {}, {} \right{}",
+            left,
+            self.start().to_latex_string(),
+            self.end().to_latex_string(),
+            right
+        )
+    }
+}
+
+impl OneSideInfinityIntervalObj {
+    pub fn to_latex_string(&self) -> String {
+        match self {
+            OneSideInfinityIntervalObj::LeftOpen(_) => {
+                format!(r"\left( {}, \infty \right)", self.start().to_latex_string())
+            }
+            OneSideInfinityIntervalObj::LeftClosed(_) => {
+                format!(r"\left[ {}, \infty \right)", self.start().to_latex_string())
+            }
+            OneSideInfinityIntervalObj::RightOpen(_) => {
+                format!(
+                    r"\left( -\infty, {} \right)",
+                    self.start().to_latex_string()
+                )
+            }
+            OneSideInfinityIntervalObj::RightClosed(_) => {
+                format!(
+                    r"\left( -\infty, {} \right]",
+                    self.start().to_latex_string()
+                )
+            }
+        }
+    }
+}
+
 impl Count {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1997,6 +2040,8 @@ impl Obj {
             Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => latex_texttt_escape(&x.to_string()),
             Obj::InstantiatedTemplateObj(x) => latex_texttt_escape(&x.to_string()),
+            Obj::OneSideInfinityIntervalObj(x) => x.to_latex_string(),
+            Obj::IntervalObj(x) => x.to_latex_string(),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),

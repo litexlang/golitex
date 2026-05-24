@@ -388,6 +388,10 @@ impl Runtime {
                 left.end.as_ref(),
                 given_arg,
             ),
+            Obj::IntervalObj(ref left) => self.match_arg_when_left_is_interval(left, given_arg),
+            Obj::OneSideInfinityIntervalObj(ref left) => {
+                self.match_arg_when_left_is_one_side_infinity_interval(left, given_arg)
+            }
             Obj::FiniteSeqSet(ref left) => self.match_arg_when_left_is_finite_seq_set(
                 left.set.as_ref(),
                 left.n.as_ref(),
@@ -1594,6 +1598,35 @@ impl Runtime {
             ),
             _ => Ok(None),
         }
+    }
+
+    fn match_arg_when_left_is_interval(
+        &mut self,
+        left: &IntervalObj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::IntervalObj(given) = given_arg else {
+            return Ok(None);
+        };
+        if left.left_closed() != given.left_closed() || left.right_closed() != given.right_closed()
+        {
+            return Ok(None);
+        }
+        self.match_arg_binary_then_merge(left.start(), left.end(), given.start(), given.end())
+    }
+
+    fn match_arg_when_left_is_one_side_infinity_interval(
+        &mut self,
+        left: &OneSideInfinityIntervalObj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::OneSideInfinityIntervalObj(given) = given_arg else {
+            return Ok(None);
+        };
+        if !left.same_kind_as(given) {
+            return Ok(None);
+        }
+        self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left.start(), given.start())
     }
 
     fn match_arg_when_left_is_finite_seq_set(
