@@ -56,6 +56,166 @@ pub enum Obj {
     StructObj(StructObj),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
+    OneSideInfinityIntervalObj(OneSideInfinityIntervalObj),
+    IntervalObj(IntervalObj),
+}
+
+#[derive(Clone)]
+pub enum OneSideInfinityIntervalObj {
+    LeftOpen(OneSideInfinityIntervalObjStruct),
+    LeftClosed(OneSideInfinityIntervalObjStruct),
+    RightOpen(OneSideInfinityIntervalObjStruct),
+    RightClosed(OneSideInfinityIntervalObjStruct),
+}
+
+#[derive(Clone)]
+pub struct OneSideInfinityIntervalObjStruct {
+    pub start: Box<Obj>,
+}
+
+impl OneSideInfinityIntervalObjStruct {
+    pub fn new(start: Obj) -> Self {
+        OneSideInfinityIntervalObjStruct {
+            start: Box::new(start),
+        }
+    }
+}
+
+impl OneSideInfinityIntervalObj {
+    pub fn new_left_open(start: Obj) -> Self {
+        OneSideInfinityIntervalObj::LeftOpen(OneSideInfinityIntervalObjStruct::new(start))
+    }
+
+    pub fn new_left_closed(start: Obj) -> Self {
+        OneSideInfinityIntervalObj::LeftClosed(OneSideInfinityIntervalObjStruct::new(start))
+    }
+
+    pub fn new_right_open(start: Obj) -> Self {
+        OneSideInfinityIntervalObj::RightOpen(OneSideInfinityIntervalObjStruct::new(start))
+    }
+
+    pub fn new_right_closed(start: Obj) -> Self {
+        OneSideInfinityIntervalObj::RightClosed(OneSideInfinityIntervalObjStruct::new(start))
+    }
+
+    pub fn interval_struct(&self) -> &OneSideInfinityIntervalObjStruct {
+        match self {
+            OneSideInfinityIntervalObj::LeftOpen(x)
+            | OneSideInfinityIntervalObj::LeftClosed(x)
+            | OneSideInfinityIntervalObj::RightOpen(x)
+            | OneSideInfinityIntervalObj::RightClosed(x) => x,
+        }
+    }
+
+    pub fn start(&self) -> &Obj {
+        self.interval_struct().start.as_ref()
+    }
+
+    pub fn left_closed(&self) -> bool {
+        matches!(self, OneSideInfinityIntervalObj::LeftClosed(_))
+    }
+
+    pub fn right_closed(&self) -> bool {
+        matches!(self, OneSideInfinityIntervalObj::RightClosed(_))
+    }
+
+    pub fn left_bounded(&self) -> bool {
+        matches!(
+            self,
+            OneSideInfinityIntervalObj::LeftOpen(_) | OneSideInfinityIntervalObj::LeftClosed(_)
+        )
+    }
+
+    pub fn same_kind_as(&self, other: &OneSideInfinityIntervalObj) -> bool {
+        matches!(
+            (self, other),
+            (
+                OneSideInfinityIntervalObj::LeftOpen(_),
+                OneSideInfinityIntervalObj::LeftOpen(_)
+            ) | (
+                OneSideInfinityIntervalObj::LeftClosed(_),
+                OneSideInfinityIntervalObj::LeftClosed(_)
+            ) | (
+                OneSideInfinityIntervalObj::RightOpen(_),
+                OneSideInfinityIntervalObj::RightOpen(_)
+            ) | (
+                OneSideInfinityIntervalObj::RightClosed(_),
+                OneSideInfinityIntervalObj::RightClosed(_)
+            )
+        )
+    }
+}
+
+#[derive(Clone)]
+pub enum IntervalObj {
+    LeftOpenRightOpen(IntervalObjStruct),
+    LeftOpenRightClosed(IntervalObjStruct),
+    LeftClosedRightOpen(IntervalObjStruct),
+    LeftClosedRightClosed(IntervalObjStruct),
+}
+
+#[derive(Clone)]
+pub struct IntervalObjStruct {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+}
+
+impl IntervalObjStruct {
+    pub fn new(start: Obj, end: Obj) -> Self {
+        IntervalObjStruct {
+            start: Box::new(start),
+            end: Box::new(end),
+        }
+    }
+}
+
+impl IntervalObj {
+    pub fn new_left_open_right_open(start: Obj, end: Obj) -> Self {
+        IntervalObj::LeftOpenRightOpen(IntervalObjStruct::new(start, end))
+    }
+
+    pub fn new_left_open_right_closed(start: Obj, end: Obj) -> Self {
+        IntervalObj::LeftOpenRightClosed(IntervalObjStruct::new(start, end))
+    }
+
+    pub fn new_left_closed_right_open(start: Obj, end: Obj) -> Self {
+        IntervalObj::LeftClosedRightOpen(IntervalObjStruct::new(start, end))
+    }
+
+    pub fn new_left_closed_right_closed(start: Obj, end: Obj) -> Self {
+        IntervalObj::LeftClosedRightClosed(IntervalObjStruct::new(start, end))
+    }
+
+    pub fn interval_struct(&self) -> &IntervalObjStruct {
+        match self {
+            IntervalObj::LeftOpenRightOpen(x)
+            | IntervalObj::LeftOpenRightClosed(x)
+            | IntervalObj::LeftClosedRightOpen(x)
+            | IntervalObj::LeftClosedRightClosed(x) => x,
+        }
+    }
+
+    pub fn start(&self) -> &Obj {
+        self.interval_struct().start.as_ref()
+    }
+
+    pub fn end(&self) -> &Obj {
+        self.interval_struct().end.as_ref()
+    }
+
+    pub fn left_closed(&self) -> bool {
+        matches!(
+            self,
+            IntervalObj::LeftClosedRightOpen(_) | IntervalObj::LeftClosedRightClosed(_)
+        )
+    }
+
+    pub fn right_closed(&self) -> bool {
+        matches!(
+            self,
+            IntervalObj::LeftOpenRightClosed(_) | IntervalObj::LeftClosedRightClosed(_)
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -930,6 +1090,8 @@ impl Obj {
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
             Obj::InstantiatedTemplateObj(x) => write!(f, "{}", x)?,
+            Obj::OneSideInfinityIntervalObj(x) => write!(f, "{}", x)?,
+            Obj::IntervalObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1255,6 +1417,54 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::IntervalObj(x) => match x {
+                IntervalObj::LeftOpenRightOpen(i) => IntervalObj::new_left_open_right_open(
+                    Obj::replace_bound_identifier(*i.start, from, to),
+                    Obj::replace_bound_identifier(*i.end, from, to),
+                )
+                .into(),
+                IntervalObj::LeftOpenRightClosed(i) => IntervalObj::new_left_open_right_closed(
+                    Obj::replace_bound_identifier(*i.start, from, to),
+                    Obj::replace_bound_identifier(*i.end, from, to),
+                )
+                .into(),
+                IntervalObj::LeftClosedRightOpen(i) => IntervalObj::new_left_closed_right_open(
+                    Obj::replace_bound_identifier(*i.start, from, to),
+                    Obj::replace_bound_identifier(*i.end, from, to),
+                )
+                .into(),
+                IntervalObj::LeftClosedRightClosed(i) => IntervalObj::new_left_closed_right_closed(
+                    Obj::replace_bound_identifier(*i.start, from, to),
+                    Obj::replace_bound_identifier(*i.end, from, to),
+                )
+                .into(),
+            },
+            Obj::OneSideInfinityIntervalObj(x) => match x {
+                OneSideInfinityIntervalObj::LeftOpen(i) => {
+                    OneSideInfinityIntervalObj::new_left_open(Obj::replace_bound_identifier(
+                        *i.start, from, to,
+                    ))
+                    .into()
+                }
+                OneSideInfinityIntervalObj::LeftClosed(i) => {
+                    OneSideInfinityIntervalObj::new_left_closed(Obj::replace_bound_identifier(
+                        *i.start, from, to,
+                    ))
+                    .into()
+                }
+                OneSideInfinityIntervalObj::RightOpen(i) => {
+                    OneSideInfinityIntervalObj::new_right_open(Obj::replace_bound_identifier(
+                        *i.start, from, to,
+                    ))
+                    .into()
+                }
+                OneSideInfinityIntervalObj::RightClosed(i) => {
+                    OneSideInfinityIntervalObj::new_right_closed(Obj::replace_bound_identifier(
+                        *i.start, from, to,
+                    ))
+                    .into()
+                }
+            },
         }
     }
 }
@@ -1480,6 +1690,39 @@ impl fmt::Display for ClosedRange {
             CLOSED_RANGE,
             braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
         )
+    }
+}
+
+impl fmt::Display for IntervalObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            IntervalObj::LeftOpenRightOpen(_) => OO,
+            IntervalObj::LeftOpenRightClosed(_) => OC,
+            IntervalObj::LeftClosedRightOpen(_) => CO,
+            IntervalObj::LeftClosedRightClosed(_) => CC,
+        };
+        let interval_struct = self.interval_struct();
+        write!(
+            f,
+            "{}{}",
+            name,
+            braced_vec_to_string(&vec![
+                interval_struct.start.as_ref(),
+                interval_struct.end.as_ref()
+            ])
+        )
+    }
+}
+
+impl fmt::Display for OneSideInfinityIntervalObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            OneSideInfinityIntervalObj::LeftOpen(_) => OINF,
+            OneSideInfinityIntervalObj::LeftClosed(_) => CINF,
+            OneSideInfinityIntervalObj::RightOpen(_) => INFO,
+            OneSideInfinityIntervalObj::RightClosed(_) => INFC,
+        };
+        write!(f, "{}{}", name, braced_vec_to_string(&vec![self.start()]))
     }
 }
 
@@ -2108,6 +2351,18 @@ impl From<Range> for Obj {
 impl From<ClosedRange> for Obj {
     fn from(r: ClosedRange) -> Self {
         Obj::ClosedRange(r)
+    }
+}
+
+impl From<IntervalObj> for Obj {
+    fn from(r: IntervalObj) -> Self {
+        Obj::IntervalObj(r)
+    }
+}
+
+impl From<OneSideInfinityIntervalObj> for Obj {
+    fn from(r: OneSideInfinityIntervalObj) -> Self {
+        Obj::OneSideInfinityIntervalObj(r)
     }
 }
 
