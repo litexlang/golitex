@@ -144,6 +144,24 @@ impl Runtime {
                     .collect();
                 MatrixListObj::new(rows).into()
             }
+            Obj::IntervalObj(interval) => {
+                let start = self.resolve_obj(interval.start());
+                let end = self.resolve_obj(interval.end());
+                match interval {
+                    IntervalObj::LeftOpenRightOpen(_) => {
+                        IntervalObj::new_left_open_right_open(start, end).into()
+                    }
+                    IntervalObj::LeftOpenRightClosed(_) => {
+                        IntervalObj::new_left_open_right_closed(start, end).into()
+                    }
+                    IntervalObj::LeftClosedRightOpen(_) => {
+                        IntervalObj::new_left_closed_right_open(start, end).into()
+                    }
+                    IntervalObj::LeftClosedRightClosed(_) => {
+                        IntervalObj::new_left_closed_right_closed(start, end).into()
+                    }
+                }
+            }
             Obj::FnObj(fn_obj) => {
                 if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() {
                     if !fn_obj.body.is_empty() {

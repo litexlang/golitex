@@ -373,6 +373,10 @@ impl Runtime {
                 let end = (*c.end).clone();
                 self.infer_in_fact_element_in_integer_interval(in_fact, start, end, true)
             }
+            // Real interval membership: `x $in oc(a,b)` => `x $in R`, `a < x`, `x <= b`.
+            Obj::IntervalObj(interval) => {
+                self.infer_in_fact_element_in_real_interval(in_fact, interval)
+            }
             // Strictly positive number sets: `x $in R_pos` (etc.) => `0 < x`.
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
@@ -702,6 +706,40 @@ impl Runtime {
             infer_result.push_atomic_fact(&equal_fact);
             self.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)?;
         }
+
+        Ok(infer_result)
+    }
+
+    // Shared real interval body: always `element $in R`; endpoint bounds follow the interval closure flags.
+    fn infer_in_fact_element_in_real_interval(
+        &mut self,
+        in_fact: &InFact,
+        interval: &IntervalObj,
+    ) -> Result<InferResult, RuntimeError> {
+        let element = in_fact.element.clone();
+        let lf = in_fact.line_file.clone();
+
+        let inferred_in_r_fact =
+            InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&inferred_in_r_fact);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
+
+        let lower_bound = if interval.left_closed() {
+            LessEqualFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+        } else {
+            LessFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+        };
+        infer_result.push_atomic_fact(&lower_bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())?;
+
+        let upper_bound = if interval.right_closed() {
+            LessEqualFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
+        } else {
+            LessFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
+        };
+        infer_result.push_atomic_fact(&upper_bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
 
         Ok(infer_result)
     }

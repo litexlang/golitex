@@ -84,6 +84,41 @@ impl Runtime {
             return Ok(done);
         }
 
+        // Direct calculation: if both sides normalize to the same computed value, close the
+        // equality before falling back to two-sided order. Example: `(-1 * sqrt(2)) ^ 2 = 2`.
+        let (result, calculated_left, calculated_right) = self
+            .verify_equality_by_they_are_the_same_and_calculation(
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        if objs_equal_by_rational_expression_evaluation(&left, &right) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
+        if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         if let Some(done) =
             self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
         {
@@ -319,39 +354,6 @@ impl Runtime {
             self.try_verify_projection_from_known_tuple_equality(left, right, line_file.clone())?
         {
             return Ok(done);
-        }
-
-        let (result, calculated_left, calculated_right) = self
-            .verify_equality_by_they_are_the_same_and_calculation(
-                left,
-                right,
-                line_file.clone(),
-                verify_state,
-            )?;
-        if result.is_true() {
-            return Ok(result);
-        }
-
-        if objs_equal_by_rational_expression_evaluation(&left, &right) {
-            return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                    "calculation and rational expression simplification".to_string(),
-                    Vec::new(),
-                ))
-                .into(),
-            );
-        }
-
-        if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
-            return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                    "calculation and rational expression simplification".to_string(),
-                    Vec::new(),
-                ))
-                .into(),
-            );
         }
 
         if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
