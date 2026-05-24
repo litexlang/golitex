@@ -1,0 +1,6 @@
+- [ ] Verify the new inverse trig facts in `std/trigonometry/main.lit` after the Rust build is healthy again
+- [ ] Add more solvable trig items in `required-2_questions.json`
+- [ ] Add more solvable trig items in `optional-1_questions.json`
+- [ ] Re-run full non-empty snippet validation after the Rust build is healthy again
+- [ ] Investigate the current Rust compile break starting at `src/obj/obj.rs:64` if verification is needed again
+- [ ] Summarize the next blocker set for `run_file trigonometry`

@@ -12,9 +12,9 @@ Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Ma
 
 ### Real interval objects (2026-05)
 
-Real intervals are available as `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)` for open/open, open/closed, closed/open, and closed/closed endpoints.
+Real intervals are available as `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)` for open/open, open/closed, closed/open, and closed/closed endpoints. Half-infinite real intervals use one finite endpoint: `info(a)` for `(-infinity, a)`, `infc(a)` for `(-infinity, a]`, `oinf(a)` for `(a, +infinity)`, and `cinf(a)` for `[a, +infinity)`.
 
-The endpoints must be well-defined real objects. The verifier does not require `a < b` for the interval object itself. Membership unfolds to real membership plus endpoint bounds; for example, `x $in oc(a, b)` infers `x $in R`, `a < x`, and `x <= b`, and those same facts can prove `x $in oc(a, b)`.
+The endpoints must be well-defined real objects. The verifier does not require `a < b` for the two-sided interval object itself. Membership unfolds to real membership plus endpoint bounds; for example, `x $in oc(a, b)` infers `x $in R`, `a < x`, and `x <= b`, and those same facts can prove `x $in oc(a, b)`. For half-infinite intervals, `x $in cinf(a)` infers `x $in R` and `a <= x`. Non-emptiness is checked separately: `cc(a, b)` is nonempty from `a <= b`, while `oo(a, b)`, `oc(a, b)`, and `co(a, b)` are nonempty from `a < b`; half-infinite real intervals are nonempty when their finite endpoint is well-defined.
 
 These intervals are continuous real sets. They are separate from integer `range` and `closed_range`, so they do not support `count`, `by for`, or `by closed_range as cases`.
 

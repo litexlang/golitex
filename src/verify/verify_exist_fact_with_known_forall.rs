@@ -409,6 +409,9 @@ impl Runtime {
             Obj::IntervalObj(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.start(), x.end(), names)
             }
+            Obj::OneSideInfinityIntervalObj(x) => {
+                Self::obj_depends_on_given_exist_param(x.start(), names)
+            }
             Obj::Proj(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.set.as_ref(), x.dim.as_ref(), names)
             }

@@ -465,14 +465,39 @@ know d $in cc(0, 1)
 0 <= d
 d <= 1
 
+have e R
+know e $in info(1)
+e $in R
+e < 1
+
+have f R
+know f $in infc(1)
+f $in R
+f <= 1
+
+have g R
+know g $in oinf(0)
+g $in R
+0 < g
+
+have h R
+know h $in cinf(0)
+h $in R
+0 <= h
+
 have x R
 know:
     0 < x
     x <= 1
 x $in oc(0, 1)
 
-have f fn(y oo(0, 1)) R
-f(a) $in R
+have y R
+know:
+    0 <= y
+y $in cinf(0)
+
+have phi fn(t oo(0, 1)) R
+phi(a) $in R
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -486,6 +511,72 @@ f(a) $in R
             "real_interval_membership_rules failed:\n{}",
             run_output
         );
+    }
+
+    #[test]
+    fn real_interval_nonempty_and_well_defined_rules() {
+        let source_code = r#"
+have empty_like set = cc(1, 0)
+
+have a, b R
+know:
+    a <= b
+    a < b
+
+$is_nonempty_set(cc(a, b))
+$is_nonempty_set(oo(a, b))
+$is_nonempty_set(oc(a, b))
+$is_nonempty_set(co(a, b))
+$is_nonempty_set(info(a))
+$is_nonempty_set(infc(a))
+$is_nonempty_set(oinf(a))
+$is_nonempty_set(cinf(a))
+
+have x cc(a, b)
+x $in cc(a, b)
+
+have y oo(a, b)
+y $in oo(a, b)
+
+have left cinf(a)
+left $in cinf(a)
+
+have right info(a)
+right $in info(a)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("real_interval_nonempty_and_well_defined_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "real_interval_nonempty_and_well_defined_rules failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn one_side_infinity_interval_parse_arity_errors() {
+        for source_code in ["have bad set = info()", "have bad set = info(0, 1)"] {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "one_side_infinity_interval_parse_arity_errors",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(!run_succeeded);
+            assert!(
+                run_output.contains("info expects 1 argument"),
+                "unexpected arity error output:\n{}",
+                run_output
+            );
+        }
     }
 
     #[test]
