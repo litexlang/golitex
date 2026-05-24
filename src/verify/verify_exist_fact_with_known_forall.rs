@@ -406,6 +406,9 @@ impl Runtime {
             Obj::ClosedRange(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.start.as_ref(), x.end.as_ref(), names)
             }
+            Obj::IntervalObj(x) => {
+                Self::obj_pair_depends_on_given_exist_param(x.start(), x.end(), names)
+            }
             Obj::Proj(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.set.as_ref(), x.dim.as_ref(), names)
             }

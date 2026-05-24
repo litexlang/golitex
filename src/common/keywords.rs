@@ -68,6 +68,10 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
+pub const OO: &str = "oo";
+pub const OC: &str = "oc";
+pub const CO: &str = "co";
+pub const CC: &str = "cc";
 pub const SUM: &str = "sum";
 pub const PRODUCT: &str = "product";
 pub const EXIST: &str = "exist";
@@ -233,6 +237,10 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         MATRIX,
         RANGE,
         CLOSED_RANGE,
+        OO,
+        OC,
+        CO,
+        CC,
         EXIST,
         ST,
         FORALL,

@@ -10,9 +10,41 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
-### Agent harness CLI (2026-05)
+### Real interval objects (2026-05)
 
-`litex -harness -e <code>`, `litex -harness -f <file>`, and `litex -harness -r <repo>` return one wrapper JSON object with run status, summary counts, `know` proof-debt count, failure root cause, suggested next action, and the ordinary Litex JSON trace. The harness exits nonzero on verifier failure or remaining `know` proof debt. See **Setup — Agent harness output**.
+Real intervals are available as `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)` for open/open, open/closed, closed/open, and closed/closed endpoints.
+
+The endpoints must be well-defined real objects. The verifier does not require `a < b` for the interval object itself. Membership unfolds to real membership plus endpoint bounds; for example, `x $in oc(a, b)` infers `x $in R`, `a < x`, and `x <= b`, and those same facts can prove `x $in oc(a, b)`.
+
+These intervals are continuous real sets. They are separate from integer `range` and `closed_range`, so they do not support `count`, `by for`, or `by closed_range as cases`.
+
+### Agent harness design sketch (2026-05)
+
+Litex already exposes statement-level JSON output that is useful to humans and agents. A future agent harness should be a thin wrapper around that verifier surface, not a second verifier and not a hidden proof search engine.
+
+The basic loop should be:
+
+1. receive a Litex source string, file, or repository entry;
+2. run the normal Litex verifier in a fresh runtime;
+3. collect the ordinary statement-by-statement JSON trace;
+4. summarize the run for an outer agent loop;
+5. return a stable machine-readable result that says what to do next.
+
+The harness result should include:
+
+- whole-run status, such as `ok` and `result`;
+- the target kind, such as source string, file, or repository;
+- checked statement count and successful statement count;
+- `know` count, treated as explicit proof debt;
+- verifier failure information, including the failing line, statement, root cause, and error chain;
+- a small `next_action` label, such as `done`, `reduce_proof_debt`, `add_intermediate_fact`, or `fix_error`;
+- the original Litex JSON trace, so no verifier detail is lost.
+
+The important design choice is that `know` should not be silently accepted as final success. For agent work, `know` is useful scaffolding, but a harness should report remaining `know` facts as proof debt so the outer loop can keep shrinking the informal gap.
+
+The harness should also use process exit status in the ordinary scripting way: successful verified source with no proof debt exits successfully; verifier failure, target-file failure, or remaining proof debt exits nonzero. This gives agents, CI jobs, and batch experiments a simple control signal while preserving the detailed JSON feedback needed for repair.
+
+This is a harness design note, not a language feature. It should not change Litex syntax, proof semantics, or trusted verification logic.
 
 ### Dependent function parameter domains (2026-05)
 

@@ -419,6 +419,76 @@ forall x R:
     }
 
     #[test]
+    fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
+        let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "direct_calculation_equality_is_reported_before_weak_order_fallback",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "direct_calculation_equality_is_reported_before_weak_order_fallback failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"rule\": \"calculation\""));
+        assert!(!run_output.contains("\"rule\": \"equality from a >= b and b >= a\""));
+    }
+
+    #[test]
+    fn real_interval_membership_rules() {
+        let source_code = r#"
+have I set = oo(0, 1)
+
+have a R
+know a $in oo(0, 1)
+a $in R
+0 < a
+a < 1
+
+have b R
+know b $in oc(0, 1)
+0 < b
+b <= 1
+
+have c R
+know c $in co(0, 1)
+0 <= c
+c < 1
+
+have d R
+know d $in cc(0, 1)
+0 <= d
+d <= 1
+
+have x R
+know:
+    0 < x
+    x <= 1
+x $in oc(0, 1)
+
+have f fn(y oo(0, 1)) R
+f(a) $in R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("real_interval_membership_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "real_interval_membership_rules failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn weak_order_does_not_recursively_prove_equality() {
         let source_code = r#"
 have a, b R

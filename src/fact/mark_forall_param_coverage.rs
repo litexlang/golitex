@@ -278,6 +278,10 @@ fn mark_forall_param_coverage_in_obj(
             );
             mark_forall_param_coverage_in_obj(closed_range.end.as_ref(), coverage_by_forall_param);
         }
+        Obj::IntervalObj(interval) => {
+            mark_forall_param_coverage_in_obj(interval.start(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(interval.end(), coverage_by_forall_param);
+        }
         Obj::FiniteSeqSet(fs) => {
             mark_forall_param_coverage_in_obj(fs.set.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(fs.n.as_ref(), coverage_by_forall_param);

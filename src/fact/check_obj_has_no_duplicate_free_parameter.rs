@@ -218,6 +218,12 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::ClosedRange(obj) => {
             check_two_objs(&obj.start, &obj.end, free_param_type, params_already_used)
         }
+        Obj::IntervalObj(obj) => check_two_objs(
+            obj.interval_struct().start.as_ref(),
+            obj.interval_struct().end.as_ref(),
+            free_param_type,
+            params_already_used,
+        ),
         Obj::FiniteSeqSet(obj) => {
             check_two_objs(&obj.set, &obj.n, free_param_type, params_already_used)
         }

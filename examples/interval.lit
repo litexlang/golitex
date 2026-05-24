@@ -1,0 +1,21 @@
+# real interval sanity checks
+have a R
+know a $in oo(0, 1)
+a $in R
+0 < a
+a < 1
+
+have b R
+know b $in oc(0, 1)
+0 < b
+b <= 1
+
+have c R
+know c $in co(0, 1)
+0 <= c
+c < 1
+
+have d R
+know d $in cc(0, 1)
+0 <= d
+d <= 1

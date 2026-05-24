@@ -74,6 +74,7 @@ impl Runtime {
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
+            Obj::IntervalObj(x) => self.verify_interval_obj_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
             Obj::SeqSet(x) => self.verify_seq_set_well_defined(x, verify_state),
             Obj::FiniteSeqListObj(x) => {
@@ -1791,6 +1792,18 @@ impl Runtime {
                 ),
             )?;
         }
+        Ok(())
+    }
+
+    fn verify_interval_obj_well_defined(
+        &mut self,
+        x: &IntervalObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(x.end(), verify_state)?;
+        self.require_obj_in_r(x.start(), verify_state)?;
+        self.require_obj_in_r(x.end(), verify_state)?;
         Ok(())
     }
 

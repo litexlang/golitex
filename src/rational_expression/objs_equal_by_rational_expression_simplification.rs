@@ -3,24 +3,47 @@ use crate::rational_expression::collect_monomials::collect_monomials_in_obj;
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;
 
-pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> bool {
-    let left_monomials = collect_monomials_in_obj(left);
-    let right_monomials = collect_monomials_in_obj(right);
+const MAX_DENOMINATOR_CLEARING_ROUNDS: usize = 16;
 
-    if monomial_vectors_are_equal(left_monomials.clone(), right_monomials.clone()) {
-        return true;
+pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> bool {
+    let mut left_monomials = collect_monomials_in_obj(left);
+    let mut right_monomials = collect_monomials_in_obj(right);
+
+    for _ in 0..MAX_DENOMINATOR_CLEARING_ROUNDS {
+        if monomial_vectors_are_equal(left_monomials.clone(), right_monomials.clone()) {
+            return true;
+        }
+
+        let previous_left_key = canonical_monomial_vector_key(&left_monomials);
+        let previous_right_key = canonical_monomial_vector_key(&right_monomials);
+        let (next_left_monomials, next_right_monomials) =
+            collect_rational_expression_monomials_after_denominator_clearing_process(
+                left_monomials,
+                right_monomials,
+            );
+        let next_left_key = canonical_monomial_vector_key(&next_left_monomials);
+        let next_right_key = canonical_monomial_vector_key(&next_right_monomials);
+
+        left_monomials = next_left_monomials;
+        right_monomials = next_right_monomials;
+
+        if previous_left_key == next_left_key && previous_right_key == next_right_key {
+            break;
+        }
     }
 
-    let (left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing) =
-        collect_rational_expression_monomials_after_denominator_clearing_process(
-            left_monomials,
-            right_monomials,
-        );
+    monomial_vectors_are_equal(left_monomials, right_monomials)
+}
 
-    monomial_vectors_are_equal(
-        left_monomials_after_denominator_clearing,
-        right_monomials_after_denominator_clearing,
-    )
+fn canonical_monomial_vector_key(
+    monomials: &[MonomialWithNonZeroScalarAndOrderedOperands],
+) -> Vec<(String, String)> {
+    let mut keys: Vec<(String, String)> = monomials
+        .iter()
+        .map(|m| (m.key(), m.non_zero_scalar.clone()))
+        .collect();
+    keys.sort();
+    keys
 }
 
 fn sort_monomials(
@@ -95,5 +118,28 @@ mod algebraic_identity_tests {
             r#"2 * ( a * m + b * n ) ^ 2 + ( m ^ 2 - 2 * n ^ 2 ) * ( b ^ 2 - 2 * a ^ 2 )"#,
         );
         assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
+    }
+
+    #[test]
+    fn nested_divisions_reach_denominator_clearing_fixed_point() {
+        let pi = Identifier::mk("pi".to_string());
+        let one: Obj = Number::new("1".to_string()).into();
+        let two: Obj = Number::new("2".to_string()).into();
+
+        let left: Obj = Div::new(
+            Sub::new(pi.clone(), Div::new(pi.clone(), two.clone()).into()).into(),
+            pi.clone(),
+        )
+        .into();
+        let right: Obj = Sub::new(one.clone(), Div::new(one.clone(), two.clone()).into()).into();
+        assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
+
+        let nested_left: Obj =
+            Div::new(Div::new(pi.clone(), two.clone()).into(), pi.clone()).into();
+        let nested_right: Obj = Div::new(one, two).into();
+        assert!(objs_equal_by_rational_expression_evaluation(
+            &nested_left,
+            &nested_right
+        ));
     }
 }
