@@ -377,6 +377,10 @@ impl Runtime {
             Obj::IntervalObj(interval) => {
                 self.infer_in_fact_element_in_real_interval(in_fact, interval)
             }
+            // Half-infinite real interval membership: `x $in cinf(a)` => `x $in R`, `a <= x`.
+            Obj::OneSideInfinityIntervalObj(interval) => {
+                self.infer_in_fact_element_in_one_side_infinity_interval(in_fact, interval)
+            }
             // Strictly positive number sets: `x $in R_pos` (etc.) => `0 < x`.
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
@@ -740,6 +744,40 @@ impl Runtime {
         };
         infer_result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
+
+        Ok(infer_result)
+    }
+
+    fn infer_in_fact_element_in_one_side_infinity_interval(
+        &mut self,
+        in_fact: &InFact,
+        interval: &OneSideInfinityIntervalObj,
+    ) -> Result<InferResult, RuntimeError> {
+        let element = in_fact.element.clone();
+        let lf = in_fact.line_file.clone();
+
+        let inferred_in_r_fact =
+            InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&inferred_in_r_fact);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
+
+        let bound = match interval {
+            OneSideInfinityIntervalObj::LeftOpen(_) => {
+                LessFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::LeftClosed(_) => {
+                LessEqualFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::RightOpen(_) => {
+                LessFact::new(element.clone(), interval.start().clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::RightClosed(_) => {
+                LessEqualFact::new(element.clone(), interval.start().clone(), lf.clone()).into()
+            }
+        };
+        infer_result.push_atomic_fact(&bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(bound.clone())?;
 
         Ok(infer_result)
     }

@@ -92,6 +92,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id)
         }
         Obj::IntervalObj(i) => obj_expr_mentions_bare_id_on_two(i.start(), i.end(), id),
+        Obj::OneSideInfinityIntervalObj(i) => obj_expr_mentions_bare_id(i.start(), id),
         Obj::Sum(s) => {
             obj_expr_mentions_bare_id(s.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
