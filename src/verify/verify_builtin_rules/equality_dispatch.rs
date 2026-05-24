@@ -75,6 +75,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_zero_equals_product_implies_other_factor_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
         {
