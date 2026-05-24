@@ -224,6 +224,11 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::OneSideInfinityIntervalObj(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.interval_struct().start,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::FiniteSeqSet(obj) => {
             check_two_objs(&obj.set, &obj.n, free_param_type, params_already_used)
         }

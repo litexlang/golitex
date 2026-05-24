@@ -1,21 +1,56 @@
 # real interval sanity checks
-have a R
-know a $in oo(0, 1)
+have a oo(0, 1)
 a $in R
 0 < a
 a < 1
 
-have b R
-know b $in oc(0, 1)
+have b  oc(0, 1)
 0 < b
 b <= 1
 
-have c R
-know c $in co(0, 1)
+have c co(0, 1)
 0 <= c
 c < 1
 
-have d R
-know d $in cc(0, 1)
+have d cc(0, 1)
 0 <= d
 d <= 1
+
+have e info(1)
+e $in R
+e < 1
+
+have f infc(1)
+f $in R
+f <= 1
+
+have g oinf(0)
+g $in R
+0 < g
+
+have h cinf(0)
+h $in R
+0 <= h
+
+have x R
+know:
+    0 <= x
+x $in cinf(0)
+
+prove:
+    $is_nonempty_set(cc(0, 0))
+
+prove:
+    $is_nonempty_set(oo(0, 1))
+
+prove:
+    $is_nonempty_set(info(1))
+
+prove:
+    $is_nonempty_set(infc(1))
+
+prove:
+    $is_nonempty_set(oinf(0))
+
+prove:
+    $is_nonempty_set(cinf(0))

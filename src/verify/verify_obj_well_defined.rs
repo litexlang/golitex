@@ -75,6 +75,9 @@ impl Runtime {
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::IntervalObj(x) => self.verify_interval_obj_well_defined(x, verify_state),
+            Obj::OneSideInfinityIntervalObj(x) => {
+                self.verify_one_side_infinity_interval_obj_well_defined(x, verify_state)
+            }
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
             Obj::SeqSet(x) => self.verify_seq_set_well_defined(x, verify_state),
             Obj::FiniteSeqListObj(x) => {
@@ -1804,6 +1807,16 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(x.end(), verify_state)?;
         self.require_obj_in_r(x.start(), verify_state)?;
         self.require_obj_in_r(x.end(), verify_state)?;
+        Ok(())
+    }
+
+    fn verify_one_side_infinity_interval_obj_well_defined(
+        &mut self,
+        x: &OneSideInfinityIntervalObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
+        self.require_obj_in_r(x.start(), verify_state)?;
         Ok(())
     }
 

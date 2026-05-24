@@ -162,6 +162,23 @@ impl Runtime {
                     }
                 }
             }
+            Obj::OneSideInfinityIntervalObj(interval) => {
+                let start = self.resolve_obj(interval.start());
+                match interval {
+                    OneSideInfinityIntervalObj::LeftOpen(_) => {
+                        OneSideInfinityIntervalObj::new_left_open(start).into()
+                    }
+                    OneSideInfinityIntervalObj::LeftClosed(_) => {
+                        OneSideInfinityIntervalObj::new_left_closed(start).into()
+                    }
+                    OneSideInfinityIntervalObj::RightOpen(_) => {
+                        OneSideInfinityIntervalObj::new_right_open(start).into()
+                    }
+                    OneSideInfinityIntervalObj::RightClosed(_) => {
+                        OneSideInfinityIntervalObj::new_right_closed(start).into()
+                    }
+                }
+            }
             Obj::FnObj(fn_obj) => {
                 if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() {
                     if !fn_obj.body.is_empty() {

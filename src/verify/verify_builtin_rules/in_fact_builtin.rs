@@ -177,6 +177,12 @@ impl Runtime {
             (_, Obj::IntervalObj(interval)) => {
                 self.verify_in_fact_interval_by_real_order_bounds(in_fact, interval, verify_state)
             }
+            (_, Obj::OneSideInfinityIntervalObj(interval)) => self
+                .verify_in_fact_one_side_infinity_interval_by_real_order_bound(
+                    in_fact,
+                    interval,
+                    verify_state,
+                ),
             (
                 Obj::Add(_)
                 | Obj::Sub(_)
@@ -1473,6 +1479,55 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "in real interval: x in R and endpoint bounds".to_string(),
+                step_results,
+            )
+            .into(),
+        )
+    }
+
+    fn verify_in_fact_one_side_infinity_interval_by_real_order_bound(
+        &mut self,
+        in_fact: &InFact,
+        interval: &OneSideInfinityIntervalObj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let mut step_results = Vec::new();
+
+        // Half-infinite real interval membership requires a real element and the finite endpoint bound.
+        // Example: `x $in cinf(a)` follows from `x $in R` and `a <= x`.
+        let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
+        let in_r_result = self.verify_non_equational_atomic_fact(&in_r, verify_state, true)?;
+        if !in_r_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(in_r_result);
+
+        let bound: AtomicFact = match interval {
+            OneSideInfinityIntervalObj::LeftOpen(_) => {
+                LessFact::new(interval.start().clone(), elem.clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::LeftClosed(_) => {
+                LessEqualFact::new(interval.start().clone(), elem.clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::RightOpen(_) => {
+                LessFact::new(elem.clone(), interval.start().clone(), lf.clone()).into()
+            }
+            OneSideInfinityIntervalObj::RightClosed(_) => {
+                LessEqualFact::new(elem.clone(), interval.start().clone(), lf.clone()).into()
+            }
+        };
+        let bound_result = self.verify_non_equational_atomic_fact(&bound, verify_state, true)?;
+        if !bound_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(bound_result);
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "in half-infinite real interval: x in R and endpoint bound".to_string(),
                 step_results,
             )
             .into(),

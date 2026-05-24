@@ -362,6 +362,17 @@ have w set = closed_range(0, 1)
 have q set = 0 `closed_range 1
 ```
 
+#### Real intervals as sets
+
+Two-sided real intervals use `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)`. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
+
+```litex
+have left set = info(1)
+have right set = cinf(0)
+```
+
+Membership unfolds to real membership and the endpoint bounds. For example, `x $in info(a)` gives `x $in R` and `x < a`; `x $in cinf(a)` gives `x $in R` and `a <= x`.
+
 #### Sequence- and matrix-style index sets
 
 Some indexed objects use **sequence** types or matrix index domains (repeated indices, `closed_range` on each axis) instead of a single `sum` index. Typical patterns appear with `have fn M(i …, j …) …` (see below).
@@ -3059,7 +3070,7 @@ Type predicates recognize standard object shapes.
 $is_set({1, 2})
 ```
 
-Nonempty enumerated sets, standard sets such as `R`, power sets, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
+Nonempty enumerated sets, standard sets such as `R`, power sets, integer closed ranges with valid endpoints, real intervals with compatible endpoint order, half-infinite real intervals with real finite endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
 
 ```litex
 $is_nonempty_set({1})
@@ -3068,6 +3079,21 @@ $is_nonempty_set({1})
 ```litex
 prove:
     $is_nonempty_set(closed_range(0, 2))
+```
+
+```litex
+prove:
+    $is_nonempty_set(cc(0, 0))
+```
+
+```litex
+prove:
+    $is_nonempty_set(oo(0, 2))
+```
+
+```litex
+prove:
+    $is_nonempty_set(cinf(0))
 ```
 
 ```litex
@@ -3442,6 +3468,28 @@ known:
 
 inferred:
     i = 1
+```
+
+#### Real Intervals
+
+Membership in a real interval gives real membership and the corresponding endpoint bounds.
+
+```text
+known:
+    x $in info(1)
+
+inferred:
+    x $in R
+    x < 1
+```
+
+```text
+known:
+    x $in cinf(0)
+
+inferred:
+    x $in R
+    0 <= x
 ```
 
 #### Set Comprehensions

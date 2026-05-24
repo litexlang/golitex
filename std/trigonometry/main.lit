@@ -9,6 +9,9 @@ let tan set
 let cot set
 let sec set
 let csc set
+let arcsin set
+let arccos set
+let arctan set
 
 know:
     sin $in fn(x R) R
@@ -17,6 +20,9 @@ know:
     cot $in fn(x R: sin(x) != 0) R
     sec $in fn(x R: cos(x) != 0) R
     csc $in fn(x R: sin(x) != 0) R
+    arcsin $in fn(x R: -1 <= x <= 1) R
+    arccos $in fn(x R: -1 <= x <= 1) R
+    arctan $in fn(x R) R
 
     sin(0) = 0
     cos(0) = 1
@@ -199,3 +205,79 @@ know:
         tan(3 * pi / 4 + k * pi) = -1
         cos(5 * pi / 6 + k * pi) != 0
         tan(5 * pi / 6 + k * pi) = (-1 * sqrt(3)) / 3
+
+    # Principal-value inverse trigonometric functions.
+    forall x R:
+        -1 <= x <= 1
+        =>:
+            -pi / 2 <= arcsin(x) <= pi / 2
+            0 <= arccos(x) <= pi
+            sin(arcsin(x)) = x
+            cos(arccos(x)) = x
+            arcsin(x) + arccos(x) = pi / 2
+
+    forall x R:
+        -1 < x < 1
+        =>:
+            cos(arcsin(x)) = sqrt(1 - x^2)
+            cos(arcsin(x)) > 0
+            sin(arccos(x)) = sqrt(1 - x^2)
+            sin(arccos(x)) > 0
+
+    forall x R:
+        -pi / 2 <= x <= pi / 2
+        =>:
+            arcsin(sin(x)) = x
+
+    forall x R:
+        0 <= x <= pi
+        =>:
+            arccos(cos(x)) = x
+
+    forall x R:
+        -pi / 2 < arctan(x) < pi / 2
+        cos(arctan(x)) > 0
+        sin(arctan(x)) = x / sqrt(1 + x^2)
+        cos(arctan(x)) = 1 / sqrt(1 + x^2)
+        tan(arctan(x)) = x
+
+    forall x R:
+        -pi / 2 < x < pi / 2
+        =>:
+            cos(x) != 0
+            arctan(tan(x)) = x
+
+    forall x R:
+        -1 <= x <= 1
+        =>:
+            arcsin(-1 * x) = -1 * arcsin(x)
+            arccos(-1 * x) = pi - arccos(x)
+
+    forall x R:
+        arctan(-1 * x) = -1 * arctan(x)
+
+    arcsin(-1) = -pi / 2
+    arcsin(-1 / 2) = -pi / 6
+    arcsin(0) = 0
+    arcsin(1 / 2) = pi / 6
+    arcsin(sqrt(2) / 2) = pi / 4
+    arcsin(sqrt(3) / 2) = pi / 3
+    arcsin(1) = pi / 2
+
+    arccos(1) = 0
+    arccos(sqrt(3) / 2) = pi / 6
+    arccos(sqrt(2) / 2) = pi / 4
+    arccos(1 / 2) = pi / 3
+    arccos(0) = pi / 2
+    arccos(-1 / 2) = 2 * pi / 3
+    arccos((-1 * sqrt(2)) / 2) = 3 * pi / 4
+    arccos((-1 * sqrt(3)) / 2) = 5 * pi / 6
+    arccos(-1) = pi
+
+    arctan(-1 * sqrt(3)) = -pi / 3
+    arctan((-1 * sqrt(3)) / 3) = -pi / 6
+    arctan(-1) = -pi / 4
+    arctan(0) = 0
+    arctan(sqrt(3) / 3) = pi / 6
+    arctan(1) = pi / 4
+    arctan(sqrt(3)) = pi / 3

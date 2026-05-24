@@ -279,6 +279,10 @@ impl Runtime {
                 Obj::IntervalObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::OneSideInfinityIntervalObj(a) => match right {
+                Obj::OneSideInfinityIntervalObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
             Obj::Atom(AtomObj::Forall(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Forall(b)) if a.to_string() == b.to_string())
