@@ -61,6 +61,20 @@ An agent should respond differently to each status:
 This loop is close to ordinary mathematical debugging. The agent states the
 next fact, checks it, and repairs only the local failure.
 
+## Agent Harness
+
+For automation, use:
+
+```bash
+litex -harness -f proof.lit
+```
+
+The harness wraps the ordinary statement-by-statement verifier output in a
+single JSON object with a run summary, `know` proof-debt count, failure root
+cause, and a small `next_action` label. A failed verification or remaining
+`know` proof debt returns a nonzero exit code, so scripts and agents can use it
+as the outer task loop while still reading the detailed Litex trace.
+
 ## Case Study
 
 The key case study is the final Chapter 8 example in The Mechanics of Litex

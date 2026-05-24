@@ -77,13 +77,21 @@ impl Runtime {
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Pow(pow) => {
-                let result: Obj =
-                    Pow::new(self.resolve_obj(&pow.base), self.resolve_obj(&pow.exponent)).into();
+                let result = self.resolve_pow_after_children(
+                    self.resolve_obj(&pow.base),
+                    self.resolve_obj(&pow.exponent),
+                );
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Div(div) => {
-                let result: Obj =
-                    Div::new(self.resolve_obj(&div.left), self.resolve_obj(&div.right)).into();
+                let resolved_left = self.resolve_obj(&div.left);
+                let resolved_right = self.resolve_obj(&div.right);
+                if let Some(cancelled) = self
+                    .try_resolve_division_by_matching_mul_factor(&resolved_left, &resolved_right)
+                {
+                    return cancelled;
+                }
+                let result: Obj = Div::new(resolved_left, resolved_right).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {
@@ -431,4 +439,174 @@ impl Runtime {
         }
         None
     }
+
+    /// Cancel a matching multiplicative factor when the divisor is known nonzero.
+    /// Example: from `a != 0`, both `a * b / a` and `b * a / a` resolve to `b`.
+    fn try_resolve_division_by_matching_mul_factor(
+        &self,
+        numerator: &Obj,
+        denominator: &Obj,
+    ) -> Option<Obj> {
+        let Obj::Mul(mul) = numerator else {
+            return None;
+        };
+
+        let denominator_key = denominator.to_string();
+        let cancelled = if mul.left.to_string() == denominator_key {
+            mul.right.as_ref().clone()
+        } else if mul.right.to_string() == denominator_key {
+            mul.left.as_ref().clone()
+        } else {
+            return None;
+        };
+
+        let denominator_known_nonzero = if let Some(number) =
+            self.resolve_obj_to_number(denominator)
+        {
+            !matches!(
+                compare_normalized_number_str_to_zero(&number.normalized_value),
+                NumberCompareResult::Equal
+            )
+        } else {
+            let zero: Obj = Number::new("0".to_string()).into();
+            let forward: Fact =
+                NotEqualFact::new(denominator.clone(), zero.clone(), default_line_file()).into();
+            let backward: Fact =
+                NotEqualFact::new(zero, denominator.clone(), default_line_file()).into();
+            self.cache_known_facts_contains(&forward.to_string()).0
+                || self.cache_known_facts_contains(&backward.to_string()).0
+        };
+
+        if denominator_known_nonzero {
+            Some(cancelled)
+        } else {
+            None
+        }
+    }
+
+    fn resolve_pow_after_children(&self, base: Obj, exponent: Obj) -> Obj {
+        if let Some(signless_base) = try_remove_even_power_negative_sign(&base, &exponent) {
+            let signless_power: Obj = Pow::new(signless_base, exponent.clone()).into();
+            return self.resolve_obj(&signless_power);
+        }
+
+        if let Some(resolved_sqrt_power) = self.try_resolve_sqrt_even_power(&base, &exponent) {
+            return resolved_sqrt_power;
+        }
+
+        if let Some(resolved_product_power) =
+            self.try_resolve_product_power_to_number(&base, &exponent)
+        {
+            return resolved_product_power;
+        }
+
+        Pow::new(base, exponent).into()
+    }
+
+    fn try_resolve_sqrt_even_power(&self, base: &Obj, exponent: &Obj) -> Option<Obj> {
+        let exponent_value = nonnegative_integer_value(exponent)?;
+        if exponent_value % 2 != 0 {
+            return None;
+        }
+        let Obj::Sqrt(sqrt) = base else {
+            return None;
+        };
+
+        let half_exponent = exponent_value / 2;
+        if half_exponent == 0 {
+            return Some(Number::new("1".to_string()).into());
+        }
+        if half_exponent == 1 {
+            return Some(self.resolve_obj(sqrt.arg.as_ref()));
+        }
+
+        let half_exponent_obj: Obj = Number::new(half_exponent.to_string()).into();
+        let result: Obj = Pow::new(sqrt.arg.as_ref().clone(), half_exponent_obj).into();
+        Some(self.resolve_obj(&result))
+    }
+
+    fn try_resolve_product_power_to_number(&self, base: &Obj, exponent: &Obj) -> Option<Obj> {
+        nonnegative_integer_value(exponent)?;
+
+        let mut factors = Vec::new();
+        collect_mul_factors(base, &mut factors);
+        if factors.len() <= 1 {
+            return None;
+        }
+
+        let mut product = "1".to_string();
+        for factor in factors {
+            let factor_power: Obj = Pow::new(factor, exponent.clone()).into();
+            let resolved_factor_power = self.resolve_obj(&factor_power);
+            let number = self.resolve_obj_to_number(&resolved_factor_power)?;
+            product = mul_signed_decimal_str(product.as_str(), number.normalized_value.as_str());
+        }
+
+        Some(Number::new(product).into())
+    }
+}
+
+fn nonnegative_integer_value(obj: &Obj) -> Option<usize> {
+    let Obj::Number(number) = obj else {
+        return None;
+    };
+    if number.normalized_value.starts_with('-') {
+        return None;
+    }
+    if !is_number_string_literally_integer_without_dot(number.normalized_value.clone()) {
+        return None;
+    }
+    number.normalized_value.parse::<usize>().ok()
+}
+
+fn try_remove_even_power_negative_sign(base: &Obj, exponent: &Obj) -> Option<Obj> {
+    let exponent_value = nonnegative_integer_value(exponent)?;
+    if exponent_value % 2 != 0 {
+        return None;
+    }
+
+    let mut factors = Vec::new();
+    collect_mul_factors(base, &mut factors);
+    let mut sign_removed = false;
+    let mut signless_factors = Vec::with_capacity(factors.len());
+    for factor in factors {
+        if !sign_removed {
+            if let Obj::Number(number) = &factor {
+                if let Some(positive_value) = number.normalized_value.strip_prefix('-') {
+                    sign_removed = true;
+                    if positive_value != "1" {
+                        signless_factors.push(Number::new(positive_value.to_string()).into());
+                    }
+                    continue;
+                }
+            }
+        }
+        signless_factors.push(factor);
+    }
+
+    if !sign_removed {
+        return None;
+    }
+    Some(obj_from_mul_factors(signless_factors))
+}
+
+fn collect_mul_factors(obj: &Obj, factors: &mut Vec<Obj>) {
+    if let Obj::Mul(mul) = obj {
+        collect_mul_factors(mul.left.as_ref(), factors);
+        collect_mul_factors(mul.right.as_ref(), factors);
+    } else {
+        factors.push(obj.clone());
+    }
+}
+
+fn obj_from_mul_factors(factors: Vec<Obj>) -> Obj {
+    let mut iter = factors.into_iter();
+    let Some(first) = iter.next() else {
+        return Number::new("1".to_string()).into();
+    };
+    let mut result = first;
+    for factor in iter {
+        result = Mul::new(result, factor).into();
+    }
+    result
 }

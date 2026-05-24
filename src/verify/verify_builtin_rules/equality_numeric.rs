@@ -299,6 +299,105 @@ impl Runtime {
         Ok(None)
     }
 
+    // Zero-product cancellation: from `a * b = 0` and `a != 0`, infer `b = 0` (and symmetrically).
+    // Example: from `(x - 1) * y = 0` and `x - 1 != 0`, prove `y = 0`.
+    pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let target = if Self::obj_is_builtin_literal_zero(left) {
+            right
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            left
+        } else {
+            return Ok(None);
+        };
+
+        let zero_obj = Self::literal_zero_obj_for_abs_builtin();
+        let zero_key = zero_obj.to_string();
+        let zero_equal_objs_by_env: Vec<Vec<Obj>> = self
+            .iter_environments_from_top()
+            .filter_map(|env| {
+                env.known_equality
+                    .get(&zero_key)
+                    .map(|(_, equal_objs)| equal_objs.iter().cloned().collect())
+            })
+            .collect();
+
+        for zero_equal_objs in zero_equal_objs_by_env {
+            for equal_obj in zero_equal_objs {
+                let Obj::Mul(mul) = equal_obj else {
+                    continue;
+                };
+
+                let left_target_result = self.verify_objs_are_equal_in_equality_builtin(
+                    target,
+                    mul.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if left_target_result.is_true() {
+                    let right_nonzero: AtomicFact = NotEqualFact::new(
+                        mul.right.as_ref().clone(),
+                        zero_obj.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
+                    let right_nonzero_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &right_nonzero,
+                            verify_state,
+                        )?;
+                    if right_nonzero_result.is_true() {
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                "equality: b = 0 from a * b = 0 and a != 0".to_string(),
+                                vec![left_target_result, right_nonzero_result],
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+
+                let right_target_result = self.verify_objs_are_equal_in_equality_builtin(
+                    target,
+                    mul.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if right_target_result.is_true() {
+                    let left_nonzero: AtomicFact = NotEqualFact::new(
+                        mul.left.as_ref().clone(),
+                        zero_obj.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
+                    let left_nonzero_result = self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &left_nonzero,
+                            verify_state,
+                        )?;
+                    if left_nonzero_result.is_true() {
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                "equality: a = 0 from a * b = 0 and b != 0".to_string(),
+                                vec![right_target_result, left_nonzero_result],
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
     // 0 = a^n when n is a literal integer > 0 (avoids 0^0 /0^negative), from a = 0.
     pub(crate) fn try_verify_zero_equals_pow_from_base_zero(
         &mut self,
