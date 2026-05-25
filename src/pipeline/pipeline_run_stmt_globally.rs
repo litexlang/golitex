@@ -39,7 +39,12 @@ fn run_file(
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
-    run_file_at_resolved_path(_run_file_stmt.clone().into(), path, _runtime)
+    run_file_at_resolved_path(
+        _run_file_stmt.clone().into(),
+        path,
+        Some(("run_file", "external_file")),
+        _runtime,
+    )
 }
 
 fn run_file_in_std_folder(
@@ -47,12 +52,19 @@ fn run_file_in_std_folder(
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let path = resolve_run_file_in_std_path(run_file_in_std)?;
-    run_file_at_resolved_path(run_file_in_std.clone().into(), path, runtime)
+    let source = format!("std/{}", run_file_in_std.file_path);
+    run_file_at_resolved_path(
+        run_file_in_std.clone().into(),
+        path,
+        Some(("std", source.as_str())),
+        runtime,
+    )
 }
 
 fn run_file_at_resolved_path(
     stmt: Stmt,
     path: String,
+    display_source_label: Option<(&str, &str)>,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
@@ -69,6 +81,11 @@ fn run_file_at_resolved_path(
     })?;
 
     let current_file_index = runtime.module_manager.current_file_index;
+    if let Some((source_kind, source)) = display_source_label {
+        runtime
+            .module_manager
+            .register_display_source_label(path.as_str(), source_kind, source);
+    }
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
 
     let result = run_source_code(content.as_str(), runtime);

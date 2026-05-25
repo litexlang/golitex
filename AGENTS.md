@@ -2,6 +2,85 @@
 
 Always apply these rules when working in this repository.
 
+## Project Direction Through September
+
+The main project direction through September is to use real mathematical
+translation work as a pressure test for Litex. The target sources include
+Mathematics in Lean, Terry Tao's Analysis I, miniF2F, MATH500, high-school
+mathematics datasets, and Weil's Number Theory for Beginners.
+
+The purpose is twofold:
+
+1. Build strong evidence that Litex can express and verify meaningful
+   mathematics quickly.
+
+2. Use translation failures to discover real language, standard library,
+   kernel, inference, automation, and diagnostic gaps.
+
+Treat this as a structured feedback loop, not as a line-by-line porting
+project. For each source, start with a small vertical slice before attempting
+large-scale coverage. A useful slice is around 20-50 representative problems,
+definitions, or theorem statements.
+
+For each translated item, follow this loop:
+
+1. Understand the mathematics first.
+
+2. Write a natural Litex statement and proof attempt that matches the current
+   verifier style.
+
+3. Run the verifier and read the exact output.
+
+4. Make the next smallest correction.
+
+5. Classify the result as one of:
+   - `translated`: the mathematical statement is naturally expressed in Litex.
+   - `checkable`: the statement and proof are fully verified by Litex.
+   - `blocked`: the failure reason is understood and recorded with a minimal
+     reproduction.
+
+Classify blockers explicitly. Useful blocker labels include:
+
+1. `blocked_by_language`: Litex cannot naturally express the object,
+   binding structure, or proposition yet.
+
+2. `blocked_by_stdlib`: the proof needs missing definitions, lemmas, or
+   theorem organization.
+
+3. `blocked_by_infer_rule`: the mathematical step is simple but needs a new
+   infer rule or builtin rule.
+
+4. `blocked_by_kernel`: the verifier, runtime, well-definedness logic, or
+   core proof model is missing required behavior.
+
+5. `blocked_by_syntax`: the parser or syntax makes the intended expression
+   awkward or impossible.
+
+6. `blocked_by_diagnostics`: the verifier output is too indirect, confusing,
+   or misleading to support a tight feedback loop.
+
+7. `blocked_by_formulation`: the source statement needs a more natural Litex
+   formulation rather than a mechanical translation.
+
+Prefer early work on low-dependency, high-feedback corpora such as MATH500,
+high-school math, and small miniF2F slices. Use Mathematics in Lean as a
+standard library roadmap. Use Tao's Analysis I and Weil's Number Theory for
+Beginners as deeper stress tests for structured definitions, chapter
+dependencies, and long-form mathematical development.
+
+Successful translations should become examples, benchmarks, or documentation
+snippets when appropriate. Failed translations should become minimal blockers
+that guide standard library work, language design, kernel improvements, or
+better diagnostics. It is acceptable to use `know` or `abstract_prop` only when
+the blocked part is clearly labeled and the rest of the development remains
+explicit and checkable.
+
+By September, a good outcome is not only a large number of translated items. A
+good outcome is a working translation pipeline, checkable examples across the
+main source families, a clear standard library gap map, a benchmark set for
+Litex's mathematical ability, and minimal reproductions for the important
+blockers.
+
 ## General Engineering Style
 
 1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
