@@ -1,10 +1,12 @@
 use crate::infer::obj_eligible_for_known_objs_in_fn_sets;
 use crate::prelude::*;
 use crate::verify::{
-    number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
-    number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz, verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
-    verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
+    compare_normalized_number_str_to_zero, number_is_in_n, number_is_in_n_pos, number_is_in_q_neg,
+    number_is_in_q_nz, number_is_in_q_pos, number_is_in_r_neg, number_is_in_r_nz,
+    number_is_in_r_pos, number_is_in_z, number_is_in_z_neg, number_is_in_z_nz,
+    verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
+    verify_number_in_standard_set::is_integer_after_simplification, NumberCompareResult,
+    VerifyState,
 };
 use std::collections::HashMap;
 
@@ -15,6 +17,11 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &not_in_fact.set {
+            if matches!(standard_set, StandardSet::Z) {
+                if let Some(result) = self.verify_not_in_z_for_resolved_numeric_div(not_in_fact) {
+                    return Ok(result);
+                }
+            }
             if !matches!(&not_in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =
                     not_in_fact.element.evaluate_to_normalized_decimal_number()
@@ -2394,6 +2401,59 @@ impl Runtime {
             }
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn verify_not_in_z_for_resolved_numeric_div(
+        &self,
+        not_in_fact: &NotInFact,
+    ) -> Option<StmtResult> {
+        let (numerator, denominator) = self.resolved_numeric_div_operands(&not_in_fact.element)?;
+        if !number_is_in_z(&numerator) || !number_is_in_z_nz(&denominator) {
+            return None;
+        }
+
+        let remainder_obj: Obj = Mod::new(numerator.into(), denominator.into()).into();
+        let remainder = self.resolve_obj_to_number_resolved(&remainder_obj)?;
+        if matches!(
+            compare_normalized_number_str_to_zero(&remainder.normalized_value),
+            NumberCompareResult::Equal
+        ) {
+            return None;
+        }
+
+        Some(not_in_fact_verified_by_builtin_rules_result(
+            not_in_fact,
+            "numeric division not in Z: resolved numerator % denominator != 0",
+        ))
+    }
+
+    fn resolved_numeric_div_operands(&self, obj: &Obj) -> Option<(Number, Number)> {
+        if let Some(operands) = self.numeric_div_operands_after_resolve(obj) {
+            return Some(operands);
+        }
+
+        let obj_key = obj.to_string();
+        for env in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = env.known_equality.get(&obj_key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                if let Some(operands) = self.numeric_div_operands_after_resolve(equal_obj) {
+                    return Some(operands);
+                }
+            }
+        }
+        None
+    }
+
+    fn numeric_div_operands_after_resolve(&self, obj: &Obj) -> Option<(Number, Number)> {
+        let resolved = self.resolve_obj(obj);
+        let Obj::Div(div) = resolved else {
+            return None;
+        };
+        let numerator = self.resolve_obj_to_number_resolved(div.left.as_ref())?;
+        let denominator = self.resolve_obj_to_number_resolved(div.right.as_ref())?;
+        Some((numerator, denominator))
     }
 
     fn verify_in_fact_by_left_is_tuple_right_is_cart(

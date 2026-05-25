@@ -444,6 +444,9 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
         let source_code = r#"
 sqrt(0) = 0
 sqrt(1) = 1
+sqrt(4) = 2
+sqrt(452) = sqrt(4 * 113)
+sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
 sqrt(2) $in R
 sqrt(3) / 2 $in R
 
@@ -456,6 +459,14 @@ forall x R:
     x > 0
     =>:
         sqrt(x) > 0
+
+forall x, a, b R:
+    x >= 0
+    a >= 0
+    b >= 0
+    x = a * b
+    =>:
+        sqrt(x) = sqrt(a) * sqrt(b)
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
