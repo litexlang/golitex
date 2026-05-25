@@ -213,6 +213,96 @@ fn mod_positive_integer_residue_or_is_exhaustive(or_fact: &OrFact) -> bool {
     seen_residues.iter().all(|seen| *seen)
 }
 
+fn integer_literal_i128_for_or_builtin(obj: &Obj) -> Option<i128> {
+    let Obj::Number(n) = obj else {
+        return None;
+    };
+    n.normalized_value.parse::<i128>().ok()
+}
+
+fn integer_successor_value_for_or_builtin(base: &Obj, offset: usize) -> Obj {
+    if offset == 0 {
+        return base.clone();
+    }
+    if let Some(base_value) = integer_literal_i128_for_or_builtin(base) {
+        return Number::new((base_value + offset as i128).to_string()).into();
+    }
+    Add::new(base.clone(), Number::new(offset.to_string()).into()).into()
+}
+
+fn equality_branch_matches_subject_and_value(
+    atomic: &AtomicFact,
+    subject: &Obj,
+    value: &Obj,
+) -> bool {
+    let AtomicFact::EqualFact(eq) = atomic else {
+        return false;
+    };
+    (objs_equal_by_display_string(&eq.left, subject)
+        && objs_equal_by_display_string(&eq.right, value))
+        || (objs_equal_by_display_string(&eq.right, subject)
+            && objs_equal_by_display_string(&eq.left, value))
+}
+
+fn strict_tail_branch_matches_subject_and_value(
+    atomic: &AtomicFact,
+    subject: &Obj,
+    tail_value: &Obj,
+) -> bool {
+    match atomic {
+        AtomicFact::GreaterFact(g) => {
+            objs_equal_by_display_string(&g.left, subject)
+                && objs_equal_by_display_string(&g.right, tail_value)
+        }
+        AtomicFact::LessFact(l) => {
+            objs_equal_by_display_string(&l.right, subject)
+                && objs_equal_by_display_string(&l.left, tail_value)
+        }
+        _ => false,
+    }
+}
+
+fn integer_successor_tail_or_pattern(or_fact: &OrFact) -> Option<(Obj, Obj)> {
+    if or_fact.facts.len() < 2 {
+        return None;
+    }
+    let AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(first_eq)) = &or_fact.facts[0] else {
+        return None;
+    };
+    let subject_base_candidates = [
+        (first_eq.left.clone(), first_eq.right.clone()),
+        (first_eq.right.clone(), first_eq.left.clone()),
+    ];
+    for (subject, base) in subject_base_candidates {
+        if integer_successor_tail_or_pattern_with_subject_base(or_fact, &subject, &base) {
+            return Some((subject, base));
+        }
+    }
+    None
+}
+
+fn integer_successor_tail_or_pattern_with_subject_base(
+    or_fact: &OrFact,
+    subject: &Obj,
+    base: &Obj,
+) -> bool {
+    let equality_count = or_fact.facts.len() - 1;
+    for (offset, fact) in or_fact.facts.iter().take(equality_count).enumerate() {
+        let AndChainAtomicFact::AtomicFact(atomic) = fact else {
+            return false;
+        };
+        let value = integer_successor_value_for_or_builtin(base, offset);
+        if !equality_branch_matches_subject_and_value(atomic, subject, &value) {
+            return false;
+        }
+    }
+    let tail_value = integer_successor_value_for_or_builtin(base, equality_count - 1);
+    let AndChainAtomicFact::AtomicFact(last_atomic) = &or_fact.facts[equality_count] else {
+        return false;
+    };
+    strict_tail_branch_matches_subject_and_value(last_atomic, subject, &tail_value)
+}
+
 fn obj_is_literal_zero_for_or_builtin(obj: &Obj) -> bool {
     match obj {
         Obj::Number(n) => n.normalized_value == "0",
@@ -365,6 +455,12 @@ impl Runtime {
         }
 
         if let Some(result) =
+            self.try_verify_integer_successor_tail_or_from_lower_bound(or_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+
+        if let Some(result) =
             self.try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(or_fact)?
         {
             return Ok(result);
@@ -397,6 +493,46 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    /// Integer lower-bound split into finitely many successor equalities plus a strict tail.
+    /// Applies when `x $in Z`, `a $in Z`, and `x >= a` are known or builtin-provable.
+    /// Example: from `x $in Z` and `x >= 1`, infer `x = 1 or x = 2 or x = 3 or x > 3`.
+    fn try_verify_integer_successor_tail_or_from_lower_bound(
+        &mut self,
+        or_fact: &OrFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((subject, base)) = integer_successor_tail_or_pattern(or_fact) else {
+            return Ok(None);
+        };
+
+        let line_file = or_fact.line_file.clone();
+        let z_set: Obj = StandardSet::Z.into();
+        let prerequisites: Vec<AtomicFact> = vec![
+            InFact::new(subject.clone(), z_set.clone(), line_file.clone()).into(),
+            InFact::new(base.clone(), z_set, line_file.clone()).into(),
+            GreaterEqualFact::new(subject, base, line_file).into(),
+        ];
+        let mut steps = Vec::with_capacity(prerequisites.len());
+        for prerequisite in prerequisites {
+            let result = self
+                .verify_non_equational_known_then_builtin_rules_only(&prerequisite, verify_state)?;
+            if result.is_unknown() {
+                return Ok(None);
+            }
+            steps.push(result);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                or_fact.clone().into(),
+                InferResult::new(),
+                "or: integer lower bound split into finite successors and strict tail".to_string(),
+                steps,
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(

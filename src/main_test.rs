@@ -993,6 +993,116 @@ $q(1)
     }
 
     #[test]
+    fn definition_namespaces_allow_same_spelling_across_kinds() {
+        let source_code = r#"
+have fn SharedName(x R) R = 1
+algo SharedName(x):
+    1
+prop SharedName(x R)
+struct SharedName:
+    value R
+    other R
+template SharedName<s set>:
+    have SharedName set = s
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "definition_namespaces_allow_same_spelling_across_kinds",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "same spelling across independent definition namespaces failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn duplicate_definition_names_fail_in_their_namespace() {
+        let cases = [
+            ("prop", "prop dup_prop(x R)\nprop dup_prop(x R)"),
+            (
+                "abstract_prop",
+                "abstract_prop dup_abstract(x)\nabstract_prop dup_abstract(x)",
+            ),
+            (
+                "abstract_prop after prop",
+                "prop dup_predicate(x R)\nabstract_prop dup_predicate(x)",
+            ),
+            (
+                "prop after abstract_prop",
+                "abstract_prop dup_predicate2(x)\nprop dup_predicate2(x R)",
+            ),
+            (
+                "struct",
+                "struct DupStruct:\n    value R\n    other R\nstruct DupStruct:\n    value R\n    other R",
+            ),
+            (
+                "template",
+                "template DupTemplate<s set>:\n    have DupTemplate set = s\ntemplate DupTemplate<s set>:\n    have DupTemplate set = s",
+            ),
+            (
+                "algo",
+                "have fn dup_algo(x R) R = 1\nalgo dup_algo(x):\n    1\nalgo dup_algo(x):\n    1",
+            ),
+            (
+                "auto algo",
+                "have fn as algo dup_auto_algo(x R) R = 1\nalgo dup_auto_algo(x):\n    1",
+            ),
+        ];
+
+        for (label, source_code) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                format!("duplicate_definition_names_{}", label).as_str(),
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "duplicate {} definition should fail, but succeeded:\n{}",
+                label, run_output
+            );
+            assert!(
+                run_output.contains("NameAlreadyUsedError"),
+                "duplicate {} definition should report NameAlreadyUsedError:\n{}",
+                label,
+                run_output
+            );
+        }
+    }
+
+    #[test]
+    fn have_fn_as_algo_rejects_non_atomic_case_condition() {
+        let source_code = "\
+have fn as algo bad_algo_case(x, y R) R by cases:
+    case x = 0 and y = 0: 0";
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_fn_as_algo_non_atomic_case");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "non-atomic generated algo case should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("generated algo case")
+                && run_output.contains("currently require atomic case conditions"),
+            "non-atomic generated algo case should report a targeted error:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn run_file_from_path() {
         run_with_large_stack("run_file_from_path_large_stack", run_file_from_path_impl);
     }

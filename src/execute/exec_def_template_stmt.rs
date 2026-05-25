@@ -185,6 +185,7 @@ impl Runtime {
                     HaveFnEqualStmt::new(
                         instance_name.to_string(),
                         anonymous_fn,
+                        s.as_algo,
                         line_file.clone(),
                     )
                     .into(),
@@ -214,6 +215,7 @@ impl Runtime {
                     fn_set_clause,
                     cases,
                     equal_tos,
+                    s.as_algo,
                     line_file.clone(),
                 )
                 .into())
@@ -234,6 +236,7 @@ impl Runtime {
                     measure,
                     lower_bound,
                     cases,
+                    s.as_algo,
                     line_file.clone(),
                 )
                 .into())

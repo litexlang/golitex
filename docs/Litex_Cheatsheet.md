@@ -124,6 +124,18 @@ prove:
 
 > **Hint - when fact1 is correct then fact1 or fact2 or ... factn is correct.**
 
+For integer lower bounds, Litex can verify finite successor splits followed by a strict tail:
+
+```litex
+prove:
+    let a, x Z:
+        x >= a
+
+    x = a or x = a + 1 or x = a + 2 or x > a + 2
+```
+
+This uses the integer facts `x $in Z` and `a $in Z`; it is not a real-number split.
+
 ---
 
 ### Conjunction (`and`)
@@ -355,6 +367,8 @@ have fn f(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
     case b > 0: f(a, b - 1) + 1
 ```
+
+Use the signature parameter names inside cases; `by induc` does not introduce a fresh `n`.
 
 ---
 

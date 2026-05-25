@@ -253,3 +253,6 @@ know:
 
     forall q Q:
         exist a Z, b N_pos st {q = a / b, $coprime(a, b)}
+
+    forall q Q:
+        exist! a Z, b N_pos st {q = a / b, $coprime(a, b)}

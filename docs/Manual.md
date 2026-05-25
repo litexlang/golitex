@@ -1128,6 +1128,8 @@ When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex ca
 
 Every case list must cover all possibilities in its current context, and cases must be mutually exclusive. Nested case lists are checked under their parent case assumptions.
 
+The case body uses the parameter names from the function signature. For example, if the header is `have fn f(x Z: ...)`, the recursive branch should call `f(x - 1)`, not `f(n - 1)`.
+
 ```litex
 have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
@@ -2082,6 +2084,21 @@ goal:
 reason:
     builtin rule
 ```
+
+For integers, Litex has a builtin exhaustive split from a lower bound. If
+`x $in Z`, `a $in Z`, and `x >= a` are known, then Litex can verify a finite
+successor split followed by a strict tail:
+
+```litex
+prove:
+    let a, x Z:
+        x >= a
+
+    x = a or x = a + 1 or x = a + 2 or x > a + 2
+```
+
+This rule is integer-only. The analogous real-number statement would not be
+valid, since a real number can lie strictly between two consecutive integers.
 
 ```text
 known:
