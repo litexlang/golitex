@@ -1,7 +1,7 @@
-have fn f(x Z: x >= 0) R by decreasing x from 0:
+have fn f(x Z: x >= 0) R by induc x from 0:
     case x = 0: 1
     case x > 0: f(x - 1) + 1
 
-have fn g(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+have fn g(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
     case b > 0: g(a, b - 1) + 1

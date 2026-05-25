@@ -1120,16 +1120,16 @@ forall x A:
 
 ---
 
-### Recursive function by decreasing measure (`have fn ... by decreasing`)
+### Recursive function by induction measure (`have fn ... by induc ... from ...`)
 
-Use **`have fn ... by decreasing ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by decreasing` clause gives a measure and a lower bound.
+Use **`have fn ... by induc ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by induc` clause gives a measure and a lower bound.
 
 When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex can verify that `args'` satisfies the function domain, that the measure at `args'` is strictly smaller than the current measure, and that the measure remains above the lower bound.
 
 Every case list must cover all possibilities in its current context, and cases must be mutually exclusive. Nested case lists are checked under their parent case assumptions.
 
 ```litex
-have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
     case b > 0: h(a, b - 1) + 1
 ```
@@ -1741,7 +1741,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... = ...` | Define a function by one formula |
 | `have fn ... by cases` | Define a function by cases |
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
-| `have fn ... by decreasing` | Define a recursive function by decreasing measure |
+| `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |

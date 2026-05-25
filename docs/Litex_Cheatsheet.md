@@ -316,7 +316,7 @@ prove:
 
 ### `have` — parameters or values
 
-**Meaning.** Introduce names in scope for the rest of the block: **typed parameters** (membership / type keywords), **fixed values** with `=`, **functions** (single equation or `case` branches), **recursive functions** (`have fn ... by decreasing` …), or **names from an existential** already known (`have by exist` …).
+**Meaning.** Introduce names in scope for the rest of the block: **typed parameters** (membership / type keywords), **fixed values** with `=`, **functions** (single equation or `case` branches), **recursive functions** (`have fn ... by induc ... from ...` …), or **names from an existential** already known (`have by exist` …).
 
 **Syntax.**
 
@@ -324,7 +324,7 @@ prove:
 - `have` *groups* `=` *objects* …
 - `have fn` *name* *function-space clause* `=` *object*
 - `have fn` *name* *clause* `by cases:` newline, `case` *fact* `:` *object* …
-- `have fn` *name* *clause* `by decreasing` *measure* `from` *lower-bound* `:` newline, `case` *fact* `:` *object* …
+- `have fn` *name* *clause* `by induc` *measure* `from` *lower-bound* `:` newline, `case` *fact* `:` *object* …
 - `have fn` *name* `as set:` newline, `forall` ... `exist!` ...
 - `have by exist` *exist … st { … }* `:` *names*
 
@@ -351,7 +351,7 @@ have fn self_max(x, y R) R by cases:
 Recursive definition by decreasing measure:
 
 ```litex
-have fn f(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+have fn f(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
     case b > 0: f(a, b - 1) + 1
 ```

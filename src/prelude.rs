@@ -288,7 +288,6 @@ pub use crate::common::keywords::COMMA;
 pub use crate::common::keywords::CONTRA;
 pub use crate::common::keywords::COUNT;
 pub use crate::common::keywords::CUP;
-pub use crate::common::keywords::DECREASING;
 pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
 pub use crate::common::keywords::DOT_DOT_DOT;

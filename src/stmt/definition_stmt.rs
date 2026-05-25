@@ -15,7 +15,7 @@ pub enum HaveFnByInducCaseBody {
 }
 
 // have fn f(a Z, b Z: a >= 0, b >= 0) R
-//     by decreasing abs(a) + abs(b) from 0:
+//     by induc abs(a) + abs(b) from 0:
 //         case b = 0: 0
 //         case b > 0: f(a, b - 1) + 1
 #[derive(Clone)]
@@ -633,7 +633,7 @@ impl fmt::Display for HaveFnByInducStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {}{} {} {} {} {} {} {}{}",
+            "{} {} {}{} {} {} {} {} {} {}",
             HAVE,
             FN_LOWER_CASE,
             self.name,
@@ -643,12 +643,12 @@ impl fmt::Display for HaveFnByInducStmt {
             ),
             self.fn_set_clause.ret_set,
             BY,
-            DECREASING,
+            INDUC,
             self.measure,
             FROM,
-            self.lower_bound,
-            COLON
+            self.lower_bound
         )?;
+        write!(f, "{}", COLON)?;
         Self::fmt_cases(f, &self.cases, 1)
     }
 }
