@@ -504,6 +504,33 @@ forall x, a, b R:
     }
 
     #[test]
+    fn known_equality_candidate_uses_rational_expression_simplification() {
+        let source_code = r#"
+forall a, b R:
+    a^2 + a * a + b = 0
+    =>:
+        0 = 2 * a^2 + b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_equality_candidate_uses_rational_expression_simplification",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_equality_candidate_uses_rational_expression_simplification failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("\"rule\": \"calculation and rational expression simplification\"")
+        );
+    }
+
+    #[test]
     fn quotient_nonzero_from_numerator_nonzero_builtin_rule() {
         let source_code = r#"
 forall a, b R:

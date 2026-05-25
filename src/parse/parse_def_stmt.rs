@@ -608,8 +608,13 @@ impl Runtime {
                     equal_to,
                 )?;
                 Ok(
-                    HaveFnEqualStmt::new(name, equal_to_anonymous_fn, as_algo, tb.line_file.clone())
-                        .into(),
+                    HaveFnEqualStmt::new(
+                        name,
+                        equal_to_anonymous_fn,
+                        as_algo,
+                        tb.line_file.clone(),
+                    )
+                    .into(),
                 )
             } else if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;

@@ -32,14 +32,30 @@ impl Runtime {
                     verify_state,
                 );
         }
-        let (result, _, _) = self.verify_equality_by_they_are_the_same_and_calculation(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )?;
+        let (result, calculated_left, calculated_right) = self
+            .verify_equality_by_they_are_the_same_and_calculation(
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?;
         if result.is_true() {
             return Ok(Some(result));
+        }
+        // Known-equality bridge for algebraic normalization. Example: from
+        // `a^2 + a * a + b = 0`, prove `0 = 2 * a^2 + b` by comparing the
+        // known candidate `a^2 + a * a + b` with `2 * a^2 + b`.
+        if objs_equal_by_rational_expression_evaluation(left, right)
+            || objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right)
+        {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
         }
         if let Some(shape_result) =
             self.try_verify_equal_by_same_shape_and_known_equality_args(left, right, line_file)
