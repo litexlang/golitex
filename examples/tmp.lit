@@ -1,1 +1,25 @@
-eval [[4/5, 3/5], [3/5, -4/5]] ** [[-2], [3]]
+forall t R_pos:
+    t^2 < 4^2
+    =>:
+        t < 4
+
+forall t R_pos:
+    t^3 < 4^3
+    =>:
+        t < 4
+
+forall t R_pos:
+    t^4 < 4^4
+    =>:
+        t < 4
+
+forall t R_pos:
+    t^5 < 4^5
+    =>:
+        t < 4
+
+forall t R_pos:
+    t^6 < 4^6
+    =>:
+        $pos_pow_strict_order_reflects(t, 4, 6)
+        t < 4
