@@ -368,6 +368,57 @@ a >= b
     }
 
     #[test]
+    fn eval_recursive_algo_memoizes_overlapping_calls() {
+        run_with_large_stack(
+            "eval_recursive_algo_memoizes_overlapping_calls_large_stack",
+            || {
+                let source_code = r#"
+prove:
+    have fib fn(x R) R
+
+    know:
+        forall x R:
+            x = 0
+            =>:
+                fib(x) = 0
+
+        forall x R:
+            x = 1
+            =>:
+                fib(x) = 1
+
+        forall x R:
+            x > 1
+            =>:
+                fib(x) = fib(x - 1) + fib(x - 2)
+
+    algo fib(x):
+        case x = 0: 0
+        case x = 1: 1
+        fib(x - 1) + fib(x - 2)
+
+    eval fib(25)
+    fib(25) = 75025
+"#;
+
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(
+                    "eval_recursive_algo_memoizes_overlapping_calls",
+                );
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    run_succeeded,
+                    "eval_recursive_algo_memoizes_overlapping_calls failed:\n{}",
+                    run_output
+                );
+            },
+        );
+    }
+
+    #[test]
     fn pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined() {
         let source_code = r#"
 have fn sqrt(x R: x >= 0) R = x^(1/2)

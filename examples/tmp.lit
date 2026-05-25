@@ -1,12 +1,149 @@
-"""
-To solve the system of equations:
-2x + 3y = 10
-4x + 5y = 14
-"""
+run_file nat
 
-forall x, y R:
-    2 * x + 3 * y = 10
-    4 * x + 5 * y = 14
-    =>:
-        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = (10 - 3 * 6) / 2 = -4
+claim:
+    prove:
+        forall a Z:
+            a ^ 2 % 4 = 0 or a ^ 2 % 4 = 1
+
+    have by exist q Z, r N st {$division_with_remainder(a, 4, q, r)}: q, r
+    $division_with_remainder(a, 4, q, r)
+    a = 4 * q + r
+    r < 4
+    r $in closed_range(0, 3)
+    by closed_range as cases: r $in 0...3
+    by cases:
+        prove:
+            a ^ 2 % 4 = 0 or a ^ 2 % 4 = 1
+        case r = 0:
+            a = 4 * q + r = 4 * q
+            witness exist t Z st {(4 * q) ^ 2 = t * 4} from 4 * q ^ 2:
+                (4 * q) ^ 2 = 16 * q ^ 2 = (4 * q ^ 2) * 4
+            (4 * q) ^ 2 % 4 = 0
+            a ^ 2 % 4 = (4 * q) ^ 2 % 4 = 0
+        case r = 1:
+            a = 4 * q + r = 4 * q + 1
+            (4 * q + 1) ^ 2 = 4 * (4 * q ^ 2 + 2 * q) + 1
+            witness exist t Z st {4 * (4 * q ^ 2 + 2 * q) = t * 4} from 4 * q ^ 2 + 2 * q:
+                4 * (4 * q ^ 2 + 2 * q) = (4 * q ^ 2 + 2 * q) * 4
+            4 * (4 * q ^ 2 + 2 * q) % 4 = 0
+            (4 * (4 * q ^ 2 + 2 * q) + 1) % 4 = (4 * (4 * q ^ 2 + 2 * q) % 4 + 1 % 4) % 4 = (0 + 1) % 4 = 1
+            a ^ 2 % 4 = (4 * q + 1) ^ 2 % 4 = (4 * (4 * q ^ 2 + 2 * q) + 1) % 4 = 1
+        case r = 2:
+            a = 4 * q + r = 4 * q + 2
+            witness exist t Z st {(4 * q + 2) ^ 2 = t * 4} from 4 * q ^ 2 + 4 * q + 1:
+                (4 * q + 2) ^ 2 = 16 * q ^ 2 + 16 * q + 4 = (4 * q ^ 2 + 4 * q + 1) * 4
+            (4 * q + 2) ^ 2 % 4 = 0
+            a ^ 2 % 4 = (4 * q + 2) ^ 2 % 4 = 0
+        case r = 3:
+            a = 4 * q + r = 4 * q + 3
+            (4 * q + 3) ^ 2 = 4 * (4 * q ^ 2 + 6 * q + 2) + 1
+            witness exist t Z st {4 * (4 * q ^ 2 + 6 * q + 2) = t * 4} from 4 * q ^ 2 + 6 * q + 2:
+                4 * (4 * q ^ 2 + 6 * q + 2) = (4 * q ^ 2 + 6 * q + 2) * 4
+            4 * (4 * q ^ 2 + 6 * q + 2) % 4 = 0
+            (4 * (4 * q ^ 2 + 6 * q + 2) + 1) % 4 = (4 * (4 * q ^ 2 + 6 * q + 2) % 4 + 1 % 4) % 4 = (0 + 1) % 4 = 1
+            a ^ 2 % 4 = (4 * q + 3) ^ 2 % 4 = (4 * (4 * q ^ 2 + 6 * q + 2) + 1) % 4 = 1
+
+claim:
+    prove:
+        (91145 + 91146 + 91147 + 91148) % 4 = 2
+
+claim:
+    prove:
+        forall a Z:
+            a ^ 2 % 3 = 0 or a ^ 2 % 3 = 1
+
+    have by exist q Z, r N st {$division_with_remainder(a, 3, q, r)}: q, r
+    a = 3 * q + r
+    r < 3
+    r $in closed_range(0, 2)
+    by closed_range as cases: r $in 0...2
+    by cases:
+        prove:
+            a ^ 2 % 3 = 0 or a ^ 2 % 3 = 1
+        case r = 0:
+            a = 3 * q + r = 3 * q
+            witness exist t Z st {(3 * q) ^ 2 = t * 3} from 3 * q ^ 2:
+                (3 * q) ^ 2 = 9 * q ^ 2 = (3 * q ^ 2) * 3
+            (3 * q) ^ 2 % 3 = 0
+            a ^ 2 % 3 = (3 * q) ^ 2 % 3 = 0
+        case r = 1:
+            a = 3 * q + r = 3 * q + 1
+            (3 * q + 1) ^ 2 = 3 * (3 * q ^ 2 + 2 * q) + 1
+            witness exist t Z st {3 * (3 * q ^ 2 + 2 * q) = t * 3} from 3 * q ^ 2 + 2 * q:
+                3 * (3 * q ^ 2 + 2 * q) = (3 * q ^ 2 + 2 * q) * 3
+            3 * (3 * q ^ 2 + 2 * q) % 3 = 0
+            (3 * (3 * q ^ 2 + 2 * q) + 1) % 3 = (3 * (3 * q ^ 2 + 2 * q) % 3 + 1 % 3) % 3 = (0 + 1) % 3 = 1
+            a ^ 2 % 3 = (3 * q + 1) ^ 2 % 3 = (3 * (3 * q ^ 2 + 2 * q) + 1) % 3 = 1
+        case r = 2:
+            a = 3 * q + r = 3 * q + 2
+            (3 * q + 2) ^ 2 = 3 * (3 * q ^ 2 + 4 * q + 1) + 1
+            witness exist t Z st {3 * (3 * q ^ 2 + 4 * q + 1) = t * 3} from 3 * q ^ 2 + 4 * q + 1:
+                3 * (3 * q ^ 2 + 4 * q + 1) = (3 * q ^ 2 + 4 * q + 1) * 3
+            3 * (3 * q ^ 2 + 4 * q + 1) % 3 = 0
+            (3 * (3 * q ^ 2 + 4 * q + 1) + 1) % 3 = (3 * (3 * q ^ 2 + 4 * q + 1) % 3 + 1 % 3) % 3 = (0 + 1) % 3 = 1
+            a ^ 2 % 3 = (3 * q + 2) ^ 2 % 3 = (3 * (3 * q ^ 2 + 4 * q + 1) + 1) % 3 = 1
+
+claim:
+    prove:
+        forall n N:
+            n < 398
+            n * 7 % 398 = 1
+            =>:
+                n = 57
+
+    have by exist r N st {n * 7 = 398 * r + 1}: r
+    n * 7 = 398 * r + 1
+    witness exist t N st {n * 7 = t * 7} from n:
+        n * 7 = n * 7
+    n * 7 % 7 = 0
+    n * 7 < 398 * 7
+    398 * r + 1 < 398 * 7
+    by contra:
+        prove:
+            r < 7
+        r >= 7
+        398 * 7 <= 398 * r
+        398 * 7 + 1 <= 398 * r + 1 = n * 7 < 398 * 7
+        impossible 398 * 7 + 1 <= 398 * 7
+    r $in closed_range(0, 6)
+    by closed_range as cases: r $in 0...6
+    by cases:
+        prove:
+            n = 57
+        case r = 0:
+            n * 7 = 398 * r + 1 = 1
+            1 % 7 = n * 7 % 7 = 0
+            impossible 1 % 7 = 0
+        case r = 1:
+            n * 7 = 398 * r + 1 = 399
+            n = 399 / 7 = 57
+        case r = 2:
+            n * 7 = 398 * r + 1 = 797
+            797 % 7 = n * 7 % 7 = 0
+            impossible 797 % 7 = 0
+        case r = 3:
+            n * 7 = 398 * r + 1 = 1195
+            1195 % 7 = n * 7 % 7 = 0
+            impossible 1195 % 7 = 0
+        case r = 4:
+            n * 7 = 398 * r + 1 = 1593
+            1593 % 7 = n * 7 % 7 = 0
+            impossible 1593 % 7 = 0
+        case r = 5:
+            n * 7 = 398 * r + 1 = 1991
+            1991 % 7 = n * 7 % 7 = 0
+            impossible 1991 % 7 = 0
+        case r = 6:
+            n * 7 = 398 * r + 1 = 2389
+            2389 % 7 = n * 7 % 7 = 0
+            impossible 2389 % 7 = 0
+
+claim:
+    prove:
+        forall n N:
+            123 * n + 17 = 39500
+            =>:
+                n = 321
+
+    123 * n = (123 * n + 17) - 17 = 39500 - 17 = 39483
+    n = (123 * n) / 123 = 39483 / 123 = 321

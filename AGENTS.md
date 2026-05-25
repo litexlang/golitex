@@ -121,13 +121,15 @@ blockers.
 
 1. Litex examples should expose a tight verifier feedback loop: write a small proof, run it, read the exact verifier output, and make the next smallest correction until the proof is checkable.
 
-2. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
+2. Before writing Litex code, first explain the proof idea in natural language and look for the local proof pattern. Prefer starting from the mathematical move that should work in Litex rather than searching for theorem names as if the task were Lean.
 
-3. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
+3. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
 
-4. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+4. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
 
-5. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
+5. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+
+6. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
 
 ```litex
 forall x R:
@@ -144,11 +146,11 @@ forall x R:
 
 The current `forall ... <=>:` syntax is an exception: if there are no shared hypotheses, keep the required `=>:` block for the left side of the iff.
 
-6. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
+7. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-7. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+8. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
 
-8. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+9. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
 ## Dataset Translation To Litex
 
