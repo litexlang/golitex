@@ -67,6 +67,18 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_operand_not_equal_from_sub_not_equal_zero(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
+            self.try_verify_operand_not_equal_negation_from_add_not_equal_zero(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_not_equal_zero_from_n_and_one_le(not_equal_fact, verify_state)?
         {
             return Ok(verified_result);
@@ -316,6 +328,116 @@ impl Runtime {
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "add_not_equal_zero_from_operand_not_equal_negation".to_string(),
+                        vec![sub_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    // Difference nonzero reflection: if `a - b != 0` is known, then `a != b`.
+    // Example: from `x - c != 0`, prove `x != c`.
+    fn try_verify_operand_not_equal_from_sub_not_equal_zero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let candidates: [AtomicFact; 2] = [
+            NotEqualFact::new(
+                Sub::new(not_equal_fact.left.clone(), not_equal_fact.right.clone()).into(),
+                zero_obj.clone(),
+                line_file.clone(),
+            )
+            .into(),
+            NotEqualFact::new(
+                Sub::new(not_equal_fact.right.clone(), not_equal_fact.left.clone()).into(),
+                zero_obj,
+                line_file.clone(),
+            )
+            .into(),
+        ];
+
+        for candidate in candidates {
+            let sub_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if sub_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "operand_not_equal_from_sub_not_equal_zero".to_string(),
+                        vec![sub_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    // Sum nonzero reflection: if `a + b != 0` is known, then `a != -b`.
+    // Example: from `x + c != 0`, prove `x != -c`.
+    fn try_verify_operand_not_equal_negation_from_add_not_equal_zero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let mut candidates: Vec<AtomicFact> = Vec::new();
+
+        if let Some(right_arg) = Self::negated_arg_for_not_equal_builtin_rule(&not_equal_fact.right)
+        {
+            candidates.push(
+                NotEqualFact::new(
+                    Add::new(not_equal_fact.left.clone(), right_arg.clone()).into(),
+                    zero_obj.clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+            candidates.push(
+                NotEqualFact::new(
+                    Add::new(right_arg, not_equal_fact.left.clone()).into(),
+                    zero_obj.clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        }
+
+        if let Some(left_arg) = Self::negated_arg_for_not_equal_builtin_rule(&not_equal_fact.left) {
+            candidates.push(
+                NotEqualFact::new(
+                    Add::new(not_equal_fact.right.clone(), left_arg.clone()).into(),
+                    zero_obj.clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+            candidates.push(
+                NotEqualFact::new(
+                    Add::new(left_arg, not_equal_fact.right.clone()).into(),
+                    zero_obj,
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        }
+
+        for candidate in candidates {
+            let sub_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if sub_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
                         vec![sub_result],
                     )
                     .into(),
@@ -604,6 +726,26 @@ impl Runtime {
             Some(number) => number.normalized_value == "0",
             None => false,
         }
+    }
+
+    fn obj_is_literal_neg_one_for_not_equal_builtin_rule(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "-1",
+            _ => false,
+        }
+    }
+
+    fn negated_arg_for_not_equal_builtin_rule(obj: &Obj) -> Option<Obj> {
+        let Obj::Mul(mul) = obj else {
+            return None;
+        };
+        if Self::obj_is_literal_neg_one_for_not_equal_builtin_rule(mul.left.as_ref()) {
+            return Some(mul.right.as_ref().clone());
+        }
+        if Self::obj_is_literal_neg_one_for_not_equal_builtin_rule(mul.right.as_ref()) {
+            return Some(mul.left.as_ref().clone());
+        }
+        None
     }
 
     fn operand_is_not_equal_to_zero_by_known_non_equational_facts(

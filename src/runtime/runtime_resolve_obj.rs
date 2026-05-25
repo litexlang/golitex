@@ -44,12 +44,18 @@ impl Runtime {
         if let Some(n) = self.resolve_obj_to_number(&result) {
             return n.into();
         }
+        if let Some(known_value) = self.get_known_obj_value_as_obj(&result.to_string()) {
+            return known_value;
+        }
         result
     }
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
         if let Some(number) = self.resolve_obj_to_number(obj) {
             return number.into();
+        }
+        if let Some(known_value) = self.get_known_obj_value_as_obj(&obj.to_string()) {
+            return known_value;
         }
         match obj {
             Obj::Number(number) => number.clone().into(),
@@ -578,6 +584,130 @@ impl Runtime {
         }
 
         Some(Number::new(product).into())
+    }
+
+    pub(crate) fn known_obj_value_from_obj(&self, obj: &Obj) -> Option<KnownObjValue> {
+        if let Some(number) = self.resolve_obj_to_number(obj) {
+            return Some(KnownObjValue::SimplifiedNumber(number));
+        }
+        let (numerator, denominator) = self.simplified_rational_pair_from_obj(obj)?;
+        if denominator == 1 {
+            return Some(KnownObjValue::SimplifiedNumber(Number::new(
+                numerator.to_string(),
+            )));
+        }
+
+        let div = Div::new(
+            Number::new(numerator.to_string()).into(),
+            Number::new(denominator.to_string()).into(),
+        );
+        let div_obj: Obj = div.clone().into();
+        if let Some(number) = div_obj.evaluate_to_normalized_decimal_number() {
+            return Some(KnownObjValue::SimplifiedNumber(number));
+        }
+        Some(KnownObjValue::SimplifiedFraction(div))
+    }
+
+    fn simplified_rational_pair_from_obj(&self, obj: &Obj) -> Option<(i128, i128)> {
+        if self.resolve_obj_to_number(obj).is_some() {
+            return None;
+        }
+
+        let resolved = self.resolve_obj(obj);
+        rational_pair_from_obj(&resolved)
+    }
+}
+
+fn normalize_rational_pair(numerator: i128, denominator: i128) -> Option<(i128, i128)> {
+    if denominator == 0 {
+        return None;
+    }
+    if numerator == 0 {
+        return Some((0, 1));
+    }
+
+    let mut n = numerator;
+    let mut d = denominator;
+    if d < 0 {
+        n = n.checked_neg()?;
+        d = d.checked_neg()?;
+    }
+    let g = gcd_i128(n, d);
+    Some((n / g, d / g))
+}
+
+fn gcd_i128(mut a: i128, mut b: i128) -> i128 {
+    a = a.abs();
+    b = b.abs();
+    while b != 0 {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    a
+}
+
+fn rational_pair_from_number(number: &Number) -> Option<(i128, i128)> {
+    let value = number.normalized_value.as_str();
+    let (is_negative, unsigned) = match value.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, value),
+    };
+
+    let (digits, denominator) = if let Some(dot_index) = unsigned.find('.') {
+        let integer_part = &unsigned[..dot_index];
+        let fractional_part = &unsigned[dot_index + 1..];
+        let integer_digits = if integer_part.is_empty() {
+            "0"
+        } else {
+            integer_part
+        };
+        let digits = format!("{}{}", integer_digits, fractional_part);
+        let denominator = 10_i128.checked_pow(fractional_part.len() as u32)?;
+        (digits, denominator)
+    } else {
+        (unsigned.to_string(), 1)
+    };
+
+    let mut numerator = digits.parse::<i128>().ok()?;
+    if is_negative {
+        numerator = numerator.checked_neg()?;
+    }
+    normalize_rational_pair(numerator, denominator)
+}
+
+fn rational_pair_from_obj(obj: &Obj) -> Option<(i128, i128)> {
+    if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
+        return rational_pair_from_number(&number);
+    }
+
+    match obj {
+        Obj::Number(number) => rational_pair_from_number(number),
+        Obj::Add(add) => {
+            let (ln, ld) = rational_pair_from_obj(add.left.as_ref())?;
+            let (rn, rd) = rational_pair_from_obj(add.right.as_ref())?;
+            let left_scaled = ln.checked_mul(rd)?;
+            let right_scaled = rn.checked_mul(ld)?;
+            normalize_rational_pair(left_scaled.checked_add(right_scaled)?, ld.checked_mul(rd)?)
+        }
+        Obj::Sub(sub) => {
+            let (ln, ld) = rational_pair_from_obj(sub.left.as_ref())?;
+            let (rn, rd) = rational_pair_from_obj(sub.right.as_ref())?;
+            let left_scaled = ln.checked_mul(rd)?;
+            let right_scaled = rn.checked_mul(ld)?;
+            normalize_rational_pair(left_scaled.checked_sub(right_scaled)?, ld.checked_mul(rd)?)
+        }
+        Obj::Mul(mul) => {
+            let (ln, ld) = rational_pair_from_obj(mul.left.as_ref())?;
+            let (rn, rd) = rational_pair_from_obj(mul.right.as_ref())?;
+            normalize_rational_pair(ln.checked_mul(rn)?, ld.checked_mul(rd)?)
+        }
+        Obj::Div(div) => {
+            let (ln, ld) = rational_pair_from_obj(div.left.as_ref())?;
+            let (rn, rd) = rational_pair_from_obj(div.right.as_ref())?;
+            normalize_rational_pair(ln.checked_mul(rd)?, ld.checked_mul(rn)?)
+        }
+        _ => None,
     }
 }
 

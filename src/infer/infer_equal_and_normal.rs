@@ -390,35 +390,25 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<InferResult, RuntimeError> {
-        if let Some(right_calculated_value) = self.resolve_obj_to_number(&equal_fact.right) {
-            self.top_level_env()
-                .known_obj_values
-                .insert(
-                    equal_fact.left.to_string(),
-                    KnownObjValue::SimplifiedNumber(right_calculated_value),
-                );
-        }
-
-        if let Some(left_calculated_value) = self.resolve_obj_to_number(&equal_fact.left) {
-            self.top_level_env()
-                .known_obj_values
-                .insert(
-                    equal_fact.right.to_string(),
-                    KnownObjValue::SimplifiedNumber(left_calculated_value),
-                );
-        }
+        self.store_known_obj_value_from_equal_side(&equal_fact.left, &equal_fact.right);
+        self.store_known_obj_value_from_equal_side(&equal_fact.right, &equal_fact.left);
 
         if let Some(derived) =
             crate::environment::equality_linear_derive::maybe_derived_linear_equal_fact(equal_fact)
         {
-            if let Some(n) = self.resolve_obj_to_number(&derived.right) {
-                self.top_level_env()
-                    .known_obj_values
-                    .insert(derived.left.to_string(), KnownObjValue::SimplifiedNumber(n));
-            }
+            self.store_known_obj_value_from_equal_side(&derived.left, &derived.right);
         }
 
         Ok(InferResult::new())
+    }
+
+    fn store_known_obj_value_from_equal_side(&mut self, target: &Obj, source: &Obj) {
+        let Some(value) = self.known_obj_value_from_obj(source) else {
+            return;
+        };
+        self.top_level_env()
+            .known_obj_values
+            .insert(target.to_string(), value);
     }
 
     // Predicate `P(args)`: check args against `P`'s param types, then store each instantiated `iff` body.

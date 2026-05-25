@@ -53,7 +53,8 @@ pub struct Environment {
 
 #[derive(Clone)]
 pub enum KnownObjValue {
-    SimplifiedNumber(Number),
+    SimplifiedNumber(Number), // when a = 1.0, store a = 1
+    SimplifiedFraction(Div),  // when a = 1/3, store a = 1/3
 }
 
 impl Environment {

@@ -531,6 +531,117 @@ forall a, b R:
     }
 
     #[test]
+    fn known_obj_values_store_simplified_fraction_for_nonfinite_decimal() {
+        let source_code = r#"
+have a R
+know a = 1 / 2 / 3
+
+have b R
+know b = 1 / 2
+
+have c R
+know c = 2 / -6
+
+have d R
+know d = 1 / (2 / 3 * 4)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_obj_values_store_simplified_fraction_for_nonfinite_decimal",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_obj_values_store_simplified_fraction_for_nonfinite_decimal failed:\n{}",
+            run_output
+        );
+
+        let env = runtime.environment_stack.last().expect("top environment");
+        match env.known_obj_values.get("a") {
+            Some(KnownObjValue::SimplifiedFraction(div)) => {
+                assert_eq!(div.left.to_string(), "1");
+                assert_eq!(div.right.to_string(), "6");
+            }
+            other => panic!(
+                "expected a to store SimplifiedFraction(1 / 6), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("b") {
+            Some(KnownObjValue::SimplifiedNumber(number)) => {
+                assert_eq!(number.normalized_value, "0.5");
+            }
+            other => panic!(
+                "expected b to store SimplifiedNumber(0.5), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("c") {
+            Some(KnownObjValue::SimplifiedFraction(div)) => {
+                assert_eq!(div.left.to_string(), "-1");
+                assert_eq!(div.right.to_string(), "3");
+            }
+            other => panic!(
+                "expected c to store SimplifiedFraction(-1 / 3), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("d") {
+            Some(KnownObjValue::SimplifiedNumber(number)) => {
+                assert_eq!(number.normalized_value, "0.375");
+            }
+            other => panic!(
+                "expected d to store SimplifiedNumber(0.375), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+    }
+
+    #[test]
+    fn simplified_fraction_known_value_is_used_by_resolve() {
+        let source_code = r#"
+forall a R:
+    a = 1 / 2 / 3
+    =>:
+        a + 1 / 6 = 1 / 3
+
+forall a R:
+    a = 2 / -6
+    =>:
+        a = -1 / 3
+
+forall a R:
+    a = 1 / (2 / 3)
+    =>:
+        a = 3 / 2
+
+forall a R:
+    a = 1 / (2 / 3 * 4)
+    =>:
+        a = 3 / 8
+        a + 1 = 11 / 8
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "simplified_fraction_known_value_is_used_by_resolve",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "simplified_fraction_known_value_is_used_by_resolve failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn real_interval_membership_rules() {
         let source_code = r#"
 have I set = oo(0, 1)
