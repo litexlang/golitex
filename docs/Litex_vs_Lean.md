@@ -621,6 +621,23 @@ signal: the checker is doing the work that the proof script actually asks for,
 without requiring the user to pass through a heavier proof-programming layer.
 *For example, in a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.*
 
+### AI Mathematical Exploration
+
+This short feedback loop is especially relevant for AI-assisted mathematical
+exploration. In that setting, verification efficiency is not only the time spent
+inside one checker call. It is the whole loop: generate a candidate statement,
+run it, read the exact failure, make the next small correction, and grow the
+local mathematical background when a missing rule or definition is discovered.
+
+Litex is deliberately friendly to that loop. It runs directly, has a small
+surface syntax, and lets many library-like background facts be added as ordinary
+Litex statements, builtin rules, or infer rules. This makes it practical for an
+AI agent to try many natural formulations and turn failures into small language,
+library, rule, or diagnostic improvements. Lean remains much stronger when the
+task depends on Mathlib, advanced abstractions, or production formalization; the
+point is that Litex can be a faster exploratory verification layer before a
+development settles into its final form.
+
 ### Message Output Explains Each Step
 
 Litex also reports what happened. Its message output shows each statement, the facts inferred from it, and often where each proved fact came from. **This is useful because you can see how every step was obtained**, not only that the final result passed. It helps users trust successful proofs, debug failed proofs, and learn how Litex is using builtin rules, known facts, matching, and substitution.
