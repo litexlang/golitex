@@ -67,7 +67,7 @@ claim:
     0 <= abs(2 * n - d)
     abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
 
-have fn fmod(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+have fn fmod(n Z, d Z) Z by induc abs(2 * n - d) from 0:
     case n * d < 0: fmod(n + d, d)
     case n * d >= 0:
         case 0 < d * (n - d): fmod(n - d, d)
@@ -75,7 +75,7 @@ have fn fmod(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
             case n = d: 0
             case n != d: n
 
-have fn fdiv(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+have fn fdiv(n Z, d Z) Z by induc abs(2 * n - d) from 0:
     case n * d < 0: fdiv(n + d, d) - 1
     case n * d >= 0:
         case 0 < d * (n - d): fdiv(n - d, d) + 1
@@ -484,7 +484,7 @@ claim:
     abs(-b) = abs(b)
     abs(fmod(a, -b)) < abs(b)
 
-have fn gcd(a Z, b Z) Z by decreasing abs(b) from 0:
+have fn gcd(a Z, b Z) Z by induc abs(b) from 0:
     case 0 < b: gcd(b, fmod(a, b))
     case 0 >= b:
         case b < 0: gcd(b, fmod(a, -b))
@@ -492,7 +492,7 @@ have fn gcd(a Z, b Z) Z by decreasing abs(b) from 0:
             case 0 <= a: a
             case 0 > a: -a
 
-have fn egcd_pair(a Z, b Z) cart(Z, Z) by decreasing abs(b) from 0:
+have fn egcd_pair(a Z, b Z) cart(Z, Z) by induc abs(b) from 0:
     case 0 < b: (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
     case 0 >= b:
         case b < 0: (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
