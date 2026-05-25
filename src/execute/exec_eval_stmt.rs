@@ -1029,8 +1029,8 @@ impl Runtime {
         if let Some(number) = self.resolve_obj_to_number(&evaluated_obj) {
             let number_obj: Obj = number.clone().into();
             self.top_level_env()
-                .known_objs_equal_to_normalized_decimal_number
-                .insert(call_key, number);
+                .known_obj_values
+                .insert(call_key, KnownObjValue::SimplifiedNumber(number));
             let evaluated_equal_fact =
                 EqualFact::new(evaluated_call_obj, number_obj, eval_stmt.line_file.clone());
             self.top_level_env().store_equality(&evaluated_equal_fact)?;
@@ -1105,8 +1105,8 @@ impl Runtime {
             };
             let number_obj: Obj = number.clone().into();
             self.top_level_env()
-                .known_objs_equal_to_normalized_decimal_number
-                .insert(call_key, number);
+                .known_obj_values
+                .insert(call_key, KnownObjValue::SimplifiedNumber(number));
             let evaluated_equal_fact = EqualFact::new(
                 current_call_obj,
                 number_obj.clone(),
