@@ -55,6 +55,18 @@ prop is_gcd(g N_pos, a, b Z):
         =>:
             d <= g
 
+know:
+    forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist! g N_pos st {$is_gcd(g, a, b)}
+
+have fn gcd as set:
+    forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist! g N_pos st {$is_gcd(g, a, b)}
+
 prop coprime(a, b Z):
     $is_gcd(1, a, b)
 
@@ -66,25 +78,11 @@ prop mutually_coprime3(a, b, c Z):
         =>:
             d = 1
 
-prop bezout_identity2(a, b Z):
+prop bezout_identity(a, b Z):
     exist x, y Z st {a * x + b * y = 1}
 
 prop bezout_identity3(a, b, c Z):
     exist x, y, z Z st {a * x + b * y + c * z = 1}
-
-abstract_prop gcd_value(a, b, g)
-
-know:
-    forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            exist! g N_pos st {$gcd_value(a, b, g)}
-
-have fn gcd as set:
-    forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            exist! g N_pos st {$gcd_value(a, b, g)}
 
 know:
     forall s power_set(N_pos):
@@ -145,14 +143,12 @@ know:
     forall a, b Z:
         a != 0 or b != 0
         =>:
-            $gcd_value(a, b, gcd(a, b))
             $is_gcd(gcd(a, b), a, b)
             exist x, y Z st {gcd(a, b) = a * x + b * y}
 
     forall a, b Z, g N_pos:
         $is_gcd(g, a, b)
         =>:
-            $gcd_value(a, b, g)
             exist x, y Z st {g = a * x + b * y}
 
     forall a, b Z, g, d N_pos:
@@ -172,10 +168,10 @@ know:
         $coprime(a, b)
         =>:
             $coprime(b, a)
-            $bezout_identity2(a, b)
+            $bezout_identity(a, b)
 
     forall a, b Z:
-        $bezout_identity2(a, b)
+        $bezout_identity(a, b)
         =>:
             $coprime(a, b)
 
