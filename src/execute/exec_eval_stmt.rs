@@ -988,6 +988,15 @@ impl Runtime {
             return Ok(number.into());
         }
 
+        if let Some(evaluated) = self.try_evaluate_unary_integer_algo_bottom_up(
+            &evaluated_fn_obj,
+            &flattened_number_args,
+            eval_stmt,
+            active_fn_calls,
+        )? {
+            return Ok(evaluated);
+        }
+
         let call_key = evaluated_call_obj.to_string();
         if active_fn_calls.contains(&call_key) {
             return Err(short_exec_error(
@@ -1027,6 +1036,168 @@ impl Runtime {
             self.top_level_env().store_equality(&evaluated_equal_fact)?;
         }
         Ok(evaluated_obj)
+    }
+
+    fn try_evaluate_unary_integer_algo_bottom_up(
+        &mut self,
+        evaluated_fn_obj: &FnObj,
+        flattened_number_args: &[Obj],
+        eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if flattened_number_args.len() != 1 {
+            return Ok(None);
+        }
+        let Some(target_value) = Self::integer_value_for_eval_obj(&flattened_number_args[0]) else {
+            return Ok(None);
+        };
+
+        let fn_name = evaluated_fn_obj.head.to_string();
+        let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name).cloned() else {
+            return Ok(None);
+        };
+        if algo_definition.params.len() != 1 {
+            return Ok(None);
+        }
+        let Some((start_value, _tail_bound)) =
+            Self::unary_integer_algo_base_range(&algo_definition, &algo_definition.params[0])
+        else {
+            return Ok(None);
+        };
+        if target_value < start_value {
+            return Ok(None);
+        }
+
+        let mut last_value_obj: Option<Obj> = None;
+        for current_value in start_value..=target_value {
+            let current_number_obj: Obj = Number::new(current_value.to_string()).into();
+            let current_fn_obj = FnObj::new(
+                evaluated_fn_obj.head.as_ref().clone(),
+                vec![vec![Box::new(current_number_obj.clone())]],
+            );
+            let current_call_obj: Obj = current_fn_obj.clone().into();
+            if let Some(number) = self.resolve_obj_to_number(&current_call_obj) {
+                last_value_obj = Some(number.into());
+                continue;
+            }
+
+            let call_key = current_call_obj.to_string();
+            if active_fn_calls.contains(&call_key) {
+                return Ok(None);
+            }
+            active_fn_calls.insert(call_key.clone());
+            let return_expr = self.dispatch_algo_one_return_expr_with_number_args(
+                &fn_name,
+                &[current_number_obj],
+                eval_stmt,
+            );
+            let evaluated_result = match return_expr {
+                Ok(expr) => {
+                    self.evaluate_symbol_obj_iterative_with_active(expr, eval_stmt, active_fn_calls)
+                }
+                Err(error) => Err(error),
+            };
+            active_fn_calls.remove(&call_key);
+
+            let evaluated_obj = evaluated_result?;
+            let Some(number) = self.resolve_obj_to_number(&evaluated_obj) else {
+                return Ok(None);
+            };
+            let number_obj: Obj = number.clone().into();
+            self.top_level_env()
+                .known_objs_equal_to_normalized_decimal_number
+                .insert(call_key, number);
+            let evaluated_equal_fact = EqualFact::new(
+                current_call_obj,
+                number_obj.clone(),
+                eval_stmt.line_file.clone(),
+            );
+            self.top_level_env().store_equality(&evaluated_equal_fact)?;
+            last_value_obj = Some(number_obj);
+        }
+
+        Ok(last_value_obj)
+    }
+
+    fn integer_value_for_eval_obj(obj: &Obj) -> Option<i128> {
+        let Obj::Number(number) = obj else {
+            return None;
+        };
+        if !is_number_string_literally_integer_without_dot(number.normalized_value.clone()) {
+            return None;
+        }
+        number.normalized_value.parse::<i128>().ok()
+    }
+
+    fn unary_integer_algo_base_range(
+        algo_definition: &DefAlgoStmt,
+        param_name: &str,
+    ) -> Option<(i128, i128)> {
+        let mut equal_values: Vec<i128> = Vec::new();
+        let mut tail_bounds: Vec<i128> = Vec::new();
+        for algo_case in algo_definition.cases.iter() {
+            if let Some(value) =
+                Self::equal_case_integer_value_for_param(&algo_case.condition, param_name)
+            {
+                equal_values.push(value);
+            }
+            if let Some(value) = Self::strict_upper_tail_case_integer_value_for_param(
+                &algo_case.condition,
+                param_name,
+            ) {
+                tail_bounds.push(value);
+            }
+        }
+        if tail_bounds.len() != 1 || equal_values.is_empty() {
+            return None;
+        }
+        let start = *equal_values.iter().min()?;
+        let max_equal = *equal_values.iter().max()?;
+        let tail_bound = tail_bounds[0];
+        if max_equal != tail_bound {
+            return None;
+        }
+        for value in start..=tail_bound {
+            if !equal_values.contains(&value) {
+                return None;
+            }
+        }
+        Some((start, tail_bound))
+    }
+
+    fn equal_case_integer_value_for_param(
+        atomic_fact: &AtomicFact,
+        param_name: &str,
+    ) -> Option<i128> {
+        let AtomicFact::EqualFact(equal) = atomic_fact else {
+            return None;
+        };
+        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        if equal.left.to_string() == param_obj.to_string() {
+            return Self::integer_value_for_eval_obj(&equal.right);
+        }
+        if equal.right.to_string() == param_obj.to_string() {
+            return Self::integer_value_for_eval_obj(&equal.left);
+        }
+        None
+    }
+
+    fn strict_upper_tail_case_integer_value_for_param(
+        atomic_fact: &AtomicFact,
+        param_name: &str,
+    ) -> Option<i128> {
+        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        match atomic_fact {
+            AtomicFact::GreaterFact(greater)
+                if greater.left.to_string() == param_obj.to_string() =>
+            {
+                Self::integer_value_for_eval_obj(&greater.right)
+            }
+            AtomicFact::LessFact(less) if less.right.to_string() == param_obj.to_string() => {
+                Self::integer_value_for_eval_obj(&less.left)
+            }
+            _ => None,
+        }
     }
 
     fn evaluate_fn_obj_number_args_for_eval_stmt(

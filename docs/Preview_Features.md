@@ -10,6 +10,20 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### `have fn as algo` (2026-05)
+
+`have fn as algo f(...) ...` defines the ordinary function facts first, then automatically generates and verifies the corresponding `algo f(...)`. This is available for direct equality, `by cases`, and `by induc` function definitions. Generated algo cases currently require atomic case conditions.
+
+```litex
+prove:
+    have fn as algo self_max(x, y R) R by cases:
+        case x > y: x
+        case x <= y: y
+
+    eval self_max(5, 3)
+    self_max(5, 3) = 5
+```
+
 ### Function application return membership (2026-05)
 
 If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after importing trigonometry.

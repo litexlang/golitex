@@ -41,6 +41,11 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_numeric_lower_bound_from_known_lower_bound(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
             return Ok(result);
         }
@@ -707,6 +712,150 @@ impl Runtime {
                 Vec::new(),
             ),
         )))
+    }
+
+    /// Numeric lower-bound weakening, with the integer successor case.
+    /// Examples: from `4 < x`, prove `2 <= x`; from `x $in Z` and `4 < x`, prove `5 <= x`.
+    fn try_verify_numeric_lower_bound_from_known_lower_bound(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        match &norm {
+            AtomicFact::LessEqualFact(f) => {
+                let Some(target_bound) = self.resolved_integer_value_for_order_bound(&f.left)
+                else {
+                    return Ok(None);
+                };
+                let candidates = self.collect_known_lower_bound_candidates(&f.right);
+                for candidate in candidates {
+                    let Some((known_bound, known_strict)) =
+                        self.known_lower_bound_candidate_value(&candidate, &f.right)
+                    else {
+                        continue;
+                    };
+                    let candidate_result =
+                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                    if !candidate_result.is_true() {
+                        continue;
+                    }
+                    if target_bound <= known_bound {
+                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "weaken numeric lower bound from known lower bound".to_string(),
+                                vec![candidate_result],
+                            ),
+                        )));
+                    }
+                    if known_strict && known_bound.checked_add(1) == Some(target_bound) {
+                        let in_z: AtomicFact = InFact::new(
+                            f.right.clone(),
+                            StandardSet::Z.into(),
+                            f.line_file.clone(),
+                        )
+                        .into();
+                        let in_z_result = self
+                            .verify_non_equational_known_then_builtin_rules_only(
+                                &in_z,
+                                verify_state,
+                            )?;
+                        if !in_z_result.is_true() {
+                            continue;
+                        }
+                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "integer weak lower bound from strict predecessor lower bound"
+                                    .to_string(),
+                                vec![candidate_result, in_z_result],
+                            ),
+                        )));
+                    }
+                }
+            }
+            AtomicFact::LessFact(f) => {
+                let Some(target_bound) = self.resolved_integer_value_for_order_bound(&f.left)
+                else {
+                    return Ok(None);
+                };
+                let candidates = self.collect_known_lower_bound_candidates(&f.right);
+                for candidate in candidates {
+                    let Some((known_bound, known_strict)) =
+                        self.known_lower_bound_candidate_value(&candidate, &f.right)
+                    else {
+                        continue;
+                    };
+                    let stronger_bound_is_enough = if known_strict {
+                        target_bound <= known_bound
+                    } else {
+                        target_bound < known_bound
+                    };
+                    if !stronger_bound_is_enough {
+                        continue;
+                    }
+                    let candidate_result =
+                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                    if candidate_result.is_true() {
+                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "weaken numeric strict lower bound from known lower bound"
+                                    .to_string(),
+                                vec![candidate_result],
+                            ),
+                        )));
+                    }
+                }
+            }
+            _ => {}
+        }
+        Ok(None)
+    }
+
+    fn collect_known_lower_bound_candidates(&self, right: &Obj) -> Vec<AtomicFact> {
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    if self
+                        .known_lower_bound_candidate_value(known_fact, right)
+                        .is_some()
+                    {
+                        candidates.push(known_fact.clone());
+                    }
+                }
+            }
+        }
+        candidates
+    }
+
+    fn known_lower_bound_candidate_value(
+        &self,
+        known_fact: &AtomicFact,
+        right: &Obj,
+    ) -> Option<(i128, bool)> {
+        let norm = normalize_positive_order_atomic_fact(known_fact)?;
+        match &norm {
+            AtomicFact::LessFact(f) if f.right.to_string() == right.to_string() => {
+                Some((self.resolved_integer_value_for_order_bound(&f.left)?, true))
+            }
+            AtomicFact::LessEqualFact(f) if f.right.to_string() == right.to_string() => {
+                Some((self.resolved_integer_value_for_order_bound(&f.left)?, false))
+            }
+            _ => None,
+        }
+    }
+
+    fn resolved_integer_value_for_order_bound(&self, obj: &Obj) -> Option<i128> {
+        let number = self.resolve_obj_to_number(obj)?;
+        if !is_number_string_literally_integer_without_dot(number.normalized_value.clone()) {
+            return None;
+        }
+        number.normalized_value.parse::<i128>().ok()
     }
 
     fn verify_zero_le_abs_builtin_rule(
