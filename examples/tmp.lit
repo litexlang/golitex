@@ -1,4 +1,4 @@
-forall a R:
-    a = 1/(2/3*4)
+forall a, b R:
+    a^2 + a * a + b = 0
     =>:
-        a + 1 = 11 / 8
+        0 = 2 * a^2 + b
