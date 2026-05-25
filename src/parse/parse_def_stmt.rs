@@ -497,6 +497,13 @@ impl Runtime {
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
+        let as_algo = if tb.current_token_is_equal_to(AS) && tb.token_at_add_index(1) == ALGO {
+            tb.skip_token(AS)?;
+            tb.skip_token(ALGO)?;
+            true
+        } else {
+            false
+        };
         if tb.current_token_is_equal_to(BY) {
             Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -508,6 +515,15 @@ impl Runtime {
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
             if tb.current_token_is_equal_to(AS) {
+                if as_algo {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "`have fn as algo` does not support `as set` function definitions"
+                                .to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
                 tb.skip_token(AS)?;
                 tb.skip_token(SET)?;
                 tb.skip_token(COLON)?;
@@ -536,6 +552,15 @@ impl Runtime {
                 return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, lf).into());
             }
             if tb.current_token_is_equal_to(BY) {
+                if as_algo {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "`have fn as algo` expects an executable function signature and body"
+                                .to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
                 tb.skip_token(BY)?;
                 let lf = tb.line_file.clone();
                 let fact = self.parse_fact(tb)?;
@@ -582,19 +607,35 @@ impl Runtime {
                     fs.ret_set.clone(),
                     equal_to,
                 )?;
-                Ok(HaveFnEqualStmt::new(name, equal_to_anonymous_fn, tb.line_file.clone()).into())
+                Ok(
+                    HaveFnEqualStmt::new(name, equal_to_anonymous_fn, as_algo, tb.line_file.clone())
+                        .into(),
+                )
             } else if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
-                self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fs, &fn_param_names)
+                self.parse_have_fn_case_by_case_stmt_after_colon(
+                    tb,
+                    name,
+                    fs,
+                    &fn_param_names,
+                    as_algo,
+                )
             } else if tb.current_token_is_equal_to(BY) {
                 if tb.token_at_add_index(1) == CASES {
-                    self.parse_have_fn_by_cases_stmt_after_signature(tb, name, fs, &fn_param_names)
+                    self.parse_have_fn_by_cases_stmt_after_signature(
+                        tb,
+                        name,
+                        fs,
+                        &fn_param_names,
+                        as_algo,
+                    )
                 } else if tb.token_at_add_index(1) == INDUC {
                     self.parse_have_fn_by_induc_stmt_after_signature(
                         tb,
                         name,
                         fs,
                         top_level_fn_param_names,
+                        as_algo,
                     )
                 } else if tb.token_at_add_index(1) == "decreasing" {
                     Err(RuntimeError::from(ParseRuntimeError(
@@ -631,6 +672,7 @@ impl Runtime {
         name: String,
         fn_set_clause: FnSetClause,
         fn_param_names: &[String],
+        as_algo: bool,
     ) -> Result<Stmt, RuntimeError> {
         let (cases, equal_tos) =
             self.parse_have_fn_case_by_case_blocks(&mut tb.body, fn_param_names)?;
@@ -639,6 +681,7 @@ impl Runtime {
             fn_set_clause,
             cases,
             equal_tos,
+            as_algo,
             tb.line_file.clone(),
         )
         .into())
@@ -650,6 +693,7 @@ impl Runtime {
         name: String,
         fn_set_clause: FnSetClause,
         fn_param_names: &[String],
+        as_algo: bool,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(BY)?;
         tb.skip_token(CASES)?;
@@ -662,7 +706,13 @@ impl Runtime {
                 ),
             )));
         }
-        self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fn_set_clause, fn_param_names)
+        self.parse_have_fn_case_by_case_stmt_after_colon(
+            tb,
+            name,
+            fn_set_clause,
+            fn_param_names,
+            as_algo,
+        )
     }
 
     fn parse_have_fn_case_by_case_blocks(
@@ -699,8 +749,9 @@ impl Runtime {
         name: String,
         fn_set_clause: FnSetClause,
         fn_param_names: Vec<String>,
+        as_algo: bool,
     ) -> Result<Stmt, RuntimeError> {
-        self.parse_have_fn_by_induc_block(tb, name, fn_set_clause, &fn_param_names)
+        self.parse_have_fn_by_induc_block(tb, name, fn_set_clause, &fn_param_names, as_algo)
     }
 
     fn parse_have_fn_by_induc_block(
@@ -709,6 +760,7 @@ impl Runtime {
         name: String,
         fn_set_clause: FnSetClause,
         fn_param_names: &[String],
+        as_algo: bool,
     ) -> Result<Stmt, RuntimeError> {
         block.skip_token(BY)?;
         block.skip_token(INDUC)?;
@@ -755,6 +807,7 @@ impl Runtime {
             measure,
             lower_bound,
             cases,
+            as_algo,
             block.line_file.clone(),
         )
         .into())

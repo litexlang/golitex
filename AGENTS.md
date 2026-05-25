@@ -81,6 +81,16 @@ main source families, a clear standard library gap map, a benchmark set for
 Litex's mathematical ability, and minimal reproductions for the important
 blockers.
 
+For every source folder under `scripts/` or a similar local translation
+workspace, maintain a nearby `todo.md` as the local blocker list for that
+source. When translation work reveals a missing definition, theorem, infer
+rule, builtin rule, syntax feature, or diagnostic gap, append a concise item to
+that folder's `todo.md`. When one of those items is implemented or no longer
+blocks the work, remove it from that `todo.md`. For example, if work in
+`scripts/minif2f_tmp/` hits a missing feature, record it in
+`scripts/minif2f_tmp/todo.md`; if the feature is later added, delete the
+completed item.
+
 ## General Engineering Style
 
 1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
