@@ -201,11 +201,10 @@ impl Runtime {
 
     pub fn get_object_equal_to_normalized_decimal_number(&self, obj_str: &str) -> Option<Number> {
         for env in self.iter_environments_from_top() {
-            if let Some(calculated_value) = env
-                .known_objs_equal_to_normalized_decimal_number
-                .get(obj_str)
+            if let Some(KnownObjValue::SimplifiedNumber(number)) =
+                env.known_obj_values.get(obj_str)
             {
-                return Some(calculated_value.clone());
+                return Some(number.clone());
             }
         }
         None

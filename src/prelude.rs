@@ -4,7 +4,9 @@ pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
     OrFactKey, PropName, StructName, TemplateName,
 };
-pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
+pub use crate::environment::{
+    Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+};
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
 pub use crate::error::ArithmeticRuntimeError;

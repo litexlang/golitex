@@ -1,0 +1,21 @@
+forall a, b, c R_nz:
+    a / (b / c) = a * c / b
+    (a / b) / c = a / (b * c)
+
+forall u R:
+    u = 1 / (7 / 3)
+    =>:
+        u = 1 / (7 / 3) = 3 / 7
+        7 * u = 3
+
+forall u R:
+    u = (-8 / 33) / (-8)
+    =>:
+        u = (-8 / 33) / (-8) = 1 / 33
+        u = 1 / 33
+
+forall u, v, w R:
+    w != 0
+    u = v / w
+    =>:
+        u * w = v

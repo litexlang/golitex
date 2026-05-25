@@ -392,14 +392,20 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         if let Some(right_calculated_value) = self.resolve_obj_to_number(&equal_fact.right) {
             self.top_level_env()
-                .known_objs_equal_to_normalized_decimal_number
-                .insert(equal_fact.left.to_string(), right_calculated_value);
+                .known_obj_values
+                .insert(
+                    equal_fact.left.to_string(),
+                    KnownObjValue::SimplifiedNumber(right_calculated_value),
+                );
         }
 
         if let Some(left_calculated_value) = self.resolve_obj_to_number(&equal_fact.left) {
             self.top_level_env()
-                .known_objs_equal_to_normalized_decimal_number
-                .insert(equal_fact.right.to_string(), left_calculated_value);
+                .known_obj_values
+                .insert(
+                    equal_fact.right.to_string(),
+                    KnownObjValue::SimplifiedNumber(left_calculated_value),
+                );
         }
 
         if let Some(derived) =
@@ -407,8 +413,8 @@ impl Runtime {
         {
             if let Some(n) = self.resolve_obj_to_number(&derived.right) {
                 self.top_level_env()
-                    .known_objs_equal_to_normalized_decimal_number
-                    .insert(derived.left.to_string(), n);
+                    .known_obj_values
+                    .insert(derived.left.to_string(), KnownObjValue::SimplifiedNumber(n));
             }
         }
 
