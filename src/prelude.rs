@@ -155,7 +155,7 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_repl, run_repl_with_show_file_path, run_source_code, run_source_code_in_file,
+    run_repl, run_repl_with_detail_output, run_source_code, run_source_code_in_file,
     run_source_code_in_file_for_cli, run_source_code_in_file_with_ok, run_stmt_at_global_env,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;

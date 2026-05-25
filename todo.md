@@ -1,4 +1,4 @@
-- [ ] Add more solvable trig items in `required-3_questions.json`
-- [ ] Re-run full non-empty snippet validation
+- [x] Add more solvable trig items in `required-3_questions.json`
 - [ ] Summarize the current blocker set for `run_file trigonometry`
 - [ ] Keep filling constant-answer trig items that do not require free symbolic variables
+- [ ] Add more solvable trig items in `required-2_questions.json`
