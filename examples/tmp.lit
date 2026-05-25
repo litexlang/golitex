@@ -1,38 +1,21 @@
-run_file nat
+forall a, b, c R_nz:
+    a / (b / c) = a * c / b
+    (a / b) / c = a / (b * c)
 
-know:
-    forall n Z, k N_pos:
-        $prime(k)
-        exist t N_pos st {n^t % k = 0}
-        =>:
-            n % k = 0
+forall u R:
+    u = 1 / (7 / 3)
+    =>:
+        u = 1 / (7 / 3) = 3 / 7
+        7 * u = 3
 
-    forall n Z, k N_pos:
-        $prime(k)
-        n^2 % k = 0
-        =>:
-            n % k = 0
+forall u R:
+    u = (-8 / 33) / (-8)
+    =>:
+        u = (-8 / 33) / (-8) = 1 / 33
+        u = 1 / 33
 
-    forall n Z, k N_pos:
-        $prime(k)
-        n^3 % k = 0
-        =>:
-            n % k = 0
-            
-    forall n Z, k N_pos:
-        $prime(k)
-        n^4 % k = 0
-        =>:
-            n % k = 0
-
-    forall n Z, k N_pos:
-        $prime(k)
-        n^5 % k = 0
-
-let n Z, k N_pos:
-    n^100 % k = 0
-    $prime(k)
-
-witness exist t N_pos st {n^t % k = 0} from 100
-
-n % k = 0
+forall u, v, w R:
+    w != 0
+    u = v / w
+    =>:
+        u * w = v

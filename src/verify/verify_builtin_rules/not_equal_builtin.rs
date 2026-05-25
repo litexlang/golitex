@@ -78,6 +78,12 @@ impl Runtime {
             return Ok(verified_result);
         }
 
+        if let Some(verified_result) =
+            self.try_verify_div_not_equal_zero_from_numerator_nonzero(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
         if let Some(verified_result) = self
             .try_verify_square_sum_not_equal_zero_from_nonzero_component(
                 not_equal_fact,
@@ -412,6 +418,71 @@ impl Runtime {
             ));
         }
         Ok(None)
+    }
+
+    // Quotient nonzero rule: if `a != 0` and `b != 0`, then `a / b != 0`.
+    // Example: from `x != 0` and `y != 0`, prove `x / y != 0`.
+    fn try_verify_div_not_equal_zero_from_numerator_nonzero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let div = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Div(div), right)
+                if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
+            {
+                div
+            }
+            (left, Obj::Div(div)) if self.obj_represents_zero_for_not_equal_builtin_rules(left) => {
+                div
+            }
+            _ => return Ok(None),
+        };
+
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let numerator_nonzero: AtomicFact = NotEqualFact::new(
+            div.left.as_ref().clone(),
+            zero_obj.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let denominator_nonzero: AtomicFact =
+            NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
+
+        let mut numerator_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &numerator_nonzero,
+            verify_state,
+        )?;
+        if !numerator_result.is_true() {
+            numerator_result =
+                self.verify_non_equational_atomic_fact(&numerator_nonzero, verify_state, true)?;
+        }
+        if !numerator_result.is_true() {
+            return Ok(None);
+        }
+
+        let mut denominator_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &denominator_nonzero,
+            verify_state,
+        )?;
+        if !denominator_result.is_true() {
+            denominator_result =
+                self.verify_non_equational_atomic_fact(&denominator_nonzero, verify_state, true)?;
+        }
+        if !denominator_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                not_equal_fact.clone().into(),
+                InferResult::new(),
+                "div_not_equal_zero_from_numerator_nonzero".to_string(),
+                vec![numerator_result, denominator_result],
+            )
+            .into(),
+        ))
     }
 
     // If `a != 0 or b != 0` is known, then `a^2 + b^2 != 0`.

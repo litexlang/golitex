@@ -504,6 +504,33 @@ forall x, a, b R:
     }
 
     #[test]
+    fn quotient_nonzero_from_numerator_nonzero_builtin_rule() {
+        let source_code = r#"
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+        0 != a / b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "quotient_nonzero_from_numerator_nonzero_builtin_rule",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "quotient_nonzero_from_numerator_nonzero_builtin_rule failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"rule\": \"div_not_equal_zero_from_numerator_nonzero\""));
+    }
+
+    #[test]
     fn real_interval_membership_rules() {
         let source_code = r#"
 have I set = oo(0, 1)

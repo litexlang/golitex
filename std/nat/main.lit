@@ -285,3 +285,5 @@ know:
     forall n Z, k N_pos:
         $prime(k)
         n^5 % k = 0
+        =>:
+            n % k = 0

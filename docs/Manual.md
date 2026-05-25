@@ -2837,6 +2837,16 @@ forall x, y R:
         x^2 + y^2 != 0
 ```
 
+A quotient is nonzero when its numerator and denominator are both nonzero.
+
+```litex
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+```
+
 ```litex
 0 < 2 ^ 3
 ```
