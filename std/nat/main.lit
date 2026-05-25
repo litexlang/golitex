@@ -256,3 +256,32 @@ know:
 
     forall q Q:
         exist! a Z, b N_pos st {q = a / b, $coprime(a, b)}
+
+know:
+    forall n Z, k N_pos:
+        $prime(k)
+        exist t N_pos st {n^t % k = 0}
+        =>:
+            n % k = 0
+
+    forall n Z, k N_pos:
+        $prime(k)
+        n^2 % k = 0
+        =>:
+            n % k = 0
+
+    forall n Z, k N_pos:
+        $prime(k)
+        n^3 % k = 0
+        =>:
+            n % k = 0
+            
+    forall n Z, k N_pos:
+        $prime(k)
+        n^4 % k = 0
+        =>:
+            n % k = 0
+
+    forall n Z, k N_pos:
+        $prime(k)
+        n^5 % k = 0

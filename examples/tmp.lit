@@ -1,25 +1,38 @@
-forall t R_pos:
-    t^2 < 4^2
-    =>:
-        t < 4
+run_file nat
 
-forall t R_pos:
-    t^3 < 4^3
-    =>:
-        t < 4
+know:
+    forall n Z, k N_pos:
+        $prime(k)
+        exist t N_pos st {n^t % k = 0}
+        =>:
+            n % k = 0
 
-forall t R_pos:
-    t^4 < 4^4
-    =>:
-        t < 4
+    forall n Z, k N_pos:
+        $prime(k)
+        n^2 % k = 0
+        =>:
+            n % k = 0
 
-forall t R_pos:
-    t^5 < 4^5
-    =>:
-        t < 4
+    forall n Z, k N_pos:
+        $prime(k)
+        n^3 % k = 0
+        =>:
+            n % k = 0
+            
+    forall n Z, k N_pos:
+        $prime(k)
+        n^4 % k = 0
+        =>:
+            n % k = 0
 
-forall t R_pos:
-    t^6 < 4^6
-    =>:
-        $pos_pow_strict_order_reflects(t, 4, 6)
-        t < 4
+    forall n Z, k N_pos:
+        $prime(k)
+        n^5 % k = 0
+
+let n Z, k N_pos:
+    n^100 % k = 0
+    $prime(k)
+
+witness exist t N_pos st {n^t % k = 0} from 100
+
+n % k = 0
