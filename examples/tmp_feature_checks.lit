@@ -1,0 +1,93 @@
+forall a, b N, n N_pos:
+    a < b
+    =>:
+        a^n < b^n
+
+forall a, b, n N:
+    n >= 1
+    a < b
+    =>:
+        a^n < b^n
+
+forall a, b, n N_pos:
+    a < b
+    =>:
+        a^n < b^n
+
+forall a, b R_pos:
+    a^6 < b^6
+    =>:
+        $pos_pow_strict_order_reflects(a, b, 6)
+        a < b
+
+forall a, b R_pos:
+    a^6 <= b^6
+    =>:
+        $pos_pow_order_reflects(a, b, 6)
+        a <= b
+
+forall a, b R:
+    a * b = 0
+    a != 0
+    =>:
+        b = 0
+
+forall a, b, c R_nz:
+    a / (b / c) = a * c / b
+    (a / b) / c = a / (b * c)
+
+forall u, v, w R:
+    w != 0
+    u = v / w
+    =>:
+        u * w = v
+
+forall u, v, w R:
+    w != 0
+    u * w = v
+    =>:
+        u = v / w
+
+forall x R:
+    x + x = 2 * x
+
+forall a R:
+    a * a = a^2
+
+forall x, y R:
+    x + x + y = 2 * x + y
+
+forall a, b R:
+    a * a * b = a^2 * b
+
+forall x, c R:
+    x != c
+    =>:
+        x - c != 0
+
+forall x, c R:
+    x - c != 0
+    =>:
+        x != c
+
+forall x, c R:
+    =>:
+        x != c
+    <=>:
+        x - c != 0
+
+forall x, c R:
+    x != -c
+    =>:
+        x + c != 0
+
+forall x, c R:
+    x + c != 0
+    =>:
+        x != -c
+
+forall x, c R:
+    =>:
+        x != -c
+    <=>:
+        x + c != 0
