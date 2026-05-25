@@ -74,6 +74,21 @@ Litex works well with AI agents because the proof language is close to ordinary 
 
 This turns `know` into temporary scaffolding rather than the final proof. The agent can read this manual, run Litex, inspect verification output and error messages, and keep shrinking the informal gaps. Large examples such as a bijection from `N^2` to `N` are approachable with this loop: first build the proof skeleton, then replace the broad assumptions by smaller verified branches.
 
+For algebra, agents should prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
+
+```litex
+claim:
+    prove:
+        forall a, b R:
+            (2 * a - b) * (3 * a + b) = 0
+            2 * a - b != 0
+            =>:
+                3 * a + b = 0
+    3 * a + b = 0 / (2 * a - b) = 0
+```
+
+This style matches the verifier feedback loop better than a large algebraic jump. It also gives an agent a reusable pattern: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
+
 ---
 
 ### Mental model
