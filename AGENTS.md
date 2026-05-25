@@ -158,9 +158,11 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 7. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-8. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+8. When an agent cannot prove a direct algebraic or numeric equality, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
 
-9. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+9. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+
+10. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
 ## Dataset Translation To Litex
 
