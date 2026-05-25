@@ -8,5 +8,5 @@ pub use pipeline::{
     render_run_source_code_output, run_source_code, run_source_code_in_file,
     run_source_code_in_file_for_cli, run_source_code_in_file_with_ok,
 };
-pub use pipeline_repl::{run_repl, run_repl_with_show_file_path};
+pub use pipeline_repl::{run_repl, run_repl_with_detail_output};
 pub use pipeline_run_stmt_globally::run_stmt_at_global_env;

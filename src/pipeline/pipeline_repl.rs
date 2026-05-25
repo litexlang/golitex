@@ -4,21 +4,21 @@ use crate::prelude::*;
 use std::io::{self, BufRead, Write};
 
 pub fn run_repl(version: &str) {
-    return run_repl_with_show_file_path(version, false);
+    return run_repl_with_detail_output(version, false);
 }
 
-pub fn run_repl_with_show_file_path(version: &str, show_file_path: bool) {
-    return run_repl_loop_internal(version, show_file_path);
+pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
+    return run_repl_loop_internal(version, detail_output);
 }
 
-fn run_repl_loop_internal(version_banner: &str, show_file_path: bool) {
+fn run_repl_loop_internal(version_banner: &str, detail_output: bool) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
     match run_repl_loop_with_readers(
         version_banner,
-        show_file_path,
+        detail_output,
         &mut stdin_locked,
         &mut stdout_locked,
     ) {
@@ -31,7 +31,7 @@ fn run_repl_loop_internal(version_banner: &str, show_file_path: bool) {
 
 fn run_repl_loop_with_readers<R, W>(
     version_banner: &str,
-    show_file_path: bool,
+    detail_output: bool,
     stdin_reader: &mut R,
     stdout_writer: &mut W,
 ) -> io::Result<()>
@@ -46,7 +46,8 @@ where
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("repl");
-    runtime.module_manager.hide_file_paths_in_output = !show_file_path;
+    runtime.detail_output = detail_output;
+    runtime.module_manager.hide_file_paths_in_output = !detail_output;
 
     let mut line_buffer = String::new();
 

@@ -4,7 +4,13 @@ $even(4)
 $odd(5)
 $divides(3, 12)
 $mod_eq(11, 3, 4)
-gcd(6, 9) = gcd(9, 6)
+$coprime(4, 1)
+$coprime(1, 4)
+
+claim:
+    prove:
+        forall q Q:
+            exist a Z, b N_pos st {q = a / b, $coprime(a, b)}
 
 claim:
     prove:

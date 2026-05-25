@@ -660,7 +660,6 @@ b = a * k1 = a * 0 = 0
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(path);
-        runtime.module_manager.hide_file_paths_in_output = true;
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -672,20 +671,120 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
-    fn show_file_path_output_keeps_source_fields() {
-        let source_code = "x = 1";
-        let path = "/private/tmp/litex-show-source-test.lit";
+    fn normal_output_omits_empty_arrays_and_empty_strings() {
+        let source_code = "1 = 1\n1 = 2";
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(path);
-        runtime.module_manager.hide_file_paths_in_output = false;
+        runtime.new_file_path_new_env_new_name_scope("normal_output_omits_empty_fields");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(!run_succeeded);
-        assert!(run_output.contains("\"source\""));
-        assert!(run_output.contains(path));
+        assert!(!run_output.contains("\"infer_facts\": []"));
+        assert!(!run_output.contains("\"inside_results\": []"));
+        assert!(!run_output.contains("\"message\": \"\""));
+    }
+
+    #[test]
+    fn detail_output_keeps_empty_arrays_and_empty_strings() {
+        let source_code = "1 = 1\n1 = 2";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("detail_output_keeps_empty_fields");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("\"infer_facts\": []"));
+        assert!(run_output.contains("\"inside_results\": []"));
+        assert!(run_output.contains("\"message\": \"\""));
+    }
+
+    #[test]
+    fn builtin_citation_source_uses_safe_builtin_label() {
+        let source_code = "have a, b R\na < b or a = b or a > b";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("builtin_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "builtin citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"builtin\""));
+        assert!(run_output.contains("\"source\": \"builtin_code\""));
+        assert!(!run_output.contains("\"path\""));
+    }
+
+    #[test]
+    fn std_citation_source_uses_safe_module_label() {
+        let source_code = "run_file trigonometry\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("std_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(run_succeeded, "std citation run failed:\n{}", run_output);
+        assert!(run_output.contains("\"source_kind\": \"std\""));
+        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
+        assert!(!run_output.contains("\"path\""));
+    }
+
+    #[test]
+    fn run_file_citation_source_uses_safe_label_and_detail_path() {
+        let run_file_path = std::env::temp_dir().join("litex-run-file-citation-source-test.lit");
+        fs::write(
+            &run_file_path,
+            "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        )
+        .unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"\n$p(2)", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "run_file citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"run_file\""));
+        assert!(run_output.contains("\"source\": \"external_file\""));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        let _ = fs::remove_file(&run_file_path);
+        assert!(
+            detail_run_succeeded,
+            "detail run_file citation run failed:\n{}",
+            detail_run_output
+        );
+        assert!(detail_run_output.contains("\"path\""));
+        assert!(detail_run_output.contains(run_file_path_string.as_str()));
     }
 
     #[test]
@@ -728,7 +827,6 @@ b = a * k1 = a * 0 = 0
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
-        runtime.module_manager.hide_file_paths_in_output = true;
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -738,6 +836,76 @@ b = a * k1 = a * 0 = 0
         assert!(run_output.contains("\"stmt\": \"run_file\""));
         assert!(!run_output.contains(run_file_path_string.as_str()));
         assert!(!run_output.contains("\"source\""));
+    }
+
+    #[test]
+    fn run_file_read_error_hides_path_unless_detail_output() {
+        let run_file_path = std::env::temp_dir().join("litex-missing-run-file-output-test.lit");
+        let _ = fs::remove_file(&run_file_path);
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("Failed to read file: external_file"));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("repl");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        assert!(!detail_run_succeeded);
+        assert!(detail_run_output.contains(run_file_path_string.as_str()));
+    }
+
+    #[test]
+    fn std_run_file_error_hides_attempted_paths_unless_detail_output() {
+        let missing_std_module = "__missing_std_module_for_output_test__";
+        let source_code = format!("run_file {}", missing_std_module);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains(
+            format!(
+                "Failed to find std run_file target `{}`",
+                missing_std_module
+            )
+            .as_str()
+        ));
+        assert!(!run_output.contains("Tried:"));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("repl");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        assert!(!detail_run_succeeded);
+        assert!(detail_run_output.contains("Tried:"));
     }
 
     #[test]

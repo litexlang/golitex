@@ -2256,8 +2256,7 @@ x = 0 or x > 0
     "x $in R",
     "a = 0 or a > 0",
     "x = a"
-  ],
-  "inside_results": []
+  ]
 }
 
 {
@@ -2274,9 +2273,7 @@ x = 0 or x > 0
       "cited_stmt": "a = 0 or a > 0",
       "verify_what": "x = 0 or x > 0"
     }
-  ],
-  "infer_facts": [],
-  "inside_results": []
+  ]
 }
 ```
 

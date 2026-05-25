@@ -280,7 +280,7 @@ Basic behavior:
 | `-harness -e <code>` | Run a source string through the agent harness. |
 | `-harness -f <file>` | Run a file through the agent harness. |
 | `-harness -r <repo>` | Run a repository through the agent harness. |
-| `-show-file-path` | Include file paths in JSON output. By default, Litex hides them for stable output. |
+| `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
 | `-latex` | Enter LaTeX-related mode. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
 | `-latex -e <code>` | Compile a source string to LaTeX, when available. |
@@ -300,8 +300,10 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 ## Command output format
 
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
-By default, Litex does not print file paths in JSON output. Use `-show-file-path`
-when you need full paths for debugging.
+By default, Litex omits empty arrays and empty strings, and it does not print
+raw file paths. Cross-source references still keep safe provenance labels such
+as `builtin_code`, `std/trigonometry`, or `external_file`. Use
+`-detail` when you need full trace details and raw paths for debugging.
 
 If the whole run succeeds:
 
@@ -319,8 +321,10 @@ Example success output looks like this. The exact output may differ by version:
   "type": "AtomicFact",
   "line": 1,
   "stmt": "1 + 1 = 2",
-  "infer_facts": [],
-  "inside_results": []
+  "verified_by": {
+    "type": "builtin rule",
+    "rule": "calculation"
+  }
 }
 ```
 
@@ -340,12 +344,15 @@ Example error output looks like this. The exact output may differ by version:
   "error_type": "VerifyError",
   "result": "error",
   "line": 1,
-  "message": "1 = 0",
+  "message": "verification failed",
+  "type": "AtomicFact",
+  "stmt": "1 = 0",
   "previous_error": {
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "message": "1 = 0",
+    "type": "AtomicFact",
+    "stmt": "1 = 0",
     "previous_error": null
   }
 }
