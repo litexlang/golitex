@@ -1,1 +1,9 @@
-(-sqrt(2))^2 = 2
+run_file trigonometry
+
+(2*pi/3 - pi/2) / pi = 1/6
+
+not 1/6 $in Z
+
+not (2*pi/3 - pi/2) / pi $in Z
+
+cos(2*pi/3) != 0

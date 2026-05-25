@@ -10,6 +10,27 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Square-root product equalities (2026-05)
+
+Builtin equality can now prove square-root product steps when the factors are nonnegative and the argument equality is checkable, such as `sqrt(x) = sqrt(a) * sqrt(b)` from `x = a * b`. The same group also handles equal square-root arguments and `sqrt(a^2) = a` for nonnegative `a`.
+
+```litex
+prove:
+    sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
+```
+
+### Numeric quotient non-integer detection (2026-05)
+
+When checking `not x $in Z`, a resolved numeric division `a / b` can be rejected as an integer by the existing modulo evaluator: if `a` and `b` resolve to integer numbers, `b != 0`, and `a % b != 0`, Litex proves the quotient is not in `Z`.
+
+```litex
+prove:
+    1 / 6 $in Q
+    6 / 3 $in Z
+    not 1 / 6 $in Z
+    not 2 / 6 $in Z
+```
+
 ### `have fn as algo` (2026-05)
 
 `have fn as algo f(...) ...` defines the ordinary function facts first, then automatically generates and verifies the corresponding `algo f(...)`. This is available for direct equality, `by cases`, and `by induc` function definitions. Generated algo cases currently require atomic case conditions.
