@@ -236,4 +236,33 @@ let pi R:
 let euler_e R:
     euler_e > 0
         
+know:
+    forall a, b R_pos:
+        a^2 < b^2 or a^3 < b^3 or a^4 < b^4 or a^5 < b^5
+        =>:
+            a < b
+
+    forall a, b R_pos:
+        a^2 <= b^2 or a^3 <= b^3 or a^4 <= b^4 or a^5 <= b^5
+        =>:
+            a <= b
+        
+prop pos_pow_strict_order_reflects(a, b, k R_pos):
+    a < b
+
+prop pos_pow_order_reflects(a, b, k R_pos):
+    a <= b
+
+know forall a, b, k R_pos:
+    a^k < b^k
+    k >= 1
+    =>:
+        $pos_pow_strict_order_reflects(a, b, k)
+
+know forall a, b, k R_pos:
+    a^k <= b^k
+    k >= 1
+    =>:
+        $pos_pow_order_reflects(a, b, k)
+
 "#;

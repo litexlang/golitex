@@ -1,6 +1,6 @@
 use crate::common::json_value::{
-    json_one_level_indent, json_string_literal, line_file_line_json_fragment,
-    line_file_line_json_value, line_file_source_json_value, render_json_value, JsonValue,
+    json_one_level_indent, json_string_literal, line_file_line_json_value, render_json_value,
+    JsonValue,
 };
 use crate::prelude::*;
 use std::rc::Rc;
@@ -50,7 +50,45 @@ fn finalize_display_text_with_optional_strip(text: String, strip_free_param_tags
 }
 
 fn should_hide_file_paths(runtime: &Runtime) -> bool {
-    runtime.module_manager.hide_file_paths_in_output
+    !runtime.detail_output
+}
+
+fn json_value_for_output(runtime: &Runtime, value: JsonValue) -> JsonValue {
+    if runtime.detail_output {
+        value
+    } else {
+        remove_empty_json_fields(value)
+    }
+}
+
+fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
+    match value {
+        JsonValue::Object(fields) => {
+            let mut next_fields: Vec<(String, JsonValue)> = Vec::new();
+            for (key, field_value) in fields {
+                let field_value = remove_empty_json_fields(field_value);
+                if !json_value_is_empty_in_normal_output(&field_value) {
+                    next_fields.push((key, field_value));
+                }
+            }
+            JsonValue::Object(next_fields)
+        }
+        JsonValue::Array(items) => JsonValue::Array(
+            items
+                .into_iter()
+                .map(remove_empty_json_fields)
+                .collect::<Vec<_>>(),
+        ),
+        _ => value,
+    }
+}
+
+fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
+    match value {
+        JsonValue::JsonString(s) => s.is_empty(),
+        JsonValue::Array(items) => items.is_empty(),
+        _ => false,
+    }
 }
 
 pub fn display_stmt_exec_result_json(
@@ -58,7 +96,8 @@ pub fn display_stmt_exec_result_json(
     r: &StmtResult,
     strip_free_param_tags: bool,
 ) -> String {
-    let raw = render_json_value(&stmt_exec_result_json_value(runtime, r), 0);
+    let value = json_value_for_output(runtime, stmt_exec_result_json_value(runtime, r));
+    let raw = render_json_value(&value, 0);
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
@@ -71,22 +110,100 @@ pub fn display_runtime_error_json(
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
-// Citation is in the same logical entry as this run (real path, "repl", "-e", etc.).
-const KNOWN_FACT_SOURCE_ENTRY: &str = "entry";
+const SOURCE_KIND: &str = "source_kind";
+const SOURCE_KIND_ENTRY: &str = "entry";
+const SOURCE_KIND_BUILTIN: &str = "builtin";
+const SOURCE_KIND_RUN_FILE: &str = "run_file";
 
-fn citation_source_json_value(line_file: &LineFile, mm: &ModuleManager) -> JsonValue {
-    if is_default_line_file(line_file) {
-        return line_file_source_json_value(line_file);
-    }
+fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
+    Rc::ptr_eq(&left.1, &right.1) || left.1.as_ref() == right.1.as_ref()
+}
+
+fn line_file_is_entry_source(line_file: &LineFile, mm: &ModuleManager) -> bool {
     if let Some(entry_rc) = mm.display_entry_rc.as_ref() {
         if Rc::ptr_eq(&line_file.1, entry_rc) || line_file.1.as_ref() == entry_rc.as_ref() {
-            return JsonValue::JsonString(KNOWN_FACT_SOURCE_ENTRY.to_string());
+            return true;
         }
     }
-    if !mm.entry_path.is_empty() && line_file.1.as_ref() == mm.entry_path.as_str() {
-        return JsonValue::JsonString(KNOWN_FACT_SOURCE_ENTRY.to_string());
+    !mm.entry_path.is_empty() && line_file.1.as_ref() == mm.entry_path.as_str()
+}
+
+fn display_source_label_for_line_file(
+    runtime: &Runtime,
+    line_file: &LineFile,
+) -> Option<(String, String)> {
+    if is_default_line_file(line_file) {
+        return None;
     }
-    line_file_source_json_value(line_file)
+
+    let path = line_file.1.as_ref();
+    if path == BUILTIN_CODE_PATH {
+        return Some((
+            SOURCE_KIND_BUILTIN.to_string(),
+            BUILTIN_CODE_PATH.to_string(),
+        ));
+    }
+
+    if line_file_is_entry_source(line_file, &runtime.module_manager) {
+        return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
+    }
+
+    if let Some(label) = runtime.module_manager.display_source_labels.get(path) {
+        return Some((label.source_kind.clone(), label.source.clone()));
+    }
+
+    Some((
+        SOURCE_KIND_RUN_FILE.to_string(),
+        "external_file".to_string(),
+    ))
+}
+
+fn source_ref_json_fields(
+    runtime: &Runtime,
+    source_line_file: &LineFile,
+    current_line_file: Option<&LineFile>,
+) -> Vec<(String, JsonValue)> {
+    let mut fields = vec![(
+        JSON_KEY_LINE.to_string(),
+        line_file_line_json_value(source_line_file),
+    )];
+
+    let same_source = match current_line_file {
+        Some(current_line_file) => line_files_have_same_source(source_line_file, current_line_file),
+        None => line_file_is_entry_source(source_line_file, &runtime.module_manager),
+    };
+
+    if !same_source {
+        if let Some((source_kind, source)) =
+            display_source_label_for_line_file(runtime, source_line_file)
+        {
+            fields.push((
+                SOURCE_KIND.to_string(),
+                JsonValue::JsonString(source_kind.clone()),
+            ));
+            fields.push((JSON_KEY_SOURCE.to_string(), JsonValue::JsonString(source)));
+            if runtime.detail_output && source_kind != SOURCE_KIND_BUILTIN {
+                fields.push((
+                    "path".to_string(),
+                    JsonValue::JsonString(source_line_file.1.as_ref().to_string()),
+                ));
+            }
+        }
+    }
+
+    fields
+}
+
+fn source_ref_json_value(
+    runtime: &Runtime,
+    source_line_file: &LineFile,
+    current_line_file: Option<&LineFile>,
+) -> JsonValue {
+    JsonValue::Object(source_ref_json_fields(
+        runtime,
+        source_line_file,
+        current_line_file,
+    ))
 }
 
 fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> JsonValue {
@@ -108,10 +225,15 @@ fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> Jso
 
 /// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or citation).
 fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
-    verified_by_result_json_value(runtime, &x.verified_by)
+    let current_line_file = x.stmt.line_file();
+    verified_by_result_json_value(runtime, &x.verified_by, &current_line_file)
 }
 
-fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResult) -> JsonValue {
+fn verified_by_result_json_value(
+    runtime: &Runtime,
+    verified_by: &VerifiedByResult,
+    current_line_file: &LineFile,
+) -> JsonValue {
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => verified_by_builtin_rule_value(&r.msg, None),
         VerifiedByResult::Fact(r) => {
@@ -128,6 +250,7 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
             verified_by_citation_object(
                 runtime,
                 &citation_line_file,
+                current_line_file,
                 citation_type.as_str(),
                 cited_stmt_json,
                 cited_stmt_plain.as_str(),
@@ -138,13 +261,17 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
         VerifiedByResult::VerifiedBys(w) => JsonValue::Array(
             w.cite_what
                 .iter()
-                .map(|item| verified_bys_enum_json_value(runtime, item))
+                .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file))
                 .collect(),
         ),
     }
 }
 
-fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> JsonValue {
+fn verified_bys_enum_json_value(
+    runtime: &Runtime,
+    item: &VerifiedBysEnum,
+    current_line_file: &LineFile,
+) -> JsonValue {
     match item {
         VerifiedBysEnum::ByBuiltinRule(r) => {
             verified_by_builtin_rule_value(&r.msg, Some(&r.verify_what))
@@ -162,6 +289,7 @@ fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> Js
             verified_by_citation_object(
                 runtime,
                 &citation_line_file,
+                current_line_file,
                 citation_type.as_str(),
                 JsonValue::JsonString(cited_stmt_plain.clone()),
                 cited_stmt_plain.as_str(),
@@ -246,21 +374,14 @@ fn lower_camel_case_words(input: &str) -> String {
 fn verified_by_citation_object(
     runtime: &Runtime,
     citation_line_file: &LineFile,
+    current_line_file: &LineFile,
     citation_type: &str,
     cited_stmt: JsonValue,
     cited_stmt_plain: &str,
     msg: &str,
     verify_what: Option<&Fact>,
 ) -> JsonValue {
-    let mut cite_source_fields = vec![(
-        "line".to_string(),
-        line_file_line_json_value(citation_line_file),
-    )];
-    if !should_hide_file_paths(runtime) {
-        let source_value = citation_source_json_value(citation_line_file, &runtime.module_manager);
-        cite_source_fields.push((JSON_KEY_SOURCE.to_string(), source_value));
-    }
-    let cite_source = JsonValue::Object(cite_source_fields);
+    let cite_source = source_ref_json_value(runtime, citation_line_file, Some(current_line_file));
     let mut fields = vec![
         (
             "type".to_string(),
@@ -435,6 +556,103 @@ fn json_array_field_line(indent_inner: &str, json_key: &str, json_elements: &[St
     }
 }
 
+fn json_value_field_line(indent_inner: &str, json_key: &str, value: &JsonValue) -> String {
+    let field_depth = indent_inner.len() / json_one_level_indent(1).len();
+    let object_depth = field_depth.saturating_sub(1);
+    let single_field_object = JsonValue::Object(vec![(json_key.to_string(), value.clone())]);
+    let rendered = render_json_value(&single_field_object, object_depth);
+    let mut lines = rendered.lines().collect::<Vec<_>>();
+    if lines.len() < 3 {
+        return rendered;
+    }
+    lines.remove(0);
+    lines.pop();
+    lines.join("\n")
+}
+
+fn push_json_value_field_line(
+    runtime: &Runtime,
+    field_lines: &mut Vec<String>,
+    indent_inner: &str,
+    json_key: &str,
+    value: JsonValue,
+) {
+    if runtime.detail_output || !json_value_is_empty_in_normal_output(&value) {
+        field_lines.push(json_value_field_line(indent_inner, json_key, &value));
+    }
+}
+
+fn push_json_string_field_line(
+    runtime: &Runtime,
+    field_lines: &mut Vec<String>,
+    indent_inner: &str,
+    json_key: &str,
+    value: &str,
+) {
+    push_json_value_field_line(
+        runtime,
+        field_lines,
+        indent_inner,
+        json_key,
+        JsonValue::JsonString(user_visible_stmt_or_msg_text(value)),
+    );
+}
+
+fn push_exec_stmt_error_message_field_line(
+    runtime: &Runtime,
+    field_lines: &mut Vec<String>,
+    indent_inner: &str,
+    statement: &Option<Stmt>,
+    message: &str,
+) {
+    let message = exec_stmt_error_message_text_for_json(runtime, statement, message);
+    push_json_value_field_line(
+        runtime,
+        field_lines,
+        indent_inner,
+        JSON_KEY_MESSAGE,
+        JsonValue::JsonString(message),
+    );
+}
+
+fn exec_stmt_error_message_text_for_json(
+    runtime: &Runtime,
+    statement: &Option<Stmt>,
+    message: &str,
+) -> String {
+    let message = user_visible_stmt_or_msg_text(message);
+    if runtime.detail_output {
+        return message;
+    }
+
+    match statement {
+        Some(Stmt::RunFileStmt(_)) if message.starts_with("Failed to read file:") => {
+            "Failed to read file: external_file".to_string()
+        }
+        Some(Stmt::RunFileInStd(run_file_in_std))
+            if message.starts_with("Failed to find std run_file target") =>
+        {
+            format!(
+                "Failed to find std run_file target `{}`",
+                run_file_in_std.file_path
+            )
+        }
+        _ => message,
+    }
+}
+
+fn push_source_ref_field_lines(
+    runtime: &Runtime,
+    field_lines: &mut Vec<String>,
+    indent_inner: &str,
+    source_line_file: &LineFile,
+    current_line_file: Option<&LineFile>,
+) {
+    for (key, value) in source_ref_json_fields(runtime, source_line_file, current_line_file) {
+        field_lines.push(json_value_field_line(indent_inner, key.as_str(), &value));
+    }
+}
+
 fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
     if should_hide_file_paths(runtime) {
         if let Stmt::RunFileStmt(_) = stmt {
@@ -525,48 +743,41 @@ fn build_display_error_json_object(
     ));
 
     let line_file = error.line_file();
-    field_lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
-        JSON_KEY_LINE,
-        line_file_line_json_fragment(&line_file)
-    ));
-    if !should_hide_file_paths(runtime) {
-        let source_json = if is_default_line_file(&line_file) {
-            "null".to_string()
-        } else {
-            json_string_literal(line_file.1.as_ref())
-        };
-        field_lines.push(format!(
-            "{}\"{}\": {}",
-            indent_inner, JSON_KEY_SOURCE, source_json
-        ));
-    }
+    push_source_ref_field_lines(
+        runtime,
+        &mut field_lines,
+        indent_inner.as_str(),
+        &line_file,
+        None,
+    );
 
     match error {
         RuntimeError::DefineParamsError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
         }
         RuntimeError::NameAlreadyUsedError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
         }
         RuntimeError::ArithmeticError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,
@@ -575,12 +786,13 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::NewFactError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,
@@ -589,12 +801,13 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::StoreFactError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,
@@ -603,20 +816,22 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::ParseError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
         }
         RuntimeError::ExecStmtError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
-                JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+            push_exec_stmt_error_message_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
+                &e.statement,
+                &e.msg,
+            );
             if let Some(stmt) = &e.statement {
                 let stmt_lines = stmt_json_field_lines(runtime, indent_inner.as_str(), stmt);
                 for stmt_line in stmt_lines {
@@ -632,19 +847,22 @@ fn build_display_error_json_object(
                     false,
                 ));
             }
-            field_lines.push(json_array_field_line(
-                indent_inner.as_str(),
-                JSON_KEY_INSIDE_RESULTS,
-                &inside_result_elements,
-            ));
+            if runtime.detail_output || !inside_result_elements.is_empty() {
+                field_lines.push(json_array_field_line(
+                    indent_inner.as_str(),
+                    JSON_KEY_INSIDE_RESULTS,
+                    &inside_result_elements,
+                ));
+            }
         }
         RuntimeError::WellDefinedError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             let well_defined_stmt = e.statement.as_ref().or(statement_context).cloned();
             push_optional_statement_json_field_lines(
                 runtime,
@@ -654,12 +872,13 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::VerifyError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,
@@ -668,12 +887,13 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::UnknownError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,
@@ -682,20 +902,22 @@ fn build_display_error_json_object(
             );
         }
         RuntimeError::InferError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
         }
         RuntimeError::InstantiateError(e) => {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
+            push_json_string_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
                 JSON_KEY_MESSAGE,
-                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
-            ));
+                &e.msg,
+            );
             push_optional_statement_json_field_lines(
                 runtime,
                 &mut field_lines,

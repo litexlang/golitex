@@ -987,7 +987,7 @@ impl Obj {
             Obj::Div(d) => {
                 d.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", DIV)?;
-                d.right.fmt_with_precedence(f, 2)?;
+                d.right.fmt_with_precedence(f, 1)?;
             }
             Obj::Mod(m) => {
                 m.left.fmt_with_precedence(f, 2)?;
@@ -2442,5 +2442,31 @@ impl Identifier {
     /// Build a name-shaped [`Obj`] (via [`AtomObj::Identifier`]). Parameter is String (not &str).
     pub fn mk(name: String) -> Obj {
         Identifier::new(name).into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn display_keeps_parentheses_on_composite_divisor() {
+        let one = number("1");
+        let two = number("2");
+        let three = number("3");
+
+        let divided_by_product: Obj =
+            Div::new(one.clone(), Mul::new(two.clone(), three.clone()).into()).into();
+        let divided_by_quotient: Obj =
+            Div::new(one.clone(), Div::new(two.clone(), three.clone()).into()).into();
+        let left_associative_quotient: Obj = Div::new(Div::new(one, two).into(), three).into();
+
+        assert_eq!(divided_by_product.to_string(), "1 / (2 * 3)");
+        assert_eq!(divided_by_quotient.to_string(), "1 / (2 / 3)");
+        assert_eq!(left_associative_quotient.to_string(), "1 / 2 / 3");
+    }
+
+    fn number(value: &str) -> Obj {
+        Number::new(value.to_string()).into()
     }
 }

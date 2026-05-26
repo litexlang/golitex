@@ -64,11 +64,15 @@ Good first case studies:
 - function equality and function application;
 - subset and set-builder arguments;
 - induction examples;
-- the Chapter 8 `N^2 -> N` bijection using Cantor pairing.
+- larger Mechanics examples that combine functions, tuples, arithmetic,
+  witnesses, injectivity, surjectivity, and proof-debt repair;
+- MATH500 and MiniF2F-style benchmark slices with explicit pass/failure
+  categories.
 
-The Chapter 8 bijection should be treated as the flagship larger case study.
-It exercises enough of the language to show whether fact-oriented repair
-actually scales beyond tiny examples.
+The flagship evidence should be a reproducible corpus rather than a single
+theorem. The Mechanics examples show whether fact-oriented repair scales
+beyond tiny snippets; MATH500 and MiniF2F-style tasks show which library,
+language, rule, and diagnostic gaps appear under external problem pressure.
 
 ## AI Evaluation
 
@@ -95,7 +99,7 @@ litex bench benchmarks/mechanics
 or:
 
 ```bash
-python3 The-Mechanics-of-Litex-Proof/extract_examples_from_md_files.py
+python3 scripts/The-Mechanics-of-Litex-Proof/extract_examples_from_md_files.py
 ```
 
 The output should eventually summarize:

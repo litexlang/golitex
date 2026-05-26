@@ -72,7 +72,28 @@ Litex works well with AI agents because the proof language is close to ordinary 
 3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
 
-This turns `know` into temporary scaffolding rather than the final proof. The agent can read this manual, run Litex, inspect verification output and error messages, and keep shrinking the informal gaps. Large examples such as a bijection from `N^2` to `N` are approachable with this loop: first build the proof skeleton, then replace the broad assumptions by smaller verified branches.
+This turns `know` into temporary scaffolding rather than the final proof. The
+agent can read this manual, run Litex, inspect verification output and error
+messages, and keep shrinking the informal gaps. This is the same loop used for
+larger Mechanics examples and benchmark-style tasks: first build a readable
+proof skeleton, then replace broad assumptions by smaller verified branches or
+record the exact language, library, rule, or diagnostic gap that blocks the
+next step.
+
+For algebra, agents should prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
+
+```litex
+claim:
+    prove:
+        forall a, b R:
+            (2 * a - b) * (3 * a + b) = 0
+            2 * a - b != 0
+            =>:
+                3 * a + b = 0
+    3 * a + b = 0 / (2 * a - b) = 0
+```
+
+This style matches the verifier feedback loop better than a large algebraic jump. It also gives an agent a reusable pattern: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
 
 ---
 
@@ -158,7 +179,7 @@ Decimal or integer numerals; they combine with `+`, `-`, `*`, `/`, `%`, `^`, etc
 
 #### Arithmetic and integer remainder
 
-Binary operations on expressions; `%` is integer remainder when both sides are concrete integers; `^` is exponentiation.
+Binary operations on expressions; `%` is integer remainder when both sides are concrete integers; `^` is exponentiation. Concrete numeric evaluation is intentionally bounded, so a very large expression such as a huge power can remain symbolic instead of being expanded by brute force.
 
 ```litex
 2 * 3 = 6
@@ -428,6 +449,10 @@ eval [[2, 0], [0, 2]] -- [[1, 0], [0, 1]]
 
 ```litex
 eval [[1, 2], [0, 1]] ** [[1, 0], [1, 1]]
+```
+
+```litex
+eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
 ```
 
 ```litex
@@ -1120,16 +1145,18 @@ forall x A:
 
 ---
 
-### Recursive function by decreasing measure (`have fn ... by decreasing`)
+### Recursive function by induction measure (`have fn ... by induc ... from ...`)
 
-Use **`have fn ... by decreasing ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by decreasing` clause gives a measure and a lower bound.
+Use **`have fn ... by induc ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by induc` clause gives a measure and a lower bound.
 
 When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex can verify that `args'` satisfies the function domain, that the measure at `args'` is strictly smaller than the current measure, and that the measure remains above the lower bound.
 
 Every case list must cover all possibilities in its current context, and cases must be mutually exclusive. Nested case lists are checked under their parent case assumptions.
 
+The case body uses the parameter names from the function signature. For example, if the header is `have fn f(x Z: ...)`, the recursive branch should call `f(x - 1)`, not `f(n - 1)`.
+
 ```litex
-have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
     case b = 0: a
     case b > 0: h(a, b - 1) + 1
 ```
@@ -1159,7 +1186,7 @@ b < c
 
 An `algo` is not the same as a function in a programming language such as Python. When you define an `algo`, Litex checks that the case flow really matches the function facts you have given. In the example below, the two cases must agree with the definition of `m`.
 
-`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, so the current evaluator only supports operations such as `+`, `-`, `*`, and integer powers.
+`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, including concrete `+`, `-`, `*`, `/`, and non-negative integer powers. Divisions that do not terminate as decimals are kept as normalized rational expressions.
 
 ```litex
 have fn m(x N_pos) R by cases:
@@ -1307,6 +1334,8 @@ a = 2
 Besides algorithms, **`eval expr`** can reduce closed expressions according to evaluation rules.
 
 ```litex
+eval 1 + 1 / 3 # exact rational arithmetic
+
 eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 
 eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
@@ -1741,7 +1770,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... = ...` | Define a function by one formula |
 | `have fn ... by cases` | Define a function by cases |
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
-| `have fn ... by decreasing` | Define a recursive function by decreasing measure |
+| `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
@@ -2083,6 +2112,21 @@ reason:
     builtin rule
 ```
 
+For integers, Litex has a builtin exhaustive split from a lower bound. If
+`x $in Z`, `a $in Z`, and `x >= a` are known, then Litex can verify a finite
+successor split followed by a strict tail:
+
+```litex
+prove:
+    let a, x Z:
+        x >= a
+
+    x = a or x = a + 1 or x = a + 2 or x > a + 2
+```
+
+This rule is integer-only. The analogous real-number statement would not be
+valid, since a real number can lie strictly between two consecutive integers.
+
 ```text
 known:
     a = 0 or a > 0
@@ -2256,8 +2300,7 @@ x = 0 or x > 0
     "x $in R",
     "a = 0 or a > 0",
     "x = a"
-  ],
-  "inside_results": []
+  ]
 }
 
 {
@@ -2274,9 +2317,7 @@ x = 0 or x > 0
       "cited_stmt": "a = 0 or a > 0",
       "verify_what": "x = 0 or x > 0"
     }
-  ],
-  "infer_facts": [],
-  "inside_results": []
+  ]
 }
 ```
 
@@ -2348,7 +2389,7 @@ Pure numeric goals are reduced and compared.
 2 + 3 * 4 = 14
 ```
 
-Integer remainder with concrete operands is evaluated directly.
+Integer remainder with concrete operands is evaluated directly when the concrete operands fit the bounded numeric evaluator.
 
 ```litex
 4 % 2 = 0
@@ -2821,6 +2862,16 @@ forall x, y R:
     x != 0 or y != 0
     =>:
         x^2 + y^2 != 0
+```
+
+A quotient is nonzero when its numerator and denominator are both nonzero.
+
+```litex
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
 ```
 
 ```litex

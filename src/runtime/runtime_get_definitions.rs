@@ -11,6 +11,12 @@ impl Runtime {
             if let Some(definition) = environment.defined_def_props.get(predicate_name) {
                 return Some(definition);
             }
+            if environment
+                .defined_abstract_props
+                .contains_key(predicate_name)
+            {
+                return None;
+            }
         }
 
         None
@@ -29,6 +35,9 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_abstract_props.get(predicate_name) {
                 return Some(definition);
+            }
+            if environment.defined_def_props.contains_key(predicate_name) {
+                return None;
             }
         }
 

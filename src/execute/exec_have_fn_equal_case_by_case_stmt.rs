@@ -37,6 +37,10 @@ impl Runtime {
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )?;
+        if have_fn_equal_case_by_case_stmt.as_algo {
+            self.exec_have_fn_equal_case_by_case_stmt_as_algo(have_fn_equal_case_by_case_stmt)?;
+        }
+
         Ok((NonFactualStmtSuccess::new(
             have_fn_equal_case_by_case_stmt.clone().into(),
             infer_result,

@@ -39,7 +39,12 @@ fn run_file(
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
-    run_file_at_resolved_path(_run_file_stmt.clone().into(), path, _runtime)
+    run_file_at_resolved_path(
+        _run_file_stmt.clone().into(),
+        path,
+        Some(("run_file", "external_file")),
+        _runtime,
+    )
 }
 
 fn run_file_in_std_folder(
@@ -47,12 +52,19 @@ fn run_file_in_std_folder(
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let path = resolve_run_file_in_std_path(run_file_in_std)?;
-    run_file_at_resolved_path(run_file_in_std.clone().into(), path, runtime)
+    let source = format!("std/{}", run_file_in_std.file_path);
+    run_file_at_resolved_path(
+        run_file_in_std.clone().into(),
+        path,
+        Some(("std", source.as_str())),
+        runtime,
+    )
 }
 
 fn run_file_at_resolved_path(
     stmt: Stmt,
     path: String,
+    display_source_label: Option<(&str, &str)>,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
@@ -69,6 +81,11 @@ fn run_file_at_resolved_path(
     })?;
 
     let current_file_index = runtime.module_manager.current_file_index;
+    if let Some((source_kind, source)) = display_source_label {
+        runtime
+            .module_manager
+            .register_display_source_label(path.as_str(), source_kind, source);
+    }
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
 
     let result = run_source_code(content.as_str(), runtime);
@@ -116,11 +133,34 @@ fn resolve_run_file_in_std_path(run_file_in_std: &RunFileInStd) -> Result<String
 }
 
 fn candidate_std_roots() -> Vec<PathBuf> {
+    let env_std_path = std::env::var_os("LITEX_STD_PATH").map(PathBuf::from);
+    let current_exe = std::env::current_exe().ok();
+    let local_app_data = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
+    let program_files = std::env::var_os("ProgramFiles").map(PathBuf::from);
+
+    candidate_std_roots_from(env_std_path, current_exe, local_app_data, program_files)
+}
+
+fn candidate_std_roots_from(
+    env_std_path: Option<PathBuf>,
+    current_exe: Option<PathBuf>,
+    local_app_data: Option<PathBuf>,
+    program_files: Option<PathBuf>,
+) -> Vec<PathBuf> {
     let mut roots: Vec<PathBuf> = Vec::new();
+
+    if let Some(env_std_path) = env_std_path {
+        push_std_root_if_new(&mut roots, env_std_path);
+    }
+
     push_std_root_if_new(&mut roots, PathBuf::from("std"));
 
-    if let Some(env_std_path) = std::env::var_os("LITEX_STD_PATH") {
-        push_std_root_if_new(&mut roots, PathBuf::from(env_std_path));
+    if let Some(current_exe) = current_exe {
+        let exe_dir = current_exe.parent().unwrap_or_else(|| Path::new(""));
+        for ancestor in exe_dir.ancestors() {
+            push_std_root_if_new(&mut roots, ancestor.join("std"));
+            push_std_root_if_new(&mut roots, ancestor.join("share").join("litex").join("std"));
+        }
     }
 
     push_std_root_if_new(
@@ -128,16 +168,17 @@ fn candidate_std_roots() -> Vec<PathBuf> {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("std"),
     );
 
-    if let Ok(current_exe) = std::env::current_exe() {
-        for ancestor in current_exe.ancestors() {
-            push_std_root_if_new(&mut roots, ancestor.join("std"));
-            push_std_root_if_new(&mut roots, ancestor.join("share").join("litex").join("std"));
-        }
-    }
-
     push_std_root_if_new(&mut roots, PathBuf::from("/opt/homebrew/share/litex/std"));
     push_std_root_if_new(&mut roots, PathBuf::from("/usr/local/share/litex/std"));
     push_std_root_if_new(&mut roots, PathBuf::from("/usr/share/litex/std"));
+
+    if let Some(local_app_data) = local_app_data {
+        push_std_root_if_new(&mut roots, local_app_data.join("litex").join("std"));
+    }
+
+    if let Some(program_files) = program_files {
+        push_std_root_if_new(&mut roots, program_files.join("Litex").join("std"));
+    }
 
     roots
 }
@@ -157,4 +198,32 @@ fn run_import_stmt(
     _runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     unimplemented!();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn std_roots_include_installed_layouts() {
+        let env_root = PathBuf::from("/custom/litex/std");
+        let exe_path = PathBuf::from("/opt/litex/bin/litex");
+        let local_app_data = PathBuf::from(r"C:\Users\me\AppData\Local");
+        let program_files = PathBuf::from(r"C:\Program Files");
+
+        let roots = candidate_std_roots_from(
+            Some(env_root.clone()),
+            Some(exe_path),
+            Some(local_app_data.clone()),
+            Some(program_files.clone()),
+        );
+
+        assert_eq!(roots.first(), Some(&env_root));
+        assert!(roots.contains(&PathBuf::from("std")));
+        assert!(roots.contains(&PathBuf::from("/opt/litex/bin/std")));
+        assert!(roots.contains(&PathBuf::from("/opt/litex/share/litex/std")));
+        assert!(roots.contains(&PathBuf::from("/usr/share/litex/std")));
+        assert!(roots.contains(&local_app_data.join("litex").join("std")));
+        assert!(roots.contains(&program_files.join("Litex").join("std")));
+    }
 }

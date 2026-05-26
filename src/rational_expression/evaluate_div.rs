@@ -1,4 +1,6 @@
 fn gcd(mut a: i128, mut b: i128) -> i128 {
+    a = a.abs();
+    b = b.abs();
     while b != 0 {
         let t = b;
         b = a % b;
@@ -39,7 +41,7 @@ fn is_finite(a: &str, b: &str) -> (bool, i128, i128) {
     (d == 1, numerator / g, denominator / g)
 }
 
-// 字符串长除法（保证会终止）
+// 字符串长除法（保证会终止）；这里只处理非负整数，符号在外层单独处理。
 fn divide(n: i128, d: i128) -> String {
     let mut result = String::new();
 
@@ -65,9 +67,26 @@ fn divide(n: i128, d: i128) -> String {
 pub fn safe_div(a: &str, b: &str) -> Option<String> {
     let (ok, n, d) = is_finite(a, b);
 
-    if !ok {
+    if !ok || d == 0 {
         return None;
     }
 
-    Some(divide(n, d))
+    let result_is_negative = (n < 0) ^ (d < 0);
+    let quotient = divide(n.abs(), d.abs());
+    if result_is_negative && quotient != "0" {
+        Some(format!("-{}", quotient))
+    } else {
+        Some(quotient)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::safe_div;
+
+    #[test]
+    fn safe_div_handles_negative_finite_decimal() {
+        assert_eq!(safe_div("4", "5"), Some("0.8".to_string()));
+        assert_eq!(safe_div("-4", "5"), Some("-0.8".to_string()));
+    }
 }

@@ -4,7 +4,9 @@ pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
     OrFactKey, PropName, StructName, TemplateName,
 };
-pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
+pub use crate::environment::{
+    Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+};
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
 pub use crate::error::ArithmeticRuntimeError;
@@ -155,12 +157,15 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_repl, run_repl_with_show_file_path, run_source_code, run_source_code_in_file,
+    run_repl, run_repl_with_detail_output, run_source_code, run_source_code_in_file,
     run_source_code_in_file_for_cli, run_source_code_in_file_with_ok, run_stmt_at_global_env,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
+pub use crate::rational_expression::{
+    evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
+};
 pub use crate::result::FactualStmtSuccess;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtResult;
@@ -288,7 +293,6 @@ pub use crate::common::keywords::COMMA;
 pub use crate::common::keywords::CONTRA;
 pub use crate::common::keywords::COUNT;
 pub use crate::common::keywords::CUP;
-pub use crate::common::keywords::DECREASING;
 pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
 pub use crate::common::keywords::DOT_DOT_DOT;
