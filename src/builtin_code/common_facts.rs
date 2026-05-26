@@ -265,4 +265,36 @@ know forall a, b, k R_pos:
     =>:
         $pos_pow_order_reflects(a, b, k)
 
+know forall s set:
+    s $in power_set(s)
+    {} $in power_set(s)
+
+prop increasing(s power_set(R), f set):
+    $restrict_fn_in(f, fn(x s)R)
+    forall x, y s:
+        x < y
+        =>:
+            f(x) < f(y)
+
+prop decreasing(s power_set(R), f set):
+    $restrict_fn_in(f, fn(x s)R)
+    forall x, y s:
+        x < y
+        =>:
+            f(x) > f(y)
+
+prop nondecreasing(s power_set(R), f set):
+    $restrict_fn_in(f, fn(x s)R)
+    forall x, y s:
+        x <= y
+        =>:
+            f(x) <= f(y)
+
+prop nonincreasing(s power_set(R), f set):
+    $restrict_fn_in(f, fn(x s)R)
+    forall x, y s:
+        x <= y
+        =>:
+            f(x) >= f(y)
+
 "#;

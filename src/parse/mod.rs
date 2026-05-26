@@ -14,5 +14,6 @@ mod parse_obj;
 mod parse_param_def;
 mod parse_prove_stmt;
 mod parse_stmt;
+mod parse_thm_stmt;
 mod parse_tooling_stmt;
 mod parse_witness;

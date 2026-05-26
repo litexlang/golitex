@@ -13,6 +13,63 @@ have arcsin fn(x R: -1 <= x <= 1) R
 have arccos fn(x R: -1 <= x <= 1) R
 have arctan fn(x R) R
 
+# Qualitative real-function properties used by the trigonometric axioms below.
+prop strictly_increasing_on(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x < y
+        =>:
+            f(x) < f(y)
+
+prop strictly_decreasing_on(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x < y
+        =>:
+            f(x) > f(y)
+
+prop injective_on(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        f(x) = f(y)
+        =>:
+            x = y
+
+prop one_to_one_on(S set, f fn(x R) R):
+    $injective_on(S, f)
+
+prop single_valued_on(S set, f fn(x R) R):
+    forall x, y1, y2 R:
+        x $in S
+        y1 = f(x)
+        y2 = f(x)
+        =>:
+            y1 = y2
+
+prop periodic_with_period(f fn(x R) R, p R):
+    p != 0
+    forall x R:
+        f(x + p) = f(x)
+
+prop tan_periodic_with_period(p R):
+    p != 0
+    forall x R:
+        cos(x) != 0
+        cos(x + p) != 0
+        =>:
+            tan(x + p) = tan(x)
+
+prop cot_periodic_with_period(p R):
+    p != 0
+    forall x R:
+        sin(x) != 0
+        sin(x + p) != 0
+        =>:
+            cot(x + p) = cot(x)
+
 know:
     sin(0) = 0
     cos(0) = 1
@@ -65,14 +122,22 @@ know:
             1 + cot(x)^2 = csc(x)^2
 
     forall x R:
-        sin(-1 * x) = -1 * sin(x)
-        cos(-1 * x) = cos(x)
+        sin(-x) = -sin(x)
+        cos(-x) = cos(x)
 
     forall x R:
         cos(x) != 0
-        cos(-1 * x) != 0
+        cos(-x) != 0
         =>:
-            tan(-1 * x) = -1 * tan(x)
+            tan(-x) = -tan(x)
+            sec(-x) = sec(x)
+
+    forall x R:
+        sin(x) != 0
+        sin(-x) != 0
+        =>:
+            cot(-x) = -cot(x)
+            csc(-x) = -csc(x)
 
     forall x R:
         sin(x + 2 * pi) = sin(x)
@@ -86,9 +151,41 @@ know:
             tan(x + pi) = tan(x)
             tan(x + 1 * pi) = tan(x)
 
+    forall x R:
+        sin(x) != 0
+        sin(x + pi) != 0
+        sin(x + 1 * pi) != 0
+        =>:
+            cot(x + pi) = cot(x)
+            cot(x + 1 * pi) = cot(x)
+
     forall x R, k Z:
         sin(x + 2 * pi * k) = sin(x)
         cos(x + 2 * pi * k) = cos(x)
+
+    forall x R, k Z:
+        cos(x) != 0
+        cos(x + 2 * pi * k) != 0
+        =>:
+            sec(x + 2 * pi * k) = sec(x)
+
+    forall x R, k Z:
+        sin(x) != 0
+        sin(x + 2 * pi * k) != 0
+        =>:
+            csc(x + 2 * pi * k) = csc(x)
+
+    forall x R, k Z:
+        cos(x) != 0
+        cos(x + k * pi) != 0
+        =>:
+            tan(x + k * pi) = tan(x)
+
+    forall x R, k Z:
+        sin(x) != 0
+        sin(x + k * pi) != 0
+        =>:
+            cot(x + k * pi) = cot(x)
 
     forall x, y R:
         sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
@@ -151,6 +248,171 @@ know:
             not x / pi $in Z
         <=>:
             sin(x) != 0
+
+    # Qualitative behavior on principal intervals and periodic translates.
+    $periodic_with_period(sin, 2 * pi)
+    $periodic_with_period(cos, 2 * pi)
+    $tan_periodic_with_period(pi)
+    $cot_periodic_with_period(pi)
+
+    $single_valued_on(R, sin)
+    $single_valued_on(R, cos)
+
+    $strictly_increasing_on(cc(-pi / 2, pi / 2), sin)
+    $strictly_decreasing_on(cc(pi / 2, 3 * pi / 2), sin)
+    $injective_on(cc(-pi / 2, pi / 2), sin)
+    $injective_on(cc(pi / 2, 3 * pi / 2), sin)
+    $one_to_one_on(cc(-pi / 2, pi / 2), sin)
+    $one_to_one_on(cc(pi / 2, 3 * pi / 2), sin)
+
+    $strictly_decreasing_on(cc(0, pi), cos)
+    $strictly_increasing_on(cc(pi, 2 * pi), cos)
+    $injective_on(cc(0, pi), cos)
+    $injective_on(cc(pi, 2 * pi), cos)
+    $one_to_one_on(cc(0, pi), cos)
+    $one_to_one_on(cc(pi, 2 * pi), cos)
+
+    forall k Z:
+        $strictly_increasing_on(cc(-pi / 2 + 2 * k * pi, pi / 2 + 2 * k * pi), sin)
+        $strictly_decreasing_on(cc(pi / 2 + 2 * k * pi, 3 * pi / 2 + 2 * k * pi), sin)
+        $strictly_decreasing_on(cc(2 * k * pi, (2 * k + 1) * pi), cos)
+        $strictly_increasing_on(cc((2 * k - 1) * pi, 2 * k * pi), cos)
+
+    forall x R:
+        -pi / 2 < x < pi / 2
+        =>:
+            cos(x) > 0
+            cos(x) != 0
+
+    forall x R:
+        pi / 2 < x < 3 * pi / 2
+        =>:
+            cos(x) < 0
+            cos(x) != 0
+
+    forall x R:
+        0 < x < pi
+        =>:
+            sin(x) > 0
+            sin(x) != 0
+
+    forall x R:
+        pi < x < 2 * pi
+        =>:
+            sin(x) < 0
+            sin(x) != 0
+
+    forall x R, k Z:
+        -pi / 2 + k * pi < x < pi / 2 + k * pi
+        =>:
+            cos(x) != 0
+
+    forall x R, k Z:
+        k * pi < x < (k + 1) * pi
+        =>:
+            sin(x) != 0
+
+    forall x R, k Z:
+        -pi / 2 < x < pi / 2
+        =>:
+            cos(x + k * pi) != 0
+
+    forall x R, k Z:
+        0 < x < pi
+        =>:
+            sin(x + k * pi) != 0
+
+    forall x, y R:
+        -pi / 2 < x < y < pi / 2
+        =>:
+            cos(x) != 0
+            cos(y) != 0
+            tan(x) < tan(y)
+
+    forall x, y R:
+        0 < x < y < pi
+        =>:
+            sin(x) != 0
+            sin(y) != 0
+            cot(x) > cot(y)
+
+    forall x, y R, k Z:
+        -pi / 2 + k * pi < x < y < pi / 2 + k * pi
+        =>:
+            cos(x) != 0
+            cos(y) != 0
+            tan(x) < tan(y)
+
+    forall x, y R, k Z:
+        k * pi < x < y < (k + 1) * pi
+        =>:
+            sin(x) != 0
+            sin(y) != 0
+            cot(x) > cot(y)
+
+    forall x, y R, k Z:
+        -pi / 2 < x < y < pi / 2
+        =>:
+            cos(x + k * pi) != 0
+            cos(y + k * pi) != 0
+            tan(x + k * pi) < tan(y + k * pi)
+
+    forall x, y R, k Z:
+        0 < x < y < pi
+        =>:
+            sin(x + k * pi) != 0
+            sin(y + k * pi) != 0
+            cot(x + k * pi) > cot(y + k * pi)
+
+    forall x, y R:
+        -pi / 2 < x < pi / 2
+        -pi / 2 < y < pi / 2
+        cos(x) != 0
+        cos(y) != 0
+        tan(x) = tan(y)
+        =>:
+            x = y
+
+    forall x, y R:
+        0 < x < pi
+        0 < y < pi
+        sin(x) != 0
+        sin(y) != 0
+        cot(x) = cot(y)
+        =>:
+            x = y
+
+    forall x, y R, k Z:
+        -pi / 2 + k * pi < x < pi / 2 + k * pi
+        -pi / 2 + k * pi < y < pi / 2 + k * pi
+        cos(x) != 0
+        cos(y) != 0
+        tan(x) = tan(y)
+        =>:
+            x = y
+
+    forall x, y R, k Z:
+        k * pi < x < (k + 1) * pi
+        k * pi < y < (k + 1) * pi
+        sin(x) != 0
+        sin(y) != 0
+        cot(x) = cot(y)
+        =>:
+            x = y
+
+    forall x, y1, y2 R:
+        cos(x) != 0
+        y1 = tan(x)
+        y2 = tan(x)
+        =>:
+            y1 = y2
+
+    forall x, y1, y2 R:
+        sin(x) != 0
+        y1 = cot(x)
+        y2 = cot(x)
+        =>:
+            y1 = y2
 
     # Common exact values at special angles, with the standard periods.
     forall k Z:
@@ -240,15 +502,45 @@ know:
             cos(x) != 0
             arctan(tan(x)) = x
 
+    forall x, y R:
+        -1 <= x < y <= 1
+        =>:
+            arcsin(x) < arcsin(y)
+            arccos(x) > arccos(y)
+
+    forall x, y R:
+        x < y
+        =>:
+            arctan(x) < arctan(y)
+
+    forall x, y R:
+        -1 <= x <= 1
+        -1 <= y <= 1
+        arcsin(x) = arcsin(y)
+        =>:
+            x = y
+
+    forall x, y R:
+        -1 <= x <= 1
+        -1 <= y <= 1
+        arccos(x) = arccos(y)
+        =>:
+            x = y
+
+    forall x, y R:
+        arctan(x) = arctan(y)
+        =>:
+            x = y
+
     forall x R:
         -1 <= x <= 1
         =>:
-            -1 <= -1 * x <= 1
-            arcsin(-1 * x) = -1 * arcsin(x)
-            arccos(-1 * x) = pi - arccos(x)
+            -1 <= -x <= 1
+            arcsin(-x) = -arcsin(x)
+            arccos(-x) = pi - arccos(x)
 
     forall x R:
-        arctan(-1 * x) = -1 * arctan(x)
+        arctan(-x) = -arctan(x)
 
     -1 <= -sqrt(3) / 2 <= 1
     -1 <= -sqrt(2) / 2 <= 1

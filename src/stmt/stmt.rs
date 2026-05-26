@@ -41,8 +41,90 @@ pub enum Stmt {
     BySymmetricPropStmt(BySymmetricPropStmt),
     ByReflexivePropStmt(ByReflexivePropStmt),
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
+    ByThmStmt(ByThmStmt),
+    DefThmStmt(DefThmStmt),
     DefStructStmt(DefStructStmt),
     EvalByStmt(EvalByStmt),
+}
+
+#[derive(Clone)]
+pub struct ByThmStmt {
+    pub name: String,
+    pub args: Vec<Obj>,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct DefThmStmt {
+    pub name: String,
+    pub forall_fact: ForallFact,
+    pub prove_process: Vec<Stmt>,
+    pub line_file: LineFile,
+}
+
+impl ByThmStmt {
+    pub fn new(name: String, args: Vec<Obj>, line_file: LineFile) -> Self {
+        ByThmStmt {
+            name,
+            args,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for ByThmStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {}{}",
+            BY,
+            THM,
+            self.name,
+            braced_vec_to_string(&self.args)
+        )
+    }
+}
+
+impl DefThmStmt {
+    pub fn new(
+        name: String,
+        forall_fact: ForallFact,
+        prove_process: Vec<Stmt>,
+        line_file: LineFile,
+    ) -> Self {
+        DefThmStmt {
+            name,
+            forall_fact,
+            prove_process,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for DefThmStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}\n{}{}\n{}",
+            THM,
+            self.name,
+            COLON,
+            add_four_spaces_at_beginning(PROVE.to_string(), 1),
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &self.forall_fact.to_string(),
+                2
+            )
+        )?;
+        if !self.prove_process.is_empty() {
+            write!(
+                f,
+                "\n{}",
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.prove_process, 1)
+            )?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone)]
@@ -221,6 +303,8 @@ impl fmt::Display for Stmt {
             Stmt::BySymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
+            Stmt::ByThmStmt(x) => write!(f, "{}", x),
+            Stmt::DefThmStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
@@ -268,6 +352,8 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByReflexivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -313,6 +399,8 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByReflexivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -549,6 +637,18 @@ impl From<ByReflexivePropStmt> for Stmt {
 impl From<ByAntisymmetricPropStmt> for Stmt {
     fn from(v: ByAntisymmetricPropStmt) -> Self {
         Stmt::ByAntisymmetricPropStmt(v)
+    }
+}
+
+impl From<ByThmStmt> for Stmt {
+    fn from(v: ByThmStmt) -> Self {
+        Stmt::ByThmStmt(v)
+    }
+}
+
+impl From<DefThmStmt> for Stmt {
+    fn from(v: DefThmStmt) -> Self {
+        Stmt::DefThmStmt(v)
     }
 }
 

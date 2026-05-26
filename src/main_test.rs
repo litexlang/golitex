@@ -913,6 +913,92 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
+    fn exist_unique_infers_component_uniqueness_forall() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know exist! a, b R st {$p(a, b)}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_infers_component_uniqueness_forall",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+        assert!(
+            run_succeeded,
+            "exist! component uniqueness inference failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("forall a1, b1 R, a2, b2 R:")
+                && run_output.contains("a1 = a2 and b1 = b2"),
+            "exist! should infer a component-wise uniqueness forall:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn exist_unique_component_uniqueness_proves_split_then_facts() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know exist! a, b R st {$p(a, b)}
+forall a1, b1, a2, b2 R:
+    $p(a1, b1)
+    $p(a2, b2)
+    =>:
+        a1 = a2
+        b1 = b2
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_component_uniqueness_proves_split_then_facts",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "component uniqueness from exist! should prove split then-facts:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn exist_unique_still_accepts_tuple_uniqueness_forall() {
+        let source_code = r#"
+prove:
+    abstract_prop p(a, b)
+    know:
+        exist a, b R st {$p(a, b)}
+        forall a1, b1, a2, b2 R:
+            $p(a1, b1)
+            $p(a2, b2)
+            =>:
+                (a1, b1) = (a2, b2)
+    exist! a, b R st {$p(a, b)}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_still_accepts_tuple_uniqueness_forall",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "tuple-style uniqueness should still prove exist!:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn hidden_file_path_output_omits_source_fields() {
         let source_code = "x = 1";
         let path = "/private/tmp/litex-hidden-source-test.lit";
@@ -2516,12 +2602,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     fn run_metamathqa_debug_items_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let jsonl_paths = vec![
-            manifest_dir
-                .join("scripts")
-                .join("MetaMathQA-litex")
-                .join("MetaMathQA.jsonl"),
-        ];
+        let jsonl_paths = vec![manifest_dir
+            .join("scripts")
+            .join("MetaMathQA-litex")
+            .join("MetaMathQA.jsonl")];
         run_jsonl_debug_items(
             "metamathqa",
             jsonl_paths.as_slice(),
@@ -2533,7 +2617,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     #[test]
     fn run_math23k_solutions() {
-        run_with_large_stack("run_math23k_solutions_large_stack", run_math23k_solutions_impl);
+        run_with_large_stack(
+            "run_math23k_solutions_large_stack",
+            run_math23k_solutions_impl,
+        );
     }
 
     fn run_math23k_solutions_impl() {
@@ -2604,12 +2691,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     fn run_math23k_debug_items_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let jsonl_paths = vec![
-            manifest_dir
-                .join("scripts")
-                .join("math23k-litex")
-                .join("math23k.jsonl"),
-        ];
+        let jsonl_paths = vec![manifest_dir
+            .join("scripts")
+            .join("math23k-litex")
+            .join("math23k.jsonl")];
         run_jsonl_debug_items(
             "math23k",
             jsonl_paths.as_slice(),
@@ -2926,11 +3011,8 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             return;
         }
 
-        let selected_paths = select_jsonl_paths_for_debug(
-            jsonl_paths,
-            split_filter.as_str(),
-            allow_split_filter,
-        );
+        let selected_paths =
+            select_jsonl_paths_for_debug(jsonl_paths, split_filter.as_str(), allow_split_filter);
 
         if selected_paths.is_empty() {
             panic!(
@@ -2949,7 +3031,9 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             }
         }
 
-        let title_filter_lower = title_filter.as_ref().map(|value| value.to_ascii_lowercase());
+        let title_filter_lower = title_filter
+            .as_ref()
+            .map(|value| value.to_ascii_lowercase());
         let text_filter_lower = text_filter.as_ref().map(|value| value.to_ascii_lowercase());
         let mut items: Vec<JsonlDebugItem> = Vec::new();
 
@@ -3031,7 +3115,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         }
 
         if items.is_empty() {
-            println!("--- run_{}_debug_items: no matching items ---", dataset_label);
+            println!(
+                "--- run_{}_debug_items: no matching items ---",
+                dataset_label
+            );
             if allow_split_filter {
                 println!("  split: {}", split_filter);
             }
@@ -3094,7 +3181,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         println!(
             "  items: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
             durations_ms.len(),
-            durations_ms.iter().map(|(_, duration_ms)| duration_ms).sum::<f64>(),
+            durations_ms
+                .iter()
+                .map(|(_, duration_ms)| duration_ms)
+                .sum::<f64>(),
             run_wall_ms
         );
         print_slowest_run_labels(
@@ -3318,7 +3408,10 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         match value.parse::<usize>() {
             Ok(parsed) => Some(parsed),
             Err(parse_error) => {
-                panic!("{} must be a positive integer, got {:?}: {}", name, value, parse_error)
+                panic!(
+                    "{} must be a positive integer, got {:?}: {}",
+                    name, value, parse_error
+                )
             }
         }
     }

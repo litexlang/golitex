@@ -3357,7 +3357,7 @@ Most builtin inference rules are triggered by **atomic facts**: equalities, memb
 
 Some larger fact shapes have special inference behavior:
 
-- `exist!` adds a uniqueness statement: any two witnesses satisfying the body must agree.
+- `exist!` adds a uniqueness statement: any two witnesses satisfying the body must agree. For multiple witness parameters, the inferred statement concludes component equalities such as `a1 = a2 and b1 = b2`.
 - `not exist` adds the usual universal De Morgan form.
 - `not forall` adds an existential counterexample.
 - equality chains add every equality forced by transitivity along the chain, and those equalities then infer as usual.

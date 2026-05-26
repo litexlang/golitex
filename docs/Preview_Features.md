@@ -10,6 +10,40 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Named theorem calls with `thm` (2026-05)
+
+`thm name:` records a verified `forall` theorem under an explicit name. Calling `by thm name(args...)` checks the argument types and domain facts, then stores the instantiated then-facts. Defining a theorem does not add it to ordinary automatic forall-pattern matching; use `by thm` when you want the named theorem.
+
+```litex
+thm one_succ:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 1 = 2
+    x + 1 = 1 + 1 = 2
+
+by thm one_succ(1)
+1 + 1 = 2
+```
+
+### Component uniqueness inferred from `exist!` (2026-05)
+
+When an `exist!` fact is recorded, Litex stores a generated uniqueness `forall`. For multiple witness parameters, the stored theorem now concludes component equalities, so it can be used either as one `and` fact or as split then-facts later.
+
+```litex
+abstract_prop p(a, b)
+
+know exist! a, b R st {$p(a, b)}
+
+forall a1, b1, a2, b2 R:
+    $p(a1, b1)
+    $p(a2, b2)
+    =>:
+        a1 = a2
+        b1 = b2
+```
+
 ### Exact rational `eval` results (2026-05)
 
 `eval` can now keep exact rational results when a concrete division does not terminate as a decimal. The same exact arithmetic is used inside matrix `eval`, so matrices with rational entries can be added, scaled, and multiplied.

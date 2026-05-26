@@ -183,6 +183,18 @@ impl ByAntisymmetricPropStmt {
     }
 }
 
+impl ByThmStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByThmStmt".to_string()
+    }
+}
+
+impl DefThmStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefThmStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()
