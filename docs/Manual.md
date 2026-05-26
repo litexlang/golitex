@@ -179,7 +179,7 @@ Decimal or integer numerals; they combine with `+`, `-`, `*`, `/`, `%`, `^`, etc
 
 #### Arithmetic and integer remainder
 
-Binary operations on expressions; `%` is integer remainder when both sides are concrete integers; `^` is exponentiation.
+Binary operations on expressions; `%` is integer remainder when both sides are concrete integers; `^` is exponentiation. Concrete numeric evaluation is intentionally bounded, so a very large expression such as a huge power can remain symbolic instead of being expanded by brute force.
 
 ```litex
 2 * 3 = 6
@@ -2389,7 +2389,7 @@ Pure numeric goals are reduced and compared.
 2 + 3 * 4 = 14
 ```
 
-Integer remainder with concrete operands is evaluated directly.
+Integer remainder with concrete operands is evaluated directly when the concrete operands fit the bounded numeric evaluator.
 
 ```litex
 4 % 2 = 0
