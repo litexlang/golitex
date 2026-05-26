@@ -7,3 +7,4 @@ not 1/6 $in Z
 not (2*pi/3 - pi/2) / pi $in Z
 
 cos(2*pi/3) != 0
+

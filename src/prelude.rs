@@ -1,8 +1,8 @@
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
-    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
-    OrFactKey, PropName, StructName, TemplateName,
+    AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
+    IdentifierName, ObjString, OrFactKey, PropName, StructName, TemplateName, ThmName,
 };
 pub use crate::environment::{
     Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
@@ -232,7 +232,9 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
+pub use crate::stmt::ByThmStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::RunFileInStd;
 pub use crate::stmt::Stmt;
@@ -401,6 +403,7 @@ pub use crate::common::keywords::SURJECTIVE;
 pub use crate::common::keywords::SYMMETRIC_PROP;
 pub use crate::common::keywords::TEMPLATE;
 pub use crate::common::keywords::TEMPLATE_INSTANCE_PREFIX;
+pub use crate::common::keywords::THM;
 pub use crate::common::keywords::TRANSITIVE_PROP;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;

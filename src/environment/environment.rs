@@ -11,6 +11,7 @@ pub struct Environment {
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+    pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -28,6 +29,8 @@ pub struct Environment {
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_exist_facts_in_forall_facts:
         HashMap<ExistFactKey, Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_and_facts_in_forall_facts:
+        HashMap<AndFactKey, Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
 
@@ -65,6 +68,7 @@ impl Environment {
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
         structs: HashMap<StructName, DefStructStmt>,
         templates: HashMap<TemplateName, DefTemplateStmt>,
+        defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -87,6 +91,10 @@ impl Environment {
         known_exist_facts_in_forall_facts: HashMap<
             ExistFactKey,
             Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
+        >,
+        known_and_facts_in_forall_facts: HashMap<
+            AndFactKey,
+            Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>,
         >,
         known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
         known_or_facts_in_forall_facts: HashMap<
@@ -112,6 +120,7 @@ impl Environment {
             defined_algorithms: algorithms,
             defined_structs: structs,
             defined_templates: templates,
+            defined_thm_stmts,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -120,6 +129,7 @@ impl Environment {
             known_exist_facts,
             known_atomic_facts_in_forall_facts,
             known_exist_facts_in_forall_facts,
+            known_and_facts_in_forall_facts,
             known_or_facts,
             known_or_facts_in_forall_facts,
             known_objs_equal_to_tuple: known_tuple_objs,
@@ -210,6 +220,11 @@ impl fmt::Display for Environment {
             f,
             "    known_exist_facts_in_forall_facts: {:?}\n",
             self.known_exist_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_and_facts_in_forall_facts: {:?}\n",
+            self.known_and_facts_in_forall_facts.len()
         )?;
         write!(
             f,
@@ -339,6 +354,21 @@ impl Environment {
         Ok(())
     }
 
+    fn store_whole_and_fact_in_forall_fact(
+        &mut self,
+        and_fact: &AndFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), RuntimeError> {
+        let key: AndFactKey = and_fact.key();
+        if let Some(vec_ref) = self.known_and_facts_in_forall_facts.get_mut(&key) {
+            vec_ref.push((and_fact.clone(), forall_params_and_dom));
+        } else {
+            self.known_and_facts_in_forall_facts
+                .insert(key, vec![(and_fact.clone(), forall_params_and_dom)]);
+        }
+        Ok(())
+    }
+
     fn store_a_fact_in_forall_fact(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
@@ -408,6 +438,7 @@ impl Environment {
         and_fact: &AndFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
+        self.store_whole_and_fact_in_forall_fact(and_fact, forall_params_and_dom.clone())?;
         for fact in and_fact.facts.iter() {
             self.store_atomic_fact_in_forall_fact(fact.clone(), forall_params_and_dom.clone())?;
         }
@@ -683,6 +714,8 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

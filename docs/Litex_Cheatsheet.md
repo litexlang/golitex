@@ -69,7 +69,7 @@ exist x R st {x > 0, x < 1}
 
 ### Existential with uniqueness (`exist!`)
 
-**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** a generated uniqueness **`forall`**. For multiple witness parameters, that stored theorem concludes component equalities such as `a1 = a2 and b1 = b2`; tuple-style uniqueness is still accepted when proving the original `exist!`.
 
 **Syntax.** `exist!` *parameter groups* `st` `{` *facts separated by commas* `}` — the lexer splits this as the keyword `exist` followed by `!` (whitespace optional).
 

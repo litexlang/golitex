@@ -68,6 +68,16 @@ impl Runtime {
         Ok(())
     }
 
+    pub fn store_def_thm(&mut self, def_thm_stmt: &DefThmStmt) -> Result<(), RuntimeError> {
+        let name = def_thm_stmt.name.clone();
+        let env = self.top_level_env();
+        if env.defined_thm_stmts.contains_key(&name) {
+            return Err(name_already_used_error(&name, "thm"));
+        }
+        env.defined_thm_stmts.insert(name, def_thm_stmt.clone());
+        Ok(())
+    }
+
     pub fn store_free_param_or_identifier_name(
         &mut self,
         name: &str,
