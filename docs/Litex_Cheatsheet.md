@@ -900,7 +900,7 @@ by tuple as set: (1, 2)
 
 ### `eval`
 
-**Meaning.** Evaluate a call using the **`algo`** attached to a function (and other forms supported by the runtime’s `eval` pipeline, such as numeric expressions and matrix literals).
+**Meaning.** Evaluate a call using the **`algo`** attached to a function (and other forms supported by the runtime’s `eval` pipeline, such as exact numeric expressions and matrix literals).
 
 **Syntax.** `eval` *expression* (typically a function application).
 

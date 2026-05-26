@@ -58,7 +58,7 @@ impl Runtime {
     }
 
     /// After substituting the sum/product index, evaluate any nested `sum` / `product` in the
-    /// expression to a numeric value, then the outer accumulation can use `evaluate_to_normalized_decimal_number`.
+    /// expression to an eval numeric value before the outer accumulation.
     fn eval_reduce_nested_sum_product_in_obj(
         &mut self,
         obj: Obj,
@@ -303,10 +303,10 @@ impl Runtime {
         }
         let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
         let pname = param_names[0].clone();
-        let mut acc_num = if is_product {
-            Number::new("1".to_string())
+        let mut acc_obj: Obj = if is_product {
+            Number::new("1".to_string()).into()
         } else {
-            Number::new("0".to_string())
+            Number::new("0".to_string()).into()
         };
         for k in ai..=bi {
             let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -316,7 +316,7 @@ impl Runtime {
             let term = self.resolve_obj(&inst);
             let term =
                 self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt, active_fn_calls)?;
-            let Some(n) = term.evaluate_to_normalized_decimal_number() else {
+            let Some(n) = Self::evaluate_numeric_obj_for_eval(&term) else {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
                     format!(
@@ -328,32 +328,28 @@ impl Runtime {
                 ));
             };
             if is_product {
-                let step: Obj = Mul::new(acc_num.into(), n.into()).into();
-                acc_num = step
-                    .evaluate_to_normalized_decimal_number()
-                    .ok_or_else(|| {
-                        short_exec_error(
-                            eval_stmt.clone().into(),
-                            "eval: product accumulation failed to normalize".to_string(),
-                            None,
-                            vec![],
-                        )
-                    })?;
+                let step: Obj = Mul::new(acc_obj, n).into();
+                acc_obj = Self::evaluate_numeric_obj_for_eval(&step).ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: product accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
             } else {
-                let step: Obj = Add::new(acc_num.into(), n.into()).into();
-                acc_num = step
-                    .evaluate_to_normalized_decimal_number()
-                    .ok_or_else(|| {
-                        short_exec_error(
-                            eval_stmt.clone().into(),
-                            "eval: sum accumulation failed to normalize".to_string(),
-                            None,
-                            vec![],
-                        )
-                    })?;
+                let step: Obj = Add::new(acc_obj, n).into();
+                acc_obj = Self::evaluate_numeric_obj_for_eval(&step).ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: sum accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
             }
         }
-        Ok(acc_num.into())
+        Ok(acc_obj)
     }
 
     fn eval_matrix_list_cells_for_eval_stmt(
@@ -405,7 +401,7 @@ impl Runtime {
             let mut row = Vec::with_capacity(lr.len());
             for (a, b) in lr.into_iter().zip(rr.into_iter()) {
                 let sum_obj: Obj = Add::new(*a, *b).into();
-                let Some(n) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix ++ needs numeric cells".to_string(),
@@ -413,7 +409,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                row.push(Box::new(n.into()));
+                row.push(Box::new(n));
             }
             rows.push(row);
         }
@@ -447,7 +443,7 @@ impl Runtime {
             let mut row = Vec::with_capacity(lr.len());
             for (a, b) in lr.into_iter().zip(rr.into_iter()) {
                 let diff_obj: Obj = Sub::new(*a, *b).into();
-                let Some(n) = diff_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&diff_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix -- needs numeric cells".to_string(),
@@ -455,7 +451,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                row.push(Box::new(n.into()));
+                row.push(Box::new(n));
             }
             rows.push(row);
         }
@@ -484,11 +480,11 @@ impl Runtime {
         for i in 0..r1 {
             let mut row: Vec<Box<Obj>> = Vec::with_capacity(c2);
             for k in 0..c2 {
-                let mut acc_num = Number::new("0".to_string());
+                let mut acc_obj: Obj = Number::new("0".to_string()).into();
                 for j in 0..c1 {
                     let prod_obj: Obj =
                         Mul::new((*left.rows[i][j]).clone(), (*right.rows[j][k]).clone()).into();
-                    let Some(p) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                    let Some(p) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
                             "eval: matrix ** cell multiply failed".to_string(),
@@ -496,8 +492,8 @@ impl Runtime {
                             vec![],
                         ));
                     };
-                    let sum_obj: Obj = Add::new(acc_num.into(), p.into()).into();
-                    let Some(s) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                    let sum_obj: Obj = Add::new(acc_obj, p).into();
+                    let Some(s) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
                             "eval: matrix ** accumulation failed".to_string(),
@@ -505,9 +501,9 @@ impl Runtime {
                             vec![],
                         ));
                     };
-                    acc_num = s;
+                    acc_obj = s;
                 }
-                row.push(Box::new(acc_num.into()));
+                row.push(Box::new(acc_obj));
             }
             rows.push(row);
         }
@@ -525,7 +521,7 @@ impl Runtime {
             let mut out_row = Vec::with_capacity(row.len());
             for cell in row {
                 let prod_obj: Obj = Mul::new(scalar.clone(), (*cell).clone()).into();
-                let Some(n) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: *. needs scalar and numeric matrix cells".to_string(),
@@ -533,7 +529,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                out_row.push(Box::new(n.into()));
+                out_row.push(Box::new(n));
             }
             rows_out.push(out_row);
         }
@@ -640,15 +636,15 @@ impl Runtime {
                     eval_stmt,
                     active_fn_calls,
                 )?;
-                let Some(exp_num) = exp_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(exp_i) = Self::integer_value_for_eval_obj(&exp_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix ^^ exponent must evaluate to a number".to_string(),
+                        "eval: matrix ^^ exponent must evaluate to an integer".to_string(),
                         None,
                         vec![],
                     ));
                 };
-                let exp_u = exp_num.normalized_value.parse::<usize>().map_err(|_| {
+                let exp_u = usize::try_from(exp_i).map_err(|_| {
                     short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix ^^ exponent must be a non-negative integer".to_string(),
@@ -768,10 +764,10 @@ impl Runtime {
                         active_fn_calls,
                     )?;
                     let combined: Obj = Pow::new(left, right).into();
-                    match combined.evaluate_to_normalized_decimal_number() {
+                    match Self::evaluate_numeric_obj_for_eval(&combined) {
                         Some(acc_num) => {
                             return self.finish_numeric_accumulator_with_pending_rights(
-                                acc_num.into(),
+                                acc_num,
                                 &mut pending,
                                 eval_stmt,
                                 active_fn_calls,
@@ -959,9 +955,9 @@ impl Runtime {
             BinaryCombineOp::Mul => Mul::new(left, right).into(),
             BinaryCombineOp::Div => Div::new(left, right).into(),
         };
-        let calculated = combined.evaluate_to_normalized_decimal_number();
+        let calculated = Self::evaluate_numeric_obj_for_eval(&combined);
         match calculated {
-            Some(number) => Ok(number.into()),
+            Some(number) => Ok(number),
             None => Err(short_exec_error(
                 eval_stmt.clone().into(),
                 "eval: failed to combine numeric sub-expression".to_string(),
@@ -969,6 +965,13 @@ impl Runtime {
                 vec![],
             )),
         }
+    }
+
+    fn evaluate_numeric_obj_for_eval(obj: &Obj) -> Option<Obj> {
+        evaluate_obj_to_exact_rational_obj_for_eval(obj).or_else(|| {
+            obj.evaluate_to_normalized_decimal_number()
+                .map(|number| number.into())
+        })
     }
 
     fn evaluate_fn_obj_with_eval_memo(
@@ -1120,6 +1123,9 @@ impl Runtime {
     }
 
     fn integer_value_for_eval_obj(obj: &Obj) -> Option<i128> {
+        if let Some(rational) = evaluate_obj_to_exact_rational_for_eval(obj) {
+            return rational.to_i128_if_integer();
+        }
         let Obj::Number(number) = obj else {
             return None;
         };

@@ -13,6 +13,7 @@ mod lit_file_runner_tests {
 
     const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
     const SLOWEST_RUNS_TO_PRINT: usize = 10;
+    const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
 
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
@@ -22,6 +23,10 @@ mod lit_file_runner_tests {
             .unwrap()
             .join()
             .unwrap();
+    }
+
+    fn the_mechanics_dir(manifest_dir: &Path) -> PathBuf {
+        manifest_dir.join(THE_MECHANICS_SUBDIR)
     }
 
     /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
@@ -140,9 +145,7 @@ mod lit_file_runner_tests {
         chapter_label: &str,
     ) {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let chapter_path = manifest_dir
-            .join("The-Mechanics-of-Litex-Proof")
-            .join(chapter_filename);
+        let chapter_path = the_mechanics_dir(&manifest_dir).join(chapter_filename);
         assert!(
             chapter_path.is_file(),
             "{} markdown file must exist at {:?}",
@@ -1481,17 +1484,19 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     fn run_the_mechanics_markdown_files_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let mechanics_dir = manifest_dir.join("The-Mechanics-of-Litex-Proof");
+        let mechanics_dir = the_mechanics_dir(&manifest_dir);
         assert!(
             mechanics_dir.is_dir(),
-            "The-Mechanics-of-Litex-Proof must exist at {:?}",
+            "{} must exist at {:?}",
+            THE_MECHANICS_SUBDIR,
             mechanics_dir
         );
 
         let md_paths = collect_markdown_files_under_dir_sorted(&mechanics_dir);
         assert!(
             !md_paths.is_empty(),
-            "The-Mechanics-of-Litex-Proof must contain markdown files"
+            "{} must contain markdown files",
+            THE_MECHANICS_SUBDIR
         );
 
         let mut snippets_by_file: Vec<Vec<(String, String, String)>> = Vec::new();
@@ -1503,7 +1508,8 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         }
         assert!(
             total_snippet_count > 0,
-            "The-Mechanics-of-Litex-Proof markdown files must contain ```litex``` blocks"
+            "{} markdown files must contain ```litex``` blocks",
+            THE_MECHANICS_SUBDIR
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -1547,8 +1553,8 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                                 "non-string panic payload".to_string()
                             };
                         println!(
-                            "=== [PANICKED] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
-                            duration_ms, panic_message, label
+                            "=== [PANICKED] {} markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
+                            THE_MECHANICS_SUBDIR, duration_ms, panic_message, label
                         );
                         failed_labels.push(label.clone());
                         break;
@@ -1566,8 +1572,8 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                         "FAILED"
                     };
                     println!(
-                        "=== [{}] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
-                        status_label, duration_ms, run_output, status_label, label
+                        "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
+                        status_label, THE_MECHANICS_SUBDIR, duration_ms, run_output, status_label, label
                     );
                     failed_labels.push(label.clone());
                     break;
@@ -1582,7 +1588,8 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             "completed with failures"
         };
         println!(
-            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
+            "--- {} markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
+            THE_MECHANICS_SUBDIR,
             total_snippet_count,
             file_count_with_snippets,
             status_text,
@@ -1593,14 +1600,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         }
 
         if !failed_labels.is_empty() {
-            println!("--- The-Mechanics-of-Litex-Proof markdown failed snippets ---");
+            println!("--- {} markdown failed snippets ---", THE_MECHANICS_SUBDIR);
             for label in failed_labels.iter() {
                 println!("{}", label);
             }
         }
         assert!(
             failed_labels.is_empty(),
-            "The-Mechanics-of-Litex-Proof markdown has {} failing snippet(s); see output above",
+            "{} markdown has {} failing snippet(s); see output above",
+            THE_MECHANICS_SUBDIR,
             failed_labels.len()
         );
     }

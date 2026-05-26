@@ -10,6 +10,15 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Exact rational `eval` results (2026-05)
+
+`eval` can now keep exact rational results when a concrete division does not terminate as a decimal. The same exact arithmetic is used inside matrix `eval`, so matrices with rational entries can be added, scaled, and multiplied.
+
+```litex
+eval 1 + 1 / 3
+eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
+```
+
 ### Square-root product equalities (2026-05)
 
 Builtin equality can now prove square-root product steps when the factors are nonnegative and the argument equality is checkable, such as `sqrt(x) = sqrt(a) * sqrt(b)` from `x = a * b`. The same group also handles equal square-root arguments and `sqrt(a^2) = a` for nonnegative `a`.

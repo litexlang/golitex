@@ -163,6 +163,9 @@ pub use crate::pipeline::{
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
+pub use crate::rational_expression::{
+    evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
+};
 pub use crate::result::FactualStmtSuccess;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtResult;
