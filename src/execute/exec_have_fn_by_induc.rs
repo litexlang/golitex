@@ -16,6 +16,10 @@ impl Runtime {
             .store_have_fn_equal_case_by_case_stmt_facts(&flat, &fn_set_stored)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
+        if stmt.as_algo {
+            self.exec_have_fn_by_induc_stmt_as_algo(stmt)?;
+        }
+
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 

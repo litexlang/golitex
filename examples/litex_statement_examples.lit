@@ -49,7 +49,7 @@ prove:
 
 # --- Stmt::HaveFnByInducStmt — recursive function given by a decreasing measure ---
 prove:
-    have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+    have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
         case b = 0: a
         case b > 0: h(a, b - 1) + 1
 

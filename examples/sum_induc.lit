@@ -1,0 +1,19 @@
+claim:
+    prove:
+        forall n N_pos:
+            sum(0, n, 'R(x){x}) = n * (n + 1) / 2
+
+    by induc n from 1:
+        prove:
+            sum(0, n, 'R(x){x}) = n * (n + 1) / 2
+
+        prove from n = 1:
+            sum(0, 0, 'R(x){x}) = 0
+            sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 'R(x){x}(1)
+            'R(x){x}(1) = 1
+            sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 1 = 0 + 1 = 1 = 1 * (1 + 1) / 2
+
+        prove induc:
+            sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + 'R(x){x}(n + 1)
+            'R(x){x}(n + 1) = n + 1
+            sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + (n + 1) = n * (n + 1) / 2 + (n + 1) = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2

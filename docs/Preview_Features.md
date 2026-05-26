@@ -10,6 +10,50 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Exact rational `eval` results (2026-05)
+
+`eval` can now keep exact rational results when a concrete division does not terminate as a decimal. The same exact arithmetic is used inside matrix `eval`, so matrices with rational entries can be added, scaled, and multiplied.
+
+```litex
+eval 1 + 1 / 3
+eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
+```
+
+### Square-root product equalities (2026-05)
+
+Builtin equality can now prove square-root product steps when the factors are nonnegative and the argument equality is checkable, such as `sqrt(x) = sqrt(a) * sqrt(b)` from `x = a * b`. The same group also handles equal square-root arguments and `sqrt(a^2) = a` for nonnegative `a`.
+
+```litex
+prove:
+    sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
+```
+
+### Numeric quotient non-integer detection (2026-05)
+
+When checking `not x $in Z`, a resolved numeric division `a / b` can be rejected as an integer by the existing modulo evaluator: if `a` and `b` resolve to integer numbers, `b != 0`, and `a % b != 0`, Litex proves the quotient is not in `Z`.
+
+```litex
+prove:
+    1 / 6 $in Q
+    6 / 3 $in Z
+    not 1 / 6 $in Z
+    not 2 / 6 $in Z
+```
+
+### `have fn as algo` (2026-05)
+
+`have fn as algo f(...) ...` defines the ordinary function facts first, then automatically generates and verifies the corresponding `algo f(...)`. This is available for direct equality, `by cases`, and `by induc` function definitions. Generated algo cases currently require atomic case conditions.
+
+```litex
+prove:
+    have fn as algo self_max(x, y R) R by cases:
+        case x > y: x
+        case x <= y: y
+
+    eval self_max(5, 3)
+    self_max(5, 3) = 5
+```
+
 ### Function application return membership (2026-05)
 
 If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after importing trigonometry.

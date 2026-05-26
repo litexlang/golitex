@@ -506,30 +506,108 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&digits_to_string(&current))
 }
 
+const POW_DECIMAL_MAX_NORMALIZED_LENGTH: usize = 100;
+
 // Non-negative integer exponent only; fractional exp => None (no exact decimal fold).
 pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
+    let n = parse_nonnegative_integer_exponent_for_pow(exp)?;
+    if n == 0 {
+        return Some("1".to_string());
+    }
+
+    let normalized_base = normalize_decimal_number_string(base);
+    if normalized_base == "0" {
+        return Some("0".to_string());
+    }
+    if normalized_base == "1" {
+        return Some("1".to_string());
+    }
+    if normalized_base == "-1" {
+        return if n % 2 == 0 {
+            Some("1".to_string())
+        } else {
+            Some("-1".to_string())
+        };
+    }
+    if pow_decimal_size_budget_exceeded(&normalized_base, n) {
+        return None;
+    }
+
+    let mut acc = "1".to_string();
+    let mut b = normalized_base;
+    let mut e = n;
+    while e > 0 {
+        if e % 2 == 1 {
+            acc = mul_signed_decimal_str(&acc, &b);
+            if normalized_decimal_string_exceeds_pow_budget(&acc) {
+                return None;
+            }
+        }
+        e /= 2;
+        if e > 0 {
+            b = mul_signed_decimal_str(&b, &b);
+            if normalized_decimal_string_exceeds_pow_budget(&b) {
+                return None;
+            }
+        }
+    }
+    Some(normalize_decimal_number_string(&acc))
+}
+
+fn parse_nonnegative_integer_exponent_for_pow(exp: &str) -> Option<usize> {
+    if exp.trim().starts_with('-') {
+        return None;
+    }
     let (exp_int, exp_frac) = parse_decimal_parts(exp);
     if exp_frac.iter().any(|&d| d != 0) {
         return None;
     }
     let mut n = 0usize;
     for &d in &exp_int {
-        n = n.saturating_mul(10).saturating_add(d as usize);
+        n = n.checked_mul(10)?.checked_add(d as usize)?;
     }
-    if n == 0 {
-        return Some("1".to_string());
+    Some(n)
+}
+
+fn pow_decimal_size_budget_exceeded(base: &str, exponent: usize) -> bool {
+    if let Some(estimated_digits) = estimated_integer_power_digit_count(base, exponent) {
+        return estimated_digits > POW_DECIMAL_MAX_NORMALIZED_LENGTH;
     }
-    let mut acc = "1".to_string();
-    let mut b = base.to_string();
-    let mut e = n;
-    while e > 0 {
-        if e % 2 == 1 {
-            acc = mul_decimal_str_and_normalize(&acc, &b);
-        }
-        b = mul_decimal_str_and_normalize(&b, &b);
-        e /= 2;
+
+    let magnitude = base.trim().strip_prefix('-').unwrap_or(base.trim());
+    let (_, frac_str) = magnitude.split_once('.').unwrap_or((magnitude, ""));
+    let significant_frac_digits = frac_str.trim_end_matches('0').len();
+    match significant_frac_digits.checked_mul(exponent) {
+        Some(digits) => digits > POW_DECIMAL_MAX_NORMALIZED_LENGTH,
+        None => true,
     }
-    Some(normalize_decimal_number_string(&acc))
+}
+
+fn estimated_integer_power_digit_count(base: &str, exponent: usize) -> Option<usize> {
+    let magnitude = base.trim().strip_prefix('-').unwrap_or(base.trim());
+    if magnitude.contains('.') {
+        return None;
+    }
+
+    let digits = magnitude.trim_start_matches('0');
+    if digits.is_empty() {
+        return Some(1);
+    }
+
+    let prefix_len = digits.len().min(16);
+    let prefix = digits[..prefix_len].parse::<f64>().ok()?;
+    let log10_base = prefix.log10() + (digits.len() - prefix_len) as f64;
+    let estimated = (log10_base * exponent as f64).floor() + 1.0;
+    if !estimated.is_finite() || estimated > usize::MAX as f64 {
+        return Some(usize::MAX);
+    }
+    Some(estimated as usize)
+}
+
+fn normalized_decimal_string_exceeds_pow_budget(value: &str) -> bool {
+    let magnitude = value.trim().strip_prefix('-').unwrap_or(value.trim());
+    let normalized_len = magnitude.chars().filter(|c| *c != '.').count();
+    normalized_len > POW_DECIMAL_MAX_NORMALIZED_LENGTH
 }
 
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
@@ -673,4 +751,50 @@ fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
         int_digits
     };
     (int_digits, frac_digits)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn huge_power_is_left_unevaluated() {
+        assert_eq!(pow_decimal_str_and_normalize("5", "999999"), None);
+    }
+
+    #[test]
+    fn mod_of_huge_power_is_left_unevaluated() {
+        let base: Obj = Number::new("5".to_string()).into();
+        let exponent: Obj = Number::new("999999".to_string()).into();
+        let modulus: Obj = Number::new("7".to_string()).into();
+        let power: Obj = Pow::new(base, exponent).into();
+        let remainder: Obj = Mod::new(power, modulus).into();
+
+        assert!(remainder.evaluate_to_normalized_decimal_number().is_none());
+    }
+
+    #[test]
+    fn power_above_one_hundred_digits_is_left_unevaluated() {
+        let base: Obj = Number::new("5".to_string()).into();
+        let exponent: Obj = Number::new("2005".to_string()).into();
+        let modulus: Obj = Number::new("100".to_string()).into();
+        let power: Obj = Pow::new(base, exponent).into();
+        let remainder: Obj = Mod::new(power, modulus).into();
+
+        assert!(remainder.evaluate_to_normalized_decimal_number().is_none());
+    }
+
+    #[test]
+    fn bounded_power_mod_still_evaluates() {
+        let base: Obj = Number::new("5".to_string()).into();
+        let exponent: Obj = Number::new("30".to_string()).into();
+        let modulus: Obj = Number::new("7".to_string()).into();
+        let power: Obj = Pow::new(base, exponent).into();
+        let remainder: Obj = Mod::new(power, modulus).into();
+
+        let result = remainder
+            .evaluate_to_normalized_decimal_number()
+            .map(|number| number.normalized_value);
+        assert_eq!(result, Some("1".to_string()));
+    }
 }

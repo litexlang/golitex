@@ -988,7 +988,7 @@ impl HaveFnByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows: Vec<String> = Vec::new();
         rows.push(format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} \quad \mathrm{{by}}\ \mathrm{{decreasing}}\ {} \ \mathrm{{from}}\ {}",
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} \quad \mathrm{{by}}\ \mathrm{{induc}}\ {} \ \mathrm{{from}}\ {}",
             latex_local_ident(&self.name),
             fn_set_clause_latex(&self.fn_set_clause),
             self.measure.to_latex_string(),
