@@ -26,6 +26,29 @@ forall a, b, k R:
     =>:
         k * a < k * b
 
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a - d < b - c
+
+forall x, a, b R:
+    x < b
+    0 <= a
+    =>:
+        x - a < b
+
+forall x, a, b R:
+    x <= b
+    0 < a
+    =>:
+        x - a < b
+
+forall a, b, c R:
+    a + c < b
+    =>:
+        a < b - c
+
 forall a R:
     0 < a
     =>:

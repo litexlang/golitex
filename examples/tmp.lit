@@ -1,15 +1,9 @@
-claim:
-    prove:
-        forall a, b, c, d R_pos:
-            a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d
+run_file trigonometry
 
-    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d))
-    0 <= (a * d - b * c)^2 / (b * d * (a + b + c + d))
-    0 <= (a^2 - b * d)^2 / (a * b * (a + b + c + d))
-    0 <= (b * d - c^2)^2 / (c * d * (a + b + c + d))
-    0 <= (a * b - c * d)^2 / (a * c * (a + b + c + d))
-    0 <= (a * c - d^2)^2 / (a * d * (a + b + c + d))
-    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
-    a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d) = (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
-    0 <= a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d)
-    a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d
+(2*pi/3 - pi/2) / pi = 1/6
+
+not 1/6 $in Z
+
+not (2*pi/3 - pi/2) / pi $in Z
+
+cos(2*pi/3) != 0

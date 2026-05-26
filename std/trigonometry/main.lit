@@ -3,27 +3,17 @@
 # functions are declared as objects, and standard identities are recorded with
 # `know` instead of being derived from limits or power series.
 
-let sin set
-let cos set
-let tan set
-let cot set
-let sec set
-let csc set
-let arcsin set
-let arccos set
-let arctan set
+have sin fn(x R) R
+have cos fn(x R) R
+have fn tan(x R: cos(x) != 0) R = sin(x) / cos(x)
+have fn cot(x R: sin(x) != 0) R = cos(x) / sin(x)
+have fn sec(x R: cos(x) != 0) R = 1 / cos(x)
+have fn csc(x R: sin(x) != 0) R = 1 / sin(x)
+have arcsin fn(x R: -1 <= x <= 1) R
+have arccos fn(x R: -1 <= x <= 1) R
+have arctan fn(x R) R
 
 know:
-    sin $in fn(x R) R
-    cos $in fn(x R) R
-    tan $in fn(x R: cos(x) != 0) R
-    cot $in fn(x R: sin(x) != 0) R
-    sec $in fn(x R: cos(x) != 0) R
-    csc $in fn(x R: sin(x) != 0) R
-    arcsin $in fn(x R: -1 <= x <= 1) R
-    arccos $in fn(x R: -1 <= x <= 1) R
-    arctan $in fn(x R) R
-
     sin(0) = 0
     cos(0) = 1
     tan(0) = 0

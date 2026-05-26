@@ -1509,16 +1509,21 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
             ))
         })?;
-        tb.skip_token(LEFT_CURLY_BRACE)?;
+        let (left_token, right_token) = if tb.current_token_is_equal_to(LESS) {
+            (LESS, GREATER)
+        } else {
+            (LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE)
+        };
+        tb.skip_token(left_token)?;
         let mut args = Vec::new();
-        if !tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
+        if !tb.current_token_is_equal_to(right_token) {
             args.push(self.parse_obj(tb)?);
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 args.push(self.parse_obj(tb)?);
             }
         }
-        tb.skip_token(RIGHT_CURLY_BRACE)?;
+        tb.skip_token(right_token)?;
         Ok(InstantiatedTemplateObj::new(template_name, args).into())
     }
 
