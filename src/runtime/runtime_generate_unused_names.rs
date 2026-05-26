@@ -29,6 +29,18 @@ impl Runtime {
                     }
                 }
             }
+            for facts in env.known_and_facts_in_forall_facts.values() {
+                for (_, known_forall) in facts {
+                    if known_forall
+                        .params_def
+                        .collect_param_names()
+                        .iter()
+                        .any(|name| name == candidate_name)
+                    {
+                        return true;
+                    }
+                }
+            }
             for facts in env.known_or_facts_in_forall_facts.values() {
                 for (_, known_forall) in facts {
                     if known_forall

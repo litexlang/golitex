@@ -52,7 +52,16 @@ impl Runtime {
         let mut out = InferResult::new();
         if exist_fact.is_exist_unique() && exist_fact.params_def_with_type().number_of_params() > 0
         {
-            let uniq = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
+            // Infer uniqueness from a stored `exist!`.
+            // Example: `exist! c Z, d N_pos st {p(c, d)}` infers
+            // `forall c1 Z, d1 N_pos, c2 Z, d2 N_pos: p(c1,d1) p(c2,d2) => c1=c2 and d1=d2`.
+            let uniq = self.build_exist_unique_component_uniqueness_forall_fact(exist_fact)?;
+            if uniq
+                .error_messages_if_forall_param_missing_in_some_then_clause()
+                .is_empty()
+            {
+                out.new_fact(&uniq.clone().into());
+            }
             out.new_infer_result_inside(
                 self.store_forall_fact_without_well_defined_verified_and_infer(uniq)?,
             );

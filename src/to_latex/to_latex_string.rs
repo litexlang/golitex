@@ -2102,6 +2102,8 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
+            Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefTemplateStmt(x) => latex_texttt_escape(&x.to_string()),
         }
