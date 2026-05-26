@@ -23,6 +23,83 @@ prop prime(p N_pos):
     forall d range(2, p):
         not p % d = 0
 
+# p-adic valuation on nonzero integers. The Z_nz domain keeps v_p(0, p)
+# undefined.
+prop padic_eval(n Z_nz, p N_pos, k N):
+    $prime(p)
+    n % (p^k) = 0
+    n % (p^(k + 1)) != 0
+
+know:
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        =>:
+            exist! k N st {$padic_eval(n, p, k)}
+
+have fn v_p as set:
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        =>:
+            exist! k N st {$padic_eval(n, p, k)}
+
+forall n Z_nz, p N_pos:
+    $prime(p)
+    =>:
+        $padic_eval(n, p, v_p(n, p))
+        n % (p^v_p(n, p)) = 0
+        n % (p^(v_p(n, p) + 1)) != 0
+
+know:
+    forall n Z_nz, p N_pos, k N:
+        $prime(p)
+        $padic_eval(n, p, k)
+        =>:
+            v_p(n, p) = k
+
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        n % p != 0
+        =>:
+            v_p(n, p) = 0
+
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        n % p = 0
+        =>:
+            1 <= v_p(n, p)
+
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        v_p(n, p) = 0
+        =>:
+            n % p != 0
+
+    forall n Z_nz, p N_pos:
+        $prime(p)
+        1 <= v_p(n, p)
+        =>:
+            n % p = 0
+
+    forall n Z_nz, p N_pos, k N:
+        $prime(p)
+        k <= v_p(n, p)
+        =>:
+            n % (p^k) = 0
+
+    forall n Z_nz, p N_pos, k N:
+        $prime(p)
+        v_p(n, p) < k
+        =>:
+            n % (p^k) != 0
+
+    forall a, b Z_nz:
+        a * b $in Z_nz
+
+    forall a, b Z_nz, p N_pos:
+        $prime(p)
+        =>:
+            v_p(a * b, p) = v_p(a, p) + v_p(b, p)
+
 prop least_in_N_pos_set(s power_set(N_pos), m s):
     forall x s:
         m <= x

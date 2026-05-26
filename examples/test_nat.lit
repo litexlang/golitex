@@ -1,11 +1,282 @@
 run_file nat
 
+# Basic predicate examples.
 $even(4)
 $odd(5)
 $divides(3, 12)
+$multiple_of(12, 3)
 $mod_eq(11, 3, 4)
+
+by for:
+    prove:
+        forall d range(2, 2):
+            not 2 % d = 0
+    do_nothing
+
+$prime(2)
+$padic_eval(12, 2, 2)
+v_p(12, 2) = 2
+
+$division_with_remainder(13, 3, 4, 1)
+13 % 3 = 1
+witness exist x, y Z st {7 = 2 * x + 3 * y} from 2, 1:
+    7 = 2 * 2 + 3 * 1
+$linear_combination2(7, 2, 3)
+witness exist x, y, z Z st {10 = 2 * x + 3 * y + 5 * z} from 1, 1, 1:
+    10 = 2 * 1 + 3 * 1 + 5 * 1
+$linear_combination3(10, 2, 3, 5)
+$common_divisor2(2, 4, 6)
+$common_divisor3(2, 4, 6, 8)
 $coprime(4, 1)
 $coprime(1, 4)
+$bezout_identity(4, 1)
+witness exist x, y, z Z st {2 * x + 3 * y + 5 * z = 1} from -1, 1, 0:
+    2 * (-1) + 3 * 1 + 5 * 0 = 1
+$bezout_identity3(2, 3, 5)
+$mutually_coprime3(2, 3, 5)
+
+# p-adic valuation facts.
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            =>:
+                exist! k N st {$padic_eval(n, p, k)}
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            =>:
+                $padic_eval(n, p, v_p(n, p))
+                n % (p^v_p(n, p)) = 0
+                n % (p^(v_p(n, p) + 1)) != 0
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos, k N:
+            $prime(p)
+            $padic_eval(n, p, k)
+            =>:
+                v_p(n, p) = k
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            n % p != 0
+            =>:
+                v_p(n, p) = 0
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            n % p = 0
+            =>:
+                1 <= v_p(n, p)
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            v_p(n, p) = 0
+            =>:
+                n % p != 0
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos:
+            $prime(p)
+            1 <= v_p(n, p)
+            =>:
+                n % p = 0
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos, k N:
+            $prime(p)
+            k <= v_p(n, p)
+            =>:
+                n % (p^k) = 0
+
+claim:
+    prove:
+        forall n Z_nz, p N_pos, k N:
+            $prime(p)
+            v_p(n, p) < k
+            =>:
+                n % (p^k) != 0
+
+claim:
+    prove:
+        forall a, b Z_nz:
+            a * b $in Z_nz
+
+claim:
+    prove:
+        forall a, b Z_nz, p N_pos:
+            $prime(p)
+            =>:
+                v_p(a * b, p) = v_p(a, p) + v_p(b, p)
+
+# Division, divisibility, and congruence facts.
+claim:
+    prove:
+        forall s power_set(N_pos):
+            $is_nonempty_set(s)
+            =>:
+                exist m s st {$least_in_N_pos_set(s, m)}
+
+claim:
+    prove:
+        forall a Z, d N_pos:
+            exist q Z, r N st {$division_with_remainder(a, d, q, r)}
+
+claim:
+    prove:
+        forall a, b, d Z:
+            $divides(d, a)
+            $divides(d, b)
+            =>:
+                $divides(d, a + b)
+                $divides(d, a - b)
+
+claim:
+    prove:
+        forall a, b, d Z:
+            $divides(d, a)
+            =>:
+                $divides(d, a * b)
+
+claim:
+    prove:
+        forall a, b, d Z:
+            $divides(d, a)
+            $divides(d, b)
+            =>:
+                $divides(d, a * b)
+
+claim:
+    prove:
+        forall a Z, n Z_nz:
+            $mod_eq(a, a, n)
+
+claim:
+    prove:
+        forall a, b, c, d Z, n Z_nz:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a + c, b + d, n)
+                $mod_eq(a - c, b - d, n)
+                $mod_eq(a * c, b * d, n)
+
+# GCD, coprime, and Bezout facts.
+claim:
+    prove:
+        forall a, b Z:
+            a != 0 or b != 0
+            =>:
+                exist! g N_pos st {$is_gcd(g, a, b)}
+
+claim:
+    prove:
+        forall a, b Z:
+            a != 0 or b != 0
+            =>:
+                $is_gcd(gcd(a, b), a, b)
+                exist x, y Z st {gcd(a, b) = a * x + b * y}
+
+claim:
+    prove:
+        forall a, b Z, g N_pos:
+            $is_gcd(g, a, b)
+            =>:
+                exist x, y Z st {g = a * x + b * y}
+
+claim:
+    prove:
+        forall a, b Z:
+            a != 0 or b != 0
+            b != 0 or a != 0
+            =>:
+                gcd(a, b) = gcd(b, a)
+
+claim:
+    prove:
+        forall a, b Z:
+            $coprime(a, b)
+            =>:
+                $coprime(b, a)
+                $bezout_identity(a, b)
+
+claim:
+    prove:
+        forall a, b Z:
+            $bezout_identity(a, b)
+            =>:
+                $coprime(a, b)
+
+claim:
+    prove:
+        forall a Z:
+            $coprime(a, 1)
+            $coprime(1, a)
+
+claim:
+    prove:
+        forall a, b, d Z:
+            $coprime(a, b)
+            $divides(d, a)
+            =>:
+                $coprime(d, b)
+
+claim:
+    prove:
+        forall a, b, d Z:
+            $coprime(a, b)
+            $divides(d, b)
+            =>:
+                $coprime(a, d)
+
+claim:
+    prove:
+        forall a, b, c Z:
+            $mutually_coprime3(a, b, c)
+            =>:
+                $bezout_identity3(a, b, c)
+
+claim:
+    prove:
+        forall a, b, c Z:
+            $bezout_identity3(a, b, c)
+            =>:
+                $mutually_coprime3(a, b, c)
+
+# Prime and rational representation facts.
+claim:
+    prove:
+        forall p, d N_pos:
+            $prime(p)
+            p % d = 0
+            =>:
+                d = 1 or d = p
+
+claim:
+    prove:
+        forall p N_pos, a, b Z:
+            $prime(p)
+            (a * b) % p = 0
+            =>:
+                a % p = 0 or b % p = 0
+
+claim:
+    prove:
+        forall n N_pos:
+            2 <= n
+            =>:
+                exist p N_pos st {$prime(p), n % p = 0}
 
 claim:
     prove:
@@ -14,8 +285,45 @@ claim:
 
 claim:
     prove:
-        forall d, a, b Z:
-            $divides(d, a)
-            $divides(d, b)
+        forall q Q:
+            exist! a Z, b N_pos st {q = a / b, $coprime(a, b)}
+
+claim:
+    prove:
+        forall n Z, k N_pos:
+            $prime(k)
+            exist t N_pos st {n^t % k = 0}
             =>:
-                $divides(d, a + b)
+                n % k = 0
+
+claim:
+    prove:
+        forall n Z, k N_pos:
+            $prime(k)
+            n^2 % k = 0
+            =>:
+                n % k = 0
+
+claim:
+    prove:
+        forall n Z, k N_pos:
+            $prime(k)
+            n^3 % k = 0
+            =>:
+                n % k = 0
+
+claim:
+    prove:
+        forall n Z, k N_pos:
+            $prime(k)
+            n^4 % k = 0
+            =>:
+                n % k = 0
+
+claim:
+    prove:
+        forall n Z, k N_pos:
+            $prime(k)
+            n^5 % k = 0
+            =>:
+                n % k = 0

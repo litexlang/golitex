@@ -72,7 +72,13 @@ Litex works well with AI agents because the proof language is close to ordinary 
 3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
 
-This turns `know` into temporary scaffolding rather than the final proof. The agent can read this manual, run Litex, inspect verification output and error messages, and keep shrinking the informal gaps. Large examples such as a bijection from `N^2` to `N` are approachable with this loop: first build the proof skeleton, then replace the broad assumptions by smaller verified branches.
+This turns `know` into temporary scaffolding rather than the final proof. The
+agent can read this manual, run Litex, inspect verification output and error
+messages, and keep shrinking the informal gaps. This is the same loop used for
+larger Mechanics examples and benchmark-style tasks: first build a readable
+proof skeleton, then replace broad assumptions by smaller verified branches or
+record the exact language, library, rule, or diagnostic gap that blocks the
+next step.
 
 For algebra, agents should prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
 
@@ -443,6 +449,10 @@ eval [[2, 0], [0, 2]] -- [[1, 0], [0, 1]]
 
 ```litex
 eval [[1, 2], [0, 1]] ** [[1, 0], [1, 1]]
+```
+
+```litex
+eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
 ```
 
 ```litex
@@ -1176,7 +1186,7 @@ b < c
 
 An `algo` is not the same as a function in a programming language such as Python. When you define an `algo`, Litex checks that the case flow really matches the function facts you have given. In the example below, the two cases must agree with the definition of `m`.
 
-`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, so the current evaluator only supports operations such as `+`, `-`, `*`, and integer powers.
+`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, including concrete `+`, `-`, `*`, `/`, and non-negative integer powers. Divisions that do not terminate as decimals are kept as normalized rational expressions.
 
 ```litex
 have fn m(x N_pos) R by cases:
@@ -1324,6 +1334,8 @@ a = 2
 Besides algorithms, **`eval expr`** can reduce closed expressions according to evaluation rules.
 
 ```litex
+eval 1 + 1 / 3 # exact rational arithmetic
+
 eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 
 eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
