@@ -1629,9 +1629,9 @@ impl fmt::Display for InstantiatedTemplateObj {
             "{}{}{}{}{}",
             TEMPLATE_INSTANCE_PREFIX,
             self.template_name,
-            LEFT_CURLY_BRACE,
+            LESS,
             vec_to_string_join_by_comma(&self.args),
-            RIGHT_CURLY_BRACE
+            GREATER
         )
     }
 }

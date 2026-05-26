@@ -1085,6 +1085,42 @@ forall x R:
 
 ---
 
+### Parameterized definitions over arbitrary sets (`template`)
+
+Use **`template`** when you want to define a whole family of objects or functions, indexed by parameters such as a set `s`.
+
+The main use case is: the parameter belongs in the *header of the definition itself*, not as an ordinary function input. In Litex, a function input must range over some object domain such as `R`, `Z`, or a previously given set. It cannot range over a condition like `$is_set(s)`. So if you want to say "for every set `s`, define a function on `s`", a plain `have fn` is not the right form.
+
+For example, suppose that for every nonempty set `s` you want a function that sends every element of `s` to `1`. This is naturally a template:
+
+<!-- litex:skip-test -->
+```litex
+template always_one<s set: $is_nonempty_set(s)>:
+    have fn always_one(x s) R = 1
+
+\always_one<R>(2) = 1
+```
+
+The point is that `s` is a parameter of the definition. After you instantiate the template at `R`, the result `\always_one<R>` is an ordinary function with domain `R`.
+
+Templates are also useful when the result is not a function. For example, you may want a family of objects that sends every parameter to `1`. This is not an ordinary function definition either, because the "domain" would be "all objects that are sets", not one fixed set object.
+
+```litex
+template always_one<s set>:
+    have always_one set = 1
+
+\always_one<R> = 1
+\always_one<2> = 1
+```
+
+Here `\always_one<R>` and `\always_one<2>` are two instantiated objects, and both reduce to `1`.
+
+> Hint: a good rule of thumb is: if you want to define something uniformly for every choice of a parameter such as a set, and that parameter cannot be the input of one ordinary function, use `template`.
+
+> Hint: a template instance is materialized only after instantiation. You write the family once, then use `\name<args>` to get the concrete object or function for those arguments.
+
+---
+
 ### Piecewise function (`have fn ... by cases`)
 
 Use **`case`** branches when the formula for a function depends on conditions.
@@ -1768,6 +1804,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have x S = expr` | Introduce a named value |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
+| `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
@@ -2896,6 +2933,29 @@ forall a, b, c, d R:
     c <= d
     =>:
         a - d <= b - c
+```
+
+```litex
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a - d < b - c
+```
+
+```litex
+forall x, a, b R:
+    x < b
+    0 <= a
+    =>:
+        x - a < b
+```
+
+```litex
+forall a, b, c R:
+    a + c < b
+    =>:
+        a < b - c
 ```
 
 ```litex
