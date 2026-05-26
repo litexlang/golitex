@@ -1,31 +1,15 @@
-run_file nat
+claim:
+    prove:
+        forall a, b, c, d R_pos:
+            a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d
 
-forall n Z_nz, p N_pos:
-    $prime(p)
-    =>:
-        $padic_eval(n, p, v_p(n, p))
-        n % (p^v_p(n, p)) = 0
-        n % (p^(v_p(n, p) + 1)) != 0
-
-forall n Z_nz, p N_pos:
-    $prime(p)
-    n % p != 0
-    =>:
-        v_p(n, p) = 0
-
-forall n Z_nz, p N_pos:
-    $prime(p)
-    v_p(n, p) = 0
-    =>:
-        n % p != 0
-
-forall n Z_nz, p N_pos, k N:
-    $prime(p)
-    k <= v_p(n, p)
-    =>:
-        n % (p^k) = 0
-
-forall a, b Z_nz, p N_pos:
-    $prime(p)
-    =>:
-        v_p(a * b, p) = v_p(a, p) + v_p(b, p)
+    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d))
+    0 <= (a * d - b * c)^2 / (b * d * (a + b + c + d))
+    0 <= (a^2 - b * d)^2 / (a * b * (a + b + c + d))
+    0 <= (b * d - c^2)^2 / (c * d * (a + b + c + d))
+    0 <= (a * b - c * d)^2 / (a * c * (a + b + c + d))
+    0 <= (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d) = (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    0 <= a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d)
+    a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d
