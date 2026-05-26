@@ -1,6 +1,8 @@
 pub mod builtin_code;
 pub mod cli;
 pub mod common;
+#[cfg(test)]
+pub mod debug_test;
 pub mod environment;
 pub mod error;
 pub mod execute;
