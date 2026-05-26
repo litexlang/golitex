@@ -7,6 +7,18 @@ prove:
     $p(1, 2) or $q(1, 2)
 
 prove:
+    let x Z:
+        x >= 1
+
+    x = 1 or x = 2 or x = 3 or x = 4 or x > 4
+
+prove:
+    let a, x Z:
+        x >= a
+
+    x = a or x = a + 1 or x = a + 2 or x > a + 2
+
+prove:
     abstract_prop p(a, b, c)
     abstract_prop q(a, b, c)
 
@@ -28,4 +40,3 @@ prove:
             $p(a, b) or $q(a, b)
 
     $p(1, 2) or $q(1, 2)
-

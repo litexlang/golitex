@@ -34,6 +34,12 @@ prove:
     1 $in R_pos
     -1 $in Z_neg
     1 $in Z_nz
+    1 / 6 $in Q
+    6 / 3 $in Z
+    not 1 / 6 $in Z
+    not 2 / 6 $in Z
+    not (-1) / 6 $in Z
+    not 0 $in Q_nz
 
 # --- Obj::ListSet ---
 prove:

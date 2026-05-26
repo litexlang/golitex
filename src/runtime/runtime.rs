@@ -6,6 +6,7 @@ pub struct Runtime {
     pub module_manager: ModuleManager,
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
+    pub detail_output: bool,
 }
 
 impl Runtime {
@@ -17,6 +18,7 @@ impl Runtime {
             module_manager,
             environment_stack: vec![new_environment],
             parsing_free_param_collection: FreeParamCollection::new(),
+            detail_output: false,
         }
     }
 
@@ -276,8 +278,6 @@ impl Runtime {
         let path_rc: Rc<str> = Rc::from(path);
         self.module_manager.run_file_paths.push(path_rc.clone());
         self.module_manager.current_file_index = self.module_manager.run_file_paths.len() - 1;
-        self.module_manager.display_entry_rc = Some(path_rc);
-        self.module_manager.entry_path = path.to_string();
     }
 
     pub fn change_file_index_to(&mut self, file_index: usize) {

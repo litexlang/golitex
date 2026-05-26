@@ -8,11 +8,11 @@ use std::process;
 pub const MAIN_DOT_LIT: &str = "main.lit";
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-const SHOW_FILE_PATH_FLAG: &str = "-show-file-path";
+const DETAIL_FLAG: &str = "-detail";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
-    let show_file_path = remove_flag(&mut args, SHOW_FILE_PATH_FLAG);
+    let detail_output = remove_flag(&mut args, DETAIL_FLAG);
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -41,7 +41,8 @@ pub fn run_cli() {
                 };
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
-                runtime.module_manager.hide_file_paths_in_output = !show_file_path;
+                runtime.detail_output = detail_output;
+                runtime.module_manager.hide_file_paths_in_output = !detail_output;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
                 let output =
@@ -59,7 +60,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str(), show_file_path);
+                main_flag_file(file_path.as_str(), detail_output);
                 return;
             }
             "-r" => {
@@ -80,12 +81,12 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str(), show_file_path);
+                main_flag_file(joined_string.as_str(), detail_output);
                 return;
             }
             "-harness" => {
                 index += 1;
-                let (ok, output) = match main_flag_harness(&args, &mut index, show_file_path) {
+                let (ok, output) = match main_flag_harness(&args, &mut index, detail_output) {
                     Ok(output) => output,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -240,7 +241,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl_with_show_file_path(VERSION, show_file_path);
+    run_repl_with_detail_output(VERSION, detail_output);
 }
 
 fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
@@ -287,7 +288,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str, show_file_path: bool) {
+fn main_flag_file(file_flag: &str, detail_output: bool) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -317,17 +318,17 @@ fn main_flag_file(file_flag: &str, show_file_path: bool) {
         }
     };
 
-    let output = run_source_code_in_file_for_cli(path_string.as_str(), !show_file_path);
+    let output = run_source_code_in_file_for_cli(path_string.as_str(), detail_output);
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
 fn main_flag_harness(
     args: &[String],
     index: &mut usize,
-    show_file_path: bool,
+    detail_output: bool,
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-harness")?;
-    let hide_file_paths = !show_file_path;
+    let hide_file_paths = !detail_output;
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
@@ -431,7 +432,7 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <repo> : compile the given repository to LaTeX
 litex -help : show the help message
 litex -version : show the version
-litex -show-file-path : include file paths in JSON output
+litex -detail : include full trace details and raw source paths in JSON output
 litex -fmt : format the given code
 litex -install <module> : install the given module
 litex -uninstall <module> : uninstall the given module

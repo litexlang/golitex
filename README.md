@@ -70,6 +70,10 @@ interface: for textbook-style mathematics, the user writes a sequence of
 checkable facts, and the checker uses context plus builtin relationships to
 keep the feedback loop short. *In a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.*
 
+Lean is a powerful formal mathematics ecosystem. Litex explores a different
+layer: a readable, fact-oriented verification interface for ordinary
+mathematical reasoning and AI repair loops.
+
 ## Why It Feels Simple
 
 Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
@@ -113,9 +117,7 @@ The output looks like
       "line": 4
     },
     "cited_stmt": "forall x human:\n    $mortal(~1x)"
-  },
-  "infer_facts": [],
-  "inside_results": []
+  }
 }
 ```
 
@@ -142,7 +144,21 @@ undeclared name, a function argument outside its domain, or `1 / 0`.
 
 Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
 
-A concrete example is the final example in [Chapter 8](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cantor pairing. Codex formalized this example in Litex by reading the Litex manual and verifier output, then iteratively refining the proof until it became fully checkable, without relying on an external mathematical library. This is mainly evidence that the Litex proof style exposes a useful feedback loop, not a claim that the theorem itself is difficult for mature proof assistants.
+In AI mathematical discovery, the expensive object is not only the final
+theorem but the long trail of intermediate claims. Litex is designed to check
+that trail as it is produced: wrong turns can fail early, missing lemmas become
+visible, and remaining assumptions can be tracked as explicit proof debt. This
+can improve search efficiency for agents while making their mathematical output
+more auditable.
+
+The main current signal is the
+[Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction)
+corpus. With Codex and verifier feedback, it was built and checked in about a
+week. MATH500 and MiniF2F-style tasks are now used as pressure tests: successful
+translations become examples or benchmarks, while failures expose language,
+library, rule, or diagnostic gaps. The point is not that the individual
+theorems are hard for mature proof assistants, but that Litex makes the repair
+loop fast and inspectable.
 
 This is the point Litex is trying to make especially strong: Litex gives agents a direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop is a practical way to discover which background facts and theorem-library entries a proof actually needs.
 

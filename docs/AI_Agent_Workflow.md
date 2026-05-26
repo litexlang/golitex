@@ -77,16 +77,15 @@ as the outer task loop while still reading the detailed Litex trace.
 
 ## Case Study
 
-The key case study is the final Chapter 8 example in The Mechanics of Litex
-Proof: a proof that there exists a bijection from `N^2` to `N` using Cantor
-pairing.
+The key case study is the Mechanics and benchmark feedback loop, not one
+isolated theorem. In The Mechanics of Litex Proof, larger examples require a
+readable plan, many local facts, function reasoning, tuple reasoning,
+arithmetic, witnesses, and repeated refinement of proof debt. MATH500 and
+MiniF2F-style tasks add external pressure: when a translation fails, the
+failure can be classified as a missing formulation, library fact, builtin rule,
+infer rule, syntax feature, or diagnostic.
 
-The example matters because it is not a one-line puzzle. It requires a readable
-plan, many local facts, function reasoning, tuple reasoning, arithmetic,
-injectivity, surjectivity, and repeated refinement of proof debt. It shows the
-kind of feedback loop Litex is designed to expose to an agent.
-
-The claim is not that this theorem is difficult for mature proof assistants.
+The claim is not that these problems are difficult for mature proof assistants.
 The claim is that Litex gives an agent a direct repair surface: failed lines
 are local mathematical facts, not only tactic-state failures.
 

@@ -126,19 +126,22 @@ proof repair easier.
 
 ## Current Evidence
 
-The strongest public evidence is the textbook-style development in
-The Mechanics of Litex Proof, especially the Chapter 8 proof that there exists
-a bijection from `N^2` to `N` using Cantor pairing.
+The strongest public evidence is not one isolated theorem. It is the
+textbook-style development in The Mechanics of Litex Proof: a full sequence of
+runnable examples that exercise calculation, logic, induction, sets, functions,
+relations, and longer proof repair.
 
-That example is not presented as a theorem that mature proof assistants cannot
-handle. They can. The interesting signal is different: Litex lets the proof be
-written as a growing sequence of mathematical facts, with local verifier
-feedback after each step.
+This evidence is complemented by MATH500 and MiniF2F-style benchmark tasks.
+Those tasks are useful because the library and kernel are still growing:
+successful translations become examples or benchmarks, while failed
+translations expose concrete language, standard-library, builtin-rule,
+infer-rule, or diagnostic gaps.
 
 Litex is not trying to be a faster Lean. It chooses a different proof
 interface: for textbook-style mathematics, the user writes a sequence of
 checkable facts, and the checker uses context plus builtin relationships to
-keep the feedback loop short. *In a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.
+keep the feedback loop short. *In a local run, more than 240 runnable examples
+from The Mechanics of Litex Proof checked in about 13 seconds.*
 
 ## Feedback Wanted
 

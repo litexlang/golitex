@@ -36,3 +36,7 @@ eval [[2, 0], [0, 2]] ^^ 2
 # Named identity: ** and scalar
 eval m ** m
 eval 2 *. m
+
+# Matrix eval keeps exact rational entries
+eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
+eval (1 / 3) *. [[3, 6], [9, 12]]

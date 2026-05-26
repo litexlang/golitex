@@ -1,12 +1,15 @@
-"""
-To solve the system of equations:
-2x + 3y = 10
-4x + 5y = 14
-"""
+claim:
+    prove:
+        forall a, b, c, d R_pos:
+            a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d
 
-forall x, y R:
-    2 * x + 3 * y = 10
-    4 * x + 5 * y = 14
-    =>:
-        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = (10 - 3 * 6) / 2 = -4
+    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d))
+    0 <= (a * d - b * c)^2 / (b * d * (a + b + c + d))
+    0 <= (a^2 - b * d)^2 / (a * b * (a + b + c + d))
+    0 <= (b * d - c^2)^2 / (c * d * (a + b + c + d))
+    0 <= (a * b - c * d)^2 / (a * c * (a + b + c + d))
+    0 <= (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    0 <= (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d) = (a * c - b^2)^2 / (b * c * (a + b + c + d)) + (a * d - b * c)^2 / (b * d * (a + b + c + d)) + (a^2 - b * d)^2 / (a * b * (a + b + c + d)) + (b * d - c^2)^2 / (c * d * (a + b + c + d)) + (a * b - c * d)^2 / (a * c * (a + b + c + d)) + (a * c - d^2)^2 / (a * d * (a + b + c + d))
+    0 <= a^2 / b + b^2 / c + c^2 / d + d^2 / a - (a + b + c + d)
+    a^2 / b + b^2 / c + c^2 / d + d^2 / a >= a + b + c + d

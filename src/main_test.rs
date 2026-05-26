@@ -13,6 +13,7 @@ mod lit_file_runner_tests {
 
     const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
     const SLOWEST_RUNS_TO_PRINT: usize = 10;
+    const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
 
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
@@ -22,6 +23,10 @@ mod lit_file_runner_tests {
             .unwrap()
             .join()
             .unwrap();
+    }
+
+    fn the_mechanics_dir(manifest_dir: &Path) -> PathBuf {
+        manifest_dir.join(THE_MECHANICS_SUBDIR)
     }
 
     /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
@@ -140,9 +145,7 @@ mod lit_file_runner_tests {
         chapter_label: &str,
     ) {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let chapter_path = manifest_dir
-            .join("The-Mechanics-of-Litex-Proof")
-            .join(chapter_filename);
+        let chapter_path = the_mechanics_dir(&manifest_dir).join(chapter_filename);
         assert!(
             chapter_path.is_file(),
             "{} markdown file must exist at {:?}",
@@ -368,6 +371,57 @@ a >= b
     }
 
     #[test]
+    fn eval_recursive_algo_memoizes_overlapping_calls() {
+        run_with_large_stack(
+            "eval_recursive_algo_memoizes_overlapping_calls_large_stack",
+            || {
+                let source_code = r#"
+prove:
+    have fib fn(x R) R
+
+    know:
+        forall x R:
+            x = 0
+            =>:
+                fib(x) = 0
+
+        forall x R:
+            x = 1
+            =>:
+                fib(x) = 1
+
+        forall x R:
+            x > 1
+            =>:
+                fib(x) = fib(x - 1) + fib(x - 2)
+
+    algo fib(x):
+        case x = 0: 0
+        case x = 1: 1
+        fib(x - 1) + fib(x - 2)
+
+    eval fib(25)
+    fib(25) = 75025
+"#;
+
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(
+                    "eval_recursive_algo_memoizes_overlapping_calls",
+                );
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    run_succeeded,
+                    "eval_recursive_algo_memoizes_overlapping_calls failed:\n{}",
+                    run_output
+                );
+            },
+        );
+    }
+
+    #[test]
     fn pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined() {
         let source_code = r#"
 have fn sqrt(x R: x >= 0) R = x^(1/2)
@@ -393,6 +447,9 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
         let source_code = r#"
 sqrt(0) = 0
 sqrt(1) = 1
+sqrt(4) = 2
+sqrt(452) = sqrt(4 * 113)
+sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
 sqrt(2) $in R
 sqrt(3) / 2 $in R
 
@@ -405,6 +462,14 @@ forall x R:
     x > 0
     =>:
         sqrt(x) > 0
+
+forall x, a, b R:
+    x >= 0
+    a >= 0
+    b >= 0
+    x = a * b
+    =>:
+        sqrt(x) = sqrt(a) * sqrt(b)
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -439,6 +504,171 @@ forall x R:
         );
         assert!(run_output.contains("\"rule\": \"calculation\""));
         assert!(!run_output.contains("\"rule\": \"equality from a >= b and b >= a\""));
+    }
+
+    #[test]
+    fn known_equality_candidate_uses_rational_expression_simplification() {
+        let source_code = r#"
+forall a, b R:
+    a^2 + a * a + b = 0
+    =>:
+        0 = 2 * a^2 + b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_equality_candidate_uses_rational_expression_simplification",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_equality_candidate_uses_rational_expression_simplification failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("\"rule\": \"calculation and rational expression simplification\"")
+        );
+    }
+
+    #[test]
+    fn quotient_nonzero_from_numerator_nonzero_builtin_rule() {
+        let source_code = r#"
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+        0 != a / b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "quotient_nonzero_from_numerator_nonzero_builtin_rule",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "quotient_nonzero_from_numerator_nonzero_builtin_rule failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"rule\": \"div_not_equal_zero_from_numerator_nonzero\""));
+    }
+
+    #[test]
+    fn known_obj_values_store_simplified_fraction_for_nonfinite_decimal() {
+        let source_code = r#"
+have a R
+know a = 1 / 2 / 3
+
+have b R
+know b = 1 / 2
+
+have c R
+know c = 2 / -6
+
+have d R
+know d = 1 / (2 / 3 * 4)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_obj_values_store_simplified_fraction_for_nonfinite_decimal",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_obj_values_store_simplified_fraction_for_nonfinite_decimal failed:\n{}",
+            run_output
+        );
+
+        let env = runtime.environment_stack.last().expect("top environment");
+        match env.known_obj_values.get("a") {
+            Some(KnownObjValue::SimplifiedFraction(div)) => {
+                assert_eq!(div.left.to_string(), "1");
+                assert_eq!(div.right.to_string(), "6");
+            }
+            other => panic!(
+                "expected a to store SimplifiedFraction(1 / 6), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("b") {
+            Some(KnownObjValue::SimplifiedNumber(number)) => {
+                assert_eq!(number.normalized_value, "0.5");
+            }
+            other => panic!(
+                "expected b to store SimplifiedNumber(0.5), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("c") {
+            Some(KnownObjValue::SimplifiedFraction(div)) => {
+                assert_eq!(div.left.to_string(), "-1");
+                assert_eq!(div.right.to_string(), "3");
+            }
+            other => panic!(
+                "expected c to store SimplifiedFraction(-1 / 3), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+        match env.known_obj_values.get("d") {
+            Some(KnownObjValue::SimplifiedNumber(number)) => {
+                assert_eq!(number.normalized_value, "0.375");
+            }
+            other => panic!(
+                "expected d to store SimplifiedNumber(0.375), got {:?}",
+                other.map(|_| "other value")
+            ),
+        }
+    }
+
+    #[test]
+    fn simplified_fraction_known_value_is_used_by_resolve() {
+        let source_code = r#"
+forall a R:
+    a = 1 / 2 / 3
+    =>:
+        a + 1 / 6 = 1 / 3
+
+forall a R:
+    a = 2 / -6
+    =>:
+        a = -1 / 3
+
+forall a R:
+    a = 1 / (2 / 3)
+    =>:
+        a = 3 / 2
+
+forall a R:
+    a = 1 / (2 / 3 * 4)
+    =>:
+        a = 3 / 8
+        a + 1 = 11 / 8
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "simplified_fraction_known_value_is_used_by_resolve",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "simplified_fraction_known_value_is_used_by_resolve failed:\n{}",
+            run_output
+        );
     }
 
     #[test]
@@ -660,7 +890,6 @@ b = a * k1 = a * 0 = 0
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(path);
-        runtime.module_manager.hide_file_paths_in_output = true;
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -672,20 +901,120 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
-    fn show_file_path_output_keeps_source_fields() {
-        let source_code = "x = 1";
-        let path = "/private/tmp/litex-show-source-test.lit";
+    fn normal_output_omits_empty_arrays_and_empty_strings() {
+        let source_code = "1 = 1\n1 = 2";
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(path);
-        runtime.module_manager.hide_file_paths_in_output = false;
+        runtime.new_file_path_new_env_new_name_scope("normal_output_omits_empty_fields");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(!run_succeeded);
-        assert!(run_output.contains("\"source\""));
-        assert!(run_output.contains(path));
+        assert!(!run_output.contains("\"infer_facts\": []"));
+        assert!(!run_output.contains("\"inside_results\": []"));
+        assert!(!run_output.contains("\"message\": \"\""));
+    }
+
+    #[test]
+    fn detail_output_keeps_empty_arrays_and_empty_strings() {
+        let source_code = "1 = 1\n1 = 2";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("detail_output_keeps_empty_fields");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("\"infer_facts\": []"));
+        assert!(run_output.contains("\"inside_results\": []"));
+        assert!(run_output.contains("\"message\": \"\""));
+    }
+
+    #[test]
+    fn builtin_citation_source_uses_safe_builtin_label() {
+        let source_code = "have a, b R\na < b or a = b or a > b";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("builtin_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "builtin citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"builtin\""));
+        assert!(run_output.contains("\"source\": \"builtin_code\""));
+        assert!(!run_output.contains("\"path\""));
+    }
+
+    #[test]
+    fn std_citation_source_uses_safe_module_label() {
+        let source_code = "run_file trigonometry\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("std_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(run_succeeded, "std citation run failed:\n{}", run_output);
+        assert!(run_output.contains("\"source_kind\": \"std\""));
+        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
+        assert!(!run_output.contains("\"path\""));
+    }
+
+    #[test]
+    fn run_file_citation_source_uses_safe_label_and_detail_path() {
+        let run_file_path = std::env::temp_dir().join("litex-run-file-citation-source-test.lit");
+        fs::write(
+            &run_file_path,
+            "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        )
+        .unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"\n$p(2)", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "run_file citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"run_file\""));
+        assert!(run_output.contains("\"source\": \"external_file\""));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        let _ = fs::remove_file(&run_file_path);
+        assert!(
+            detail_run_succeeded,
+            "detail run_file citation run failed:\n{}",
+            detail_run_output
+        );
+        assert!(detail_run_output.contains("\"path\""));
+        assert!(detail_run_output.contains(run_file_path_string.as_str()));
     }
 
     #[test]
@@ -728,7 +1057,6 @@ b = a * k1 = a * 0 = 0
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
-        runtime.module_manager.hide_file_paths_in_output = true;
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -738,6 +1066,76 @@ b = a * k1 = a * 0 = 0
         assert!(run_output.contains("\"stmt\": \"run_file\""));
         assert!(!run_output.contains(run_file_path_string.as_str()));
         assert!(!run_output.contains("\"source\""));
+    }
+
+    #[test]
+    fn run_file_read_error_hides_path_unless_detail_output() {
+        let run_file_path = std::env::temp_dir().join("litex-missing-run-file-output-test.lit");
+        let _ = fs::remove_file(&run_file_path);
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("Failed to read file: external_file"));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("repl");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        assert!(!detail_run_succeeded);
+        assert!(detail_run_output.contains(run_file_path_string.as_str()));
+    }
+
+    #[test]
+    fn std_run_file_error_hides_attempted_paths_unless_detail_output() {
+        let missing_std_module = "__missing_std_module_for_output_test__";
+        let source_code = format!("run_file {}", missing_std_module);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains(
+            format!(
+                "Failed to find std run_file target `{}`",
+                missing_std_module
+            )
+            .as_str()
+        ));
+        assert!(!run_output.contains("Tried:"));
+
+        let mut detail_runtime = Runtime::new_with_builtin_code();
+        detail_runtime.new_file_path_new_env_new_name_scope("repl");
+        detail_runtime.detail_output = true;
+        let (detail_stmt_results, detail_runtime_error) =
+            run_source_code(source_code.as_str(), &mut detail_runtime);
+        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+            &detail_runtime,
+            &detail_stmt_results,
+            &detail_runtime_error,
+            false,
+        );
+
+        assert!(!detail_run_succeeded);
+        assert!(detail_run_output.contains("Tried:"));
     }
 
     #[test]
@@ -771,6 +1169,116 @@ $q(1)
         assert!(run_output.contains("\"type\": \"cite forall fact\""));
         assert!(run_output.contains("\"type\": \"cite atomic fact\""));
         assert!(run_output.contains("\"type\": \"cite prop def\""));
+    }
+
+    #[test]
+    fn definition_namespaces_allow_same_spelling_across_kinds() {
+        let source_code = r#"
+have fn SharedName(x R) R = 1
+algo SharedName(x):
+    1
+prop SharedName(x R)
+struct SharedName:
+    value R
+    other R
+template SharedName<s set>:
+    have SharedName set = s
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "definition_namespaces_allow_same_spelling_across_kinds",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "same spelling across independent definition namespaces failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn duplicate_definition_names_fail_in_their_namespace() {
+        let cases = [
+            ("prop", "prop dup_prop(x R)\nprop dup_prop(x R)"),
+            (
+                "abstract_prop",
+                "abstract_prop dup_abstract(x)\nabstract_prop dup_abstract(x)",
+            ),
+            (
+                "abstract_prop after prop",
+                "prop dup_predicate(x R)\nabstract_prop dup_predicate(x)",
+            ),
+            (
+                "prop after abstract_prop",
+                "abstract_prop dup_predicate2(x)\nprop dup_predicate2(x R)",
+            ),
+            (
+                "struct",
+                "struct DupStruct:\n    value R\n    other R\nstruct DupStruct:\n    value R\n    other R",
+            ),
+            (
+                "template",
+                "template DupTemplate<s set>:\n    have DupTemplate set = s\ntemplate DupTemplate<s set>:\n    have DupTemplate set = s",
+            ),
+            (
+                "algo",
+                "have fn dup_algo(x R) R = 1\nalgo dup_algo(x):\n    1\nalgo dup_algo(x):\n    1",
+            ),
+            (
+                "auto algo",
+                "have fn as algo dup_auto_algo(x R) R = 1\nalgo dup_auto_algo(x):\n    1",
+            ),
+        ];
+
+        for (label, source_code) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                format!("duplicate_definition_names_{}", label).as_str(),
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "duplicate {} definition should fail, but succeeded:\n{}",
+                label, run_output
+            );
+            assert!(
+                run_output.contains("NameAlreadyUsedError"),
+                "duplicate {} definition should report NameAlreadyUsedError:\n{}",
+                label,
+                run_output
+            );
+        }
+    }
+
+    #[test]
+    fn have_fn_as_algo_rejects_non_atomic_case_condition() {
+        let source_code = "\
+have fn as algo bad_algo_case(x, y R) R by cases:
+    case x = 0 and y = 0: 0";
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_fn_as_algo_non_atomic_case");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "non-atomic generated algo case should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("generated algo case")
+                && run_output.contains("currently require atomic case conditions"),
+            "non-atomic generated algo case should report a targeted error:\n{}",
+            run_output
+        );
     }
 
     #[test]
@@ -976,17 +1484,19 @@ $q(1)
 
     fn run_the_mechanics_markdown_files_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let mechanics_dir = manifest_dir.join("The-Mechanics-of-Litex-Proof");
+        let mechanics_dir = the_mechanics_dir(&manifest_dir);
         assert!(
             mechanics_dir.is_dir(),
-            "The-Mechanics-of-Litex-Proof must exist at {:?}",
+            "{} must exist at {:?}",
+            THE_MECHANICS_SUBDIR,
             mechanics_dir
         );
 
         let md_paths = collect_markdown_files_under_dir_sorted(&mechanics_dir);
         assert!(
             !md_paths.is_empty(),
-            "The-Mechanics-of-Litex-Proof must contain markdown files"
+            "{} must contain markdown files",
+            THE_MECHANICS_SUBDIR
         );
 
         let mut snippets_by_file: Vec<Vec<(String, String, String)>> = Vec::new();
@@ -998,7 +1508,8 @@ $q(1)
         }
         assert!(
             total_snippet_count > 0,
-            "The-Mechanics-of-Litex-Proof markdown files must contain ```litex``` blocks"
+            "{} markdown files must contain ```litex``` blocks",
+            THE_MECHANICS_SUBDIR
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -1042,8 +1553,8 @@ $q(1)
                                 "non-string panic payload".to_string()
                             };
                         println!(
-                            "=== [PANICKED] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
-                            duration_ms, panic_message, label
+                            "=== [PANICKED] {} markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
+                            THE_MECHANICS_SUBDIR, duration_ms, panic_message, label
                         );
                         failed_labels.push(label.clone());
                         break;
@@ -1061,8 +1572,8 @@ $q(1)
                         "FAILED"
                     };
                     println!(
-                        "=== [{}] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
-                        status_label, duration_ms, run_output, status_label, label
+                        "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
+                        status_label, THE_MECHANICS_SUBDIR, duration_ms, run_output, status_label, label
                     );
                     failed_labels.push(label.clone());
                     break;
@@ -1077,7 +1588,8 @@ $q(1)
             "completed with failures"
         };
         println!(
-            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
+            "--- {} markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
+            THE_MECHANICS_SUBDIR,
             total_snippet_count,
             file_count_with_snippets,
             status_text,
@@ -1088,14 +1600,15 @@ $q(1)
         }
 
         if !failed_labels.is_empty() {
-            println!("--- The-Mechanics-of-Litex-Proof markdown failed snippets ---");
+            println!("--- {} markdown failed snippets ---", THE_MECHANICS_SUBDIR);
             for label in failed_labels.iter() {
                 println!("{}", label);
             }
         }
         assert!(
             failed_labels.is_empty(),
-            "The-Mechanics-of-Litex-Proof markdown has {} failing snippet(s); see output above",
+            "{} markdown has {} failing snippet(s); see output above",
+            THE_MECHANICS_SUBDIR,
             failed_labels.len()
         );
     }

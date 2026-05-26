@@ -94,7 +94,7 @@ impl Runtime {
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
-                ParamObjType::Forall,
+                ParamObjType::FnSet,
             )
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -162,7 +162,7 @@ impl Runtime {
                 self.inst_obj(
                     param_def_with_set.set_obj(),
                     &fn_set_param_name_to_algo_arg_obj,
-                    ParamObjType::Forall,
+                    ParamObjType::FnSet,
                 )
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -186,7 +186,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     &fn_set_param_name_to_algo_arg_obj,
-                    ParamObjType::Forall,
+                    ParamObjType::FnSet,
                     None,
                 )
                 .map_err(|runtime_error| {

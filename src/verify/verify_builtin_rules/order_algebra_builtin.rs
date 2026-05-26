@@ -3,6 +3,7 @@
 //
 // Addition (weak): `a <= b + c` from (`a <= b` and `0 <= c`) or (`a <= c` and `0 <= b`); and
 // `a <= a + b` from `0 <= b`. Strict: `a < b + c` from (`a < b` and `0 <= c`) or (`a < c` and `0 <= b`).
+// Subtraction lower bounds: `a <= x - n` from `a + n <= x` for integer `n >= 0`.
 //
 // Multiplication monotonicity on R: for fixed k, t |-> k*t preserves non-strict order when 0 <= k
 // (a <= b => k*a <= k*b with k on the same side of both products), reverses when k <= 0 (b <= a =>
@@ -67,13 +68,29 @@ impl Runtime {
     }
 
     fn obj_is_nonnegative_integer_number(obj: &Obj) -> bool {
+        match Self::integer_value_of_number_obj(obj) {
+            Some(integer) => integer >= 0,
+            None => false,
+        }
+    }
+
+    fn integer_value_of_number_obj(obj: &Obj) -> Option<i128> {
         let Obj::Number(number) = obj else {
-            return false;
+            return None;
         };
-        let Ok(integer) = number.normalized_value.parse::<i128>() else {
-            return false;
-        };
-        integer >= 0
+        number.normalized_value.parse::<i128>().ok()
+    }
+
+    fn obj_plus_nonnegative_integer_offset(obj: &Obj, offset: i128) -> Obj {
+        if offset == 0 {
+            return obj.clone();
+        }
+        if let Some(base) = Self::integer_value_of_number_obj(obj) {
+            if let Some(sum) = base.checked_add(offset) {
+                return Number::new(sum.to_string()).into();
+            }
+        }
+        Add::new(obj.clone(), Number::new(offset.to_string()).into()).into()
     }
 
     fn obj_is_positive_odd_integer_number(obj: &Obj) -> bool {
@@ -864,6 +881,27 @@ impl Runtime {
                         vec![r3, r4],
                     ),
                 )));
+            }
+        }
+
+        if let Obj::Sub(sub) = &f.right {
+            if let Some(offset) = Self::integer_value_of_number_obj(sub.right.as_ref()) {
+                if offset >= 0 {
+                    let shifted_left = Self::obj_plus_nonnegative_integer_offset(&f.left, offset);
+                    let subgoal: AtomicFact =
+                        LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone())
+                            .into();
+                    let result = self.verify_order_subgoal(subgoal)?;
+                    if result.is_true() {
+                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "a <= x - n from a + n <= x".to_string(),
+                                vec![result],
+                            ),
+                        )));
+                    }
+                }
             }
         }
 

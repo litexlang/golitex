@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Right-hand side of a binary op waiting while we evaluate the left spine (iterative, no deep Rust recursion).
 enum PendingRight {
@@ -58,11 +58,12 @@ impl Runtime {
     }
 
     /// After substituting the sum/product index, evaluate any nested `sum` / `product` in the
-    /// expression to a numeric value, then the outer accumulation can use `evaluate_to_normalized_decimal_number`.
+    /// expression to an eval numeric value before the outer accumulation.
     fn eval_reduce_nested_sum_product_in_obj(
         &mut self,
         obj: Obj,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<Obj, RuntimeError> {
         match obj {
             Obj::Sum(s) => self.eval_sum_or_product_for_eval_stmt(
@@ -71,6 +72,7 @@ impl Runtime {
                 s.func.as_ref(),
                 false,
                 eval_stmt,
+                active_fn_calls,
             ),
             Obj::Product(p) => self.eval_sum_or_product_for_eval_stmt(
                 p.start.as_ref(),
@@ -78,64 +80,131 @@ impl Runtime {
                 p.func.as_ref(),
                 true,
                 eval_stmt,
+                active_fn_calls,
             ),
             Obj::Add(b) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Add::new(l, r).into())
             }
             Obj::Sub(b) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Sub::new(l, r).into())
             }
             Obj::Mul(b) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Mul::new(l, r).into())
             }
             Obj::Div(b) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*b.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Div::new(l, r).into())
             }
             Obj::Mod(m) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Mod::new(l, r).into())
             }
             Obj::Pow(p) => {
-                let base =
-                    self.eval_reduce_nested_sum_product_in_obj((*p.base).clone(), eval_stmt)?;
-                let exp =
-                    self.eval_reduce_nested_sum_product_in_obj((*p.exponent).clone(), eval_stmt)?;
+                let base = self.eval_reduce_nested_sum_product_in_obj(
+                    (*p.base).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let exp = self.eval_reduce_nested_sum_product_in_obj(
+                    (*p.exponent).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Pow::new(base, exp).into())
             }
             Obj::Abs(a) => {
-                let arg =
-                    self.eval_reduce_nested_sum_product_in_obj((*a.arg).clone(), eval_stmt)?;
+                let arg = self.eval_reduce_nested_sum_product_in_obj(
+                    (*a.arg).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Abs::new(arg).into())
             }
             Obj::Log(l) => {
-                let b = self.eval_reduce_nested_sum_product_in_obj((*l.base).clone(), eval_stmt)?;
-                let x = self.eval_reduce_nested_sum_product_in_obj((*l.arg).clone(), eval_stmt)?;
+                let b = self.eval_reduce_nested_sum_product_in_obj(
+                    (*l.base).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let x = self.eval_reduce_nested_sum_product_in_obj(
+                    (*l.arg).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Log::new(b, x).into())
             }
             Obj::Max(m) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Max::new(l, r).into())
             }
             Obj::Min(m) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r =
-                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*m.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 Ok(Min::new(l, r).into())
             }
             other => Ok(other),
@@ -150,9 +219,18 @@ impl Runtime {
         func: &Obj,
         is_product: bool,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<Obj, RuntimeError> {
-        let start_ev = self.evaluate_symbol_obj_iterative(start.clone(), eval_stmt)?;
-        let end_ev = self.evaluate_symbol_obj_iterative(end.clone(), eval_stmt)?;
+        let start_ev = self.evaluate_symbol_obj_iterative_with_active(
+            start.clone(),
+            eval_stmt,
+            active_fn_calls,
+        )?;
+        let end_ev = self.evaluate_symbol_obj_iterative_with_active(
+            end.clone(),
+            eval_stmt,
+            active_fn_calls,
+        )?;
         let Some(a_num) = self.resolve_obj_to_number(&start_ev) else {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
@@ -225,10 +303,10 @@ impl Runtime {
         }
         let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
         let pname = param_names[0].clone();
-        let mut acc_num = if is_product {
-            Number::new("1".to_string())
+        let mut acc_obj: Obj = if is_product {
+            Number::new("1".to_string()).into()
         } else {
-            Number::new("0".to_string())
+            Number::new("0".to_string()).into()
         };
         for k in ai..=bi {
             let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -236,8 +314,9 @@ impl Runtime {
             let inst =
                 self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
             let term = self.resolve_obj(&inst);
-            let term = self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt)?;
-            let Some(n) = term.evaluate_to_normalized_decimal_number() else {
+            let term =
+                self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt, active_fn_calls)?;
+            let Some(n) = Self::evaluate_numeric_obj_for_eval(&term) else {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
                     format!(
@@ -249,44 +328,45 @@ impl Runtime {
                 ));
             };
             if is_product {
-                let step: Obj = Mul::new(acc_num.into(), n.into()).into();
-                acc_num = step
-                    .evaluate_to_normalized_decimal_number()
-                    .ok_or_else(|| {
-                        short_exec_error(
-                            eval_stmt.clone().into(),
-                            "eval: product accumulation failed to normalize".to_string(),
-                            None,
-                            vec![],
-                        )
-                    })?;
+                let step: Obj = Mul::new(acc_obj, n).into();
+                acc_obj = Self::evaluate_numeric_obj_for_eval(&step).ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: product accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
             } else {
-                let step: Obj = Add::new(acc_num.into(), n.into()).into();
-                acc_num = step
-                    .evaluate_to_normalized_decimal_number()
-                    .ok_or_else(|| {
-                        short_exec_error(
-                            eval_stmt.clone().into(),
-                            "eval: sum accumulation failed to normalize".to_string(),
-                            None,
-                            vec![],
-                        )
-                    })?;
+                let step: Obj = Add::new(acc_obj, n).into();
+                acc_obj = Self::evaluate_numeric_obj_for_eval(&step).ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: sum accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
             }
         }
-        Ok(acc_num.into())
+        Ok(acc_obj)
     }
 
     fn eval_matrix_list_cells_for_eval_stmt(
         &mut self,
         m: MatrixListObj,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<MatrixListObj, RuntimeError> {
         let mut rows_out = Vec::with_capacity(m.rows.len());
         for row in m.rows {
             let mut out_row = Vec::with_capacity(row.len());
             for cell in row {
-                let v = self.evaluate_symbol_obj_iterative(*cell, eval_stmt)?;
+                let v = self.evaluate_symbol_obj_iterative_with_active(
+                    *cell,
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 out_row.push(Box::new(v));
             }
             rows_out.push(out_row);
@@ -321,7 +401,7 @@ impl Runtime {
             let mut row = Vec::with_capacity(lr.len());
             for (a, b) in lr.into_iter().zip(rr.into_iter()) {
                 let sum_obj: Obj = Add::new(*a, *b).into();
-                let Some(n) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix ++ needs numeric cells".to_string(),
@@ -329,7 +409,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                row.push(Box::new(n.into()));
+                row.push(Box::new(n));
             }
             rows.push(row);
         }
@@ -363,7 +443,7 @@ impl Runtime {
             let mut row = Vec::with_capacity(lr.len());
             for (a, b) in lr.into_iter().zip(rr.into_iter()) {
                 let diff_obj: Obj = Sub::new(*a, *b).into();
-                let Some(n) = diff_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&diff_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix -- needs numeric cells".to_string(),
@@ -371,7 +451,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                row.push(Box::new(n.into()));
+                row.push(Box::new(n));
             }
             rows.push(row);
         }
@@ -400,11 +480,11 @@ impl Runtime {
         for i in 0..r1 {
             let mut row: Vec<Box<Obj>> = Vec::with_capacity(c2);
             for k in 0..c2 {
-                let mut acc_num = Number::new("0".to_string());
+                let mut acc_obj: Obj = Number::new("0".to_string()).into();
                 for j in 0..c1 {
                     let prod_obj: Obj =
                         Mul::new((*left.rows[i][j]).clone(), (*right.rows[j][k]).clone()).into();
-                    let Some(p) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                    let Some(p) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
                             "eval: matrix ** cell multiply failed".to_string(),
@@ -412,8 +492,8 @@ impl Runtime {
                             vec![],
                         ));
                     };
-                    let sum_obj: Obj = Add::new(acc_num.into(), p.into()).into();
-                    let Some(s) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                    let sum_obj: Obj = Add::new(acc_obj, p).into();
+                    let Some(s) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
                             "eval: matrix ** accumulation failed".to_string(),
@@ -421,9 +501,9 @@ impl Runtime {
                             vec![],
                         ));
                     };
-                    acc_num = s;
+                    acc_obj = s;
                 }
-                row.push(Box::new(acc_num.into()));
+                row.push(Box::new(acc_obj));
             }
             rows.push(row);
         }
@@ -441,7 +521,7 @@ impl Runtime {
             let mut out_row = Vec::with_capacity(row.len());
             for cell in row {
                 let prod_obj: Obj = Mul::new(scalar.clone(), (*cell).clone()).into();
-                let Some(n) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                let Some(n) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: *. needs scalar and numeric matrix cells".to_string(),
@@ -449,7 +529,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                out_row.push(Box::new(n.into()));
+                out_row.push(Box::new(n));
             }
             rows_out.push(out_row);
         }
@@ -481,43 +561,90 @@ impl Runtime {
         &mut self,
         obj: Obj,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<MatrixListObj, RuntimeError> {
-        let cur = self.peel_fn_obj_dispatch_loop(obj, eval_stmt)?;
+        let cur = match obj {
+            Obj::FnObj(fn_obj) => {
+                self.evaluate_fn_obj_with_eval_memo(&fn_obj, eval_stmt, active_fn_calls)?
+            }
+            other => other,
+        };
         match cur {
-            Obj::MatrixListObj(m) => self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt),
+            Obj::MatrixListObj(m) => {
+                self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt, active_fn_calls)
+            }
             Obj::MatrixAdd(ma) => {
-                let l = self.eval_to_matrix_list_for_eval_stmt((*ma.left).clone(), eval_stmt)?;
-                let r = self.eval_to_matrix_list_for_eval_stmt((*ma.right).clone(), eval_stmt)?;
+                let l = self.eval_to_matrix_list_for_eval_stmt(
+                    (*ma.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_to_matrix_list_for_eval_stmt(
+                    (*ma.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 self.add_matrix_lists_under_eval(l, r, eval_stmt)
             }
             Obj::MatrixSub(ms) => {
-                let l = self.eval_to_matrix_list_for_eval_stmt((*ms.left).clone(), eval_stmt)?;
-                let r = self.eval_to_matrix_list_for_eval_stmt((*ms.right).clone(), eval_stmt)?;
+                let l = self.eval_to_matrix_list_for_eval_stmt(
+                    (*ms.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_to_matrix_list_for_eval_stmt(
+                    (*ms.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 self.sub_matrix_lists_under_eval(l, r, eval_stmt)
             }
             Obj::MatrixMul(mm) => {
-                let l = self.eval_to_matrix_list_for_eval_stmt((*mm.left).clone(), eval_stmt)?;
-                let r = self.eval_to_matrix_list_for_eval_stmt((*mm.right).clone(), eval_stmt)?;
+                let l = self.eval_to_matrix_list_for_eval_stmt(
+                    (*mm.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_to_matrix_list_for_eval_stmt(
+                    (*mm.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 self.multiply_matrix_lists_under_eval(l, r, eval_stmt)
             }
             Obj::MatrixScalarMul(m) => {
-                let s = self.evaluate_symbol_obj_iterative((*m.scalar).clone(), eval_stmt)?;
-                let mat = self.eval_to_matrix_list_for_eval_stmt((*m.matrix).clone(), eval_stmt)?;
+                let s = self.evaluate_symbol_obj_iterative_with_active(
+                    (*m.scalar).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let mat = self.eval_to_matrix_list_for_eval_stmt(
+                    (*m.matrix).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 self.scalar_matrix_mul_under_eval(s, mat, eval_stmt)
             }
             Obj::MatrixPow(mp) => {
-                let base = self.eval_to_matrix_list_for_eval_stmt((*mp.base).clone(), eval_stmt)?;
-                let exp_obj =
-                    self.evaluate_symbol_obj_iterative((*mp.exponent).clone(), eval_stmt)?;
-                let Some(exp_num) = exp_obj.evaluate_to_normalized_decimal_number() else {
+                let base = self.eval_to_matrix_list_for_eval_stmt(
+                    (*mp.base).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let exp_obj = self.evaluate_symbol_obj_iterative_with_active(
+                    (*mp.exponent).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let Some(exp_i) = Self::integer_value_for_eval_obj(&exp_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix ^^ exponent must evaluate to a number".to_string(),
+                        "eval: matrix ^^ exponent must evaluate to an integer".to_string(),
                         None,
                         vec![],
                     ));
                 };
-                let exp_u = exp_num.normalized_value.parse::<usize>().map_err(|_| {
+                let exp_u = usize::try_from(exp_i).map_err(|_| {
                     short_exec_error(
                         eval_stmt.clone().into(),
                         "eval: matrix ^^ exponent must be a non-negative integer".to_string(),
@@ -540,7 +667,7 @@ impl Runtime {
                         vec![],
                     ));
                 };
-                self.eval_to_matrix_list_for_eval_stmt(ml.into(), eval_stmt)
+                self.eval_to_matrix_list_for_eval_stmt(ml.into(), eval_stmt, active_fn_calls)
             }
         }
     }
@@ -550,6 +677,7 @@ impl Runtime {
         acc: Obj,
         pending: &mut Vec<PendingRight>,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<Obj, RuntimeError> {
         let mut acc = acc;
         while let Some(pend) = pending.pop() {
@@ -559,26 +687,43 @@ impl Runtime {
                 PendingRight::Mul(o) => (BinaryCombineOp::Mul, o),
                 PendingRight::Div(o) => (BinaryCombineOp::Div, o),
             };
-            let right_eval = self.evaluate_symbol_obj_iterative(right_obj, eval_stmt)?;
+            let right_eval = self.evaluate_symbol_obj_iterative_with_active(
+                right_obj,
+                eval_stmt,
+                active_fn_calls,
+            )?;
             acc = self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
         }
         Ok(acc)
     }
 
     /// Evaluates numeric expressions for `eval` without deep recursion on the Rust stack.
-    /// Algorithm calls are expanded in a loop; `Add`/`Sub`/`Mul`/`Div` use an explicit stack for the left spine.
+    /// Algorithm calls use an eval-local memo; `Add`/`Sub`/`Mul`/`Div` use an explicit stack for the left spine.
     fn evaluate_symbol_obj_iterative(
         &mut self,
         initial: Obj,
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
+        let mut active_fn_calls: HashSet<ObjString> = HashSet::new();
+        self.evaluate_symbol_obj_iterative_with_active(initial, eval_stmt, &mut active_fn_calls)
+    }
+
+    fn evaluate_symbol_obj_iterative_with_active(
+        &mut self,
+        initial: Obj,
+        eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
+    ) -> Result<Obj, RuntimeError> {
         let mut pending: Vec<PendingRight> = Vec::new();
         let mut cur = initial;
 
         loop {
-            cur = self.peel_fn_obj_dispatch_loop(cur, eval_stmt)?;
-
             match cur {
+                Obj::FnObj(fn_obj) => {
+                    cur =
+                        self.evaluate_fn_obj_with_eval_memo(&fn_obj, eval_stmt, active_fn_calls)?;
+                    continue;
+                }
                 Obj::Add(add) => {
                     pending.push(PendingRight::Add(*add.right));
                     cur = *add.left;
@@ -604,20 +749,28 @@ impl Runtime {
                         acc_num.into(),
                         &mut pending,
                         eval_stmt,
+                        active_fn_calls,
                     );
                 }
                 Obj::Pow(pow) => {
-                    let left =
-                        self.evaluate_symbol_obj_iterative((*pow.base).clone(), eval_stmt)?;
-                    let right =
-                        self.evaluate_symbol_obj_iterative((*pow.exponent).clone(), eval_stmt)?;
+                    let left = self.evaluate_symbol_obj_iterative_with_active(
+                        (*pow.base).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let right = self.evaluate_symbol_obj_iterative_with_active(
+                        (*pow.exponent).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     let combined: Obj = Pow::new(left, right).into();
-                    match combined.evaluate_to_normalized_decimal_number() {
+                    match Self::evaluate_numeric_obj_for_eval(&combined) {
                         Some(acc_num) => {
                             return self.finish_numeric_accumulator_with_pending_rights(
-                                acc_num.into(),
+                                acc_num,
                                 &mut pending,
                                 eval_stmt,
+                                active_fn_calls,
                             );
                         }
                         None => {
@@ -648,11 +801,13 @@ impl Runtime {
                         sum.func.as_ref(),
                         false,
                         eval_stmt,
+                        active_fn_calls,
                     )?;
                     return self.finish_numeric_accumulator_with_pending_rights(
                         v,
                         &mut pending,
                         eval_stmt,
+                        active_fn_calls,
                     );
                 }
                 Obj::Product(prod) => {
@@ -670,11 +825,13 @@ impl Runtime {
                         prod.func.as_ref(),
                         true,
                         eval_stmt,
+                        active_fn_calls,
                     )?;
                     return self.finish_numeric_accumulator_with_pending_rights(
                         v,
                         &mut pending,
                         eval_stmt,
+                        active_fn_calls,
                     );
                 }
                 Obj::MatrixListObj(m) => {
@@ -686,7 +843,8 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done = self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt)?;
+                    let done =
+                        self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt, active_fn_calls)?;
                     return Ok(done.into());
                 }
                 Obj::MatrixAdd(ma) => {
@@ -698,8 +856,11 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done =
-                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixAdd(ma), eval_stmt)?;
+                    let done = self.eval_to_matrix_list_for_eval_stmt(
+                        Obj::MatrixAdd(ma),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     return Ok(done.into());
                 }
                 Obj::MatrixSub(ms) => {
@@ -711,8 +872,11 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done =
-                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixSub(ms), eval_stmt)?;
+                    let done = self.eval_to_matrix_list_for_eval_stmt(
+                        Obj::MatrixSub(ms),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     return Ok(done.into());
                 }
                 Obj::MatrixMul(mm) => {
@@ -724,8 +888,11 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done =
-                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixMul(mm), eval_stmt)?;
+                    let done = self.eval_to_matrix_list_for_eval_stmt(
+                        Obj::MatrixMul(mm),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     return Ok(done.into());
                 }
                 Obj::MatrixScalarMul(m) => {
@@ -737,8 +904,11 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done =
-                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixScalarMul(m), eval_stmt)?;
+                    let done = self.eval_to_matrix_list_for_eval_stmt(
+                        Obj::MatrixScalarMul(m),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     return Ok(done.into());
                 }
                 Obj::MatrixPow(mp) => {
@@ -750,8 +920,11 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done =
-                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixPow(mp), eval_stmt)?;
+                    let done = self.eval_to_matrix_list_for_eval_stmt(
+                        Obj::MatrixPow(mp),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
                     return Ok(done.into());
                 }
                 _ => {
@@ -782,9 +955,9 @@ impl Runtime {
             BinaryCombineOp::Mul => Mul::new(left, right).into(),
             BinaryCombineOp::Div => Div::new(left, right).into(),
         };
-        let calculated = combined.evaluate_to_normalized_decimal_number();
+        let calculated = Self::evaluate_numeric_obj_for_eval(&combined);
         match calculated {
-            Some(number) => Ok(number.into()),
+            Some(number) => Ok(number),
             None => Err(short_exec_error(
                 eval_stmt.clone().into(),
                 "eval: failed to combine numeric sub-expression".to_string(),
@@ -794,33 +967,267 @@ impl Runtime {
         }
     }
 
-    /// Repeatedly expands `FnObj` using the algo definition until the head is not a call.
-    fn peel_fn_obj_dispatch_loop(
-        &mut self,
-        mut cur: Obj,
-        eval_stmt: &EvalStmt,
-    ) -> Result<Obj, RuntimeError> {
-        while let Obj::FnObj(ref fn_obj) = cur {
-            cur = self.dispatch_algo_one_return_expr(fn_obj, eval_stmt)?;
-        }
-        Ok(cur)
+    fn evaluate_numeric_obj_for_eval(obj: &Obj) -> Option<Obj> {
+        evaluate_obj_to_exact_rational_obj_for_eval(obj).or_else(|| {
+            obj.evaluate_to_normalized_decimal_number()
+                .map(|number| number.into())
+        })
     }
 
-    /// One algo step: bind numeric args, match case / default, return **instantiated** return expression only (no recursive eval).
-    fn dispatch_algo_one_return_expr(
+    fn evaluate_fn_obj_with_eval_memo(
         &mut self,
         fn_obj_to_evaluate: &FnObj,
         eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
     ) -> Result<Obj, RuntimeError> {
-        let fn_name = fn_obj_to_evaluate.head.to_string();
+        let (evaluated_fn_obj, flattened_number_args) = self
+            .evaluate_fn_obj_number_args_for_eval_stmt(
+                fn_obj_to_evaluate,
+                eval_stmt,
+                active_fn_calls,
+            )?;
+        let evaluated_call_obj: Obj = evaluated_fn_obj.clone().into();
+        if let Some(number) = self.resolve_obj_to_number(&evaluated_call_obj) {
+            return Ok(number.into());
+        }
+
+        if let Some(evaluated) = self.try_evaluate_unary_integer_algo_bottom_up(
+            &evaluated_fn_obj,
+            &flattened_number_args,
+            eval_stmt,
+            active_fn_calls,
+        )? {
+            return Ok(evaluated);
+        }
+
+        let call_key = evaluated_call_obj.to_string();
+        if active_fn_calls.contains(&call_key) {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                format!(
+                    "eval: recursive algorithm call `{}` is already being evaluated",
+                    call_key
+                ),
+                None,
+                vec![],
+            ));
+        }
+
+        active_fn_calls.insert(call_key.clone());
+        let fn_name = evaluated_fn_obj.head.to_string();
+        let return_expr = self.dispatch_algo_one_return_expr_with_number_args(
+            &fn_name,
+            &flattened_number_args,
+            eval_stmt,
+        );
+        let evaluated_result = match return_expr {
+            Ok(expr) => {
+                self.evaluate_symbol_obj_iterative_with_active(expr, eval_stmt, active_fn_calls)
+            }
+            Err(error) => Err(error),
+        };
+        active_fn_calls.remove(&call_key);
+
+        let evaluated_obj = evaluated_result?;
+        if let Some(number) = self.resolve_obj_to_number(&evaluated_obj) {
+            let number_obj: Obj = number.clone().into();
+            self.top_level_env()
+                .known_obj_values
+                .insert(call_key, KnownObjValue::SimplifiedNumber(number));
+            let evaluated_equal_fact =
+                EqualFact::new(evaluated_call_obj, number_obj, eval_stmt.line_file.clone());
+            self.top_level_env().store_equality(&evaluated_equal_fact)?;
+        }
+        Ok(evaluated_obj)
+    }
+
+    fn try_evaluate_unary_integer_algo_bottom_up(
+        &mut self,
+        evaluated_fn_obj: &FnObj,
+        flattened_number_args: &[Obj],
+        eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if flattened_number_args.len() != 1 {
+            return Ok(None);
+        }
+        let Some(target_value) = Self::integer_value_for_eval_obj(&flattened_number_args[0]) else {
+            return Ok(None);
+        };
+
+        let fn_name = evaluated_fn_obj.head.to_string();
+        let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name).cloned() else {
+            return Ok(None);
+        };
+        if algo_definition.params.len() != 1 {
+            return Ok(None);
+        }
+        let Some((start_value, _tail_bound)) =
+            Self::unary_integer_algo_base_range(&algo_definition, &algo_definition.params[0])
+        else {
+            return Ok(None);
+        };
+        if target_value < start_value {
+            return Ok(None);
+        }
+
+        let mut last_value_obj: Option<Obj> = None;
+        for current_value in start_value..=target_value {
+            let current_number_obj: Obj = Number::new(current_value.to_string()).into();
+            let current_fn_obj = FnObj::new(
+                evaluated_fn_obj.head.as_ref().clone(),
+                vec![vec![Box::new(current_number_obj.clone())]],
+            );
+            let current_call_obj: Obj = current_fn_obj.clone().into();
+            if let Some(number) = self.resolve_obj_to_number(&current_call_obj) {
+                last_value_obj = Some(number.into());
+                continue;
+            }
+
+            let call_key = current_call_obj.to_string();
+            if active_fn_calls.contains(&call_key) {
+                return Ok(None);
+            }
+            active_fn_calls.insert(call_key.clone());
+            let return_expr = self.dispatch_algo_one_return_expr_with_number_args(
+                &fn_name,
+                &[current_number_obj],
+                eval_stmt,
+            );
+            let evaluated_result = match return_expr {
+                Ok(expr) => {
+                    self.evaluate_symbol_obj_iterative_with_active(expr, eval_stmt, active_fn_calls)
+                }
+                Err(error) => Err(error),
+            };
+            active_fn_calls.remove(&call_key);
+
+            let evaluated_obj = evaluated_result?;
+            let Some(number) = self.resolve_obj_to_number(&evaluated_obj) else {
+                return Ok(None);
+            };
+            let number_obj: Obj = number.clone().into();
+            self.top_level_env()
+                .known_obj_values
+                .insert(call_key, KnownObjValue::SimplifiedNumber(number));
+            let evaluated_equal_fact = EqualFact::new(
+                current_call_obj,
+                number_obj.clone(),
+                eval_stmt.line_file.clone(),
+            );
+            self.top_level_env().store_equality(&evaluated_equal_fact)?;
+            last_value_obj = Some(number_obj);
+        }
+
+        Ok(last_value_obj)
+    }
+
+    fn integer_value_for_eval_obj(obj: &Obj) -> Option<i128> {
+        if let Some(rational) = evaluate_obj_to_exact_rational_for_eval(obj) {
+            return rational.to_i128_if_integer();
+        }
+        let Obj::Number(number) = obj else {
+            return None;
+        };
+        if !is_number_string_literally_integer_without_dot(number.normalized_value.clone()) {
+            return None;
+        }
+        number.normalized_value.parse::<i128>().ok()
+    }
+
+    fn unary_integer_algo_base_range(
+        algo_definition: &DefAlgoStmt,
+        param_name: &str,
+    ) -> Option<(i128, i128)> {
+        let mut equal_values: Vec<i128> = Vec::new();
+        let mut tail_bounds: Vec<i128> = Vec::new();
+        for algo_case in algo_definition.cases.iter() {
+            if let Some(value) =
+                Self::equal_case_integer_value_for_param(&algo_case.condition, param_name)
+            {
+                equal_values.push(value);
+            }
+            if let Some(value) = Self::strict_upper_tail_case_integer_value_for_param(
+                &algo_case.condition,
+                param_name,
+            ) {
+                tail_bounds.push(value);
+            }
+        }
+        if tail_bounds.len() != 1 || equal_values.is_empty() {
+            return None;
+        }
+        let start = *equal_values.iter().min()?;
+        let max_equal = *equal_values.iter().max()?;
+        let tail_bound = tail_bounds[0];
+        if max_equal != tail_bound {
+            return None;
+        }
+        for value in start..=tail_bound {
+            if !equal_values.contains(&value) {
+                return None;
+            }
+        }
+        Some((start, tail_bound))
+    }
+
+    fn equal_case_integer_value_for_param(
+        atomic_fact: &AtomicFact,
+        param_name: &str,
+    ) -> Option<i128> {
+        let AtomicFact::EqualFact(equal) = atomic_fact else {
+            return None;
+        };
+        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        if equal.left.to_string() == param_obj.to_string() {
+            return Self::integer_value_for_eval_obj(&equal.right);
+        }
+        if equal.right.to_string() == param_obj.to_string() {
+            return Self::integer_value_for_eval_obj(&equal.left);
+        }
+        None
+    }
+
+    fn strict_upper_tail_case_integer_value_for_param(
+        atomic_fact: &AtomicFact,
+        param_name: &str,
+    ) -> Option<i128> {
+        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        match atomic_fact {
+            AtomicFact::GreaterFact(greater)
+                if greater.left.to_string() == param_obj.to_string() =>
+            {
+                Self::integer_value_for_eval_obj(&greater.right)
+            }
+            AtomicFact::LessFact(less) if less.right.to_string() == param_obj.to_string() => {
+                Self::integer_value_for_eval_obj(&less.left)
+            }
+            _ => None,
+        }
+    }
+
+    fn evaluate_fn_obj_number_args_for_eval_stmt(
+        &mut self,
+        fn_obj_to_evaluate: &FnObj,
+        eval_stmt: &EvalStmt,
+        active_fn_calls: &mut HashSet<ObjString>,
+    ) -> Result<(FnObj, Vec<Obj>), RuntimeError> {
         let mut flattened_number_args: Vec<Obj> = Vec::new();
+        let mut evaluated_arg_groups: Vec<Vec<Box<Obj>>> =
+            Vec::with_capacity(fn_obj_to_evaluate.body.len());
         for arg_group in fn_obj_to_evaluate.body.iter() {
+            let mut evaluated_arg_group: Vec<Box<Obj>> = Vec::with_capacity(arg_group.len());
             for arg in arg_group.iter() {
-                let evaluated_arg_obj =
-                    self.evaluate_symbol_obj_iterative((**arg).clone(), eval_stmt)?;
+                let evaluated_arg_obj = self.evaluate_symbol_obj_iterative_with_active(
+                    (**arg).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
                 match evaluated_arg_obj {
                     Obj::Number(number) => {
-                        flattened_number_args.push(number.into());
+                        let number_obj: Obj = number.into();
+                        flattened_number_args.push(number_obj.clone());
+                        evaluated_arg_group.push(Box::new(number_obj));
                     }
                     _ => {
                         return Err(short_exec_error(
@@ -832,8 +1239,24 @@ impl Runtime {
                     }
                 }
             }
+            evaluated_arg_groups.push(evaluated_arg_group);
         }
+        Ok((
+            FnObj::new(
+                fn_obj_to_evaluate.head.as_ref().clone(),
+                evaluated_arg_groups,
+            ),
+            flattened_number_args,
+        ))
+    }
 
+    /// One algo step: bind numeric args, match case / default, return **instantiated** return expression only (no recursive eval).
+    fn dispatch_algo_one_return_expr_with_number_args(
+        &mut self,
+        fn_name: &str,
+        flattened_number_args: &[Obj],
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
         let algo_definition = match self.get_algo_definition_by_name(&fn_name) {
             Some(definition) => definition.clone(),
             None => {

@@ -28,6 +28,10 @@ impl Runtime {
         let infer_result =
             self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, &fn_set_stored)?;
 
+        if have_fn_equal_stmt.as_algo {
+            self.exec_have_fn_equal_stmt_as_algo(have_fn_equal_stmt)?;
+        }
+
         Ok(
             (NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![]))
                 .into(),
