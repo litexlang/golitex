@@ -92,17 +92,23 @@ Litex is useful if it helps answer concrete questions:
 6. Can Litex serve as a preformal or intermediate layer for systems with deeper
    foundations and larger libraries?
 
-## Best Current Demo
+## Best Current Evidence
 
-The strongest demo is The Mechanics of Litex Proof. It translates a sequence of
+The strongest evidence is The Mechanics of Litex Proof as a full runnable
+development, not a single showcase theorem. It translates a sequence of
 textbook-style proof examples into Litex and shows the intended interaction:
 write mathematical facts, run the checker, inspect the local explanation, and
 continue growing the context.
 
-The Chapter 8 construction of a bijection from `N^2` to `N` is especially
-important. It is large enough to exercise functions, tuples, arithmetic,
-existential witnesses, injectivity, surjectivity, and reusable facts. It is
-also still close to ordinary undergraduate mathematics.
+That corpus matters because it exercises many proof shapes at once:
+calculation, logic, induction, functions, tuples, sets, relations, existential
+witnesses, reusable universal facts, and longer proof repair. It is also a
+practical AI-agent test: Codex can read the Litex manual and verifier output,
+then iteratively shrink broad proof debt into smaller checked facts.
+
+MATH500 and MiniF2F-style tasks are the next pressure tests. They are useful
+even when they fail, because each failure can be classified as a language,
+standard-library, builtin-rule, infer-rule, formulation, or diagnostic gap.
 
 For abstract mathematics specifically, the best current demo is the
 [Hilbert geometry tutorial](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry).

@@ -188,7 +188,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 2. Run `cargo test run_examples` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples.
 
-3. Run `cargo test run_the_mechanics_markdown_files` after changing `The-Mechanics-of-Litex-Proof` snippets or the markdown snippet runner.
+3. Run `cargo test run_the_mechanics_markdown_files` after changing `scripts/The-Mechanics-of-Litex-Proof` snippets or the markdown snippet runner.
 
 4. Run `cargo test run_all` when a change can affect examples and Mechanics snippets together.
 
