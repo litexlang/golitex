@@ -2012,6 +2012,8 @@ If direct known facts do not close the goal, Litex searches applicable universal
 
 Object matching is structural. If the `forall` conclusion has a parameter such as `x`, that parameter may bind to the object in the goal. If the conclusion has a structured object such as `f(x)`, `x + 1`, or `(x, y)`, Litex matches the outer shape first, then recursively matches the inner objects.
 
+Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p('R(x){f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `'R(x){b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
+
 ```text
 know forall x R:
     $p(x)
