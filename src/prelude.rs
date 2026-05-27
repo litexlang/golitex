@@ -2,7 +2,8 @@ pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
-    IdentifierName, ObjString, OrFactKey, PropName, StructName, TemplateName, ThmName,
+    IdentifierName, ObjString, OrFactKey, PropName, StrategyName, StructName, TemplateName,
+    ThmName,
 };
 pub use crate::environment::{
     Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
@@ -232,12 +233,15 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
+pub use crate::stmt::ByStrategyStmt;
 pub use crate::stmt::ByThmStmt;
+pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::RunFileInStd;
 pub use crate::stmt::Stmt;
+pub use crate::stmt::StopStrategyStmt;
 pub use crate::verify::VerifyState;
 
 pub use crate::cli::run_cli;
@@ -391,6 +395,8 @@ pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
+pub use crate::common::keywords::STOP;
+pub use crate::common::keywords::STRATEGY;
 pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::STRUCT;
 pub use crate::common::keywords::STRUCT_VIEW_PREFIX;

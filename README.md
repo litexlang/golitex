@@ -28,7 +28,7 @@ _– Isaac Newton_
 
 Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write math almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
-The central idea is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them, stores successful ones, and reuses them later.
+Math is the science of discovering patterns. The central idea of Litex is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them based on their patterns and the current context, stores successful ones, and reuses them later.
 
 Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step.
 

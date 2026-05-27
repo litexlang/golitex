@@ -107,3 +107,20 @@ thm thm_nat_refl:
 
 by thm thm_nat_refl(1)
 1 = 1
+
+# A proved theorem is also stored as a normal forall fact, so later facts can
+# use ordinary forall matching without an explicit theorem call when all
+# theorem parameters are recoverable from the goal.
+abstract_prop thm_match_p(x)
+abstract_prop thm_match_q(x)
+
+thm thm_direct_forall_match:
+    prove:
+        forall x R:
+            $thm_match_p(x)
+            =>:
+                $thm_match_q(x)
+    know $thm_match_q(x)
+
+know $thm_match_p(1)
+$thm_match_q(1)

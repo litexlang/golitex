@@ -12,4 +12,5 @@ pub type AlgoName = String;
 pub type StructName = String;
 pub type TemplateName = String;
 pub type ThmName = String;
+pub type StrategyName = String;
 pub type IdentifierName = String;

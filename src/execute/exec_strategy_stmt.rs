@@ -1,8 +1,11 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
-        let thm_names = stmt.names.join(", ");
+    pub fn exec_def_strategy_stmt(
+        &mut self,
+        stmt: &DefStrategyStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let strategy_names = stmt.names.join(", ");
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
@@ -10,7 +13,7 @@ impl Runtime {
         .map_err(|e| {
             short_exec_error(
                 stmt.clone().into(),
-                "thm: forall fact is not well defined".to_string(),
+                "strategy: forall fact is not well defined".to_string(),
                 Some(e),
                 vec![],
             )
@@ -41,8 +44,8 @@ impl Runtime {
                         RuntimeErrorStruct::new(
                             Some(proof_stmt.clone()),
                             format!(
-                                "thm `{}` failed: proof step {}/{} is unknown: `{}`\n{}",
-                                thm_names,
+                                "strategy `{}` failed: proof step {}/{} is unknown: `{}`\n{}",
+                                strategy_names,
                                 proof_index + 1,
                                 proof_len,
                                 proof_stmt,
@@ -68,8 +71,8 @@ impl Runtime {
                         RuntimeErrorStruct::new(
                             Some(Stmt::Fact(then_fact.clone().to_fact())),
                             format!(
-                                "thm `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
-                                thm_names,
+                                "strategy `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
+                                strategy_names,
                                 then_index + 1,
                                 then_count,
                                 then_fact,
@@ -90,14 +93,80 @@ impl Runtime {
             )
         })?;
 
-        self.store_def_thm(stmt)
+        self.store_def_strategy(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        let infer_result_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::ForallFact(
-                stmt.forall_fact.clone(),
-            ))?;
+        Ok(body_exec_result)
+    }
 
-        Ok(body_exec_result.with_infers(infer_result_after_store))
+    pub fn exec_by_strategy_stmt(
+        &mut self,
+        stmt: &ByStrategyStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let strategy = self
+            .get_strategy_definition_by_name(&stmt.name)
+            .cloned()
+            .ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by strategy: strategy `{}` is not defined", stmt.name),
+                    None,
+                    vec![],
+                )
+            })?;
+        let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
+        let env = self.top_level_env();
+        env.used_strategy_stmts
+            .insert(atomic_fact_key.clone(), stmt.name.clone());
+        env.stopped_strategy_stmts.remove(&atomic_fact_key);
+        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+    }
+
+    pub fn exec_stop_strategy_stmt(
+        &mut self,
+        stmt: &StopStrategyStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let strategy = self
+            .get_strategy_definition_by_name(&stmt.name)
+            .cloned()
+            .ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("stop strategy: strategy `{}` is not defined", stmt.name),
+                    None,
+                    vec![],
+                )
+            })?;
+        let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
+        self.top_level_env()
+            .stopped_strategy_stmts
+            .insert(atomic_fact_key, stmt.name.clone());
+        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+    }
+}
+
+fn strategy_then_atomic_fact_key(
+    strategy: &DefStrategyStmt,
+    caller_stmt: Stmt,
+) -> Result<(PropName, bool), RuntimeError> {
+    let then_fact = strategy.forall_fact.then_facts.first().ok_or_else(|| {
+        short_exec_error(
+            caller_stmt.clone(),
+            "strategy: missing then-clause fact".to_string(),
+            None,
+            vec![],
+        )
+    })?;
+
+    match then_fact {
+        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            Ok((atomic_fact.key(), atomic_fact.is_true()))
+        }
+        _ => Err(short_exec_error(
+            caller_stmt,
+            "strategy: then-clause fact must be atomic".to_string(),
+            None,
+            vec![],
+        )),
     }
 }

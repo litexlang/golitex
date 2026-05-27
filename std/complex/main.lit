@@ -7,4 +7,23 @@ have fn C_neg(a &C) &C = (-&C{a}.re, -&C{a}.im)
 have fn C_sub(a, b &C) &C = (&C{a}.re - &C{b}.re, &C{a}.im - &C{b}.im)
 have fn C_mul(a, b &C) &C = (&C{a}.re * &C{b}.re - &C{a}.im * &C{b}.im, &C{a}.re * &C{b}.im + &C{a}.im * &C{b}.re)
 have fn C_conj(a &C) &C = (&C{a}.re, -&C{a}.im)
+have fn C_normSq(z &C) R = &C{z}.re^2 + &C{z}.im^2
+
+know:
+    forall z &C:
+        0 <= C_normSq(z)
+
+have fn C_norm(z &C) R = sqrt(C_normSq(z))
+have fn C_abs(z &C) R = C_norm(z)
+
+know:
+    forall z &C:
+        0 <= C_norm(z)
+        C_norm(z)^2 = C_normSq(z)
+        C_abs(z) = C_norm(z)
+
 have C_i &C = (0, 1)
+
+# Lean/Mathlib `Complex.I`; real and imaginary parts use direct struct access:
+# `&C{z}.re` and `&C{z}.im`.
+have Complex_I &C = (0, 1)

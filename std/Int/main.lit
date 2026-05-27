@@ -1,0 +1,9 @@
+# Integer floor and ceiling aliases for Mathlib-style MiniF2F statements.
+
+have Int_floor fn(x R) Z
+have Int_ceil fn(x R) Z
+
+know:
+    forall x R:
+        Int_floor(x) <= x < Int_floor(x) + 1
+        Int_ceil(x) - 1 < x <= Int_ceil(x)

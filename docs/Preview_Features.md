@@ -30,6 +30,25 @@ by thm succ_one(1)
 1 + 1 = 2
 ```
 
+### Strategy registration with `strategy` (2026-05)
+
+`strategy name:` records a verified `forall` rule for future strategy-driven proof search. The `prove:` block has the same shape as `thm`, but the `forall` conclusion must contain exactly one atomic fact. `by strategy name` registers the strategy for that conclusion predicate, and `stop strategy name` records that the strategy should be stopped for the same predicate.
+
+```litex
+prop is_one(x R):
+    x = 1
+
+strategy prove_is_one:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $is_one(x)
+
+by strategy prove_is_one
+stop strategy prove_is_one
+```
+
 ### Component uniqueness inferred from `exist!` (2026-05)
 
 When an `exist!` fact is recorded, Litex stores a generated uniqueness `forall`. For multiple witness parameters, the stored theorem now concludes component equalities, so it can be used either as one `and` fact or as split then-facts later.

@@ -1,6 +1,94 @@
-# Elementary number-theory background for problem formalization.
-# The definitions are intentionally small; longer proofs can import this file
-# and then prove problem-specific facts in the local context.
+# Natural-number and elementary number-theory background.
+#
+# This std module intentionally uses the Lean/Mathlib-facing module name `Nat`.
+# The theorem declarations put the Litex-style descriptive name first and the
+# Lean/Mathlib compatibility alias after it. Litex names cannot currently
+# contain `.`, so dotted Mathlib names are written with `_`; for example,
+# Mathlib `Nat.succ_eq_add_one` is represented as `Nat_succ_eq_add_one`.
+#
+# Redundant generic arithmetic theorem aliases such as `add_comm` and
+# `zero_add` are not part of std. Litex's pattern/builtin proof style already
+# handles those facts directly.
+
+# Lean writes natural-number successor as `Nat.succ n`; Litex exposes the same
+# idea as a callable function whose normal form is `n + 1`.
+have fn Nat_succ(n N) N = n + 1
+
+# Mathlib: Nat.succ_eq_add_one
+thm natural_successor_equals_add_one, Nat_succ_eq_add_one:
+    prove:
+        forall n N:
+            Nat_succ(n) = n + 1
+    Nat_succ(n) = n + 1
+
+# Mathlib: Nat.add_one_sub_one
+thm natural_add_one_then_subtract_one_returns_self, Nat_add_one_sub_one:
+    prove:
+        forall n N:
+            (n + 1) - 1 = n
+    (n + 1) - 1 = n
+
+# Mathlib: Nat.zero_le
+thm natural_zero_is_less_equal, Nat_zero_le:
+    prove:
+        forall n N:
+            0 <= n
+    0 <= n
+
+# Mathlib: Nat.eq_zero_or_pos
+thm natural_is_zero_or_positive, Nat_eq_zero_or_pos:
+    prove:
+        forall n N:
+            n = 0 or 0 < n
+    n = 0 or 0 < n
+
+# Mathlib: Nat.succ_pos / Nat.zero_lt_succ
+thm natural_successor_is_positive, Nat_succ_pos, Nat_zero_lt_succ:
+    prove:
+        forall n N:
+            0 < Nat_succ(n)
+    Nat_succ(n) = n + 1
+    0 <= n < n + 1 = Nat_succ(n)
+
+# Mathlib: Nat.succ_ne_zero
+thm natural_successor_is_not_zero, Nat_succ_ne_zero:
+    prove:
+        forall n N:
+            Nat_succ(n) != 0
+    Nat_succ(n) = n + 1
+    0 <= n < n + 1 = Nat_succ(n)
+    Nat_succ(n) != 0
+
+# Mathlib: Nat.succ_inj
+thm natural_successor_is_injective, Nat_succ_inj:
+    prove:
+        forall a, b N:
+            Nat_succ(a) = Nat_succ(b)
+            =>:
+                a = b
+    Nat_succ(a) = a + 1
+    Nat_succ(b) = b + 1
+    a + 1 = Nat_succ(a) = Nat_succ(b) = b + 1
+    a = (a + 1) - 1 = (b + 1) - 1 = b
+
+# Mathlib: Nat.ne_zero_of_pos
+thm natural_positive_is_not_zero, Nat_ne_zero_of_pos:
+    prove:
+        forall n N:
+            0 < n
+            =>:
+                n != 0
+    n != 0
+
+# Mathlib: Nat.pos_of_ne_zero
+# TODO(proof debt): replace this `know` with a direct proof or builtin rule.
+thm natural_not_zero_is_positive, Nat_pos_of_ne_zero:
+    prove:
+        forall n N:
+            n != 0
+            =>:
+                0 < n
+    know 0 < n
 
 prop even(a Z):
     a % 2 = 0
@@ -334,6 +422,49 @@ know:
     forall q Q:
         exist! a Z, b N_pos st {q = a / b, $coprime(a, b)}
 
+# Mathlib-style: Nat.gcd_comm.
+# Litex's current gcd is defined for integer pairs with `a != 0 or b != 0`.
+thm integer_gcd_commutes_when_defined, Nat_gcd_comm:
+    prove:
+        forall a, b Z:
+            a != 0 or b != 0
+            b != 0 or a != 0
+            =>:
+                gcd(a, b) = gcd(b, a)
+    gcd(a, b) = gcd(b, a)
+
+# Mathlib-style: Nat.Coprime.symm / coprime_comm.
+thm integer_coprime_is_symmetric, Nat_Coprime_symm, Nat_coprime_comm:
+    prove:
+        forall a, b Z:
+            $coprime(a, b)
+            =>:
+                $coprime(b, a)
+    $coprime(b, a)
+
+# Mathlib-style: coprime with one.
+thm integer_is_coprime_to_one, Nat_coprime_one_right:
+    prove:
+        forall a Z:
+            $coprime(a, 1)
+    $coprime(a, 1)
+
+thm one_is_coprime_to_integer, Nat_one_coprime:
+    prove:
+        forall a Z:
+            $coprime(1, a)
+    $coprime(1, a)
+
+# Mathlib-style: Euclid's lemma for a prime dividing a product.
+thm prime_dividing_product_divides_a_factor, Nat_Prime_dvd_or_dvd:
+    prove:
+        forall p N_pos, a, b Z:
+            $prime(p)
+            (a * b) % p = 0
+            =>:
+                a % p = 0 or b % p = 0
+    a % p = 0 or b % p = 0
+
 know:
     forall n Z, k N_pos:
         $prime(k)
@@ -364,3 +495,108 @@ know:
         n^5 % k = 0
         =>:
             n % k = 0
+
+# Additional Mathlib-facing aliases and objects used by MiniF2F statements.
+# These keep the existing Litex predicates as the source of truth while giving
+# Lean-style names a stable lowering target.
+
+prop Nat_Prime(p N_pos):
+    $prime(p)
+
+prop Nat_Coprime(a, b Z):
+    $coprime(a, b)
+
+have fn Nat_gcd(a, b N: a != 0 or b != 0) N_pos = gcd(a, b)
+have Nat_lcm fn(a, b N) N
+have Nat_choose fn(n, k N) N
+
+prop Nat_divisors_value(n N_pos, s power_set(N_pos)):
+    forall d N_pos:
+        =>:
+            d $in s
+        <=>:
+            n % d = 0
+
+know:
+    forall n N_pos:
+        exist! s power_set(N_pos) st {$Nat_divisors_value(n, s)}
+
+have fn Nat_divisors as set:
+    forall n N_pos:
+        exist! s power_set(N_pos) st {$Nat_divisors_value(n, s)}
+
+prop Nat_properDivisors_value(n N_pos, s power_set(N_pos)):
+    forall d N_pos:
+        =>:
+            d $in s
+        <=>:
+            n % d = 0
+            d < n
+
+know:
+    forall n N_pos:
+        exist! s power_set(N_pos) st {$Nat_properDivisors_value(n, s)}
+
+have fn Nat_properDivisors as set:
+    forall n N_pos:
+        exist! s power_set(N_pos) st {$Nat_properDivisors_value(n, s)}
+
+have Nat_digits fn(base N_pos, n N) power_set(N)
+have Nat_ofDigits fn(base N_pos, digits power_set(N)) N
+have Nat_sqrt fn(n N) N
+have Nat_floor fn(x R: 0 <= x) N
+
+know:
+    forall p N_pos:
+        $Nat_Prime(p)
+        =>:
+            $prime(p)
+
+    forall p N_pos:
+        $prime(p)
+        =>:
+            $Nat_Prime(p)
+
+    forall a, b Z:
+        $Nat_Coprime(a, b)
+        =>:
+            $coprime(a, b)
+
+    forall a, b Z:
+        $coprime(a, b)
+        =>:
+            $Nat_Coprime(a, b)
+
+    forall a, b N:
+        a != 0 or b != 0
+        =>:
+            Nat_gcd(a, b) = gcd(a, b)
+
+    forall a, b N_pos:
+        Nat_lcm(a, b) % a = 0
+        Nat_lcm(a, b) % b = 0
+
+    forall a, b N_pos:
+        a % b = 0
+        b % a = 0
+        =>:
+            Nat_lcm(a, b) = a
+            Nat_lcm(a, b) = b
+
+    forall n N:
+        Nat_choose(n, 0) = 1
+        Nat_choose(n, n) = 1
+
+    forall n, k N:
+        k <= n
+        =>:
+            Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
+
+    forall n N:
+        Nat_sqrt(n)^2 <= n
+        n < (Nat_sqrt(n) + 1)^2
+
+    forall x R:
+        0 <= x
+        =>:
+            Nat_floor(x) <= x < Nat_floor(x) + 1

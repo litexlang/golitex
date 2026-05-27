@@ -1,0 +1,43 @@
+run_file mathlib_compat
+
+Real_sqrt(4) = 2
+Real_logb(2, 8) = 3
+Real_sin(0) = 0
+Real_cos(0) = 1
+Real_pi = pi
+
+Complex_I = (0, 1)
+have z &C = (3, 4)
+&C{z}.re^2 + &C{z}.im^2 = 3^2 + 4^2 = 25
+C_normSq(z) = 25
+C_abs(z) = C_norm(z) = 5
+
+Finset_card({1, 2, 3}) = 3
+
+$Finset_range_value(5, Finset_range(5))
+1 < 5
+1 $in Finset_range(5)
+
+$Finset_Icc_value(2, 5, Finset_Icc(2, 5))
+2 <= 3 <= 5
+3 $in Finset_Icc(2, 5)
+
+$ZMod_value(5, ZMod(5))
+1 < 5
+1 $in ZMod(5)
+
+ZMod_repr(6, 5) = 1
+ZMod_add(5, 3, 4) = 2
+ZMod_mul(5, 3, 4) = 2
+$ZMod_congruent(5, 6, 1)
+
+Nat_gcd(4, 6) = gcd(4, 6)
+
+$Nat_divisors_value(6, Nat_divisors(6))
+6 % 3 = 0
+3 $in Nat_divisors(6)
+
+Rat_den(3 / 2) != 0
+3 / 2 = Rat_num(3 / 2) / Rat_den(3 / 2)
+
+Int_floor(3 / 2) <= 3 / 2 < Int_floor(3 / 2) + 1
