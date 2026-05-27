@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 // Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
@@ -37,6 +37,7 @@ pub struct ModuleManager {
     pub display_entry_rc: Option<Rc<str>>,
     pub hide_file_paths_in_output: bool,
     pub display_source_labels: HashMap<String, DisplaySourceLabel>,
+    pub loaded_std_run_file_paths: HashSet<String>,
     pub imported_module_environments: HashMap<String, Box<ImportedModuleEnvironment>>,
 }
 
@@ -53,6 +54,7 @@ impl ModuleManager {
             display_entry_rc: None,
             hide_file_paths_in_output: false,
             display_source_labels: HashMap::new(),
+            loaded_std_run_file_paths: HashSet::new(),
             imported_module_environments: HashMap::new(),
         }
     }

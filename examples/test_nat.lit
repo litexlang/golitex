@@ -359,17 +359,50 @@ prove:
         =>:
             v_p(a * b, p) = v_p(a, p) + v_p(b, p)
 
-# Litex-style theorem names and Mathlib-style aliases both work.
-by thm natural_successor_equals_add_one(2)
+# These simple Mathlib Nat facts are intentionally examples, not std theorem
+# aliases. Litex can verify them directly by normal forms and builtin facts.
+# Former std theorem: natural_successor_equals_add_one / Nat_succ_eq_add_one.
+claim:
+    prove:
+        forall n N:
+            Nat_succ(n) = n + 1
+    Nat_succ(n) = n + 1
+
+# Former std theorem: natural_add_one_then_subtract_one_returns_self /
+# Nat_add_one_sub_one.
+claim:
+    prove:
+        forall n N:
+            (n + 1) - 1 = n
+    (n + 1) - 1 = n
+
+# Former std theorem: natural_zero_is_less_equal / Nat_zero_le.
+claim:
+    prove:
+        forall n N:
+            0 <= n
+    0 <= n
+
+# Former std theorem: natural_is_zero_or_positive / Nat_eq_zero_or_pos.
+claim:
+    prove:
+        forall n N:
+            n = 0 or 0 < n
+    n = 0 or 0 < n
+
+# Former std theorem: natural_successor_is_positive / Nat_succ_pos /
+# Nat_zero_lt_succ.
+claim:
+    prove:
+        forall n N:
+            0 < Nat_succ(n)
+    Nat_succ(n) = n + 1
+    0 <= n < n + 1 = Nat_succ(n)
+
 Nat_succ(2) = 2 + 1
 
-by thm Nat_zero_le(2)
 0 <= 2
 
-by thm natural_successor_is_positive(2)
-0 < Nat_succ(2)
-
-by thm Nat_zero_lt_succ(2)
 0 < Nat_succ(2)
 
 by thm Nat_succ_ne_zero(2)

@@ -291,14 +291,14 @@ prop decreasing(s power_set(R), f set):
 prop nondecreasing(s power_set(R), f set):
     $restrict_fn_in(f, fn(x s)R)
     forall x, y s:
-        x <= y
+        x < y
         =>:
             f(x) <= f(y)
 
 prop nonincreasing(s power_set(R), f set):
     $restrict_fn_in(f, fn(x s)R)
     forall x, y s:
-        x <= y
+        x < y
         =>:
             f(x) >= f(y)
 
