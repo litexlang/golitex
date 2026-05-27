@@ -82,12 +82,11 @@ know:
         =>:
             a % b = b
 
-prop archimedean_property(e R_pos):
-    exist n N_pos st {1/n < e}
-
-know:
-    forall e R_pos:
-        $archimedean_property(e)
+thm archimedean_property:
+    prove:
+        forall e R_pos:
+            exist n N_pos st {1/n < e}
+    know:
         exist n N_pos st {1/n < e}
 
 know:
@@ -197,37 +196,41 @@ know:
         =>:
             exist p N, q N_pos st {a = p / q}
 
-prop even_power_abs_bound(x, y R, k N_pos):
-    abs(x) <= abs(y)
+thm even_power_abs_bound:
+    prove:
+        forall x, y R, k N_pos:
+            k % 2 = 0
+            x^k <= y^k
+            =>:
+                abs(x) <= abs(y)
+    know:
+        abs(x) <= abs(y)
 
-prop even_power_bound_by_nonnegative_rhs(x, y R, k N_pos):
-    -y <= x
-    x <= y
+thm even_power_bound_by_nonnegative_rhs:
+    prove:
+        forall x, y R, k N_pos:
+            k % 2 = 0
+            x^k <= y^k
+            y >= 0
+            =>:
+                -y <= x
+                x <= y
+    know:
+        -y <= x
+        x <= y
 
-prop even_power_bound_by_nonpositive_rhs(x, y R, k N_pos):
-    y <= x
-    x <= -y
-
-know:
-    forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        =>:
-            $even_power_abs_bound(x, y, k)
-
-    forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        y >= 0
-        =>:
-            $even_power_bound_by_nonnegative_rhs(x, y, k)
-
-    forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        y <= 0
-        =>:
-            $even_power_bound_by_nonpositive_rhs(x, y, k)
+thm even_power_bound_by_nonpositive_rhs:
+    prove:
+        forall x, y R, k N_pos:
+            k % 2 = 0
+            x^k <= y^k
+            y <= 0
+            =>:
+                y <= x
+                x <= -y
+    know:
+        y <= x
+        x <= -y
 
 
 let pi R:
@@ -247,23 +250,25 @@ know:
         =>:
             a <= b
         
-prop pos_pow_strict_order_reflects(a, b, k R_pos):
-    a < b
+thm pos_pow_strict_order_reflects:
+    prove:
+        forall a, b, k R_pos:
+            a^k < b^k
+            k >= 1
+            =>:
+                a < b
+    know:
+        a < b
 
-prop pos_pow_order_reflects(a, b, k R_pos):
-    a <= b
-
-know forall a, b, k R_pos:
-    a^k < b^k
-    k >= 1
-    =>:
-        $pos_pow_strict_order_reflects(a, b, k)
-
-know forall a, b, k R_pos:
-    a^k <= b^k
-    k >= 1
-    =>:
-        $pos_pow_order_reflects(a, b, k)
+thm pos_pow_order_reflects:
+    prove:
+        forall a, b, k R_pos:
+            a^k <= b^k
+            k >= 1
+            =>:
+                a <= b
+    know:
+        a <= b
 
 know forall s set:
     s $in power_set(s)

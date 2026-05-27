@@ -1,10 +1,13 @@
-# Basic named theorem with no domain facts.
-thm thm_refl_r:
+# Basic named theorem with aliases and no domain facts.
+thm thm_refl_r, thm_refl_r_alias:
     prove:
         forall x R:
             x = x
 
 by thm thm_refl_r(0)
+0 = 0
+
+by thm thm_refl_r_alias(0)
 0 = 0
 
 # A theorem with one domain fact.
@@ -104,3 +107,51 @@ thm thm_nat_refl:
 
 by thm thm_nat_refl(1)
 1 = 1
+
+# Builtin named theorem: the intermediate parameter is explicit at call time,
+# while the released fact only mentions the endpoints.
+claim:
+    prove:
+        forall t R:
+            100 < t
+            =>:
+                0 < t
+    by thm a_lt_c(0, 100, t)
+
+# Background existence theorem: calling the theorem releases the existential fact.
+claim:
+    prove:
+        forall e R_pos:
+            exist n N_pos st {1/n < e}
+    by thm archimedean_property(e)
+
+# A theorem call can release multiple then-facts.
+claim:
+    prove:
+        forall z set, A set, B set:
+            $in(z, intersect(A, B))
+            =>:
+                $in(z, A)
+                $in(z, B)
+    by thm in_intersect_is_in_both(z, A, B)
+
+# Power-order reflection is now a theorem call instead of a wrapper prop.
+claim:
+    prove:
+        forall a, b R_pos:
+            a^6 <= b^6
+            =>:
+                a <= b
+    by thm pos_pow_order_reflects(a, b, 6)
+
+# The theorem releases both sides of the bound.
+claim:
+    prove:
+        forall x, y R, k N_pos:
+            k % 2 = 0
+            x^k <= y^k
+            y >= 0
+            =>:
+                -y <= x
+                x <= y
+    by thm even_power_bound_by_nonnegative_rhs(x, y, k)

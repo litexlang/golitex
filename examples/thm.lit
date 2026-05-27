@@ -1,10 +1,13 @@
-# Basic named theorem with no domain facts.
-thm thm_refl_r:
+# Basic named theorem with aliases and no domain facts.
+thm thm_refl_r, thm_refl_r_alias:
     prove:
         forall x R:
             x = x
 
 by thm thm_refl_r(0)
+0 = 0
+
+by thm thm_refl_r_alias(0)
 0 = 0
 
 # A theorem with one domain fact.

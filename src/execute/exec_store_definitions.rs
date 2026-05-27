@@ -69,12 +69,19 @@ impl Runtime {
     }
 
     pub fn store_def_thm(&mut self, def_thm_stmt: &DefThmStmt) -> Result<(), RuntimeError> {
-        let name = def_thm_stmt.name.clone();
         let env = self.top_level_env();
-        if env.defined_thm_stmts.contains_key(&name) {
-            return Err(name_already_used_error(&name, "thm"));
+        for (index, name) in def_thm_stmt.names.iter().enumerate() {
+            if def_thm_stmt.names.iter().skip(index + 1).any(|n| n == name) {
+                return Err(name_already_used_error(name, "thm"));
+            }
+            if env.defined_thm_stmts.contains_key(name) {
+                return Err(name_already_used_error(name, "thm"));
+            }
         }
-        env.defined_thm_stmts.insert(name, def_thm_stmt.clone());
+        for name in def_thm_stmt.names.iter() {
+            env.defined_thm_stmts
+                .insert(name.clone(), def_thm_stmt.clone());
+        }
         Ok(())
     }
 

@@ -56,7 +56,7 @@ pub struct ByThmStmt {
 
 #[derive(Clone)]
 pub struct DefThmStmt {
-    pub name: String,
+    pub names: Vec<String>,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
@@ -87,13 +87,13 @@ impl fmt::Display for ByThmStmt {
 
 impl DefThmStmt {
     pub fn new(
-        name: String,
+        names: Vec<String>,
         forall_fact: ForallFact,
         prove_process: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
         DefThmStmt {
-            name,
+            names,
             forall_fact,
             prove_process,
             line_file,
@@ -107,7 +107,7 @@ impl fmt::Display for DefThmStmt {
             f,
             "{} {}{}\n{}{}\n{}",
             THM,
-            self.name,
+            vec_to_string_with_sep(&self.names, ", ".to_string()),
             COLON,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
