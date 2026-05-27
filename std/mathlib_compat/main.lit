@@ -3,7 +3,6 @@
 # `run_file` is not currently idempotent. Use this as a single entry point in
 # a fresh verifier context instead of running the component std files twice.
 
-run_file Nat
 run_file Rat
 run_file complex
 run_file Real
