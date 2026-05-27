@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
+        let thm_names = stmt.names.join(", ");
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
@@ -41,7 +42,7 @@ impl Runtime {
                             Some(proof_stmt.clone()),
                             format!(
                                 "thm `{}` failed: proof step {}/{} is unknown: `{}`\n{}",
-                                stmt.name,
+                                thm_names,
                                 proof_index + 1,
                                 proof_len,
                                 proof_stmt,
@@ -68,7 +69,7 @@ impl Runtime {
                             Some(Stmt::Fact(then_fact.clone().to_fact())),
                             format!(
                                 "thm `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
-                                stmt.name,
+                                thm_names,
                                 then_index + 1,
                                 then_count,
                                 then_fact,

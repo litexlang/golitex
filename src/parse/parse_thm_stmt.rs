@@ -3,17 +3,26 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_def_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
-        let name = tb.advance()?;
-        is_valid_litex_name(&name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
+        let mut thm_names = Vec::new();
+        loop {
+            let name = tb.advance()?;
+            is_valid_litex_name(&name).map_err(|msg| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                ))
+            })?;
+            thm_names.push(name);
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+            } else {
+                break;
+            }
+        }
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "thm: expected `:` immediately after theorem name".to_string(),
+                    "thm: unexpected token after theorem name list".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -90,6 +99,6 @@ impl Runtime {
             },
         )?;
 
-        Ok(DefThmStmt::new(name, forall_fact, prove_process, tb.line_file.clone()).into())
+        Ok(DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone()).into())
     }
 }
