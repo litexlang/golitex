@@ -442,7 +442,7 @@ prove:
 
 ### `clear`
 
-**Meaning.** Clear only the **current** (top) environment and the **current** (top) parse-time name map: the top env is replaced by an empty one, and the top name map is emptied. The single builtin layer is left unchanged when it is the only layer. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
+**Meaning.** Clear only the **current user** environment and the **current** parse-time name map: the user env is replaced by an empty one, and the name map is emptied. Builtins and loaded standard-library modules are left unchanged. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
 
 **Syntax.** `clear`.
 
@@ -950,13 +950,14 @@ import "other.lit"
 
 ### `run_file`
 
-**Meaning.** Run another `.lit` file.
+**Meaning.** Run another `.lit` file. Unquoted standard-library modules such as `run_file Nat` must appear before user definitions and facts in the current file section; they remain available after `clear`. Quoted file paths run in the current user environment and are cleared by `clear`.
 
-**Syntax.** `run_file` `"path"`.
+**Syntax.** `run_file` `module` or `run_file` `"path"`.
 
 **Example.**
 
 ```text
+run_file Nat
 run_file "./runfile2.lit"
 
 $p(1, 2)

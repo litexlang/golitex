@@ -1,10 +1,9 @@
 # Natural-number and elementary number-theory background.
 #
 # This std module intentionally uses the Lean/Mathlib-facing module name `Nat`.
-# The theorem declarations put the Litex-style descriptive name first and the
-# Lean/Mathlib compatibility alias after it. Litex names cannot currently
-# contain `.`, so dotted Mathlib names are written with `_`; for example,
-# Mathlib `Nat.succ_eq_add_one` is represented as `Nat_succ_eq_add_one`.
+# Useful theorem declarations put the Litex-style descriptive name first and
+# the Lean/Mathlib compatibility alias after it. Litex names cannot currently
+# contain `.`, so dotted Mathlib names are written with `_`.
 #
 # Redundant generic arithmetic theorem aliases such as `add_comm` and
 # `zero_add` are not part of std. Litex's pattern/builtin proof style already
@@ -12,43 +11,8 @@
 
 # Lean writes natural-number successor as `Nat.succ n`; Litex exposes the same
 # idea as a callable function whose normal form is `n + 1`.
+# Nat_succ exists only as a Lean/Mathlib lowering target; ordinary Litex should use n + 1.
 have fn Nat_succ(n N) N = n + 1
-
-# Mathlib: Nat.succ_eq_add_one
-thm natural_successor_equals_add_one, Nat_succ_eq_add_one:
-    prove:
-        forall n N:
-            Nat_succ(n) = n + 1
-    Nat_succ(n) = n + 1
-
-# Mathlib: Nat.add_one_sub_one
-thm natural_add_one_then_subtract_one_returns_self, Nat_add_one_sub_one:
-    prove:
-        forall n N:
-            (n + 1) - 1 = n
-    (n + 1) - 1 = n
-
-# Mathlib: Nat.zero_le
-thm natural_zero_is_less_equal, Nat_zero_le:
-    prove:
-        forall n N:
-            0 <= n
-    0 <= n
-
-# Mathlib: Nat.eq_zero_or_pos
-thm natural_is_zero_or_positive, Nat_eq_zero_or_pos:
-    prove:
-        forall n N:
-            n = 0 or 0 < n
-    n = 0 or 0 < n
-
-# Mathlib: Nat.succ_pos / Nat.zero_lt_succ
-thm natural_successor_is_positive, Nat_succ_pos, Nat_zero_lt_succ:
-    prove:
-        forall n N:
-            0 < Nat_succ(n)
-    Nat_succ(n) = n + 1
-    0 <= n < n + 1 = Nat_succ(n)
 
 # Mathlib: Nat.succ_ne_zero
 thm natural_successor_is_not_zero, Nat_succ_ne_zero:
