@@ -3,6 +3,7 @@ mod verify_and_chain_fact;
 mod verify_atomic_fact;
 mod verify_atomic_fact_by_definition;
 mod verify_atomic_fact_with_known_forall;
+mod verify_atomic_fact_with_strategy;
 mod verify_builtin_rules;
 mod verify_by_syntax;
 mod verify_equality;

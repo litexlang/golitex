@@ -1373,6 +1373,406 @@ template SharedName<s set>:
     }
 
     #[test]
+    fn strategy_definition_by_and_stop_are_stored() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+by strategy use_target_strategy
+stop strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_definition_by_and_stop_are_stored");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition/use/stop should succeed:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert!(env
+            .defined_strategy_stmts
+            .contains_key("use_target_strategy"));
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn strategy_positive_and_negative_atomic_keys_do_not_collide() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_positive_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+strategy use_negative_strategy:
+    prove:
+        forall x R:
+            x != 1
+            =>:
+                not $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y != 1
+            =>:
+                not $target_strategy_prop(y)
+
+by strategy use_positive_strategy
+by strategy use_negative_strategy
+stop strategy use_negative_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "strategy_positive_and_negative_atomic_keys_do_not_collide",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "positive and negative strategy keys should both be stored:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_positive_strategy".to_string())
+        );
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), false)),
+            Some(&"use_negative_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), false)),
+            Some(&"use_negative_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            None
+        );
+    }
+
+    #[test]
+    fn by_strategy_verifies_matching_atomic_fact_and_stop_disables_it() {
+        let strategy_setup = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+"#;
+        let succeeds_source_code = format!(
+            "{}\nby strategy use_target_strategy\n$target_strategy_prop(1)\n",
+            strategy_setup
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_strategy_verifies_matching_atomic_fact");
+        let (stmt_results, runtime_error) =
+            run_source_code(succeeds_source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "enabled strategy should verify the matching atomic fact:\n{}",
+            run_output
+        );
+
+        let fails_source_code = format!(
+            "{}\nby strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
+            strategy_setup
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("stop_strategy_disables_matching_atomic_fact");
+        let (stmt_results, runtime_error) =
+            run_source_code(fails_source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "stopped strategy should not verify the matching atomic fact:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("Unknown"),
+            "stopped strategy failure should be reported as unknown:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn by_strategy_after_stop_in_same_env_removes_stop() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+by strategy use_target_strategy
+stop strategy use_target_strategy
+by strategy use_target_strategy
+$target_strategy_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "by_strategy_after_stop_in_same_env_removes_stop",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "same-env by after stop should re-enable the strategy:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            None
+        );
+    }
+
+    #[test]
+    fn child_env_by_strategy_overrides_parent_stop_without_removing_it() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+by strategy use_target_strategy
+stop strategy use_target_strategy
+claim:
+    prove:
+        $target_strategy_prop(1)
+    by strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "child_env_by_strategy_overrides_parent_stop_without_removing_it",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "child-env by should override the parent stop while inside the child env:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn strategy_rejects_non_single_atomic_then_fact() {
+        let cases = [
+            (
+                "multiple then facts",
+                r#"
+prop p(x R):
+    x = 1
+
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $p(x)
+                x = 1
+"#,
+                "strategy: forall then-clause must contain exactly one fact",
+            ),
+            (
+                "non atomic then fact",
+                r#"
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1 and x = 1
+"#,
+                "strategy: forall then-clause fact must be atomic",
+            ),
+        ];
+
+        for (label, source_code, expected_message) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                format!("strategy_rejects_{}", label).as_str(),
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "strategy {} case should fail, but succeeded:\n{}",
+                label, run_output
+            );
+            assert!(
+                run_output.contains(expected_message),
+                "strategy {} case should report `{}`:\n{}",
+                label,
+                expected_message,
+                run_output
+            );
+        }
+    }
+
+    #[test]
+    fn strategy_rejects_non_atomic_dom_fact() {
+        let source_code = r#"
+prop p(x R):
+    x = 1
+
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1 and x = 1
+            =>:
+                $p(x)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_rejects_non_atomic_dom_fact");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "strategy non-atomic dom fact should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("strategy: forall dom-clause facts must be atomic"),
+            "strategy non-atomic dom fact should report atomic dom requirement:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn strategy_rejects_equal_then_fact() {
+        let source_code = r#"
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = x
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_rejects_equal_then_fact");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "strategy equality then fact should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("strategy: forall then-clause fact must not be an equality fact"),
+            "strategy equality then fact should report equality restriction:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn have_fn_as_algo_rejects_non_atomic_case_condition() {
         let source_code = "\
 have fn as algo bad_algo_case(x, y R) R by cases:

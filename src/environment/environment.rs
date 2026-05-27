@@ -12,6 +12,7 @@ pub struct Environment {
     pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+    pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -52,6 +53,9 @@ pub struct Environment {
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
+
+    pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
+    pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
 }
 
 #[derive(Clone)]
@@ -121,6 +125,7 @@ impl Environment {
             defined_structs: structs,
             defined_templates: templates,
             defined_thm_stmts,
+            defined_strategy_stmts: HashMap::new(),
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -144,6 +149,8 @@ impl Environment {
             known_antisymmetric_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
+            used_strategy_stmts: HashMap::new(),
+            stopped_strategy_stmts: HashMap::new(),
         }
     }
 }
