@@ -12,10 +12,10 @@ Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Ma
 
 ### Named theorem calls with `thm` (2026-05)
 
-`thm name:` records a verified `forall` theorem under an explicit name. Calling `by thm name(args...)` checks the argument types and domain facts, then stores the instantiated then-facts. Defining a theorem does not add it to ordinary automatic forall-pattern matching; use `by thm` when you want the named theorem.
+`thm name:` records a verified `forall` theorem under an explicit name. `thm name1, name2:` records the same theorem under multiple names. Calling `by thm name(args...)` checks the argument types and domain facts, then stores the instantiated then-facts. Defining a theorem does not add it to ordinary automatic forall-pattern matching; use `by thm` when you want the named theorem.
 
 ```litex
-thm one_succ:
+thm one_succ, succ_one:
     prove:
         forall x R:
             x = 1
@@ -24,6 +24,9 @@ thm one_succ:
     x + 1 = 1 + 1 = 2
 
 by thm one_succ(1)
+1 + 1 = 2
+
+by thm succ_one(1)
 1 + 1 = 2
 ```
 
