@@ -1,4 +1,4 @@
-run_file nat
+run_file Nat
 
 # Basic predicate examples.
 $even(4)
@@ -358,3 +358,37 @@ prove:
         $prime(p)
         =>:
             v_p(a * b, p) = v_p(a, p) + v_p(b, p)
+
+# Litex-style theorem names and Mathlib-style aliases both work.
+by thm natural_successor_equals_add_one(2)
+Nat_succ(2) = 2 + 1
+
+by thm Nat_zero_le(2)
+0 <= 2
+
+by thm natural_successor_is_positive(2)
+0 < Nat_succ(2)
+
+by thm Nat_zero_lt_succ(2)
+0 < Nat_succ(2)
+
+by thm Nat_succ_ne_zero(2)
+Nat_succ(2) != 0
+
+1 != 0
+by thm natural_not_zero_is_positive(1)
+0 < 1
+
+by thm prime_dividing_product_divides_a_factor(2, 4, 3)
+4 % 2 = 0 or 3 % 2 = 0
+
+by thm Nat_coprime_one_right(4)
+$coprime(4, 1)
+
+by thm Nat_one_coprime(4)
+$coprime(1, 4)
+
+4 != 0 or 6 != 0
+6 != 0 or 4 != 0
+by thm integer_gcd_commutes_when_defined(4, 6)
+gcd(4, 6) = gcd(6, 4)

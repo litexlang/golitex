@@ -19,6 +19,8 @@ impl Runtime {
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
+            STRATEGY => self.parse_def_strategy_stmt(tb),
+            STOP => self.parse_stop_strategy_stmt(tb),
             PROVE => self.parse_prove_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),

@@ -1,10 +1,23 @@
-run_file trigonometry
+"""
+abstract_prop XXX(a, b)
+abstract_prop YYY(a, b)
 
-(2*pi/3 - pi/2) / pi = 1/6
+strategy some_strategy, another_name, ...:
+    prove:
+        forall a, b R:
+            $XXX(a, b)
+            =>:
+                $YYY(a, b)
 
-not 1/6 $in Z
+    ...
 
-not (2*pi/3 - pi/2) / pi $in Z
+by strategy some_strategy
+stop strategy some_strategy
 
-cos(2*pi/3) != 0
+1. 定义新的stmt：DefStrategyStmt, ByStrategyStmt, StopStrategyStmt.
 
+2. defStrategyStmt 的parse 是类似thm 的。它们的rust struct结构甚至也是一样的。但是它有个重要的点事，这里的forall里的then必须是只有一个fact，而且这个fact必须只能是atomic fact。 他的执行方式也是和 def thm差不多，就是保存到   pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>, 里面
+
+3. by strategy 和 stop strategy 就是单纯的parse出名字，然后放入ByStrategyStmt 和 StopStrategyStmt 中。它们的执行逻辑很容易，就是往 pub used_strategy_stmts: HashMap<PropName, StrategyName>, 和 pub stopped_strategy_stmts: HashMap<PropName, StrategyName>, 里添加数据。
+
+"""

@@ -1,0 +1,73 @@
+# Lean/Mathlib-facing real-function compatibility layer.
+#
+# Litex names cannot contain `.`, so Mathlib names such as `Real.sqrt` and
+# `Real.logb` are represented as `Real_sqrt` and `Real_logb`. This file is a
+# focused MiniF2F surface, not a complete port of Mathlib's real analysis API.
+
+run_file trigonometry
+
+# Mathlib `Real.sqrt` is total, but Litex's builtin `sqrt` is currently
+# well-defined on nonnegative inputs. The compatibility alias therefore carries
+# the verifier-visible domain restriction.
+have fn Real_sqrt(x R: 0 <= x) R = sqrt(x)
+
+have Real_pi R = pi
+have fn Real_sin(x R) R = sin(x)
+have fn Real_cos(x R) R = cos(x)
+have fn Real_tan(x R: cos(x) != 0) R = tan(x)
+
+# Natural logarithm is kept abstract for now. The verifier has a builtin
+# two-argument logarithm `log(base, x)`, which gives a direct alias for
+# Mathlib's `Real.logb`.
+have Real_log fn(x R_pos) R
+have fn Real_logb(a, x R_pos: a != 1) R = log(a, x)
+
+know:
+    forall x R:
+        0 <= x
+        =>:
+            Real_sqrt(x) = sqrt(x)
+            0 <= Real_sqrt(x)
+            Real_sqrt(x)^2 = x
+
+    forall x R:
+        Real_sin(x) = sin(x)
+        Real_cos(x) = cos(x)
+
+    forall x R:
+        cos(x) != 0
+        =>:
+            Real_tan(x) = tan(x)
+
+    Real_log(1) = 0
+
+    forall x, y R_pos:
+        x * y $in R_pos
+        x / y $in R_pos
+        =>:
+            Real_log(x * y) = Real_log(x) + Real_log(y)
+            Real_log(x / y) = Real_log(x) - Real_log(y)
+
+    forall x R_pos, b R:
+        x^b $in R_pos
+        =>:
+            Real_log(x^b) = b * Real_log(x)
+
+    forall a, x R_pos:
+        a != 1
+        =>:
+            Real_logb(a, x) = log(a, x)
+
+    forall a R_pos, b R:
+        a != 1
+        a^b $in R_pos
+        =>:
+            Real_logb(a, a^b) = b
+
+    forall a, x, y R_pos:
+        a != 1
+        x * y $in R_pos
+        x / y $in R_pos
+        =>:
+            Real_logb(a, x * y) = Real_logb(a, x) + Real_logb(a, y)
+            Real_logb(a, x / y) = Real_logb(a, x) - Real_logb(a, y)

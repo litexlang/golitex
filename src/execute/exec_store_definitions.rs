@@ -85,6 +85,31 @@ impl Runtime {
         Ok(())
     }
 
+    pub fn store_def_strategy(
+        &mut self,
+        def_strategy_stmt: &DefStrategyStmt,
+    ) -> Result<(), RuntimeError> {
+        let env = self.top_level_env();
+        for (index, name) in def_strategy_stmt.names.iter().enumerate() {
+            if def_strategy_stmt
+                .names
+                .iter()
+                .skip(index + 1)
+                .any(|n| n == name)
+            {
+                return Err(name_already_used_error(name, "strategy"));
+            }
+            if env.defined_strategy_stmts.contains_key(name) {
+                return Err(name_already_used_error(name, "strategy"));
+            }
+        }
+        for name in def_strategy_stmt.names.iter() {
+            env.defined_strategy_stmts
+                .insert(name.clone(), def_strategy_stmt.clone());
+        }
+        Ok(())
+    }
+
     pub fn store_free_param_or_identifier_name(
         &mut self,
         name: &str,

@@ -195,6 +195,24 @@ impl DefThmStmt {
     }
 }
 
+impl ByStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByStrategyStmt".to_string()
+    }
+}
+
+impl StopStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "StopStrategyStmt".to_string()
+    }
+}
+
+impl DefStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefStrategyStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()

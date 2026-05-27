@@ -1,0 +1,54 @@
+# Lean/Mathlib-facing rational metadata used by a small MiniF2F slice.
+#
+# Litex already has the rational set `Q`. This file adds the namespace-shaped
+# numerator/denominator surface that appears in Mathlib proofs as `Rat.num`,
+# `Rat.den`, `Rat.num_div_den`, and `Rat.den_nz`.
+
+have Rat_num fn(q Q) Z
+have Rat_den fn(q Q) N_pos
+
+prop Rat_reduced(q Q):
+    forall d N_pos:
+        Rat_num(q) % d = 0
+        Rat_den(q) % d = 0
+        =>:
+            d = 1
+
+know:
+    forall q Q:
+        Rat_den(q) != 0
+        q = Rat_num(q) / Rat_den(q)
+        $Rat_reduced(q)
+
+    forall q1, q2 Q:
+        Rat_num(q1) = Rat_num(q2)
+        Rat_den(q1) = Rat_den(q2)
+        =>:
+            q1 = q2
+
+# Mathlib: Rat.den_nz
+thm rational_denominator_nonzero, Rat_den_nz:
+    prove:
+        forall q Q:
+            Rat_den(q) != 0
+    Rat_den(q) != 0
+
+# Mathlib: Rat.num_div_den
+thm rational_equals_numerator_divided_by_denominator, Rat_num_div_den:
+    prove:
+        forall q Q:
+            Rat_den(q) != 0
+            =>:
+                q = Rat_num(q) / Rat_den(q)
+    Rat_den(q) != 0
+    q = Rat_num(q) / Rat_den(q)
+
+# Mathlib: Rat.ext-style reasoning by reduced numerator and denominator.
+thm rational_extensionality_by_num_den, Rat_ext:
+    prove:
+        forall q1, q2 Q:
+            Rat_num(q1) = Rat_num(q2)
+            Rat_den(q1) = Rat_den(q2)
+            =>:
+                q1 = q2
+    q1 = q2

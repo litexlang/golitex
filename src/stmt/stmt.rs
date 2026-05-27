@@ -43,8 +43,97 @@ pub enum Stmt {
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByThmStmt(ByThmStmt),
     DefThmStmt(DefThmStmt),
+    ByStrategyStmt(ByStrategyStmt),
+    StopStrategyStmt(StopStrategyStmt),
+    DefStrategyStmt(DefStrategyStmt),
     DefStructStmt(DefStructStmt),
     EvalByStmt(EvalByStmt),
+}
+
+#[derive(Clone)]
+pub struct ByStrategyStmt {
+    pub name: String,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct StopStrategyStmt {
+    pub name: String,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct DefStrategyStmt {
+    pub names: Vec<String>,
+    pub forall_fact: ForallFact,
+    pub prove_process: Vec<Stmt>,
+    pub line_file: LineFile,
+}
+
+impl ByStrategyStmt {
+    pub fn new(name: String, line_file: LineFile) -> Self {
+        ByStrategyStmt { name, line_file }
+    }
+}
+
+impl fmt::Display for ByStrategyStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", BY, STRATEGY, self.name)
+    }
+}
+
+impl StopStrategyStmt {
+    pub fn new(name: String, line_file: LineFile) -> Self {
+        StopStrategyStmt { name, line_file }
+    }
+}
+
+impl fmt::Display for StopStrategyStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", STOP, STRATEGY, self.name)
+    }
+}
+
+impl DefStrategyStmt {
+    pub fn new(
+        names: Vec<String>,
+        forall_fact: ForallFact,
+        prove_process: Vec<Stmt>,
+        line_file: LineFile,
+    ) -> Self {
+        DefStrategyStmt {
+            names,
+            forall_fact,
+            prove_process,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for DefStrategyStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}\n{}{}\n{}",
+            STRATEGY,
+            vec_to_string_with_sep(&self.names, ", ".to_string()),
+            COLON,
+            add_four_spaces_at_beginning(PROVE.to_string(), 1),
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &self.forall_fact.to_string(),
+                2
+            )
+        )?;
+        if !self.prove_process.is_empty() {
+            write!(
+                f,
+                "\n{}",
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.prove_process, 1)
+            )?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone)]
@@ -305,6 +394,9 @@ impl fmt::Display for Stmt {
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByThmStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
+            Stmt::ByStrategyStmt(x) => write!(f, "{}", x),
+            Stmt::StopStrategyStmt(x) => write!(f, "{}", x),
+            Stmt::DefStrategyStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
@@ -354,6 +446,9 @@ impl Stmt {
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByStrategyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::StopStrategyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -401,6 +496,9 @@ impl Stmt {
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByStrategyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::StopStrategyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -649,6 +747,24 @@ impl From<ByThmStmt> for Stmt {
 impl From<DefThmStmt> for Stmt {
     fn from(v: DefThmStmt) -> Self {
         Stmt::DefThmStmt(v)
+    }
+}
+
+impl From<ByStrategyStmt> for Stmt {
+    fn from(v: ByStrategyStmt) -> Self {
+        Stmt::ByStrategyStmt(v)
+    }
+}
+
+impl From<StopStrategyStmt> for Stmt {
+    fn from(v: StopStrategyStmt) -> Self {
+        Stmt::StopStrategyStmt(v)
+    }
+}
+
+impl From<DefStrategyStmt> for Stmt {
+    fn from(v: DefStrategyStmt) -> Self {
+        Stmt::DefStrategyStmt(v)
     }
 }
 
