@@ -749,6 +749,78 @@ know forall x R:
 $p(2)
 ```
 
+### Known `forall` Matching Inside Anonymous Functions
+
+This example is a sharper version of known-`forall` reuse. The known fact says
+that a predicate `p` is closed under pointwise addition of real-valued
+functions. Litex first proves the inner sum function, then matches the final
+anonymous-function body against the same known fact again.
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    &#36;p(f)
+    &#36;p(g)
+    =&gt;:
+        &#36;p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            &#36;p(a)
+            &#36;p(b)
+            &#36;p(c)
+            =&gt;:
+                &#36;p('R(x){a(x) + (b(x) + c(x))})
+    &#36;p('R(x){b(x) + c(x)})</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+example (p : (ℝ → ℝ) → Prop)
+    (h : ∀ f g : ℝ → ℝ, p f → p g → p (fun x =&gt; f x + g x))
+    (a b c : ℝ → ℝ) (pa : p a) (pb : p b) (pc : p c) :
+    p (fun x =&gt; a x + (b x + c x)) := by
+  have hbc : p (fun x =&gt; b x + c x) := h b c pb pc
+  exact h a (fun x =&gt; b x + c x) pa hbc</code></pre>
+    </td>
+  </tr>
+</table>
+
+**What differs.** In the final Litex goal, the matcher treats
+`a(x) + (b(x) + c(x))` as an instance of `f(x) + g(x)`. Since `g` is applied to
+the full anonymous-function parameter list `x`, Litex may infer
+`g := 'R(x){b(x) + c(x)}`. Lean can express the same proof, but the user
+normally supplies the intermediate function and applies the universal
+hypothesis explicitly.
+
+```litex
+abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    $p(f)
+    $p(g)
+    =>:
+        $p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})
+```
+
 ---
 
 ## Builtin Mathematical Background

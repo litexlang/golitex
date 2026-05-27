@@ -31,11 +31,15 @@ ZMod_add(5, 3, 4) = 2
 ZMod_mul(5, 3, 4) = 2
 $ZMod_congruent(5, 6, 1)
 
-Nat_gcd(4, 6) = gcd(4, 6)
+by thm Nat_gcd_comm(4, 6)
+Nat_gcd(4, 6) = Nat_gcd(6, 4)
 
-$Nat_divisors_value(6, Nat_divisors(6))
-6 % 3 = 0
-3 $in Nat_divisors(6)
+witness exist k N st {6 = 3 * k} from 2:
+    6 = 3 * 2
+$Nat_Dvd(3, 6)
+
+by thm Int_gcd_def(4, 6)
+Int_gcd(4, 6) = Nat_gcd(Int_natAbs(4), Int_natAbs(6))
 
 Rat_den(3 / 2) != 0
 3 / 2 = Rat_num(3 / 2) / Rat_den(3 / 2)
