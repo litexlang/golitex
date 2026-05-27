@@ -7,6 +7,9 @@ pub struct Runtime {
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
     pub detail_output: bool,
+    pub std_env_index: Option<usize>,
+    pub std_run_file_prelude_open: bool,
+    pub running_std_file: bool,
 }
 
 impl Runtime {
@@ -19,6 +22,9 @@ impl Runtime {
             environment_stack: vec![new_environment],
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: false,
+            std_env_index: None,
+            std_run_file_prelude_open: true,
+            running_std_file: false,
         }
     }
 
@@ -36,6 +42,7 @@ impl Runtime {
         if !ok {
             panic!("builtin code execution failed: {}", msg);
         }
+        runtime.push_std_env_after_builtin();
         runtime
     }
 }
@@ -107,6 +114,7 @@ impl Runtime {
         self.module_manager.display_entry_rc = Some(path_rc);
         self.module_manager.entry_path = path.to_string();
         self.push_env();
+        self.std_run_file_prelude_open = true;
     }
 
     /// After `new_file_path_new_env_new_name_scope`, point the current user entry slot at another
@@ -142,6 +150,17 @@ impl Runtime {
         self.environment_stack.push(new_env);
     }
 
+    fn push_std_env_after_builtin(&mut self) {
+        debug_assert_eq!(
+            self.environment_stack.len(),
+            1,
+            "std env must be inserted immediately after builtin"
+        );
+        self.push_env();
+        self.std_env_index = Some(1);
+        self.std_run_file_prelude_open = true;
+    }
+
     fn pop_env(&mut self) {
         let last_env = self.environment_stack.last();
 
@@ -156,14 +175,49 @@ impl Runtime {
     }
 
     /// Replace the top environment with an empty one and clear parse-time free-param scopes.
-    /// If there is only one environment layer (builtin), does nothing so builtins stay intact.
+    /// Builtin and persistent std layers are left unchanged.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
-        if self.environment_stack.len() > 1 {
+        if self.has_user_env() {
             if let Some(top) = self.environment_stack.last_mut() {
                 *top = Box::new(Environment::new_empty_env());
             }
         }
         self.parsing_free_param_collection.clear();
+        self.std_run_file_prelude_open = true;
+    }
+
+    pub fn has_user_env(&self) -> bool {
+        self.environment_stack.len() > self.persistent_env_count()
+    }
+
+    fn persistent_env_count(&self) -> usize {
+        if self.std_env_index.is_some() {
+            2
+        } else {
+            1
+        }
+    }
+
+    pub fn close_std_run_file_prelude(&mut self) {
+        self.std_run_file_prelude_open = false;
+    }
+
+    pub fn run_with_std_env_as_top<T, F>(&mut self, f: F) -> Result<T, RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
+    {
+        let Some(std_env_index) = self.std_env_index else {
+            return f(self);
+        };
+        let saved_std_run_file_prelude_open = self.std_run_file_prelude_open;
+        let saved_running_std_file = self.running_std_file;
+        self.running_std_file = true;
+        let detached_user_envs = self.environment_stack.split_off(std_env_index + 1);
+        let result = f(self);
+        self.environment_stack.extend(detached_user_envs);
+        self.std_run_file_prelude_open = saved_std_run_file_prelude_open;
+        self.running_std_file = saved_running_std_file;
+        result
     }
 
     /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。

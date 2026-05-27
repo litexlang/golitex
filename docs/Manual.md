@@ -1328,9 +1328,12 @@ prove:
 
 ### run file
 
-**`run_file "path.lit"`** runs a file as a separate episode. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects.
+**`run_file Nat`** or **`run_file trigonometry`** loads a standard-library module at the top of the current file section, before user definitions and facts. Loaded standard-library modules stay available after `clear`.
+
+**`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
 ```text
+run_file Nat
 run_file "local_path_to_file.lit"
 ```
 
@@ -1349,7 +1352,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current top environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block).
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block). Builtin facts and loaded standard-library modules remain available.
 
 ```litex
 let a R:

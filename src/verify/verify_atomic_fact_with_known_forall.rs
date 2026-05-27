@@ -66,7 +66,7 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
-                let (atomic_fact_args_in_known_forall, current_known_forall) = {
+                let (atomic_fact_in_known_forall, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
                     let Some(known_forall_facts_in_env) =
                         env.known_atomic_facts_in_forall_facts.get(&lookup_key)
@@ -77,10 +77,10 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    (current_known_forall.0.args(), current_known_forall.clone())
+                    (current_known_forall.0.clone(), current_known_forall.clone())
                 };
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
-                    &atomic_fact_args_in_known_forall,
+                    &atomic_fact_in_known_forall,
                     given_fact,
                 )?;
                 if let Some(arg_map) = match_result {
@@ -237,15 +237,63 @@ impl Runtime {
 
     fn match_atomic_fact_args_against_known_forall_ordered_args(
         &mut self,
-        atomic_fact_args_in_known_forall: &Vec<Obj>,
+        atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if let Some(match_result) =
+            self.match_in_fact_standard_set_target(atomic_fact_in_known_forall, given_fact)?
+        {
+            return Ok(match_result);
+        }
+
+        let atomic_fact_args_in_known_forall = atomic_fact_in_known_forall.args();
         let given_args = given_fact.args();
         let forward = self.match_args_in_fact_in_known_forall_fact_with_given_args(
-            atomic_fact_args_in_known_forall,
+            &atomic_fact_args_in_known_forall,
             &given_args,
         )?;
         return Ok(forward);
+    }
+
+    fn match_in_fact_standard_set_target(
+        &mut self,
+        atomic_fact_in_known_forall: &AtomicFact,
+        given_fact: &AtomicFact,
+    ) -> Result<Option<Option<HashMap<String, Obj>>>, RuntimeError> {
+        let (AtomicFact::InFact(known_in), AtomicFact::InFact(given_in)) =
+            (atomic_fact_in_known_forall, given_fact)
+        else {
+            return Ok(None);
+        };
+        let (Obj::StandardSet(known_set), Obj::StandardSet(given_set)) =
+            (&known_in.set, &given_in.set)
+        else {
+            return Ok(None);
+        };
+
+        let Some(element_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            &known_in.element,
+            &given_in.element,
+        )?
+        else {
+            return Ok(Some(None));
+        };
+
+        // Narrow known membership implies broader target membership directly.
+        // Broad known membership may match a narrow target only when the narrow
+        // membership is already a known atomic fact, not merely builtin-provable.
+        if Self::standard_set_is_subset_eq(known_set, given_set) {
+            return Ok(Some(Some(element_map)));
+        }
+        if Self::standard_set_is_subset_eq(given_set, known_set) {
+            let known_only_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(given_fact)?;
+            if known_only_result.is_true() {
+                return Ok(Some(Some(element_map)));
+            }
+        }
+
+        Ok(Some(None))
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
@@ -1350,6 +1398,71 @@ impl Runtime {
             left.set_obj(),
             given.set_obj(),
         )
+    }
+
+    fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
+        match (subset, superset) {
+            (StandardSet::NPos, StandardSet::NPos)
+            | (StandardSet::NPos, StandardSet::N)
+            | (StandardSet::NPos, StandardSet::Z)
+            | (StandardSet::NPos, StandardSet::Q)
+            | (StandardSet::NPos, StandardSet::R)
+            | (StandardSet::NPos, StandardSet::QPos)
+            | (StandardSet::NPos, StandardSet::RPos)
+            | (StandardSet::NPos, StandardSet::ZNz)
+            | (StandardSet::NPos, StandardSet::QNz)
+            | (StandardSet::NPos, StandardSet::RNz)
+            | (StandardSet::N, StandardSet::N)
+            | (StandardSet::N, StandardSet::Z)
+            | (StandardSet::N, StandardSet::Q)
+            | (StandardSet::N, StandardSet::R)
+            | (StandardSet::ZNeg, StandardSet::ZNeg)
+            | (StandardSet::ZNeg, StandardSet::Z)
+            | (StandardSet::ZNeg, StandardSet::Q)
+            | (StandardSet::ZNeg, StandardSet::R)
+            | (StandardSet::ZNeg, StandardSet::QNeg)
+            | (StandardSet::ZNeg, StandardSet::RNeg)
+            | (StandardSet::ZNeg, StandardSet::ZNz)
+            | (StandardSet::ZNeg, StandardSet::QNz)
+            | (StandardSet::ZNeg, StandardSet::RNz)
+            | (StandardSet::ZNz, StandardSet::ZNz)
+            | (StandardSet::ZNz, StandardSet::Z)
+            | (StandardSet::ZNz, StandardSet::Q)
+            | (StandardSet::ZNz, StandardSet::R)
+            | (StandardSet::ZNz, StandardSet::QNz)
+            | (StandardSet::ZNz, StandardSet::RNz)
+            | (StandardSet::Z, StandardSet::Z)
+            | (StandardSet::Z, StandardSet::Q)
+            | (StandardSet::Z, StandardSet::R)
+            | (StandardSet::QPos, StandardSet::QPos)
+            | (StandardSet::QPos, StandardSet::Q)
+            | (StandardSet::QPos, StandardSet::R)
+            | (StandardSet::QPos, StandardSet::RPos)
+            | (StandardSet::QPos, StandardSet::QNz)
+            | (StandardSet::QPos, StandardSet::RNz)
+            | (StandardSet::QNeg, StandardSet::QNeg)
+            | (StandardSet::QNeg, StandardSet::Q)
+            | (StandardSet::QNeg, StandardSet::R)
+            | (StandardSet::QNeg, StandardSet::RNeg)
+            | (StandardSet::QNeg, StandardSet::QNz)
+            | (StandardSet::QNeg, StandardSet::RNz)
+            | (StandardSet::QNz, StandardSet::QNz)
+            | (StandardSet::QNz, StandardSet::Q)
+            | (StandardSet::QNz, StandardSet::R)
+            | (StandardSet::QNz, StandardSet::RNz)
+            | (StandardSet::Q, StandardSet::Q)
+            | (StandardSet::Q, StandardSet::R)
+            | (StandardSet::RPos, StandardSet::RPos)
+            | (StandardSet::RPos, StandardSet::R)
+            | (StandardSet::RPos, StandardSet::RNz)
+            | (StandardSet::RNeg, StandardSet::RNeg)
+            | (StandardSet::RNeg, StandardSet::R)
+            | (StandardSet::RNeg, StandardSet::RNz)
+            | (StandardSet::RNz, StandardSet::RNz)
+            | (StandardSet::RNz, StandardSet::R)
+            | (StandardSet::R, StandardSet::R) => true,
+            _ => false,
+        }
     }
 
     fn match_arg_when_left_is_n_pos_obj(

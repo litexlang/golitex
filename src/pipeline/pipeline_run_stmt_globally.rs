@@ -19,15 +19,24 @@ pub fn run_stmt_at_global_env(
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
         Stmt::RunFileStmt(run_file_stmt) => {
+            if !runtime.running_std_file {
+                runtime.close_std_run_file_prelude();
+            }
             return run_file(run_file_stmt, runtime);
         }
         Stmt::RunFileInStd(run_file_in_std) => {
             return run_file_in_std_folder(run_file_in_std, runtime);
         }
         Stmt::ImportStmt(import_stmt) => {
+            if !runtime.running_std_file {
+                runtime.close_std_run_file_prelude();
+            }
             return run_import_stmt(import_stmt, runtime);
         }
         _ => {
+            if !runtime.running_std_file {
+                runtime.close_std_run_file_prelude();
+            }
             return runtime.exec_stmt(stmt);
         }
     }
@@ -51,14 +60,12 @@ fn run_file_in_std_folder(
     run_file_in_std: &RunFileInStd,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
+    if !runtime.running_std_file && !runtime.std_run_file_prelude_open {
+        return Err(std_run_file_after_user_content_error(run_file_in_std));
+    }
     let path = resolve_run_file_in_std_path(run_file_in_std)?;
     let source = format!("std/{}", run_file_in_std.file_path);
-    run_file_at_resolved_path(
-        run_file_in_std.clone().into(),
-        path,
-        Some(("std", source.as_str())),
-        runtime,
-    )
+    run_std_file_at_resolved_path(run_file_in_std.clone().into(), path, source, runtime)
 }
 
 fn run_file_at_resolved_path(
@@ -97,6 +104,74 @@ fn run_file_at_resolved_path(
     };
 
     return Ok((NonFactualStmtSuccess::new(stmt, InferResult::new(), result.0)).into());
+}
+
+fn run_std_file_at_resolved_path(
+    stmt: Stmt,
+    path: String,
+    source: String,
+    runtime: &mut Runtime,
+) -> Result<StmtResult, RuntimeError> {
+    if runtime
+        .module_manager
+        .loaded_std_run_file_paths
+        .contains(&path)
+    {
+        return Ok(NonFactualStmtSuccess::new_with_stmt(stmt).into());
+    }
+
+    let content = fs::read_to_string(path.as_str()).map_err(|_| {
+        RuntimeError::ExecStmtError({
+            let lf = stmt.line_file();
+            RuntimeErrorStruct::new(
+                Some(stmt.clone()),
+                format!("Failed to read file: {}", path.as_str()),
+                lf,
+                None,
+                vec![],
+            )
+        })
+    })?;
+
+    let current_file_index = runtime.module_manager.current_file_index;
+    runtime
+        .module_manager
+        .register_display_source_label(path.as_str(), "std", source.as_str());
+    runtime.new_file_and_update_runtime_with_file_content(path.as_str());
+
+    let result = runtime.run_with_std_env_as_top(|rt| {
+        let (stmt_results, runtime_error) = run_source_code(content.as_str(), rt);
+        if let Some(error) = runtime_error {
+            return Err(error);
+        }
+        Ok(stmt_results)
+    });
+
+    runtime.change_file_index_to(current_file_index);
+
+    match result {
+        Ok(stmt_results) => {
+            runtime
+                .module_manager
+                .loaded_std_run_file_paths
+                .insert(path);
+            Ok((NonFactualStmtSuccess::new(stmt, InferResult::new(), stmt_results)).into())
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn std_run_file_after_user_content_error(run_file_in_std: &RunFileInStd) -> RuntimeError {
+    let st: Stmt = run_file_in_std.clone().into();
+    let lf = st.line_file();
+    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+        Some(st),
+        "std run_file statements must appear before user definitions and facts in the current file section; put them at the top, or run clear before loading std"
+            .to_string(),
+        lf,
+        None,
+        vec![],
+    ))
 }
 
 fn resolve_run_file_in_std_path(run_file_in_std: &RunFileInStd) -> Result<String, RuntimeError> {

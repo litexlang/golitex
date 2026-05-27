@@ -371,6 +371,65 @@ a >= b
     }
 
     #[test]
+    fn known_forall_membership_uses_standard_set_subset_direction() {
+        let source_code = r#"
+abstract_prop p(x)
+have x set
+know:
+    forall u set:
+        $p(u)
+        =>:
+            u $in Z
+know $p(x)
+x $in Q
+x $in R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_membership_uses_standard_set_subset_direction",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known forall with `u $in Z` should prove broader memberships:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_membership_narrowing_requires_known_fact() {
+        let source_code = r#"
+abstract_prop p(x)
+have x set
+know:
+    forall u set:
+        $p(u)
+        =>:
+        u $in R
+know $p(x)
+x $in Z
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_membership_narrowing_requires_known_fact",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "`u $in R` should not prove narrower `x $in Z` without a known `x $in Z` fact:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn eval_recursive_algo_memoizes_overlapping_calls() {
         run_with_large_stack(
             "eval_recursive_algo_memoizes_overlapping_calls_large_stack",
@@ -1823,6 +1882,113 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         assert!(run_output.contains("\"stmt\": \"run_file trigonometry\""));
         assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
         assert!(run_output.contains("\"stmt\": \"cos(0) = 1\""));
+    }
+
+    #[test]
+    fn clear_preserves_loaded_std_environment() {
+        let source_code = "run_file trigonometry\nclear\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("clear_preserves_loaded_std_environment");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "std was not preserved by clear:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
+    }
+
+    #[test]
+    fn repeated_std_run_file_after_clear_is_cached() {
+        let source_code = "run_file trigonometry\nclear\nrun_file trigonometry\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repeated_std_run_file_after_clear_is_cached");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "repeated std run_file after clear failed:\n{}",
+            run_output
+        );
+        assert!(!run_output.contains("NameAlreadyUsedError"));
+    }
+
+    #[test]
+    fn std_run_file_after_user_statement_is_rejected() {
+        let source_code = "1 = 1\nrun_file trigonometry";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("std_run_file_after_user_statement_is_rejected");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "late std run_file should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("std run_file statements must appear before user definitions"),
+            "late std run_file should report targeted error:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn clear_does_not_preserve_quoted_run_file_environment() {
+        let run_file_path = std::env::temp_dir().join("litex-clear-quoted-run-file-test.lit");
+        fs::write(
+            &run_file_path,
+            "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        )
+        .unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"\nclear\n$p(2)", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "clear_does_not_preserve_quoted_run_file_environment",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let _ = fs::remove_file(&run_file_path);
+
+        assert!(
+            !run_succeeded,
+            "quoted run_file content should be cleared:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn std_citation_source_survives_cached_reload_after_clear() {
+        let source_code = "run_file trigonometry\nclear\nrun_file trigonometry\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "std_citation_source_survives_cached_reload_after_clear",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "cached std citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"std\""));
+        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
     }
 
     fn run_file_from_path_impl() {
