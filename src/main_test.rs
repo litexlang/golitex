@@ -430,6 +430,70 @@ x $in Z
     }
 
     #[test]
+    fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
+        let source_code = r#"
+abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    $p(f)
+    $p(g)
+    =>:
+        $p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_matches_function_param_application_inside_anonymous_fn_body",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known forall should infer g = anonymous fn from g(x) inside the anonymous body:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_does_not_infer_function_from_single_point_application() {
+        let source_code = r#"
+abstract_prop p(x)
+
+know forall g fn(x R) R:
+    $p('R(x){g(0)})
+
+have h fn(x R) R
+$p('R(x){h(x)})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_does_not_infer_function_from_single_point_application",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "known forall should not infer a whole function from a single point application:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn eval_recursive_algo_memoizes_overlapping_calls() {
         run_with_large_stack(
             "eval_recursive_algo_memoizes_overlapping_calls_large_stack",

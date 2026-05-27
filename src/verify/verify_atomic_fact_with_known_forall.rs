@@ -1372,7 +1372,27 @@ impl Runtime {
             given.equal_to.as_ref(),
         )?
         else {
-            return Ok(None);
+            let Some(eq_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+                left.equal_to.as_ref(),
+                given.equal_to.as_ref(),
+                &given.body,
+            )?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, eq_map) {
+                return Ok(None);
+            }
+            let verify_state = VerifyState::new_with_final_round(false);
+            for value in merged.values() {
+                if self
+                    .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                    .is_err()
+                {
+                    return Ok(None);
+                }
+            }
+            return Ok(Some(merged));
         };
         if !self.merge_arg_match_map_into(&mut merged, eq_map) {
             return Ok(None);
@@ -1387,6 +1407,310 @@ impl Runtime {
             }
         }
         Ok(Some(merged))
+    }
+
+    fn match_arg_in_anonymous_fn_body_with_given_arg(
+        &mut self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if let Some(existing_match) =
+            self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(known_arg, given_arg)?
+        {
+            return Ok(Some(existing_match));
+        }
+        if let Some(function_param_match) = self
+            .match_forall_function_param_application_as_anonymous_fn(
+                known_arg,
+                given_arg,
+                anonymous_fn_body,
+            )?
+        {
+            return Ok(Some(function_param_match));
+        }
+
+        match (known_arg, given_arg) {
+            (Obj::FnObj(left), Obj::FnObj(given)) => {
+                self.match_fn_obj_in_anonymous_fn_body(left, given, anonymous_fn_body)
+            }
+            (Obj::Add(left), Obj::Add(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Sub(left), Obj::Sub(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Mul(left), Obj::Mul(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Div(left), Obj::Div(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Mod(left), Obj::Mod(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Pow(left), Obj::Pow(given)) => self.match_binary_in_anonymous_fn_body(
+                left.base.as_ref(),
+                left.exponent.as_ref(),
+                given.base.as_ref(),
+                given.exponent.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::MatrixAdd(left), Obj::MatrixAdd(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixSub(left), Obj::MatrixSub(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixMul(left), Obj::MatrixMul(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixScalarMul(left), Obj::MatrixScalarMul(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.scalar.as_ref(),
+                    left.matrix.as_ref(),
+                    given.scalar.as_ref(),
+                    given.matrix.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixPow(left), Obj::MatrixPow(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.base.as_ref(),
+                    left.exponent.as_ref(),
+                    given.base.as_ref(),
+                    given.exponent.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Abs(left), Obj::Abs(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Sqrt(left), Obj::Sqrt(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Log(left), Obj::Log(given)) => self.match_binary_in_anonymous_fn_body(
+                left.base.as_ref(),
+                left.arg.as_ref(),
+                given.base.as_ref(),
+                given.arg.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Max(left), Obj::Max(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Min(left), Obj::Min(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Tuple(left), Obj::Tuple(given)) => self.match_boxed_args_in_anonymous_fn_body(
+                &left.args,
+                &given.args,
+                anonymous_fn_body,
+            ),
+            (Obj::Cart(left), Obj::Cart(given)) => self.match_boxed_args_in_anonymous_fn_body(
+                &left.args,
+                &given.args,
+                anonymous_fn_body,
+            ),
+            (Obj::ListSet(left), Obj::ListSet(given)) => self
+                .match_boxed_args_in_anonymous_fn_body(&left.list, &given.list, anonymous_fn_body),
+            (Obj::FiniteSeqListObj(left), Obj::FiniteSeqListObj(given)) => self
+                .match_boxed_args_in_anonymous_fn_body(&left.objs, &given.objs, anonymous_fn_body),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_fn_obj_in_anonymous_fn_body(
+        &mut self,
+        left: &FnObj,
+        given: &FnObj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left.body.len() != given.body.len() {
+            return Ok(None);
+        }
+        let left_head: Obj = left.head.as_ref().clone().into();
+        let given_head: Obj = given.head.as_ref().clone().into();
+        let Some(mut merged) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            &left_head,
+            &given_head,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        for (left_row, given_row) in left.body.iter().zip(given.body.iter()) {
+            if left_row.len() != given_row.len() {
+                return Ok(None);
+            }
+            let Some(row_map) =
+                self.match_boxed_args_in_anonymous_fn_body(left_row, given_row, anonymous_fn_body)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, row_map) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_binary_in_anonymous_fn_body(
+        &mut self,
+        left_left: &Obj,
+        left_right: &Obj,
+        given_left: &Obj,
+        given_right: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Some(mut merged) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            left_left,
+            given_left,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(right_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            left_right,
+            given_right,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, right_map) {
+            return Ok(None);
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_boxed_args_in_anonymous_fn_body(
+        &mut self,
+        left: &[Box<Obj>],
+        given: &[Box<Obj>],
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left.len() != given.len() {
+            return Ok(None);
+        }
+        let mut merged = HashMap::new();
+        for (left_arg, given_arg) in left.iter().zip(given.iter()) {
+            let Some(sub_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+                left_arg.as_ref(),
+                given_arg.as_ref(),
+                anonymous_fn_body,
+            )?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, sub_map) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_forall_function_param_application_as_anonymous_fn(
+        &mut self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = known_arg else {
+            return Ok(None);
+        };
+        let FnObjHead::Forall(forall_param) = fn_obj.head.as_ref() else {
+            return Ok(None);
+        };
+        if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {
+            return Ok(None);
+        }
+
+        let anonymous_fn = AnonymousFn::new(
+            anonymous_fn_body.params_def_with_set.clone(),
+            anonymous_fn_body.dom_facts.clone(),
+            (*anonymous_fn_body.ret_set).clone(),
+            given_arg.clone(),
+        )?;
+        let mut map = HashMap::new();
+        map.insert(forall_param.name.clone(), anonymous_fn.into());
+        Ok(Some(map))
+    }
+
+    fn fn_obj_applies_to_exact_anonymous_fn_params(
+        fn_obj: &FnObj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> bool {
+        let expected_param_names = anonymous_fn_body.get_params();
+        let expected_len = expected_param_names.len();
+        let actual_args_count: usize = fn_obj.body.iter().map(|row| row.len()).sum();
+        if actual_args_count != expected_len {
+            return false;
+        }
+
+        let mut flat_index = 0;
+        for row in fn_obj.body.iter() {
+            for arg in row.iter() {
+                let expected = obj_for_bound_param_in_scope(
+                    expected_param_names[flat_index].clone(),
+                    ParamObjType::FnSet,
+                );
+                if arg.to_string() != expected.to_string() {
+                    return false;
+                }
+                flat_index += 1;
+            }
+        }
+        true
     }
 
     fn match_fn_param_group_type_in_known_forall_with_given(
