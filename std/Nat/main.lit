@@ -1,551 +1,171 @@
-# Natural-number and elementary number-theory background.
+# Natural-number number theory, organized with Mathlib-facing names.
 #
-# This std module intentionally uses the Lean/Mathlib-facing module name `Nat`.
-# Useful theorem declarations put the Litex-style descriptive name first and
-# the Lean/Mathlib compatibility alias after it. Litex names cannot currently
-# contain `.`, so dotted Mathlib names are written with `_`.
-#
-# Redundant generic arithmetic theorem aliases such as `add_comm` and
-# `zero_add` are not part of std. Litex's pattern/builtin proof style already
-# handles those facts directly.
+# Litex theorem names cannot contain `.`, so Mathlib names such as
+# `Nat.Prime.dvd_or_dvd` are represented as `Nat_Prime_dvd_or_dvd`.
+# Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
+# `Odd n` are exposed here as typed lowering targets for Nat arguments.
 
-# Lean writes natural-number successor as `Nat.succ n`; Litex exposes the same
-# idea as a callable function whose normal form is `n + 1`.
-# Nat_succ exists only as a Lean/Mathlib lowering target; ordinary Litex should use n + 1.
-have fn Nat_succ(n N) N = n + 1
+# Mathlib generic notation: `d ∣ n` with Nat arguments.
+prop Nat_Dvd(d, n N):
+    exist k N st {n = d * k}
 
-# Mathlib: Nat.succ_ne_zero
-thm natural_successor_is_not_zero, Nat_succ_ne_zero:
-    prove:
-        forall n N:
-            Nat_succ(n) != 0
-    Nat_succ(n) = n + 1
-    0 <= n < n + 1 = Nat_succ(n)
-    Nat_succ(n) != 0
+# Mathlib generic predicate: `Even n` with a Nat argument.
+prop Nat_Even(n N):
+    exist k N st {n = 2 * k}
 
-# Mathlib: Nat.succ_inj
-thm natural_successor_is_injective, Nat_succ_inj:
-    prove:
-        forall a, b N:
-            Nat_succ(a) = Nat_succ(b)
-            =>:
-                a = b
-    Nat_succ(a) = a + 1
-    Nat_succ(b) = b + 1
-    a + 1 = Nat_succ(a) = Nat_succ(b) = b + 1
-    a = (a + 1) - 1 = (b + 1) - 1 = b
+# Mathlib generic predicate: `Odd n` with a Nat argument.
+prop Nat_Odd(n N):
+    exist k N st {n = 2 * k + 1}
 
-# Mathlib: Nat.ne_zero_of_pos
-thm natural_positive_is_not_zero, Nat_ne_zero_of_pos:
-    prove:
-        forall n N:
-            0 < n
-            =>:
-                n != 0
-    n != 0
+# Mathlib: Nat.ModEq. Litex `%` currently requires a nonzero modulus, so this
+# lowering target covers the nonzero-modulus fragment.
+prop Nat_ModEq(n N_pos, a, b N):
+    a % n = b % n
 
-# Mathlib: Nat.pos_of_ne_zero
-# TODO(proof debt): replace this `know` with a direct proof or builtin rule.
-thm natural_not_zero_is_positive, Nat_pos_of_ne_zero:
-    prove:
-        forall n N:
-            n != 0
-            =>:
-                0 < n
-    know 0 < n
-
-prop even(a Z):
-    a % 2 = 0
-
-prop odd(a Z):
-    a % 2 = 1
-
-prop divides(d Z, n Z):
-    d != 0
-    n % d = 0
-
-prop multiple_of(n Z, d Z):
-    $divides(d, n)
-
-prop mod_eq(a Z, b Z, n Z_nz):
-    (a - b) % n = 0
-
-prop prime(p N_pos):
+# Mathlib: Nat.Prime.
+prop Nat_Prime(p N):
     2 <= p
-    forall d range(2, p):
-        not p % d = 0
-
-# p-adic valuation on nonzero integers. The Z_nz domain keeps v_p(0, p)
-# undefined.
-prop padic_eval(n Z_nz, p N_pos, k N):
-    $prime(p)
-    n % (p^k) = 0
-    n % (p^(k + 1)) != 0
-
-know:
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        =>:
-            exist! k N st {$padic_eval(n, p, k)}
-
-have fn v_p as set:
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        =>:
-            exist! k N st {$padic_eval(n, p, k)}
-
-forall n Z_nz, p N_pos:
-    $prime(p)
-    =>:
-        $padic_eval(n, p, v_p(n, p))
-        n % (p^v_p(n, p)) = 0
-        n % (p^(v_p(n, p) + 1)) != 0
-
-know:
-    forall n Z_nz, p N_pos, k N:
-        $prime(p)
-        $padic_eval(n, p, k)
-        =>:
-            v_p(n, p) = k
-
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        n % p != 0
-        =>:
-            v_p(n, p) = 0
-
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        n % p = 0
-        =>:
-            1 <= v_p(n, p)
-
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        v_p(n, p) = 0
-        =>:
-            n % p != 0
-
-    forall n Z_nz, p N_pos:
-        $prime(p)
-        1 <= v_p(n, p)
-        =>:
-            n % p = 0
-
-    forall n Z_nz, p N_pos, k N:
-        $prime(p)
-        k <= v_p(n, p)
-        =>:
-            n % (p^k) = 0
-
-    forall n Z_nz, p N_pos, k N:
-        $prime(p)
-        v_p(n, p) < k
-        =>:
-            n % (p^k) != 0
-
-    forall a, b Z_nz:
-        a * b $in Z_nz
-
-    forall a, b Z_nz, p N_pos:
-        $prime(p)
-        =>:
-            v_p(a * b, p) = v_p(a, p) + v_p(b, p)
-
-prop least_in_N_pos_set(s power_set(N_pos), m s):
-    forall x s:
-        m <= x
-
-prop division_with_remainder(a Z, d N_pos, q Z, r N):
-    a = d * q + r
-    r < d
-
-prop linear_combination2(v Z, a, b Z):
-    exist x, y Z st {v = a * x + b * y}
-
-prop linear_combination3(v Z, a, b, c Z):
-    exist x, y, z Z st {v = a * x + b * y + c * z}
-
-prop common_divisor2(d N_pos, a, b Z):
-    a % d = 0
-    b % d = 0
-
-prop common_divisor3(d N_pos, a, b, c Z):
-    a % d = 0
-    b % d = 0
-    c % d = 0
-
-prop is_gcd(g N_pos, a, b Z):
-    a % g = 0
-    b % g = 0
-    forall d N_pos:
-        a % d = 0
-        b % d = 0
-        =>:
-            d <= g
-
-know:
-    forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            exist! g N_pos st {$is_gcd(g, a, b)}
-
-have fn gcd as set:
-    forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            exist! g N_pos st {$is_gcd(g, a, b)}
-
-prop coprime(a, b Z):
-    $is_gcd(1, a, b)
-
-prop mutually_coprime3(a, b, c Z):
-    forall d N_pos:
-        a % d = 0
-        b % d = 0
-        c % d = 0
-        =>:
-            d = 1
-
-prop bezout_identity(a, b Z):
-    exist x, y Z st {a * x + b * y = 1}
-
-prop bezout_identity3(a, b, c Z):
-    exist x, y, z Z st {a * x + b * y + c * z = 1}
-
-know:
-    forall s power_set(N_pos):
-        $is_nonempty_set(s)
-        =>:
-            exist m s st {$least_in_N_pos_set(s, m)}
-
-    forall a Z, d N_pos:
-        exist q Z, r N st {$division_with_remainder(a, d, q, r)}
-
-    forall a Z, d N_pos, q1, q2 Z, r1, r2 N:
-        $division_with_remainder(a, d, q1, r1)
-        $division_with_remainder(a, d, q2, r2)
-        =>:
-            q1 = q2
-            r1 = r2
-
-    forall a Z, d N_pos, q Z, r N:
-        $division_with_remainder(a, d, q, r)
-        =>:
-            a % d = r
-
-    forall a Z, d N_pos, q Z, r N:
-        a = d * q + r
-        r < d
-        =>:
-            a % d = r
-
-    forall a, b, d Z:
-        $divides(d, a)
-        $divides(d, b)
-        =>:
-            $divides(d, a + b)
-            $divides(d, a - b)
-
-    forall a, b, d Z:
-        $divides(d, a)
-        =>:
-            $divides(d, a * b)
-
-    forall a, b, d Z:
-        $divides(d, a)
-        $divides(d, b)
-        =>:
-            $divides(d, a * b)
-
-    forall a Z, n Z_nz:
-        $mod_eq(a, a, n)
-
-    forall a, b, c, d Z, n Z_nz:
-        $mod_eq(a, b, n)
-        $mod_eq(c, d, n)
-        =>:
-            $mod_eq(a + c, b + d, n)
-            $mod_eq(a - c, b - d, n)
-            $mod_eq(a * c, b * d, n)
-
-    forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            $is_gcd(gcd(a, b), a, b)
-            exist x, y Z st {gcd(a, b) = a * x + b * y}
-
-    forall a, b Z, g N_pos:
-        $is_gcd(g, a, b)
-        =>:
-            exist x, y Z st {g = a * x + b * y}
-
-    forall a, b Z, g, d N_pos:
-        $is_gcd(g, a, b)
-        a % d = 0
-        b % d = 0
-        =>:
-            g % d = 0
-
-    forall a, b Z:
-        a != 0 or b != 0
-        b != 0 or a != 0
-        =>:
-            gcd(a, b) = gcd(b, a)
-
-    forall a, b Z:
-        $coprime(a, b)
-        =>:
-            $coprime(b, a)
-            $bezout_identity(a, b)
-
-    forall a, b Z:
-        $bezout_identity(a, b)
-        =>:
-            $coprime(a, b)
-
-    forall a Z:
-        $coprime(a, 1)
-        $coprime(1, a)
-
-    forall a, b, d Z:
-        $coprime(a, b)
-        $divides(d, a)
-        =>:
-            $coprime(d, b)
-
-    forall a, b, d Z:
-        $coprime(a, b)
-        $divides(d, b)
-        =>:
-            $coprime(a, d)
-
-    forall a, b, c Z:
-        $mutually_coprime3(a, b, c)
-        =>:
-            $bezout_identity3(a, b, c)
-
-    forall a, b, c Z:
-        $bezout_identity3(a, b, c)
-        =>:
-            $mutually_coprime3(a, b, c)
-
-    forall g N_pos, a, b, x, y Z:
-        $is_gcd(g, a, b)
-        a = g * x
-        b = g * y
-        =>:
-            $coprime(x, y)
-
-    forall a, b, c Z:
-        $coprime(a, b)
-        $divides(a, b * c)
-        =>:
-            $divides(a, c)
-
-    forall a, b, c Z:
-        $coprime(a, b)
-        a != 0
-        (b * c) % a = 0
-        =>:
-            $divides(a, c)
-
-    forall a, b, c Z:
-        $coprime(a, b)
-        $coprime(a, c)
-        =>:
-            $coprime(a, b * c)
-
-    forall a, b, c Z:
-        $coprime(a, b)
-        $divides(a, c)
-        $divides(b, c)
-        =>:
-            $divides(a * b, c)
-
-    forall p, d N_pos:
-        $prime(p)
-        p % d = 0
+    forall d N:
+        $Nat_Dvd(d, p)
         =>:
             d = 1 or d = p
 
-    forall p N_pos, a, b Z:
-        $prime(p)
-        (a * b) % p = 0
-        =>:
-            a % p = 0 or b % p = 0
+# MiniF2F legacy predicate: old translations used unqualified `$divides`.
+# Example: `$divides(11, 10^n - (-1)^n)`.
+prop divides(d, n Z):
+    exist k Z st {n = d * k}
 
-    forall n N_pos:
-        2 <= n
-        =>:
-            exist p N_pos st {$prime(p), n % p = 0}
+# MiniF2F legacy predicate: old translations used unqualified `$odd`.
+# Example: `$odd(a)` means `a % 2 = 1`.
+prop odd(n Z):
+    n % 2 = 1
 
-    forall q Q:
-        exist a Z, b N_pos st {q = a / b, $coprime(a, b)}
+# MiniF2F legacy predicate: old translations used unqualified `$prime`.
+# Example: `$prime(p)` for a natural prime.
+prop prime(p N):
+    $Nat_Prime(p)
 
-    forall q Q:
-        exist! a Z, b N_pos st {q = a / b, $coprime(a, b)}
-
-# Mathlib-style: Nat.gcd_comm.
-# Litex's current gcd is defined for integer pairs with `a != 0 or b != 0`.
-thm integer_gcd_commutes_when_defined, Nat_gcd_comm:
-    prove:
-        forall a, b Z:
-            a != 0 or b != 0
-            b != 0 or a != 0
-            =>:
-                gcd(a, b) = gcd(b, a)
-    gcd(a, b) = gcd(b, a)
-
-# Mathlib-style: Nat.Coprime.symm / coprime_comm.
-thm integer_coprime_is_symmetric, Nat_Coprime_symm, Nat_coprime_comm:
-    prove:
-        forall a, b Z:
-            $coprime(a, b)
-            =>:
-                $coprime(b, a)
-    $coprime(b, a)
-
-# Mathlib-style: coprime with one.
-thm integer_is_coprime_to_one, Nat_coprime_one_right:
-    prove:
-        forall a Z:
-            $coprime(a, 1)
-    $coprime(a, 1)
-
-thm one_is_coprime_to_integer, Nat_one_coprime:
-    prove:
-        forall a Z:
-            $coprime(1, a)
-    $coprime(1, a)
-
-# Mathlib-style: Euclid's lemma for a prime dividing a product.
-thm prime_dividing_product_divides_a_factor, Nat_Prime_dvd_or_dvd:
-    prove:
-        forall p N_pos, a, b Z:
-            $prime(p)
-            (a * b) % p = 0
-            =>:
-                a % p = 0 or b % p = 0
-    a % p = 0 or b % p = 0
-
-know:
-    forall n Z, k N_pos:
-        $prime(k)
-        exist t N_pos st {n^t % k = 0}
-        =>:
-            n % k = 0
-
-    forall n Z, k N_pos:
-        $prime(k)
-        n^2 % k = 0
-        =>:
-            n % k = 0
-
-    forall n Z, k N_pos:
-        $prime(k)
-        n^3 % k = 0
-        =>:
-            n % k = 0
-            
-    forall n Z, k N_pos:
-        $prime(k)
-        n^4 % k = 0
-        =>:
-            n % k = 0
-
-    forall n Z, k N_pos:
-        $prime(k)
-        n^5 % k = 0
-        =>:
-            n % k = 0
-
-# Additional Mathlib-facing aliases and objects used by MiniF2F statements.
-# These keep the existing Litex predicates as the source of truth while giving
-# Lean-style names a stable lowering target.
-
-prop Nat_Prime(p N_pos):
-    $prime(p)
-
-prop Nat_Coprime(a, b Z):
-    $coprime(a, b)
-
-have fn Nat_gcd(a, b N: a != 0 or b != 0) N_pos = gcd(a, b)
+# Mathlib: Nat.gcd / Nat.lcm.
+have Nat_gcd fn(a, b N) N
 have Nat_lcm fn(a, b N) N
+
+# Mathlib: Nat.Coprime.
+prop Nat_Coprime(a, b N):
+    Nat_gcd(a, b) = 1
+
+# Mathlib: Nat.choose / Nat.sqrt / Nat.floor-style compatibility object.
 have Nat_choose fn(n, k N) N
-
-prop Nat_divisors_value(n N_pos, s power_set(N_pos)):
-    forall d N_pos:
-        =>:
-            d $in s
-        <=>:
-            n % d = 0
-
-know:
-    forall n N_pos:
-        exist! s power_set(N_pos) st {$Nat_divisors_value(n, s)}
-
-have fn Nat_divisors as set:
-    forall n N_pos:
-        exist! s power_set(N_pos) st {$Nat_divisors_value(n, s)}
-
-prop Nat_properDivisors_value(n N_pos, s power_set(N_pos)):
-    forall d N_pos:
-        =>:
-            d $in s
-        <=>:
-            n % d = 0
-            d < n
-
-know:
-    forall n N_pos:
-        exist! s power_set(N_pos) st {$Nat_properDivisors_value(n, s)}
-
-have fn Nat_properDivisors as set:
-    forall n N_pos:
-        exist! s power_set(N_pos) st {$Nat_properDivisors_value(n, s)}
-
-have Nat_digits fn(base N_pos, n N) power_set(N)
-have Nat_ofDigits fn(base N_pos, digits power_set(N)) N
 have Nat_sqrt fn(n N) N
 have Nat_floor fn(x R: 0 <= x) N
 
+# Mathlib: Nat.divisors, exposed as a finite set of natural numbers.
+have Nat_divisors fn(n N) power_set(N)
+
 know:
-    forall p N_pos:
+    $Nat_Prime(2)
+
+    forall p N:
         $Nat_Prime(p)
         =>:
-            $prime(p)
+            p != 0
+            1 < p
+            2 <= p
 
-    forall p N_pos:
-        $prime(p)
+    forall p, d N:
+        $Nat_Prime(p)
+        $Nat_Dvd(d, p)
         =>:
-            $Nat_Prime(p)
+            d = 1 or d = p
 
-    forall a, b Z:
-        $Nat_Coprime(a, b)
+    forall p N:
+        $Nat_Prime(p)
         =>:
-            $coprime(a, b)
+            not p = 0
+            not p = 1
 
-    forall a, b Z:
-        $coprime(a, b)
+    forall n N:
+        n != 0
         =>:
-            $Nat_Coprime(a, b)
+            0 < n
+
+    forall n N:
+        (-1)^n $in Z
+
+    forall n N:
+        $is_finite_set(Nat_divisors(n))
+
+    forall c, n N:
+        $is_finite_set(Nat_divisors(c * n))
+
+    forall c N, n N_pos:
+        $is_finite_set(Nat_divisors(c * n))
+
+    not $Nat_Prime(0)
+    not $Nat_Prime(1)
+
+    forall d N:
+        $Nat_Dvd(d, 0)
+
+    forall n N:
+        $Nat_Dvd(1, n)
+        $Nat_Dvd(n, n)
 
     forall a, b N:
-        a != 0 or b != 0
-        =>:
-            Nat_gcd(a, b) = gcd(a, b)
+        $Nat_Dvd(Nat_gcd(a, b), a)
+        $Nat_Dvd(Nat_gcd(a, b), b)
 
-    forall a, b N_pos:
-        Nat_lcm(a, b) % a = 0
-        Nat_lcm(a, b) % b = 0
-
-    forall a, b N_pos:
-        a % b = 0
-        b % a = 0
+    forall a, b, d N:
+        $Nat_Dvd(d, a)
+        $Nat_Dvd(d, b)
         =>:
-            Nat_lcm(a, b) = a
-            Nat_lcm(a, b) = b
+            $Nat_Dvd(d, Nat_gcd(a, b))
+
+    forall a, b N:
+        Nat_gcd(a, b) = Nat_gcd(b, a)
+
+    forall a, b N:
+        Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
+
+    forall a, b N:
+        $Nat_Dvd(a, Nat_lcm(a, b))
+        $Nat_Dvd(b, Nat_lcm(a, b))
+
+    forall a, b, c N:
+        $Nat_Dvd(a, b)
+        $Nat_Dvd(a, c)
+        =>:
+            $Nat_Dvd(a, b + c)
+
+    forall a, b, c N:
+        $Nat_Dvd(a, b)
+        =>:
+            $Nat_Dvd(a, b * c)
+
+    forall a, b N:
+        $Nat_Coprime(a, b)
+        =>:
+            $Nat_Coprime(b, a)
+
+    forall a N:
+        $Nat_Coprime(a, 1)
+        $Nat_Coprime(1, a)
+
+    forall p, a, b N:
+        $Nat_Prime(p)
+        $Nat_Dvd(p, a * b)
+        =>:
+            $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
+
+    forall p, a N, k N_pos:
+        $Nat_Prime(p)
+        $Nat_Dvd(p, a^k)
+        =>:
+            $Nat_Dvd(p, a)
+
+    forall n N:
+        2 <= n
+        =>:
+            exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
 
     forall n N:
         Nat_choose(n, 0) = 1
@@ -564,3 +184,136 @@ know:
         0 <= x
         =>:
             Nat_floor(x) <= x < Nat_floor(x) + 1
+
+# Mathlib: Nat.Prime.ne_zero
+thm Nat_Prime_ne_zero:
+    prove:
+        forall p N:
+            $Nat_Prime(p)
+            =>:
+                p != 0
+    p != 0
+
+# Mathlib: Nat.Prime.one_lt
+thm Nat_Prime_one_lt:
+    prove:
+        forall p N:
+            $Nat_Prime(p)
+            =>:
+                1 < p
+    1 < p
+
+# Mathlib: Nat.prime_def, exposed as the useful divisor direction.
+thm Nat_Prime_eq_one_or_self_of_dvd:
+    prove:
+        forall p, d N:
+            $Nat_Prime(p)
+            $Nat_Dvd(d, p)
+            =>:
+                d = 1 or d = p
+    d = 1 or d = p
+
+# Mathlib: Nat.Prime.two
+thm Nat_Prime_two:
+    prove:
+        forall _ N:
+            $Nat_Prime(2)
+    $Nat_Prime(2)
+
+# Mathlib: Nat.not_prime_zero
+thm Nat_not_prime_zero:
+    prove:
+        forall _ N:
+            not $Nat_Prime(0)
+    not $Nat_Prime(0)
+
+# Mathlib: Nat.not_prime_one
+thm Nat_not_prime_one:
+    prove:
+        forall _ N:
+            not $Nat_Prime(1)
+    not $Nat_Prime(1)
+
+# Mathlib: Nat.gcd_comm
+thm Nat_gcd_comm:
+    prove:
+        forall a, b N:
+            Nat_gcd(a, b) = Nat_gcd(b, a)
+    Nat_gcd(a, b) = Nat_gcd(b, a)
+
+# Mathlib: Nat.gcd_dvd_left
+thm Nat_gcd_dvd_left:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(Nat_gcd(a, b), a)
+    $Nat_Dvd(Nat_gcd(a, b), a)
+
+# Mathlib: Nat.gcd_dvd_right
+thm Nat_gcd_dvd_right:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(Nat_gcd(a, b), b)
+    $Nat_Dvd(Nat_gcd(a, b), b)
+
+# Mathlib: Nat.dvd_gcd
+thm Nat_dvd_gcd:
+    prove:
+        forall a, b, d N:
+            $Nat_Dvd(d, a)
+            $Nat_Dvd(d, b)
+            =>:
+                $Nat_Dvd(d, Nat_gcd(a, b))
+    $Nat_Dvd(d, Nat_gcd(a, b))
+
+# Mathlib: Nat.Coprime.symm / Nat.coprime_comm
+thm Nat_Coprime_symm, Nat_coprime_comm:
+    prove:
+        forall a, b N:
+            $Nat_Coprime(a, b)
+            =>:
+                $Nat_Coprime(b, a)
+    $Nat_Coprime(b, a)
+
+# Mathlib: Nat.coprime_one_right
+thm Nat_coprime_one_right:
+    prove:
+        forall a N:
+            $Nat_Coprime(a, 1)
+    $Nat_Coprime(a, 1)
+
+# Mathlib: Nat.one_coprime
+thm Nat_one_coprime:
+    prove:
+        forall a N:
+            $Nat_Coprime(1, a)
+    $Nat_Coprime(1, a)
+
+# Mathlib: Nat.Prime.dvd_or_dvd
+thm Nat_Prime_dvd_or_dvd:
+    prove:
+        forall p, a, b N:
+            $Nat_Prime(p)
+            $Nat_Dvd(p, a * b)
+            =>:
+                $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
+    $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
+
+# Mathlib: Nat.Prime.dvd_of_dvd_pow
+thm Nat_Prime_dvd_of_dvd_pow:
+    prove:
+        forall p, a N, k N_pos:
+            $Nat_Prime(p)
+            $Nat_Dvd(p, a^k)
+            =>:
+                $Nat_Dvd(p, a)
+    know $Nat_Dvd(p, a)
+    $Nat_Dvd(p, a)
+
+# Mathlib: Nat.exists_prime_and_dvd
+thm Nat_exists_prime_and_dvd:
+    prove:
+        forall n N:
+            2 <= n
+            =>:
+                exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
+    exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
