@@ -6,8 +6,9 @@ pub use crate::common::name_types::{
     TemplateName, ThmName,
 };
 pub use crate::environment::{
-    equality_in_forall_fact_key, Environment, EqualityInForallFactKey, KnownFnInfo,
-    KnownForallFactParamsAndDom, KnownObjValue,
+    atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
+    AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
+    KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
