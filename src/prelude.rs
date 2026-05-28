@@ -76,9 +76,6 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
-pub use crate::harness::{
-    resolve_litex_file_path, run_harness_for_code, run_harness_for_file, run_harness_for_repo,
-};
 pub use crate::infer::InferResult;
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;
@@ -179,6 +176,9 @@ pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
+pub use crate::runner::{
+    resolve_litex_file_path, run_runner_for_code, run_runner_for_file, run_runner_for_repo,
+};
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::Runtime;
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;

@@ -623,20 +623,20 @@ without requiring the user to pass through a heavier proof-programming layer.
 
 ### AI Mathematical Exploration
 
-This short feedback loop is especially relevant for AI-assisted mathematical
-exploration. In that setting, verification efficiency is not only the time spent
-inside one checker call. It is the whole loop: generate a candidate statement,
-run it, read the exact failure, make the next small correction, and grow the
-local mathematical background when a missing rule or definition is discovered.
+This short feedback loop is especially relevant for exploratory mathematical
+formalization. Verification efficiency is not only the time spent inside one
+checker call. It is the whole loop: write a candidate statement, run it, read
+the exact failure, make the next small correction, and grow the local
+mathematical background when a missing rule or definition is discovered.
 
 Litex is deliberately friendly to that loop. It runs directly, has a small
 surface syntax, and lets many library-like background facts be added as ordinary
-Litex statements, builtin rules, or infer rules. This makes it practical for an
-AI agent to try many natural formulations and turn failures into small language,
-library, rule, or diagnostic improvements. Lean remains much stronger when the
-task depends on Mathlib, advanced abstractions, or production formalization; the
-point is that Litex can be a faster exploratory verification layer before a
-development settles into its final form.
+Litex statements, builtin rules, or infer rules. This makes it practical to try
+many natural formulations and turn failures into small language, library, rule,
+or diagnostic improvements. Lean remains much stronger when the task depends on
+Mathlib, advanced abstractions, or production formalization; the point is that
+Litex can be a faster exploratory verification layer before a development
+settles into its final form.
 
 ### Message Output Explains Each Step
 
@@ -1157,8 +1157,8 @@ Use Litex when you want:
 - direct facts rather than many named proof terms;
 - proof statements that look like common mathematical moves;
 - builtin relationships among basic mathematical objects;
-- matching and substitution that reduce proof-engine bookkeeping.
-- proof-trail verification for agent repair loops and early failure detection.
+- matching and substitution that reduce proof-engine bookkeeping;
+- proof-trail verification for early failure detection.
 
 Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine, backed by a rich library and a large expert community; Litex tries to make common mathematical reasoning feel direct.
 

@@ -135,11 +135,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
-        let arg_shape_candidates =
-            self.atomic_fact_candidates_with_arg_shape(atomic_fact, &arg_shape_lookup_keys);
-        if let Some(fact_verified) = self.try_verify_candidates_with_known_forall(
-            &arg_shape_candidates,
+        if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
             atomic_fact,
+            &arg_shape_lookup_keys,
             verify_state,
         )? {
             return Ok(Some(fact_verified));
@@ -151,32 +149,52 @@ impl Runtime {
             return Ok(Some(fact_verified));
         }
 
-        let other_arg_shape_candidates =
-            self.atomic_fact_candidates_with_other_arg_shapes(atomic_fact, &arg_shape_lookup_keys);
-        self.try_verify_candidates_with_known_forall(
-            &other_arg_shape_candidates,
+        self.try_verify_with_other_arg_shape_known_forall_facts_in_envs(
             atomic_fact,
+            &arg_shape_lookup_keys,
             verify_state,
         )
     }
 
-    fn try_verify_candidates_with_known_forall(
+    fn try_verify_known_forall_candidate(
         &mut self,
-        candidates: &[(AtomicFact, Rc<KnownForallFactParamsAndDom>)],
+        atomic_fact_in_known_forall_fact: AtomicFact,
+        forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        for (atomic_fact_in_known_forall_fact, forall_rc) in candidates.iter() {
-            let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
-                atomic_fact_in_known_forall_fact,
+        let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
+            &atomic_fact_in_known_forall_fact,
+            given_atomic_fact,
+        )?;
+        if let Some(arg_map) = match_result {
+            return self.verify_args_satisfy_forall_requirements(
+                &atomic_fact_in_known_forall_fact,
+                &forall_rc,
+                arg_map,
                 given_atomic_fact,
-            )?;
-            if let Some(arg_map) = match_result {
-                if let Some(fact_verified) = self.verify_args_satisfy_forall_requirements(
-                    atomic_fact_in_known_forall_fact,
-                    forall_rc,
-                    arg_map,
-                    given_atomic_fact,
+                verify_state,
+            );
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_arg_shape_known_forall_facts_in_envs(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        let envs_count = self.environment_stack.len();
+        for i in 0..envs_count {
+            let stack_idx = envs_count - 1 - i;
+            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
+                if let Some(fact_verified) = self.try_verify_with_arg_shape_key_in_env(
+                    stack_idx,
+                    &lookup_key,
+                    arg_shape_lookup_key,
+                    atomic_fact,
                     verify_state,
                 )? {
                     return Ok(Some(fact_verified));
@@ -186,56 +204,86 @@ impl Runtime {
         Ok(None)
     }
 
-    fn atomic_fact_candidates_with_arg_shape(
-        &self,
+    fn try_verify_with_other_arg_shape_known_forall_facts_in_envs(
+        &mut self,
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
-    ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
-        let mut candidates = Vec::new();
-        for env in self.iter_environments_from_top() {
-            let Some(arg_shape_map) = env
-                .known_atomic_facts_in_forall_facts_by_arg_shape
-                .get(&lookup_key)
-            else {
-                continue;
-            };
-            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
-                let Some(bucket) = arg_shape_map.get(arg_shape_lookup_key) else {
+        let envs_count = self.environment_stack.len();
+        for i in 0..envs_count {
+            let stack_idx = envs_count - 1 - i;
+            let arg_shape_keys = {
+                let env = &self.environment_stack[stack_idx];
+                let Some(arg_shape_map) = env
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(&lookup_key)
+                else {
                     continue;
                 };
-                for candidate in bucket.iter().rev() {
-                    candidates.push(candidate.clone());
+                arg_shape_map
+                    .keys()
+                    .filter(|key| !arg_shape_lookup_keys.contains(key))
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            for arg_shape_key in arg_shape_keys.iter() {
+                if let Some(fact_verified) = self.try_verify_with_arg_shape_key_in_env(
+                    stack_idx,
+                    &lookup_key,
+                    arg_shape_key,
+                    atomic_fact,
+                    verify_state,
+                )? {
+                    return Ok(Some(fact_verified));
                 }
             }
         }
-        candidates
+        Ok(None)
     }
 
-    fn atomic_fact_candidates_with_other_arg_shapes(
-        &self,
+    fn try_verify_with_arg_shape_key_in_env(
+        &mut self,
+        stack_idx: usize,
+        lookup_key: &(AtomicFactKey, bool),
+        arg_shape_key: &AtomicFactInForallArgShapeKey,
         atomic_fact: &AtomicFact,
-        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
-    ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
-        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
-        let mut candidates = Vec::new();
-        for env in self.iter_environments_from_top() {
-            let Some(arg_shape_map) = env
-                .known_atomic_facts_in_forall_facts_by_arg_shape
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let Some(bucket_count) = ({
+            let env = &self.environment_stack[stack_idx];
+            env.known_atomic_facts_in_forall_facts_by_arg_shape
                 .get(&lookup_key)
-            else {
+                .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                .map(|bucket| bucket.len())
+        }) else {
+            return Ok(None);
+        };
+
+        for j in 0..bucket_count {
+            let entry_idx = bucket_count - 1 - j;
+            let candidate = {
+                let env = &self.environment_stack[stack_idx];
+                env.known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(lookup_key)
+                    .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                    .and_then(|bucket| bucket.get(entry_idx))
+                    .cloned()
+            };
+            let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
                 continue;
             };
-            for (arg_shape_key, bucket) in arg_shape_map.iter() {
-                if arg_shape_lookup_keys.contains(arg_shape_key) {
-                    continue;
-                }
-                for candidate in bucket.iter().rev() {
-                    candidates.push(candidate.clone());
-                }
+            if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                atomic_fact_in_known_forall_fact,
+                forall_rc,
+                atomic_fact,
+                verify_state,
+            )? {
+                return Ok(Some(fact_verified));
             }
         }
-        candidates
+        Ok(None)
     }
 
     fn verify_args_satisfy_forall_requirements(
