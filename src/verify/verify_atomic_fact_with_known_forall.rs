@@ -9,19 +9,20 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
-            if let Some(fact_verified) =
-                self.try_verify_equality_with_known_forall_facts_in_envs(equal_fact, verify_state)?
-            {
-                return Ok((fact_verified).into());
-            }
+        if let Some(fact_verified) =
+            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
+        {
+            return Ok((fact_verified).into());
+        }
 
+        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
             let fact_with_reversed_args = EqualFact::new(
                 equal_fact.right.clone(),
                 equal_fact.left.clone(),
                 equal_fact.line_file.clone(),
             );
-            if let Some(fact_verified) = self.try_verify_equality_with_known_forall_facts_in_envs(
+            let fact_with_reversed_args: AtomicFact = fact_with_reversed_args.into();
+            if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
                 &fact_with_reversed_args,
                 verify_state,
             )? {
@@ -31,16 +32,10 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        if let Some(fact_verified) =
-            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
-        {
-            return Ok((fact_verified).into());
-        }
-
         Ok((StmtUnknown::new()).into())
     }
 
-    fn get_matched_atomic_fact_in_known_forall_fact_in_envs(
+    fn get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(
         &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
@@ -100,7 +95,7 @@ impl Runtime {
         Ok(((0, 0), None, None))
     }
 
-    fn try_verify_with_known_forall_facts_in_envs(
+    fn try_verify_with_fallback_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -109,7 +104,7 @@ impl Runtime {
         let mut iterate_from_known_forall_fact_index = 0;
 
         loop {
-            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_envs(
+            let result = self.get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(
                 iterate_from_env_index,
                 iterate_from_known_forall_fact_index,
                 atomic_fact,
@@ -134,31 +129,38 @@ impl Runtime {
         }
     }
 
-    fn try_verify_equality_with_known_forall_facts_in_envs(
+    fn try_verify_with_known_forall_facts_in_envs(
         &mut self,
-        equal_fact: &EqualFact,
+        atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let atomic_fact: AtomicFact = equal_fact.clone().into();
-        let no_forall_head_candidates =
-            self.equality_candidates_with_no_forall_free_param_in_fn_head(equal_fact);
-        if let Some(fact_verified) = self.try_verify_equality_candidates_with_known_forall(
-            &no_forall_head_candidates,
-            &atomic_fact,
+        let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
+        let arg_shape_candidates =
+            self.atomic_fact_candidates_with_arg_shape(atomic_fact, &arg_shape_lookup_keys);
+        if let Some(fact_verified) = self.try_verify_candidates_with_known_forall(
+            &arg_shape_candidates,
+            atomic_fact,
             verify_state,
         )? {
             return Ok(Some(fact_verified));
         }
 
-        let forall_head_candidates = self.equality_candidates_with_forall_free_param_in_fn_head();
-        self.try_verify_equality_candidates_with_known_forall(
-            &forall_head_candidates,
-            &atomic_fact,
+        if let Some(fact_verified) =
+            self.try_verify_with_fallback_known_forall_facts_in_envs(atomic_fact, verify_state)?
+        {
+            return Ok(Some(fact_verified));
+        }
+
+        let other_arg_shape_candidates =
+            self.atomic_fact_candidates_with_other_arg_shapes(atomic_fact, &arg_shape_lookup_keys);
+        self.try_verify_candidates_with_known_forall(
+            &other_arg_shape_candidates,
+            atomic_fact,
             verify_state,
         )
     }
 
-    fn try_verify_equality_candidates_with_known_forall(
+    fn try_verify_candidates_with_known_forall(
         &mut self,
         candidates: &[(AtomicFact, Rc<KnownForallFactParamsAndDom>)],
         given_atomic_fact: &AtomicFact,
@@ -184,18 +186,22 @@ impl Runtime {
         Ok(None)
     }
 
-    fn equality_candidates_with_no_forall_free_param_in_fn_head(
+    fn atomic_fact_candidates_with_arg_shape(
         &self,
-        equal_fact: &EqualFact,
+        atomic_fact: &AtomicFact,
+        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
     ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
-        let lookup_keys = equality_in_forall_lookup_keys(equal_fact);
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let mut candidates = Vec::new();
         for env in self.iter_environments_from_top() {
-            for lookup_key in lookup_keys.iter() {
-                let Some(bucket) = env
-                    .equality_in_forall_fact_with_no_forall_free_param_in_fn_head
-                    .get(lookup_key)
-                else {
+            let Some(arg_shape_map) = env
+                .known_atomic_facts_in_forall_facts_by_arg_shape
+                .get(&lookup_key)
+            else {
+                continue;
+            };
+            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
+                let Some(bucket) = arg_shape_map.get(arg_shape_lookup_key) else {
                     continue;
                 };
                 for candidate in bucket.iter().rev() {
@@ -206,20 +212,27 @@ impl Runtime {
         candidates
     }
 
-    fn equality_candidates_with_forall_free_param_in_fn_head(
+    fn atomic_fact_candidates_with_other_arg_shapes(
         &self,
+        atomic_fact: &AtomicFact,
+        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
     ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
-        let lookup_key = (EQUAL.to_string(), true);
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let mut candidates = Vec::new();
         for env in self.iter_environments_from_top() {
-            let Some(bucket) = env
-                .equality_in_forall_fact_with_forall_free_param_in_fn_head
+            let Some(arg_shape_map) = env
+                .known_atomic_facts_in_forall_facts_by_arg_shape
                 .get(&lookup_key)
             else {
                 continue;
             };
-            for candidate in bucket.iter().rev() {
-                candidates.push(candidate.clone());
+            for (arg_shape_key, bucket) in arg_shape_map.iter() {
+                if arg_shape_lookup_keys.contains(arg_shape_key) {
+                    continue;
+                }
+                for candidate in bucket.iter().rev() {
+                    candidates.push(candidate.clone());
+                }
             }
         }
         candidates
@@ -2396,47 +2409,29 @@ impl Runtime {
     }
 }
 
-fn equality_in_forall_lookup_keys(equal_fact: &EqualFact) -> Vec<EqualityInForallFactKey> {
-    let exact_key = equality_in_forall_fact_key(&equal_fact.left, &equal_fact.right);
-    let (left_kind, left_operator) = equal_fact.left.equality_in_forall_key_part();
-    let (right_kind, right_operator) = equal_fact.right.equality_in_forall_key_part();
+fn atomic_fact_in_forall_lookup_arg_shape_keys(
+    atomic_fact: &AtomicFact,
+) -> Vec<AtomicFactInForallArgShapeKey> {
+    let exact_key = atomic_fact_in_forall_arg_shape_key(atomic_fact);
     let forall_param_key_part = (ObjKind::ForallFreeParam, String::new());
-
     let mut keys = Vec::new();
-    push_equality_lookup_key_if_new(&mut keys, exact_key);
-    push_equality_lookup_key_if_new(
-        &mut keys,
-        (
-            forall_param_key_part.0,
-            forall_param_key_part.1.clone(),
-            right_kind,
-            right_operator.clone(),
-        ),
-    );
-    push_equality_lookup_key_if_new(
-        &mut keys,
-        (
-            left_kind,
-            left_operator.clone(),
-            forall_param_key_part.0,
-            forall_param_key_part.1.clone(),
-        ),
-    );
-    push_equality_lookup_key_if_new(
-        &mut keys,
-        (
-            forall_param_key_part.0,
-            forall_param_key_part.1,
-            forall_param_key_part.0,
-            String::new(),
-        ),
-    );
+    push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, exact_key.clone());
+
+    for index in 0..exact_key.len() {
+        let known_keys_count = keys.len();
+        for key_index in 0..known_keys_count {
+            let mut key = keys[key_index].clone();
+            key[index] = forall_param_key_part.clone();
+            push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, key);
+        }
+    }
+
     keys
 }
 
-fn push_equality_lookup_key_if_new(
-    keys: &mut Vec<EqualityInForallFactKey>,
-    key: EqualityInForallFactKey,
+fn push_atomic_fact_in_forall_arg_shape_key_if_new(
+    keys: &mut Vec<AtomicFactInForallArgShapeKey>,
+    key: AtomicFactInForallArgShapeKey,
 ) {
     if !keys.contains(&key) {
         keys.push(key);

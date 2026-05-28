@@ -511,6 +511,100 @@ g(1) = 1
     }
 
     #[test]
+    fn known_forall_prop_indexes_forall_param_arg_as_wildcard() {
+        let source_code = r#"
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_prop_indexes_forall_param_arg_as_wildcard",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param prop arg should match concrete target args through arg-shape index:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_indexes_expression_arg_shape() {
+        let source_code = r#"
+abstract_prop p(x)
+know forall x R:
+    $p(x + 1)
+$p(1 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("known_forall_prop_indexes_expression_arg_shape");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "expression prop args should be indexed by their top-level operator shape:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_indexes_multi_arg_shape() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know forall a, b R:
+    $p(a, b + 1)
+$p(2, 3 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_multi_arg_shape");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "multi-arg prop facts should match wildcard and exact arg-shape positions:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_with_forall_param_function_head_uses_fallback_bucket() {
+        let source_code = r#"
+abstract_prop p(x)
+have g fn(x R) R
+know forall f fn(x R) R:
+    $p(f(2))
+$p(g(2))
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_prop_with_forall_param_function_head_uses_fallback_bucket",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param function heads in prop args should be checked through the fallback bucket:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
         let source_code = r#"
 abstract_prop p(x)
