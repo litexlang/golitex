@@ -14,6 +14,14 @@ C_abs(z) = C_norm(z) = 5
 
 Finset_card({1, 2, 3}) = 3
 
+claim:
+    prove:
+        forall n N_pos:
+            Finset_card(Nat_divisors(2 * n)) = 28
+            =>:
+                Finset_card(Nat_divisors(2 * n)) = 28
+    Finset_card(Nat_divisors(2 * n)) = 28
+
 $Finset_range_value(5, Finset_range(5))
 1 < 5
 1 $in Finset_range(5)

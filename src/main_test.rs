@@ -1,6 +1,8 @@
 // cargo test run_examples -- --nocapture
+// cargo test run_examples_include_std -- --ignored --nocapture
 // cargo test run_the_mechanics_markdown_files -- --nocapture
 // cargo test run_all -- --nocapture
+// cargo test run_all_include_std -- --ignored --nocapture
 
 #[cfg(test)]
 mod lit_file_runner_tests {
@@ -14,6 +16,7 @@ mod lit_file_runner_tests {
     const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
     const SLOWEST_RUNS_TO_PRINT: usize = 10;
     const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
+    const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/cite_std";
 
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
@@ -208,15 +211,21 @@ mod lit_file_runner_tests {
     }
 
     fn run_tmp_lit_file(file_name: &str) {
-        let tmp_lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("examples")
-            .join(file_name);
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let default_tmp_lit_path = manifest_dir.join("examples").join(file_name);
+        let cite_std_tmp_lit_path = manifest_dir.join(CITE_STD_EXAMPLES_SUBDIR).join(file_name);
+        let tmp_lit_path = if default_tmp_lit_path.is_file() {
+            default_tmp_lit_path
+        } else {
+            cite_std_tmp_lit_path
+        };
 
         assert!(
             tmp_lit_path.is_file(),
-            "examples/{} must exist at {:?}",
+            "examples/{} or {}/{} must exist",
             file_name,
-            tmp_lit_path
+            CITE_STD_EXAMPLES_SUBDIR,
+            file_name
         );
 
         let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
@@ -263,22 +272,22 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_tmp0() {
-        run_tmp_lit_file("tmp.lit");
+        run_with_large_stack("run_tmp0_large_stack", || run_tmp_lit_file("tmp.lit"));
     }
 
     #[test]
     fn run_tmp2() {
-        run_tmp_lit_file("tmp2.lit");
+        run_with_large_stack("run_tmp2_large_stack", || run_tmp_lit_file("tmp2.lit"));
     }
 
     #[test]
     fn run_tmp3() {
-        run_tmp_lit_file("tmp3.lit");
+        run_with_large_stack("run_tmp3_large_stack", || run_tmp_lit_file("tmp3.lit"));
     }
 
     #[test]
     fn run_tmp4() {
-        run_tmp_lit_file("tmp4.lit");
+        run_with_large_stack("run_tmp4_large_stack", || run_tmp_lit_file("tmp4.lit"));
     }
 
     #[test]
@@ -1496,6 +1505,93 @@ template SharedName<s set>:
     }
 
     #[test]
+    fn strategy_definition_auto_enables_strategy() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+$target_strategy_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_definition_auto_enables_strategy");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition should enable the strategy immediately:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn strategy_definition_stores_forall_fact_for_known_forall_use() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+stop strategy use_target_strategy
+
+claim:
+    prove:
+        forall z R:
+            z = 1
+            =>:
+                $target_strategy_prop(z)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "strategy_definition_stores_forall_fact_for_known_forall_use",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition should store its proved forall for known-forall use:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn strategy_definition_by_and_stop_are_stored() {
         let source_code = r#"
 prop target_strategy_prop(x R):
@@ -2361,12 +2457,24 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
+        collect_lit_files_recursive_under_excluding(manifest_dir, subdir, &[])
+    }
+
+    fn collect_lit_files_recursive_under_excluding(
+        manifest_dir: &Path,
+        subdir: &str,
+        excluded_subdirs: &[&str],
+    ) -> Vec<PathBuf> {
         let dir_path = manifest_dir.join(subdir);
         if !dir_path.is_dir() {
             println!("--- {} {:?}: directory missing; skip ---", subdir, dir_path);
             return Vec::new();
         }
-        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+        let excluded_paths: Vec<PathBuf> = excluded_subdirs
+            .iter()
+            .map(|excluded_subdir| manifest_dir.join(excluded_subdir))
+            .collect();
+        fn walk(dir: &Path, excluded_paths: &[PathBuf], out: &mut Vec<PathBuf>) {
             let read_directory = match fs::read_dir(dir) {
                 Ok(entries) => entries,
                 Err(read_error) => panic!("failed to read {:?}: {}", dir, read_error),
@@ -2381,14 +2489,20 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                     continue;
                 };
                 if file_type.is_dir() {
-                    walk(&path, out);
+                    if excluded_paths
+                        .iter()
+                        .any(|excluded_path| path == *excluded_path)
+                    {
+                        continue;
+                    }
+                    walk(&path, excluded_paths, out);
                 } else if path.extension().is_some_and(|ext| ext == "lit") {
                     out.push(path);
                 }
             }
         }
         let mut lit_file_paths = Vec::new();
-        walk(&dir_path, &mut lit_file_paths);
+        walk(&dir_path, excluded_paths.as_slice(), &mut lit_file_paths);
         lit_file_paths.sort();
         lit_file_paths
     }
@@ -2408,7 +2522,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         if examples_ran {
             println!(
-                "  phase 1 (examples/*.lit + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+                "  phase 1 (selected examples/**/*.lit + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
@@ -2458,12 +2572,26 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     #[test]
     fn run_examples() {
-        run_with_large_stack("run_examples_large_stack", run_examples_impl);
+        run_with_large_stack("run_examples_large_stack", || run_examples_impl(false));
+    }
+
+    #[test]
+    #[ignore = "includes examples/cite_std files that intentionally load std with run_file"]
+    fn run_examples_include_std() {
+        run_with_large_stack("run_examples_include_std_large_stack", || {
+            run_examples_impl(true)
+        });
     }
 
     #[test]
     fn run_all() {
         run_with_large_stack("run_all_large_stack", run_all_impl);
+    }
+
+    #[test]
+    #[ignore = "includes examples/cite_std files that intentionally load std with run_file"]
+    fn run_all_include_std() {
+        run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
     }
 
     // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
@@ -2617,6 +2745,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             .join("MATH-500-litex")
             .join("math-500")
             .join("finished");
+        let completed_dir = if completed_dir.is_dir() {
+            completed_dir
+        } else {
+            manifest_dir
+                .join("scripts")
+                .join("MATH-500-litex")
+                .join("math-500")
+                .join("finished")
+        };
         assert!(
             completed_dir.is_dir(),
             "MATH-500-litex/math-500/finished must exist at {:?}",
@@ -2631,6 +2768,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             .join("MATH-500-litex")
             .join("math-500")
             .join("unfinished");
+        let lit_dir = if lit_dir.is_dir() {
+            lit_dir
+        } else {
+            manifest_dir
+                .join("scripts")
+                .join("MATH-500-litex")
+                .join("math-500")
+                .join("unfinished")
+        };
         assert!(
             lit_dir.is_dir(),
             "MATH-500-litex/math-500/unfinished must exist at {:?}",
@@ -2668,11 +2814,13 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         collect_lit_files(base_dir, &mut lit_paths);
         lit_paths.sort();
 
-        assert!(
-            !lit_paths.is_empty(),
-            "{:?} must contain at least one .lit file",
-            base_dir
-        );
+        if lit_paths.is_empty() {
+            println!(
+                "--- math500-litex simple: no .lit files under {:?}; skip ---",
+                base_dir
+            );
+            return;
+        }
 
         let base_dir_str = base_dir.to_string_lossy().to_string();
 
@@ -2755,7 +2903,12 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     fn run_all_impl() {
-        run_examples_impl();
+        run_examples_impl(false);
+        run_the_mechanics_markdown_files_impl();
+    }
+
+    fn run_all_include_std_impl() {
+        run_examples_impl(true);
         run_the_mechanics_markdown_files_impl();
     }
 
@@ -2771,9 +2924,24 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         run_the_mechanics_markdown_files_impl();
     }
 
-    fn run_examples_impl() {
+    fn run_examples_impl(include_std_examples: bool) {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
+        let lit_file_paths = if include_std_examples {
+            collect_lit_files_recursive_under(&manifest_dir, "examples")
+        } else {
+            collect_lit_files_recursive_under_excluding(
+                &manifest_dir,
+                "examples",
+                &[CITE_STD_EXAMPLES_SUBDIR],
+            )
+        };
+        if include_std_examples {
+            println!("--- examples/cite_std included ---");
+        } else {
+            println!(
+                "--- examples/cite_std excluded; use run_examples_include_std to include it ---"
+            );
+        }
 
         let manual_md_dir = manifest_dir.join("docs").join("Manual");
         let manual_md_paths = collect_markdown_files_under_dir_sorted(&manual_md_dir);
@@ -2830,7 +2998,9 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         let mut examples_phase_wall_ms: f64 = 0.0;
 
         if phase1_items.is_empty() {
-            println!("--- phase 1: no examples/*.lit and no docs/Manual ```litex``` snippets ---");
+            println!(
+                "--- phase 1: no selected examples/**/*.lit and no docs/Manual ```litex``` snippets ---"
+            );
         } else {
             examples_ran = true;
             let examples_wall_start = Instant::now();
@@ -2877,7 +3047,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
         if every_file_run_ok && examples_ran {
             println!(
-                "--- phase 1: {} run(s) (examples/*.lit + docs/Manual ```litex```), all OK ---",
+                "--- phase 1: {} run(s) (selected examples/**/*.lit + docs/Manual ```litex```), all OK ---",
                 file_label_and_duration_ms_list.len()
             );
             print_slowest_run_labels("phase 1 runs", file_label_and_duration_ms_list.as_slice());

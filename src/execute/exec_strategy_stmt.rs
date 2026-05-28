@@ -96,7 +96,16 @@ impl Runtime {
         self.store_def_strategy(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        Ok(body_exec_result)
+        let infer_result_after_store = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::ForallFact(
+                stmt.forall_fact.clone(),
+            ))?;
+
+        for name in stmt.names.iter() {
+            self.activate_strategy(stmt, name, stmt.clone().into())?;
+        }
+
+        Ok(body_exec_result.with_infers(infer_result_after_store))
     }
 
     pub fn exec_by_strategy_stmt(
@@ -114,11 +123,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
-        let env = self.top_level_env();
-        env.used_strategy_stmts
-            .insert(atomic_fact_key.clone(), stmt.name.clone());
-        env.stopped_strategy_stmts.remove(&atomic_fact_key);
+        self.activate_strategy(&strategy, &stmt.name, stmt.clone().into())?;
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 
@@ -142,6 +147,20 @@ impl Runtime {
             .stopped_strategy_stmts
             .insert(atomic_fact_key, stmt.name.clone());
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+    }
+
+    fn activate_strategy(
+        &mut self,
+        strategy: &DefStrategyStmt,
+        strategy_name: &str,
+        caller_stmt: Stmt,
+    ) -> Result<(), RuntimeError> {
+        let atomic_fact_key = strategy_then_atomic_fact_key(strategy, caller_stmt)?;
+        let env = self.top_level_env();
+        env.used_strategy_stmts
+            .insert(atomic_fact_key.clone(), strategy_name.to_string());
+        env.stopped_strategy_stmts.remove(&atomic_fact_key);
+        Ok(())
     }
 }
 

@@ -91,6 +91,61 @@ blocks the work, remove it from that `todo.md`. For example, if work in
 `scripts/minif2f_tmp/todo.md`; if the feature is later added, delete the
 completed item.
 
+## Dataset And Textbook Problem-Solving Loop
+
+Use this loop for MiniF2F, MATH500, high-school datasets, Mathematics in
+Lean, Tao Analysis, Weil Number Theory, and any other dataset or textbook
+translation work. The goal is a pressure-test workflow, not only a final
+answer.
+
+For each item, proceed in this order:
+
+1. First explain the natural-language mathematical idea. Work out the key
+   transformations, cases, witnesses, estimates, or theorem dependencies before
+   writing Litex.
+
+2. Translate that mathematical plan into a natural Litex formulation. Prefer a
+   proof shape that the current verifier can check: explicit equality chains,
+   small intermediate facts, finite case splits, witnesses, named theorem
+   calls, and local reusable lemmas.
+
+3. If the proof cannot be completed immediately, write the best partial Litex
+   proof first. It is acceptable to use `know` temporarily, but only for the
+   blocked step. Next to each temporary `know`, add a concise comment saying
+   why the step is not yet proved and what kind of missing support it appears
+   to need.
+
+4. Put unfinished attempts in the local unfinished-explanation area. In
+   MiniF2F this is
+   `scripts/litex-minif2f/unfinished_problems_and_why_they_are_unfiniishded/`.
+   For another dataset or textbook workspace, create the analogous nearby
+   folder if it does not already exist. Name the file by the problem or theorem
+   id. Record the proof idea, the current Litex attempt, the exact verifier
+   failure if any, every remaining `know`, and the primary blocker label.
+
+5. Iterate by removing proof debt one step at a time. Run the verifier after
+   each small change and use the exact output to decide the next correction.
+   Try splitting algebraic or numeric jumps into smaller equalities before
+   searching for new theorems.
+
+6. When the item becomes checkable, move it out of the unfinished area and into
+   the finished area for that source. Delete the matching unfinished-explanation
+   file, update any local JSONL/status/todo bookkeeping, and keep the final
+   `.lit` file runnable.
+
+7. After solving a formerly unfinished item, write a short "war story" in the
+   local solved-experience area. In MiniF2F this is
+   `scripts/litex-minif2f/how_unfinshed_problems_are_solved/`. For another
+   source, create the analogous nearby folder if needed. Record the natural
+   idea, where the attempt got stuck, the exact trick or Litex pattern that
+   solved it, and any reusable lesson for later items.
+
+When using multiple agents on a backlog, split the work into disjoint ranges
+or families. Use read-only triage agents to classify unfinished items, and use
+worker agents only on clearly separated write scopes. Each agent should return
+the status for each item it touched: `checkable`, `translated`, or `blocked`
+with one primary blocker label.
+
 ## General Engineering Style
 
 1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
