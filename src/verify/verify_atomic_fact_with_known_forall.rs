@@ -9,24 +9,32 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(fact_verified) =
-            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
-        {
-            return Ok((fact_verified).into());
-        }
-
         if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
+            if let Some(fact_verified) =
+                self.try_verify_equality_with_known_forall_facts_in_envs(equal_fact, verify_state)?
+            {
+                return Ok((fact_verified).into());
+            }
+
             let fact_with_reversed_args = EqualFact::new(
                 equal_fact.right.clone(),
                 equal_fact.left.clone(),
                 equal_fact.line_file.clone(),
             );
-            if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
-                &fact_with_reversed_args.into(),
+            if let Some(fact_verified) = self.try_verify_equality_with_known_forall_facts_in_envs(
+                &fact_with_reversed_args,
                 verify_state,
             )? {
                 return Ok((fact_verified).into());
             }
+
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        if let Some(fact_verified) =
+            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
+        {
+            return Ok((fact_verified).into());
         }
 
         Ok((StmtUnknown::new()).into())
@@ -124,6 +132,97 @@ impl Runtime {
                 _ => return Ok(None),
             }
         }
+    }
+
+    fn try_verify_equality_with_known_forall_facts_in_envs(
+        &mut self,
+        equal_fact: &EqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let atomic_fact: AtomicFact = equal_fact.clone().into();
+        let no_forall_head_candidates =
+            self.equality_candidates_with_no_forall_free_param_in_fn_head(equal_fact);
+        if let Some(fact_verified) = self.try_verify_equality_candidates_with_known_forall(
+            &no_forall_head_candidates,
+            &atomic_fact,
+            verify_state,
+        )? {
+            return Ok(Some(fact_verified));
+        }
+
+        let forall_head_candidates = self.equality_candidates_with_forall_free_param_in_fn_head();
+        self.try_verify_equality_candidates_with_known_forall(
+            &forall_head_candidates,
+            &atomic_fact,
+            verify_state,
+        )
+    }
+
+    fn try_verify_equality_candidates_with_known_forall(
+        &mut self,
+        candidates: &[(AtomicFact, Rc<KnownForallFactParamsAndDom>)],
+        given_atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        for (atomic_fact_in_known_forall_fact, forall_rc) in candidates.iter() {
+            let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
+                atomic_fact_in_known_forall_fact,
+                given_atomic_fact,
+            )?;
+            if let Some(arg_map) = match_result {
+                if let Some(fact_verified) = self.verify_args_satisfy_forall_requirements(
+                    atomic_fact_in_known_forall_fact,
+                    forall_rc,
+                    arg_map,
+                    given_atomic_fact,
+                    verify_state,
+                )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn equality_candidates_with_no_forall_free_param_in_fn_head(
+        &self,
+        equal_fact: &EqualFact,
+    ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
+        let lookup_keys = equality_in_forall_lookup_keys(equal_fact);
+        let mut candidates = Vec::new();
+        for env in self.iter_environments_from_top() {
+            for lookup_key in lookup_keys.iter() {
+                let Some(bucket) = env
+                    .equality_in_forall_fact_with_no_forall_free_param_in_fn_head
+                    .get(lookup_key)
+                else {
+                    continue;
+                };
+                for candidate in bucket.iter().rev() {
+                    candidates.push(candidate.clone());
+                }
+            }
+        }
+        candidates
+    }
+
+    fn equality_candidates_with_forall_free_param_in_fn_head(
+        &self,
+    ) -> Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> {
+        let lookup_key = (EQUAL.to_string(), true);
+        let mut candidates = Vec::new();
+        for env in self.iter_environments_from_top() {
+            let Some(bucket) = env
+                .equality_in_forall_fact_with_forall_free_param_in_fn_head
+                .get(&lookup_key)
+            else {
+                continue;
+            };
+            for candidate in bucket.iter().rev() {
+                candidates.push(candidate.clone());
+            }
+        }
+        candidates
     }
 
     fn verify_args_satisfy_forall_requirements(
@@ -2294,5 +2393,52 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let _ = obj_type_name;
         Ok(None)
+    }
+}
+
+fn equality_in_forall_lookup_keys(equal_fact: &EqualFact) -> Vec<EqualityInForallFactKey> {
+    let exact_key = equality_in_forall_fact_key(&equal_fact.left, &equal_fact.right);
+    let (left_kind, left_operator) = equal_fact.left.equality_in_forall_key_part();
+    let (right_kind, right_operator) = equal_fact.right.equality_in_forall_key_part();
+    let forall_param_key_part = (ObjKind::ForallFreeParam, String::new());
+
+    let mut keys = Vec::new();
+    push_equality_lookup_key_if_new(&mut keys, exact_key);
+    push_equality_lookup_key_if_new(
+        &mut keys,
+        (
+            forall_param_key_part.0,
+            forall_param_key_part.1.clone(),
+            right_kind,
+            right_operator.clone(),
+        ),
+    );
+    push_equality_lookup_key_if_new(
+        &mut keys,
+        (
+            left_kind,
+            left_operator.clone(),
+            forall_param_key_part.0,
+            forall_param_key_part.1.clone(),
+        ),
+    );
+    push_equality_lookup_key_if_new(
+        &mut keys,
+        (
+            forall_param_key_part.0,
+            forall_param_key_part.1,
+            forall_param_key_part.0,
+            String::new(),
+        ),
+    );
+    keys
+}
+
+fn push_equality_lookup_key_if_new(
+    keys: &mut Vec<EqualityInForallFactKey>,
+    key: EqualityInForallFactKey,
+) {
+    if !keys.contains(&key) {
+        keys.push(key);
     }
 }

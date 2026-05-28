@@ -5,6 +5,7 @@ mod fn_obj_head;
 mod fn_set;
 mod free_param_obj;
 mod obj;
+mod obj_contrain_free_params;
 mod standard_set;
 pub use atom::{
     identifier_to_string, identifier_with_mod_to_string, Identifier, IdentifierWithMod,

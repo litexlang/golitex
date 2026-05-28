@@ -2,11 +2,12 @@ pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
-    IdentifierName, ObjString, OrFactKey, PropName, StrategyName, StructName, TemplateName,
-    ThmName,
+    IdentifierName, ObjOperatorString, ObjString, OrFactKey, PropName, StrategyName, StructName,
+    TemplateName, ThmName,
 };
 pub use crate::environment::{
-    Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+    equality_in_forall_fact_key, Environment, EqualityInForallFactKey, KnownFnInfo,
+    KnownForallFactParamsAndDom, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;

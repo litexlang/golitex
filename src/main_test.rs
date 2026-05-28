@@ -439,6 +439,78 @@ x $in Z
     }
 
     #[test]
+    fn known_forall_equality_uses_indexed_function_head() {
+        let source_code = r#"
+have f fn(x R) R
+know forall a R:
+    f(a) = a
+f(1) = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_uses_indexed_function_head",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "indexed equality-in-forall should prove matching function applications:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
+        let source_code = r#"
+have f fn(x R) R
+know forall a R:
+    a = f(a)
+1 + 1 = f(1 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_indexes_forall_param_side_as_wildcard",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param equality side should match non-atom target sides:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_equality_with_forall_param_function_head_uses_fallback_bucket() {
+        let source_code = r#"
+have g fn(x R) R
+know forall f fn(x R) R, a R:
+    f(a) = a
+g(1) = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_with_forall_param_function_head_uses_fallback_bucket",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param function heads should be checked through the fallback equality bucket:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
         let source_code = r#"
 abstract_prop p(x)

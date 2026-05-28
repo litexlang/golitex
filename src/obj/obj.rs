@@ -116,6 +116,16 @@ pub enum ObjKind {
     InstantiatedTemplateObj = 50,
     OneSideInfinityIntervalObj = 51,
     IntervalObj = 52,
+    Identifier = 53,
+    IdentifierWithMod = 54,
+    ForallFreeParam = 55,
+    DefHeaderFreeParam = 56,
+    ExistFreeParam = 57,
+    SetBuilderFreeParam = 58,
+    FnSetFreeParam = 59,
+    ByInducFreeParam = 60,
+    DefAlgoFreeParam = 61,
+    DefStructFieldFreeParam = 62,
 }
 
 impl ObjKind {
@@ -1021,7 +1031,18 @@ impl fmt::Display for Obj {
 impl Obj {
     pub fn kind(&self) -> ObjKind {
         match self {
-            Obj::Atom(_) => ObjKind::Atom,
+            Obj::Atom(atom) => match atom {
+                AtomObj::Identifier(_) => ObjKind::Identifier,
+                AtomObj::IdentifierWithMod(_) => ObjKind::IdentifierWithMod,
+                AtomObj::Forall(_) => ObjKind::ForallFreeParam,
+                AtomObj::Def(_) => ObjKind::DefHeaderFreeParam,
+                AtomObj::Exist(_) => ObjKind::ExistFreeParam,
+                AtomObj::SetBuilder(_) => ObjKind::SetBuilderFreeParam,
+                AtomObj::FnSet(_) => ObjKind::FnSetFreeParam,
+                AtomObj::Induc(_) => ObjKind::ByInducFreeParam,
+                AtomObj::DefAlgo(_) => ObjKind::DefAlgoFreeParam,
+                AtomObj::DefStructField(_) => ObjKind::DefStructFieldFreeParam,
+            },
             Obj::FnObj(_) => ObjKind::FnObj,
             Obj::Number(_) => ObjKind::Number,
             Obj::Add(_) => ObjKind::Add,
@@ -1081,6 +1102,54 @@ impl Obj {
 
     pub fn kind_id(&self) -> u8 {
         self.kind().as_u8()
+    }
+
+    pub fn equality_in_forall_key_part(&self) -> (ObjKind, ObjOperatorString) {
+        (self.kind(), self.obj_operator_string())
+    }
+
+    fn obj_operator_string(&self) -> ObjOperatorString {
+        match self {
+            Obj::FnObj(fn_obj) => fn_obj.head.to_string(),
+            Obj::Add(_) => ADD.to_string(),
+            Obj::Sub(_) => SUB.to_string(),
+            Obj::Mul(_) => MUL.to_string(),
+            Obj::Div(_) => DIV.to_string(),
+            Obj::Mod(_) => MOD.to_string(),
+            Obj::Pow(_) => POW.to_string(),
+            Obj::Abs(_) => ABS.to_string(),
+            Obj::Sqrt(_) => SQRT.to_string(),
+            Obj::Log(_) => LOG.to_string(),
+            Obj::Max(_) => MAX.to_string(),
+            Obj::Min(_) => MIN.to_string(),
+            Obj::Union(_) => UNION.to_string(),
+            Obj::Intersect(_) => INTERSECT.to_string(),
+            Obj::SetMinus(_) => SET_MINUS.to_string(),
+            Obj::SetDiff(_) => SET_DIFF.to_string(),
+            Obj::Cup(_) => CUP.to_string(),
+            Obj::Cap(_) => CAP.to_string(),
+            Obj::PowerSet(_) => POWER_SET.to_string(),
+            Obj::Cart(_) => CART.to_string(),
+            Obj::CartDim(_) => CART_DIM.to_string(),
+            Obj::Proj(_) => PROJ.to_string(),
+            Obj::TupleDim(_) => TUPLE_DIM.to_string(),
+            Obj::Count(_) => COUNT.to_string(),
+            Obj::Sum(_) => SUM.to_string(),
+            Obj::Product(_) => PRODUCT.to_string(),
+            Obj::Range(_) => RANGE.to_string(),
+            Obj::ClosedRange(_) => CLOSED_RANGE.to_string(),
+            Obj::MatrixAdd(_) => MATRIX_ADD.to_string(),
+            Obj::MatrixSub(_) => MATRIX_SUB.to_string(),
+            Obj::MatrixMul(_) => MATRIX_MUL.to_string(),
+            Obj::MatrixScalarMul(_) => MATRIX_SCALAR_MUL.to_string(),
+            Obj::MatrixPow(_) => MATRIX_POW.to_string(),
+            Obj::StructObj(struct_obj) => struct_obj.name.to_string(),
+            Obj::InstantiatedTemplateObj(template_obj) => template_obj.template_name.clone(),
+            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                field_access.field_name.clone()
+            }
+            _ => String::new(),
+        }
     }
 
     /// Precedence-aware display: add parens when a child binds looser than the parent (e.g. + under *).

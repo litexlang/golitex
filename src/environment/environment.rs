@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
+pub type EqualityInForallFactKey = (ObjKind, ObjOperatorString, ObjKind, ObjOperatorString);
+
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
@@ -27,6 +29,10 @@ pub struct Environment {
     pub known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
 
     pub known_atomic_facts_in_forall_facts:
+        HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub equality_in_forall_fact_with_no_forall_free_param_in_fn_head:
+        HashMap<EqualityInForallFactKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub equality_in_forall_fact_with_forall_free_param_in_fn_head:
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_exist_facts_in_forall_facts:
         HashMap<ExistFactKey, Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>>,
@@ -133,6 +139,8 @@ impl Environment {
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
             known_exist_facts,
             known_atomic_facts_in_forall_facts,
+            equality_in_forall_fact_with_no_forall_free_param_in_fn_head: HashMap::new(),
+            equality_in_forall_fact_with_forall_free_param_in_fn_head: HashMap::new(),
             known_exist_facts_in_forall_facts,
             known_and_facts_in_forall_facts,
             known_or_facts,
@@ -222,6 +230,18 @@ impl fmt::Display for Environment {
             f,
             "    known_atomic_facts_in_forall_facts: {:?}\n",
             self.known_atomic_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    equality_in_forall_fact_with_no_forall_free_param_in_fn_head: {:?}\n",
+            self.equality_in_forall_fact_with_no_forall_free_param_in_fn_head
+                .len()
+        )?;
+        write!(
+            f,
+            "    equality_in_forall_fact_with_forall_free_param_in_fn_head: {:?}\n",
+            self.equality_in_forall_fact_with_forall_free_param_in_fn_head
+                .len()
         )?;
         write!(
             f,
@@ -332,6 +352,10 @@ impl Environment {
         atomic_fact: AtomicFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
+        if let AtomicFact::EqualFact(equal_fact) = &atomic_fact {
+            return self.store_equality_in_forall_fact(equal_fact, forall_params_and_dom);
+        }
+
         let key: AtomicFactKey = atomic_fact.key();
         let is_true = atomic_fact.is_true();
         if let Some(vec_ref) = self
@@ -342,6 +366,39 @@ impl Environment {
         } else {
             self.known_atomic_facts_in_forall_facts
                 .insert((key, is_true), vec![(atomic_fact, forall_params_and_dom)]);
+        }
+        Ok(())
+    }
+
+    fn store_equality_in_forall_fact(
+        &mut self,
+        equal_fact: &EqualFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), RuntimeError> {
+        let atomic_fact: AtomicFact = equal_fact.clone().into();
+        if equality_has_fn_head_with_forall_free_param(equal_fact) {
+            let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+            if let Some(vec_ref) = self
+                .equality_in_forall_fact_with_forall_free_param_in_fn_head
+                .get_mut(&lookup_key)
+            {
+                vec_ref.push((atomic_fact, forall_params_and_dom));
+            } else {
+                self.equality_in_forall_fact_with_forall_free_param_in_fn_head
+                    .insert(lookup_key, vec![(atomic_fact, forall_params_and_dom)]);
+            }
+            return Ok(());
+        }
+
+        let lookup_key = equality_in_forall_fact_key(&equal_fact.left, &equal_fact.right);
+        if let Some(vec_ref) = self
+            .equality_in_forall_fact_with_no_forall_free_param_in_fn_head
+            .get_mut(&lookup_key)
+        {
+            vec_ref.push((atomic_fact, forall_params_and_dom));
+        } else {
+            self.equality_in_forall_fact_with_no_forall_free_param_in_fn_head
+                .insert(lookup_key, vec![(atomic_fact, forall_params_and_dom)]);
         }
         Ok(())
     }
@@ -841,6 +898,12 @@ impl Environment {
     }
 }
 
+pub fn equality_in_forall_fact_key(left: &Obj, right: &Obj) -> EqualityInForallFactKey {
+    let (left_kind, left_operator) = left.equality_in_forall_key_part();
+    let (right_kind, right_operator) = right.equality_in_forall_key_part();
+    (left_kind, left_operator, right_kind, right_operator)
+}
+
 pub struct KnownForallFactParamsAndDom {
     pub params_def: ParamDefWithType,
     pub dom: Vec<Fact>,
@@ -878,4 +941,16 @@ fn symmetric_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
         seen[i] = true;
     }
     true
+}
+
+fn equality_has_fn_head_with_forall_free_param(equal_fact: &EqualFact) -> bool {
+    obj_is_fn_obj_with_forall_free_param_in_head(&equal_fact.left)
+        || obj_is_fn_obj_with_forall_free_param_in_head(&equal_fact.right)
+}
+
+fn obj_is_fn_obj_with_forall_free_param_in_head(obj: &Obj) -> bool {
+    match obj {
+        Obj::FnObj(fn_obj) => fn_obj.head.contains_forall_free_param_obj(),
+        _ => false,
+    }
 }
