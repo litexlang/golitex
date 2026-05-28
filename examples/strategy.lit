@@ -1,5 +1,6 @@
 abstract_prop p(x)
 abstract_prop q(x)
+abstract_prop r(x)
 
 strategy prove_p:
     prove:
@@ -14,6 +15,9 @@ strategy prove_p:
             =>:
                 $p(y)
 
+# A verified strategy is enabled immediately after definition.
+$p(1)
+
 strategy prove_q:
     prove:
         forall x R:
@@ -27,8 +31,29 @@ strategy prove_q:
             =>:
                 $q(y)
 
+# A stopped strategy still leaves its proved forall available to ordinary proofs.
+strategy prove_r:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $r(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $r(y)
+
+stop strategy prove_r
+claim:
+    prove:
+        forall z R:
+            z = 1
+            =>:
+                $r(z)
+
 # Same environment: stop followed by by re-enables the same strategy key.
-by strategy prove_p
 stop strategy prove_p
 by strategy prove_p
 $p(1)

@@ -1,14 +1,41 @@
-by induc n from 1:
+abstract_prop exist_riemann_sum(f, s)
+
+prop integrable(f set, s set):
+    $restrict_fn_in(f, s)
+    $exist_riemann_sum(f, s)
+
+strategy sum_of_integrable_fn_integrable:
     prove:
-        sum(0, n, 'R(x){x}) = n * (n + 1) / 2
+        forall f, g set, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) + g(x)}, s)
+    know $integrable('(x s)R{f(x) + g(x)}, s)
 
-    prove from n = 1:
-        sum(0, 0, 'R(x){x}) = 0
-        sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 'R(x){x}(1)
-        'R(x){x}(1) = 1
-        sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 1 = 0 + 1 = 1 = 1 * (1 + 1) / 2
+strategy minus_of_integrable_fn_integrable:
+    prove:
+        forall f, g set, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) - g(x)}, s)
+    know $integrable('(x s)R{f(x) - g(x)}, s)
 
-    prove induc:
-        sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + 'R(x){x}(n + 1)
-        'R(x){x}(n + 1) = n + 1
-        sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + (n + 1) = n * (n + 1) / 2 + (n + 1) = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
+strategy product_of_integrable_fn_integrable:
+    prove:
+        forall f, g set, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) * g(x)}, s)
+    know $integrable('(x s)R{f(x) * g(x)}, s)
+
+claim:
+    prove:
+        forall f, g set, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) + g(x)}, s)
+    by strategy sum_of_integrable_fn_integrable

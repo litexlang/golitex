@@ -1,0 +1,44 @@
+abstract_prop exist_riemann_sum(f, s)
+
+prop integrable(f set, s set):
+    $restrict_fn_in(f, s)
+    $exist_riemann_sum(f, s)
+
+let s set
+
+strategy sum_of_integrable_fn_integrable:
+    prove:
+        forall f, g set:
+            $restrict_fn_in(f, s)
+            $restrict_fn_in(g, s)
+            =>:
+                $restrict_fn_in('(x s)R{f(x) + g(x)}, s)
+    know $restrict_fn_in('(x s)R{f(x) + g(x)}, s)
+
+strategy minus_of_integrable_fn_integrable:
+    prove:
+        forall f, g set:
+            $restrict_fn_in(f, s)
+            $restrict_fn_in(g, s)
+            =>:
+                $restrict_fn_in('(x s)R{f(x) - g(x)}, s)
+    know $restrict_fn_in('(x s)R{f(x) - g(x)}, s)
+
+strategy product_of_integrable_fn_integrable:
+    prove:
+        forall f, g set:
+            $restrict_fn_in(f, s)
+            $restrict_fn_in(g, s)
+            =>:
+                $restrict_fn_in('(x s)R{f(x) * g(x)}, s)
+    know $restrict_fn_in('(x s)R{f(x) * g(x)}, s)
+
+by strategy sum_of_integrable_fn_integrable
+
+claim:
+    prove:
+        forall f, g set:
+            $restrict_fn_in(f, s)
+            $restrict_fn_in(g, s)
+            =>:
+                $restrict_fn_in('(x s)R{f(x) + g(x)}, s)
