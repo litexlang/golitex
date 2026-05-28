@@ -742,7 +742,8 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
 
     #[test]
     fn sqrt_core_builtin_rules() {
-        let source_code = r#"
+        run_with_large_stack("sqrt_core_builtin_rules_large_stack", || {
+            let source_code = r#"
 sqrt(0) = 0
 sqrt(1) = 1
 sqrt(4) = 2
@@ -770,17 +771,64 @@ forall x, a, b R:
         sqrt(x) = sqrt(a) * sqrt(b)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-        assert!(
-            run_succeeded,
-            "sqrt_core_builtin_rules failed:\n{}",
-            run_output
-        );
+            assert!(
+                run_succeeded,
+                "sqrt_core_builtin_rules failed:\n{}",
+                run_output
+            );
+        });
+    }
+
+    #[test]
+    fn sqrt_order_and_quotient_builtin_rules() {
+        run_with_large_stack("sqrt_order_and_quotient_builtin_rules_large_stack", || {
+            let source_code = r#"
+forall x R:
+    x >= 0
+    =>:
+        sqrt(x) >= 0
+
+forall x, a, b R:
+    x >= 0
+    a >= 0
+    b > 0
+    x = a / b
+    =>:
+        sqrt(x) = sqrt(a) / sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a <= b
+    =>:
+        sqrt(a) <= sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a < b
+    =>:
+        sqrt(a) < sqrt(b)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("sqrt_order_and_quotient_builtin_rules");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "sqrt_order_and_quotient_builtin_rules failed:\n{}",
+                run_output
+            );
+        });
     }
 
     #[test]
@@ -1431,34 +1479,40 @@ prove:
     }
 
     #[test]
-    fn harness_success_has_done_action() {
-        let (ok, output) = run_harness_for_code("1 + 1 = 2", "-harness-test", true);
+    fn runner_success_returns_trace() {
+        let (ok, output) = run_runner_for_code("1 + 1 = 2", "-runner-test", true);
 
-        assert!(ok, "harness success run failed:\n{}", output);
-        assert!(output.contains("\"harness\": \"litex-agent-harness\""));
+        assert!(ok, "runner success run failed:\n{}", output);
+        assert!(output.contains("\"runner\": \"litex-runner\""));
         assert!(output.contains("\"result\": \"success\""));
-        assert!(output.contains("\"proof_debt_know_statements\": 0"));
-        assert!(output.contains("\"next_action\": \"done\""));
+        assert!(output.contains("\"trace\""));
     }
 
     #[test]
-    fn harness_unknown_failure_suggests_intermediate_fact() {
-        let (ok, output) = run_harness_for_code("1 = 0", "-harness-test", true);
+    fn runner_failure_returns_trace() {
+        let (ok, output) = run_runner_for_code("1 = 0", "-runner-test", true);
 
-        assert!(!ok, "harness unknown run should fail:\n{}", output);
+        assert!(!ok, "runner unknown run should fail:\n{}", output);
         assert!(output.contains("\"result\": \"error\""));
-        assert!(output.contains("\"error_type\": \"VerifyError\""));
-        assert!(output.contains("\"error_type\": \"UnknownError\""));
-        assert!(output.contains("\"next_action\": \"add_intermediate_fact\""));
+        assert!(output.contains("\\\"error_type\\\": \\\"VerifyError\\\""));
+        assert!(output.contains("\\\"error_type\\\": \\\"UnknownError\\\""));
     }
 
     #[test]
-    fn harness_counts_know_as_proof_debt() {
-        let (ok, output) = run_harness_for_code("know 1 = 0", "-harness-test", true);
+    fn runner_target_error_returns_message() {
+        let (ok, output) = run_runner_for_file("does_not_exist.lit", true);
 
-        assert!(!ok, "harness proof debt run should fail:\n{}", output);
-        assert!(output.contains("\"proof_debt_know_statements\": 1"));
-        assert!(output.contains("\"next_action\": \"reduce_proof_debt\""));
+        assert!(!ok, "runner target error should fail:\n{}", output);
+        assert!(output.contains("\"kind\": \"target_error\""));
+        assert!(output.contains("could not read entry file"));
+    }
+
+    #[test]
+    fn runner_accepts_know_as_normal_execution() {
+        let (ok, output) = run_runner_for_code("know 1 = 0", "-runner-test", true);
+
+        assert!(ok, "runner should not reject know statements:\n{}", output);
+        assert!(output.contains("\"result\": \"success\""));
     }
 
     #[test]

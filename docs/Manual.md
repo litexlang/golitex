@@ -59,28 +59,24 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
-> You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
-
 > If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
-### Working With AI Agents
+### Iterative Proof Workflow
 
-Litex works well with AI agents because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
+Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
-1. Ask the agent to solve the theorem first in natural language, step by step.
-2. Ask it to formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
+1. Solve the theorem first in natural language, step by step.
+2. Formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
 3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
-4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
 This turns `know` into temporary scaffolding rather than the final proof. The
-agent can read this manual, run Litex, inspect verification output and error
-messages, and keep shrinking the informal gaps. This is the same loop used for
-larger Mechanics examples and benchmark-style tasks: first build a readable
-proof skeleton, then replace broad assumptions by smaller verified branches or
-record the exact language, library, rule, or diagnostic gap that blocks the
-next step.
+same loop is used for larger Mechanics examples and benchmark-style tasks:
+first build a readable proof skeleton, then replace broad assumptions by
+smaller verified branches or record the exact language, library, rule, or
+diagnostic gap that blocks the next step.
 
-For algebra, agents should prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
+For algebra, prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
 
 ```litex
 claim:
@@ -93,7 +89,7 @@ claim:
     3 * a + b = 0 / (2 * a - b) = 0
 ```
 
-This style matches the verifier feedback loop better than a large algebraic jump. It also gives an agent a reusable pattern: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
+This style matches the verifier feedback loop better than a large algebraic jump: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
 
 ---
 

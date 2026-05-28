@@ -84,9 +84,9 @@ pub fn run_cli() {
                 main_flag_file(joined_string.as_str(), detail_output);
                 return;
             }
-            "-harness" => {
+            "-runner" => {
                 index += 1;
-                let (ok, output) = match main_flag_harness(&args, &mut index, detail_output) {
+                let (ok, output) = match main_flag_runner(&args, &mut index, detail_output) {
                     Ok(output) => output,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -322,33 +322,31 @@ fn main_flag_file(file_flag: &str, detail_output: bool) {
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
-fn main_flag_harness(
+fn main_flag_runner(
     args: &[String],
     index: &mut usize,
     detail_output: bool,
 ) -> Result<(bool, String), String> {
-    let target_flag = read_any_value_after_flag(args, index, "-harness")?;
+    let target_flag = read_any_value_after_flag(args, index, "-runner")?;
     let hide_file_paths = !detail_output;
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            Ok(run_harness_for_code(
+            Ok(run_runner_for_code(
                 code.as_str(),
-                "-harness -e",
+                "-runner -e",
                 hide_file_paths,
             ))
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            Ok(run_harness_for_file(file_path.as_str(), hide_file_paths))
+            Ok(run_runner_for_file(file_path.as_str(), hide_file_paths))
         }
         "-r" => {
             let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            Ok(run_harness_for_repo(repo_path.as_str(), hide_file_paths))
+            Ok(run_runner_for_repo(repo_path.as_str(), hide_file_paths))
         }
-        _ => {
-            Err("-harness must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string())
-        }
+        _ => Err("-runner must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string()),
     }
 }
 
@@ -423,9 +421,9 @@ fn help_message() -> String {
 litex -f <file> : run the given file
 litex -r <repo> : run the given repository
 litex -e <code> : execute the given code
-litex -harness -f <file> : run a file through the agent harness
-litex -harness -e <code> : run source code through the agent harness
-litex -harness -r <repo> : run a repository through the agent harness
+litex -runner -f <file> : run a file and return one wrapper JSON object
+litex -runner -e <code> : run source code and return one wrapper JSON object
+litex -runner -r <repo> : run a repository and return one wrapper JSON object
 litex -latex : compile the given file or code to LaTeX interactively in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
