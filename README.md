@@ -140,28 +140,6 @@ undeclared name, a function argument outside its domain, or `1 / 0`.
 
 > Another special design is that Litex lets a development start at the right abstraction level: primitive domains with `have`, relations with `abstract_prop`, definitions with `prop`, and axioms with `know`. The [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry) tutorial shows this style: it starts from points, lines, planes, incidence, betweenness, and congruence relations rather than coordinates.
 
-## AI Agents Can Work With Litex
-
-Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
-
-In AI mathematical discovery, the expensive object is not only the final
-theorem but the long trail of intermediate claims. Litex is designed to check
-that trail as it is produced: wrong turns can fail early, missing lemmas become
-visible, and remaining assumptions can be tracked as explicit proof debt. This
-can improve search efficiency for agents while making their mathematical output
-more auditable.
-
-The main current signal is the
-[Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction)
-corpus. With Codex and verifier feedback, it was built and checked in about a
-week. MATH500 and MiniF2F-style tasks are now used as pressure tests: successful
-translations become examples or benchmarks, while failures expose language,
-library, rule, or diagnostic gaps. The point is not that the individual
-theorems are hard for mature proof assistants, but that Litex makes the repair
-loop fast and inspectable.
-
-This is the point Litex is trying to make especially strong: Litex gives agents a direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop is a practical way to discover which background facts and theorem-library entries a proof actually needs.
-
 ## Starting Points
 
 Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape. Welcome to explore Litex by yourself.
@@ -170,12 +148,11 @@ For different readers:
 
 1. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, `know`, builtin rules, and current limitations.
 2. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
-3. [AI Agent Workflow](https://litexlang.com/doc/AI_Agent_Workflow): for AI and formal math work using verifier feedback.
-4. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and future evaluation.
-5. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
-6. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
-7. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
-8. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
+3. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and future evaluation.
+4. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
+5. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
+6. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
+7. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:
 

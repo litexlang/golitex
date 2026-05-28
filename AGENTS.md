@@ -140,11 +140,11 @@ For each item, proceed in this order:
    idea, where the attempt got stuck, the exact trick or Litex pattern that
    solved it, and any reusable lesson for later items.
 
-When using multiple agents on a backlog, split the work into disjoint ranges
-or families. Use read-only triage agents to classify unfinished items, and use
-worker agents only on clearly separated write scopes. Each agent should return
-the status for each item it touched: `checkable`, `translated`, or `blocked`
-with one primary blocker label.
+When splitting backlog work, use disjoint ranges or families. Use read-only
+triage passes to classify unfinished items, and use workers only on clearly
+separated write scopes. Each worker should return the status for each item it
+touched: `checkable`, `translated`, or `blocked` with one primary blocker
+label.
 
 ## General Engineering Style
 
@@ -213,7 +213,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 7. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-8. When an agent cannot prove a direct algebraic or numeric equality, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+8. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
 
 9. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
 
