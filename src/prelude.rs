@@ -131,6 +131,7 @@ pub use crate::obj::Number;
 pub use crate::obj::Obj;
 pub use crate::obj::ObjAsStructInstanceWithFieldAccess;
 pub use crate::obj::ObjAtIndex;
+pub use crate::obj::ObjKind;
 pub use crate::obj::OneSideInfinityIntervalObj;
 pub use crate::obj::OneSideInfinityIntervalObjStruct;
 pub use crate::obj::ParamObjType;

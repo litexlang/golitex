@@ -24,7 +24,7 @@ pub use obj::{
     FiniteSeqListObj, FiniteSeqSet, FnObj, InstantiatedTemplateObj, Intersect, IntervalObj,
     IntervalObjStruct, ListSet, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
     MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, NameWithOrWithoutMod, Number, Obj,
-    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, OneSideInfinityIntervalObj,
+    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
     OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product, Proj, Range, SeqSet, SetBuilder,
     SetDiff, SetMinus, Sqrt, StructObj, Sub, Sum, Tuple, TupleDim, Union,
 };

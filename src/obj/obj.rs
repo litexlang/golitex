@@ -60,6 +60,70 @@ pub enum Obj {
     IntervalObj(IntervalObj),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ObjKind {
+    Atom = 0,
+    FnObj = 1,
+    Number = 2,
+    Add = 3,
+    Sub = 4,
+    Mul = 5,
+    Div = 6,
+    Mod = 7,
+    Pow = 8,
+    Abs = 9,
+    Sqrt = 10,
+    Log = 11,
+    Max = 12,
+    Min = 13,
+    Union = 14,
+    Intersect = 15,
+    SetMinus = 16,
+    SetDiff = 17,
+    Cup = 18,
+    Cap = 19,
+    PowerSet = 20,
+    ListSet = 21,
+    SetBuilder = 22,
+    FnSet = 23,
+    AnonymousFn = 24,
+    Cart = 25,
+    CartDim = 26,
+    Proj = 27,
+    TupleDim = 28,
+    Tuple = 29,
+    Count = 30,
+    Sum = 31,
+    Product = 32,
+    Range = 33,
+    ClosedRange = 34,
+    FiniteSeqSet = 35,
+    SeqSet = 36,
+    FiniteSeqListObj = 37,
+    Choose = 38,
+    ObjAtIndex = 39,
+    StandardSet = 40,
+    MatrixSet = 41,
+    MatrixListObj = 42,
+    MatrixAdd = 43,
+    MatrixSub = 44,
+    MatrixMul = 45,
+    MatrixScalarMul = 46,
+    MatrixPow = 47,
+    StructObj = 48,
+    ObjAsStructInstanceWithFieldAccess = 49,
+    InstantiatedTemplateObj = 50,
+    OneSideInfinityIntervalObj = 51,
+    IntervalObj = 52,
+}
+
+impl ObjKind {
+    pub fn as_u8(self) -> u8 {
+        self as u8
+    }
+}
+
 #[derive(Clone)]
 pub enum OneSideInfinityIntervalObj {
     LeftOpen(OneSideInfinityIntervalObjStruct),
@@ -955,6 +1019,70 @@ impl fmt::Display for Obj {
 }
 
 impl Obj {
+    pub fn kind(&self) -> ObjKind {
+        match self {
+            Obj::Atom(_) => ObjKind::Atom,
+            Obj::FnObj(_) => ObjKind::FnObj,
+            Obj::Number(_) => ObjKind::Number,
+            Obj::Add(_) => ObjKind::Add,
+            Obj::Sub(_) => ObjKind::Sub,
+            Obj::Mul(_) => ObjKind::Mul,
+            Obj::Div(_) => ObjKind::Div,
+            Obj::Mod(_) => ObjKind::Mod,
+            Obj::Pow(_) => ObjKind::Pow,
+            Obj::Abs(_) => ObjKind::Abs,
+            Obj::Sqrt(_) => ObjKind::Sqrt,
+            Obj::Log(_) => ObjKind::Log,
+            Obj::Max(_) => ObjKind::Max,
+            Obj::Min(_) => ObjKind::Min,
+            Obj::Union(_) => ObjKind::Union,
+            Obj::Intersect(_) => ObjKind::Intersect,
+            Obj::SetMinus(_) => ObjKind::SetMinus,
+            Obj::SetDiff(_) => ObjKind::SetDiff,
+            Obj::Cup(_) => ObjKind::Cup,
+            Obj::Cap(_) => ObjKind::Cap,
+            Obj::PowerSet(_) => ObjKind::PowerSet,
+            Obj::ListSet(_) => ObjKind::ListSet,
+            Obj::SetBuilder(_) => ObjKind::SetBuilder,
+            Obj::FnSet(_) => ObjKind::FnSet,
+            Obj::AnonymousFn(_) => ObjKind::AnonymousFn,
+            Obj::Cart(_) => ObjKind::Cart,
+            Obj::CartDim(_) => ObjKind::CartDim,
+            Obj::Proj(_) => ObjKind::Proj,
+            Obj::TupleDim(_) => ObjKind::TupleDim,
+            Obj::Tuple(_) => ObjKind::Tuple,
+            Obj::Count(_) => ObjKind::Count,
+            Obj::Sum(_) => ObjKind::Sum,
+            Obj::Product(_) => ObjKind::Product,
+            Obj::Range(_) => ObjKind::Range,
+            Obj::ClosedRange(_) => ObjKind::ClosedRange,
+            Obj::FiniteSeqSet(_) => ObjKind::FiniteSeqSet,
+            Obj::SeqSet(_) => ObjKind::SeqSet,
+            Obj::FiniteSeqListObj(_) => ObjKind::FiniteSeqListObj,
+            Obj::Choose(_) => ObjKind::Choose,
+            Obj::ObjAtIndex(_) => ObjKind::ObjAtIndex,
+            Obj::StandardSet(_) => ObjKind::StandardSet,
+            Obj::MatrixSet(_) => ObjKind::MatrixSet,
+            Obj::MatrixListObj(_) => ObjKind::MatrixListObj,
+            Obj::MatrixAdd(_) => ObjKind::MatrixAdd,
+            Obj::MatrixSub(_) => ObjKind::MatrixSub,
+            Obj::MatrixMul(_) => ObjKind::MatrixMul,
+            Obj::MatrixScalarMul(_) => ObjKind::MatrixScalarMul,
+            Obj::MatrixPow(_) => ObjKind::MatrixPow,
+            Obj::StructObj(_) => ObjKind::StructObj,
+            Obj::ObjAsStructInstanceWithFieldAccess(_) => {
+                ObjKind::ObjAsStructInstanceWithFieldAccess
+            }
+            Obj::InstantiatedTemplateObj(_) => ObjKind::InstantiatedTemplateObj,
+            Obj::OneSideInfinityIntervalObj(_) => ObjKind::OneSideInfinityIntervalObj,
+            Obj::IntervalObj(_) => ObjKind::IntervalObj,
+        }
+    }
+
+    pub fn kind_id(&self) -> u8 {
+        self.kind().as_u8()
+    }
+
     /// Precedence-aware display: add parens when a child binds looser than the parent (e.g. + under *).
     /// For same-precedence `+`/`-`, pass a stricter bound (2) on Sub's sides and Add's right so
     /// `a - (b + c)` and `a + (b - c)` do not print as the ambiguous `a - b + c` / `a + b - c`.

@@ -27,8 +27,9 @@ impl Runtime {
             })?;
 
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
-                rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                rt.verify_well_defined_and_store_and_infer(
                     dom_fact.clone(),
+                    &VerifyState::new(0, false),
                 )?;
             }
 
