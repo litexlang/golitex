@@ -946,7 +946,7 @@ algo f(x, y):
 
 ### `import`
 
-**Meaning.** Load another module or file path into scope.
+**Meaning.** Load another module or file path into scope. The chosen module name and resolved module path must not already be used.
 
 **Syntax.** `import` `"path"` [`as` *name*] or `import` *module* [`as` *name*].
 
@@ -954,20 +954,20 @@ algo f(x, y):
 
 ```text
 import "other.lit"
+import Nat as Nat
 ```
 
 ---
 
 ### `run_file`
 
-**Meaning.** Run another `.lit` file. Unquoted standard-library modules such as `run_file Nat` must appear before user definitions and facts in the current file section; they remain available after `clear`. Quoted file paths run in the current user environment and are cleared by `clear`.
+**Meaning.** Run another `.lit` file. `run_file` only accepts quoted file paths; standard-library module names should be registered with `import`.
 
-**Syntax.** `run_file` `module` or `run_file` `"path"`.
+**Syntax.** `run_file` `"path"`.
 
 **Example.**
 
 ```text
-run_file Nat
 run_file "./runfile2.lit"
 
 $p(1, 2)

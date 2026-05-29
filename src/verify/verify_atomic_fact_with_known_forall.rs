@@ -317,9 +317,6 @@ impl Runtime {
         if stack_idx == FILE_INDEX_FOR_BUILTIN {
             return KnownForallEnvKind::Builtin;
         }
-        if self.std_env_index == Some(stack_idx) {
-            return KnownForallEnvKind::Std;
-        }
         KnownForallEnvKind::User
     }
 

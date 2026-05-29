@@ -23,7 +23,6 @@ pub enum Stmt {
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     RunFileStmt(RunFileStmt),
-    RunFileInStd(RunFileInStd),
     EvalStmt(EvalStmt),
     WitnessExistFact(WitnessExistFact),
     WitnessNonemptySet(WitnessNonemptySet),
@@ -53,13 +52,13 @@ pub enum Stmt {
 
 #[derive(Clone)]
 pub struct ByStrategyStmt {
-    pub name: String,
+    pub name: AtomicName,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct StopStrategyStmt {
-    pub name: String,
+    pub name: AtomicName,
     pub line_file: LineFile,
 }
 
@@ -72,7 +71,7 @@ pub struct DefStrategyStmt {
 }
 
 impl ByStrategyStmt {
-    pub fn new(name: String, line_file: LineFile) -> Self {
+    pub fn new(name: AtomicName, line_file: LineFile) -> Self {
         ByStrategyStmt { name, line_file }
     }
 }
@@ -84,7 +83,7 @@ impl fmt::Display for ByStrategyStmt {
 }
 
 impl StopStrategyStmt {
-    pub fn new(name: String, line_file: LineFile) -> Self {
+    pub fn new(name: AtomicName, line_file: LineFile) -> Self {
         StopStrategyStmt { name, line_file }
     }
 }
@@ -139,7 +138,7 @@ impl fmt::Display for DefStrategyStmt {
 
 #[derive(Clone)]
 pub struct ByThmStmt {
-    pub name: String,
+    pub name: AtomicName,
     pub args: Vec<Obj>,
     pub line_file: LineFile,
 }
@@ -153,7 +152,7 @@ pub struct DefThmStmt {
 }
 
 impl ByThmStmt {
-    pub fn new(name: String, args: Vec<Obj>, line_file: LineFile) -> Self {
+    pub fn new(name: AtomicName, args: Vec<Obj>, line_file: LineFile) -> Self {
         ByThmStmt {
             name,
             args,
@@ -214,27 +213,6 @@ impl fmt::Display for DefThmStmt {
             )?;
         }
         Ok(())
-    }
-}
-
-#[derive(Clone)]
-pub struct RunFileInStd {
-    pub file_path: String,
-    pub line_file: LineFile,
-}
-
-impl RunFileInStd {
-    pub fn new(file_path: String, line_file: LineFile) -> Self {
-        RunFileInStd {
-            file_path,
-            line_file,
-        }
-    }
-}
-
-impl fmt::Display for RunFileInStd {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", RUN_FILE, self.file_path)
     }
 }
 
@@ -405,7 +383,6 @@ impl fmt::Display for Stmt {
             Stmt::DoNothingStmt(x) => write!(f, "{}", x),
             Stmt::ClearStmt(x) => write!(f, "{}", x),
             Stmt::RunFileStmt(x) => write!(f, "{}", x),
-            Stmt::RunFileInStd(x) => write!(f, "{}", x),
             Stmt::EvalStmt(x) => write!(f, "{}", x),
             Stmt::EvalByStmt(x) => write!(f, "{}", x),
             Stmt::WitnessExistFact(x) => write!(f, "{}", x),
@@ -458,7 +435,6 @@ impl Stmt {
             Stmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClearStmt(stmt) => stmt.line_file.clone(),
             Stmt::RunFileStmt(stmt) => stmt.line_file.clone(),
-            Stmt::RunFileInStd(stmt) => stmt.line_file.clone(),
             Stmt::EvalStmt(stmt) => stmt.line_file.clone(),
             Stmt::EvalByStmt(stmt) => stmt.line_file.clone(),
             Stmt::WitnessExistFact(stmt) => stmt.line_file.clone(),
@@ -509,7 +485,6 @@ impl Stmt {
             Stmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             Stmt::RunFileStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::RunFileInStd(stmt) => stmt.stmt_type_name(),
             Stmt::EvalStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
             Stmt::WitnessExistFact(stmt) => stmt.stmt_type_name(),
@@ -656,12 +631,6 @@ impl From<ClearStmt> for Stmt {
 impl From<RunFileStmt> for Stmt {
     fn from(v: RunFileStmt) -> Self {
         Stmt::RunFileStmt(v)
-    }
-}
-
-impl From<RunFileInStd> for Stmt {
-    fn from(v: RunFileInStd) -> Self {
-        Stmt::RunFileInStd(v)
     }
 }
 
