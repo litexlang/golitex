@@ -22,6 +22,7 @@ pub enum Stmt {
     ImportStmt(ImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
+    StopImportStmt(StopImportStmt),
     RunFileStmt(RunFileStmt),
     EvalStmt(EvalStmt),
     WitnessExistFact(WitnessExistFact),
@@ -382,6 +383,7 @@ impl fmt::Display for Stmt {
             Stmt::ImportStmt(x) => write!(f, "{}", x),
             Stmt::DoNothingStmt(x) => write!(f, "{}", x),
             Stmt::ClearStmt(x) => write!(f, "{}", x),
+            Stmt::StopImportStmt(x) => write!(f, "{}", x),
             Stmt::RunFileStmt(x) => write!(f, "{}", x),
             Stmt::EvalStmt(x) => write!(f, "{}", x),
             Stmt::EvalByStmt(x) => write!(f, "{}", x),
@@ -434,6 +436,7 @@ impl Stmt {
             Stmt::ImportStmt(stmt) => stmt.line_file(),
             Stmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClearStmt(stmt) => stmt.line_file.clone(),
+            Stmt::StopImportStmt(stmt) => stmt.line_file.clone(),
             Stmt::RunFileStmt(stmt) => stmt.line_file.clone(),
             Stmt::EvalStmt(stmt) => stmt.line_file.clone(),
             Stmt::EvalByStmt(stmt) => stmt.line_file.clone(),
@@ -484,6 +487,7 @@ impl Stmt {
             Stmt::ImportStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::StopImportStmt(stmt) => stmt.stmt_type_name(),
             Stmt::RunFileStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
@@ -625,6 +629,12 @@ impl From<DoNothingStmt> for Stmt {
 impl From<ClearStmt> for Stmt {
     fn from(v: ClearStmt) -> Self {
         Stmt::ClearStmt(v)
+    }
+}
+
+impl From<StopImportStmt> for Stmt {
+    fn from(v: StopImportStmt) -> Self {
+        Stmt::StopImportStmt(v)
     }
 }
 

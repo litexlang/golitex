@@ -149,8 +149,28 @@ impl Runtime {
         &self,
         x: &IdentifierWithMod,
     ) -> Result<(), RuntimeError> {
-        let _ = x;
-        unreachable!()
+        if self.is_current_parse_module(&x.mod_name) {
+            for env in self.iter_environments_from_top() {
+                if env.defined_identifiers.contains_key(&x.name)
+                    || env.defined_structs.contains_key(&x.name)
+                {
+                    return Ok(());
+                }
+            }
+        } else if let Some(env) = self.imported_module_environment(&x.mod_name) {
+            if env.defined_identifiers.contains_key(&x.name)
+                || env.defined_structs.contains_key(&x.name)
+            {
+                return Ok(());
+            }
+        }
+
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "identifier `{}` not defined",
+                x.to_string()
+            )),
+        )))
     }
 
     fn verify_fn_obj_well_defined(

@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Stoppable imports (2026-05)
+
+`stop import Name` keeps an imported module registered but removes it from ordinary automatic verification. This is useful when a loaded module has many known facts and `forall` facts that should not be searched for later goals. Local imports now name module directories containing `main.lit`, not `.lit` files, and `import Nat` defaults to the module name `Nat`. Re-importing the same module with the same module name is idempotent and re-enables the module if it was stopped; `clear` stops all currently imported modules. Explicit citations such as `by thm Name::theorem(...)` can still cite a stopped module.
+
 ### Named theorem calls with `thm` (2026-05)
 
 `thm name:` records a verified `forall` theorem under an explicit name. `thm name1, name2:` records the same theorem under multiple names. Calling `by thm name(args...)` checks the argument types and domain facts, then stores the instantiated then-facts. Defining a theorem does not add it to ordinary automatic forall-pattern matching; use `by thm` when you want the named theorem.

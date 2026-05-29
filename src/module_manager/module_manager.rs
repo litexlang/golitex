@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 // Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
@@ -47,6 +47,7 @@ pub struct ModuleManager {
     pub hide_file_paths_in_output: bool,
     pub display_source_labels: HashMap<String, DisplaySourceLabel>,
     pub imported_modules: HashMap<String, ImportedModule>,
+    pub stopped_module: HashSet<String>,
 }
 
 impl ModuleManager {
@@ -62,6 +63,7 @@ impl ModuleManager {
             hide_file_paths_in_output: false,
             display_source_labels: HashMap::new(),
             imported_modules: HashMap::new(),
+            stopped_module: HashSet::new(),
         }
     }
 
@@ -76,14 +78,13 @@ impl ModuleManager {
         );
     }
 
-    pub fn register_imported_module(
-        &mut self,
-        module_name: String,
-        absolute_path: String,
-        is_std: bool,
+    pub fn validate_imported_module_is_new(
+        &self,
+        module_name: &str,
+        absolute_path: &str,
     ) -> Result<(), String> {
-        if self.module_name_and_path_map.contains_key(&module_name)
-            || self.imported_modules.contains_key(&module_name)
+        if self.module_name_and_path_map.contains_key(module_name)
+            || self.imported_modules.contains_key(module_name)
         {
             return Err(format!(
                 "module name `{}` has already been used",
@@ -93,19 +94,89 @@ impl ModuleManager {
         if let Some((used_module_name, _)) = self
             .module_name_and_path_map
             .iter()
-            .find(|(_, used_path)| *used_path == &absolute_path)
+            .find(|(_, used_path)| used_path.as_str() == absolute_path)
         {
             return Err(format!(
                 "module path `{}` has already been imported as module name `{}`",
                 absolute_path, used_module_name
             ));
         }
+        Ok(())
+    }
+
+    pub fn imported_module_can_be_loaded_or_reactivated(
+        &self,
+        module_name: &str,
+        absolute_path: &str,
+    ) -> Result<bool, String> {
+        if let Some(existing_path) = self.module_name_and_path_map.get(module_name) {
+            if existing_path.as_str() == absolute_path {
+                return Ok(true);
+            }
+            return Err(format!(
+                "module name `{}` has already been used",
+                module_name
+            ));
+        }
+        if let Some(imported_module) = self.imported_modules.get(module_name) {
+            if imported_module.absolute_path == absolute_path {
+                return Ok(true);
+            }
+            return Err(format!(
+                "module name `{}` has already been used",
+                module_name
+            ));
+        }
+        if let Some((used_module_name, _)) = self
+            .module_name_and_path_map
+            .iter()
+            .find(|(_, used_path)| used_path.as_str() == absolute_path)
+        {
+            return Err(format!(
+                "module path `{}` has already been imported as module name `{}`",
+                absolute_path, used_module_name
+            ));
+        }
+        Ok(false)
+    }
+
+    pub fn register_imported_module(
+        &mut self,
+        module_name: String,
+        absolute_path: String,
+        environment: Environment,
+        is_std: bool,
+    ) -> Result<(), String> {
+        self.validate_imported_module_is_new(&module_name, &absolute_path)?;
         self.module_name_and_path_map
             .insert(module_name.clone(), absolute_path.clone());
         self.imported_modules.insert(
-            module_name,
-            ImportedModule::new(absolute_path, Environment::new_empty_env(), is_std),
+            module_name.clone(),
+            ImportedModule::new(absolute_path, environment, is_std),
         );
+        self.stopped_module.remove(&module_name);
         Ok(())
+    }
+
+    pub fn reactivate_imported_module(&mut self, module_name: &str) {
+        self.stopped_module.remove(module_name);
+    }
+
+    pub fn stop_imported_module(&mut self, module_name: &str) -> Result<(), String> {
+        if !self.imported_modules.contains_key(module_name) {
+            return Err(format!("module `{}` has not been imported", module_name));
+        }
+        self.stopped_module.insert(module_name.to_string());
+        Ok(())
+    }
+
+    pub fn stop_all_imported_modules(&mut self) {
+        for module_name in self.imported_modules.keys() {
+            self.stopped_module.insert(module_name.clone());
+        }
+    }
+
+    pub fn imported_module_is_stopped(&self, module_name: &str) -> bool {
+        self.stopped_module.contains(module_name)
     }
 }

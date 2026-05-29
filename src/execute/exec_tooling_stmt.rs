@@ -27,6 +27,16 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 
+    pub fn exec_stop_import_stmt(
+        &mut self,
+        stmt: &StopImportStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.module_manager
+            .stop_imported_module(&stmt.module_name)
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
+        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+    }
+
     pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();

@@ -442,7 +442,7 @@ prove:
 
 ### `clear`
 
-**Meaning.** Clear only the **current user** environment and the **current** parse-time name map: the user env is replaced by an empty one, and the name map is emptied. Builtins and loaded standard-library modules are left unchanged. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
+**Meaning.** Clear only the **current user** environment and the **current** parse-time name map: the user env is replaced by an empty one, and the name map is emptied. Builtins are left unchanged. Imported modules stay registered but are stopped for automatic verification until the same module is imported again. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
 
 **Syntax.** `clear`.
 
@@ -946,15 +946,30 @@ algo f(x, y):
 
 ### `import`
 
-**Meaning.** Load another module or file path into scope. The chosen module name and resolved module path must not already be used.
+**Meaning.** Load another standard-library module or local module directory into a named imported-module environment. For standard-library modules, omitting `as` uses the module name itself, so `import Nat` means `import Nat as Nat`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. The chosen module name and resolved module directory must not already be used, except that importing the same module with the same name again is an idempotent no-op and re-enables a stopped module.
 
-**Syntax.** `import` `"path"` [`as` *name*] or `import` *module* [`as` *name*].
+**Syntax.** `import` `"module_dir"` [`as` *name*] or `import` *std_module* [`as` *name*].
 
 **Example.**
 
 ```text
-import "other.lit"
-import Nat as Nat
+import "other_module"
+import Nat
+```
+
+---
+
+### `stop import`
+
+**Meaning.** Stop using an imported module as an automatic verification source. Explicit citations such as `by thm Mod::name(...)` may still cite the module.
+
+**Syntax.** `stop import` *name*.
+
+**Example.**
+
+```text
+import Nat
+stop import Nat
 ```
 
 ---

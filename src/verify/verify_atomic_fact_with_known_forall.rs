@@ -137,9 +137,61 @@ impl Runtime {
                     iterate_from_env_index = i;
                     iterate_from_known_forall_fact_index = j + 1;
                 }
-                _ => return Ok(None),
+                _ => break,
             }
         }
+
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        self.try_verify_with_fallback_known_forall_facts_in_imported_modules(
+            atomic_fact,
+            verify_state,
+            &module_names,
+        )
+    }
+
+    fn try_verify_with_fallback_known_forall_facts_in_imported_modules(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        module_names: &[String],
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        for module_name in module_names.iter() {
+            let Some(known_forall_facts_count) = ({
+                self.active_imported_module_environment(module_name)
+                    .and_then(|env| {
+                        env.known_atomic_facts_in_forall_facts
+                            .get(&lookup_key)
+                            .map(|facts| facts.len())
+                    })
+            }) else {
+                continue;
+            };
+
+            for j in 0..known_forall_facts_count {
+                let entry_idx = known_forall_facts_count - 1 - j;
+                let candidate = {
+                    self.active_imported_module_environment(module_name)
+                        .and_then(|env| env.known_atomic_facts_in_forall_facts.get(&lookup_key))
+                        .and_then(|facts| facts.get(entry_idx))
+                        .cloned()
+                };
+                let Some((atomic_fact_in_known_forall, forall_rc)) = candidate else {
+                    continue;
+                };
+                if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                    KnownForallSearchPhase::Fallback,
+                    KnownForallEnvKind::User,
+                    atomic_fact_in_known_forall,
+                    forall_rc,
+                    atomic_fact,
+                    verify_state,
+                )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        Ok(None)
     }
 
     fn try_verify_with_known_forall_facts_in_envs(
@@ -223,6 +275,23 @@ impl Runtime {
                 }
             }
         }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        for module_name in module_names.iter() {
+            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
+                if let Some(fact_verified) = self
+                    .try_verify_with_arg_shape_key_in_imported_module_env(
+                        module_name,
+                        &lookup_key,
+                        arg_shape_lookup_key,
+                        atomic_fact,
+                        verify_state,
+                        KnownForallSearchPhase::ExactShape,
+                    )?
+                {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
         Ok(None)
     }
 
@@ -259,6 +328,39 @@ impl Runtime {
                     verify_state,
                     KnownForallSearchPhase::OtherShape,
                 )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        for module_name in module_names.iter() {
+            let arg_shape_keys = {
+                let Some(env) = self.active_imported_module_environment(module_name) else {
+                    continue;
+                };
+                let Some(arg_shape_map) = env
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(&lookup_key)
+                else {
+                    continue;
+                };
+                arg_shape_map
+                    .keys()
+                    .filter(|key| !arg_shape_lookup_keys.contains(key))
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            for arg_shape_key in arg_shape_keys.iter() {
+                if let Some(fact_verified) = self
+                    .try_verify_with_arg_shape_key_in_imported_module_env(
+                        module_name,
+                        &lookup_key,
+                        arg_shape_key,
+                        atomic_fact,
+                        verify_state,
+                        KnownForallSearchPhase::OtherShape,
+                    )?
+                {
                     return Ok(Some(fact_verified));
                 }
             }
@@ -302,6 +404,56 @@ impl Runtime {
             if let Some(fact_verified) = self.try_verify_known_forall_candidate(
                 phase,
                 env_kind,
+                atomic_fact_in_known_forall_fact,
+                forall_rc,
+                atomic_fact,
+                verify_state,
+            )? {
+                return Ok(Some(fact_verified));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_arg_shape_key_in_imported_module_env(
+        &mut self,
+        module_name: &str,
+        lookup_key: &(AtomicFactKey, bool),
+        arg_shape_key: &AtomicFactInForallArgShapeKey,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        phase: KnownForallSearchPhase,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let Some(bucket_count) = ({
+            self.active_imported_module_environment(module_name)
+                .and_then(|env| {
+                    env.known_atomic_facts_in_forall_facts_by_arg_shape
+                        .get(lookup_key)
+                })
+                .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                .map(|bucket| bucket.len())
+        }) else {
+            return Ok(None);
+        };
+
+        for j in 0..bucket_count {
+            let entry_idx = bucket_count - 1 - j;
+            let candidate = {
+                self.active_imported_module_environment(module_name)
+                    .and_then(|env| {
+                        env.known_atomic_facts_in_forall_facts_by_arg_shape
+                            .get(lookup_key)
+                    })
+                    .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                    .and_then(|bucket| bucket.get(entry_idx))
+                    .cloned()
+            };
+            let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
+                continue;
+            };
+            if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                phase,
+                KnownForallEnvKind::User,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 atomic_fact,
@@ -541,8 +693,8 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                self.match_arg_when_left_is_identifier_with_mod(given_arg)
+            Obj::Atom(AtomObj::IdentifierWithMod(ref id_known)) => {
+                self.match_arg_when_left_is_identifier_with_mod(id_known, given_arg)
             }
             Obj::FnObj(ref f) => self.match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => self.match_arg_when_left_is_number(left, given_arg),
@@ -779,11 +931,16 @@ impl Runtime {
 
     fn match_arg_when_left_is_identifier_with_mod(
         &mut self,
+        id_known: &IdentifierWithMod,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                self.match_arg_type_not_implemented("IdentifierWithMod")
+            Obj::Atom(AtomObj::IdentifierWithMod(id_given)) => {
+                if id_known.mod_name == id_given.mod_name && id_known.name == id_given.name {
+                    Ok(Some(HashMap::new()))
+                } else {
+                    Ok(None)
+                }
             }
             _ => Ok(None),
         }
@@ -2480,14 +2637,6 @@ impl Runtime {
         let mut map = HashMap::new();
         map.insert(given_arg.to_string(), given_arg.clone());
         Ok(Some(map))
-    }
-
-    fn match_arg_type_not_implemented(
-        &mut self,
-        obj_type_name: &str,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let _ = obj_type_name;
-        Ok(None)
     }
 }
 

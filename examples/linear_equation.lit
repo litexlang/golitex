@@ -4,3 +4,20 @@ forall x, y R:
     =>:
         y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
         x = ((2 * x + 3 * y) - 3 * y) / 2 = -4
+
+forall a, b, c R:
+    a + b = c
+    =>:
+        a = c - b
+
+forall a, b, c R:
+    b + a = c
+    =>:
+        a = c - b
+
+forall x cart(R, R):
+    3 * x[1] + 2 * x[2] = 12
+    x[1] = 4
+    =>:
+        2 * x[2] = 12 - 3 * x[1] = 12 - 3 * 4 = 0
+        x[2] = (2 * x[2]) / 2 = 0 / 2 = 0

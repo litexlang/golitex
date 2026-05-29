@@ -81,6 +81,12 @@ impl ClearStmt {
     }
 }
 
+impl StopImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "StopImportStmt".to_string()
+    }
+}
+
 impl WitnessExistFact {
     pub fn stmt_type_name(&self) -> String {
         "WitnessExistFact".to_string()

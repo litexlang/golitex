@@ -1324,12 +1324,15 @@ prove:
 
 ### run file
 
-Use **`import Nat as Nat`** or **`import trigonometry as trig`** to register a standard-library module name. Import currently records module metadata; it does not execute the module contents. Each imported module name and resolved module path must be unique in the current runtime.
+Use **`import Nat`** or **`import "local_module_dir" as Local`** to load a module into its own imported-module environment. For standard-library modules, omitting `as` uses the module name itself, so `import Nat` means `import Nat as Nat`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. Each imported module name and resolved module directory must be unique in the current runtime, except that importing the same module with the same name again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
+
+Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
 
 **`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
 ```text
-import Nat as Nat
+import Nat
+stop import Nat
 run_file "local_path_to_file.lit"
 ```
 
@@ -1348,7 +1351,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block). Builtin facts and loaded standard-library modules remain available.
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block). Builtin facts remain available. Imported modules remain registered, but they are stopped for automatic verification until the same module is imported again.
 
 ```litex
 let a R:
