@@ -1693,16 +1693,6 @@ impl RunFileStmt {
     }
 }
 
-impl RunFileInStd {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \texttt{{{}}}",
-            RUN_FILE,
-            latex_texttt_escape(&self.file_path)
-        )
-    }
-}
-
 impl SeqSet {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2089,7 +2079,6 @@ impl Stmt {
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
             Stmt::ClearStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
-            Stmt::RunFileInStd(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::EvalByStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),

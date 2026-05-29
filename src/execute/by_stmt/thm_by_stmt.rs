@@ -2,8 +2,9 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
+        let thm_name = stmt.name.to_string();
         let thm = self
-            .get_thm_definition_by_name(&stmt.name)
+            .get_thm_definition_by_name(&thm_name)
             .cloned()
             .ok_or_else(|| {
                 short_exec_error(

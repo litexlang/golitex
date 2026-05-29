@@ -298,14 +298,8 @@ pub struct Sqrt {
 }
 
 #[derive(Clone)]
-pub enum NameWithOrWithoutMod {
-    WithoutMod(String),
-    WithMod(String, String),
-}
-
-#[derive(Clone)]
 pub struct StructObj {
-    pub name: NameWithOrWithoutMod,
+    pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
@@ -318,29 +312,12 @@ pub struct ObjAsStructInstanceWithFieldAccess {
 
 #[derive(Clone)]
 pub struct InstantiatedTemplateObj {
-    pub template_name: String,
+    pub template_name: AtomicName,
     pub args: Vec<Obj>,
 }
 
-impl NameWithOrWithoutMod {
-    pub fn to_name_string(&self) -> String {
-        match self {
-            NameWithOrWithoutMod::WithoutMod(name) => name.clone(),
-            NameWithOrWithoutMod::WithMod(mod_name, name) => {
-                format!("{}{}{}", mod_name, MOD_SIGN, name)
-            }
-        }
-    }
-}
-
-impl fmt::Display for NameWithOrWithoutMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_name_string())
-    }
-}
-
 impl StructObj {
-    pub fn new(name: NameWithOrWithoutMod, params: Vec<Obj>) -> Self {
+    pub fn new(name: AtomicName, params: Vec<Obj>) -> Self {
         StructObj { name, params }
     }
 }
@@ -356,7 +333,7 @@ impl ObjAsStructInstanceWithFieldAccess {
 }
 
 impl InstantiatedTemplateObj {
-    pub fn new(template_name: String, args: Vec<Obj>) -> Self {
+    pub fn new(template_name: AtomicName, args: Vec<Obj>) -> Self {
         InstantiatedTemplateObj {
             template_name,
             args,
@@ -1144,7 +1121,7 @@ impl Obj {
             Obj::MatrixScalarMul(_) => MATRIX_SCALAR_MUL.to_string(),
             Obj::MatrixPow(_) => MATRIX_POW.to_string(),
             Obj::StructObj(struct_obj) => struct_obj.name.to_string(),
-            Obj::InstantiatedTemplateObj(template_obj) => template_obj.template_name.clone(),
+            Obj::InstantiatedTemplateObj(template_obj) => template_obj.template_name.to_string(),
             Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
                 field_access.field_name.clone()
             }

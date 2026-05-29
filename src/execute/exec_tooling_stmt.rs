@@ -40,21 +40,4 @@ impl Runtime {
             )
         }));
     }
-
-    pub fn exec_run_file_in_std(
-        &mut self,
-        stmt: &RunFileInStd,
-    ) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                "run_file can only be run as a top-level statement".to_string(),
-                lf,
-                None,
-                vec![],
-            )
-        }));
-    }
 }

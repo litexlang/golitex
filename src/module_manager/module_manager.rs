@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 // Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
@@ -21,30 +21,32 @@ impl DisplaySourceLabel {
 }
 
 pub struct ImportedModule {
-    pub path: String,
+    pub absolute_path: String,
     pub environment: Environment,
     pub is_std: bool,
 }
 
-pub struct ImportedModuleEnvironment {
-    pub environment: Environment,
-    pub name_scope: HashMap<String, LineFile>,
+impl ImportedModule {
+    pub fn new(absolute_path: String, environment: Environment, is_std: bool) -> Self {
+        ImportedModule {
+            absolute_path,
+            environment,
+            is_std,
+        }
+    }
 }
 
 pub struct ModuleManager {
     pub run_file_paths: Vec<Rc<str>>,
     pub module_name_and_path_map: HashMap<String, String>,
-    pub module_path_and_names_map: HashMap<String, Vec<String>>,
     pub current_module_path: String,
     pub current_module_name: String,
     pub current_file_index: usize,
     pub entry_path: String,
-    /// Same `Rc` as the user entry slot in `run_file_paths` when set (file path, `repl`, `-e`, ...).
     pub display_entry_rc: Option<Rc<str>>,
     pub hide_file_paths_in_output: bool,
     pub display_source_labels: HashMap<String, DisplaySourceLabel>,
-    pub loaded_std_run_file_paths: HashSet<String>,
-    pub imported_module_environments: HashMap<String, Box<ImportedModuleEnvironment>>,
+    pub imported_modules: HashMap<String, ImportedModule>,
 }
 
 impl ModuleManager {
@@ -52,7 +54,6 @@ impl ModuleManager {
         ModuleManager {
             run_file_paths: vec![Rc::from(initial_path)],
             module_name_and_path_map: HashMap::new(),
-            module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
             current_module_name: String::new(),
             current_file_index: FILE_INDEX_FOR_BUILTIN,
@@ -60,8 +61,7 @@ impl ModuleManager {
             display_entry_rc: None,
             hide_file_paths_in_output: false,
             display_source_labels: HashMap::new(),
-            loaded_std_run_file_paths: HashSet::new(),
-            imported_module_environments: HashMap::new(),
+            imported_modules: HashMap::new(),
         }
     }
 
@@ -74,5 +74,38 @@ impl ModuleManager {
             path.to_string(),
             DisplaySourceLabel::new(source_kind, source),
         );
+    }
+
+    pub fn register_imported_module(
+        &mut self,
+        module_name: String,
+        absolute_path: String,
+        is_std: bool,
+    ) -> Result<(), String> {
+        if self.module_name_and_path_map.contains_key(&module_name)
+            || self.imported_modules.contains_key(&module_name)
+        {
+            return Err(format!(
+                "module name `{}` has already been used",
+                module_name
+            ));
+        }
+        if let Some((used_module_name, _)) = self
+            .module_name_and_path_map
+            .iter()
+            .find(|(_, used_path)| *used_path == &absolute_path)
+        {
+            return Err(format!(
+                "module path `{}` has already been imported as module name `{}`",
+                absolute_path, used_module_name
+            ));
+        }
+        self.module_name_and_path_map
+            .insert(module_name.clone(), absolute_path.clone());
+        self.imported_modules.insert(
+            module_name,
+            ImportedModule::new(absolute_path, Environment::new_empty_env(), is_std),
+        );
+        Ok(())
     }
 }

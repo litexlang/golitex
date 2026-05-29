@@ -629,14 +629,6 @@ fn exec_stmt_error_message_text_for_json(
         Some(Stmt::RunFileStmt(_)) if message.starts_with("Failed to read file:") => {
             "Failed to read file: external_file".to_string()
         }
-        Some(Stmt::RunFileInStd(run_file_in_std))
-            if message.starts_with("Failed to find std run_file target") =>
-        {
-            format!(
-                "Failed to find std run_file target `{}`",
-                run_file_in_std.file_path
-            )
-        }
         _ => message,
     }
 }

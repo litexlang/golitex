@@ -2434,7 +2434,7 @@ impl Runtime {
         struct_obj: &StructObj,
         verify_state: &VerifyState,
     ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
-        let struct_name = struct_obj.name.to_name_string();
+        let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
             .cloned()
@@ -2556,7 +2556,7 @@ impl Runtime {
         struct_obj: &StructObj,
         field_name: &str,
     ) -> Result<usize, RuntimeError> {
-        let struct_name = struct_obj.name.to_name_string();
+        let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
             .ok_or_else(|| {
