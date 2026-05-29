@@ -20,6 +20,12 @@ impl DisplaySourceLabel {
     }
 }
 
+pub struct ImportedModule {
+    pub path: String,
+    pub environment: Environment,
+    pub is_std: bool,
+}
+
 pub struct ImportedModuleEnvironment {
     pub environment: Environment,
     pub name_scope: HashMap<String, LineFile>,

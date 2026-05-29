@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::known_forall_profile::{self, KnownForallEnvKind, KnownForallSearchPhase};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
@@ -9,9 +10,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        known_forall_profile::record_entry();
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
+            known_forall_profile::record_success();
             return Ok((fact_verified).into());
         }
 
@@ -26,12 +29,15 @@ impl Runtime {
                 &fact_with_reversed_args,
                 verify_state,
             )? {
+                known_forall_profile::record_success();
                 return Ok((fact_verified).into());
             }
 
+            known_forall_profile::record_unknown();
             return Ok((StmtUnknown::new()).into());
         }
 
+        known_forall_profile::record_unknown();
         Ok((StmtUnknown::new()).into())
     }
 
@@ -69,6 +75,7 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
+                let env_kind = self.known_forall_env_kind(stack_idx);
                 let (atomic_fact_in_known_forall, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
                     let Some(known_forall_facts_in_env) =
@@ -82,11 +89,16 @@ impl Runtime {
                     };
                     (current_known_forall.0.clone(), current_known_forall.clone())
                 };
+                known_forall_profile::record_candidate_attempt(
+                    KnownForallSearchPhase::Fallback,
+                    env_kind,
+                );
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
                     &atomic_fact_in_known_forall,
                     given_fact,
                 )?;
                 if let Some(arg_map) = match_result {
+                    known_forall_profile::record_arg_match();
                     return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
             }
@@ -121,6 +133,7 @@ impl Runtime {
                     )? {
                         return Ok(Some(fact_verified));
                     }
+                    known_forall_profile::record_requirement_failure();
                     iterate_from_env_index = i;
                     iterate_from_known_forall_fact_index = j + 1;
                 }
@@ -158,23 +171,31 @@ impl Runtime {
 
     fn try_verify_known_forall_candidate(
         &mut self,
+        phase: KnownForallSearchPhase,
+        env_kind: KnownForallEnvKind,
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        known_forall_profile::record_candidate_attempt(phase, env_kind);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
             given_atomic_fact,
         )?;
         if let Some(arg_map) = match_result {
-            return self.verify_args_satisfy_forall_requirements(
+            known_forall_profile::record_arg_match();
+            let fact_verified = self.verify_args_satisfy_forall_requirements(
                 &atomic_fact_in_known_forall_fact,
                 &forall_rc,
                 arg_map,
                 given_atomic_fact,
                 verify_state,
-            );
+            )?;
+            if fact_verified.is_none() {
+                known_forall_profile::record_requirement_failure();
+            }
+            return Ok(fact_verified);
         }
         Ok(None)
     }
@@ -196,6 +217,7 @@ impl Runtime {
                     arg_shape_lookup_key,
                     atomic_fact,
                     verify_state,
+                    KnownForallSearchPhase::ExactShape,
                 )? {
                     return Ok(Some(fact_verified));
                 }
@@ -235,6 +257,7 @@ impl Runtime {
                     arg_shape_key,
                     atomic_fact,
                     verify_state,
+                    KnownForallSearchPhase::OtherShape,
                 )? {
                     return Ok(Some(fact_verified));
                 }
@@ -250,6 +273,7 @@ impl Runtime {
         arg_shape_key: &AtomicFactInForallArgShapeKey,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
+        phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let Some(bucket_count) = ({
             let env = &self.environment_stack[stack_idx];
@@ -263,6 +287,7 @@ impl Runtime {
 
         for j in 0..bucket_count {
             let entry_idx = bucket_count - 1 - j;
+            let env_kind = self.known_forall_env_kind(stack_idx);
             let candidate = {
                 let env = &self.environment_stack[stack_idx];
                 env.known_atomic_facts_in_forall_facts_by_arg_shape
@@ -275,6 +300,8 @@ impl Runtime {
                 continue;
             };
             if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                phase,
+                env_kind,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 atomic_fact,
@@ -284,6 +311,16 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {
+        if stack_idx == FILE_INDEX_FOR_BUILTIN {
+            return KnownForallEnvKind::Builtin;
+        }
+        if self.std_env_index == Some(stack_idx) {
+            return KnownForallEnvKind::Std;
+        }
+        KnownForallEnvKind::User
     }
 
     fn verify_args_satisfy_forall_requirements(

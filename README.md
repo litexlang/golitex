@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: The Formal Way to Write Math as It Looks
+# Litex: The Formal Language Where Code Verifies Itself
 
 *by Jiachen Shen and The Litex Team, version 0.9.88-beta*
 
@@ -26,7 +26,7 @@ _Truth is ever to be found in simplicity, and not in the multiplicity and confus
 
 _– Isaac Newton_
 
-Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write math almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
+Litex is an open-source formal language for writing mathematical proof code that can be checked as it is written. Users write math almost exactly as they would in notes or textbooks; Litex checks each stated fact against the current verified context, stores accepted results, and lets the proof grow from there.
 
 Math is the science of discovering patterns. The central idea of Litex is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them based on their patterns and the current context, stores successful ones, and reuses them later.
 
@@ -83,9 +83,9 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-Litex expects you to recognize familiar proof patterns: equality chains, membership claims, subsets, witnesses, contradiction, finite case splits, and induction. The checker matches those shapes to facts and routine consequences, more like following a textbook argument than memorizing tactic or library names for each line.
+Litex expects you to recognize familiar proof patterns: equality chains, membership claims, subsets, witnesses, contradiction, finite case splits, and induction. When a person reads a fact, they often recognize its pattern and remember which proved fact should apply. Litex is designed to work in the same spirit: the checker matches those shapes to facts and routine consequences, more like following a textbook argument than memorizing tactic or library names for each line.
 
-In this sense, Litex aims to be **the language where mathematics verifies itself**.
+This is the precise sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; each line exposes a mathematical shape that the checker can match against verified context, builtin rules, known facts, and known `forall` facts.
 
 For example, a syllogism is ordinary mathematical information:
 

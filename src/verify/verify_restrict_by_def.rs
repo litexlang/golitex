@@ -31,6 +31,9 @@ struct RestrictProofFlow {
 }
 
 impl Runtime {
+    // Restricts an anonymous function by verifying the target function domain is a valid subdomain
+    // for the anonymous function and that outputs stay in the requested return set.
+    // Example: `$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)`.
     pub fn verify_restrict_fact_using_its_definition(
         &mut self,
         restrict_fact: &RestrictFact,
@@ -101,8 +104,7 @@ impl Runtime {
         let forall_params = self.restrict_build_forall_params_from_rhs(&rhs_fn_set.body)?;
         let forall_dom_facts = self.restrict_build_forall_dom_facts_from_rhs(&rhs_fn_set.body);
 
-        let fn_head = match FnObjHead::given_an_atom_return_a_fn_obj_head(restrict_fact.obj.clone())
-        {
+        let fn_head = match Self::restrict_fn_head_for_obj(&restrict_fact.obj) {
             Some(v) => v,
             None => return Ok(None),
         };
@@ -127,6 +129,9 @@ impl Runtime {
         function: &Obj,
         restrict_fact: &RestrictFact,
     ) -> Result<FnSetBody, RuntimeError> {
+        if let Obj::AnonymousFn(anonymous_fn) = function {
+            return Ok(anonymous_fn.body.clone());
+        }
         match self.get_cloned_object_in_fn_set(function) {
             Some(v) => Ok(v),
             None => match self.get_cloned_object_in_fn_set_or_restrict(function) {
@@ -152,6 +157,15 @@ impl Runtime {
                 ))
                 .into()),
             },
+        }
+    }
+
+    fn restrict_fn_head_for_obj(function: &Obj) -> Option<FnObjHead> {
+        match function {
+            Obj::AnonymousFn(anonymous_fn) => Some(FnObjHead::AnonymousFnLiteral(Box::new(
+                anonymous_fn.clone(),
+            ))),
+            _ => FnObjHead::given_an_atom_return_a_fn_obj_head(function.clone()),
         }
     }
 

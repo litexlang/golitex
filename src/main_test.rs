@@ -18,6 +18,29 @@ mod lit_file_runner_tests {
     const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
     const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/cite_std";
 
+    fn print_known_forall_profile_summary(label: &str) {
+        if !crate::verify::known_forall_profile::enabled() {
+            return;
+        }
+        let p = crate::verify::known_forall_profile::snapshot();
+        println!(
+            "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_std={} env_builtin={} arg_matches={} requirement_failures={}",
+            label,
+            p.entries,
+            p.successes,
+            p.unknowns,
+            p.candidate_attempts,
+            p.exact_candidate_attempts,
+            p.fallback_candidate_attempts,
+            p.other_candidate_attempts,
+            p.user_candidate_attempts,
+            p.std_candidate_attempts,
+            p.builtin_candidate_attempts,
+            p.arg_matches,
+            p.requirement_failures,
+        );
+    }
+
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
             .name(test_name.to_string())
@@ -309,6 +332,69 @@ forall a set:
             run_succeeded,
             "list_set_membership_implies_equality_or failed:\n{}",
             run_output
+        );
+    }
+
+    #[test]
+    fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
+        run_with_large_stack(
+            "anonymous_fn_restrict_requires_valid_target_domain_and_return_large_stack",
+            || {
+                anonymous_fn_restrict_positive_cases_impl();
+                anonymous_fn_restrict_negative_case_impl();
+            },
+        );
+    }
+
+    fn anonymous_fn_restrict_positive_cases_impl() {
+        let positive_source_code = r#"
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
+$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
+$restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
+"#;
+
+        let mut positive_runtime = Runtime::new_with_builtin_code();
+        positive_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_positive");
+        let (positive_stmt_results, positive_runtime_error) =
+            run_source_code(positive_source_code, &mut positive_runtime);
+        let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+            &positive_runtime,
+            &positive_stmt_results,
+            &positive_runtime_error,
+            false,
+        );
+        assert!(
+            positive_run_succeeded,
+            "anonymous fn restrict positive cases failed:\n{}",
+            positive_run_output
+        );
+    }
+
+    fn anonymous_fn_restrict_negative_case_impl() {
+        let negative_source_code = r#"
+$restrict_fn_in('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+"#;
+
+        let mut negative_runtime = Runtime::new_with_builtin_code();
+        negative_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_negative");
+        let (negative_stmt_results, negative_runtime_error) =
+            run_source_code(negative_source_code, &mut negative_runtime);
+        let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+            &negative_runtime,
+            &negative_stmt_results,
+            &negative_runtime_error,
+            false,
+        );
+        assert!(
+            !negative_run_succeeded,
+            "anonymous fn restrict negative case should fail:\n{}",
+            negative_run_output
+        );
+        assert!(
+            negative_run_output.contains("failed to verify function domain fact"),
+            "negative case should explain the domain failure:\n{}",
+            negative_run_output
         );
     }
 
@@ -3226,6 +3312,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             let examples_wall_start = Instant::now();
             let first_path = phase1_items[0].path_for_runtime.as_str();
             runtime.new_file_path_new_env_new_name_scope(first_path);
+            crate::verify::known_forall_profile::reset();
 
             for (item_index, item) in phase1_items.iter().enumerate() {
                 if item_index > 0 {
@@ -3263,6 +3350,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                     .push((item.report_label.clone(), duration_ms_for_one_file));
             }
             examples_phase_wall_ms = examples_wall_start.elapsed().as_secs_f64() * 1000.0;
+            print_known_forall_profile_summary("phase 1");
         }
 
         if every_file_run_ok && examples_ran {
@@ -3362,6 +3450,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             md_paths.len()
         );
 
+        crate::verify::known_forall_profile::reset();
         let docs_wall_start = Instant::now();
         let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
         for (snippet_index, (label, source_code, md_path_for_run_file)) in
@@ -3395,6 +3484,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             }
         }
         let docs_phase_wall_ms = docs_wall_start.elapsed().as_secs_f64() * 1000.0;
+        print_known_forall_profile_summary("remaining markdown");
 
         print_slowest_run_labels("remaining markdown snippets", doc_durations_ms.as_slice());
         for (label, duration_ms) in doc_durations_ms.iter() {

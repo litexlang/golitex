@@ -626,13 +626,23 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2
     ...
 ```
 
-Integer **closed_range** membership uses **`by closed_range as cases:`** *object* `$in` *lo*`...`*hi* (next section), not list-set enumeration.
+Integer interval membership can also be enumerated directly:
+
+```litex
+let a range(7, 8)
+
+by enumerate range: a $in range(7, 8)
+
+a = 7
+```
+
+Use **`by enumerate range:`** for half-open `range(lo, hi)` and **`by enumerate closed_range:`** for closed `lo...hi` / `closed_range(lo, hi)`.
 
 ---
 
 ### `by closed_range as cases`
 
-**Meaning.** From membership of an object in a **closed interval** with **integer** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
+**Meaning.** From membership of an object in a **closed interval** with **integer** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`). The spelling **`by enumerate closed_range:`** has the same effect.
 
 **Syntax.** `by closed_range as cases:` *object* `$in` *lo* `...` *hi* — the right side parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`).
 

@@ -147,6 +147,12 @@ impl ByFnSetAsSetStmt {
     }
 }
 
+impl ByEnumerateRangeStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByEnumerateRangeStmt".to_string()
+    }
+}
+
 impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleAsSetStmt".to_string()

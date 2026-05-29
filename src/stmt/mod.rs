@@ -12,6 +12,7 @@ pub mod witness_stmt;
 mod stmt;
 mod stmt_type_name;
 pub use stmt::ByClosedRangeAsCasesStmt;
+pub use stmt::ByEnumerateRangeStmt;
 pub use stmt::ByStrategyStmt;
 pub use stmt::ByThmStmt;
 pub use stmt::DefStrategyStmt;

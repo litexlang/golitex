@@ -36,6 +36,7 @@ pub enum Stmt {
     ByFnAsSetStmt(ByFnAsSetStmt),
     ByTupleAsSetStmt(ByTupleAsSetStmt),
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
+    ByEnumerateRangeStmt(ByEnumerateRangeStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
     ByTransitivePropStmt(ByTransitivePropStmt),
     BySymmetricPropStmt(BySymmetricPropStmt),
@@ -316,6 +317,37 @@ pub struct ByClosedRangeAsCasesStmt {
     pub line_file: LineFile,
 }
 
+#[derive(Clone)]
+pub struct ByEnumerateRangeStmt {
+    pub element: Obj,
+    pub range: ClosedRangeOrRange,
+    pub line_file: LineFile,
+}
+
+impl fmt::Display for ByEnumerateRangeStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let keyword = match &self.range {
+            ClosedRangeOrRange::ClosedRange(_) => CLOSED_RANGE,
+            ClosedRangeOrRange::Range(_) => RANGE,
+        };
+        write!(
+            f,
+            "{} {} {}{} {} {}{} {}",
+            BY, ENUMERATE, keyword, COLON, self.element, FACT_PREFIX, IN, self.range
+        )
+    }
+}
+
+impl ByEnumerateRangeStmt {
+    pub fn new(element: Obj, range: ClosedRangeOrRange, line_file: LineFile) -> Self {
+        ByEnumerateRangeStmt {
+            element,
+            range,
+            line_file,
+        }
+    }
+}
+
 impl fmt::Display for ByClosedRangeAsCasesStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -387,6 +419,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFnAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByTupleAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByEnumerateRangeStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
             Stmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
             Stmt::BySymmetricPropStmt(x) => write!(f, "{}", x),
@@ -439,6 +472,7 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByEnumerateRangeStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::BySymmetricPropStmt(stmt) => stmt.line_file.clone(),
@@ -489,6 +523,7 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByEnumerateRangeStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::BySymmetricPropStmt(stmt) => stmt.stmt_type_name(),
@@ -705,6 +740,12 @@ impl From<ByTupleAsSetStmt> for Stmt {
 impl From<ByFnSetAsSetStmt> for Stmt {
     fn from(v: ByFnSetAsSetStmt) -> Self {
         Stmt::ByFnSetAsSetStmt(v)
+    }
+}
+
+impl From<ByEnumerateRangeStmt> for Stmt {
+    fn from(v: ByEnumerateRangeStmt) -> Self {
+        Stmt::ByEnumerateRangeStmt(v)
     }
 }
 

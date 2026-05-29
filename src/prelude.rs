@@ -236,6 +236,7 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
+pub use crate::stmt::ByEnumerateRangeStmt;
 pub use crate::stmt::ByStrategyStmt;
 pub use crate::stmt::ByThmStmt;
 pub use crate::stmt::DefStrategyStmt;

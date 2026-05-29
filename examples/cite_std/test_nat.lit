@@ -56,3 +56,9 @@ claim:
         forall n N:
             0 <= n
     0 <= n
+
+claim:
+    prove:
+        forall n N_pos:
+            n - 1 $in N
+    n - 1 $in N

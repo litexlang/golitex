@@ -31,3 +31,9 @@ prove:
 
     have f fn(x R, y Q) R
     $p(f)
+
+prove:
+    $restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
+    $restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
+    $restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
+    $restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)

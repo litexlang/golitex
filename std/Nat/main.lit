@@ -234,6 +234,82 @@ thm Nat_not_prime_one:
             not $Nat_Prime(1)
     not $Nat_Prime(1)
 
+# Mathlib: Nat.dvd_refl
+thm Nat_dvd_refl:
+    prove:
+        forall n N:
+            $Nat_Dvd(n, n)
+    witness exist k N st {n = n * k} from 1:
+        n = n * 1
+    $Nat_Dvd(n, n)
+
+# Mathlib: Nat.dvd_zero
+thm Nat_dvd_zero:
+    prove:
+        forall d N:
+            $Nat_Dvd(d, 0)
+    witness exist k N st {0 = d * k} from 0:
+        0 = d * 0
+    $Nat_Dvd(d, 0)
+
+# Mathlib: Nat.one_dvd
+thm Nat_one_dvd:
+    prove:
+        forall n N:
+            $Nat_Dvd(1, n)
+    $Nat_Dvd(1, n)
+
+# Mathlib: Nat.dvd_mul_left / Nat.dvd_mul_right
+thm Nat_dvd_mul_left:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(a, a * b)
+    witness exist k N st {a * b = a * k} from b:
+        a * b = a * b
+    $Nat_Dvd(a, a * b)
+
+thm Nat_dvd_mul_right:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(a, b * a)
+    witness exist k N st {b * a = a * k} from b:
+        b * a = a * b
+    $Nat_Dvd(a, b * a)
+
+# Mathlib: Nat.dvd_add
+thm Nat_dvd_add:
+    prove:
+        forall a, b, c N:
+            $Nat_Dvd(a, b)
+            $Nat_Dvd(a, c)
+            =>:
+                $Nat_Dvd(a, b + c)
+    $Nat_Dvd(a, b + c)
+
+# Mathlib: Nat.dvd_mul_of_dvd_left
+thm Nat_dvd_mul_of_dvd_left:
+    prove:
+        forall a, b, c N:
+            $Nat_Dvd(a, b)
+            =>:
+                $Nat_Dvd(a, b * c)
+    $Nat_Dvd(a, b * c)
+
+# Mathlib: Nat.ModEq.refl / symm
+thm Nat_ModEq_refl:
+    prove:
+        forall n N_pos, a N:
+            $Nat_ModEq(n, a, a)
+    $Nat_ModEq(n, a, a)
+
+thm Nat_ModEq_symm:
+    prove:
+        forall n N_pos, a, b N:
+            $Nat_ModEq(n, a, b)
+            =>:
+                $Nat_ModEq(n, b, a)
+    $Nat_ModEq(n, b, a)
+
 # Mathlib: Nat.gcd_comm
 thm Nat_gcd_comm:
     prove:
@@ -264,6 +340,26 @@ thm Nat_dvd_gcd:
             =>:
                 $Nat_Dvd(d, Nat_gcd(a, b))
     $Nat_Dvd(d, Nat_gcd(a, b))
+
+# Mathlib: Nat.lcm_mul_gcd
+thm Nat_lcm_mul_gcd:
+    prove:
+        forall a, b N:
+            Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
+    Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
+
+# Mathlib: Nat.dvd_lcm_left / Nat.dvd_lcm_right
+thm Nat_dvd_lcm_left:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(a, Nat_lcm(a, b))
+    $Nat_Dvd(a, Nat_lcm(a, b))
+
+thm Nat_dvd_lcm_right:
+    prove:
+        forall a, b N:
+            $Nat_Dvd(b, Nat_lcm(a, b))
+    $Nat_Dvd(b, Nat_lcm(a, b))
 
 # Mathlib: Nat.Coprime.symm / Nat.coprime_comm
 thm Nat_Coprime_symm, Nat_coprime_comm:
@@ -317,3 +413,54 @@ thm Nat_exists_prime_and_dvd:
             =>:
                 exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
     exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
+
+# Mathlib: Nat.choose_zero_right / Nat.choose_self
+thm Nat_choose_zero_right:
+    prove:
+        forall n N:
+            Nat_choose(n, 0) = 1
+    Nat_choose(n, 0) = 1
+
+thm Nat_choose_self:
+    prove:
+        forall n N:
+            Nat_choose(n, n) = 1
+    Nat_choose(n, n) = 1
+
+# Mathlib: Nat.choose_succ_succ
+thm Nat_choose_succ_succ:
+    prove:
+        forall n, k N:
+            k <= n
+            =>:
+                Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
+    Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
+
+# Mathlib-facing sqrt and floor bounds.
+thm Nat_sqrt_sq_le:
+    prove:
+        forall n N:
+            Nat_sqrt(n)^2 <= n
+    Nat_sqrt(n)^2 <= n
+
+thm Nat_lt_succ_sqrt_sq:
+    prove:
+        forall n N:
+            n < (Nat_sqrt(n) + 1)^2
+    n < (Nat_sqrt(n) + 1)^2
+
+thm Nat_floor_le:
+    prove:
+        forall x R:
+            0 <= x
+            =>:
+                Nat_floor(x) <= x
+    Nat_floor(x) <= x
+
+thm Nat_lt_floor_add_one:
+    prove:
+        forall x R:
+            0 <= x
+            =>:
+                x < Nat_floor(x) + 1
+    x < Nat_floor(x) + 1

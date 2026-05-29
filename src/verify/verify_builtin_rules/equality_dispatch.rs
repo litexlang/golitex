@@ -503,7 +503,8 @@ impl Runtime {
 
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
-        let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
+        let is_tuple_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_true() {
             return Ok(None);
         }
@@ -512,7 +513,8 @@ impl Runtime {
         let tuple_dim_value_obj: Obj = Number::new(tuple_obj.args.len().to_string()).into();
         let tuple_dim_fact: AtomicFact =
             EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
-        let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
+        let tuple_dim_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_true() {
             return Ok(None);
         }
@@ -523,7 +525,8 @@ impl Runtime {
             let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
             let component_fact: AtomicFact =
                 EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
-            let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
+            let component_result = self
+                .verify_atomic_fact_known_then_builtin_rules_only(&component_fact, verify_state)?;
             if !component_result.is_true() {
                 return Ok(None);
             }
@@ -802,7 +805,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        self.verify_non_equational_atomic_fact(&fact, &VerifyState::new(0, true), true)
+        self.verify_non_equational_known_then_builtin_rules_only(&fact, &VerifyState::new(0, true))
     }
 
     // Antisymmetry rule for registered user-defined props.
