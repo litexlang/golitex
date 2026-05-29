@@ -5,6 +5,7 @@ mod cases_by_stmt;
 mod closed_range_by_stmt;
 mod contra_by_stmt;
 mod enumerate_by_stmt;
+mod enumerate_range_by_stmt;
 mod extension_by_stmt;
 mod for_by_stmt;
 mod helpers_by_stmt;

@@ -160,6 +160,10 @@ Litex now knows more count identities for finite set operations, including `unio
 
 Membership in `range(a, b)` and `closed_range(a, b)` now records the element equality directly when the integer interval has exactly one value, such as `range(1, 2)` or `closed_range(1, 1)`. `by closed_range as cases` likewise records the single equality instead of a one-branch `or`. See **Manual — Builtin Inference — Ranges** and **Manual — Closed range as cases**.
 
+### Enumerate integer interval membership (2026-05)
+
+`by enumerate range: x $in range(lo, hi)` and `by enumerate closed_range: x $in lo...hi` expand known integer interval membership into equality cases. Half-open `range(lo, hi)` enumerates through `hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
+
 ### Natural membership from nonnegative integers (2026-05)
 
 Builtin verification can now close `x $in N` from a verified integer expression `x` together with `x >= 0` / `0 <= x`, or together with `x > 0` / `0 < x`. For example, from `a, b $in Z` and `b - a >= 0`, it can verify `b - a $in N`. See **Manual — Builtin Verification Rules — Membership Rules**.

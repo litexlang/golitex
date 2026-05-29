@@ -1,36 +1,7 @@
-# test/precalculus/819
-# Natural-language idea:
-# In cylindrical coordinates, z = c fixes only the height coordinate.
-# The radius r and angle theta are free, so the locus is a horizontal plane.
-#
-# This version does not ask Litex to "recognize" the geometry from a raw word
-# problem.  Instead, it gives a small mathematical definition: a horizontal
-# plane is a cylindrical-coordinate locus whose third coordinate is fixed.
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
 
-struct CylindricalPoint:
-    r R
-    theta R
-    z R
+$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
 
-have fn z_eq_c_locus(c R) power_set(&CylindricalPoint) = {p &CylindricalPoint: p[3] = c}
+$restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
 
-prop horizontal_plane(S power_set(&CylindricalPoint)):
-    exist a &CylindricalPoint st {S = z_eq_c_locus(a[3])}
-
-claim:
-    prove:
-        forall c R:
-            $horizontal_plane(z_eq_c_locus(c))
-    have a &CylindricalPoint = (0, 0, c)
-    a[3] = c
-    witness exist p &CylindricalPoint st {z_eq_c_locus(c) = z_eq_c_locus(p[3])} from a:
-        z_eq_c_locus(c) = z_eq_c_locus(a[3])
-
-have line_shape N = 1
-have circle_shape N = 2
-have plane_shape N = 3
-have sphere_shape N = 4
-have cylinder_shape N = 5
-have cone_shape N = 6
-
-have answer_819 {line_shape, circle_shape, plane_shape, sphere_shape, cylinder_shape, cone_shape} = plane_shape
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)

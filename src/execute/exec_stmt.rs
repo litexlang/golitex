@@ -41,6 +41,7 @@ impl Runtime {
             Stmt::ByFnAsSetStmt(s) => self.exec_by_fn_stmt(s),
             Stmt::ByTupleAsSetStmt(s) => self.exec_by_tuple_stmt(s),
             Stmt::ByFnSetAsSetStmt(s) => self.exec_by_fn_set_stmt(s),
+            Stmt::ByEnumerateRangeStmt(s) => self.exec_by_enumerate_range_stmt(s),
             Stmt::ByClosedRangeAsCasesStmt(s) => self.exec_by_closed_range_as_cases_stmt(s),
             Stmt::ByTransitivePropStmt(s) => self.exec_by_transitive_prop_stmt(s),
             Stmt::BySymmetricPropStmt(s) => self.exec_by_symmetric_prop_stmt(s),
