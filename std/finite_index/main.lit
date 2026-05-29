@@ -1,62 +1,6 @@
-# MiniF2F-facing finite-index objects.
+# Legacy MiniF2F entry point.
 #
-# This is the focused part of Mathlib.Algebra.BigOperators.Basic that appears
-# in MiniF2F statements: ranges, closed natural intervals, cardinality, and
-# aliases into Litex's builtin finite sum/product expressions.
+# New translations should load `Finset` directly. Keep this module as a
+# compatibility shim for older files that still say `run_file finite_index`.
 
-prop Finset_range_value(n N, s power_set(N)):
-    forall x N:
-        =>:
-            x $in s
-        <=>:
-            x < n
-
-know:
-    forall n N:
-        exist! s power_set(N) st {$Finset_range_value(n, s)}
-
-have fn Finset_range as set:
-    forall n N:
-        exist! s power_set(N) st {$Finset_range_value(n, s)}
-
-prop Finset_Icc_value(a, b N, s power_set(N)):
-    forall x N:
-        =>:
-            x $in s
-        <=>:
-            a <= x <= b
-
-know:
-    forall a, b N:
-        exist! s power_set(N) st {$Finset_Icc_value(a, b, s)}
-
-have fn Finset_Icc as set:
-    forall a, b N:
-        exist! s power_set(N) st {$Finset_Icc_value(a, b, s)}
-
-have fn Finset_card(s power_set(N): $is_finite_set(s)) N = count(s)
-
-have fn Finset_sum_range(n N, f fn(x Z) Z) Z = sum(0, n - 1, f)
-have fn Finset_prod_range(n N, f fn(x Z) Z) Z = product(0, n - 1, f)
-have fn Finset_sum_Icc(a, b Z, f fn(x Z) Z) Z = sum(a, b, f)
-have fn Finset_prod_Icc(a, b Z, f fn(x Z) Z) Z = product(a, b, f)
-
-know:
-    forall n N:
-        $is_finite_set(Finset_range(n))
-
-    forall n N:
-        $is_finite_set(Finset_range(n))
-        =>:
-            Finset_card(Finset_range(n)) = n
-
-    forall a, b N:
-        a <= b
-        =>:
-            $is_finite_set(Finset_Icc(a, b))
-
-    forall a, b N:
-        a <= b
-        $is_finite_set(Finset_Icc(a, b))
-        =>:
-            Finset_card(Finset_Icc(a, b)) = b - a + 1
+run_file Finset

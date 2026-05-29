@@ -1,4 +1,7 @@
-use crate::common::helper::is_number_string_literally_integer_without_dot;
+use super::helpers_by_stmt::{
+    or_branches_closed_range_start_plus_offset_equalities,
+    or_branches_integer_closed_range_equalities,
+};
 use crate::prelude::*;
 
 impl Runtime {
@@ -49,6 +52,7 @@ impl Runtime {
             stmt.element.clone(),
             &stmt.closed_range,
             &stmt.line_file,
+            "by closed_range as cases",
         ) {
             Ok(b) => {
                 if b.is_empty() {
@@ -66,6 +70,7 @@ impl Runtime {
                 stmt.element.clone(),
                 &stmt.closed_range,
                 &stmt.line_file,
+                "by closed_range as cases",
             ) {
                 Ok(b) => b,
                 Err(offset_err) => {
@@ -95,104 +100,4 @@ impl Runtime {
 
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
-}
-
-fn closed_range_endpoint_integer_string(obj: &Obj) -> Result<String, String> {
-    let Obj::Number(n) = obj else {
-        return Err(
-            "by closed_range as cases: range endpoints must be integer literals".to_string(),
-        );
-    };
-    let s = n.normalized_value.clone();
-    if !is_number_string_literally_integer_without_dot(s.clone()) {
-        return Err(
-            "by closed_range as cases: range endpoints must be integers (no decimal point)"
-                .to_string(),
-        );
-    }
-    Ok(s)
-}
-
-fn or_branches_integer_closed_range_equalities(
-    element: Obj,
-    closed: &ClosedRange,
-    line_file: &LineFile,
-) -> Result<Vec<AndChainAtomicFact>, String> {
-    let start_s = closed_range_endpoint_integer_string(closed.start.as_ref())?;
-    let end_s = closed_range_endpoint_integer_string(closed.end.as_ref())?;
-    let start_i: i128 = start_s
-        .parse()
-        .map_err(|_| format!("by closed_range as cases: invalid integer `{}`", start_s))?;
-    let end_i: i128 = end_s
-        .parse()
-        .map_err(|_| format!("by closed_range as cases: invalid integer `{}`", end_s))?;
-
-    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
-    let mut v = start_i;
-    while v <= end_i {
-        let eq = EqualFact::new(
-            element.clone(),
-            Number::new(v.to_string()).into(),
-            line_file.clone(),
-        );
-        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
-        v += 1;
-    }
-    Ok(branches)
-}
-
-/// `closed_range(start, start + N)` with integer literal `N >= 0`; `start` may be any obj.
-fn or_branches_closed_range_start_plus_offset_equalities(
-    element: Obj,
-    closed: &ClosedRange,
-    line_file: &LineFile,
-) -> Result<Vec<AndChainAtomicFact>, String> {
-    let start = closed.start.as_ref();
-    let end = closed.end.as_ref();
-    let Obj::Add(add) = end else {
-        return Err(
-            "by closed_range as cases: when start is not an integer literal, end must be start + N"
-                .to_string(),
-        );
-    };
-    if add.left.as_ref().to_string() != start.to_string() {
-        return Err(
-            "by closed_range as cases: end must be start + N (left addend equals range start)"
-                .to_string(),
-        );
-    }
-    let Obj::Number(n) = add.right.as_ref() else {
-        return Err(
-            "by closed_range as cases: N in start + N must be an integer literal".to_string(),
-        );
-    };
-    let s = n.normalized_value.clone();
-    if !is_number_string_literally_integer_without_dot(s.clone()) {
-        return Err(
-            "by closed_range as cases: N in start + N must be an integer (no decimal point)"
-                .to_string(),
-        );
-    }
-    let k: i128 = s
-        .parse()
-        .map_err(|_| format!("by closed_range as cases: invalid integer offset `{}`", s))?;
-    if k < 0 {
-        return Err(
-            "by closed_range as cases: offset N in start + N must be non-negative".to_string(),
-        );
-    }
-
-    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
-    let mut i = 0_i128;
-    while i <= k {
-        let rhs = if i == 0 {
-            start.clone()
-        } else {
-            Add::new(start.clone(), Number::new(i.to_string()).into()).into()
-        };
-        let eq = EqualFact::new(element.clone(), rhs, line_file.clone());
-        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
-        i += 1;
-    }
-    Ok(branches)
 }

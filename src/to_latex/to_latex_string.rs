@@ -243,6 +243,12 @@ impl ByClosedRangeAsCasesStmt {
     }
 }
 
+impl ByEnumerateRangeStmt {
+    pub fn to_latex_string(&self) -> String {
+        latex_texttt_escape(&self.to_string())
+    }
+}
+
 impl ByEnumerateFiniteSetStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
@@ -2097,6 +2103,7 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByEnumerateRangeStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
             Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),

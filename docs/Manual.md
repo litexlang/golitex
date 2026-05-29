@@ -18,9 +18,9 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
-This is the sense in which Litex aims to be **the language where mathematics verifies itself**.
+This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
@@ -1508,6 +1508,24 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
     ...
 ```
 
+For a known integer interval membership, **`by enumerate range`** and **`by enumerate closed_range`** expand the member into equality cases. `range(lo, hi)` is half-open, so it enumerates `lo, lo + 1, ..., hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
+
+```litex
+let a range(7, 8)
+
+by enumerate range: a $in range(7, 8)
+
+a = 7
+```
+
+```litex
+let x closed_range(1, 3)
+
+by enumerate closed_range: x $in 1...3
+
+x = 1 or x = 2 or x = 3
+```
+
 ---
 
 ### Induction (`by induc`, `by strong_induc`)
@@ -1760,6 +1778,7 @@ a = b
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 For a one-point range, it records the single equality directly instead of a one-branch `or`.
+The equivalent spelling **`by enumerate closed_range: x $in lo...hi`** is also accepted.
 
 ```litex
 have x closed_range(0, 10)

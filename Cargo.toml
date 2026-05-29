@@ -2,7 +2,7 @@
 name = "litex-lang"
 version = "0.9.91-beta"
 edition = "2021"
-description = "The Formal Way to Write Math as It Looks"
+description = "The Formal Language Where Code Verifies Itself"
 license = "Apache-2.0"
 repository = "https://github.com/litexlang/golitex"
 homepage = "https://litexlang.com"
