@@ -120,6 +120,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_subtraction_from_known_addition(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
         {
             return Ok(done);
@@ -479,6 +485,79 @@ impl Runtime {
             Obj::ListSet(list_set) => list_set.list.get(index - 1).map(|x| x.as_ref().clone()),
             _ => None,
         }
+    }
+
+    fn try_verify_subtraction_from_known_addition(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) = self.try_verify_one_subtraction_from_known_addition(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+        )? {
+            return Ok(Some(done));
+        }
+        self.try_verify_one_subtraction_from_known_addition(left, right, right, left, line_file)
+    }
+
+    // Moves one addend across a known sum equality.
+    // Example: from a known `a + b = c` or `b + a = c`, prove `a = c - b`.
+    fn try_verify_one_subtraction_from_known_addition(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        target_a: &Obj,
+        subtraction_side: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Sub(subtraction) = subtraction_side else {
+            return Ok(None);
+        };
+
+        let candidate_sum_1: Obj =
+            Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
+        let known_sum_1 = self.verify_objs_are_equal_known_only(
+            &candidate_sum_1,
+            subtraction.left.as_ref(),
+            line_file.clone(),
+        );
+        if known_sum_1.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "equality: a = c - b from known a + b = c".to_string(),
+                    vec![known_sum_1],
+                )
+                .into(),
+            ));
+        }
+
+        let candidate_sum_2: Obj =
+            Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
+        let known_sum_2 = self.verify_objs_are_equal_known_only(
+            &candidate_sum_2,
+            subtraction.left.as_ref(),
+            line_file.clone(),
+        );
+        if known_sum_2.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "equality: a = c - b from known b + a = c".to_string(),
+                    vec![known_sum_2],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
     }
 
     // Tuple extensionality: a tuple is equal to `(a, b, ...)` when its dimension matches

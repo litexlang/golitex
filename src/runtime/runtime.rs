@@ -164,6 +164,7 @@ impl Runtime {
             }
         }
         self.parsing_free_param_collection.clear();
+        self.module_manager.stop_all_imported_modules();
     }
 
     pub fn has_user_env(&self) -> bool {

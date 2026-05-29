@@ -101,8 +101,11 @@ impl Runtime {
 
         let predicate_name = normal_atomic_fact.predicate.to_string();
 
-        let definition = match self.get_prop_definition_by_name(&predicate_name) {
+        let raw_prop_definition_exists =
+            self.get_prop_definition_by_name(&predicate_name).is_some();
+        let definition = match self.get_active_prop_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
+            None if raw_prop_definition_exists => return Ok(None),
             None => {
                 return Err({
                     VerifyRuntimeError(RuntimeErrorStruct::new(
