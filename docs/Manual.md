@@ -1324,12 +1324,12 @@ prove:
 
 ### run file
 
-**`run_file Nat`** or **`run_file trigonometry`** loads a standard-library module at the top of the current file section, before user definitions and facts. Loaded standard-library modules stay available after `clear`.
+Use **`import Nat as Nat`** or **`import trigonometry as trig`** to register a standard-library module name. Import currently records module metadata; it does not execute the module contents. Each imported module name and resolved module path must be unique in the current runtime.
 
 **`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
 ```text
-run_file Nat
+import Nat as Nat
 run_file "local_path_to_file.lit"
 ```
 

@@ -19,6 +19,5 @@ pub use stmt::DefStrategyStmt;
 pub use stmt::DefStructStmt;
 pub use stmt::DefThmStmt;
 pub use stmt::EvalByStmt;
-pub use stmt::RunFileInStd;
 pub use stmt::Stmt;
 pub use stmt::StopStrategyStmt;

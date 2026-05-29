@@ -24,7 +24,7 @@ mod lit_file_runner_tests {
         }
         let p = crate::verify::known_forall_profile::snapshot();
         println!(
-            "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_std={} env_builtin={} arg_matches={} requirement_failures={}",
+            "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_builtin={} arg_matches={} requirement_failures={}",
             label,
             p.entries,
             p.successes,
@@ -34,7 +34,6 @@ mod lit_file_runner_tests {
             p.fallback_candidate_attempts,
             p.other_candidate_attempts,
             p.user_candidate_attempts,
-            p.std_candidate_attempts,
             p.builtin_candidate_attempts,
             p.arg_matches,
             p.requirement_failures,
@@ -1244,6 +1243,7 @@ right $in info(a)
     }
 
     #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn typed_function_applications_return_real() {
         let source_code = r#"
 run_file trigonometry
@@ -1501,6 +1501,7 @@ prove:
     }
 
     #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn std_citation_source_uses_safe_module_label() {
         let source_code = "run_file trigonometry\nsin(0) = 0";
 
@@ -1655,40 +1656,19 @@ prove:
     }
 
     #[test]
-    fn std_run_file_error_hides_attempted_paths_unless_detail_output() {
-        let missing_std_module = "__missing_std_module_for_output_test__";
-        let source_code = format!("run_file {}", missing_std_module);
+    fn unquoted_run_file_is_rejected() {
+        let source_code = "run_file trigonometry";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
-        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(!run_succeeded);
         assert!(run_output.contains(
-            format!(
-                "Failed to find std run_file target `{}`",
-                missing_std_module
-            )
-            .as_str()
+            "run_file expects a quoted relative or absolute file path; use import <std_module> as <name> for std modules"
         ));
-        assert!(!run_output.contains("Tried:"));
-
-        let mut detail_runtime = Runtime::new_with_builtin_code();
-        detail_runtime.new_file_path_new_env_new_name_scope("repl");
-        detail_runtime.detail_output = true;
-        let (detail_stmt_results, detail_runtime_error) =
-            run_source_code(source_code.as_str(), &mut detail_runtime);
-        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
-            &detail_runtime,
-            &detail_stmt_results,
-            &detail_runtime_error,
-            false,
-        );
-
-        assert!(!detail_run_succeeded);
-        assert!(detail_run_output.contains("Tried:"));
     }
 
     #[test]
@@ -2327,86 +2307,17 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    fn run_file_in_std_from_folder_name() {
-        run_with_large_stack(
-            "run_file_in_std_from_folder_name_large_stack",
-            run_file_in_std_from_folder_name_impl,
-        );
-    }
-
-    fn run_file_in_std_from_folder_name_impl() {
-        let source_code = "run_file trigonometry\n\nsin(0) = 0\ncos(0) = 1";
+    fn run_file_std_module_form_is_rejected() {
+        let source_code = "run_file trigonometry";
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("repl");
+        runtime.new_file_path_new_env_new_name_scope("run_file_std_module_form_is_rejected");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-        assert!(run_succeeded, "run_file in std failed:\n{}", run_output);
-        assert!(run_output.contains("\"type\": \"RunFileInStd\""));
-        assert!(run_output.contains("\"stmt\": \"run_file trigonometry\""));
-        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
-        assert!(run_output.contains("\"stmt\": \"cos(0) = 1\""));
-    }
-
-    #[test]
-    fn clear_preserves_loaded_std_environment() {
-        let source_code = "run_file trigonometry\nclear\nsin(0) = 0";
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("clear_preserves_loaded_std_environment");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            run_succeeded,
-            "std was not preserved by clear:\n{}",
-            run_output
-        );
-        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
-    }
-
-    #[test]
-    fn repeated_std_run_file_after_clear_is_cached() {
-        let source_code = "run_file trigonometry\nclear\nrun_file trigonometry\nsin(0) = 0";
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("repeated_std_run_file_after_clear_is_cached");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            run_succeeded,
-            "repeated std run_file after clear failed:\n{}",
-            run_output
-        );
-        assert!(!run_output.contains("NameAlreadyUsedError"));
-    }
-
-    #[test]
-    fn std_run_file_after_user_statement_is_rejected() {
-        let source_code = "1 = 1\nrun_file trigonometry";
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime
-            .new_file_path_new_env_new_name_scope("std_run_file_after_user_statement_is_rejected");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            !run_succeeded,
-            "late std run_file should fail:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("std run_file statements must appear before user definitions"),
-            "late std run_file should report targeted error:\n{}",
-            run_output
-        );
+        assert!(!run_succeeded);
+        assert!(run_output.contains("run_file expects a quoted relative or absolute file path"));
     }
 
     #[test]
@@ -2437,6 +2348,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn std_citation_source_survives_cached_reload_after_clear() {
         let source_code = "run_file trigonometry\nclear\nrun_file trigonometry\nsin(0) = 0";
 
@@ -2882,7 +2794,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    #[ignore = "includes examples/cite_std files that intentionally load std with run_file"]
+    #[ignore = "includes legacy examples/cite_std files that use removed std run_file syntax"]
     fn run_examples_include_std() {
         run_with_large_stack("run_examples_include_std_large_stack", || {
             run_examples_impl(true)
@@ -2895,7 +2807,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    #[ignore = "includes examples/cite_std files that intentionally load std with run_file"]
+    #[ignore = "includes legacy examples/cite_std files that use removed std run_file syntax"]
     fn run_all_include_std() {
         run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
     }

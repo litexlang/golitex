@@ -14,7 +14,7 @@ impl Runtime {
         }
         if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
             tb.skip()?; // consume the infix delimiter, then read the name
-            let fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let mut fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let right = self.parse_obj(tb)?;
 
             if is_key_symbol_or_keyword(&fn_name.to_string()) {
@@ -33,6 +33,10 @@ impl Runtime {
                         ),
                     ))),
                 };
+            }
+
+            if let Obj::Atom(AtomObj::Identifier(id)) = fn_name {
+                fn_name = self.qualify_bare_identifier_if_needed(id);
             }
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
@@ -1398,9 +1402,15 @@ impl Runtime {
                 if let Some(standard) = standard_set_from_bare_identifier_name(&id.name) {
                     return Ok(standard);
                 }
-                Ok(self
+                let resolved = self
                     .parsing_free_param_collection
-                    .resolve_identifier_to_free_param_obj(&id.name))
+                    .resolve_identifier_to_free_param_obj(&id.name);
+                match resolved {
+                    Obj::Atom(AtomObj::Identifier(id)) => {
+                        Ok(self.qualify_bare_identifier_if_needed(id))
+                    }
+                    _ => Ok(resolved),
+                }
             }
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
                 Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
@@ -1503,12 +1513,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Obj, RuntimeError> {
         tb.skip_token(TEMPLATE_INSTANCE_PREFIX)?;
-        let template_name = tb.advance()?;
-        is_valid_litex_name(&template_name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
+        let template_name = self.parse_module_qualified_reference_name(tb)?;
         let (left_token, right_token) = if tb.current_token_is_equal_to(LESS) {
             (LESS, GREATER)
         } else {
@@ -1647,7 +1652,7 @@ impl Runtime {
 
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
-        let name = self.parse_name_with_or_without_mod(tb)?;
+        let name = self.parse_module_qualified_reference_name(tb)?;
         let params = if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
             self.parse_braced_objs(tb)?
         } else {
@@ -1667,17 +1672,6 @@ impl Runtime {
         Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
     }
 
-    fn parse_name_with_or_without_mod(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<NameWithOrWithoutMod, RuntimeError> {
-        let name = self.parse_atomic_name(tb)?;
-        Ok(match name {
-            AtomicName::WithoutMod(name) => NameWithOrWithoutMod::WithoutMod(name),
-            AtomicName::WithMod(mod_name, name) => NameWithOrWithoutMod::WithMod(mod_name, name),
-        })
-    }
-
     /// `ident` or `mod::ident` as a predicate/atomic name in parse position.
     pub fn parse_atomic_name(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
@@ -1686,8 +1680,75 @@ impl Runtime {
             let right = parse_synthetically_correct_identifier_string(tb)?;
             Ok(AtomicName::WithMod(left, right))
         } else {
+            Ok(self.qualify_bare_atomic_name_if_needed(left))
+        }
+    }
+
+    pub(crate) fn parse_module_qualified_reference_name(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<AtomicName, RuntimeError> {
+        let left = tb.advance()?;
+        validate_litex_name_for_parse(&left, tb.line_file.clone())?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip_token(MOD_SIGN)?;
+            let right = tb.advance()?;
+            validate_litex_name_for_parse(&right, tb.line_file.clone())?;
+            Ok(AtomicName::WithMod(left, right))
+        } else if let Some(module_name) = self.current_parse_module_name() {
+            Ok(AtomicName::WithMod(module_name.to_string(), left))
+        } else {
             Ok(AtomicName::WithoutMod(left))
         }
+    }
+
+    fn current_parse_module_name(&self) -> Option<&str> {
+        if self.module_manager.current_module_name.is_empty() {
+            None
+        } else {
+            Some(self.module_manager.current_module_name.as_str())
+        }
+    }
+
+    fn name_is_in_builtin_identifier_layer(&self, name: &str) -> bool {
+        if is_builtin_identifier_name(name) {
+            return true;
+        }
+        self.environment_stack
+            .get(FILE_INDEX_FOR_BUILTIN)
+            .map_or(false, |env| env.defined_identifiers.contains_key(name))
+    }
+
+    fn name_is_in_builtin_prop_layer(&self, name: &str) -> bool {
+        if is_builtin_predicate(name) {
+            return true;
+        }
+        self.environment_stack
+            .get(FILE_INDEX_FOR_BUILTIN)
+            .map_or(false, |env| {
+                env.defined_def_props.contains_key(name)
+                    || env.defined_abstract_props.contains_key(name)
+            })
+    }
+
+    fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
+        let Some(module_name) = self.current_parse_module_name() else {
+            return id.into();
+        };
+        if self.name_is_in_builtin_identifier_layer(&id.name) {
+            return id.into();
+        }
+        IdentifierWithMod::new(module_name.to_string(), id.name).into()
+    }
+
+    fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
+        let Some(module_name) = self.current_parse_module_name() else {
+            return AtomicName::WithoutMod(name);
+        };
+        if self.name_is_in_builtin_prop_layer(&name) {
+            return AtomicName::WithoutMod(name);
+        }
+        AtomicName::WithMod(module_name.to_string(), name)
     }
 }
 
@@ -1752,6 +1813,14 @@ fn parse_synthetically_correct_identifier_string(
     Ok(cur)
 }
 
+fn validate_litex_name_for_parse(name: &str, line_file: LineFile) -> Result<(), RuntimeError> {
+    is_valid_litex_name(name).map_err(|msg| {
+        RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file),
+        ))
+    })
+}
+
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
 fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     match name {
@@ -1769,5 +1838,276 @@ fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
         Z_NZ => Some(StandardSet::ZNz.into()),
         R_NZ => Some(StandardSet::RNz.into()),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod module_qualification_parse_tests {
+    use crate::parse::Tokenizer;
+    use crate::prelude::*;
+    use std::rc::Rc;
+
+    fn parse_one_obj_line_with_runtime(rt: &mut Runtime, line: &str) -> Obj {
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(line, Rc::from("test.lit"))
+            .expect("tokenize object line");
+        assert_eq!(blocks.len(), 1, "{line:?}");
+        rt.parse_obj(&mut blocks[0]).expect("parse object line")
+    }
+
+    fn parse_one_fact_line_with_runtime(rt: &mut Runtime, line: &str) -> Fact {
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(line, Rc::from("test.lit"))
+            .expect("tokenize fact line");
+        assert_eq!(blocks.len(), 1, "{line:?}");
+        rt.parse_fact(&mut blocks[0]).expect("parse fact line")
+    }
+
+    fn parse_one_stmt_line_with_runtime(rt: &mut Runtime, line: &str) -> Stmt {
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(line, Rc::from("test.lit"))
+            .expect("tokenize stmt line");
+        assert_eq!(blocks.len(), 1, "{line:?}");
+        rt.parse_stmt(&mut blocks[0]).expect("parse stmt line")
+    }
+
+    fn assert_with_mod(name: &AtomicName, expected_mod_name: &str, expected_name: &str) {
+        let AtomicName::WithMod(mod_name, name) = name else {
+            panic!("expected module-qualified name");
+        };
+        assert_eq!(mod_name, expected_mod_name);
+        assert_eq!(name, expected_name);
+    }
+
+    fn assert_without_mod(name: &AtomicName, expected_name: &str) {
+        let AtomicName::WithoutMod(name) = name else {
+            panic!("expected bare name");
+        };
+        assert_eq!(name, expected_name);
+    }
+
+    #[test]
+    fn module_qualification_keeps_definition_name_bare() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
+
+        let Stmt::DefAbstractPropStmt(stmt) = stmt else {
+            panic!("expected abstract prop definition");
+        };
+        assert_eq!(stmt.name, "some_prop");
+    }
+
+    #[test]
+    fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "forall x Z:\n    $some_prop(x)");
+
+        let Fact::ForallFact(forall_fact) = fact else {
+            panic!("expected forall fact");
+        };
+        assert_eq!(forall_fact.then_facts.len(), 1);
+        let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::NormalAtomicFact(atomic_fact)) =
+            &forall_fact.then_facts[0]
+        else {
+            panic!("expected normal atomic fact");
+        };
+        let AtomicName::WithMod(mod_name, name) = &atomic_fact.predicate else {
+            panic!("expected module-qualified predicate");
+        };
+        assert_eq!(mod_name, "Nat");
+        assert_eq!(name, "some_prop");
+        let Obj::Atom(AtomObj::Forall(arg)) = &atomic_fact.body[0] else {
+            panic!("expected forall-bound argument");
+        };
+        assert_eq!(arg.name, "x");
+    }
+
+    #[test]
+    fn module_qualification_qualifies_bare_identifier() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
+
+        let Obj::Atom(AtomObj::IdentifierWithMod(id)) = obj else {
+            panic!("expected module-qualified identifier");
+        };
+        assert_eq!(id.mod_name, "Nat");
+        assert_eq!(id.name, "a");
+    }
+
+    #[test]
+    fn module_qualification_qualifies_bare_infix_function_head() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "a ` f b");
+
+        let Obj::FnObj(fn_obj) = obj else {
+            panic!("expected infix function object");
+        };
+        let FnObjHead::IdentifierWithMod(id) = fn_obj.head.as_ref() else {
+            panic!("expected module-qualified infix function head");
+        };
+        assert_eq!(id.mod_name, "Nat");
+        assert_eq!(id.name, "f");
+    }
+
+    #[test]
+    fn module_qualification_keeps_builtin_identifier_bare() {
+        let mut rt = Runtime::new_with_builtin_code();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
+
+        let Obj::Atom(AtomObj::Identifier(id)) = obj else {
+            panic!("expected bare builtin identifier");
+        };
+        assert_eq!(id.name, "pi");
+    }
+
+    #[test]
+    fn module_qualification_keeps_builtin_layer_predicate_bare() {
+        let mut rt = Runtime::new();
+        rt.environment_stack[FILE_INDEX_FOR_BUILTIN]
+            .defined_abstract_props
+            .insert(
+                "builtin_prop".to_string(),
+                DefAbstractPropStmt::new(
+                    "builtin_prop".to_string(),
+                    vec!["x".to_string()],
+                    default_line_file(),
+                ),
+            );
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
+
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(atomic_fact)) = fact else {
+            panic!("expected normal atomic fact");
+        };
+        let AtomicName::WithoutMod(name) = &atomic_fact.predicate else {
+            panic!("expected bare builtin-layer predicate");
+        };
+        assert_eq!(name, "builtin_prop");
+    }
+
+    #[test]
+    fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
+        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+            panic!("expected by thm stmt");
+        };
+        assert_with_mod(&thm_stmt.name, "Nat", "T");
+
+        let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by strategy S");
+        let Stmt::ByStrategyStmt(strategy_stmt) = strategy_stmt else {
+            panic!("expected by strategy stmt");
+        };
+        assert_with_mod(&strategy_stmt.name, "Nat", "S");
+
+        let stop_stmt = parse_one_stmt_line_with_runtime(&mut rt, "stop strategy S");
+        let Stmt::StopStrategyStmt(stop_stmt) = stop_stmt else {
+            panic!("expected stop strategy stmt");
+        };
+        assert_with_mod(&stop_stmt.name, "Nat", "S");
+
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Template<2>");
+        let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
+            panic!("expected instantiated template object");
+        };
+        assert_with_mod(&template_obj.template_name, "Nat", "Template");
+
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&Struct");
+        let Obj::StructObj(struct_obj) = struct_obj else {
+            panic!("expected struct object");
+        };
+        assert_with_mod(&struct_obj.name, "Nat", "Struct");
+    }
+
+    #[test]
+    fn module_qualification_preserves_explicit_reference_module_names() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
+        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+            panic!("expected by thm stmt");
+        };
+        assert_with_mod(&thm_stmt.name, "Other", "T");
+
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Other::Template<2>");
+        let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
+            panic!("expected instantiated template object");
+        };
+        assert_with_mod(&template_obj.template_name, "Other", "Template");
+
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&Other::Struct");
+        let Obj::StructObj(struct_obj) = struct_obj else {
+            panic!("expected struct object");
+        };
+        assert_with_mod(&struct_obj.name, "Other", "Struct");
+    }
+
+    #[test]
+    fn module_qualification_preserves_explicit_module_names() {
+        let mut rt = Runtime::new();
+        rt.module_manager.current_module_name = "Nat".to_string();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "Other::a");
+
+        let Obj::Atom(AtomObj::IdentifierWithMod(id)) = obj else {
+            panic!("expected module-qualified identifier");
+        };
+        assert_eq!(id.mod_name, "Other");
+        assert_eq!(id.name, "a");
+    }
+
+    #[test]
+    fn module_qualification_keeps_names_bare_without_module_context() {
+        let mut rt = Runtime::new();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
+        let Obj::Atom(AtomObj::Identifier(id)) = obj else {
+            panic!("expected bare identifier");
+        };
+        assert_eq!(id.name, "a");
+
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "$some_prop(a)");
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(atomic_fact)) = fact else {
+            panic!("expected normal atomic fact");
+        };
+        let AtomicName::WithoutMod(name) = &atomic_fact.predicate else {
+            panic!("expected bare predicate");
+        };
+        assert_eq!(name, "some_prop");
+
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
+        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+            panic!("expected by thm stmt");
+        };
+        assert_without_mod(&thm_stmt.name, "T");
+
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Template<2>");
+        let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
+            panic!("expected instantiated template object");
+        };
+        assert_without_mod(&template_obj.template_name, "Template");
+
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&Struct");
+        let Obj::StructObj(struct_obj) = struct_obj else {
+            panic!("expected struct object");
+        };
+        assert_without_mod(&struct_obj.name, "Struct");
     }
 }

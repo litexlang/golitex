@@ -112,12 +112,7 @@ impl Runtime {
     pub fn parse_stop_strategy_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STOP)?;
         tb.skip_token(STRATEGY)?;
-        let name = tb.advance()?;
-        is_valid_litex_name(&name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
+        let name = self.parse_module_qualified_reference_name(tb)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(

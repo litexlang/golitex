@@ -1,7 +1,7 @@
 use crate::pipeline::run_source_code;
 use crate::prelude::*;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 fn resolve_run_file_path(user_path: &str, current_lit_file_path: &str) -> String {
     let user = Path::new(user_path);
@@ -19,24 +19,12 @@ pub fn run_stmt_at_global_env(
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
         Stmt::RunFileStmt(run_file_stmt) => {
-            if !runtime.running_std_file {
-                runtime.close_std_run_file_prelude();
-            }
             return run_file(run_file_stmt, runtime);
         }
-        Stmt::RunFileInStd(run_file_in_std) => {
-            return run_file_in_std_folder(run_file_in_std, runtime);
-        }
         Stmt::ImportStmt(import_stmt) => {
-            if !runtime.running_std_file {
-                runtime.close_std_run_file_prelude();
-            }
             return run_import_stmt(import_stmt, runtime);
         }
         _ => {
-            if !runtime.running_std_file {
-                runtime.close_std_run_file_prelude();
-            }
             return runtime.exec_stmt(stmt);
         }
     }
@@ -54,18 +42,6 @@ fn run_file(
         Some(("run_file", "external_file")),
         _runtime,
     )
-}
-
-fn run_file_in_std_folder(
-    run_file_in_std: &RunFileInStd,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    if !runtime.running_std_file && !runtime.std_run_file_prelude_open {
-        return Err(std_run_file_after_user_content_error(run_file_in_std));
-    }
-    let path = resolve_run_file_in_std_path(run_file_in_std)?;
-    let source = format!("std/{}", run_file_in_std.file_path);
-    run_std_file_at_resolved_path(run_file_in_std.clone().into(), path, source, runtime)
 }
 
 fn run_file_at_resolved_path(
@@ -104,107 +80,6 @@ fn run_file_at_resolved_path(
     };
 
     return Ok((NonFactualStmtSuccess::new(stmt, InferResult::new(), result.0)).into());
-}
-
-fn run_std_file_at_resolved_path(
-    stmt: Stmt,
-    path: String,
-    source: String,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    if runtime
-        .module_manager
-        .loaded_std_run_file_paths
-        .contains(&path)
-    {
-        return Ok(NonFactualStmtSuccess::new_with_stmt(stmt).into());
-    }
-
-    let content = fs::read_to_string(path.as_str()).map_err(|_| {
-        RuntimeError::ExecStmtError({
-            let lf = stmt.line_file();
-            RuntimeErrorStruct::new(
-                Some(stmt.clone()),
-                format!("Failed to read file: {}", path.as_str()),
-                lf,
-                None,
-                vec![],
-            )
-        })
-    })?;
-
-    let current_file_index = runtime.module_manager.current_file_index;
-    runtime
-        .module_manager
-        .register_display_source_label(path.as_str(), "std", source.as_str());
-    runtime.new_file_and_update_runtime_with_file_content(path.as_str());
-
-    let result = runtime.run_with_std_env_as_top(|rt| {
-        let (stmt_results, runtime_error) = run_source_code(content.as_str(), rt);
-        if let Some(error) = runtime_error {
-            return Err(error);
-        }
-        Ok(stmt_results)
-    });
-
-    runtime.change_file_index_to(current_file_index);
-
-    match result {
-        Ok(stmt_results) => {
-            runtime
-                .module_manager
-                .loaded_std_run_file_paths
-                .insert(path);
-            Ok((NonFactualStmtSuccess::new(stmt, InferResult::new(), stmt_results)).into())
-        }
-        Err(error) => Err(error),
-    }
-}
-
-fn std_run_file_after_user_content_error(run_file_in_std: &RunFileInStd) -> RuntimeError {
-    let st: Stmt = run_file_in_std.clone().into();
-    let lf = st.line_file();
-    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
-        Some(st),
-        "std run_file statements must appear before user definitions and facts in the current file section; put them at the top, or run clear before loading std"
-            .to_string(),
-        lf,
-        None,
-        vec![],
-    ))
-}
-
-fn resolve_run_file_in_std_path(run_file_in_std: &RunFileInStd) -> Result<String, RuntimeError> {
-    let relative_main_lit_path = Path::new(run_file_in_std.file_path.as_str()).join("main.lit");
-    let std_roots = candidate_std_roots();
-    for std_root in std_roots.iter() {
-        let candidate = std_root.join(&relative_main_lit_path);
-        if candidate.is_file() {
-            return Ok(candidate.to_string_lossy().into_owned());
-        }
-    }
-
-    let attempted_paths = std_roots
-        .iter()
-        .map(|root| {
-            root.join(&relative_main_lit_path)
-                .to_string_lossy()
-                .into_owned()
-        })
-        .collect::<Vec<_>>()
-        .join(", ");
-    let st: Stmt = run_file_in_std.clone().into();
-    let lf = st.line_file();
-    Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
-        Some(st),
-        format!(
-            "Failed to find std run_file target `{}`. Tried: {}",
-            run_file_in_std.file_path, attempted_paths
-        ),
-        lf,
-        None,
-        vec![],
-    )))
 }
 
 fn candidate_std_roots() -> Vec<PathBuf> {
@@ -269,10 +144,141 @@ fn push_std_root_if_new(roots: &mut Vec<PathBuf>, candidate: PathBuf) {
 }
 
 fn run_import_stmt(
-    _import_stmt: &ImportStmt,
-    _runtime: &mut Runtime,
+    import_stmt: &ImportStmt,
+    runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
-    unimplemented!();
+    let (module_name, absolute_path, is_std) = imported_module_info(import_stmt, runtime)?;
+    runtime
+        .module_manager
+        .register_imported_module(module_name, absolute_path, is_std)
+        .map_err(|msg| import_name_already_used_error(import_stmt, msg))?;
+
+    Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into())
+}
+
+fn imported_module_info(
+    import_stmt: &ImportStmt,
+    runtime: &Runtime,
+) -> Result<(String, String, bool), RuntimeError> {
+    match import_stmt {
+        ImportStmt::ImportRelativePath(stmt) => {
+            let module_name = import_module_name(
+                stmt.as_mod_name.as_ref(),
+                || module_name_from_path(&stmt.path, import_stmt),
+                import_stmt,
+            )?;
+            let current_lit_path = runtime.module_manager.current_file_path_rc();
+            let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
+            Ok((
+                module_name,
+                absolute_path_string(PathBuf::from(path)),
+                false,
+            ))
+        }
+        ImportStmt::ImportGlobalModule(stmt) => {
+            let module_name = import_module_name(
+                stmt.as_mod_name.as_ref(),
+                || Ok(stmt.mod_name.clone()),
+                import_stmt,
+            )?;
+            Ok((module_name, std_import_path(stmt.mod_name.as_str()), true))
+        }
+    }
+}
+
+fn import_module_name<F>(
+    as_mod_name: Option<&String>,
+    default_name: F,
+    import_stmt: &ImportStmt,
+) -> Result<String, RuntimeError>
+where
+    F: FnOnce() -> Result<String, RuntimeError>,
+{
+    let name = match as_mod_name {
+        Some(name) => name.clone(),
+        None => default_name()?,
+    };
+    if let Err(msg) = is_valid_litex_name(name.as_str()) {
+        return Err(import_stmt_error(
+            import_stmt,
+            format!("invalid import module name `{}`: {}", name, msg),
+        ));
+    }
+    Ok(name)
+}
+
+fn module_name_from_path(path: &str, import_stmt: &ImportStmt) -> Result<String, RuntimeError> {
+    match Path::new(path).file_stem() {
+        Some(stem) => Ok(stem.to_string_lossy().into_owned()),
+        None => Err(import_stmt_error(
+            import_stmt,
+            format!(
+                "cannot infer import module name from path `{}`; use `as <name>`",
+                path
+            ),
+        )),
+    }
+}
+
+fn std_import_path(module_name: &str) -> String {
+    let relative_main_lit_path = Path::new(module_name).join("main.lit");
+    for std_root in candidate_std_roots() {
+        let candidate = std_root.join(&relative_main_lit_path);
+        if candidate.is_file() {
+            return absolute_path_string(candidate);
+        }
+    }
+
+    absolute_path_string(Path::new("std").join(relative_main_lit_path))
+}
+
+fn absolute_path_string(path: PathBuf) -> String {
+    let absolute_path = if path.is_absolute() {
+        path
+    } else {
+        match std::env::current_dir() {
+            Ok(current_dir) => current_dir.join(path),
+            Err(_) => path,
+        }
+    };
+
+    normalize_path(absolute_path).to_string_lossy().into_owned()
+}
+
+fn normalize_path(path: PathBuf) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => match normalized.components().last() {
+                Some(Component::Normal(_)) => {
+                    normalized.pop();
+                }
+                Some(Component::RootDir) | Some(Component::Prefix(_)) => {}
+                _ => normalized.push(component.as_os_str()),
+            },
+            _ => normalized.push(component.as_os_str()),
+        }
+    }
+    normalized
+}
+
+fn import_stmt_error(import_stmt: &ImportStmt, message: String) -> RuntimeError {
+    let stmt: Stmt = import_stmt.clone().into();
+    short_exec_error(stmt, message, None, vec![])
+}
+
+fn import_name_already_used_error(import_stmt: &ImportStmt, message: String) -> RuntimeError {
+    let stmt: Stmt = import_stmt.clone().into();
+    let line_file = stmt.line_file();
+    NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new(
+        Some(stmt),
+        message,
+        line_file,
+        None,
+        vec![],
+    ))
+    .into()
 }
 
 #[cfg(test)]
@@ -300,5 +306,147 @@ mod tests {
         assert!(roots.contains(&PathBuf::from("/usr/share/litex/std")));
         assert!(roots.contains(&local_app_data.join("litex").join("std")));
         assert!(roots.contains(&program_files.join("Litex").join("std")));
+    }
+
+    #[test]
+    fn import_relative_path_registers_module_info() {
+        let entry_path = std::env::temp_dir()
+            .join("litex-import-entry")
+            .join("entry.lit");
+        let expected_path = entry_path
+            .parent()
+            .unwrap()
+            .join("module")
+            .join("main.lit")
+            .to_string_lossy()
+            .into_owned();
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+
+        let (_, runtime_error) =
+            run_source_code("import \"module/main.lit\" as demo", &mut runtime);
+
+        assert!(runtime_error.is_none());
+        let imported = runtime.module_manager.imported_modules.get("demo").unwrap();
+        assert_eq!(imported.absolute_path, expected_path);
+        assert!(!imported.is_std);
+        assert!(imported.environment.defined_identifiers.is_empty());
+        assert_eq!(
+            runtime.module_manager.module_name_and_path_map.get("demo"),
+            Some(&expected_path)
+        );
+    }
+
+    #[test]
+    fn import_std_module_registers_module_info() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code("import trigonometry as trig", &mut runtime);
+
+        assert!(runtime_error.is_none());
+        let imported = runtime.module_manager.imported_modules.get("trig").unwrap();
+        assert!(imported.is_std);
+        assert!(imported.absolute_path.contains("trigonometry"));
+        assert_eq!(
+            Path::new(imported.absolute_path.as_str())
+                .file_name()
+                .and_then(|name| name.to_str()),
+            Some("main.lit")
+        );
+        assert_eq!(
+            runtime.module_manager.module_name_and_path_map.get("trig"),
+            Some(&imported.absolute_path)
+        );
+    }
+
+    #[test]
+    fn import_duplicate_module_name_is_rejected() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code(
+            "import trigonometry as trig\nimport Nat as trig",
+            &mut runtime,
+        );
+
+        let runtime_error = runtime_error.expect("duplicate module name should fail");
+        match runtime_error {
+            RuntimeError::NameAlreadyUsedError(error) => {
+                assert!(error
+                    .msg
+                    .contains("module name `trig` has already been used"));
+            }
+            other => panic!("expected NameAlreadyUsedError, got {:?}", other),
+        }
+        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
+        let imported = runtime.module_manager.imported_modules.get("trig").unwrap();
+        assert!(imported.absolute_path.contains("trigonometry"));
+    }
+
+    #[test]
+    fn import_duplicate_module_path_is_rejected() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code(
+            "import Nat as nat_alias\nimport Nat as other_nat",
+            &mut runtime,
+        );
+
+        let runtime_error = runtime_error.expect("duplicate module path should fail");
+        match runtime_error {
+            RuntimeError::NameAlreadyUsedError(error) => {
+                assert!(error
+                    .msg
+                    .contains("has already been imported as module name `nat_alias`"));
+            }
+            other => panic!("expected NameAlreadyUsedError, got {:?}", other),
+        }
+        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
+        assert!(runtime
+            .module_manager
+            .imported_modules
+            .contains_key("nat_alias"));
+    }
+
+    #[test]
+    fn import_equivalent_relative_paths_are_rejected() {
+        let entry_path = std::env::temp_dir()
+            .join("litex-import-entry")
+            .join("entry.lit");
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+
+        let (_, runtime_error) = run_source_code(
+            "import \"module/main.lit\" as demo\nimport \"./module/main.lit\" as other_demo",
+            &mut runtime,
+        );
+
+        let runtime_error = runtime_error.expect("equivalent relative module paths should fail");
+        match runtime_error {
+            RuntimeError::NameAlreadyUsedError(error) => {
+                assert!(error
+                    .msg
+                    .contains("has already been imported as module name `demo`"));
+            }
+            other => panic!("expected NameAlreadyUsedError, got {:?}", other),
+        }
+        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
+        assert!(runtime.module_manager.imported_modules.contains_key("demo"));
+    }
+
+    #[test]
+    fn import_inside_prove_is_rejected() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) =
+            run_source_code("prove:\n    import trigonometry as trig", &mut runtime);
+
+        assert!(runtime_error.is_some());
+        assert!(runtime.module_manager.imported_modules.is_empty());
     }
 }

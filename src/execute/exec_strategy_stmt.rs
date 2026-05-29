@@ -112,8 +112,9 @@ impl Runtime {
         &mut self,
         stmt: &ByStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let strategy_name = stmt.name.to_string();
         let strategy = self
-            .get_strategy_definition_by_name(&stmt.name)
+            .get_strategy_definition_by_name(&strategy_name)
             .cloned()
             .ok_or_else(|| {
                 short_exec_error(
@@ -123,7 +124,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        self.activate_strategy(&strategy, &stmt.name, stmt.clone().into())?;
+        self.activate_strategy(&strategy, &strategy_name, stmt.clone().into())?;
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 
@@ -131,8 +132,9 @@ impl Runtime {
         &mut self,
         stmt: &StopStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let strategy_name = stmt.name.to_string();
         let strategy = self
-            .get_strategy_definition_by_name(&stmt.name)
+            .get_strategy_definition_by_name(&strategy_name)
             .cloned()
             .ok_or_else(|| {
                 short_exec_error(
@@ -145,7 +147,7 @@ impl Runtime {
         let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
         self.top_level_env()
             .stopped_strategy_stmts
-            .insert(atomic_fact_key, stmt.name.clone());
+            .insert(atomic_fact_key, strategy_name);
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 

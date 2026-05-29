@@ -67,15 +67,11 @@ impl Runtime {
             return Ok(RunFileStmt::new(file_path, tb.line_file.clone()).into());
         }
 
-        let file_path = tb.advance()?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "Expected end of run_file std module name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(RunFileInStd::new(file_path, tb.line_file.clone()).into())
+        Err(RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(
+                "run_file expects a quoted relative or absolute file path; use import <std_module> as <name> for std modules".to_string(),
+                tb.line_file.clone(),
+            ),
+        )))
     }
 }

@@ -27,7 +27,6 @@ impl Runtime {
             Stmt::DoNothingStmt(s) => self.exec_do_nothing_stmt(s),
             Stmt::ClearStmt(s) => self.exec_clear_stmt(s),
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
-            Stmt::RunFileInStd(s) => self.exec_run_file_in_std(s),
             Stmt::EvalStmt(s) => self.exec_eval_stmt(s),
             Stmt::EvalByStmt(s) => self.exec_eval_by_stmt(s),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),

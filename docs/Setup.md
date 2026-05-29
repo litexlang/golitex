@@ -71,10 +71,10 @@ sudo apt-get install -f
 ```
 
 The `.deb` package installs the standard library at `/usr/share/litex/std`.
-To verify that `run_file` can find it, run:
+To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
+litex -e $'import trigonometry as trig' | grep '"stmt": "import trigonometry as trig"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
+litex -e $'import trigonometry as trig' | grep '"stmt": "import trigonometry as trig"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
 ```
 
 ---

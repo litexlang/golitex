@@ -11,7 +11,6 @@ static EXACT_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static FALLBACK_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static OTHER_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static BUILTIN_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
-static STD_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static USER_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static ARG_MATCHES: AtomicU64 = AtomicU64::new(0);
 static REQUIREMENT_FAILURES: AtomicU64 = AtomicU64::new(0);
@@ -26,7 +25,6 @@ pub struct KnownForallProfileSnapshot {
     pub fallback_candidate_attempts: u64,
     pub other_candidate_attempts: u64,
     pub builtin_candidate_attempts: u64,
-    pub std_candidate_attempts: u64,
     pub user_candidate_attempts: u64,
     pub arg_matches: u64,
     pub requirement_failures: u64,
@@ -42,7 +40,6 @@ pub(crate) enum KnownForallSearchPhase {
 #[derive(Clone, Copy)]
 pub(crate) enum KnownForallEnvKind {
     Builtin,
-    Std,
     User,
 }
 
@@ -62,7 +59,6 @@ pub fn reset() {
     FALLBACK_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     OTHER_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     BUILTIN_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
-    STD_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     USER_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     ARG_MATCHES.store(0, Ordering::Relaxed);
     REQUIREMENT_FAILURES.store(0, Ordering::Relaxed);
@@ -78,7 +74,6 @@ pub fn snapshot() -> KnownForallProfileSnapshot {
         fallback_candidate_attempts: FALLBACK_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         other_candidate_attempts: OTHER_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         builtin_candidate_attempts: BUILTIN_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
-        std_candidate_attempts: STD_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         user_candidate_attempts: USER_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         arg_matches: ARG_MATCHES.load(Ordering::Relaxed),
         requirement_failures: REQUIREMENT_FAILURES.load(Ordering::Relaxed),
@@ -125,9 +120,6 @@ pub(crate) fn record_candidate_attempt(
     match env_kind {
         KnownForallEnvKind::Builtin => {
             BUILTIN_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);
-        }
-        KnownForallEnvKind::Std => {
-            STD_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);
         }
         KnownForallEnvKind::User => {
             USER_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);

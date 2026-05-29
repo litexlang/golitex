@@ -42,14 +42,15 @@ impl Runtime {
         template_obj: &InstantiatedTemplateObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let template_name = template_obj.template_name.to_string();
         let def = self
-            .get_template_definition_by_name(&template_obj.template_name)
+            .get_template_definition_by_name(&template_name)
             .cloned()
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "template `{}` is not defined",
-                        template_obj.template_name
+                        template_name
                     )),
                 ))
             })?;
