@@ -232,6 +232,7 @@ pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::tooling_stmt::RunFileStmt;
+pub use crate::stmt::tooling_stmt::StopImportStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;

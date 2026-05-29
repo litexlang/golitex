@@ -74,7 +74,7 @@ The `.deb` package installs the standard library at `/usr/share/litex/std`.
 To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'import trigonometry as trig' | grep '"stmt": "import trigonometry as trig"'
+litex -e $'import trigonometry' | grep '"stmt": "import trigonometry"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'import trigonometry as trig' | grep '"stmt": "import trigonometry as trig"'
+litex -e $'import trigonometry' | grep '"stmt": "import trigonometry"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
+litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
+litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import trigonometry as trig" | Select-String '"stmt": "import trigonometry as trig"'
+litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
 ```
 
 ---

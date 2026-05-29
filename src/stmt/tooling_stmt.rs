@@ -17,7 +17,6 @@ pub struct ImportRelativePathStmt {
 #[derive(Clone)]
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
-    pub as_mod_name: Option<String>,
     pub line_file: LineFile,
 }
 
@@ -27,12 +26,33 @@ pub struct RunFileStmt {
     pub line_file: LineFile,
 }
 
+#[derive(Clone)]
+pub struct StopImportStmt {
+    pub module_name: String,
+    pub line_file: LineFile,
+}
+
 impl RunFileStmt {
     pub fn new(file_path: String, line_file: LineFile) -> Self {
         RunFileStmt {
             file_path,
             line_file,
         }
+    }
+}
+
+impl StopImportStmt {
+    pub fn new(module_name: String, line_file: LineFile) -> Self {
+        StopImportStmt {
+            module_name,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for StopImportStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", STOP, IMPORT, self.module_name)
     }
 }
 
@@ -64,10 +84,9 @@ impl ImportRelativePathStmt {
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: String, as_mod_name: Option<String>, line_file: LineFile) -> Self {
+    pub fn new(mod_name: String, line_file: LineFile) -> Self {
         ImportGlobalModuleStmt {
             mod_name,
-            as_mod_name,
             line_file,
         }
     }
@@ -92,10 +111,7 @@ impl fmt::Display for ImportRelativePathStmt {
 
 impl fmt::Display for ImportGlobalModuleStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.as_mod_name {
-            Some(name) => write!(f, "{} {} {} {}", IMPORT, self.mod_name, AS, name),
-            None => write!(f, "{} {}", IMPORT, self.mod_name),
-        }
+        write!(f, "{} {}", IMPORT, self.mod_name)
     }
 }
 

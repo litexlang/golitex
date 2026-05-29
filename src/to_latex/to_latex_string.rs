@@ -708,6 +708,17 @@ impl ClearStmt {
     }
 }
 
+impl StopImportStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\ \operatorname{{{}}}\ {}",
+            STOP,
+            IMPORT,
+            latex_local_ident(&self.module_name)
+        )
+    }
+}
+
 impl EqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2078,6 +2089,7 @@ impl Stmt {
             Stmt::ImportStmt(x) => x.to_latex_string(),
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
             Stmt::ClearStmt(x) => x.to_latex_string(),
+            Stmt::StopImportStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::EvalByStmt(x) => x.to_latex_string(),
