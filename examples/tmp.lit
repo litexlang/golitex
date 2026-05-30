@@ -1,19 +1,11 @@
-# Std imports.
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
 
-import Nat
+thm all_humans_are_mortal:
+    prove:
+        forall x human:
+            $mortal(x)
+    know $mortal(x)
 
-$Nat::Prime(2)
-
-by thm Nat::Prime_one_lt(2)
-1 < 2
-
-witness exist k N st {12 = 3 * k} from 4:
-    12 = 3 * 4
-$Nat::Dvd(3, 12)
-
-import Trig
-
-Trig::sin(0) = 0
-Trig::cos(0) = 1
-Trig::cos(2 * pi) = 1
-
+by thm all_humans_are_mortal(Socrates)
+$mortal(Socrates)

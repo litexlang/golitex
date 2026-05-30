@@ -87,7 +87,30 @@ Litex expects you to recognize familiar proof patterns: equality chains, members
 
 This is the precise sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; each line exposes a mathematical shape that the checker can match against verified context, builtin rules, known facts, and known `forall` facts.
 
-For example, a syllogism is ordinary mathematical information:
+For example, a syllogism can be written in two complementary ways. The
+traditional route is to give the universal fact a theorem name, then cite that
+theorem explicitly:
+
+```litex
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+thm all_humans_are_mortal:
+    prove:
+        forall x human:
+            $mortal(x)
+    know $mortal(x)
+
+by thm all_humans_are_mortal(Socrates)
+$mortal(Socrates)
+```
+
+This style is useful for famous theorems, reusable library results, and facts
+whose pattern is complex enough that explicit parameters make the proof easier
+to read.
+
+The lighter Litex route is to leave the universal fact in the context and write
+the conclusion directly:
 
 ```litex
 have human nonempty_set, Socrates human
@@ -99,11 +122,13 @@ know forall x human:
 $mortal(Socrates)
 ```
 
-Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates` belongs to `human`, and verifies the conclusion.
+Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates`
+belongs to `human`, and verifies the conclusion. This style is useful when the
+goal itself exposes enough shape for pattern matching.
 
 This is why `forall` is central: a known `forall` theorem acts like infinitely many concrete facts, ready to use when arguments and assumptions match.
 
-The output looks like
+For the second route, the output looks like
 
 ```text
 {
@@ -135,6 +160,8 @@ statement is meaningful, but Litex did not find enough verified information to
 prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
+
+
 
 > Another special design of Litex is that much of its surface vocabulary is primitive. Forms such as `R`, `N`, `$in`, `fn`, `{}`, and finite sets are not first unfolded into user-visible foundations; their meaning comes from the web of builtin rules, known facts, and inference rules connected to them. The keyword `abstract_prop` aligns with the idea that sometimes you want to use a predicate symbol without defining it yet.
 
@@ -179,7 +206,7 @@ Litex is experimental, but it is aiming at three simple things:
 
 1. **Verify AI-generated mathematics.** As generation gets cheaper, checking becomes the bottleneck.
 2. **Support scientific discovery.** Turn verification into a fast loop of trying ideas, repairing arguments, and reusing patterns.
-3. **Make formal mathematical language more broadly usable.** Formal math should not only be backend code for proof-assistant experts; it should also become a medium for ordinary mathematical learning, communication, and research.
+3. **Make formal mathematical language usable for everyone.** Formal math should not only be backend code for proof-assistant experts; it should also become a medium for ordinary mathematical learning, communication, and research.
 
 ## Special Thanks
 
