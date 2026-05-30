@@ -10,6 +10,7 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
     HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
 >;
 
+#[derive(Clone)]
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,

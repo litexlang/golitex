@@ -32,6 +32,7 @@ impl Runtime {
         stmt: &StopImportStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.module_manager
+            .borrow_mut()
             .stop_imported_module(&stmt.module_name)
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())

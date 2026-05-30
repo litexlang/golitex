@@ -1,14 +1,14 @@
-# Fresh-context MiniF2F compatibility bundle.
+# Mathlib-facing compatibility bundle.
 #
-# `run_file` is not currently idempotent. Use this as a single entry point in
-# a fresh verifier context instead of running the component std files twice.
+# Components are kept in their own module scopes because short names such as
+# `Mem` and `Card` intentionally repeat across Set, Finset, and Fintype.
 
-run_file Rat
-run_file complex
-run_file Real
-run_file Set
-run_file Finset
-run_file Fintype
-run_file ZMod
-run_file Int
-run_file topology
+import Rat
+import complex
+import Real
+import Set
+import Finset
+import Fintype
+import ZMod
+import Int
+import topology

@@ -12,7 +12,6 @@ impl Runtime {
         };
         let Some(strategy) = self
             .get_strategy_definition_by_name(&strategy_name)
-            .cloned()
         else {
             return Ok(StmtUnknown::new().into());
         };

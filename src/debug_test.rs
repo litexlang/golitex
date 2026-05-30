@@ -72,7 +72,7 @@ mod local_debug_tests {
         runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
         let detail_output = env_flag_is_set("LITEX_DEBUG_DETAIL_OUTPUT");
         runtime.detail_output = detail_output;
-        runtime.module_manager.hide_file_paths_in_output = !detail_output;
+        runtime.module_manager.borrow_mut().hide_file_paths_in_output = !detail_output;
         let stop_on_first_failure = env_flag_is_set("LITEX_DEBUG_STOP_ON_FIRST_FAILURE");
 
         let run_wall_start = Instant::now();

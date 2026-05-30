@@ -1,34 +1,40 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn get_prop_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
+    pub fn get_prop_definition_by_name(&self, predicate_name: &str) -> Option<DefPropStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(predicate_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_prop_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_prop_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment, local_name)
+                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name).cloned()
                 });
         }
 
         self.get_prop_definition_by_name_in_current_envs(predicate_name)
+            .cloned()
     }
 
-    pub fn get_active_prop_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
+    pub fn get_active_prop_definition_by_name(&self, predicate_name: &str) -> Option<DefPropStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(predicate_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_prop_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_prop_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .active_imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment, local_name)
+                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name).cloned()
                 });
         }
 
         self.get_prop_definition_by_name_in_current_envs(predicate_name)
+            .cloned()
     }
 
     fn get_prop_definition_by_name_in_current_envs(
@@ -55,19 +61,23 @@ impl Runtime {
     pub fn get_abstract_prop_definition_by_name(
         &self,
         predicate_name: &str,
-    ) -> Option<&DefAbstractPropStmt> {
+    ) -> Option<DefAbstractPropStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(predicate_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_abstract_prop_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_abstract_prop_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_abstract_prop_definition_by_name_in_env(environment, local_name)
+                    get_abstract_prop_definition_by_name_in_env(environment.as_ref(), local_name)
+                        .cloned()
                 });
         }
 
         self.get_abstract_prop_definition_by_name_in_current_envs(predicate_name)
+            .cloned()
     }
 
     fn get_abstract_prop_definition_by_name_in_current_envs(
@@ -85,26 +95,29 @@ impl Runtime {
         None
     }
 
-    pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
+    pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<DefAlgoStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_algorithms.get(algo_name) {
-                return Some(definition);
+                return Some(definition.clone());
             }
         }
         None
     }
 
-    pub fn get_struct_definition_by_name(&self, struct_name: &str) -> Option<&DefStructStmt> {
+    pub fn get_struct_definition_by_name(&self, struct_name: &str) -> Option<DefStructStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(struct_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_struct_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_struct_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_structs.get(local_name));
+                .and_then(|environment| environment.defined_structs.get(local_name).cloned());
         }
 
         self.get_struct_definition_by_name_in_current_envs(struct_name)
+            .cloned()
     }
 
     fn get_struct_definition_by_name_in_current_envs(
@@ -120,17 +133,20 @@ impl Runtime {
         None
     }
 
-    pub fn get_template_definition_by_name(&self, template_name: &str) -> Option<&DefTemplateStmt> {
+    pub fn get_template_definition_by_name(&self, template_name: &str) -> Option<DefTemplateStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(template_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_template_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_template_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_templates.get(local_name));
+                .and_then(|environment| environment.defined_templates.get(local_name).cloned());
         }
 
         self.get_template_definition_by_name_in_current_envs(template_name)
+            .cloned()
     }
 
     fn get_template_definition_by_name_in_current_envs(
@@ -146,17 +162,20 @@ impl Runtime {
         None
     }
 
-    pub fn get_thm_definition_by_name(&self, thm_name: &str) -> Option<&DefThmStmt> {
+    pub fn get_thm_definition_by_name(&self, thm_name: &str) -> Option<DefThmStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(thm_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_thm_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_thm_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_thm_stmts.get(local_name));
+                .and_then(|environment| environment.defined_thm_stmts.get(local_name).cloned());
         }
 
         self.get_thm_definition_by_name_in_current_envs(thm_name)
+            .cloned()
     }
 
     fn get_thm_definition_by_name_in_current_envs(&self, thm_name: &str) -> Option<&DefThmStmt> {
@@ -169,17 +188,22 @@ impl Runtime {
         None
     }
 
-    pub fn get_strategy_definition_by_name(&self, strategy_name: &str) -> Option<&DefStrategyStmt> {
+    pub fn get_strategy_definition_by_name(&self, strategy_name: &str) -> Option<DefStrategyStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(strategy_name) {
             if self.is_current_parse_module(module_name) {
-                return self.get_strategy_definition_by_name_in_current_envs(local_name);
+                return self
+                    .get_strategy_definition_by_name_in_current_envs(local_name)
+                    .cloned();
             }
             return self
                 .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_strategy_stmts.get(local_name));
+                .and_then(|environment| {
+                    environment.defined_strategy_stmts.get(local_name).cloned()
+                });
         }
 
         self.get_strategy_definition_by_name_in_current_envs(strategy_name)
+            .cloned()
     }
 
     fn get_strategy_definition_by_name_in_current_envs(

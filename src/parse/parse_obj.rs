@@ -1702,11 +1702,12 @@ impl Runtime {
         }
     }
 
-    fn current_parse_module_name(&self) -> Option<&str> {
-        if self.module_manager.current_module_name.is_empty() {
+    fn current_parse_module_name(&self) -> Option<String> {
+        let current_module_name = self.module_manager.borrow().current_module_name.clone();
+        if current_module_name.is_empty() {
             None
         } else {
-            Some(self.module_manager.current_module_name.as_str())
+            Some(current_module_name)
         }
     }
 
@@ -1892,7 +1893,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_definition_name_bare() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
@@ -1905,7 +1906,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "forall x Z:\n    $some_prop(x)");
 
@@ -1932,7 +1933,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_identifier() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
 
@@ -1946,7 +1947,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_infix_function_head() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "a ` f b");
 
@@ -1963,7 +1964,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_builtin_identifier_bare() {
         let mut rt = Runtime::new_with_builtin_code();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
@@ -1986,7 +1987,7 @@ mod module_qualification_parse_tests {
                     default_line_file(),
                 ),
             );
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
 
@@ -2002,7 +2003,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
         let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
@@ -2038,7 +2039,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_reference_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
         let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
@@ -2062,7 +2063,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.current_module_name = "Nat".to_string();
+        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "Other::a");
 

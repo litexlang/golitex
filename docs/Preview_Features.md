@@ -12,7 +12,7 @@ Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Ma
 
 ### Stoppable imports (2026-05)
 
-`stop import Name` keeps an imported module registered but removes it from ordinary automatic verification. This is useful when a loaded module has many known facts and `forall` facts that should not be searched for later goals. Local imports now name module directories containing `main.lit`, not `.lit` files, and `import Nat` defaults to the module name `Nat`. Re-importing the same module with the same module name is idempotent and re-enables the module if it was stopped; `clear` stops all currently imported modules. Explicit citations such as `by thm Name::theorem(...)` can still cite a stopped module.
+`stop import Name` keeps an imported module registered but removes it from ordinary automatic verification. This is useful when a loaded module has many known facts and `forall` facts that should not be searched for later goals. Local imports now name module directories containing `main.lit`, not `.lit` files, and std imports must use the std folder name as the module name. Re-importing the same module with the same module name is idempotent and re-enables the module if it was stopped; `clear` stops all currently imported modules. Explicit citations such as `by thm Name::theorem(...)` can still cite a stopped module.
 
 ### Named theorem calls with `thm` (2026-05)
 
@@ -130,7 +130,7 @@ prove:
 
 ### Function application return membership (2026-05)
 
-If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after importing trigonometry.
+If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after loading `Trig`.
 
 ### Real interval objects (2026-05)
 

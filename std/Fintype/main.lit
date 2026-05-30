@@ -11,16 +11,16 @@ prop Fintype(alpha set):
 prop Finite(alpha set):
     $Fintype(alpha)
 
-prop Fintype_Card(alpha set, n N):
+prop Card(alpha set, n N):
     $Fintype(alpha)
     count(alpha) = n
 
-have fn Fintype_card(alpha power_set(N): $Fintype(alpha)) N = count(alpha)
-have fn Fintype_card_Z(alpha power_set(Z): $Fintype(alpha)) N = count(alpha)
-have fn Fintype_card_R(alpha power_set(R): $Fintype(alpha)) N = count(alpha)
+have fn card(alpha power_set(N): $Fintype(alpha)) N = count(alpha)
+have fn card_Z(alpha power_set(Z): $Fintype(alpha)) N = count(alpha)
+have fn card_R(alpha power_set(R): $Fintype(alpha)) N = count(alpha)
 
 # Mathlib: construct a Fintype instance from finiteness of the carrier.
-thm Fintype_of_finite:
+thm of_finite:
     prove:
         forall alpha set:
             $is_finite_set(alpha)
@@ -36,7 +36,7 @@ thm Finite_of_fintype:
                 $Finite(alpha)
     $Finite(alpha)
 
-thm Fintype_of_finite_pred:
+thm of_finite_pred:
     prove:
         forall alpha set:
             $Finite(alpha)
@@ -45,18 +45,18 @@ thm Fintype_of_finite_pred:
     $Fintype(alpha)
 
 # Mathlib: Fintype.card, Nat-set fragment.
-thm Fintype_card_eq_count:
+thm card_eq_count:
     prove:
         forall alpha power_set(N):
             $Fintype(alpha)
             =>:
-                Fintype_card(alpha) = count(alpha)
-    Fintype_card(alpha) = count(alpha)
+                card(alpha) = count(alpha)
+    card(alpha) = count(alpha)
 
-thm Fintype_Card_eq:
+thm Card_eq:
     prove:
         forall alpha set, n N:
-            $Fintype_Card(alpha, n)
+            $Card(alpha, n)
             =>:
                 count(alpha) = n
     count(alpha) = n

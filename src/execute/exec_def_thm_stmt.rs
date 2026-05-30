@@ -94,11 +94,6 @@ impl Runtime {
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        let infer_result_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::ForallFact(
-                stmt.forall_fact.clone(),
-            ))?;
-
-        Ok(body_exec_result.with_infers(infer_result_after_store))
+        Ok(body_exec_result)
     }
 }

@@ -1876,19 +1876,11 @@ impl WitnessNonemptySet {
 
 impl ImportGlobalModuleStmt {
     pub fn to_latex_string(&self) -> String {
-        match &self.as_mod_name {
-            Some(m) => format!(
-                r"\operatorname{{{}}}\ {}\ \mathrm{{as}}\ {}",
-                IMPORT,
-                latex_local_ident(&self.mod_name),
-                latex_local_ident(m)
-            ),
-            None => format!(
-                r"\operatorname{{{}}}\ {}",
-                IMPORT,
-                latex_local_ident(&self.mod_name)
-            ),
-        }
+        format!(
+            r"\operatorname{{{}}}\ {}",
+            IMPORT,
+            latex_local_ident(&self.mod_name)
+        )
     }
 }
 

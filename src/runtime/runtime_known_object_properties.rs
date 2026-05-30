@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::rc::Rc;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
@@ -17,10 +18,10 @@ impl Runtime {
     }
 
     /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restrict_fn_in` targets.
-    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSetBody> {
+    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
-                return Some(body);
+                return Some(body.clone());
             }
         }
 
@@ -29,14 +30,14 @@ impl Runtime {
 
     /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
     /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for well-defined/calls.
-    pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<&FnSetBody> {
+    pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
-                return Some(body);
+                return Some(body.clone());
             }
             if let Some(restricts) = info.restrict_to.as_ref() {
                 if let Some((rb, _)) = restricts.last() {
-                    return Some(rb);
+                    return Some(rb.clone());
                 }
             }
         }
@@ -45,17 +46,11 @@ impl Runtime {
     }
 
     pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.clone() {
-                return Some(body);
-            }
-        }
-
-        None
+        self.get_object_in_fn_set(obj)
     }
 
     pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
-        self.get_object_in_fn_set_or_restrict(obj).cloned()
+        self.get_object_in_fn_set_or_restrict(obj)
     }
 
     pub fn get_cloned_object_in_fn_set_or_restrict_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
@@ -89,10 +84,10 @@ impl Runtime {
         None
     }
 
-    fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<&KnownFnInfo> {
+    fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
         let key = obj.to_string();
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
-            return Some(info);
+            return Some(info.clone());
         }
 
         if let Some((module_name, local_name)) = module_qualified_obj_name(obj) {
@@ -102,9 +97,9 @@ impl Runtime {
         None
     }
 
-    fn get_known_fn_info_for_key(&self, key: &str) -> Option<&KnownFnInfo> {
+    fn get_known_fn_info_for_key(&self, key: &str) -> Option<KnownFnInfo> {
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(key) {
-            return Some(info);
+            return Some(info.clone());
         }
 
         if let Some((module_name, local_name)) = split_module_qualified_key(key) {
@@ -127,13 +122,15 @@ impl Runtime {
         &self,
         module_name: &str,
         local_name: &str,
-    ) -> Option<&KnownFnInfo> {
+    ) -> Option<KnownFnInfo> {
         if self.is_current_parse_module(module_name) {
-            return self.get_known_fn_info_for_key_from_current_envs(local_name);
+            return self
+                .get_known_fn_info_for_key_from_current_envs(local_name)
+                .cloned();
         }
 
         self.active_imported_module_environment(module_name)
-            .and_then(|env| env.known_objs_in_fn_sets.get(local_name))
+            .and_then(|env| env.known_objs_in_fn_sets.get(local_name).cloned())
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
@@ -273,23 +270,29 @@ impl Runtime {
         result
     }
 
-    pub fn imported_module_environment(&self, module_name: &str) -> Option<&Environment> {
+    pub fn imported_module_environment(&self, module_name: &str) -> Option<Rc<Environment>> {
         self.module_manager
+            .borrow()
             .imported_modules
             .get(module_name)
-            .map(|module| &module.environment)
+            .map(|module| Rc::clone(&module.environment))
     }
 
-    pub fn active_imported_module_environment(&self, module_name: &str) -> Option<&Environment> {
-        if self.module_manager.imported_module_is_stopped(module_name) {
+    pub fn active_imported_module_environment(&self, module_name: &str) -> Option<Rc<Environment>> {
+        if self
+            .module_manager
+            .borrow()
+            .imported_module_is_stopped(module_name)
+        {
             return None;
         }
         self.imported_module_environment(module_name)
     }
 
     pub fn is_current_parse_module(&self, module_name: &str) -> bool {
-        !self.module_manager.current_module_name.is_empty()
-            && self.module_manager.current_module_name == module_name
+        let module_manager = self.module_manager.borrow();
+        !module_manager.current_module_name.is_empty()
+            && module_manager.current_module_name == module_name
     }
 
     pub fn atomic_fact_referenced_module_names(&self, atomic_fact: &AtomicFact) -> Vec<String> {

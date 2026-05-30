@@ -3,45 +3,45 @@ run_file Nat
 # Basic natural-number predicates.
 witness exist k N st {4 = 2 * k} from 2:
     4 = 2 * 2
-$Nat_Even(4)
+$Even(4)
 
 witness exist k N st {5 = 2 * k + 1} from 2:
     5 = 2 * 2 + 1
-$Nat_Odd(5)
+$Odd(5)
 
 witness exist k N st {12 = 3 * k} from 4:
     12 = 3 * 4
-$Nat_Dvd(3, 12)
+$Dvd(3, 12)
 
-$Nat_ModEq(4, 11, 3)
+$ModEq(4, 11, 3)
 
 # Prime, gcd, and coprime Mathlib-facing theorem names.
-by thm Nat_Prime_two(0)
-$Nat_Prime(2)
+by thm Prime_two(0)
+$Prime(2)
 
-by thm Nat_Prime_one_lt(2)
+by thm Prime_one_lt(2)
 1 < 2
 
-by thm Nat_gcd_comm(4, 6)
-Nat_gcd(4, 6) = Nat_gcd(6, 4)
+by thm gcd_comm(4, 6)
+gcd(4, 6) = gcd(6, 4)
 
-by thm Nat_gcd_dvd_left(4, 6)
-$Nat_Dvd(Nat_gcd(4, 6), 4)
+by thm gcd_dvd_left(4, 6)
+$Dvd(gcd(4, 6), 4)
 
-by thm Nat_coprime_one_right(4)
-$Nat_Coprime(4, 1)
+by thm coprime_one_right(4)
+$Coprime(4, 1)
 
-by thm Nat_one_coprime(4)
-$Nat_Coprime(1, 4)
+by thm one_coprime(4)
+$Coprime(1, 4)
 
-by thm Nat_Prime_dvd_or_dvd(2, 4, 3)
-$Nat_Dvd(2, 4) or $Nat_Dvd(2, 3)
+by thm Prime_dvd_or_dvd(2, 4, 3)
+$Dvd(2, 4) or $Dvd(2, 3)
 
-by thm Nat_exists_prime_and_dvd(91)
-exist p N st {$Nat_Prime(p), $Nat_Dvd(p, 91)}
+by thm exists_prime_and_dvd(91)
+exist p N st {$Prime(p), $Dvd(p, 91)}
 
-Nat_choose(5, 0) = 1
-Nat_sqrt(9)^2 <= 9
+choose_fn(5, 0) = 1
+sqrt_nat(9)^2 <= 9
 
 # Trivial Mathlib Nat facts are examples, not std theorem aliases.
 claim:

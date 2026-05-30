@@ -34,7 +34,7 @@ fn run_file(
     _run_file_stmt: &RunFileStmt,
     _runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
-    let current_lit_path = _runtime.module_manager.current_file_path_rc();
+    let current_lit_path = _runtime.module_manager.borrow().current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
     run_file_at_resolved_path(
         _run_file_stmt.clone().into(),
@@ -63,10 +63,11 @@ fn run_file_at_resolved_path(
         })
     })?;
 
-    let current_file_index = runtime.module_manager.current_file_index;
+    let current_file_index = runtime.module_manager.borrow().current_file_index;
     if let Some((source_kind, source)) = display_source_label {
         runtime
             .module_manager
+            .borrow_mut()
             .register_display_source_label(path.as_str(), source_kind, source);
     }
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
@@ -150,6 +151,7 @@ fn run_import_stmt(
     let import_info = imported_module_info(import_stmt, runtime)?;
     let reactivate_existing = runtime
         .module_manager
+        .borrow()
         .imported_module_can_be_loaded_or_reactivated(
             &import_info.module_name,
             &import_info.module_root_path,
@@ -158,25 +160,34 @@ fn run_import_stmt(
     if reactivate_existing {
         runtime
             .module_manager
+            .borrow_mut()
             .reactivate_imported_module(&import_info.module_name);
         return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
     }
-    let environment = load_imported_module_environment(
+    let module_manager_snapshot = runtime.module_manager.borrow().clone();
+    let environment = match load_imported_module_environment(
         import_stmt,
         &import_info.module_name,
         &import_info.module_root_path,
         &import_info.main_lit_path,
         runtime,
-    )?;
-    runtime
-        .module_manager
-        .register_imported_module(
-            import_info.module_name,
-            import_info.module_root_path,
-            environment,
-            import_info.is_std,
-        )
-        .map_err(|msg| import_name_already_used_error(import_stmt, msg))?;
+    ) {
+        Ok(environment) => environment,
+        Err(error) => {
+            *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+            return Err(error);
+        }
+    };
+    let register_result = runtime.module_manager.borrow_mut().register_imported_module(
+        import_info.module_name,
+        import_info.module_root_path,
+        environment,
+        import_info.is_std,
+    );
+    if let Err(msg) = register_result {
+        *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+        return Err(import_name_already_used_error(import_stmt, msg));
+    }
 
     Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into())
 }
@@ -198,13 +209,24 @@ fn load_imported_module_environment(
         )
     })?;
 
-    let mut module_runtime = Runtime::new_with_builtin_code();
+    let parent_context = {
+        let module_manager = parent_runtime.module_manager.borrow();
+        (
+            module_manager.current_file_index,
+            module_manager.entry_path.clone(),
+            module_manager.display_entry_rc.clone(),
+            module_manager.current_module_name.clone(),
+            module_manager.current_module_path.clone(),
+        )
+    };
+
+    let mut module_runtime = Runtime::new_for_import_from_parent(parent_runtime);
     module_runtime.new_file_path_new_env_new_name_scope(main_lit_path);
-    module_runtime.module_manager.current_module_name = module_name.to_string();
-    module_runtime.module_manager.current_module_path = module_root_path.to_string();
-    module_runtime.module_manager.hide_file_paths_in_output =
-        parent_runtime.module_manager.hide_file_paths_in_output;
-    module_runtime.detail_output = parent_runtime.detail_output;
+    {
+        let mut module_manager = module_runtime.module_manager.borrow_mut();
+        module_manager.current_module_name = module_name.to_string();
+        module_manager.current_module_path = module_root_path.to_string();
+    }
 
     let (_stmt_results, runtime_error) = run_source_code(content.as_str(), &mut module_runtime);
     if let Some(error) = runtime_error {
@@ -228,6 +250,14 @@ fn load_imported_module_environment(
             ),
         ));
     };
+    {
+        let mut module_manager = parent_runtime.module_manager.borrow_mut();
+        module_manager.current_file_index = parent_context.0;
+        module_manager.entry_path = parent_context.1;
+        module_manager.display_entry_rc = parent_context.2;
+        module_manager.current_module_name = parent_context.3;
+        module_manager.current_module_path = parent_context.4;
+    }
     Ok(*module_env)
 }
 
@@ -265,7 +295,7 @@ fn imported_module_info(
                 || module_name_from_path(&stmt.path, import_stmt),
                 import_stmt,
             )?;
-            let current_lit_path = runtime.module_manager.current_file_path_rc();
+            let current_lit_path = runtime.module_manager.borrow().current_file_path_rc();
             let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
             let module_root_path = absolute_path_string(PathBuf::from(path));
             let module_root = Path::new(&module_root_path);
@@ -279,11 +309,7 @@ fn imported_module_info(
             ))
         }
         ImportStmt::ImportGlobalModule(stmt) => {
-            let module_name = import_module_name(
-                stmt.as_mod_name.as_ref(),
-                || Ok(stmt.mod_name.clone()),
-                import_stmt,
-            )?;
+            let module_name = import_module_name(None, || Ok(stmt.mod_name.clone()), import_stmt)?;
             let (module_root_path, main_lit_path) = std_import_paths(stmt.mod_name.as_str());
             Ok(ImportModuleInfo::new(
                 module_name,
@@ -490,7 +516,8 @@ mod tests {
         let (_, runtime_error) = run_source_code("import \"module\" as demo", &mut runtime);
 
         assert!(runtime_error.is_none());
-        let imported = runtime.module_manager.imported_modules.get("demo").unwrap();
+        let module_manager = runtime.module_manager.borrow();
+        let imported = module_manager.imported_modules.get("demo").unwrap();
         assert_eq!(imported.absolute_path, expected_path);
         assert!(!imported.is_std);
         assert!(imported
@@ -498,7 +525,7 @@ mod tests {
             .defined_abstract_props
             .contains_key("loaded_prop"));
         assert_eq!(
-            runtime.module_manager.module_name_and_path_map.get("demo"),
+            module_manager.module_name_and_path_map.get("demo"),
             Some(&expected_path)
         );
     }
@@ -508,26 +535,44 @@ mod tests {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) = run_source_code("import trigonometry as trig", &mut runtime);
+        let (_, runtime_error) = run_source_code("import Trig", &mut runtime);
 
         assert!(runtime_error.is_none());
-        let imported = runtime.module_manager.imported_modules.get("trig").unwrap();
+        let module_manager = runtime.module_manager.borrow();
+        let imported = module_manager.imported_modules.get("Trig").unwrap();
         assert!(imported.is_std);
-        assert!(imported.absolute_path.contains("trigonometry"));
+        assert!(imported.absolute_path.contains("Trig"));
         assert_eq!(
             Path::new(imported.absolute_path.as_str())
                 .file_name()
                 .and_then(|name| name.to_str()),
-            Some("trigonometry")
+            Some("Trig")
         );
         assert_eq!(
-            runtime.module_manager.module_name_and_path_map.get("trig"),
+            module_manager.module_name_and_path_map.get("Trig"),
             Some(&imported.absolute_path)
         );
         assert!(imported
             .environment
             .defined_def_props
             .contains_key("strictly_increasing_on"));
+    }
+
+    #[test]
+    fn import_std_module_with_as_is_rejected() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code("import Trig as trig", &mut runtime);
+
+        let runtime_error = runtime_error.expect("std import alias should fail");
+        let output = format!("{:?}", runtime_error);
+        assert!(
+            output.contains("standard-library imports use the std folder name"),
+            "std import alias should report folder-name requirement, got: {}",
+            output
+        );
+        assert!(runtime.module_manager.borrow().imported_modules.is_empty());
     }
 
     #[test]
@@ -538,7 +583,8 @@ mod tests {
         let (_, runtime_error) = run_source_code("import Nat", &mut runtime);
 
         assert!(runtime_error.is_none());
-        let imported = runtime.module_manager.imported_modules.get("Nat").unwrap();
+        let module_manager = runtime.module_manager.borrow();
+        let imported = module_manager.imported_modules.get("Nat").unwrap();
         assert!(imported.is_std);
         assert_eq!(
             Path::new(imported.absolute_path.as_str())
@@ -547,7 +593,7 @@ mod tests {
             Some("Nat")
         );
         assert_eq!(
-            runtime.module_manager.module_name_and_path_map.get("Nat"),
+            module_manager.module_name_and_path_map.get("Nat"),
             Some(&imported.absolute_path)
         );
     }
@@ -567,9 +613,93 @@ mod tests {
         let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
 
         assert!(runtime_error.is_none());
-        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
-        assert!(runtime.module_manager.imported_modules.contains_key("Same"));
-        assert!(!runtime.module_manager.stopped_module.contains("Same"));
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 1);
+        assert!(module_manager.imported_modules.contains_key("Same"));
+        assert!(!module_manager.stopped_module.contains("Same"));
+    }
+
+    #[test]
+    fn nested_import_updates_shared_module_manager() {
+        let root = temp_test_dir("nested-import-shared-manager");
+        let nested_dir = root.join("Nested");
+        let child_dir = root.join("Child");
+        fs::create_dir_all(&nested_dir).expect("create nested module dir");
+        fs::create_dir_all(&child_dir).expect("create child module dir");
+        fs::write(
+            nested_dir.join("main.lit"),
+            "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+        )
+        .expect("write nested module");
+        fs::write(
+            child_dir.join("main.lit"),
+            "import \"../Nested\" as Nested\nabstract_prop child_prop(x)",
+        )
+        .expect("write child module");
+
+        let source_code = format!(
+            "import \"{}\" as Child\n$Nested::nested_prop(2)",
+            child_dir.to_string_lossy()
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+
+        assert!(runtime_error.is_none());
+        let module_manager = runtime.module_manager.borrow();
+        assert!(module_manager.imported_modules.contains_key("Child"));
+        assert!(module_manager.imported_modules.contains_key("Nested"));
+    }
+
+    #[test]
+    fn failed_nested_import_rolls_back_shared_module_manager() {
+        let root = temp_test_dir("failed-nested-import-rolls-back-manager");
+        let nested_dir = root.join("Nested");
+        let child_dir = root.join("Child");
+        fs::create_dir_all(&nested_dir).expect("create nested module dir");
+        fs::create_dir_all(&child_dir).expect("create child module dir");
+        fs::write(nested_dir.join("main.lit"), "abstract_prop nested_prop(x)")
+            .expect("write nested module");
+        fs::write(
+            child_dir.join("main.lit"),
+            "import \"../Nested\" as Nested\n$missing_prop(2)",
+        )
+        .expect("write child module");
+
+        let source_code = format!("import \"{}\" as Child", child_dir.to_string_lossy());
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+
+        assert!(runtime_error.is_some());
+        assert!(runtime.module_manager.borrow().imported_modules.is_empty());
+    }
+
+    #[test]
+    fn import_restores_parent_relative_path_context() {
+        let root = temp_test_dir("import-restores-parent-relative-path");
+        let entry_path = root.join("entry.lit");
+        let child_dir = root.join("Child");
+        let sibling_dir = root.join("Sibling");
+        fs::create_dir_all(&child_dir).expect("create child module dir");
+        fs::create_dir_all(&sibling_dir).expect("create sibling module dir");
+        fs::write(child_dir.join("main.lit"), "abstract_prop child_prop(x)")
+            .expect("write child module");
+        fs::write(sibling_dir.join("main.lit"), "abstract_prop sibling_prop(x)")
+            .expect("write sibling module");
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+
+        let (_, runtime_error) =
+            run_source_code("import \"Child\" as Child\nimport \"Sibling\" as Sibling", &mut runtime);
+
+        assert!(runtime_error.is_none());
+        let module_manager = runtime.module_manager.borrow();
+        assert!(module_manager.imported_modules.contains_key("Child"));
+        assert!(module_manager.imported_modules.contains_key("Sibling"));
     }
 
     #[test]
@@ -596,12 +726,9 @@ mod tests {
             }
             other => panic!("expected NameAlreadyUsedError, got {:?}", other),
         }
-        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
-        let imported = runtime
-            .module_manager
-            .imported_modules
-            .get("duplicate")
-            .unwrap();
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 1);
+        let imported = module_manager.imported_modules.get("duplicate").unwrap();
         assert_eq!(
             imported.absolute_path,
             first_path.to_string_lossy().into_owned()
@@ -631,11 +758,9 @@ mod tests {
             }
             other => panic!("expected NameAlreadyUsedError, got {:?}", other),
         }
-        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
-        assert!(runtime
-            .module_manager
-            .imported_modules
-            .contains_key("first_name"));
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 1);
+        assert!(module_manager.imported_modules.contains_key("first_name"));
     }
 
     #[test]
@@ -665,8 +790,9 @@ mod tests {
             }
             other => panic!("expected NameAlreadyUsedError, got {:?}", other),
         }
-        assert_eq!(runtime.module_manager.imported_modules.len(), 1);
-        assert!(runtime.module_manager.imported_modules.contains_key("demo"));
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 1);
+        assert!(module_manager.imported_modules.contains_key("demo"));
     }
 
     #[test]
@@ -958,7 +1084,7 @@ know $imported_prop(2)
             "stopped import should not verify by imported known atomic facts:\n{}",
             run_output
         );
-        assert!(runtime.module_manager.stopped_module.contains("Demo"));
+        assert!(runtime.module_manager.borrow().stopped_module.contains("Demo"));
     }
 
     #[test]
@@ -1026,7 +1152,7 @@ know $imported_prop(2)
             "same-name same-path reimport should reactivate the module:\n{}",
             run_output
         );
-        assert!(!runtime.module_manager.stopped_module.contains("Demo"));
+        assert!(!runtime.module_manager.borrow().stopped_module.contains("Demo"));
     }
 
     #[test]
@@ -1059,7 +1185,7 @@ know $imported_prop(2)
             "clear should stop existing imports for verification:\n{}",
             run_output
         );
-        assert!(runtime.module_manager.stopped_module.contains("Demo"));
+        assert!(runtime.module_manager.borrow().stopped_module.contains("Demo"));
 
         let source_code = format!(
             "import \"{}\" as Demo\nclear\nimport \"{}\" as Demo\n$Demo::imported_prop(2)",
@@ -1170,9 +1296,9 @@ strategy imported_strategy:
         runtime.new_file_path_new_env_new_name_scope("repl");
 
         let (_, runtime_error) =
-            run_source_code("prove:\n    import trigonometry as trig", &mut runtime);
+            run_source_code("prove:\n    import Trig", &mut runtime);
 
         assert!(runtime_error.is_some());
-        assert!(runtime.module_manager.imported_modules.is_empty());
+        assert!(runtime.module_manager.borrow().imported_modules.is_empty());
     }
 }

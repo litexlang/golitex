@@ -3,36 +3,36 @@ run_file Int
 # Basic integer predicates from Mathlib generic notation.
 witness exist k Z st {12 = 3 * k} from 4:
     12 = 3 * 4
-$Int_Dvd(3, 12)
+$Dvd(3, 12)
 
 witness exist k Z st {-4 = 2 * k} from -2:
     -4 = 2 * -2
-$Int_Even(-4)
+$Even(-4)
 
 witness exist k Z st {-3 = 2 * k + 1} from -2:
     -3 = 2 * -2 + 1
-$Int_Odd(-3)
+$Odd(-3)
 
-$Int_ModEq(5, 11, 1)
+$ModEq(5, 11, 1)
 
 # Mathlib: Int.gcd_def
-by thm Int_gcd_def(4, -6)
-Int_gcd(4, -6) = Nat_gcd(Int_natAbs(4), Int_natAbs(-6))
+by thm gcd_def(4, -6)
+gcd(4, -6) = gcd(natAbs(4), natAbs(-6))
 
 # Mathlib: Int.lcm_def
-by thm Int_lcm_def(4, -6)
-Int_lcm(4, -6) = Nat_lcm(Int_natAbs(4), Int_natAbs(-6))
+by thm lcm_def(4, -6)
+lcm(4, -6) = lcm(natAbs(4), natAbs(-6))
 
 # Mathlib: Int.gcd_eq_gcd_ab
-by thm Int_gcd_eq_gcd_ab(56, 35)
-Int_gcd(56, 35) = 56 * Int_gcdA(56, 35) + 35 * Int_gcdB(56, 35)
+by thm gcd_eq_gcd_ab(56, 35)
+gcd(56, 35) = 56 * gcdA(56, 35) + 35 * gcdB(56, 35)
 
 # Mathlib: Int.gcd_dvd_left / Int.gcd_dvd_right
-by thm Int_gcd_dvd_left(56, 35)
-$Int_Dvd(Int_gcd(56, 35), 56)
+by thm gcd_dvd_left(56, 35)
+$Dvd(gcd(56, 35), 56)
 
-by thm Int_gcd_dvd_right(56, 35)
-$Int_Dvd(Int_gcd(56, 35), 35)
+by thm gcd_dvd_right(56, 35)
+$Dvd(gcd(56, 35), 35)
 
-Int_floor(3 / 2) <= 3 / 2 < Int_floor(3 / 2) + 1
-Int_ceil(3 / 2) - 1 < 3 / 2 <= Int_ceil(3 / 2)
+floor(3 / 2) <= 3 / 2 < floor(3 / 2) + 1
+ceil(3 / 2) - 1 < 3 / 2 <= ceil(3 / 2)
