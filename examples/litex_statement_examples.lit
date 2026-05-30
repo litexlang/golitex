@@ -92,7 +92,7 @@ prove:
         2 = 2
 
 # --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
-# import "examples/some_module_dir"
+# import Nat
 # run_file "./runfile2.lit"
 
 # --- Stmt::DoNothingStmt — trivial proof step ---
