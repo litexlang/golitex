@@ -17,4 +17,5 @@ mod parse_stmt;
 mod parse_strategy_stmt;
 mod parse_thm_stmt;
 mod parse_tooling_stmt;
+mod parse_use_strategy_stmt;
 mod parse_witness;

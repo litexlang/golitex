@@ -3,16 +3,14 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
         let thm_name = stmt.name.to_string();
-        let thm = self
-            .get_thm_definition_by_name(&thm_name)
-            .ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("by thm: theorem `{}` is not defined", stmt.name),
-                    None,
-                    vec![],
-                )
-            })?;
+        let thm = self.get_thm_definition_by_name(&thm_name).ok_or_else(|| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!("by thm: theorem `{}` is not defined", stmt.name),
+                None,
+                vec![],
+            )
+        })?;
 
         let verify_state = VerifyState::new(0, false);
         let arg_type_result = self

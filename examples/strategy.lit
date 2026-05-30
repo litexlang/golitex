@@ -53,19 +53,19 @@ claim:
             =>:
                 $r(z)
 
-# Same environment: stop followed by by re-enables the same strategy key.
+# Same environment: stop followed by use re-enables the same strategy key.
 stop strategy prove_p
-by strategy prove_p
+use strategy prove_p
 $p(1)
 
 # Parent environment is stopped, but a child environment can enable the strategy locally.
-by strategy prove_q
+use strategy prove_q
 stop strategy prove_q
 claim:
     prove:
         $q(2)
-    by strategy prove_q
+    use strategy prove_q
 
-# Back in the parent environment, by removes the parent stop and re-enables it.
-by strategy prove_q
+# Back in the parent environment, use removes the parent stop and re-enables it.
+use strategy prove_q
 $q(3)

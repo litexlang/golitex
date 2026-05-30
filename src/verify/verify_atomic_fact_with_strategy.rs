@@ -10,9 +10,7 @@ impl Runtime {
         let Some(strategy_name) = self.active_strategy_name_for_atomic_fact(atomic_fact) else {
             return Ok(StmtUnknown::new().into());
         };
-        let Some(strategy) = self
-            .get_strategy_definition_by_name(&strategy_name)
-        else {
+        let Some(strategy) = self.get_strategy_definition_by_name(&strategy_name) else {
             return Ok(StmtUnknown::new().into());
         };
         let Some(ExistOrAndChainAtomicFact::AtomicFact(then_atomic_fact)) =

@@ -53,14 +53,26 @@ have lcm fn(a, b N) N
 prop Coprime(a, b N):
     gcd(a, b) = 1
 
-# Mathlib: Nat.choose / integer square-root / Nat.floor-style compatibility object.
+# Mathlib: Nat.choose / integer square-root compatibility objects.
 # `choose` and `sqrt` are Litex keywords, so these short module-local names use suffixes.
 have choose_fn fn(n, k N) N
 have sqrt_nat fn(n N) N
-have floor fn(x R: 0 <= x) N
 
-# Mathlib: Nat.divisors, exposed as a finite set of natural numbers.
-have divisors fn(n N) power_set(N)
+# Mathlib: Nat.divisors, exposed as a finite set of natural divisors.
+prop divisors_value(n N, s power_set(N)):
+    forall d N:
+        =>:
+            d $in s
+        <=>:
+            $Dvd(d, n)
+
+know:
+    forall n N:
+        exist! s power_set(N) st {$divisors_value(n, s)}
+
+have fn divisors as set:
+    forall n N:
+        exist! s power_set(N) st {$divisors_value(n, s)}
 
 know:
     $Prime(2)
@@ -91,6 +103,9 @@ know:
 
     forall n N:
         (-1)^n $in Z
+
+    forall n N:
+        $divisors_value(n, divisors(n))
 
     forall n N:
         $is_finite_set(divisors(n))
@@ -180,11 +195,6 @@ know:
     forall n N:
         sqrt_nat(n)^2 <= n
         n < (sqrt_nat(n) + 1)^2
-
-    forall x R:
-        0 <= x
-        =>:
-            floor(x) <= x < floor(x) + 1
 
 # Mathlib: Nat.Prime.ne_zero
 thm Prime_ne_zero:
@@ -437,7 +447,7 @@ thm choose_succ_succ:
                 choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
     choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
-# Mathlib-facing sqrt and floor bounds.
+# Mathlib-facing sqrt bounds.
 thm sqrt_sq_le:
     prove:
         forall n N:
@@ -449,19 +459,3 @@ thm lt_succ_sqrt_sq:
         forall n N:
             n < (sqrt_nat(n) + 1)^2
     n < (sqrt_nat(n) + 1)^2
-
-thm floor_le:
-    prove:
-        forall x R:
-            0 <= x
-            =>:
-                floor(x) <= x
-    floor(x) <= x
-
-thm lt_floor_add_one:
-    prove:
-        forall x R:
-            0 <= x
-            =>:
-                x < floor(x) + 1
-    x < floor(x) + 1

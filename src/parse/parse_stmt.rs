@@ -20,6 +20,7 @@ impl Runtime {
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
             STRATEGY => self.parse_def_strategy_stmt(tb),
+            USE => self.parse_use_strategy_stmt(tb),
             STOP if tb.token_at_index(1)? == IMPORT => self.parse_stop_import_stmt(tb),
             STOP => self.parse_stop_strategy_stmt(tb),
             PROVE => self.parse_prove_stmt(tb),

@@ -33,30 +33,12 @@ strategy product_of_integrable_fn_integrable:
                 $integrable('(x s)R{f(x) * g(x)}, s)
     know $integrable('(x s)R{f(x) * g(x)}, s)
 
-strategy quotient_of_integrable_fn_integrable:
+claim:
     prove:
         forall f, g set:
             $integrable(f, s)
             $integrable(g, s)
-            forall x s:
-                g(x) != 0
             =>:
-                $integrable('(x s)R{f(x) / g(x)}, s)
-    know $integrable('(x s)R{f(x) / g(x)}, s)
-
-claim:
-    prove:
-        forall f, g, h set:
-            $integrable(f, s)
-            $integrable(g, s)
-            $integrable(h, s)
-            =>:
-                $integrable('(x s)R{f(x) + g(x) + h(x)}, s)
-    by strategy sum_of_integrable_fn_integrable
+                $integrable('(x s)R{f(x) + g(x)}, s)
+    use strategy sum_of_integrable_fn_integrable
     stop strategy sum_of_integrable_fn_integrable
-    by strategy minus_of_integrable_fn_integrable
-    stop strategy minus_of_integrable_fn_integrable
-    by strategy product_of_integrable_fn_integrable
-    stop strategy product_of_integrable_fn_integrable
-    by strategy quotient_of_integrable_fn_integrable
-    stop strategy quotient_of_integrable_fn_integrable

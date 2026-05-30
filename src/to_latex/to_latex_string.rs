@@ -2104,7 +2104,7 @@ impl Stmt {
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::ByStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::UseStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::StopStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),

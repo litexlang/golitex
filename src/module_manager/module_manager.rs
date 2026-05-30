@@ -6,21 +6,6 @@ use std::rc::Rc;
 pub const BUILTIN_CODE_PATH: &str = "builtin_code";
 
 #[derive(Clone)]
-pub struct DisplaySourceLabel {
-    pub source_kind: String,
-    pub source: String,
-}
-
-impl DisplaySourceLabel {
-    pub fn new(source_kind: &str, source: &str) -> Self {
-        DisplaySourceLabel {
-            source_kind: source_kind.to_string(),
-            source: source.to_string(),
-        }
-    }
-}
-
-#[derive(Clone)]
 pub struct ImportedModule {
     pub absolute_path: String,
     pub environment: Rc<Environment>,
@@ -45,27 +30,22 @@ pub struct ModuleManager {
     pub current_module_path: String,
     pub current_module_name: String,
     pub current_file_index: usize,
-    pub entry_path: String,
-    pub display_entry_rc: Option<Rc<str>>,
-    pub hide_file_paths_in_output: bool,
-    pub display_source_labels: HashMap<String, DisplaySourceLabel>,
+    pub entry_path_rc: Rc<str>,
     pub imported_modules: HashMap<String, ImportedModule>,
     pub stopped_module: HashSet<String>,
 }
 
 impl ModuleManager {
     pub fn new_empty_module_manager(initial_path: &str) -> Self {
+        let initial_path_rc: Rc<str> = Rc::from(initial_path);
         ModuleManager {
-            run_file_paths: vec![Rc::from(initial_path)],
+            run_file_paths: vec![initial_path_rc.clone()],
             module_name_and_path_map: HashMap::new(),
             loading_import_stack: vec![],
             current_module_path: String::new(),
             current_module_name: String::new(),
             current_file_index: FILE_INDEX_FOR_BUILTIN,
-            entry_path: initial_path.to_string(),
-            display_entry_rc: None,
-            hide_file_paths_in_output: false,
-            display_source_labels: HashMap::new(),
+            entry_path_rc: initial_path_rc,
             imported_modules: HashMap::new(),
             stopped_module: HashSet::new(),
         }
@@ -73,13 +53,6 @@ impl ModuleManager {
 
     pub fn current_file_path_rc(&self) -> Rc<str> {
         self.run_file_paths[self.current_file_index].clone()
-    }
-
-    pub fn register_display_source_label(&mut self, path: &str, source_kind: &str, source: &str) {
-        self.display_source_labels.insert(
-            path.to_string(),
-            DisplaySourceLabel::new(source_kind, source),
-        );
     }
 
     pub fn validate_imported_module_is_new(

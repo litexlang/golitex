@@ -28,7 +28,7 @@ $Demo::demo_is_two(2)
 by thm Demo::demo_prop_when_three(3)
 $Demo::demo_prop(3)
 
-by strategy Demo::demo_prop_when_four
+use strategy Demo::demo_prop_when_four
 $Demo::demo_prop(4)
 
 

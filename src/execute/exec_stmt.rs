@@ -49,7 +49,7 @@ impl Runtime {
             Stmt::ByAntisymmetricPropStmt(s) => self.exec_by_antisymmetric_prop_stmt(s),
             Stmt::ByThmStmt(s) => self.exec_by_thm_stmt(s),
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
-            Stmt::ByStrategyStmt(s) => self.exec_by_strategy_stmt(s),
+            Stmt::UseStrategyStmt(s) => self.exec_use_strategy_stmt(s),
             Stmt::StopStrategyStmt(s) => self.exec_stop_strategy_stmt(s),
             Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt(s),
             Stmt::DefStructStmt(s) => self.exec_def_struct_stmt(s),

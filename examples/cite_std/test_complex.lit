@@ -1,53 +1,52 @@
-run_file complex
+import complex
 
-(1, 2) $in &C
-have z0 &C = (1, 2)
+(1, 2) $in &complex::C
+have z0 &complex::C = (1, 2)
 
-&C{z0}.re = z0[1]
-&C{z0}.im = z0[2]
-&C{(1, 2)}.re = 1
-&C{(1, 2)}.im = 2
+&complex::C{z0}.re = z0[1]
+&complex::C{z0}.im = z0[2]
+&complex::C{(1, 2)}.re = 1
+&complex::C{(1, 2)}.im = 2
 
-forall z &C:
-    &C{z}.re $in R
-    &C{z}.im $in R
+forall z &complex::C:
+    &complex::C{z}.re $in R
+    &complex::C{z}.im $in R
 
-forall a, b &C:
-    C_add(a, b) = (&C{a}.re + &C{b}.re, &C{a}.im + &C{b}.im)
+forall a, b &complex::C:
+    complex::C_add(a, b) = (&complex::C{a}.re + &complex::C{b}.re, &complex::C{a}.im + &complex::C{b}.im)
 
-forall a &C:
-    C_neg(a) = (-&C{a}.re, -&C{a}.im)
+forall a &complex::C:
+    complex::C_neg(a) = (-&complex::C{a}.re, -&complex::C{a}.im)
 
-forall a, b &C:
-    C_sub(a, b) = (&C{a}.re - &C{b}.re, &C{a}.im - &C{b}.im)
+forall a, b &complex::C:
+    complex::C_sub(a, b) = (&complex::C{a}.re - &complex::C{b}.re, &complex::C{a}.im - &complex::C{b}.im)
 
-forall a, b &C:
-    C_mul(a, b) = (&C{a}.re * &C{b}.re - &C{a}.im * &C{b}.im, &C{a}.re * &C{b}.im + &C{a}.im * &C{b}.re)
+forall a, b &complex::C:
+    complex::C_mul(a, b) = (&complex::C{a}.re * &complex::C{b}.re - &complex::C{a}.im * &complex::C{b}.im, &complex::C{a}.re * &complex::C{b}.im + &complex::C{a}.im * &complex::C{b}.re)
 
-forall a &C:
-    C_conj(a) = (&C{a}.re, -&C{a}.im)
+forall a &complex::C:
+    complex::C_conj(a) = (&complex::C{a}.re, -&complex::C{a}.im)
 
-forall z &C:
-    C_normSq(z) = &C{z}.re^2 + &C{z}.im^2
-    C_abs(z) = C_norm(z)
-    C_norm(z)^2 = C_normSq(z)
+forall z &complex::C:
+    complex::C_normSq(z) = &complex::C{z}.re^2 + &complex::C{z}.im^2
+    complex::C_abs(z) = complex::C_norm(z)
+    complex::C_norm(z)^2 = complex::C_normSq(z)
 
-C_i = (0, 1)
+complex::C_add((1, 2), (3, 4)) = (1 + 3, 2 + 4) = (4, 6)
 
-forall a, b &C:
-    C_add(a, b) = (&C{a}.re + &C{b}.re, &C{a}.im + &C{b}.im) = (&C{b}.re + &C{a}.re, &C{b}.im + &C{a}.im) = C_add(b, a)
+forall a, b &complex::C:
+    complex::C_add(a, b) = (&complex::C{a}.re + &complex::C{b}.re, &complex::C{a}.im + &complex::C{b}.im) = (&complex::C{b}.re + &complex::C{a}.re, &complex::C{b}.im + &complex::C{a}.im) = complex::C_add(b, a)
 
-forall a &C:
-    C_add(a, (0, 0)) = (&C{a}.re + 0, &C{a}.im + 0) = (&C{a}.re, &C{a}.im) = a
-    C_add((0, 0), a) = (0 + &C{a}.re, 0 + &C{a}.im) = (&C{a}.re, &C{a}.im) = a
+forall a &complex::C:
+    complex::C_add(a, (0, 0)) = (&complex::C{a}.re + 0, &complex::C{a}.im + 0) = (&complex::C{a}.re, &complex::C{a}.im) = a
+    complex::C_add((0, 0), a) = (0 + &complex::C{a}.re, 0 + &complex::C{a}.im) = (&complex::C{a}.re, &complex::C{a}.im) = a
 
-C_add((1, 2), (3, 4)) = (1 + 3, 2 + 4) = (4, 6)
-C_neg((1, 2)) = (-1 * 1, -1 * 2)
-C_sub((5, 7), (2, 3)) = (5 - 2, 7 - 3) = (3, 4)
-C_mul((1, 2), (3, 4)) = (1 * 3 - 2 * 4, 1 * 4 + 2 * 3) = (-5, 10)
-C_conj((3, 5)) = (3, -1 * 5)
-C_normSq((3, 4)) = 3^2 + 4^2 = 25
-C_norm((3, 4)) = 5
-C_abs((3, 4)) = C_norm((3, 4)) = 5
-C_add((1, 2), C_neg((1, 2))) = C_add((1, 2), (-1 * 1, -1 * 2)) = (1 + -1 * 1, 2 + -1 * 2) = (0, 0)
-C_add(C_neg((1, 2)), (1, 2)) = C_add((-1 * 1, -1 * 2), (1, 2)) = (-1 * 1 + 1, -1 * 2 + 2) = (0, 0)
+complex::C_neg((1, 2)) = (-1 * 1, -1 * 2)
+complex::C_sub((5, 7), (2, 3)) = (5 - 2, 7 - 3) = (3, 4)
+complex::C_mul((1, 2), (3, 4)) = (1 * 3 - 2 * 4, 1 * 4 + 2 * 3) = (-5, 10)
+complex::C_conj((3, 5)) = (3, -1 * 5)
+complex::C_normSq((3, 4)) = 3^2 + 4^2 = 25
+complex::C_norm((3, 4)) = 5
+complex::C_abs((3, 4)) = complex::C_norm((3, 4)) = 5
+complex::C_add((1, 2), complex::C_neg((1, 2))) = complex::C_add((1, 2), (-1 * 1, -1 * 2)) = (1 + -1 * 1, 2 + -1 * 2) = (0, 0)
+complex::C_add(complex::C_neg((1, 2)), (1, 2)) = complex::C_add((-1 * 1, -1 * 2), (1, 2)) = (-1 * 1 + 1, -1 * 2 + 2) = (0, 0)

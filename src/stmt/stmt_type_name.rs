@@ -201,9 +201,9 @@ impl DefThmStmt {
     }
 }
 
-impl ByStrategyStmt {
+impl UseStrategyStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByStrategyStmt".to_string()
+        "UseStrategyStmt".to_string()
     }
 }
 

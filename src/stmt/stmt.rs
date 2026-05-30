@@ -44,7 +44,7 @@ pub enum Stmt {
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByThmStmt(ByThmStmt),
     DefThmStmt(DefThmStmt),
-    ByStrategyStmt(ByStrategyStmt),
+    UseStrategyStmt(UseStrategyStmt),
     StopStrategyStmt(StopStrategyStmt),
     DefStrategyStmt(DefStrategyStmt),
     DefStructStmt(DefStructStmt),
@@ -52,7 +52,7 @@ pub enum Stmt {
 }
 
 #[derive(Clone)]
-pub struct ByStrategyStmt {
+pub struct UseStrategyStmt {
     pub name: AtomicName,
     pub line_file: LineFile,
 }
@@ -71,15 +71,15 @@ pub struct DefStrategyStmt {
     pub line_file: LineFile,
 }
 
-impl ByStrategyStmt {
+impl UseStrategyStmt {
     pub fn new(name: AtomicName, line_file: LineFile) -> Self {
-        ByStrategyStmt { name, line_file }
+        UseStrategyStmt { name, line_file }
     }
 }
 
-impl fmt::Display for ByStrategyStmt {
+impl fmt::Display for UseStrategyStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", BY, STRATEGY, self.name)
+        write!(f, "{} {} {}", USE, STRATEGY, self.name)
     }
 }
 
@@ -406,7 +406,7 @@ impl fmt::Display for Stmt {
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByThmStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
-            Stmt::ByStrategyStmt(x) => write!(f, "{}", x),
+            Stmt::UseStrategyStmt(x) => write!(f, "{}", x),
             Stmt::StopStrategyStmt(x) => write!(f, "{}", x),
             Stmt::DefStrategyStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
@@ -459,7 +459,7 @@ impl Stmt {
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByStrategyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
             Stmt::StopStrategyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
@@ -510,7 +510,7 @@ impl Stmt {
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByStrategyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::StopStrategyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
@@ -770,9 +770,9 @@ impl From<DefThmStmt> for Stmt {
     }
 }
 
-impl From<ByStrategyStmt> for Stmt {
-    fn from(v: ByStrategyStmt) -> Self {
-        Stmt::ByStrategyStmt(v)
+impl From<UseStrategyStmt> for Stmt {
+    fn from(v: UseStrategyStmt) -> Self {
+        Stmt::UseStrategyStmt(v)
     }
 }
 
