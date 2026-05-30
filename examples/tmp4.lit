@@ -38,4 +38,4 @@ claim:
             $integrable(g, s)
             =>:
                 $integrable('(x s)R{f(x) + g(x)}, s)
-    by strategy sum_of_integrable_fn_integrable
+    use strategy sum_of_integrable_fn_integrable

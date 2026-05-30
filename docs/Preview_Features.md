@@ -36,7 +36,7 @@ by thm succ_one(1)
 
 ### Strategy registration with `strategy` (2026-05)
 
-`strategy name:` records a verified `forall` rule for future strategy-driven proof search. The `prove:` block has the same shape as `thm`, but the `forall` conclusion must contain exactly one atomic fact. A successfully defined strategy is enabled immediately for that conclusion predicate, as if `by strategy name` had been run. The proved `forall` is also stored as an ordinary known fact, so later proofs can use normal `forall` instantiation even if strategy search is stopped or another strategy is active for the same predicate. `by strategy name` can still re-enable a stopped strategy, and `stop strategy name` records that the strategy should be stopped for the same predicate.
+`strategy name:` records a verified `forall` rule for future strategy-driven proof search. The `prove:` block has the same shape as `thm`, but the `forall` conclusion must contain exactly one atomic fact. A successfully defined strategy is enabled immediately for that conclusion predicate, as if `use strategy name` had been run. The proved `forall` is also stored as an ordinary known fact, so later proofs can use normal `forall` instantiation even if strategy search is stopped or another strategy is active for the same predicate. `use strategy name` can still re-enable a stopped strategy, and `stop strategy name` records that the strategy should be stopped for the same predicate.
 
 ```litex
 prop is_one(x R):
@@ -51,7 +51,7 @@ strategy prove_is_one:
 
 $is_one(1)
 stop strategy prove_is_one
-by strategy prove_is_one
+use strategy prove_is_one
 ```
 
 ### Component uniqueness inferred from `exist!` (2026-05)

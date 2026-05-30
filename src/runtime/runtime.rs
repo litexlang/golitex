@@ -121,8 +121,7 @@ impl Runtime {
             let mut module_manager = self.module_manager.borrow_mut();
             module_manager.run_file_paths.push(path_rc.clone());
             module_manager.current_file_index += 1;
-            module_manager.display_entry_rc = Some(path_rc);
-            module_manager.entry_path = path.to_string();
+            module_manager.entry_path_rc = path_rc;
         }
         self.push_env();
     }
@@ -140,8 +139,7 @@ impl Runtime {
         if let Some(slot) = module_manager.run_file_paths.get_mut(idx) {
             *slot = path_rc.clone();
         }
-        module_manager.display_entry_rc = Some(path_rc);
-        module_manager.entry_path = path.to_string();
+        module_manager.entry_path_rc = path_rc;
     }
 }
 

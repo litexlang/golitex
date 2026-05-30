@@ -2011,9 +2011,9 @@ mod module_qualification_parse_tests {
         };
         assert_with_mod(&thm_stmt.name, "Nat", "T");
 
-        let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by strategy S");
-        let Stmt::ByStrategyStmt(strategy_stmt) = strategy_stmt else {
-            panic!("expected by strategy stmt");
+        let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
+        let Stmt::UseStrategyStmt(strategy_stmt) = strategy_stmt else {
+            panic!("expected use strategy stmt");
         };
         assert_with_mod(&strategy_stmt.name, "Nat", "S");
 

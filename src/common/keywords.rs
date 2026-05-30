@@ -106,6 +106,7 @@ pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
 pub const STOP: &str = "stop";
+pub const USE: &str = "use";
 
 pub const BY: &str = "by";
 pub const CASES: &str = "cases";
@@ -271,6 +272,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROVE,
         THM,
         STOP,
+        USE,
         BY,
         CASES,
         CONTRA,

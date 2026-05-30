@@ -36,18 +36,12 @@ fn run_file(
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.borrow().current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
-    run_file_at_resolved_path(
-        _run_file_stmt.clone().into(),
-        path,
-        Some(("run_file", "external_file")),
-        _runtime,
-    )
+    run_file_at_resolved_path(_run_file_stmt.clone().into(), path, _runtime)
 }
 
 fn run_file_at_resolved_path(
     stmt: Stmt,
     path: String,
-    display_source_label: Option<(&str, &str)>,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
@@ -64,12 +58,6 @@ fn run_file_at_resolved_path(
     })?;
 
     let current_file_index = runtime.module_manager.borrow().current_file_index;
-    if let Some((source_kind, source)) = display_source_label {
-        runtime
-            .module_manager
-            .borrow_mut()
-            .register_display_source_label(path.as_str(), source_kind, source);
-    }
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
 
     let result = run_source_code(content.as_str(), runtime);
@@ -227,8 +215,7 @@ fn load_imported_module_environment(
         let module_manager = parent_runtime.module_manager.borrow();
         (
             module_manager.current_file_index,
-            module_manager.entry_path.clone(),
-            module_manager.display_entry_rc.clone(),
+            module_manager.entry_path_rc.clone(),
             module_manager.current_module_name.clone(),
             module_manager.current_module_path.clone(),
         )
@@ -267,10 +254,9 @@ fn load_imported_module_environment(
     {
         let mut module_manager = parent_runtime.module_manager.borrow_mut();
         module_manager.current_file_index = parent_context.0;
-        module_manager.entry_path = parent_context.1;
-        module_manager.display_entry_rc = parent_context.2;
-        module_manager.current_module_name = parent_context.3;
-        module_manager.current_module_path = parent_context.4;
+        module_manager.entry_path_rc = parent_context.1;
+        module_manager.current_module_name = parent_context.2;
+        module_manager.current_module_path = parent_context.3;
     }
     Ok(*module_env)
 }
@@ -742,14 +728,19 @@ mod tests {
         fs::create_dir_all(&sibling_dir).expect("create sibling module dir");
         fs::write(child_dir.join("main.lit"), "abstract_prop child_prop(x)")
             .expect("write child module");
-        fs::write(sibling_dir.join("main.lit"), "abstract_prop sibling_prop(x)")
-            .expect("write sibling module");
+        fs::write(
+            sibling_dir.join("main.lit"),
+            "abstract_prop sibling_prop(x)",
+        )
+        .expect("write sibling module");
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
 
-        let (_, runtime_error) =
-            run_source_code("import \"Child\" as Child\nimport \"Sibling\" as Sibling", &mut runtime);
+        let (_, runtime_error) = run_source_code(
+            "import \"Child\" as Child\nimport \"Sibling\" as Sibling",
+            &mut runtime,
+        );
 
         assert!(runtime_error.is_none());
         let module_manager = runtime.module_manager.borrow();
@@ -935,6 +926,79 @@ know $imported_prop(2)
     }
 
     #[test]
+    fn imported_local_citation_source_uses_module_relative_path() {
+        let root = temp_test_dir("local-citation-source");
+        let entry_path = root.join("entry.lit");
+        let module_dir = root.join("module");
+        fs::create_dir_all(&module_dir).expect("create temp module dir");
+        fs::write(
+            module_dir.join("main.lit"),
+            r#"
+abstract_prop imported_prop(x)
+know $imported_prop(2)
+"#,
+        )
+        .expect("write temp module");
+
+        let source_code = "import \"module\" as Demo\n$Demo::imported_prop(2)";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
+            run_succeeded,
+            "imported known atomic fact should verify:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"module\""));
+        assert!(run_output.contains("\"source\": \"module\""));
+        assert!(
+            !run_output.contains(module_dir.to_string_lossy().as_ref()),
+            "normal output should not expose the absolute module path:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn imported_std_citation_source_uses_std_module_label() {
+        let source_code = "import Trig\n$Trig::periodic_with_period(Trig::sin, 2 * pi)";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("imported_std_citation_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(run_succeeded, "std citation run failed:\n{}", run_output);
+        assert!(
+            run_output.contains("\"source_kind\": \"std\""),
+            "std citation should include std source kind:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("\"source\": \"std/Trig\""),
+            "std citation should include std module label:\n{}",
+            run_output
+        );
+        assert!(
+            !run_output.contains("\"path\""),
+            "normal output should not expose the std source path:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn imported_known_forall_fact_can_verify_qualified_prop() {
         let path = write_temp_module(
             "known-forall",
@@ -1025,7 +1089,7 @@ strategy imported_strategy:
 "#,
         );
         let source_code = format!(
-            "import \"{}\" as Demo\nby strategy Demo::imported_strategy\n$Demo::imported_strategy_prop(2)",
+            "import \"{}\" as Demo\nuse strategy Demo::imported_strategy\n$Demo::imported_strategy_prop(2)",
             path.to_string_lossy()
         );
 
@@ -1070,7 +1134,7 @@ strategy imported_strategy:
 "#,
         );
         let source_code = format!(
-            "import \"{}\" as Demo\nby strategy Demo::imported_strategy\nstop strategy Demo::imported_strategy",
+            "import \"{}\" as Demo\nuse strategy Demo::imported_strategy\nstop strategy Demo::imported_strategy",
             path.to_string_lossy()
         );
 
@@ -1139,7 +1203,11 @@ know $imported_prop(2)
             "stopped import should not verify by imported known atomic facts:\n{}",
             run_output
         );
-        assert!(runtime.module_manager.borrow().stopped_module.contains("Demo"));
+        assert!(runtime
+            .module_manager
+            .borrow()
+            .stopped_module
+            .contains("Demo"));
     }
 
     #[test]
@@ -1207,7 +1275,11 @@ know $imported_prop(2)
             "same-name same-path reimport should reactivate the module:\n{}",
             run_output
         );
-        assert!(!runtime.module_manager.borrow().stopped_module.contains("Demo"));
+        assert!(!runtime
+            .module_manager
+            .borrow()
+            .stopped_module
+            .contains("Demo"));
     }
 
     #[test]
@@ -1240,7 +1312,11 @@ know $imported_prop(2)
             "clear should stop existing imports for verification:\n{}",
             run_output
         );
-        assert!(runtime.module_manager.borrow().stopped_module.contains("Demo"));
+        assert!(runtime
+            .module_manager
+            .borrow()
+            .stopped_module
+            .contains("Demo"));
 
         let source_code = format!(
             "import \"{}\" as Demo\nclear\nimport \"{}\" as Demo\n$Demo::imported_prop(2)",
@@ -1302,7 +1378,7 @@ thm imported_thm:
     }
 
     #[test]
-    fn by_strategy_can_cite_stopped_imported_module() {
+    fn use_strategy_can_cite_stopped_imported_module() {
         let path = write_temp_module(
             "by-strategy-after-stop-import",
             r#"
@@ -1323,13 +1399,13 @@ strategy imported_strategy:
 "#,
         );
         let source_code = format!(
-            "import \"{}\" as Demo\nstop import Demo\nby strategy Demo::imported_strategy\n$Demo::imported_strategy_prop(2)",
+            "import \"{}\" as Demo\nstop import Demo\nuse strategy Demo::imported_strategy\n$Demo::imported_strategy_prop(2)",
             path.to_string_lossy()
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime
-            .new_file_path_new_env_new_name_scope("by_strategy_can_cite_stopped_imported_module");
+            .new_file_path_new_env_new_name_scope("use_strategy_can_cite_stopped_imported_module");
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
             &runtime,
@@ -1350,8 +1426,7 @@ strategy imported_strategy:
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) =
-            run_source_code("prove:\n    import Trig", &mut runtime);
+        let (_, runtime_error) = run_source_code("prove:\n    import Trig", &mut runtime);
 
         assert!(runtime_error.is_some());
         assert!(runtime.module_manager.borrow().imported_modules.is_empty());

@@ -38,6 +38,18 @@ know:
         floor(x) <= x < floor(x) + 1
         ceil(x) - 1 < x <= ceil(x)
 
+    forall x R, y Z:
+        0 <= x - y
+        x - y < 1
+        =>:
+            y = floor(x)
+
+    forall x R, y Z:
+        0 <= y - x
+        y - x < 1
+        =>:
+            y = ceil(x)
+
     # Mathlib: Int.gcd_def
     forall a, b Z:
         gcd(a, b) = Nat::gcd(natAbs(a), natAbs(b))
@@ -61,6 +73,64 @@ know:
         $Dvd(d, b)
         =>:
             $Dvd(d, gcd(a, b))
+
+# Mathlib: Int.floor_le / Int.lt_floor_add_one, bundled for examples that
+# want the standard floor interval.
+thm floor_bounds:
+    prove:
+        forall x R:
+            floor(x) <= x < floor(x) + 1
+    floor(x) <= x < floor(x) + 1
+
+thm floor_le:
+    prove:
+        forall x R:
+            floor(x) <= x
+    floor(x) <= x
+
+thm lt_floor_add_one:
+    prove:
+        forall x R:
+            x < floor(x) + 1
+    x < floor(x) + 1
+
+# Mathlib: Int.ceil_le / Int.sub_one_lt_ceil, bundled for examples that want
+# the standard ceil interval.
+thm ceil_bounds:
+    prove:
+        forall x R:
+            ceil(x) - 1 < x <= ceil(x)
+    ceil(x) - 1 < x <= ceil(x)
+
+thm ceil_sub_one_lt:
+    prove:
+        forall x R:
+            ceil(x) - 1 < x
+    ceil(x) - 1 < x
+
+thm le_ceil:
+    prove:
+        forall x R:
+            x <= ceil(x)
+    x <= ceil(x)
+
+thm floor_eq_of_bounds:
+    prove:
+        forall x R, y Z:
+            0 <= x - y
+            x - y < 1
+            =>:
+                y = floor(x)
+    y = floor(x)
+
+thm ceil_eq_of_bounds:
+    prove:
+        forall x R, y Z:
+            0 <= y - x
+            y - x < 1
+            =>:
+                y = ceil(x)
+    y = ceil(x)
 
 # Mathlib: Int.gcd_def
 thm gcd_def:

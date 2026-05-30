@@ -42,7 +42,6 @@ pub fn run_cli() {
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
                 runtime.detail_output = detail_output;
-                runtime.module_manager.borrow_mut().hide_file_paths_in_output = !detail_output;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
                 let output =

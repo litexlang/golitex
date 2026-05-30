@@ -1,55 +1,59 @@
-run_file mathlib_compat
+import mathlib_compat
 
 sqrt(4) = 2
-logb(2, 8) = 3
-sin(0) = 0
-cos(0) = 1
+Real::logb(2, 8) = 3
+Real::sin(0) = 0
+Real::cos(0) = 1
 pi = pi
 
-I = (0, 1)
-have z &C = (3, 4)
-&C{z}.re^2 + &C{z}.im^2 = 3^2 + 4^2 = 25
-C_normSq(z) = 25
-C_abs(z) = C_norm(z) = 5
+have z &complex::C = (3, 4)
+&complex::C{z}.re^2 + &complex::C{z}.im^2 = 3^2 + 4^2 = 25
+complex::C_normSq(z) = 25
+complex::C_abs(z) = complex::C_norm(z) = 5
 
-card({1, 2, 3}) = 3
+Finset::card({1, 2, 3}) = 3
 
 claim:
     prove:
         forall n N_pos:
-            card(divisors(2 * n)) = 28
+            Finset::card(Nat::divisors(2 * n)) = 28
             =>:
-                card(divisors(2 * n)) = 28
-    card(divisors(2 * n)) = 28
+                Finset::card(Nat::divisors(2 * n)) = 28
+    Finset::card(Nat::divisors(2 * n)) = 28
 
-$range_value(5, range_nat(5))
+$Finset::range_value(5, Finset::range_nat(5))
 1 < 5
-1 $in range_nat(5)
+1 $in Finset::range_nat(5)
 
-$Icc_value(2, 5, Icc(2, 5))
+$Finset::Icc_value(2, 5, Finset::Icc(2, 5))
 2 <= 3 <= 5
-3 $in Icc(2, 5)
+3 $in Finset::Icc(2, 5)
 
-$value(5, ZMod(5))
+by thm ZMod::value_ZMod(5)
+$ZMod::value(5, ZMod::ZMod(5))
 1 < 5
-1 $in ZMod(5)
+1 $in ZMod::ZMod(5)
 
-repr(6, 5) = 1
-add(5, 3, 4) = 2
-mul(5, 3, 4) = 2
-$congruent(5, 6, 1)
+ZMod::repr(6, 5) = 1
+ZMod::add(5, 3, 4) = 2
+ZMod::mul(5, 3, 4) = 2
+$ZMod::congruent(5, 6, 1)
 
-by thm gcd_comm(4, 6)
-gcd(4, 6) = gcd(6, 4)
+by thm Nat::gcd_comm(4, 6)
+Nat::gcd(4, 6) = Nat::gcd(6, 4)
 
 witness exist k N st {6 = 3 * k} from 2:
     6 = 3 * 2
-$Dvd(3, 6)
+$Nat::Dvd(3, 6)
 
-by thm gcd_def(4, 6)
-gcd(4, 6) = gcd(natAbs(4), natAbs(6))
+by thm Int::gcd_def(4, 6)
+Int::gcd(4, 6) = Nat::gcd(Int::natAbs(4), Int::natAbs(6))
 
-den(3 / 2) != 0
-3 / 2 = num(3 / 2) / den(3 / 2)
+Rat::den(3 / 2) != 0
+3 / 2 = Rat::num(3 / 2) / Rat::den(3 / 2)
 
-floor(3 / 2) <= 3 / 2 < floor(3 / 2) + 1
+by thm Int::floor_le(3 / 2)
+Int::floor(3 / 2) <= 3 / 2
+
+by thm Int::lt_floor_add_one(3 / 2)
+3 / 2 < Int::floor(3 / 2) + 1
