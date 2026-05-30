@@ -440,17 +440,17 @@ impl Runtime {
         };
 
         for j in 0..bucket_count {
-                let entry_idx = bucket_count - 1 - j;
-                let candidate = {
-                    self.active_imported_module_environment(module_name)
-                        .and_then(|env| {
-                            env.known_atomic_facts_in_forall_facts_by_arg_shape
-                                .get(lookup_key)
-                                .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
-                                .and_then(|bucket| bucket.get(entry_idx))
-                                .cloned()
-                        })
-                };
+            let entry_idx = bucket_count - 1 - j;
+            let candidate = {
+                self.active_imported_module_environment(module_name)
+                    .and_then(|env| {
+                        env.known_atomic_facts_in_forall_facts_by_arg_shape
+                            .get(lookup_key)
+                            .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                            .and_then(|bucket| bucket.get(entry_idx))
+                            .cloned()
+                    })
+            };
             let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
                 continue;
             };

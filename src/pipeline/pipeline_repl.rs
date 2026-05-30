@@ -49,7 +49,6 @@ where
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("repl");
     runtime.detail_output = detail_output;
-    runtime.module_manager.borrow_mut().hide_file_paths_in_output = !detail_output;
 
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();

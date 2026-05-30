@@ -173,6 +173,14 @@ Contact us:
 1. [Email](mailto:litexlang@outlook.com)
 2. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
+## Goals of Litex
+
+Litex is experimental, but it is aiming at three simple things:
+
+1. **Verify AI-generated mathematics.** As generation gets cheaper, checking becomes the bottleneck.
+2. **Support scientific discovery.** Turn verification into a fast loop of trying ideas, repairing arguments, and reusing patterns.
+3. **Make formal mathematical language more broadly usable.** Formal math should not only be backend code for proof-assistant experts; it should also become a medium for ordinary mathematical learning, communication, and research.
+
 ## Special Thanks
 
 _未来没有计划，但一定更好。_

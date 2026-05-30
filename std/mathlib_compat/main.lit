@@ -4,6 +4,7 @@
 # `Mem` and `Card` intentionally repeat across Set, Finset, and Fintype.
 
 import Rat
+import Nat
 import complex
 import Real
 import Set

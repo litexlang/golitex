@@ -81,6 +81,7 @@ know:
     cos(pi) = -1
     sin(2 * pi) = 0
     cos(2 * pi) = 1
+    cos(2 * pi / 3) != 0
 
     sin(1 / 2 * pi) = 1
     cos(1 / 2 * pi) = 0
@@ -578,3 +579,10 @@ know:
     arctan(sqrt(3) / 3) = pi / 6
     arctan(1) = pi / 4
     arctan(sqrt(3)) = pi / 3
+
+# Special-angle nonzero fact used by std import examples.
+thm cos_two_pi_over_three_ne_zero:
+    prove:
+        forall _ N:
+            cos(2 * pi / 3) != 0
+    cos(2 * pi / 3) != 0

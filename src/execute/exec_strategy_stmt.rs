@@ -108,9 +108,9 @@ impl Runtime {
         Ok(body_exec_result.with_infers(infer_result_after_store))
     }
 
-    pub fn exec_by_strategy_stmt(
+    pub fn exec_use_strategy_stmt(
         &mut self,
-        stmt: &ByStrategyStmt,
+        stmt: &UseStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let strategy_name = stmt.name.to_string();
         let strategy = self
@@ -118,7 +118,7 @@ impl Runtime {
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by strategy: strategy `{}` is not defined", stmt.name),
+                    format!("use strategy: strategy `{}` is not defined", stmt.name),
                     None,
                     vec![],
                 )

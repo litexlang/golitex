@@ -1861,7 +1861,8 @@ $target_thm_prop(1)
     #[test]
     fn strategy_definition_auto_enables_strategy() {
         let source_code = r#"
-abstract_prop target_strategy_prop(x)
+prop target_strategy_prop(x R):
+    x = 1
 
 strategy use_target_strategy:
     prove:
@@ -1905,7 +1906,8 @@ $target_strategy_prop(1)
     #[test]
     fn strategy_definition_stores_forall_fact_for_known_forall_use() {
         let source_code = r#"
-abstract_prop target_strategy_prop(x)
+prop target_strategy_prop(x R):
+    x = 1
 
 strategy use_target_strategy:
     prove:
@@ -1946,7 +1948,7 @@ claim:
     }
 
     #[test]
-    fn strategy_definition_by_and_stop_are_stored() {
+    fn strategy_definition_use_and_stop_are_stored() {
         let source_code = r#"
 prop target_strategy_prop(x R):
     x = 1
@@ -1958,12 +1960,12 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-by strategy use_target_strategy
+use strategy use_target_strategy
 stop strategy use_target_strategy
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("strategy_definition_by_and_stop_are_stored");
+        runtime.new_file_path_new_env_new_name_scope("strategy_definition_use_and_stop_are_stored");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -1990,6 +1992,42 @@ stop strategy use_target_strategy
             env.stopped_strategy_stmts
                 .get(&("target_strategy_prop".to_string(), true)),
             Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn by_strategy_is_rejected_as_removed_activation_syntax() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+by strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "by_strategy_is_rejected_as_removed_activation_syntax",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "`by strategy` should no longer parse as strategy activation:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("got `strategy`"),
+            "the parser should report that strategy is not a valid `by` subkeyword:\n{}",
+            run_output
         );
     }
 
@@ -2024,8 +2062,8 @@ strategy use_negative_strategy:
             =>:
                 not $target_strategy_prop(y)
 
-by strategy use_positive_strategy
-by strategy use_negative_strategy
+use strategy use_positive_strategy
+use strategy use_negative_strategy
 stop strategy use_negative_strategy
 "#;
 
@@ -2070,7 +2108,7 @@ stop strategy use_negative_strategy
     }
 
     #[test]
-    fn by_strategy_verifies_matching_atomic_fact_and_stop_disables_it() {
+    fn use_strategy_verifies_matching_atomic_fact_and_stop_leaves_known_forall_available() {
         let strategy_setup = r#"
 abstract_prop target_strategy_prop(x)
 
@@ -2088,11 +2126,11 @@ strategy use_target_strategy:
                 $target_strategy_prop(y)
 "#;
         let succeeds_source_code = format!(
-            "{}\nby strategy use_target_strategy\n$target_strategy_prop(1)\n",
+            "{}\nuse strategy use_target_strategy\n$target_strategy_prop(1)\n",
             strategy_setup
         );
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("by_strategy_verifies_matching_atomic_fact");
+        runtime.new_file_path_new_env_new_name_scope("use_strategy_verifies_matching_atomic_fact");
         let (stmt_results, runtime_error) =
             run_source_code(succeeds_source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) =
@@ -2104,31 +2142,31 @@ strategy use_target_strategy:
             run_output
         );
 
-        let fails_source_code = format!(
-            "{}\nby strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
+        let stop_source_code = format!(
+            "{}\nuse strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
             strategy_setup
         );
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("stop_strategy_disables_matching_atomic_fact");
+        runtime.new_file_path_new_env_new_name_scope("stop_strategy_leaves_known_forall_available");
         let (stmt_results, runtime_error) =
-            run_source_code(fails_source_code.as_str(), &mut runtime);
+            run_source_code(stop_source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
-            !run_succeeded,
-            "stopped strategy should not verify the matching atomic fact:\n{}",
+            run_succeeded,
+            "stopped strategy search should still leave the stored forall available:\n{}",
             run_output
         );
         assert!(
-            run_output.contains("Unknown"),
-            "stopped strategy failure should be reported as unknown:\n{}",
+            run_output.contains("cite forall fact"),
+            "the stopped strategy case should verify by ordinary known-forall search:\n{}",
             run_output
         );
     }
 
     #[test]
-    fn by_strategy_after_stop_in_same_env_removes_stop() {
+    fn use_strategy_after_stop_in_same_env_removes_stop() {
         let source_code = r#"
 abstract_prop target_strategy_prop(x)
 
@@ -2145,15 +2183,15 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(y)
 
-by strategy use_target_strategy
+use strategy use_target_strategy
 stop strategy use_target_strategy
-by strategy use_target_strategy
+use strategy use_target_strategy
 $target_strategy_prop(1)
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "by_strategy_after_stop_in_same_env_removes_stop",
+            "use_strategy_after_stop_in_same_env_removes_stop",
         );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2161,7 +2199,7 @@ $target_strategy_prop(1)
 
         assert!(
             run_succeeded,
-            "same-env by after stop should re-enable the strategy:\n{}",
+            "same-env use after stop should re-enable the strategy:\n{}",
             run_output
         );
 
@@ -2177,7 +2215,7 @@ $target_strategy_prop(1)
     }
 
     #[test]
-    fn child_env_by_strategy_overrides_parent_stop_without_removing_it() {
+    fn child_env_use_strategy_overrides_parent_stop_without_removing_it() {
         let source_code = r#"
 abstract_prop target_strategy_prop(x)
 
@@ -2194,17 +2232,17 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(y)
 
-by strategy use_target_strategy
+use strategy use_target_strategy
 stop strategy use_target_strategy
 claim:
     prove:
         $target_strategy_prop(1)
-    by strategy use_target_strategy
+    use strategy use_target_strategy
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "child_env_by_strategy_overrides_parent_stop_without_removing_it",
+            "child_env_use_strategy_overrides_parent_stop_without_removing_it",
         );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2212,7 +2250,7 @@ claim:
 
         assert!(
             run_succeeded,
-            "child-env by should override the parent stop while inside the child env:\n{}",
+            "child-env use should override the parent stop while inside the child env:\n{}",
             run_output
         );
 
@@ -2862,7 +2900,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    #[ignore = "includes legacy examples/cite_std files that use removed std run_file syntax"]
+    #[ignore = "includes optional examples/cite_std std-import examples"]
     fn run_examples_include_std() {
         run_with_large_stack("run_examples_include_std_large_stack", || {
             run_examples_impl(true)
@@ -2875,7 +2913,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    #[ignore = "includes legacy examples/cite_std files that use removed std run_file syntax"]
+    #[ignore = "includes optional examples/cite_std std-import examples"]
     fn run_all_include_std() {
         run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
     }
@@ -4229,7 +4267,6 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
         runtime.new_file_path_new_env_new_name_scope(items[0].path_for_runtime.as_str());
         runtime.detail_output = detail_output;
-        runtime.module_manager.borrow_mut().hide_file_paths_in_output = !detail_output;
 
         let run_wall_start = Instant::now();
         let mut durations_ms: Vec<(String, f64)> = Vec::new();
