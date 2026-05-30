@@ -133,8 +133,8 @@ jobs:
           SMOKE_DIR="smoke_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${SMOKE_DIR}"
           tar -xzf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${SMOKE_DIR}"
-          OUTPUT=$("${SMOKE_DIR}/litex" -e $'run_file trigonometry\nsin(0) = 0')
-          if ! printf '%s\n' "${OUTPUT}" | grep '"stmt": "sin(0) = 0"' > /dev/null; then
+          OUTPUT=$("${SMOKE_DIR}/litex" -e $'import Trig\nTrig::sin(0) = 0')
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F 'Trig::sin(0) = 0' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -146,9 +146,9 @@ jobs:
           $smokeDir = "smoke_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
           Expand-Archive -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -DestinationPath $smokeDir -Force
-          $output = & (Join-Path $smokeDir "litex.exe") -e "run_file trigonometry`nsin(0) = 0"
+          $output = & (Join-Path $smokeDir "litex.exe") -e "import Trig`nTrig::sin(0) = 0"
           $outputText = $output -join "`n"
-          if ($outputText -notmatch '"stmt": "sin\(0\) = 0"') {
+          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('Trig::sin(0) = 0')) {
               $outputText
               throw "std smoke test failed"
           }
@@ -204,8 +204,8 @@ jobs:
         if: matrix.arch == 'amd64'
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          OUTPUT=$(litex -e $'run_file trigonometry\nsin(0) = 0')
-          if ! printf '%s\n' "${OUTPUT}" | grep '"stmt": "sin(0) = 0"' > /dev/null; then
+          OUTPUT=$(litex -e $'import Trig\nTrig::sin(0) = 0')
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F 'Trig::sin(0) = 0' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -371,8 +371,10 @@ jobs:
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "run_file trigonometry\nsin(0) = 0\n"
-              assert_match "sin(0) = 0", shell_output("#{bin}/litex -f #{testpath}/test.lit")
+              (testpath/"test.lit").write "import Trig\nTrig::sin(0) = 0\n"
+              output = shell_output("#{bin}/litex -f #{testpath}/test.lit")
+              assert_match "Trig::sin(0) = 0", output
+              refute_match '"result": "error"', output
             end
           end
           FORMULA

@@ -17,23 +17,3 @@ Trig::sin(0) = 0
 Trig::cos(0) = 1
 Trig::cos(2 * pi) = 1
 
-
-# Local module imports. Import paths are module directories containing main.lit.
-
-import "../tmp/import_examples/local_repo/DemoFacts" as Demo
-
-$Demo::demo_prop(2)
-$Demo::demo_is_two(2)
-
-by thm Demo::demo_prop_when_three(3)
-$Demo::demo_prop(3)
-
-use strategy Demo::demo_prop_when_four
-$Demo::demo_prop(4)
-
-
-# A local module may contain facts about a std module-qualified predicate.
-
-import "../tmp/import_examples/local_repo/UsesNat" as UsesNat
-
-$UsesNat::local_nat_fact(2)
