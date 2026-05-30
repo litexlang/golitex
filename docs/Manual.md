@@ -1926,18 +1926,48 @@ $ok(0)
 
 The last line is accepted because `$ok(0)` is already known in the proof context. This is the simplest form of reuse: a fact proved or introduced earlier can be used later.
 
-#### A known `forall` proves it
+#### A theorem or known `forall` proves it
 
-Known universal facts are also reusable. Litex can match the current goal against a known `forall` statement and substitute the right argument.
+Known universal facts are also reusable. Litex supports both explicit theorem
+calls and automatic matching against known `forall` facts.
+
+The explicit route gives the fact a name and cites it:
 
 ```litex
-abstract_prop p(x)
-know forall x R:
-    $p(x)
-$p(2)
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+thm all_humans_are_mortal:
+    prove:
+        forall x human:
+            $mortal(x)
+    know $mortal(x)
+
+by thm all_humans_are_mortal(Socrates)
+$mortal(Socrates)
 ```
 
-The known fact says that every real number satisfies `$p`. When the goal is `$p(2)`, Litex matches `x` with `2` and checks the instantiated conclusion.
+This is the traditional style: name a reusable theorem, then call it at the
+point where the proof needs its consequences. It is especially useful when a
+theorem is famous, comes from the standard library, or needs explicit parameters
+that are not obvious from the final goal alone.
+
+The lightweight route leaves the universal fact in the current context and
+writes the desired conclusion directly:
+
+```litex
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)
+```
+
+The known fact says that every human is mortal. When the goal is
+`$mortal(Socrates)`, Litex matches `x` with `Socrates`, checks that
+`Socrates human` is known, and verifies the instantiated conclusion.
 
 This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact.
 

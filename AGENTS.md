@@ -182,6 +182,8 @@ label.
 
 10. When implementing an infer rule, write comments about the condition under which the rule is applied and what new fact is inferred. Include an example.
 
+11. All runtimes created within one top-level run must share the same module manager. In particular, imported-module runtimes should be created with `Runtime::new_for_import_from_parent` so nested imports, cycle checks, source labels, and stopped-module state all update the same `Rc<RefCell<ModuleManager>>`.
+
 ## Litex Language And Proof Style
 
 1. Litex examples should expose a tight verifier feedback loop: write a small proof, run it, read the exact verifier output, and make the next smallest correction until the proof is checkable.
