@@ -1,0 +1,77 @@
+# Lean/Mathlib-facing real-function compatibility layer.
+#
+# Litex names cannot contain `.`, so Mathlib names such as `Real.logb`
+# are represented as `logb`. This file is a
+# focused MiniF2F surface, not a complete port of Mathlib's real analysis API.
+
+import Trig
+
+# Mathlib `Real.sqrt` is not aliased here because `sqrt` is a Litex builtin.
+# Use the builtin `sqrt(x)` directly with its verifier-visible domain facts.
+
+have pi R = pi
+have fn sin(x R) R = Trig::sin(x)
+have fn cos(x R) R = Trig::cos(x)
+have fn tan(x R: Trig::cos(x) != 0) R = Trig::tan(x)
+
+# Natural logarithm is kept abstract for now. The verifier has a builtin
+# two-argument logarithm `log(base, x)`, which gives a direct alias for
+# Mathlib's `Real.logb`. The one-argument real logarithm uses `ln` because
+# `log` is a Litex builtin keyword.
+have ln fn(x R_pos) R
+have fn logb(a, x R_pos: a != 1) R = log(a, x)
+
+know:
+    sin(0) = 0
+    cos(0) = 1
+    Trig::cos(0) != 0
+    tan(0) = 0
+
+    forall x R:
+        0 <= x
+        =>:
+            sqrt(x) = sqrt(x)
+            0 <= sqrt(x)
+            sqrt(x)^2 = x
+
+    forall x R:
+        sin(x) = Trig::sin(x)
+        cos(x) = Trig::cos(x)
+
+    forall x R:
+        Trig::cos(x) != 0
+        =>:
+            tan(x) = Trig::tan(x)
+
+    ln(1) = 0
+
+    forall x, y R_pos:
+        x * y $in R_pos
+        x / y $in R_pos
+        =>:
+            ln(x * y) = ln(x) + ln(y)
+            ln(x / y) = ln(x) - ln(y)
+
+    forall x R_pos, b R:
+        x^b $in R_pos
+        =>:
+            ln(x^b) = b * ln(x)
+
+    forall a, x R_pos:
+        a != 1
+        =>:
+            logb(a, x) = log(a, x)
+
+    forall a R_pos, b R:
+        a != 1
+        a^b $in R_pos
+        =>:
+            logb(a, a^b) = b
+
+    forall a, x, y R_pos:
+        a != 1
+        x * y $in R_pos
+        x / y $in R_pos
+        =>:
+            logb(a, x * y) = logb(a, x) + logb(a, y)
+            logb(a, x / y) = logb(a, x) - logb(a, y)

@@ -1,0 +1,47 @@
+import Set
+import Finset
+import Fintype
+
+$Set::Mem(1, {1, 2})
+$Set::Subset({1}, {1, 2})
+$Set::Finite({1, 2})
+$Set::Ncard({1, 2}, 2)
+Set::ncard({1, 2}) = 2
+Set::toFinset({1, 2}) = {1, 2}
+
+by thm Set::subset_refl({1, 2})
+{1, 2} $subset {1, 2}
+
+by thm Set::Finite_union({1}, {2})
+$is_finite_set(union({1}, {2}))
+
+$Finset::Finset({1, 2, 3})
+$Finset::Mem(2, {1, 2, 3})
+$Finset::Card({1, 2, 3}, 3)
+Finset::card({1, 2, 3}) = 3
+
+$Finset::range_value(5, Finset::range_nat(5))
+2 < 5
+2 $in Finset::range_nat(5)
+by thm Finset::mem_range(2, 5)
+2 < 5
+
+by thm Finset::card_range(5)
+Finset::card(Finset::range_nat(5)) = 5
+
+$Finset::Icc_value(2, 5, Finset::Icc(2, 5))
+2 <= 3 <= 5
+3 $in Finset::Icc(2, 5)
+by thm Finset::mem_Icc(2, 5, 3)
+2 <= 3 <= 5
+
+by thm Finset::card_Icc(2, 5)
+Finset::card(Finset::Icc(2, 5)) = 5 - 2 + 1 = 4
+
+$Fintype::Fintype({1, 2})
+$Fintype::Finite({1, 2})
+$Fintype::Card({1, 2}, 2)
+Fintype::card({1, 2}) = 2
+
+by thm Fintype::card_eq_count({1, 2})
+Fintype::card({1, 2}) = count({1, 2})

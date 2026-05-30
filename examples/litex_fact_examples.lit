@@ -43,12 +43,13 @@ prove:
         x $in R
 
 # --- Fact::ForallFact — with `=>:` (non-empty `dom_facts` + `then_facts`) ---
-prove:
-    forall t R:
-        100 < t
-        =>:
-            $a_lt_c(0, 100, t)
-            0 < t
+claim:
+    prove:
+        forall t R:
+            100 < t
+            =>:
+                0 < t
+    by thm a_lt_c(0, 100, t)
 
 # --- Fact::ForallFactWithIff — required `=>:` left side, then `<=>:` ---
 prove:

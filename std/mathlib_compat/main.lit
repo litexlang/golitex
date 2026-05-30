@@ -1,0 +1,15 @@
+# Mathlib-facing compatibility bundle.
+#
+# Components are kept in their own module scopes because short names such as
+# `Mem` and `Card` intentionally repeat across Set, Finset, and Fintype.
+
+import Rat
+import Nat
+import complex
+import Real
+import Set
+import Finset
+import Fintype
+import ZMod
+import Int
+import topology

@@ -29,11 +29,11 @@ One useful way to say the difference is: Lean often asks the user to choose proo
 
 > In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
 
-This is not just a syntactic convenience. Litex tries to keep the main cognitive load on mathematical patterns: equality chains, subset arguments, existential witnesses, contradiction proofs, finite case splits, membership in a displayed set, and so on. The checker uses those patterns to search builtin rules, known facts, and known `forall` facts. The user is asked to remember the mathematical structure of the argument, not the name of the tactic or library lemma that packages the same move—as G. H. Hardy put it, *A mathematician, like a painter or poet, is a maker of patterns*.
+This is not just a syntactic convenience. Litex tries to keep the main cognitive load on mathematical patterns: equality chains, subset arguments, existential witnesses, contradiction proofs, finite case splits, membership in a displayed set, and so on. When a person reads a fact, they often recognize its pattern and know which already-proved fact should apply; Litex makes that habit mechanical by using those patterns to search builtin rules, known facts, and known `forall` facts. The user is asked to remember the mathematical structure of the argument, not the name of the tactic or library lemma that packages the same move—as G. H. Hardy put it, *A mathematician, like a painter or poet, is a maker of patterns*.
 
 This is a large reduction in friction for ordinary proofs. Even the largest library cannot package every future argument in exactly the final shape a user needs; eventually the user still has to write the mathematics. Litex's bet is that the remembered material should stay close to that mathematics. Remembering library and tactic names is useful in a system like Lean, but it is not the mathematical content the proof is trying to expose.
 
-This is why Litex can be described as **the language where mathematics verifies itself**.
+This is why Litex can be described by the slogan **Litex: The Formal Language Where Code Verifies Itself**. The phrase means that the user writes mathematical facts as code, and the checker tries to justify those facts from context, builtin rules, known facts, and known `forall` facts; it is not a claim of fully automatic proof search.
 
 Litex also lets a development start from an abstract interface. A user can name
 domains, relations, and axioms first, then reason from that structure before
@@ -623,20 +623,20 @@ without requiring the user to pass through a heavier proof-programming layer.
 
 ### AI Mathematical Exploration
 
-This short feedback loop is especially relevant for AI-assisted mathematical
-exploration. In that setting, verification efficiency is not only the time spent
-inside one checker call. It is the whole loop: generate a candidate statement,
-run it, read the exact failure, make the next small correction, and grow the
-local mathematical background when a missing rule or definition is discovered.
+This short feedback loop is especially relevant for exploratory mathematical
+formalization. Verification efficiency is not only the time spent inside one
+checker call. It is the whole loop: write a candidate statement, run it, read
+the exact failure, make the next small correction, and grow the local
+mathematical background when a missing rule or definition is discovered.
 
 Litex is deliberately friendly to that loop. It runs directly, has a small
 surface syntax, and lets many library-like background facts be added as ordinary
-Litex statements, builtin rules, or infer rules. This makes it practical for an
-AI agent to try many natural formulations and turn failures into small language,
-library, rule, or diagnostic improvements. Lean remains much stronger when the
-task depends on Mathlib, advanced abstractions, or production formalization; the
-point is that Litex can be a faster exploratory verification layer before a
-development settles into its final form.
+Litex statements, builtin rules, or infer rules. This makes it practical to try
+many natural formulations and turn failures into small language, library, rule,
+or diagnostic improvements. Lean remains much stronger when the task depends on
+Mathlib, advanced abstractions, or production formalization; the point is that
+Litex can be a faster exploratory verification layer before a development
+settles into its final form.
 
 ### Message Output Explains Each Step
 
@@ -747,6 +747,78 @@ know forall x R:
     $p(x)
 
 $p(2)
+```
+
+### Known `forall` Matching Inside Anonymous Functions
+
+This example is a sharper version of known-`forall` reuse. The known fact says
+that a predicate `p` is closed under pointwise addition of real-valued
+functions. Litex first proves the inner sum function, then matches the final
+anonymous-function body against the same known fact again.
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    &#36;p(f)
+    &#36;p(g)
+    =&gt;:
+        &#36;p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            &#36;p(a)
+            &#36;p(b)
+            &#36;p(c)
+            =&gt;:
+                &#36;p('R(x){a(x) + (b(x) + c(x))})
+    &#36;p('R(x){b(x) + c(x)})</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+example (p : (ℝ → ℝ) → Prop)
+    (h : ∀ f g : ℝ → ℝ, p f → p g → p (fun x =&gt; f x + g x))
+    (a b c : ℝ → ℝ) (pa : p a) (pb : p b) (pc : p c) :
+    p (fun x =&gt; a x + (b x + c x)) := by
+  have hbc : p (fun x =&gt; b x + c x) := h b c pb pc
+  exact h a (fun x =&gt; b x + c x) pa hbc</code></pre>
+    </td>
+  </tr>
+</table>
+
+**What differs.** In the final Litex goal, the matcher treats
+`a(x) + (b(x) + c(x))` as an instance of `f(x) + g(x)`. Since `g` is applied to
+the full anonymous-function parameter list `x`, Litex may infer
+`g := 'R(x){b(x) + c(x)}`. Lean can express the same proof, but the user
+normally supplies the intermediate function and applies the universal
+hypothesis explicitly.
+
+```litex
+abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    $p(f)
+    $p(g)
+    =>:
+        $p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})
 ```
 
 ---
@@ -1085,8 +1157,8 @@ Use Litex when you want:
 - direct facts rather than many named proof terms;
 - proof statements that look like common mathematical moves;
 - builtin relationships among basic mathematical objects;
-- matching and substitution that reduce proof-engine bookkeeping.
-- proof-trail verification for agent repair loops and early failure detection.
+- matching and substitution that reduce proof-engine bookkeeping;
+- proof-trail verification for early failure detection.
 
 Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine, backed by a rich library and a large expert community; Litex tries to make common mathematical reasoning feel direct.
 

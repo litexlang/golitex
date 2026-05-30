@@ -4,6 +4,13 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
+pub type AtomicFactInForallArgShapeKey = Vec<(ObjKind, ObjOperatorString)>;
+pub type AtomicFactInForallArgShapeIndex = HashMap<
+    (AtomicFactKey, bool),
+    HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+>;
+
+#[derive(Clone)]
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
@@ -11,6 +18,8 @@ pub struct Environment {
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+    pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+    pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -26,8 +35,11 @@ pub struct Environment {
 
     pub known_atomic_facts_in_forall_facts:
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_atomic_facts_in_forall_facts_by_arg_shape: AtomicFactInForallArgShapeIndex,
     pub known_exist_facts_in_forall_facts:
         HashMap<ExistFactKey, Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_and_facts_in_forall_facts:
+        HashMap<AndFactKey, Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
 
@@ -49,6 +61,9 @@ pub struct Environment {
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
+
+    pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
+    pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
 }
 
 #[derive(Clone)]
@@ -65,6 +80,7 @@ impl Environment {
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
         structs: HashMap<StructName, DefStructStmt>,
         templates: HashMap<TemplateName, DefTemplateStmt>,
+        defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -87,6 +103,10 @@ impl Environment {
         known_exist_facts_in_forall_facts: HashMap<
             ExistFactKey,
             Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
+        >,
+        known_and_facts_in_forall_facts: HashMap<
+            AndFactKey,
+            Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>,
         >,
         known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
         known_or_facts_in_forall_facts: HashMap<
@@ -112,6 +132,8 @@ impl Environment {
             defined_algorithms: algorithms,
             defined_structs: structs,
             defined_templates: templates,
+            defined_thm_stmts,
+            defined_strategy_stmts: HashMap::new(),
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -119,7 +141,9 @@ impl Environment {
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
             known_exist_facts,
             known_atomic_facts_in_forall_facts,
+            known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
             known_exist_facts_in_forall_facts,
+            known_and_facts_in_forall_facts,
             known_or_facts,
             known_or_facts_in_forall_facts,
             known_objs_equal_to_tuple: known_tuple_objs,
@@ -134,6 +158,8 @@ impl Environment {
             known_antisymmetric_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
+            used_strategy_stmts: HashMap::new(),
+            stopped_strategy_stmts: HashMap::new(),
         }
     }
 }
@@ -208,8 +234,18 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
+            "    known_atomic_facts_in_forall_facts_by_arg_shape: {:?}\n",
+            self.known_atomic_facts_in_forall_facts_by_arg_shape.len()
+        )?;
+        write!(
+            f,
             "    known_exist_facts_in_forall_facts: {:?}\n",
             self.known_exist_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_and_facts_in_forall_facts: {:?}\n",
+            self.known_and_facts_in_forall_facts.len()
         )?;
         write!(
             f,
@@ -312,15 +348,28 @@ impl Environment {
     ) -> Result<(), RuntimeError> {
         let key: AtomicFactKey = atomic_fact.key();
         let is_true = atomic_fact.is_true();
-        if let Some(vec_ref) = self
-            .known_atomic_facts_in_forall_facts
-            .get_mut(&(key.clone(), is_true))
-        {
-            vec_ref.push((atomic_fact, forall_params_and_dom));
-        } else {
-            self.known_atomic_facts_in_forall_facts
-                .insert((key, is_true), vec![(atomic_fact, forall_params_and_dom)]);
+
+        if atomic_fact_has_top_level_fn_arg_head_with_forall_free_param(&atomic_fact) {
+            let lookup_key = (key, is_true);
+            if let Some(vec_ref) = self.known_atomic_facts_in_forall_facts.get_mut(&lookup_key) {
+                vec_ref.push((atomic_fact, forall_params_and_dom));
+            } else {
+                self.known_atomic_facts_in_forall_facts
+                    .insert(lookup_key, vec![(atomic_fact, forall_params_and_dom)]);
+            }
+            return Ok(());
         }
+
+        let lookup_key = (key, is_true);
+        let arg_shape_key = atomic_fact_in_forall_arg_shape_key(&atomic_fact);
+        let arg_shape_map = self
+            .known_atomic_facts_in_forall_facts_by_arg_shape
+            .entry(lookup_key)
+            .or_default();
+        arg_shape_map
+            .entry(arg_shape_key)
+            .or_default()
+            .push((atomic_fact, forall_params_and_dom));
         Ok(())
     }
 
@@ -335,6 +384,21 @@ impl Environment {
         } else {
             self.known_or_facts_in_forall_facts
                 .insert(key, vec![(or_fact.clone(), forall_params_and_dom)]);
+        }
+        Ok(())
+    }
+
+    fn store_whole_and_fact_in_forall_fact(
+        &mut self,
+        and_fact: &AndFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), RuntimeError> {
+        let key: AndFactKey = and_fact.key();
+        if let Some(vec_ref) = self.known_and_facts_in_forall_facts.get_mut(&key) {
+            vec_ref.push((and_fact.clone(), forall_params_and_dom));
+        } else {
+            self.known_and_facts_in_forall_facts
+                .insert(key, vec![(and_fact.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
@@ -408,6 +472,7 @@ impl Environment {
         and_fact: &AndFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
+        self.store_whole_and_fact_in_forall_fact(and_fact, forall_params_and_dom.clone())?;
         for fact in and_fact.facts.iter() {
             self.store_atomic_fact_in_forall_fact(fact.clone(), forall_params_and_dom.clone())?;
         }
@@ -707,6 +772,8 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
         )
     }
 }
@@ -801,6 +868,16 @@ impl Environment {
     }
 }
 
+pub fn atomic_fact_in_forall_arg_shape_key(
+    atomic_fact: &AtomicFact,
+) -> AtomicFactInForallArgShapeKey {
+    atomic_fact
+        .args()
+        .iter()
+        .map(|arg| arg.equality_in_forall_key_part())
+        .collect()
+}
+
 pub struct KnownForallFactParamsAndDom {
     pub params_def: ParamDefWithType,
     pub dom: Vec<Fact>,
@@ -838,4 +915,18 @@ fn symmetric_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
         seen[i] = true;
     }
     true
+}
+
+fn atomic_fact_has_top_level_fn_arg_head_with_forall_free_param(atomic_fact: &AtomicFact) -> bool {
+    atomic_fact
+        .args()
+        .iter()
+        .any(obj_is_fn_obj_with_forall_free_param_in_head)
+}
+
+fn obj_is_fn_obj_with_forall_free_param_in_head(obj: &Obj) -> bool {
+    match obj {
+        Obj::FnObj(fn_obj) => fn_obj.head.contains_forall_free_param_obj(),
+        _ => false,
+    }
 }

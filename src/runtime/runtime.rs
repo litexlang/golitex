@@ -1,9 +1,10 @@
 use crate::prelude::*;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct Runtime {
-    pub module_manager: ModuleManager,
+    pub module_manager: Rc<RefCell<ModuleManager>>,
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
     pub detail_output: bool,
@@ -11,7 +12,9 @@ pub struct Runtime {
 
 impl Runtime {
     pub fn new() -> Self {
-        let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE_PATH);
+        let module_manager = Rc::new(RefCell::new(ModuleManager::new_empty_module_manager(
+            BUILTIN_CODE_PATH,
+        )));
         let new_environment = Box::new(Environment::new_empty_env());
 
         Runtime {
@@ -37,6 +40,18 @@ impl Runtime {
             panic!("builtin code execution failed: {}", msg);
         }
         runtime
+    }
+
+    pub fn new_for_import_from_parent(parent_runtime: &Runtime) -> Self {
+        let Some(builtin_env) = parent_runtime.environment_stack.get(FILE_INDEX_FOR_BUILTIN) else {
+            unreachable!("parent runtime has no builtin environment")
+        };
+        Runtime {
+            module_manager: Rc::clone(&parent_runtime.module_manager),
+            environment_stack: vec![builtin_env.clone()],
+            parsing_free_param_collection: FreeParamCollection::new(),
+            detail_output: parent_runtime.detail_output,
+        }
     }
 }
 
@@ -102,10 +117,12 @@ impl Runtime {
 impl Runtime {
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        self.module_manager.run_file_paths.push(path_rc.clone());
-        self.module_manager.current_file_index += 1;
-        self.module_manager.display_entry_rc = Some(path_rc);
-        self.module_manager.entry_path = path.to_string();
+        {
+            let mut module_manager = self.module_manager.borrow_mut();
+            module_manager.run_file_paths.push(path_rc.clone());
+            module_manager.current_file_index += 1;
+            module_manager.entry_path_rc = path_rc;
+        }
         self.push_env();
     }
 
@@ -113,16 +130,16 @@ impl Runtime {
     /// path without pushing more layers (pair with `clear_current_env_and_parse_name_scope`).
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        let idx = self.module_manager.current_file_index;
+        let idx = self.module_manager.borrow().current_file_index;
         debug_assert!(
             idx > FILE_INDEX_FOR_BUILTIN,
             "set_current_user_lit_file_path requires a prior new_file_path_new_env_new_name_scope"
         );
-        if let Some(slot) = self.module_manager.run_file_paths.get_mut(idx) {
+        let mut module_manager = self.module_manager.borrow_mut();
+        if let Some(slot) = module_manager.run_file_paths.get_mut(idx) {
             *slot = path_rc.clone();
         }
-        self.module_manager.display_entry_rc = Some(path_rc);
-        self.module_manager.entry_path = path.to_string();
+        module_manager.entry_path_rc = path_rc;
     }
 }
 
@@ -155,15 +172,20 @@ impl Runtime {
         }
     }
 
-    /// Replace the top environment with an empty one and clear parse-time free-param scopes.
-    /// If there is only one environment layer (builtin), does nothing so builtins stay intact.
+    /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
+    /// The builtin layer at index 0 is left unchanged.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
-        if self.environment_stack.len() > 1 {
+        if self.has_user_env() {
             if let Some(top) = self.environment_stack.last_mut() {
                 *top = Box::new(Environment::new_empty_env());
             }
         }
         self.parsing_free_param_collection.clear();
+        self.module_manager.borrow_mut().stop_all_imported_modules();
+    }
+
+    pub fn has_user_env(&self) -> bool {
+        self.environment_stack.len() > 1
     }
 
     /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。
@@ -276,12 +298,13 @@ impl Runtime {
 impl Runtime {
     pub fn new_file_and_update_runtime_with_file_content(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        self.module_manager.run_file_paths.push(path_rc.clone());
-        self.module_manager.current_file_index = self.module_manager.run_file_paths.len() - 1;
+        let mut module_manager = self.module_manager.borrow_mut();
+        module_manager.run_file_paths.push(path_rc.clone());
+        module_manager.current_file_index = module_manager.run_file_paths.len() - 1;
     }
 
     pub fn change_file_index_to(&mut self, file_index: usize) {
-        self.module_manager.current_file_index = file_index;
+        self.module_manager.borrow_mut().current_file_index = file_index;
     }
 }
 

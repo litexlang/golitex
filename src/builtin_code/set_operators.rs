@@ -2,21 +2,53 @@
 
 pub const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
 
-prop in_intersect_is_in_both(z set, A set, B set):
-    $in(z, A)
-    $in(z, B)
+thm in_intersect_is_in_both:
+    prove:
+        forall z set, A set, B set:
+            $in(z, intersect(A, B))
+            =>:
+                $in(z, A)
+                $in(z, B)
+    know:
+        $in(z, A)
+        $in(z, B)
 
-prop in_set_minus_is_in_first_operand(z set, A set, B set):
-    $in(z, A)
+thm in_set_minus_is_in_first_operand:
+    prove:
+        forall z set, A set, B set:
+            $in(z, set_minus(A, B))
+            =>:
+                $in(z, A)
+    know:
+        $in(z, A)
 
-prop in_set_minus_is_not_in_second_operand(z set, A set, B set):
-    not $in(z, B)
+thm in_set_minus_is_not_in_second_operand:
+    prove:
+        forall z set, A set, B set:
+            $in(z, set_minus(A, B))
+            =>:
+                not $in(z, B)
+    know:
+        not $in(z, B)
 
-prop in_cup_via_member_set(z set, F set, Y set):
-    $in(z, cup(F))
+thm in_cup_via_member_set:
+    prove:
+        forall z set, F set, Y set:
+            $in(Y, F)
+            $in(z, Y)
+            =>:
+                $in(z, cup(F))
+    know:
+        $in(z, cup(F))
 
-prop subset_of_finite_set_is_finite(A set, B finite_set):
-    $is_finite_set(A)
+thm subset_of_finite_set_is_finite:
+    prove:
+        forall A set, B finite_set:
+            A $subset B
+            =>:
+                $is_finite_set(A)
+    know:
+        $is_finite_set(A)
 
 know:
     forall z set, A set, B set:
@@ -39,11 +71,6 @@ know:
         $in(z, B)
         =>:
             $in(z, intersect(A, B))
-
-    forall z set, A set, B set:
-        $in(z, intersect(A, B))
-        =>:
-            $in_intersect_is_in_both(z, A, B)
 
     forall z set, A set, B set:
         not $in(z, A)
@@ -109,27 +136,11 @@ know:
         =>:
             $in(z, set_minus(A, B))
 
-    forall z set, A set, B set:
-        $in(z, set_minus(A, B))
-        =>:
-            $in_set_minus_is_in_first_operand(z, A, B)
-
-    forall z set, A set, B set:
-        $in(z, set_minus(A, B))
-        =>:
-            $in_set_minus_is_not_in_second_operand(z, A, B)
-
     forall A, B set:
         set_minus(A, B) $subset A
 
     forall A, B set:
         set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
-
-    forall z set, F set, Y set:
-        $in(Y, F)
-        $in(z, Y)
-        =>:
-            $in_cup_via_member_set(z, F, Y)
 
     forall A, B finite_set:
         $is_finite_set(union(A, B))
@@ -139,11 +150,6 @@ know:
 
     forall A finite_set:
         count(A) $in N
-
-    forall A set, B finite_set:
-        A $subset B
-        =>:
-            $subset_of_finite_set_is_finite(A, B)
 
     forall A finite_set, B set:
         B $subset A

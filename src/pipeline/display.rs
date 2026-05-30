@@ -3,6 +3,7 @@ use crate::common::json_value::{
     JsonValue,
 };
 use crate::prelude::*;
+use std::path::Path;
 use std::rc::Rc;
 
 const JSON_KEY_RESULT: &str = "result";
@@ -113,6 +114,8 @@ pub fn display_runtime_error_json(
 const SOURCE_KIND: &str = "source_kind";
 const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_BUILTIN: &str = "builtin";
+const SOURCE_KIND_STD: &str = "std";
+const SOURCE_KIND_MODULE: &str = "module";
 const SOURCE_KIND_RUN_FILE: &str = "run_file";
 
 fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
@@ -120,12 +123,7 @@ fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
 }
 
 fn line_file_is_entry_source(line_file: &LineFile, mm: &ModuleManager) -> bool {
-    if let Some(entry_rc) = mm.display_entry_rc.as_ref() {
-        if Rc::ptr_eq(&line_file.1, entry_rc) || line_file.1.as_ref() == entry_rc.as_ref() {
-            return true;
-        }
-    }
-    !mm.entry_path.is_empty() && line_file.1.as_ref() == mm.entry_path.as_str()
+    Rc::ptr_eq(&line_file.1, &mm.entry_path_rc) || line_file.1.as_ref() == mm.entry_path_rc.as_ref()
 }
 
 fn display_source_label_for_line_file(
@@ -144,18 +142,71 @@ fn display_source_label_for_line_file(
         ));
     }
 
-    if line_file_is_entry_source(line_file, &runtime.module_manager) {
+    if line_file_is_entry_source(line_file, &runtime.module_manager.borrow()) {
         return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
     }
 
-    if let Some(label) = runtime.module_manager.display_source_labels.get(path) {
-        return Some((label.source_kind.clone(), label.source.clone()));
+    if let Some(label) = imported_module_source_label_for_path(runtime, path) {
+        return Some(label);
     }
 
     Some((
         SOURCE_KIND_RUN_FILE.to_string(),
         "external_file".to_string(),
     ))
+}
+
+fn imported_module_source_label_for_path(
+    runtime: &Runtime,
+    source_path: &str,
+) -> Option<(String, String)> {
+    let source_path = Path::new(source_path);
+    let module_manager = runtime.module_manager.borrow();
+    let mut best_match: Option<(usize, String, String)> = None;
+
+    for (module_name, imported_module) in module_manager.imported_modules.iter() {
+        let module_root = Path::new(imported_module.absolute_path.as_str());
+        if !source_path.starts_with(module_root) {
+            continue;
+        }
+
+        let source_kind = if imported_module.is_std {
+            SOURCE_KIND_STD.to_string()
+        } else {
+            SOURCE_KIND_MODULE.to_string()
+        };
+        let source = if imported_module.is_std {
+            format!("std/{}", module_name)
+        } else {
+            module_display_path(module_root, &module_manager.entry_path_rc)
+        };
+        let score = imported_module.absolute_path.len();
+
+        if best_match
+            .as_ref()
+            .map_or(true, |(best_score, _, _)| score > *best_score)
+        {
+            best_match = Some((score, source_kind, source));
+        }
+    }
+
+    best_match.map(|(_, source_kind, source)| (source_kind, source))
+}
+
+fn module_display_path(module_root: &Path, entry_path: &Rc<str>) -> String {
+    let entry_path = Path::new(entry_path.as_ref());
+    if let Some(entry_dir) = entry_path.parent() {
+        if !entry_dir.as_os_str().is_empty() {
+            if let Ok(relative_path) = module_root.strip_prefix(entry_dir) {
+                return relative_path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    match module_root.file_name() {
+        Some(file_name) => file_name.to_string_lossy().into_owned(),
+        None => module_root.to_string_lossy().into_owned(),
+    }
 }
 
 fn source_ref_json_fields(
@@ -170,7 +221,7 @@ fn source_ref_json_fields(
 
     let same_source = match current_line_file {
         Some(current_line_file) => line_files_have_same_source(source_line_file, current_line_file),
-        None => line_file_is_entry_source(source_line_file, &runtime.module_manager),
+        None => line_file_is_entry_source(source_line_file, &runtime.module_manager.borrow()),
     };
 
     if !same_source {
@@ -628,14 +679,6 @@ fn exec_stmt_error_message_text_for_json(
     match statement {
         Some(Stmt::RunFileStmt(_)) if message.starts_with("Failed to read file:") => {
             "Failed to read file: external_file".to_string()
-        }
-        Some(Stmt::RunFileInStd(run_file_in_std))
-            if message.starts_with("Failed to find std run_file target") =>
-        {
-            format!(
-                "Failed to find std run_file target `{}`",
-                run_file_in_std.file_path
-            )
         }
         _ => message,
     }

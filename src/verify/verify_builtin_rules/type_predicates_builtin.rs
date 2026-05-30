@@ -170,7 +170,7 @@ impl Runtime {
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self
-                        .verify_non_equational_atomic_fact_with_builtin_rules(
+                        .verify_non_equational_known_then_builtin_rules_only(
                             &IsNonemptySetFact::new(
                                 *arg_obj.clone(),
                                 is_nonempty_set_fact.line_file.clone(),
@@ -207,7 +207,7 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                let ret_check = self.verify_non_equational_known_then_builtin_rules_only(
                     &ret_nonempty_fact,
                     _verify_state,
                 )?;
@@ -230,7 +230,7 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                let ret_check = self.verify_non_equational_known_then_builtin_rules_only(
                     &ret_nonempty_fact,
                     _verify_state,
                 )?;
@@ -253,7 +253,7 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
                     &codomain_nonempty,
                     _verify_state,
                 )?;
@@ -276,7 +276,7 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
                     &codomain_nonempty,
                     _verify_state,
                 )?;
@@ -299,7 +299,7 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
                     &codomain_nonempty,
                     _verify_state,
                 )?;
@@ -334,10 +334,9 @@ impl Runtime {
                         is_nonempty_set_fact.line_file.clone(),
                     )
                     .into();
-                    let field_result = self.verify_non_equational_atomic_fact(
+                    let field_result = self.verify_non_equational_known_then_builtin_rules_only(
                         &field_nonempty,
                         _verify_state,
-                        true,
                     )?;
                     if !field_result.is_true() {
                         return Ok((StmtUnknown::new()).into());
@@ -403,13 +402,17 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_non_equational_atomic_fact(&left_finite, _verify_state, true)?;
+                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &left_finite,
+                    _verify_state,
+                )?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
-                let right_result =
-                    self.verify_non_equational_atomic_fact(&right_finite, _verify_state, true)?;
+                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &right_finite,
+                    _verify_state,
+                )?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -437,13 +440,17 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_non_equational_atomic_fact(&left_finite, _verify_state, true)?;
+                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &left_finite,
+                    _verify_state,
+                )?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
-                let right_result =
-                    self.verify_non_equational_atomic_fact(&right_finite, _verify_state, true)?;
+                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &right_finite,
+                    _verify_state,
+                )?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -452,6 +459,69 @@ impl Runtime {
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "intersect_is_finite_set_when_both_sides_are_finite_set".to_string(),
+                        vec![left_result, right_result],
+                    ))
+                    .into(),
+                )
+            }
+            // Finite set difference: a subset of a finite set is finite.
+            // Example: from `$is_finite_set(A)`, prove `$is_finite_set(set_minus(A, B))`.
+            Obj::SetMinus(set_minus) => {
+                let left_finite: AtomicFact = IsFiniteSetFact::new(
+                    set_minus.left.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &left_finite,
+                    _verify_state,
+                )?;
+                if !left_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "set_minus_is_finite_set_when_left_side_is_finite_set".to_string(),
+                        vec![left_result],
+                    ))
+                    .into(),
+                )
+            }
+            // Symmetric difference is finite when both operands are finite.
+            // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
+            // `$is_finite_set(set_diff(A, B))`.
+            Obj::SetDiff(set_diff) => {
+                let left_finite: AtomicFact = IsFiniteSetFact::new(
+                    set_diff.left.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let right_finite: AtomicFact = IsFiniteSetFact::new(
+                    set_diff.right.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &left_finite,
+                    _verify_state,
+                )?;
+                if !left_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &right_finite,
+                    _verify_state,
+                )?;
+                if !right_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "set_diff_is_finite_set_when_both_sides_are_finite_set".to_string(),
                         vec![left_result, right_result],
                     ))
                     .into(),
@@ -468,10 +538,9 @@ impl Runtime {
                         is_finite_set_fact.line_file.clone(),
                     )
                     .into();
-                    let factor_result = self.verify_non_equational_atomic_fact(
+                    let factor_result = self.verify_non_equational_known_then_builtin_rules_only(
                         &factor_finite,
                         _verify_state,
-                        true,
                     )?;
                     if !factor_result.is_true() {
                         return Ok((StmtUnknown::new()).into());

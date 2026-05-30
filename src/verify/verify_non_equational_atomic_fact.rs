@@ -32,6 +32,14 @@ impl Runtime {
             if result.is_true() {
                 return Ok(result);
             }
+
+            result = self.verify_non_equational_atomic_fact_with_strategy(
+                atomic_fact,
+                &verify_state_add_one_round,
+            )?;
+            if result.is_true() {
+                return Ok(result);
+            }
         }
 
         if post_process {

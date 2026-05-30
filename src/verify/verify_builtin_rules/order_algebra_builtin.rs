@@ -3,7 +3,8 @@
 //
 // Addition (weak): `a <= b + c` from (`a <= b` and `0 <= c`) or (`a <= c` and `0 <= b`); and
 // `a <= a + b` from `0 <= b`. Strict: `a < b + c` from (`a < b` and `0 <= c`) or (`a < c` and `0 <= b`).
-// Subtraction lower bounds: `a <= x - n` from `a + n <= x` for integer `n >= 0`.
+// Subtraction: order is preserved by subtracting the same term; subtracting a nonnegative term
+// cannot increase a value; and subtractors can move across an inequality as addends.
 //
 // Multiplication monotonicity on R: for fixed k, t |-> k*t preserves non-strict order when 0 <= k
 // (a <= b => k*a <= k*b with k on the same side of both products), reverses when k <= 0 (b <= a =>
@@ -829,6 +830,42 @@ impl Runtime {
             }
         }
 
+        if let Obj::Sub(sub) = &f.left {
+            // Subtracting a nonnegative term cannot increase the left side.
+            // Example: from `a <= b` and `0 <= c`, prove `a - c <= b`.
+            let order_subgoal: AtomicFact =
+                LessEqualFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
+            let nonnegative_subtractor: AtomicFact =
+                LessEqualFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let order_result = self.verify_order_subgoal(order_subgoal)?;
+            let nonnegative_result = self.verify_order_subgoal(nonnegative_subtractor)?;
+            if order_result.is_true() && nonnegative_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c <= b from a <= b and 0 <= c".to_string(),
+                        vec![order_result, nonnegative_result],
+                    ),
+                )));
+            }
+
+            // Move a left subtractor to the right side as an addend.
+            // Example: from `a <= b + c`, prove `a - c <= b`.
+            let shifted_right: Obj = Add::new(f.right.clone(), sub.right.as_ref().clone()).into();
+            let shifted_subgoal: AtomicFact =
+                LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
+            let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
+            if shifted_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c <= b from a <= b + c".to_string(),
+                        vec![shifted_result],
+                    ),
+                )));
+            }
+        }
+
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
             let b_opt = if add.left.as_ref().to_string() == left_s {
@@ -885,6 +922,22 @@ impl Runtime {
         }
 
         if let Obj::Sub(sub) = &f.right {
+            // Move a right subtractor to the left side as an addend.
+            // Example: from `a + c <= b`, prove `a <= b - c`.
+            let shifted_left: Obj = Add::new(f.left.clone(), sub.right.as_ref().clone()).into();
+            let shifted_subgoal: AtomicFact =
+                LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
+            let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
+            if shifted_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a <= b - c from a + c <= b".to_string(),
+                        vec![shifted_result],
+                    ),
+                )));
+            }
+
             if let Some(offset) = Self::integer_value_of_number_obj(sub.right.as_ref()) {
                 if offset >= 0 {
                     let shifted_left = Self::obj_plus_nonnegative_integer_offset(&f.left, offset);
@@ -1037,6 +1090,8 @@ impl Runtime {
         }
 
         if let (Obj::Sub(sl), Obj::Sub(sr)) = (&f.left, &f.right) {
+            // Componentwise weak monotonicity for subtraction.
+            // Example: from `a <= b` and `c <= d`, prove `a - d <= b - c`.
             let g1 = LessEqualFact::new(
                 sl.left.as_ref().clone(),
                 sr.left.as_ref().clone(),
@@ -1164,6 +1219,60 @@ impl Runtime {
             }
         }
 
+        if let (Obj::Sub(sl), Obj::Sub(sr)) = (&f.left, &f.right) {
+            // Componentwise strict monotonicity for subtraction.
+            // Example: from `a < b` and `c <= d`, prove `a - d < b - c`.
+            let g1s = LessFact::new(
+                sl.left.as_ref().clone(),
+                sr.left.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g2s = LessEqualFact::new(
+                sr.right.as_ref().clone(),
+                sl.right.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let r1 = self.verify_order_subgoal(g1s)?;
+            let r2 = self.verify_order_subgoal(g2s)?;
+            if r1.is_true() && r2.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - d < b - c from a < b and c <= d".to_string(),
+                        vec![r1, r2],
+                    ),
+                )));
+            }
+
+            // A strict subtractor comparison also gives a strict result.
+            // Example: from `a <= b` and `c < d`, prove `a - d < b - c`.
+            let g1w = LessEqualFact::new(
+                sl.left.as_ref().clone(),
+                sr.left.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g2w = LessFact::new(
+                sr.right.as_ref().clone(),
+                sl.right.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let r3 = self.verify_order_subgoal(g1w)?;
+            let r4 = self.verify_order_subgoal(g2w)?;
+            if r3.is_true() && r4.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - d < b - c from a <= b and c < d".to_string(),
+                        vec![r3, r4],
+                    ),
+                )));
+            }
+        }
+
         if let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) {
             if let Obj::Sub(sub) = left_abs.arg.as_ref() {
                 if Self::objs_same_by_display(sub.left.as_ref(), right_abs.arg.as_ref())
@@ -1188,6 +1297,60 @@ impl Runtime {
                         )));
                     }
                 }
+            }
+        }
+
+        if let Obj::Sub(sub) = &f.left {
+            // Subtracting a nonnegative term preserves a strict upper bound.
+            // Example: from `a < b` and `0 <= c`, prove `a - c < b`.
+            let strict_order_subgoal: AtomicFact =
+                LessFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
+            let nonnegative_subtractor: AtomicFact =
+                LessEqualFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let strict_order_result = self.verify_order_subgoal(strict_order_subgoal)?;
+            let nonnegative_result = self.verify_order_subgoal(nonnegative_subtractor)?;
+            if strict_order_result.is_true() && nonnegative_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c < b from a < b and 0 <= c".to_string(),
+                        vec![strict_order_result, nonnegative_result],
+                    ),
+                )));
+            }
+
+            // Subtracting a positive term turns a weak upper bound into a strict one.
+            // Example: from `a <= b` and `0 < c`, prove `a - c < b`.
+            let weak_order_subgoal: AtomicFact =
+                LessEqualFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
+            let positive_subtractor: AtomicFact =
+                LessFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let weak_order_result = self.verify_order_subgoal(weak_order_subgoal)?;
+            let positive_result = self.verify_order_subgoal(positive_subtractor)?;
+            if weak_order_result.is_true() && positive_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c < b from a <= b and 0 < c".to_string(),
+                        vec![weak_order_result, positive_result],
+                    ),
+                )));
+            }
+
+            // Move a left subtractor to the right side as an addend.
+            // Example: from `a < b + c`, prove `a - c < b`.
+            let shifted_right: Obj = Add::new(f.right.clone(), sub.right.as_ref().clone()).into();
+            let shifted_subgoal: AtomicFact =
+                LessFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
+            let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
+            if shifted_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c < b from a < b + c".to_string(),
+                        vec![shifted_result],
+                    ),
+                )));
             }
         }
 
@@ -1241,6 +1404,24 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         "a < b + c from a < c and 0 <= b".to_string(),
                         vec![r3, r4],
+                    ),
+                )));
+            }
+        }
+
+        if let Obj::Sub(sub) = &f.right {
+            // Move a right subtractor to the left side as an addend.
+            // Example: from `a + c < b`, prove `a < b - c`.
+            let shifted_left: Obj = Add::new(f.left.clone(), sub.right.as_ref().clone()).into();
+            let shifted_subgoal: AtomicFact =
+                LessFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
+            let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
+            if shifted_result.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a < b - c from a + c < b".to_string(),
+                        vec![shifted_result],
                     ),
                 )));
             }

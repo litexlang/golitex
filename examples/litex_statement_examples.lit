@@ -92,7 +92,7 @@ prove:
         2 = 2
 
 # --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
-# import "examples/runfile2.lit"
+# import "examples/some_module_dir"
 # run_file "./runfile2.lit"
 
 # --- Stmt::DoNothingStmt — trivial proof step ---
@@ -176,7 +176,7 @@ prove:
         $p0(1, 2)
         impossible $q0(1, 2)
 
-# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall; integer intervals use `by closed_range as cases: x $in lo...hi`.
+# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall.
 prove:
     let a R:
         a $in {1, 2}
@@ -187,6 +187,14 @@ prove:
         prove:
             forall a2 {1, 2, 3}:
                 a2 < 4
+
+# --- Stmt::ByEnumerateRangeStmt — expand integer range / closed_range membership into equality cases.
+prove:
+    let a1 range(7, 8)
+
+    by enumerate range: a1 $in range(7, 8)
+
+    a1 = 7
 
 # --- Stmt::ByInducStmt — induction on a discrete parameter ---
 prove:

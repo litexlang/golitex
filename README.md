@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: The Formal Way to Write Math as It Looks
+# Litex: The Formal Language Where Code Verifies Itself
 
 *by Jiachen Shen and The Litex Team, version 0.9.88-beta*
 
@@ -26,9 +26,9 @@ _Truth is ever to be found in simplicity, and not in the multiplicity and confus
 
 _– Isaac Newton_
 
-Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write math almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
+Litex is an open-source formal language for writing mathematical proof code that can be checked as it is written. Users write math almost exactly as they would in notes or textbooks; Litex checks each stated fact against the current verified context, stores accepted results, and lets the proof grow from there.
 
-The central idea is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them, stores successful ones, and reuses them later.
+Math is the science of discovering patterns. The central idea of Litex is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them based on their patterns and the current context, stores successful ones, and reuses them later.
 
 Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step.
 
@@ -83,9 +83,9 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-Litex expects you to recognize familiar proof patterns: equality chains, membership claims, subsets, witnesses, contradiction, finite case splits, and induction. The checker matches those shapes to facts and routine consequences, more like following a textbook argument than memorizing tactic or library names for each line.
+Litex expects you to recognize familiar proof patterns: equality chains, membership claims, subsets, witnesses, contradiction, finite case splits, and induction. When a person reads a fact, they often recognize its pattern and remember which proved fact should apply. Litex is designed to work in the same spirit: the checker matches those shapes to facts and routine consequences, more like following a textbook argument than memorizing tactic or library names for each line.
 
-In this sense, Litex aims to be **the language where mathematics verifies itself**.
+This is the precise sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; each line exposes a mathematical shape that the checker can match against verified context, builtin rules, known facts, and known `forall` facts.
 
 For example, a syllogism is ordinary mathematical information:
 
@@ -140,28 +140,6 @@ undeclared name, a function argument outside its domain, or `1 / 0`.
 
 > Another special design is that Litex lets a development start at the right abstraction level: primitive domains with `have`, relations with `abstract_prop`, definitions with `prop`, and axioms with `know`. The [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry) tutorial shows this style: it starts from points, lines, planes, incidence, betweenness, and congruence relations rather than coordinates.
 
-## AI Agents Can Work With Litex
-
-Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
-
-In AI mathematical discovery, the expensive object is not only the final
-theorem but the long trail of intermediate claims. Litex is designed to check
-that trail as it is produced: wrong turns can fail early, missing lemmas become
-visible, and remaining assumptions can be tracked as explicit proof debt. This
-can improve search efficiency for agents while making their mathematical output
-more auditable.
-
-The main current signal is the
-[Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction)
-corpus. With Codex and verifier feedback, it was built and checked in about a
-week. MATH500 and MiniF2F-style tasks are now used as pressure tests: successful
-translations become examples or benchmarks, while failures expose language,
-library, rule, or diagnostic gaps. The point is not that the individual
-theorems are hard for mature proof assistants, but that Litex makes the repair
-loop fast and inspectable.
-
-This is the point Litex is trying to make especially strong: Litex gives agents a direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop is a practical way to discover which background facts and theorem-library entries a proof actually needs.
-
 ## Starting Points
 
 Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape. Welcome to explore Litex by yourself.
@@ -170,12 +148,11 @@ For different readers:
 
 1. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, `know`, builtin rules, and current limitations.
 2. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
-3. [AI Agent Workflow](https://litexlang.com/doc/AI_Agent_Workflow): for AI and formal math work using verifier feedback.
-4. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and future evaluation.
-5. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
-6. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
-7. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
-8. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
+3. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and future evaluation.
+4. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
+5. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
+6. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
+7. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:
 
@@ -195,6 +172,14 @@ Contact us:
 
 1. [Email](mailto:litexlang@outlook.com)
 2. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+
+## Goals of Litex
+
+Litex is experimental, but it is aiming at three simple things:
+
+1. **Verify AI-generated mathematics.** As generation gets cheaper, checking becomes the bottleneck.
+2. **Support scientific discovery.** Turn verification into a fast loop of trying ideas, repairing arguments, and reusing patterns.
+3. **Make formal mathematical language more broadly usable.** Formal math should not only be backend code for proof-assistant experts; it should also become a medium for ordinary mathematical learning, communication, and research.
 
 ## Special Thanks
 

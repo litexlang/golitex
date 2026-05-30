@@ -1,0 +1,171 @@
+# Mathlib-facing Set compatibility layer.
+#
+# Litex already has builtin set membership, subset, finite-set, and cardinality
+# support. This file gives those operations stable Mathlib-shaped names for
+# translation work.
+
+# Mathlib: `x in S`.
+prop Mem(x, S set):
+    x $in S
+
+# Mathlib: `A subset B`.
+prop Subset(A, B set):
+    A $subset B
+
+# Mathlib: `Set.Finite S`.
+prop Finite(S set):
+    $is_finite_set(S)
+
+# Mathlib: `Set.Nonempty S`.
+prop Nonempty(S set):
+    $is_nonempty_set(S)
+
+# Generic relational form of `Set.ncard`, useful when the element type is not
+# one of the typed function fragments below.
+prop Ncard(S set, n N):
+    $is_finite_set(S)
+    count(S) = n
+
+# Typed function fragments for common dataset domains.
+have fn ncard(s power_set(N): $is_finite_set(s)) N = count(s)
+have fn ncard_Z(s power_set(Z): $is_finite_set(s)) N = count(s)
+have fn ncard_R(s power_set(R): $is_finite_set(s)) N = count(s)
+
+# Mathlib: `Set.Finite.toFinset`, exposed on common typed finite sets.
+have fn toFinset(s power_set(N): $is_finite_set(s)) power_set(N) = s
+have fn toFinset_Z(s power_set(Z): $is_finite_set(s)) power_set(Z) = s
+have fn toFinset_R(s power_set(R): $is_finite_set(s)) power_set(R) = s
+
+# Mathlib: Set.Finite.of_finite / finite wrapper introduction.
+thm finite_of_finite:
+    prove:
+        forall S set:
+            $is_finite_set(S)
+            =>:
+                $Finite(S)
+    $Finite(S)
+
+# Mathlib: Set.Subset.refl
+thm subset_refl:
+    prove:
+        forall A set:
+            A $subset A
+    A $subset A
+
+# Mathlib: Set.Subset.trans
+thm subset_trans:
+    prove:
+        forall A, B, C set:
+            A $subset B
+            B $subset C
+            =>:
+                A $subset C
+    A $subset C
+
+# Mathlib: Set.mem_union
+thm mem_union:
+    prove:
+        forall x, A, B set:
+            x $in union(A, B)
+            =>:
+                x $in A or x $in B
+    x $in A or x $in B
+
+# Mathlib: Set.mem_inter, exposed as the elimination direction.
+thm mem_inter:
+    prove:
+        forall x, A, B set:
+            x $in intersect(A, B)
+            =>:
+                x $in A
+                x $in B
+    x $in A
+    x $in B
+
+# Mathlib: left and right projections from membership in an intersection.
+thm mem_of_mem_inter_left:
+    prove:
+        forall x, A, B set:
+            x $in intersect(A, B)
+            =>:
+                x $in A
+    x $in A
+
+thm mem_of_mem_inter_right:
+    prove:
+        forall x, A, B set:
+            x $in intersect(A, B)
+            =>:
+                x $in B
+    x $in B
+
+# Mathlib: membership in set difference implies membership in the left set.
+thm mem_sdiff_left:
+    prove:
+        forall x, A, B set:
+            x $in set_minus(A, B)
+            =>:
+                x $in A
+    x $in A
+
+# Mathlib: finite-set closure under standard set operations.
+thm Finite_union:
+    prove:
+        forall A, B set:
+            $is_finite_set(A)
+            $is_finite_set(B)
+            =>:
+                $is_finite_set(union(A, B))
+    $is_finite_set(union(A, B))
+
+thm Finite_inter:
+    prove:
+        forall A, B set:
+            $is_finite_set(A)
+            $is_finite_set(B)
+            =>:
+                $is_finite_set(intersect(A, B))
+    $is_finite_set(intersect(A, B))
+
+thm Finite_sdiff:
+    prove:
+        forall A, B set:
+            $is_finite_set(A)
+            $is_finite_set(B)
+            =>:
+                $is_finite_set(set_minus(A, B))
+    $is_finite_set(set_minus(A, B))
+
+thm Finite_symmDiff:
+    prove:
+        forall A, B set:
+            $is_finite_set(A)
+            $is_finite_set(B)
+            =>:
+                $is_finite_set(set_diff(A, B))
+    $is_finite_set(set_diff(A, B))
+
+# Mathlib: Set.ncard_eq_toFinset_card-style facts for the typed fragments.
+thm ncard_eq_count:
+    prove:
+        forall s power_set(N):
+            $is_finite_set(s)
+            =>:
+                ncard(s) = count(s)
+    ncard(s) = count(s)
+
+thm Ncard_eq:
+    prove:
+        forall S set, n N:
+            $Ncard(S, n)
+            =>:
+                count(S) = n
+    count(S) = n
+
+thm toFinset_eq_self:
+    prove:
+        forall s power_set(N):
+            $is_finite_set(s)
+            =>:
+                toFinset(s) = s
+    toFinset(s) = s

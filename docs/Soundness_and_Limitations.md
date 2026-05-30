@@ -55,7 +55,7 @@ This is deliberate. It supports several useful workflows:
 
 - record an axiom or background theorem;
 - write a readable proof skeleton before all gaps are formalized;
-- let an AI agent mark exact proof debt and then refine it into checked claims.
+- mark exact proof debt and then refine it into checked claims.
 
 The cost is also clear: if a false fact is introduced with `know`, later results
 may depend on it. A Litex development that uses `know` should distinguish
@@ -121,8 +121,8 @@ Important limitations:
   suite.
 
 These limitations are part of the research value. Litex is exploring whether a
-fact-oriented interface can make ordinary mathematical formalization and agent
-proof repair easier.
+fact-oriented interface can make ordinary mathematical formalization and proof
+repair easier.
 
 ## Current Evidence
 
@@ -151,5 +151,5 @@ Litex especially needs feedback on:
 - which builtin rules are mathematically safe and which are too implicit;
 - whether the verifier output gives enough evidence for accepted facts;
 - whether `know` is useful as explicit proof debt or too easy to misuse;
-- whether the fact-oriented interface is a valuable experiment for humans,
-  AI agents, or both.
+- whether the fact-oriented interface is a valuable experiment for formal
+  proof writing.

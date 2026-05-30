@@ -69,7 +69,7 @@ exist x R st {x > 0, x < 1}
 
 ### Existential with uniqueness (`exist!`)
 
-**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** a generated uniqueness **`forall`**. For multiple witness parameters, that stored theorem concludes component equalities such as `a1 = a2 and b1 = b2`; tuple-style uniqueness is still accepted when proving the original `exist!`.
 
 **Syntax.** `exist!` *parameter groups* `st` `{` *facts separated by commas* `}` — the lexer splits this as the keyword `exist` followed by `!` (whitespace optional).
 
@@ -442,7 +442,7 @@ prove:
 
 ### `clear`
 
-**Meaning.** Clear only the **current** (top) environment and the **current** (top) parse-time name map: the top env is replaced by an empty one, and the top name map is emptied. The single builtin layer is left unchanged when it is the only layer. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
+**Meaning.** Clear only the **current user** environment and the **current** parse-time name map: the user env is replaced by an empty one, and the name map is emptied. Builtins are left unchanged. Imported modules stay registered but are stopped for automatic verification until the same module is imported again. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
 
 **Syntax.** `clear`.
 
@@ -626,13 +626,23 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2
     ...
 ```
 
-Integer **closed_range** membership uses **`by closed_range as cases:`** *object* `$in` *lo*`...`*hi* (next section), not list-set enumeration.
+Integer interval membership can also be enumerated directly:
+
+```litex
+let a range(7, 8)
+
+by enumerate range: a $in range(7, 8)
+
+a = 7
+```
+
+Use **`by enumerate range:`** for half-open `range(lo, hi)` and **`by enumerate closed_range:`** for closed `lo...hi` / `closed_range(lo, hi)`.
 
 ---
 
 ### `by closed_range as cases`
 
-**Meaning.** From membership of an object in a **closed interval** with **integer** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
+**Meaning.** From membership of an object in a **closed interval** with **integer** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`). The spelling **`by enumerate closed_range:`** has the same effect.
 
 **Syntax.** `by closed_range as cases:` *object* `$in` *lo* `...` *hi* — the right side parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`).
 
@@ -936,21 +946,37 @@ algo f(x, y):
 
 ### `import`
 
-**Meaning.** Load another module or file path into scope.
+**Meaning.** Load another standard-library module or local module directory into a named imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. The chosen module name and resolved module directory must not already be used, except that importing the same module with the same name again is an idempotent no-op and re-enables a stopped module.
 
-**Syntax.** `import` `"path"` [`as` *name*] or `import` *module* [`as` *name*].
+**Syntax.** `import` `"module_dir"` [`as` *name*] or `import` *std_module*.
 
 **Example.**
 
 ```text
-import "other.lit"
+import "other_module"
+import Nat
+```
+
+---
+
+### `stop import`
+
+**Meaning.** Stop using an imported module as an automatic verification source. Explicit citations such as `by thm Mod::name(...)` may still cite the module.
+
+**Syntax.** `stop import` *name*.
+
+**Example.**
+
+```text
+import Nat
+stop import Nat
 ```
 
 ---
 
 ### `run_file`
 
-**Meaning.** Run another `.lit` file.
+**Meaning.** Run another `.lit` file. `run_file` only accepts quoted file paths; standard-library module names should be registered with `import`.
 
 **Syntax.** `run_file` `"path"`.
 

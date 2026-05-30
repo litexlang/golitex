@@ -1,9 +1,9 @@
 # write <= and < instead of >= and >
 
-# give a name to a fact when you 在证明的 forall 的then里的事实的参数数量少于forall 参数量 
+# 用 thm 给一个 forall fact 取名，特别是 then-fact 本身的参数少于 forall 参数时。
 
 """
-比如下面这个不好，因为 未来想用这个事实证明后续事实的时候，我
+比如下面这个不好，因为未来想用这个事实证明后续事实的时候，then-fact 里没有 b：
 
 know forall a, b, c R:
     a < b
@@ -11,14 +11,23 @@ know forall a, b, c R:
     =>:
         a < c
 
-要写成 
+要写成 named theorem，然后在使用处显式传入所有 forall 参数：
 
-prop a_less_than_c(a, b, c R):
-    a < c
+thm a_less_than_c:
+    prove:
+        forall a, b, c R:
+            a < b
+            b < c
+            =>:
+                a < c
+    a < b < c
 
-know forall a, b, c R:
-    a < b
-    b < c
-    =>:
-        $a_less_than_c(a, b, c)
-"""·
+claim:
+    prove:
+        forall a, b, c R:
+            a < b
+            b < c
+            =>:
+                a < c
+    by thm a_less_than_c(a, b, c)
+"""

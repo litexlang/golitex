@@ -15,6 +15,11 @@ forall x R:
     =>:
         sqrt(x) > 0
 
+forall x R:
+    x >= 0
+    =>:
+        sqrt(x) >= 0
+
 forall x, a, b R:
     x >= 0
     a >= 0
@@ -22,3 +27,25 @@ forall x, a, b R:
     x = a * b
     =>:
         sqrt(x) = sqrt(a) * sqrt(b)
+
+forall x, a, b R:
+    x >= 0
+    a >= 0
+    b > 0
+    x = a / b
+    =>:
+        sqrt(x) = sqrt(a) / sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a <= b
+    =>:
+        sqrt(a) <= sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a < b
+    =>:
+        sqrt(a) < sqrt(b)

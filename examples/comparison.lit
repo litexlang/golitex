@@ -105,8 +105,10 @@ prove:
         =>:
             t < 4
 
-    forall t R_pos:
-        t^6 < 4^6
-        =>:
-            $pos_pow_strict_order_reflects(t, 4, 6)
-            t < 4
+claim:
+    prove:
+        forall t R_pos:
+            t^6 < 4^6
+            =>:
+                t < 4
+    by thm pos_pow_strict_order_reflects(t, 4, 6)
