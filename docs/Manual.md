@@ -1324,7 +1324,7 @@ prove:
 
 ### run file
 
-Use **`import Nat`** or **`import "local_module_dir" as Local`** to load a module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. Each imported module name and resolved module directory must be unique in the current runtime, except that importing the same module with the same name again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
+Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
 
 Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
 
@@ -1333,7 +1333,7 @@ Use **`stop import name`** to stop using an imported module as an automatic veri
 ```text
 import Nat
 stop import Nat
-run_file "local_path_to_file.lit"
+run_file "./runfile2.lit"
 ```
 
 ---
