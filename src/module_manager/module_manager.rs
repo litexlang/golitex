@@ -41,6 +41,7 @@ impl ImportedModule {
 pub struct ModuleManager {
     pub run_file_paths: Vec<Rc<str>>,
     pub module_name_and_path_map: HashMap<String, String>,
+    pub loading_import_stack: Vec<(String, String)>,
     pub current_module_path: String,
     pub current_module_name: String,
     pub current_file_index: usize,
@@ -57,6 +58,7 @@ impl ModuleManager {
         ModuleManager {
             run_file_paths: vec![Rc::from(initial_path)],
             module_name_and_path_map: HashMap::new(),
+            loading_import_stack: vec![],
             current_module_path: String::new(),
             current_module_name: String::new(),
             current_file_index: FILE_INDEX_FOR_BUILTIN,
@@ -140,6 +142,63 @@ impl ModuleManager {
             ));
         }
         Ok(false)
+    }
+
+    pub fn begin_loading_import(
+        &mut self,
+        module_name: &str,
+        absolute_path: &str,
+    ) -> Result<(), String> {
+        if let Some(cycle_start_index) = self
+            .loading_import_stack
+            .iter()
+            .position(|(_, loading_path)| loading_path == absolute_path)
+        {
+            let mut cycle_names = self.loading_import_stack[cycle_start_index..]
+                .iter()
+                .map(|(loading_name, _)| loading_name.clone())
+                .collect::<Vec<String>>();
+            cycle_names.push(module_name.to_string());
+            return Err(format!("cyclic import: {}", cycle_names.join(" -> ")));
+        }
+
+        if self
+            .loading_import_stack
+            .iter()
+            .any(|(loading_name, _)| loading_name == module_name)
+        {
+            return Err(format!(
+                "module name `{}` is already being imported",
+                module_name
+            ));
+        }
+
+        self.loading_import_stack
+            .push((module_name.to_string(), absolute_path.to_string()));
+        Ok(())
+    }
+
+    pub fn finish_loading_import(&mut self, module_name: &str, absolute_path: &str) {
+        if self
+            .loading_import_stack
+            .last()
+            .is_some_and(|(loading_name, loading_path)| {
+                loading_name == module_name && loading_path == absolute_path
+            })
+        {
+            self.loading_import_stack.pop();
+            return;
+        }
+
+        if let Some(index) =
+            self.loading_import_stack
+                .iter()
+                .rposition(|(loading_name, loading_path)| {
+                    loading_name == module_name && loading_path == absolute_path
+                })
+        {
+            self.loading_import_stack.remove(index);
+        }
     }
 
     pub fn register_imported_module(

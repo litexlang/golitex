@@ -165,6 +165,13 @@ fn run_import_stmt(
         return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
     }
     let module_manager_snapshot = runtime.module_manager.borrow().clone();
+    if let Err(msg) = runtime
+        .module_manager
+        .borrow_mut()
+        .begin_loading_import(&import_info.module_name, &import_info.module_root_path)
+    {
+        return Err(import_stmt_error(import_stmt, msg));
+    }
     let environment = match load_imported_module_environment(
         import_stmt,
         &import_info.module_name,
@@ -178,12 +185,19 @@ fn run_import_stmt(
             return Err(error);
         }
     };
-    let register_result = runtime.module_manager.borrow_mut().register_imported_module(
-        import_info.module_name,
-        import_info.module_root_path,
-        environment,
-        import_info.is_std,
-    );
+    runtime
+        .module_manager
+        .borrow_mut()
+        .finish_loading_import(&import_info.module_name, &import_info.module_root_path);
+    let register_result = runtime
+        .module_manager
+        .borrow_mut()
+        .register_imported_module(
+            import_info.module_name,
+            import_info.module_root_path,
+            environment,
+            import_info.is_std,
+        );
     if let Err(msg) = register_result {
         *runtime.module_manager.borrow_mut() = module_manager_snapshot;
         return Err(import_name_already_used_error(import_stmt, msg));
@@ -675,6 +689,47 @@ mod tests {
 
         assert!(runtime_error.is_some());
         assert!(runtime.module_manager.borrow().imported_modules.is_empty());
+    }
+
+    #[test]
+    fn cyclic_import_is_rejected_and_rolls_back_shared_module_manager() {
+        let root = temp_test_dir("cyclic-import-rolls-back-manager");
+        let a_dir = root.join("A");
+        let b_dir = root.join("B");
+        fs::create_dir_all(&a_dir).expect("create A module dir");
+        fs::create_dir_all(&b_dir).expect("create B module dir");
+        fs::write(
+            a_dir.join("main.lit"),
+            "import \"../B\" as B\nabstract_prop a_prop(x)",
+        )
+        .expect("write A module");
+        fs::write(
+            b_dir.join("main.lit"),
+            "import \"../A\" as A\nabstract_prop b_prop(x)",
+        )
+        .expect("write B module");
+
+        let source_code = format!("import \"{}\" as A", a_dir.to_string_lossy());
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(!run_succeeded, "cyclic import should fail:\n{}", run_output);
+        assert!(
+            run_output.contains("cyclic import: A -> B -> A"),
+            "cyclic import should report the import chain:\n{}",
+            run_output
+        );
+        let module_manager = runtime.module_manager.borrow();
+        assert!(module_manager.imported_modules.is_empty());
+        assert!(module_manager.loading_import_stack.is_empty());
     }
 
     #[test]
