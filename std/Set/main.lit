@@ -5,55 +5,55 @@
 # translation work.
 
 # Mathlib: `x in S`.
-prop Set_Mem(x, S set):
+prop Mem(x, S set):
     x $in S
 
 # Mathlib: `A subset B`.
-prop Set_Subset(A, B set):
+prop Subset(A, B set):
     A $subset B
 
 # Mathlib: `Set.Finite S`.
-prop Set_Finite(S set):
+prop Finite(S set):
     $is_finite_set(S)
 
 # Mathlib: `Set.Nonempty S`.
-prop Set_Nonempty(S set):
+prop Nonempty(S set):
     $is_nonempty_set(S)
 
 # Generic relational form of `Set.ncard`, useful when the element type is not
 # one of the typed function fragments below.
-prop Set_Ncard(S set, n N):
+prop Ncard(S set, n N):
     $is_finite_set(S)
     count(S) = n
 
 # Typed function fragments for common dataset domains.
-have fn Set_ncard(s power_set(N): $is_finite_set(s)) N = count(s)
-have fn Set_ncard_Z(s power_set(Z): $is_finite_set(s)) N = count(s)
-have fn Set_ncard_R(s power_set(R): $is_finite_set(s)) N = count(s)
+have fn ncard(s power_set(N): $is_finite_set(s)) N = count(s)
+have fn ncard_Z(s power_set(Z): $is_finite_set(s)) N = count(s)
+have fn ncard_R(s power_set(R): $is_finite_set(s)) N = count(s)
 
 # Mathlib: `Set.Finite.toFinset`, exposed on common typed finite sets.
-have fn Set_toFinset(s power_set(N): $is_finite_set(s)) power_set(N) = s
-have fn Set_toFinset_Z(s power_set(Z): $is_finite_set(s)) power_set(Z) = s
-have fn Set_toFinset_R(s power_set(R): $is_finite_set(s)) power_set(R) = s
+have fn toFinset(s power_set(N): $is_finite_set(s)) power_set(N) = s
+have fn toFinset_Z(s power_set(Z): $is_finite_set(s)) power_set(Z) = s
+have fn toFinset_R(s power_set(R): $is_finite_set(s)) power_set(R) = s
 
 # Mathlib: Set.Finite.of_finite / finite wrapper introduction.
-thm Set_finite_of_finite:
+thm finite_of_finite:
     prove:
         forall S set:
             $is_finite_set(S)
             =>:
-                $Set_Finite(S)
-    $Set_Finite(S)
+                $Finite(S)
+    $Finite(S)
 
 # Mathlib: Set.Subset.refl
-thm Set_subset_refl:
+thm subset_refl:
     prove:
         forall A set:
             A $subset A
     A $subset A
 
 # Mathlib: Set.Subset.trans
-thm Set_subset_trans:
+thm subset_trans:
     prove:
         forall A, B, C set:
             A $subset B
@@ -63,7 +63,7 @@ thm Set_subset_trans:
     A $subset C
 
 # Mathlib: Set.mem_union
-thm Set_mem_union:
+thm mem_union:
     prove:
         forall x, A, B set:
             x $in union(A, B)
@@ -72,7 +72,7 @@ thm Set_mem_union:
     x $in A or x $in B
 
 # Mathlib: Set.mem_inter, exposed as the elimination direction.
-thm Set_mem_inter:
+thm mem_inter:
     prove:
         forall x, A, B set:
             x $in intersect(A, B)
@@ -83,7 +83,7 @@ thm Set_mem_inter:
     x $in B
 
 # Mathlib: left and right projections from membership in an intersection.
-thm Set_mem_of_mem_inter_left:
+thm mem_of_mem_inter_left:
     prove:
         forall x, A, B set:
             x $in intersect(A, B)
@@ -91,7 +91,7 @@ thm Set_mem_of_mem_inter_left:
                 x $in A
     x $in A
 
-thm Set_mem_of_mem_inter_right:
+thm mem_of_mem_inter_right:
     prove:
         forall x, A, B set:
             x $in intersect(A, B)
@@ -100,7 +100,7 @@ thm Set_mem_of_mem_inter_right:
     x $in B
 
 # Mathlib: membership in set difference implies membership in the left set.
-thm Set_mem_sdiff_left:
+thm mem_sdiff_left:
     prove:
         forall x, A, B set:
             x $in set_minus(A, B)
@@ -109,7 +109,7 @@ thm Set_mem_sdiff_left:
     x $in A
 
 # Mathlib: finite-set closure under standard set operations.
-thm Set_Finite_union:
+thm Finite_union:
     prove:
         forall A, B set:
             $is_finite_set(A)
@@ -118,7 +118,7 @@ thm Set_Finite_union:
                 $is_finite_set(union(A, B))
     $is_finite_set(union(A, B))
 
-thm Set_Finite_inter:
+thm Finite_inter:
     prove:
         forall A, B set:
             $is_finite_set(A)
@@ -127,7 +127,7 @@ thm Set_Finite_inter:
                 $is_finite_set(intersect(A, B))
     $is_finite_set(intersect(A, B))
 
-thm Set_Finite_sdiff:
+thm Finite_sdiff:
     prove:
         forall A, B set:
             $is_finite_set(A)
@@ -136,7 +136,7 @@ thm Set_Finite_sdiff:
                 $is_finite_set(set_minus(A, B))
     $is_finite_set(set_minus(A, B))
 
-thm Set_Finite_symmDiff:
+thm Finite_symmDiff:
     prove:
         forall A, B set:
             $is_finite_set(A)
@@ -146,26 +146,26 @@ thm Set_Finite_symmDiff:
     $is_finite_set(set_diff(A, B))
 
 # Mathlib: Set.ncard_eq_toFinset_card-style facts for the typed fragments.
-thm Set_ncard_eq_count:
+thm ncard_eq_count:
     prove:
         forall s power_set(N):
             $is_finite_set(s)
             =>:
-                Set_ncard(s) = count(s)
-    Set_ncard(s) = count(s)
+                ncard(s) = count(s)
+    ncard(s) = count(s)
 
-thm Set_Ncard_eq:
+thm Ncard_eq:
     prove:
         forall S set, n N:
-            $Set_Ncard(S, n)
+            $Ncard(S, n)
             =>:
                 count(S) = n
     count(S) = n
 
-thm Set_toFinset_eq_self:
+thm toFinset_eq_self:
     prove:
         forall s power_set(N):
             $is_finite_set(s)
             =>:
-                Set_toFinset(s) = s
-    Set_toFinset(s) = s
+                toFinset(s) = s
+    toFinset(s) = s

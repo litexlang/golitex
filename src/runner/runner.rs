@@ -118,7 +118,7 @@ fn run_runner_on_source(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
-    runtime.module_manager.hide_file_paths_in_output = hide_file_paths;
+    runtime.module_manager.borrow_mut().hide_file_paths_in_output = hide_file_paths;
 
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     let (ok, trace_output) =

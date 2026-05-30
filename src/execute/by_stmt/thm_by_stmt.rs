@@ -5,7 +5,6 @@ impl Runtime {
         let thm_name = stmt.name.to_string();
         let thm = self
             .get_thm_definition_by_name(&thm_name)
-            .cloned()
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),

@@ -419,7 +419,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let predicate_definition = match self.get_prop_definition_by_name(&predicate_name) {
-            Some(predicate_definition) => predicate_definition.clone(),
+            Some(predicate_definition) => predicate_definition,
             None => return Ok(InferResult::new()),
         };
         let mut infer_result = InferResult::new();

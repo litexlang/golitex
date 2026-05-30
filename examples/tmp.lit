@@ -2,16 +2,16 @@
 
 import Nat
 
-$Nat::Nat_Prime(2)
+$Nat::Prime(2)
 
-by thm Nat::Nat_Prime_one_lt(2)
+by thm Nat::Prime_one_lt(2)
 1 < 2
 
 witness exist k N st {12 = 3 * k} from 4:
     12 = 3 * 4
-$Nat::Nat_Dvd(3, 12)
+$Nat::Dvd(3, 12)
 
-import trigonometry as Trig
+import Trig
 
 Trig::sin(0) = 0
 Trig::cos(0) = 1

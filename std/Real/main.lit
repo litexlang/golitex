@@ -1,73 +1,77 @@
 # Lean/Mathlib-facing real-function compatibility layer.
 #
-# Litex names cannot contain `.`, so Mathlib names such as `Real.sqrt` and
-# `Real.logb` are represented as `Real_sqrt` and `Real_logb`. This file is a
+# Litex names cannot contain `.`, so Mathlib names such as `Real.logb`
+# are represented as `logb`. This file is a
 # focused MiniF2F surface, not a complete port of Mathlib's real analysis API.
 
-run_file trigonometry
+import Trig
 
-# Mathlib `Real.sqrt` is total, but Litex's builtin `sqrt` is currently
-# well-defined on nonnegative inputs. The compatibility alias therefore carries
-# the verifier-visible domain restriction.
-have fn Real_sqrt(x R: 0 <= x) R = sqrt(x)
+# Mathlib `Real.sqrt` is not aliased here because `sqrt` is a Litex builtin.
+# Use the builtin `sqrt(x)` directly with its verifier-visible domain facts.
 
-have Real_pi R = pi
-have fn Real_sin(x R) R = sin(x)
-have fn Real_cos(x R) R = cos(x)
-have fn Real_tan(x R: cos(x) != 0) R = tan(x)
+have pi R = pi
+have fn sin(x R) R = Trig::sin(x)
+have fn cos(x R) R = Trig::cos(x)
+have fn tan(x R: Trig::cos(x) != 0) R = Trig::tan(x)
 
 # Natural logarithm is kept abstract for now. The verifier has a builtin
 # two-argument logarithm `log(base, x)`, which gives a direct alias for
-# Mathlib's `Real.logb`.
-have Real_log fn(x R_pos) R
-have fn Real_logb(a, x R_pos: a != 1) R = log(a, x)
+# Mathlib's `Real.logb`. The one-argument real logarithm uses `ln` because
+# `log` is a Litex builtin keyword.
+have ln fn(x R_pos) R
+have fn logb(a, x R_pos: a != 1) R = log(a, x)
 
 know:
+    sin(0) = 0
+    cos(0) = 1
+    Trig::cos(0) != 0
+    tan(0) = 0
+
     forall x R:
         0 <= x
         =>:
-            Real_sqrt(x) = sqrt(x)
-            0 <= Real_sqrt(x)
-            Real_sqrt(x)^2 = x
+            sqrt(x) = sqrt(x)
+            0 <= sqrt(x)
+            sqrt(x)^2 = x
 
     forall x R:
-        Real_sin(x) = sin(x)
-        Real_cos(x) = cos(x)
+        sin(x) = Trig::sin(x)
+        cos(x) = Trig::cos(x)
 
     forall x R:
-        cos(x) != 0
+        Trig::cos(x) != 0
         =>:
-            Real_tan(x) = tan(x)
+            tan(x) = Trig::tan(x)
 
-    Real_log(1) = 0
+    ln(1) = 0
 
     forall x, y R_pos:
         x * y $in R_pos
         x / y $in R_pos
         =>:
-            Real_log(x * y) = Real_log(x) + Real_log(y)
-            Real_log(x / y) = Real_log(x) - Real_log(y)
+            ln(x * y) = ln(x) + ln(y)
+            ln(x / y) = ln(x) - ln(y)
 
     forall x R_pos, b R:
         x^b $in R_pos
         =>:
-            Real_log(x^b) = b * Real_log(x)
+            ln(x^b) = b * ln(x)
 
     forall a, x R_pos:
         a != 1
         =>:
-            Real_logb(a, x) = log(a, x)
+            logb(a, x) = log(a, x)
 
     forall a R_pos, b R:
         a != 1
         a^b $in R_pos
         =>:
-            Real_logb(a, a^b) = b
+            logb(a, a^b) = b
 
     forall a, x, y R_pos:
         a != 1
         x * y $in R_pos
         x / y $in R_pos
         =>:
-            Real_logb(a, x * y) = Real_logb(a, x) + Real_logb(a, y)
-            Real_logb(a, x / y) = Real_logb(a, x) - Real_logb(a, y)
+            logb(a, x * y) = logb(a, x) + logb(a, y)
+            logb(a, x / y) = logb(a, x) - logb(a, y)

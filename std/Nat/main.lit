@@ -1,32 +1,32 @@
 # Natural-number number theory, organized with Mathlib-facing names.
 #
 # Litex theorem names cannot contain `.`, so Mathlib names such as
-# `Nat.Prime.dvd_or_dvd` are represented as `Nat_Prime_dvd_or_dvd`.
+# `Nat.Prime.dvd_or_dvd` are represented as `Prime_dvd_or_dvd`.
 # Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
 # `Odd n` are exposed here as typed lowering targets for Nat arguments.
 
 # Mathlib generic notation: `d ∣ n` with Nat arguments.
-prop Nat_Dvd(d, n N):
+prop Dvd(d, n N):
     exist k N st {n = d * k}
 
 # Mathlib generic predicate: `Even n` with a Nat argument.
-prop Nat_Even(n N):
+prop Even(n N):
     exist k N st {n = 2 * k}
 
 # Mathlib generic predicate: `Odd n` with a Nat argument.
-prop Nat_Odd(n N):
+prop Odd(n N):
     exist k N st {n = 2 * k + 1}
 
 # Mathlib: Nat.ModEq. Litex `%` currently requires a nonzero modulus, so this
 # lowering target covers the nonzero-modulus fragment.
-prop Nat_ModEq(n N_pos, a, b N):
+prop ModEq(n N_pos, a, b N):
     a % n = b % n
 
 # Mathlib: Nat.Prime.
-prop Nat_Prime(p N):
+prop Prime(p N):
     2 <= p
     forall d N:
-        $Nat_Dvd(d, p)
+        $Dvd(d, p)
         =>:
             d = 1 or d = p
 
@@ -43,42 +43,43 @@ prop odd(n Z):
 # MiniF2F legacy predicate: old translations used unqualified `$prime`.
 # Example: `$prime(p)` for a natural prime.
 prop prime(p N):
-    $Nat_Prime(p)
+    $Prime(p)
 
 # Mathlib: Nat.gcd / Nat.lcm.
-have Nat_gcd fn(a, b N) N
-have Nat_lcm fn(a, b N) N
+have gcd fn(a, b N) N
+have lcm fn(a, b N) N
 
 # Mathlib: Nat.Coprime.
-prop Nat_Coprime(a, b N):
-    Nat_gcd(a, b) = 1
+prop Coprime(a, b N):
+    gcd(a, b) = 1
 
-# Mathlib: Nat.choose / Nat.sqrt / Nat.floor-style compatibility object.
-have Nat_choose fn(n, k N) N
-have Nat_sqrt fn(n N) N
-have Nat_floor fn(x R: 0 <= x) N
+# Mathlib: Nat.choose / integer square-root / Nat.floor-style compatibility object.
+# `choose` and `sqrt` are Litex keywords, so these short module-local names use suffixes.
+have choose_fn fn(n, k N) N
+have sqrt_nat fn(n N) N
+have floor fn(x R: 0 <= x) N
 
 # Mathlib: Nat.divisors, exposed as a finite set of natural numbers.
-have Nat_divisors fn(n N) power_set(N)
+have divisors fn(n N) power_set(N)
 
 know:
-    $Nat_Prime(2)
+    $Prime(2)
 
     forall p N:
-        $Nat_Prime(p)
+        $Prime(p)
         =>:
             p != 0
             1 < p
             2 <= p
 
     forall p, d N:
-        $Nat_Prime(p)
-        $Nat_Dvd(d, p)
+        $Prime(p)
+        $Dvd(d, p)
         =>:
             d = 1 or d = p
 
     forall p N:
-        $Nat_Prime(p)
+        $Prime(p)
         =>:
             not p = 0
             not p = 1
@@ -92,375 +93,375 @@ know:
         (-1)^n $in Z
 
     forall n N:
-        $is_finite_set(Nat_divisors(n))
+        $is_finite_set(divisors(n))
 
     forall c, n N:
-        $is_finite_set(Nat_divisors(c * n))
+        $is_finite_set(divisors(c * n))
 
     forall c N, n N_pos:
-        $is_finite_set(Nat_divisors(c * n))
+        $is_finite_set(divisors(c * n))
 
-    not $Nat_Prime(0)
-    not $Nat_Prime(1)
+    not $Prime(0)
+    not $Prime(1)
 
     forall d N:
-        $Nat_Dvd(d, 0)
+        $Dvd(d, 0)
 
     forall n N:
-        $Nat_Dvd(1, n)
-        $Nat_Dvd(n, n)
+        $Dvd(1, n)
+        $Dvd(n, n)
 
     forall a, b N:
-        $Nat_Dvd(Nat_gcd(a, b), a)
-        $Nat_Dvd(Nat_gcd(a, b), b)
+        $Dvd(gcd(a, b), a)
+        $Dvd(gcd(a, b), b)
 
     forall a, b, d N:
-        $Nat_Dvd(d, a)
-        $Nat_Dvd(d, b)
+        $Dvd(d, a)
+        $Dvd(d, b)
         =>:
-            $Nat_Dvd(d, Nat_gcd(a, b))
+            $Dvd(d, gcd(a, b))
 
     forall a, b N:
-        Nat_gcd(a, b) = Nat_gcd(b, a)
+        gcd(a, b) = gcd(b, a)
 
     forall a, b N:
-        Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
+        lcm(a, b) * gcd(a, b) = a * b
 
     forall a, b N:
-        $Nat_Dvd(a, Nat_lcm(a, b))
-        $Nat_Dvd(b, Nat_lcm(a, b))
+        $Dvd(a, lcm(a, b))
+        $Dvd(b, lcm(a, b))
 
     forall a, b, c N:
-        $Nat_Dvd(a, b)
-        $Nat_Dvd(a, c)
+        $Dvd(a, b)
+        $Dvd(a, c)
         =>:
-            $Nat_Dvd(a, b + c)
+            $Dvd(a, b + c)
 
     forall a, b, c N:
-        $Nat_Dvd(a, b)
+        $Dvd(a, b)
         =>:
-            $Nat_Dvd(a, b * c)
+            $Dvd(a, b * c)
 
     forall a, b N:
-        $Nat_Coprime(a, b)
+        $Coprime(a, b)
         =>:
-            $Nat_Coprime(b, a)
+            $Coprime(b, a)
 
     forall a N:
-        $Nat_Coprime(a, 1)
-        $Nat_Coprime(1, a)
+        $Coprime(a, 1)
+        $Coprime(1, a)
 
     forall p, a, b N:
-        $Nat_Prime(p)
-        $Nat_Dvd(p, a * b)
+        $Prime(p)
+        $Dvd(p, a * b)
         =>:
-            $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
+            $Dvd(p, a) or $Dvd(p, b)
 
     forall p, a N, k N_pos:
-        $Nat_Prime(p)
-        $Nat_Dvd(p, a^k)
+        $Prime(p)
+        $Dvd(p, a^k)
         =>:
-            $Nat_Dvd(p, a)
+            $Dvd(p, a)
 
     forall n N:
         2 <= n
         =>:
-            exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
+            exist p N st {$Prime(p), $Dvd(p, n)}
 
     forall n N:
-        Nat_choose(n, 0) = 1
-        Nat_choose(n, n) = 1
+        choose_fn(n, 0) = 1
+        choose_fn(n, n) = 1
 
     forall n, k N:
         k <= n
         =>:
-            Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
+            choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
     forall n N:
-        Nat_sqrt(n)^2 <= n
-        n < (Nat_sqrt(n) + 1)^2
+        sqrt_nat(n)^2 <= n
+        n < (sqrt_nat(n) + 1)^2
 
     forall x R:
         0 <= x
         =>:
-            Nat_floor(x) <= x < Nat_floor(x) + 1
+            floor(x) <= x < floor(x) + 1
 
 # Mathlib: Nat.Prime.ne_zero
-thm Nat_Prime_ne_zero:
+thm Prime_ne_zero:
     prove:
         forall p N:
-            $Nat_Prime(p)
+            $Prime(p)
             =>:
                 p != 0
     p != 0
 
 # Mathlib: Nat.Prime.one_lt
-thm Nat_Prime_one_lt:
+thm Prime_one_lt:
     prove:
         forall p N:
-            $Nat_Prime(p)
+            $Prime(p)
             =>:
                 1 < p
     1 < p
 
 # Mathlib: Nat.prime_def, exposed as the useful divisor direction.
-thm Nat_Prime_eq_one_or_self_of_dvd:
+thm Prime_eq_one_or_self_of_dvd:
     prove:
         forall p, d N:
-            $Nat_Prime(p)
-            $Nat_Dvd(d, p)
+            $Prime(p)
+            $Dvd(d, p)
             =>:
                 d = 1 or d = p
     d = 1 or d = p
 
 # Mathlib: Nat.Prime.two
-thm Nat_Prime_two:
+thm Prime_two:
     prove:
         forall _ N:
-            $Nat_Prime(2)
-    $Nat_Prime(2)
+            $Prime(2)
+    $Prime(2)
 
 # Mathlib: Nat.not_prime_zero
-thm Nat_not_prime_zero:
+thm not_prime_zero:
     prove:
         forall _ N:
-            not $Nat_Prime(0)
-    not $Nat_Prime(0)
+            not $Prime(0)
+    not $Prime(0)
 
 # Mathlib: Nat.not_prime_one
-thm Nat_not_prime_one:
+thm not_prime_one:
     prove:
         forall _ N:
-            not $Nat_Prime(1)
-    not $Nat_Prime(1)
+            not $Prime(1)
+    not $Prime(1)
 
 # Mathlib: Nat.dvd_refl
-thm Nat_dvd_refl:
+thm dvd_refl:
     prove:
         forall n N:
-            $Nat_Dvd(n, n)
+            $Dvd(n, n)
     witness exist k N st {n = n * k} from 1:
         n = n * 1
-    $Nat_Dvd(n, n)
+    $Dvd(n, n)
 
 # Mathlib: Nat.dvd_zero
-thm Nat_dvd_zero:
+thm dvd_zero:
     prove:
         forall d N:
-            $Nat_Dvd(d, 0)
+            $Dvd(d, 0)
     witness exist k N st {0 = d * k} from 0:
         0 = d * 0
-    $Nat_Dvd(d, 0)
+    $Dvd(d, 0)
 
 # Mathlib: Nat.one_dvd
-thm Nat_one_dvd:
+thm one_dvd:
     prove:
         forall n N:
-            $Nat_Dvd(1, n)
-    $Nat_Dvd(1, n)
+            $Dvd(1, n)
+    $Dvd(1, n)
 
 # Mathlib: Nat.dvd_mul_left / Nat.dvd_mul_right
-thm Nat_dvd_mul_left:
+thm dvd_mul_left:
     prove:
         forall a, b N:
-            $Nat_Dvd(a, a * b)
+            $Dvd(a, a * b)
     witness exist k N st {a * b = a * k} from b:
         a * b = a * b
-    $Nat_Dvd(a, a * b)
+    $Dvd(a, a * b)
 
-thm Nat_dvd_mul_right:
+thm dvd_mul_right:
     prove:
         forall a, b N:
-            $Nat_Dvd(a, b * a)
+            $Dvd(a, b * a)
     witness exist k N st {b * a = a * k} from b:
         b * a = a * b
-    $Nat_Dvd(a, b * a)
+    $Dvd(a, b * a)
 
 # Mathlib: Nat.dvd_add
-thm Nat_dvd_add:
+thm dvd_add:
     prove:
         forall a, b, c N:
-            $Nat_Dvd(a, b)
-            $Nat_Dvd(a, c)
+            $Dvd(a, b)
+            $Dvd(a, c)
             =>:
-                $Nat_Dvd(a, b + c)
-    $Nat_Dvd(a, b + c)
+                $Dvd(a, b + c)
+    $Dvd(a, b + c)
 
 # Mathlib: Nat.dvd_mul_of_dvd_left
-thm Nat_dvd_mul_of_dvd_left:
+thm dvd_mul_of_dvd_left:
     prove:
         forall a, b, c N:
-            $Nat_Dvd(a, b)
+            $Dvd(a, b)
             =>:
-                $Nat_Dvd(a, b * c)
-    $Nat_Dvd(a, b * c)
+                $Dvd(a, b * c)
+    $Dvd(a, b * c)
 
 # Mathlib: Nat.ModEq.refl / symm
-thm Nat_ModEq_refl:
+thm ModEq_refl:
     prove:
         forall n N_pos, a N:
-            $Nat_ModEq(n, a, a)
-    $Nat_ModEq(n, a, a)
+            $ModEq(n, a, a)
+    $ModEq(n, a, a)
 
-thm Nat_ModEq_symm:
+thm ModEq_symm:
     prove:
         forall n N_pos, a, b N:
-            $Nat_ModEq(n, a, b)
+            $ModEq(n, a, b)
             =>:
-                $Nat_ModEq(n, b, a)
-    $Nat_ModEq(n, b, a)
+                $ModEq(n, b, a)
+    $ModEq(n, b, a)
 
 # Mathlib: Nat.gcd_comm
-thm Nat_gcd_comm:
+thm gcd_comm:
     prove:
         forall a, b N:
-            Nat_gcd(a, b) = Nat_gcd(b, a)
-    Nat_gcd(a, b) = Nat_gcd(b, a)
+            gcd(a, b) = gcd(b, a)
+    gcd(a, b) = gcd(b, a)
 
 # Mathlib: Nat.gcd_dvd_left
-thm Nat_gcd_dvd_left:
+thm gcd_dvd_left:
     prove:
         forall a, b N:
-            $Nat_Dvd(Nat_gcd(a, b), a)
-    $Nat_Dvd(Nat_gcd(a, b), a)
+            $Dvd(gcd(a, b), a)
+    $Dvd(gcd(a, b), a)
 
 # Mathlib: Nat.gcd_dvd_right
-thm Nat_gcd_dvd_right:
+thm gcd_dvd_right:
     prove:
         forall a, b N:
-            $Nat_Dvd(Nat_gcd(a, b), b)
-    $Nat_Dvd(Nat_gcd(a, b), b)
+            $Dvd(gcd(a, b), b)
+    $Dvd(gcd(a, b), b)
 
 # Mathlib: Nat.dvd_gcd
-thm Nat_dvd_gcd:
+thm dvd_gcd:
     prove:
         forall a, b, d N:
-            $Nat_Dvd(d, a)
-            $Nat_Dvd(d, b)
+            $Dvd(d, a)
+            $Dvd(d, b)
             =>:
-                $Nat_Dvd(d, Nat_gcd(a, b))
-    $Nat_Dvd(d, Nat_gcd(a, b))
+                $Dvd(d, gcd(a, b))
+    $Dvd(d, gcd(a, b))
 
 # Mathlib: Nat.lcm_mul_gcd
-thm Nat_lcm_mul_gcd:
+thm lcm_mul_gcd:
     prove:
         forall a, b N:
-            Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
-    Nat_lcm(a, b) * Nat_gcd(a, b) = a * b
+            lcm(a, b) * gcd(a, b) = a * b
+    lcm(a, b) * gcd(a, b) = a * b
 
 # Mathlib: Nat.dvd_lcm_left / Nat.dvd_lcm_right
-thm Nat_dvd_lcm_left:
+thm dvd_lcm_left:
     prove:
         forall a, b N:
-            $Nat_Dvd(a, Nat_lcm(a, b))
-    $Nat_Dvd(a, Nat_lcm(a, b))
+            $Dvd(a, lcm(a, b))
+    $Dvd(a, lcm(a, b))
 
-thm Nat_dvd_lcm_right:
+thm dvd_lcm_right:
     prove:
         forall a, b N:
-            $Nat_Dvd(b, Nat_lcm(a, b))
-    $Nat_Dvd(b, Nat_lcm(a, b))
+            $Dvd(b, lcm(a, b))
+    $Dvd(b, lcm(a, b))
 
 # Mathlib: Nat.Coprime.symm / Nat.coprime_comm
-thm Nat_Coprime_symm, Nat_coprime_comm:
+thm Coprime_symm, coprime_comm:
     prove:
         forall a, b N:
-            $Nat_Coprime(a, b)
+            $Coprime(a, b)
             =>:
-                $Nat_Coprime(b, a)
-    $Nat_Coprime(b, a)
+                $Coprime(b, a)
+    $Coprime(b, a)
 
 # Mathlib: Nat.coprime_one_right
-thm Nat_coprime_one_right:
+thm coprime_one_right:
     prove:
         forall a N:
-            $Nat_Coprime(a, 1)
-    $Nat_Coprime(a, 1)
+            $Coprime(a, 1)
+    $Coprime(a, 1)
 
 # Mathlib: Nat.one_coprime
-thm Nat_one_coprime:
+thm one_coprime:
     prove:
         forall a N:
-            $Nat_Coprime(1, a)
-    $Nat_Coprime(1, a)
+            $Coprime(1, a)
+    $Coprime(1, a)
 
 # Mathlib: Nat.Prime.dvd_or_dvd
-thm Nat_Prime_dvd_or_dvd:
+thm Prime_dvd_or_dvd:
     prove:
         forall p, a, b N:
-            $Nat_Prime(p)
-            $Nat_Dvd(p, a * b)
+            $Prime(p)
+            $Dvd(p, a * b)
             =>:
-                $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
-    $Nat_Dvd(p, a) or $Nat_Dvd(p, b)
+                $Dvd(p, a) or $Dvd(p, b)
+    $Dvd(p, a) or $Dvd(p, b)
 
 # Mathlib: Nat.Prime.dvd_of_dvd_pow
-thm Nat_Prime_dvd_of_dvd_pow:
+thm Prime_dvd_of_dvd_pow:
     prove:
         forall p, a N, k N_pos:
-            $Nat_Prime(p)
-            $Nat_Dvd(p, a^k)
+            $Prime(p)
+            $Dvd(p, a^k)
             =>:
-                $Nat_Dvd(p, a)
-    know $Nat_Dvd(p, a)
-    $Nat_Dvd(p, a)
+                $Dvd(p, a)
+    know $Dvd(p, a)
+    $Dvd(p, a)
 
 # Mathlib: Nat.exists_prime_and_dvd
-thm Nat_exists_prime_and_dvd:
+thm exists_prime_and_dvd:
     prove:
         forall n N:
             2 <= n
             =>:
-                exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
-    exist p N st {$Nat_Prime(p), $Nat_Dvd(p, n)}
+                exist p N st {$Prime(p), $Dvd(p, n)}
+    exist p N st {$Prime(p), $Dvd(p, n)}
 
 # Mathlib: Nat.choose_zero_right / Nat.choose_self
-thm Nat_choose_zero_right:
+thm choose_zero_right:
     prove:
         forall n N:
-            Nat_choose(n, 0) = 1
-    Nat_choose(n, 0) = 1
+            choose_fn(n, 0) = 1
+    choose_fn(n, 0) = 1
 
-thm Nat_choose_self:
+thm choose_self:
     prove:
         forall n N:
-            Nat_choose(n, n) = 1
-    Nat_choose(n, n) = 1
+            choose_fn(n, n) = 1
+    choose_fn(n, n) = 1
 
 # Mathlib: Nat.choose_succ_succ
-thm Nat_choose_succ_succ:
+thm choose_succ_succ:
     prove:
         forall n, k N:
             k <= n
             =>:
-                Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
-    Nat_choose(n + 1, k + 1) = Nat_choose(n, k) + Nat_choose(n, k + 1)
+                choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
+    choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
 # Mathlib-facing sqrt and floor bounds.
-thm Nat_sqrt_sq_le:
+thm sqrt_sq_le:
     prove:
         forall n N:
-            Nat_sqrt(n)^2 <= n
-    Nat_sqrt(n)^2 <= n
+            sqrt_nat(n)^2 <= n
+    sqrt_nat(n)^2 <= n
 
-thm Nat_lt_succ_sqrt_sq:
+thm lt_succ_sqrt_sq:
     prove:
         forall n N:
-            n < (Nat_sqrt(n) + 1)^2
-    n < (Nat_sqrt(n) + 1)^2
+            n < (sqrt_nat(n) + 1)^2
+    n < (sqrt_nat(n) + 1)^2
 
-thm Nat_floor_le:
+thm floor_le:
     prove:
         forall x R:
             0 <= x
             =>:
-                Nat_floor(x) <= x
-    Nat_floor(x) <= x
+                floor(x) <= x
+    floor(x) <= x
 
-thm Nat_lt_floor_add_one:
+thm lt_floor_add_one:
     prove:
         forall x R:
             0 <= x
             =>:
-                x < Nat_floor(x) + 1
-    x < Nat_floor(x) + 1
+                x < floor(x) + 1
+    x < floor(x) + 1

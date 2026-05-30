@@ -20,9 +20,10 @@ impl DisplaySourceLabel {
     }
 }
 
+#[derive(Clone)]
 pub struct ImportedModule {
     pub absolute_path: String,
-    pub environment: Environment,
+    pub environment: Rc<Environment>,
     pub is_std: bool,
 }
 
@@ -30,12 +31,13 @@ impl ImportedModule {
     pub fn new(absolute_path: String, environment: Environment, is_std: bool) -> Self {
         ImportedModule {
             absolute_path,
-            environment,
+            environment: Rc::new(environment),
             is_std,
         }
     }
 }
 
+#[derive(Clone)]
 pub struct ModuleManager {
     pub run_file_paths: Vec<Rc<str>>,
     pub module_name_and_path_map: HashMap<String, String>,

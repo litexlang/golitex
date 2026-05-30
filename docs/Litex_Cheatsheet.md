@@ -946,9 +946,9 @@ algo f(x, y):
 
 ### `import`
 
-**Meaning.** Load another standard-library module or local module directory into a named imported-module environment. For standard-library modules, omitting `as` uses the module name itself, so `import Nat` means `import Nat as Nat`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. The chosen module name and resolved module directory must not already be used, except that importing the same module with the same name again is an idempotent no-op and re-enables a stopped module.
+**Meaning.** Load another standard-library module or local module directory into a named imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. The chosen module name and resolved module directory must not already be used, except that importing the same module with the same name again is an idempotent no-op and re-enables a stopped module.
 
-**Syntax.** `import` `"module_dir"` [`as` *name*] or `import` *std_module* [`as` *name*].
+**Syntax.** `import` `"module_dir"` [`as` *name*] or `import` *std_module*.
 
 **Example.**
 

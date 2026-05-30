@@ -1246,7 +1246,7 @@ right $in info(a)
     #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn typed_function_applications_return_real() {
         let source_code = r#"
-run_file trigonometry
+run_file Trig
 
 sin(0) $in R
 cos(pi / 3) $in R
@@ -1503,7 +1503,7 @@ prove:
     #[test]
     #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn std_citation_source_uses_safe_module_label() {
-        let source_code = "run_file trigonometry\nsin(0) = 0";
+        let source_code = "run_file Trig\nsin(0) = 0";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("std_citation_source");
@@ -1513,7 +1513,7 @@ prove:
 
         assert!(run_succeeded, "std citation run failed:\n{}", run_output);
         assert!(run_output.contains("\"source_kind\": \"std\""));
-        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
+        assert!(run_output.contains("\"source\": \"std/Trig\""));
         assert!(!run_output.contains("\"path\""));
     }
 
@@ -1657,7 +1657,7 @@ prove:
 
     #[test]
     fn unquoted_run_file_is_rejected() {
-        let source_code = "run_file trigonometry";
+        let source_code = "run_file Trig";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
@@ -1667,7 +1667,7 @@ prove:
 
         assert!(!run_succeeded);
         assert!(run_output.contains(
-            "run_file expects a quoted relative or absolute file path; use import <std_module> as <name> for std modules"
+            "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules"
         ));
     }
 
@@ -1788,6 +1788,74 @@ template SharedName<s set>:
                 run_output
             );
         }
+    }
+
+    #[test]
+    fn thm_definition_does_not_store_forall_fact_for_known_forall_use() {
+        let source_code = r#"
+abstract_prop target_thm_prop(x)
+
+thm use_target_thm:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_thm_prop(x)
+
+    know $target_thm_prop(x)
+
+$target_thm_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "thm_definition_does_not_store_forall_fact_for_known_forall_use",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "thm definition should not enable ordinary forall matching:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("Unknown"),
+            "thm named-only failure should be reported as unknown:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn by_thm_releases_instantiated_then_facts() {
+        let source_code = r#"
+abstract_prop target_thm_prop(x)
+
+thm use_target_thm:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_thm_prop(x)
+
+    know $target_thm_prop(x)
+
+by thm use_target_thm(1)
+$target_thm_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_thm_releases_instantiated_then_facts");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "explicit by thm should release the instantiated then-fact:\n{}",
+            run_output
+        );
     }
 
     #[test]
@@ -2308,7 +2376,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     #[test]
     fn run_file_std_module_form_is_rejected() {
-        let source_code = "run_file trigonometry";
+        let source_code = "run_file Trig";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("run_file_std_module_form_is_rejected");
@@ -2350,7 +2418,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     #[test]
     #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn std_citation_source_survives_cached_reload_after_clear() {
-        let source_code = "run_file trigonometry\nclear\nrun_file trigonometry\nsin(0) = 0";
+        let source_code = "run_file Trig\nclear\nrun_file Trig\nsin(0) = 0";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
@@ -2366,7 +2434,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             run_output
         );
         assert!(run_output.contains("\"source_kind\": \"std\""));
-        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
+        assert!(run_output.contains("\"source\": \"std/Trig\""));
     }
 
     fn run_file_from_path_impl() {
@@ -4161,7 +4229,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
         runtime.new_file_path_new_env_new_name_scope(items[0].path_for_runtime.as_str());
         runtime.detail_output = detail_output;
-        runtime.module_manager.hide_file_paths_in_output = !detail_output;
+        runtime.module_manager.borrow_mut().hide_file_paths_in_output = !detail_output;
 
         let run_wall_start = Instant::now();
         let mut durations_ms: Vec<(String, f64)> = Vec::new();
