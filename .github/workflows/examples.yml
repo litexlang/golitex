@@ -1,0 +1,51 @@
+name: Examples
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Example suite to run"
+        required: true
+        default: run_examples
+        type: choice
+        options:
+          - run_examples
+          - run_all
+          - run_examples_include_std
+          - run_all_include_std
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_MIN_STACK: 8388608
+
+jobs:
+  examples:
+    name: ${{ inputs.suite }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Run selected suite
+        run: |
+          case "${{ inputs.suite }}" in
+            run_examples|run_all)
+              cargo test "${{ inputs.suite }}" -- --nocapture
+              ;;
+            run_examples_include_std|run_all_include_std)
+              cargo test "${{ inputs.suite }}" -- --ignored --nocapture
+              ;;
+            *)
+              echo "::error::unknown example suite: ${{ inputs.suite }}"
+              exit 1
+              ;;
+          esac
