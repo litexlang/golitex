@@ -26,4 +26,4 @@ have C_i &C = (0, 1)
 
 # Lean/Mathlib `Complex.I`; real and imaginary parts use direct struct access:
 # `&C{z}.re` and `&C{z}.im`.
-have Complex_I &C = (0, 1)
+have I &C = (0, 1)

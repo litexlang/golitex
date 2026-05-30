@@ -144,11 +144,16 @@ fn display_source_label_for_line_file(
         ));
     }
 
-    if line_file_is_entry_source(line_file, &runtime.module_manager) {
+    if line_file_is_entry_source(line_file, &runtime.module_manager.borrow()) {
         return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
     }
 
-    if let Some(label) = runtime.module_manager.display_source_labels.get(path) {
+    if let Some(label) = runtime
+        .module_manager
+        .borrow()
+        .display_source_labels
+        .get(path)
+    {
         return Some((label.source_kind.clone(), label.source.clone()));
     }
 
@@ -170,7 +175,7 @@ fn source_ref_json_fields(
 
     let same_source = match current_line_file {
         Some(current_line_file) => line_files_have_same_source(source_line_file, current_line_file),
-        None => line_file_is_entry_source(source_line_file, &runtime.module_manager),
+        None => line_file_is_entry_source(source_line_file, &runtime.module_manager.borrow()),
     };
 
     if !same_source {

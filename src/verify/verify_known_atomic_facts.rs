@@ -38,7 +38,7 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             if let Some(environment) = self.active_imported_module_environment(module_name) {
-                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
+                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment.as_ref(), atomic_fact, &all_objs_equal_to_arg)?;
                 if result.is_true() {
                     return Ok(result);
                 }
@@ -75,7 +75,7 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             if let Some(environment) = self.active_imported_module_environment(module_name) {
-                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment.as_ref(), atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
                 if result.is_true() {
                     return Ok(result);
                 }
@@ -125,7 +125,7 @@ impl Runtime {
         for module_name in module_names.iter() {
             if let Some(environment) = self.active_imported_module_environment(module_name) {
                 let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
-                    environment,
+                    environment.as_ref(),
                     atomic_fact,
                     &all_objs_equal_to_each_arg,
                 )?;
@@ -195,7 +195,7 @@ impl Runtime {
         for module_name in module_names.iter() {
             if let Some(environment) = self.active_imported_module_environment(module_name) {
                 result.extend(Self::get_all_objs_equal_to_given_in_environment(
-                    environment,
+                    environment.as_ref(),
                     given,
                 ));
             }

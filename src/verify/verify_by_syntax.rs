@@ -14,9 +14,11 @@ impl Runtime {
                     } else {
                         match (
                             self.module_manager
+                                .borrow()
                                 .module_name_and_path_map
                                 .get(&a.mod_name),
                             self.module_manager
+                                .borrow()
                                 .module_name_and_path_map
                                 .get(&b.mod_name),
                         ) {

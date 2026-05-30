@@ -1645,10 +1645,7 @@ impl Runtime {
                 )));
             }
             let function_name_obj: Obj = (*fo.head).clone().into();
-            let Some(fs_body) = self
-                .get_object_in_fn_set_or_restrict(&function_name_obj)
-                .cloned()
-            else {
+            let Some(fs_body) = self.get_object_in_fn_set_or_restrict(&function_name_obj) else {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
@@ -2457,7 +2454,6 @@ impl Runtime {
         let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
-            .cloned()
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(

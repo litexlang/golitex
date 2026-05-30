@@ -45,7 +45,6 @@ impl Runtime {
         let template_name = template_obj.template_name.to_string();
         let def = self
             .get_template_definition_by_name(&template_name)
-            .cloned()
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(

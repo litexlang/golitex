@@ -3,7 +3,7 @@
 # `ZMod(n)` is modeled as the natural representatives `{0, ..., n - 1}`.
 # Arithmetic helpers normalize integer representatives with `% n`.
 
-prop ZMod_value(n N_pos, s power_set(N)):
+prop value(n N_pos, s power_set(N)):
     forall x N:
         =>:
             x $in s
@@ -12,24 +12,24 @@ prop ZMod_value(n N_pos, s power_set(N)):
 
 know:
     forall n N_pos:
-        exist! s power_set(N) st {$ZMod_value(n, s)}
+        exist! s power_set(N) st {$value(n, s)}
 
 have fn ZMod as set:
     forall n N_pos:
-        exist! s power_set(N) st {$ZMod_value(n, s)}
+        exist! s power_set(N) st {$value(n, s)}
 
-prop ZMod_congruent(n N_pos, a, b Z):
+prop congruent(n N_pos, a, b Z):
     (a - b) % n = 0
 
-have fn ZMod_repr(a Z, n N_pos) N = a % n
-have fn ZMod_add(n N_pos, a, b Z) N = (a + b) % n
-have fn ZMod_sub(n N_pos, a, b Z) N = (a - b) % n
-have fn ZMod_mul(n N_pos, a, b Z) N = (a * b) % n
-have fn ZMod_neg(n N_pos, a Z) N = (0 - a) % n
+have fn repr(a Z, n N_pos) N = a % n
+have fn add(n N_pos, a, b Z) N = (a + b) % n
+have fn sub(n N_pos, a, b Z) N = (a - b) % n
+have fn mul(n N_pos, a, b Z) N = (a * b) % n
+have fn neg(n N_pos, a Z) N = (0 - a) % n
 
 know:
     forall n N_pos, a, b Z:
         =>:
-            $ZMod_congruent(n, a, b)
+            $congruent(n, a, b)
         <=>:
-            ZMod_repr(a, n) = ZMod_repr(b, n)
+            repr(a, n) = repr(b, n)

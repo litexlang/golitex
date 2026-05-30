@@ -36,8 +36,9 @@ fn standalone_latex_document(math_blocks: &[String]) -> String {
 // Returns a full LaTeX file (preamble + each stmt in display math) ready for pdflatex/lualatex.
 pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
     let mut tokenizer = Tokenizer::new();
+    let current_file_path = runtime.module_manager.borrow().current_file_path_rc();
     let blocks =
-        tokenizer.parse_blocks(source_code, runtime.module_manager.current_file_path_rc())?;
+        tokenizer.parse_blocks(source_code, current_file_path)?;
     let mut math_blocks: Vec<String> = Vec::new();
     for mut block in blocks {
         let stmt = runtime.parse_stmt(&mut block)?;

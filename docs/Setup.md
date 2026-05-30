@@ -74,7 +74,7 @@ The `.deb` package installs the standard library at `/usr/share/litex/std`.
 To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'import trigonometry' | grep '"stmt": "import trigonometry"'
+litex -e $'import Trig' | grep '"stmt": "import Trig"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'import trigonometry' | grep '"stmt": "import trigonometry"'
+litex -e $'import Trig' | grep '"stmt": "import Trig"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import trigonometry" | Select-String '"stmt": "import trigonometry"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 ---
@@ -302,7 +302,7 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
 By default, Litex omits empty arrays and empty strings, and it does not print
 raw file paths. Cross-source references still keep safe provenance labels such
-as `builtin_code`, `std/trigonometry`, or `external_file`. Use
+as `builtin_code`, `std/Trig`, or `external_file`. Use
 `-detail` when you need full trace details and raw paths for debugging.
 
 If the whole run succeeds:

@@ -1056,7 +1056,7 @@ impl Runtime {
         };
 
         let fn_name = evaluated_fn_obj.head.to_string();
-        let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name).cloned() else {
+        let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name) else {
             return Ok(None);
         };
         if algo_definition.params.len() != 1 {
@@ -1258,7 +1258,7 @@ impl Runtime {
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
         let algo_definition = match self.get_algo_definition_by_name(&fn_name) {
-            Some(definition) => definition.clone(),
+            Some(definition) => definition,
             None => {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),

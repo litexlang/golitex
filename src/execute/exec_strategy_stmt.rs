@@ -115,7 +115,6 @@ impl Runtime {
         let strategy_name = stmt.name.to_string();
         let strategy = self
             .get_strategy_definition_by_name(&strategy_name)
-            .cloned()
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -135,7 +134,6 @@ impl Runtime {
         let strategy_name = stmt.name.to_string();
         let strategy = self
             .get_strategy_definition_by_name(&strategy_name)
-            .cloned()
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
