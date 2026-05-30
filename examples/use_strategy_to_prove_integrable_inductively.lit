@@ -4,6 +4,8 @@ prop integrable(f set, s set):
     $restrict_fn_in(f, s)
     $exist_riemann_sum(f, s)
 
+have s nonempty_set
+
 strategy sum_of_integrable_fn_integrable:
     prove:
         forall f, g set:
