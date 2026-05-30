@@ -62,8 +62,43 @@ impl Runtime {
         let mut then_verification_results: Vec<StmtResult> = Vec::new();
 
         let then_count = forall_fact.then_facts.len();
+        let combined_atomic_then_fact = if then_count > 1 {
+            let mut atomic_facts: Vec<AtomicFact> = Vec::new();
+            for fact in forall_fact.then_facts.iter() {
+                match fact {
+                    ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                        atomic_facts.push(atomic_fact.clone());
+                    }
+                    _ => {
+                        atomic_facts.clear();
+                        break;
+                    }
+                }
+            }
+            if atomic_facts.len() == then_count {
+                Some(AndFact::new(atomic_facts, forall_fact.line_file.clone()))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let mut combined_atomic_then_fact_stored = false;
         for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
-            let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
+            let mut result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
+            if result.is_unknown() && !combined_atomic_then_fact_stored {
+                if let Some(and_fact) = combined_atomic_then_fact.as_ref() {
+                    let and_result = self.verify_and_fact(and_fact, verify_state)?;
+                    if !and_result.is_unknown() {
+                        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            and_fact.clone().into(),
+                        )?;
+                        combined_atomic_then_fact_stored = true;
+                        result =
+                            self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
+                    }
+                }
+            }
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let detail_header = match by_cases_case_label {

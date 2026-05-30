@@ -28,7 +28,7 @@ mathematics:
 - equalities and inequalities;
 - existential choices and case splits.
 
-Litex keeps many of these objects close to domain notation. A user or agent can
+Litex keeps many of these objects close to domain notation. A user can
 write a derivation as a sequence of facts, then ask the checker which lines are
 verified, unknown, or malformed.
 
@@ -50,9 +50,9 @@ Litex is most suitable for local derivation checks such as:
 These tasks are small enough to be checked locally but important enough to catch
 hallucinated or skipped reasoning steps.
 
-## Agent Workflow
+## Verification Workflow
 
-A useful AI for Science workflow is:
+A useful workflow is:
 
 1. Extract a derivation from a paper, textbook, or model note.
 2. Ask an LLM to rewrite the derivation as Litex facts.
@@ -89,11 +89,11 @@ Each example should show:
 
 For AI for Science audiences, the pitch should be:
 
-> Litex gives AI-generated scientific reasoning a local verifier feedback loop.
+> Litex gives scientific reasoning a local verifier feedback loop.
 
-Avoid leading with theorem-prover internals. The important point is that an
-agent can move from "this derivation looks plausible" to "each local
-mathematical fact was checked or explicitly marked as an assumption."
+Avoid leading with theorem-prover internals. The important point is moving from
+"this derivation looks plausible" to "each local mathematical fact was checked
+or explicitly marked as an assumption."
 
 ## Current Limitations
 

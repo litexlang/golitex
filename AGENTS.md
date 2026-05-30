@@ -91,6 +91,61 @@ blocks the work, remove it from that `todo.md`. For example, if work in
 `scripts/minif2f_tmp/todo.md`; if the feature is later added, delete the
 completed item.
 
+## Dataset And Textbook Problem-Solving Loop
+
+Use this loop for MiniF2F, MATH500, high-school datasets, Mathematics in
+Lean, Tao Analysis, Weil Number Theory, and any other dataset or textbook
+translation work. The goal is a pressure-test workflow, not only a final
+answer.
+
+For each item, proceed in this order:
+
+1. First explain the natural-language mathematical idea. Work out the key
+   transformations, cases, witnesses, estimates, or theorem dependencies before
+   writing Litex.
+
+2. Translate that mathematical plan into a natural Litex formulation. Prefer a
+   proof shape that the current verifier can check: explicit equality chains,
+   small intermediate facts, finite case splits, witnesses, named theorem
+   calls, and local reusable lemmas.
+
+3. If the proof cannot be completed immediately, write the best partial Litex
+   proof first. It is acceptable to use `know` temporarily, but only for the
+   blocked step. Next to each temporary `know`, add a concise comment saying
+   why the step is not yet proved and what kind of missing support it appears
+   to need.
+
+4. Put unfinished attempts in the local unfinished-explanation area. In
+   MiniF2F this is
+   `scripts/litex-minif2f/unfinished_problems_and_why_they_are_unfiniishded/`.
+   For another dataset or textbook workspace, create the analogous nearby
+   folder if it does not already exist. Name the file by the problem or theorem
+   id. Record the proof idea, the current Litex attempt, the exact verifier
+   failure if any, every remaining `know`, and the primary blocker label.
+
+5. Iterate by removing proof debt one step at a time. Run the verifier after
+   each small change and use the exact output to decide the next correction.
+   Try splitting algebraic or numeric jumps into smaller equalities before
+   searching for new theorems.
+
+6. When the item becomes checkable, move it out of the unfinished area and into
+   the finished area for that source. Delete the matching unfinished-explanation
+   file, update any local JSONL/status/todo bookkeeping, and keep the final
+   `.lit` file runnable.
+
+7. After solving a formerly unfinished item, write a short "war story" in the
+   local solved-experience area. In MiniF2F this is
+   `scripts/litex-minif2f/how_unfinshed_problems_are_solved/`. For another
+   source, create the analogous nearby folder if needed. Record the natural
+   idea, where the attempt got stuck, the exact trick or Litex pattern that
+   solved it, and any reusable lesson for later items.
+
+When splitting backlog work, use disjoint ranges or families. Use read-only
+triage passes to classify unfinished items, and use workers only on clearly
+separated write scopes. Each worker should return the status for each item it
+touched: `checkable`, `translated`, or `blocked` with one primary blocker
+label.
+
 ## General Engineering Style
 
 1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
@@ -158,7 +213,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 7. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-8. When an agent cannot prove a direct algebraic or numeric equality, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+8. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
 
 9. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
 

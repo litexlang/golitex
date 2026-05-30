@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::known_forall_profile::{self, KnownForallEnvKind, KnownForallSearchPhase};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
@@ -9,9 +10,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        known_forall_profile::record_entry();
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
+            known_forall_profile::record_success();
             return Ok((fact_verified).into());
         }
 
@@ -21,18 +24,24 @@ impl Runtime {
                 equal_fact.left.clone(),
                 equal_fact.line_file.clone(),
             );
+            let fact_with_reversed_args: AtomicFact = fact_with_reversed_args.into();
             if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
-                &fact_with_reversed_args.into(),
+                &fact_with_reversed_args,
                 verify_state,
             )? {
+                known_forall_profile::record_success();
                 return Ok((fact_verified).into());
             }
+
+            known_forall_profile::record_unknown();
+            return Ok((StmtUnknown::new()).into());
         }
 
+        known_forall_profile::record_unknown();
         Ok((StmtUnknown::new()).into())
     }
 
-    fn get_matched_atomic_fact_in_known_forall_fact_in_envs(
+    fn get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(
         &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
@@ -66,7 +75,8 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
-                let (atomic_fact_args_in_known_forall, current_known_forall) = {
+                let env_kind = self.known_forall_env_kind(stack_idx);
+                let (atomic_fact_in_known_forall, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
                     let Some(known_forall_facts_in_env) =
                         env.known_atomic_facts_in_forall_facts.get(&lookup_key)
@@ -77,13 +87,18 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    (current_known_forall.0.args(), current_known_forall.clone())
+                    (current_known_forall.0.clone(), current_known_forall.clone())
                 };
+                known_forall_profile::record_candidate_attempt(
+                    KnownForallSearchPhase::Fallback,
+                    env_kind,
+                );
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
-                    &atomic_fact_args_in_known_forall,
+                    &atomic_fact_in_known_forall,
                     given_fact,
                 )?;
                 if let Some(arg_map) = match_result {
+                    known_forall_profile::record_arg_match();
                     return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
             }
@@ -92,7 +107,7 @@ impl Runtime {
         Ok(((0, 0), None, None))
     }
 
-    fn try_verify_with_known_forall_facts_in_envs(
+    fn try_verify_with_fallback_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -101,7 +116,7 @@ impl Runtime {
         let mut iterate_from_known_forall_fact_index = 0;
 
         loop {
-            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_envs(
+            let result = self.get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(
                 iterate_from_env_index,
                 iterate_from_known_forall_fact_index,
                 atomic_fact,
@@ -118,12 +133,346 @@ impl Runtime {
                     )? {
                         return Ok(Some(fact_verified));
                     }
+                    known_forall_profile::record_requirement_failure();
                     iterate_from_env_index = i;
                     iterate_from_known_forall_fact_index = j + 1;
                 }
-                _ => return Ok(None),
+                _ => break,
             }
         }
+
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        self.try_verify_with_fallback_known_forall_facts_in_imported_modules(
+            atomic_fact,
+            verify_state,
+            &module_names,
+        )
+    }
+
+    fn try_verify_with_fallback_known_forall_facts_in_imported_modules(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        module_names: &[String],
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        for module_name in module_names.iter() {
+            let Some(known_forall_facts_count) = ({
+                self.active_imported_module_environment(module_name)
+                    .and_then(|env| {
+                        env.known_atomic_facts_in_forall_facts
+                            .get(&lookup_key)
+                            .map(|facts| facts.len())
+                    })
+            }) else {
+                continue;
+            };
+
+            for j in 0..known_forall_facts_count {
+                let entry_idx = known_forall_facts_count - 1 - j;
+                let candidate = {
+                    self.active_imported_module_environment(module_name)
+                        .and_then(|env| {
+                            env.known_atomic_facts_in_forall_facts
+                                .get(&lookup_key)
+                                .and_then(|facts| facts.get(entry_idx))
+                                .cloned()
+                        })
+                };
+                let Some((atomic_fact_in_known_forall, forall_rc)) = candidate else {
+                    continue;
+                };
+                if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                    KnownForallSearchPhase::Fallback,
+                    KnownForallEnvKind::User,
+                    atomic_fact_in_known_forall,
+                    forall_rc,
+                    atomic_fact,
+                    verify_state,
+                )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_known_forall_facts_in_envs(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
+        if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
+            atomic_fact,
+            &arg_shape_lookup_keys,
+            verify_state,
+        )? {
+            return Ok(Some(fact_verified));
+        }
+
+        if let Some(fact_verified) =
+            self.try_verify_with_fallback_known_forall_facts_in_envs(atomic_fact, verify_state)?
+        {
+            return Ok(Some(fact_verified));
+        }
+
+        self.try_verify_with_other_arg_shape_known_forall_facts_in_envs(
+            atomic_fact,
+            &arg_shape_lookup_keys,
+            verify_state,
+        )
+    }
+
+    fn try_verify_known_forall_candidate(
+        &mut self,
+        phase: KnownForallSearchPhase,
+        env_kind: KnownForallEnvKind,
+        atomic_fact_in_known_forall_fact: AtomicFact,
+        forall_rc: Rc<KnownForallFactParamsAndDom>,
+        given_atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        known_forall_profile::record_candidate_attempt(phase, env_kind);
+        let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
+            &atomic_fact_in_known_forall_fact,
+            given_atomic_fact,
+        )?;
+        if let Some(arg_map) = match_result {
+            known_forall_profile::record_arg_match();
+            let fact_verified = self.verify_args_satisfy_forall_requirements(
+                &atomic_fact_in_known_forall_fact,
+                &forall_rc,
+                arg_map,
+                given_atomic_fact,
+                verify_state,
+            )?;
+            if fact_verified.is_none() {
+                known_forall_profile::record_requirement_failure();
+            }
+            return Ok(fact_verified);
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_arg_shape_known_forall_facts_in_envs(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        let envs_count = self.environment_stack.len();
+        for i in 0..envs_count {
+            let stack_idx = envs_count - 1 - i;
+            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
+                if let Some(fact_verified) = self.try_verify_with_arg_shape_key_in_env(
+                    stack_idx,
+                    &lookup_key,
+                    arg_shape_lookup_key,
+                    atomic_fact,
+                    verify_state,
+                    KnownForallSearchPhase::ExactShape,
+                )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        for module_name in module_names.iter() {
+            for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
+                if let Some(fact_verified) = self
+                    .try_verify_with_arg_shape_key_in_imported_module_env(
+                        module_name,
+                        &lookup_key,
+                        arg_shape_lookup_key,
+                        atomic_fact,
+                        verify_state,
+                        KnownForallSearchPhase::ExactShape,
+                    )?
+                {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_other_arg_shape_known_forall_facts_in_envs(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        let envs_count = self.environment_stack.len();
+        for i in 0..envs_count {
+            let stack_idx = envs_count - 1 - i;
+            let arg_shape_keys = {
+                let env = &self.environment_stack[stack_idx];
+                let Some(arg_shape_map) = env
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(&lookup_key)
+                else {
+                    continue;
+                };
+                arg_shape_map
+                    .keys()
+                    .filter(|key| !arg_shape_lookup_keys.contains(key))
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            for arg_shape_key in arg_shape_keys.iter() {
+                if let Some(fact_verified) = self.try_verify_with_arg_shape_key_in_env(
+                    stack_idx,
+                    &lookup_key,
+                    arg_shape_key,
+                    atomic_fact,
+                    verify_state,
+                    KnownForallSearchPhase::OtherShape,
+                )? {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        for module_name in module_names.iter() {
+            let arg_shape_keys = {
+                let Some(env) = self.active_imported_module_environment(module_name) else {
+                    continue;
+                };
+                let Some(arg_shape_map) = env
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(&lookup_key)
+                else {
+                    continue;
+                };
+                arg_shape_map
+                    .keys()
+                    .filter(|key| !arg_shape_lookup_keys.contains(key))
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            for arg_shape_key in arg_shape_keys.iter() {
+                if let Some(fact_verified) = self
+                    .try_verify_with_arg_shape_key_in_imported_module_env(
+                        module_name,
+                        &lookup_key,
+                        arg_shape_key,
+                        atomic_fact,
+                        verify_state,
+                        KnownForallSearchPhase::OtherShape,
+                    )?
+                {
+                    return Ok(Some(fact_verified));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_arg_shape_key_in_env(
+        &mut self,
+        stack_idx: usize,
+        lookup_key: &(AtomicFactKey, bool),
+        arg_shape_key: &AtomicFactInForallArgShapeKey,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        phase: KnownForallSearchPhase,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let Some(bucket_count) = ({
+            let env = &self.environment_stack[stack_idx];
+            env.known_atomic_facts_in_forall_facts_by_arg_shape
+                .get(&lookup_key)
+                .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                .map(|bucket| bucket.len())
+        }) else {
+            return Ok(None);
+        };
+
+        for j in 0..bucket_count {
+            let entry_idx = bucket_count - 1 - j;
+            let env_kind = self.known_forall_env_kind(stack_idx);
+            let candidate = {
+                let env = &self.environment_stack[stack_idx];
+                env.known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(lookup_key)
+                    .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                    .and_then(|bucket| bucket.get(entry_idx))
+                    .cloned()
+            };
+            let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
+                continue;
+            };
+            if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                phase,
+                env_kind,
+                atomic_fact_in_known_forall_fact,
+                forall_rc,
+                atomic_fact,
+                verify_state,
+            )? {
+                return Ok(Some(fact_verified));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_with_arg_shape_key_in_imported_module_env(
+        &mut self,
+        module_name: &str,
+        lookup_key: &(AtomicFactKey, bool),
+        arg_shape_key: &AtomicFactInForallArgShapeKey,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        phase: KnownForallSearchPhase,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let Some(bucket_count) = ({
+            self.active_imported_module_environment(module_name)
+                .and_then(|env| {
+                    env.known_atomic_facts_in_forall_facts_by_arg_shape
+                        .get(lookup_key)
+                        .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                        .map(|bucket| bucket.len())
+                })
+        }) else {
+            return Ok(None);
+        };
+
+        for j in 0..bucket_count {
+            let entry_idx = bucket_count - 1 - j;
+            let candidate = {
+                self.active_imported_module_environment(module_name)
+                    .and_then(|env| {
+                        env.known_atomic_facts_in_forall_facts_by_arg_shape
+                            .get(lookup_key)
+                            .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+                            .and_then(|bucket| bucket.get(entry_idx))
+                            .cloned()
+                    })
+            };
+            let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
+                continue;
+            };
+            if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+                phase,
+                KnownForallEnvKind::User,
+                atomic_fact_in_known_forall_fact,
+                forall_rc,
+                atomic_fact,
+                verify_state,
+            )? {
+                return Ok(Some(fact_verified));
+            }
+        }
+        Ok(None)
+    }
+
+    fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {
+        if stack_idx == FILE_INDEX_FOR_BUILTIN {
+            return KnownForallEnvKind::Builtin;
+        }
+        KnownForallEnvKind::User
     }
 
     fn verify_args_satisfy_forall_requirements(
@@ -237,15 +586,63 @@ impl Runtime {
 
     fn match_atomic_fact_args_against_known_forall_ordered_args(
         &mut self,
-        atomic_fact_args_in_known_forall: &Vec<Obj>,
+        atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if let Some(match_result) =
+            self.match_in_fact_standard_set_target(atomic_fact_in_known_forall, given_fact)?
+        {
+            return Ok(match_result);
+        }
+
+        let atomic_fact_args_in_known_forall = atomic_fact_in_known_forall.args();
         let given_args = given_fact.args();
         let forward = self.match_args_in_fact_in_known_forall_fact_with_given_args(
-            atomic_fact_args_in_known_forall,
+            &atomic_fact_args_in_known_forall,
             &given_args,
         )?;
         return Ok(forward);
+    }
+
+    fn match_in_fact_standard_set_target(
+        &mut self,
+        atomic_fact_in_known_forall: &AtomicFact,
+        given_fact: &AtomicFact,
+    ) -> Result<Option<Option<HashMap<String, Obj>>>, RuntimeError> {
+        let (AtomicFact::InFact(known_in), AtomicFact::InFact(given_in)) =
+            (atomic_fact_in_known_forall, given_fact)
+        else {
+            return Ok(None);
+        };
+        let (Obj::StandardSet(known_set), Obj::StandardSet(given_set)) =
+            (&known_in.set, &given_in.set)
+        else {
+            return Ok(None);
+        };
+
+        let Some(element_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            &known_in.element,
+            &given_in.element,
+        )?
+        else {
+            return Ok(Some(None));
+        };
+
+        // Narrow known membership implies broader target membership directly.
+        // Broad known membership may match a narrow target only when the narrow
+        // membership is already a known atomic fact, not merely builtin-provable.
+        if Self::standard_set_is_subset_eq(known_set, given_set) {
+            return Ok(Some(Some(element_map)));
+        }
+        if Self::standard_set_is_subset_eq(given_set, known_set) {
+            let known_only_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(given_fact)?;
+            if known_only_result.is_true() {
+                return Ok(Some(Some(element_map)));
+            }
+        }
+
+        Ok(Some(None))
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
@@ -299,8 +696,8 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                self.match_arg_when_left_is_identifier_with_mod(given_arg)
+            Obj::Atom(AtomObj::IdentifierWithMod(ref id_known)) => {
+                self.match_arg_when_left_is_identifier_with_mod(id_known, given_arg)
             }
             Obj::FnObj(ref f) => self.match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => self.match_arg_when_left_is_number(left, given_arg),
@@ -537,11 +934,16 @@ impl Runtime {
 
     fn match_arg_when_left_is_identifier_with_mod(
         &mut self,
+        id_known: &IdentifierWithMod,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                self.match_arg_type_not_implemented("IdentifierWithMod")
+            Obj::Atom(AtomObj::IdentifierWithMod(id_given)) => {
+                if id_known.mod_name == id_given.mod_name && id_known.name == id_given.name {
+                    Ok(Some(HashMap::new()))
+                } else {
+                    Ok(None)
+                }
             }
             _ => Ok(None),
         }
@@ -1324,7 +1726,27 @@ impl Runtime {
             given.equal_to.as_ref(),
         )?
         else {
-            return Ok(None);
+            let Some(eq_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+                left.equal_to.as_ref(),
+                given.equal_to.as_ref(),
+                &given.body,
+            )?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, eq_map) {
+                return Ok(None);
+            }
+            let verify_state = VerifyState::new_with_final_round(false);
+            for value in merged.values() {
+                if self
+                    .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                    .is_err()
+                {
+                    return Ok(None);
+                }
+            }
+            return Ok(Some(merged));
         };
         if !self.merge_arg_match_map_into(&mut merged, eq_map) {
             return Ok(None);
@@ -1341,6 +1763,310 @@ impl Runtime {
         Ok(Some(merged))
     }
 
+    fn match_arg_in_anonymous_fn_body_with_given_arg(
+        &mut self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if let Some(existing_match) =
+            self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(known_arg, given_arg)?
+        {
+            return Ok(Some(existing_match));
+        }
+        if let Some(function_param_match) = self
+            .match_forall_function_param_application_as_anonymous_fn(
+                known_arg,
+                given_arg,
+                anonymous_fn_body,
+            )?
+        {
+            return Ok(Some(function_param_match));
+        }
+
+        match (known_arg, given_arg) {
+            (Obj::FnObj(left), Obj::FnObj(given)) => {
+                self.match_fn_obj_in_anonymous_fn_body(left, given, anonymous_fn_body)
+            }
+            (Obj::Add(left), Obj::Add(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Sub(left), Obj::Sub(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Mul(left), Obj::Mul(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Div(left), Obj::Div(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Mod(left), Obj::Mod(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Pow(left), Obj::Pow(given)) => self.match_binary_in_anonymous_fn_body(
+                left.base.as_ref(),
+                left.exponent.as_ref(),
+                given.base.as_ref(),
+                given.exponent.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::MatrixAdd(left), Obj::MatrixAdd(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixSub(left), Obj::MatrixSub(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixMul(left), Obj::MatrixMul(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.left.as_ref(),
+                    left.right.as_ref(),
+                    given.left.as_ref(),
+                    given.right.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixScalarMul(left), Obj::MatrixScalarMul(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.scalar.as_ref(),
+                    left.matrix.as_ref(),
+                    given.scalar.as_ref(),
+                    given.matrix.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::MatrixPow(left), Obj::MatrixPow(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.base.as_ref(),
+                    left.exponent.as_ref(),
+                    given.base.as_ref(),
+                    given.exponent.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Abs(left), Obj::Abs(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Sqrt(left), Obj::Sqrt(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Log(left), Obj::Log(given)) => self.match_binary_in_anonymous_fn_body(
+                left.base.as_ref(),
+                left.arg.as_ref(),
+                given.base.as_ref(),
+                given.arg.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Max(left), Obj::Max(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Min(left), Obj::Min(given)) => self.match_binary_in_anonymous_fn_body(
+                left.left.as_ref(),
+                left.right.as_ref(),
+                given.left.as_ref(),
+                given.right.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Tuple(left), Obj::Tuple(given)) => self.match_boxed_args_in_anonymous_fn_body(
+                &left.args,
+                &given.args,
+                anonymous_fn_body,
+            ),
+            (Obj::Cart(left), Obj::Cart(given)) => self.match_boxed_args_in_anonymous_fn_body(
+                &left.args,
+                &given.args,
+                anonymous_fn_body,
+            ),
+            (Obj::ListSet(left), Obj::ListSet(given)) => self
+                .match_boxed_args_in_anonymous_fn_body(&left.list, &given.list, anonymous_fn_body),
+            (Obj::FiniteSeqListObj(left), Obj::FiniteSeqListObj(given)) => self
+                .match_boxed_args_in_anonymous_fn_body(&left.objs, &given.objs, anonymous_fn_body),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_fn_obj_in_anonymous_fn_body(
+        &mut self,
+        left: &FnObj,
+        given: &FnObj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left.body.len() != given.body.len() {
+            return Ok(None);
+        }
+        let left_head: Obj = left.head.as_ref().clone().into();
+        let given_head: Obj = given.head.as_ref().clone().into();
+        let Some(mut merged) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            &left_head,
+            &given_head,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        for (left_row, given_row) in left.body.iter().zip(given.body.iter()) {
+            if left_row.len() != given_row.len() {
+                return Ok(None);
+            }
+            let Some(row_map) =
+                self.match_boxed_args_in_anonymous_fn_body(left_row, given_row, anonymous_fn_body)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, row_map) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_binary_in_anonymous_fn_body(
+        &mut self,
+        left_left: &Obj,
+        left_right: &Obj,
+        given_left: &Obj,
+        given_right: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Some(mut merged) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            left_left,
+            given_left,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(right_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+            left_right,
+            given_right,
+            anonymous_fn_body,
+        )?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, right_map) {
+            return Ok(None);
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_boxed_args_in_anonymous_fn_body(
+        &mut self,
+        left: &[Box<Obj>],
+        given: &[Box<Obj>],
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left.len() != given.len() {
+            return Ok(None);
+        }
+        let mut merged = HashMap::new();
+        for (left_arg, given_arg) in left.iter().zip(given.iter()) {
+            let Some(sub_map) = self.match_arg_in_anonymous_fn_body_with_given_arg(
+                left_arg.as_ref(),
+                given_arg.as_ref(),
+                anonymous_fn_body,
+            )?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, sub_map) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_forall_function_param_application_as_anonymous_fn(
+        &mut self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = known_arg else {
+            return Ok(None);
+        };
+        let FnObjHead::Forall(forall_param) = fn_obj.head.as_ref() else {
+            return Ok(None);
+        };
+        if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {
+            return Ok(None);
+        }
+
+        let anonymous_fn = AnonymousFn::new(
+            anonymous_fn_body.params_def_with_set.clone(),
+            anonymous_fn_body.dom_facts.clone(),
+            (*anonymous_fn_body.ret_set).clone(),
+            given_arg.clone(),
+        )?;
+        let mut map = HashMap::new();
+        map.insert(forall_param.name.clone(), anonymous_fn.into());
+        Ok(Some(map))
+    }
+
+    fn fn_obj_applies_to_exact_anonymous_fn_params(
+        fn_obj: &FnObj,
+        anonymous_fn_body: &FnSetBody,
+    ) -> bool {
+        let expected_param_names = anonymous_fn_body.get_params();
+        let expected_len = expected_param_names.len();
+        let actual_args_count: usize = fn_obj.body.iter().map(|row| row.len()).sum();
+        if actual_args_count != expected_len {
+            return false;
+        }
+
+        let mut flat_index = 0;
+        for row in fn_obj.body.iter() {
+            for arg in row.iter() {
+                let expected = obj_for_bound_param_in_scope(
+                    expected_param_names[flat_index].clone(),
+                    ParamObjType::FnSet,
+                );
+                if arg.to_string() != expected.to_string() {
+                    return false;
+                }
+                flat_index += 1;
+            }
+        }
+        true
+    }
+
     fn match_fn_param_group_type_in_known_forall_with_given(
         &mut self,
         left: &ParamGroupWithSet,
@@ -1350,6 +2076,71 @@ impl Runtime {
             left.set_obj(),
             given.set_obj(),
         )
+    }
+
+    fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
+        match (subset, superset) {
+            (StandardSet::NPos, StandardSet::NPos)
+            | (StandardSet::NPos, StandardSet::N)
+            | (StandardSet::NPos, StandardSet::Z)
+            | (StandardSet::NPos, StandardSet::Q)
+            | (StandardSet::NPos, StandardSet::R)
+            | (StandardSet::NPos, StandardSet::QPos)
+            | (StandardSet::NPos, StandardSet::RPos)
+            | (StandardSet::NPos, StandardSet::ZNz)
+            | (StandardSet::NPos, StandardSet::QNz)
+            | (StandardSet::NPos, StandardSet::RNz)
+            | (StandardSet::N, StandardSet::N)
+            | (StandardSet::N, StandardSet::Z)
+            | (StandardSet::N, StandardSet::Q)
+            | (StandardSet::N, StandardSet::R)
+            | (StandardSet::ZNeg, StandardSet::ZNeg)
+            | (StandardSet::ZNeg, StandardSet::Z)
+            | (StandardSet::ZNeg, StandardSet::Q)
+            | (StandardSet::ZNeg, StandardSet::R)
+            | (StandardSet::ZNeg, StandardSet::QNeg)
+            | (StandardSet::ZNeg, StandardSet::RNeg)
+            | (StandardSet::ZNeg, StandardSet::ZNz)
+            | (StandardSet::ZNeg, StandardSet::QNz)
+            | (StandardSet::ZNeg, StandardSet::RNz)
+            | (StandardSet::ZNz, StandardSet::ZNz)
+            | (StandardSet::ZNz, StandardSet::Z)
+            | (StandardSet::ZNz, StandardSet::Q)
+            | (StandardSet::ZNz, StandardSet::R)
+            | (StandardSet::ZNz, StandardSet::QNz)
+            | (StandardSet::ZNz, StandardSet::RNz)
+            | (StandardSet::Z, StandardSet::Z)
+            | (StandardSet::Z, StandardSet::Q)
+            | (StandardSet::Z, StandardSet::R)
+            | (StandardSet::QPos, StandardSet::QPos)
+            | (StandardSet::QPos, StandardSet::Q)
+            | (StandardSet::QPos, StandardSet::R)
+            | (StandardSet::QPos, StandardSet::RPos)
+            | (StandardSet::QPos, StandardSet::QNz)
+            | (StandardSet::QPos, StandardSet::RNz)
+            | (StandardSet::QNeg, StandardSet::QNeg)
+            | (StandardSet::QNeg, StandardSet::Q)
+            | (StandardSet::QNeg, StandardSet::R)
+            | (StandardSet::QNeg, StandardSet::RNeg)
+            | (StandardSet::QNeg, StandardSet::QNz)
+            | (StandardSet::QNeg, StandardSet::RNz)
+            | (StandardSet::QNz, StandardSet::QNz)
+            | (StandardSet::QNz, StandardSet::Q)
+            | (StandardSet::QNz, StandardSet::R)
+            | (StandardSet::QNz, StandardSet::RNz)
+            | (StandardSet::Q, StandardSet::Q)
+            | (StandardSet::Q, StandardSet::R)
+            | (StandardSet::RPos, StandardSet::RPos)
+            | (StandardSet::RPos, StandardSet::R)
+            | (StandardSet::RPos, StandardSet::RNz)
+            | (StandardSet::RNeg, StandardSet::RNeg)
+            | (StandardSet::RNeg, StandardSet::R)
+            | (StandardSet::RNeg, StandardSet::RNz)
+            | (StandardSet::RNz, StandardSet::RNz)
+            | (StandardSet::RNz, StandardSet::R)
+            | (StandardSet::R, StandardSet::R) => true,
+            _ => false,
+        }
     }
 
     fn match_arg_when_left_is_n_pos_obj(
@@ -1850,12 +2641,33 @@ impl Runtime {
         map.insert(given_arg.to_string(), given_arg.clone());
         Ok(Some(map))
     }
+}
 
-    fn match_arg_type_not_implemented(
-        &mut self,
-        obj_type_name: &str,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let _ = obj_type_name;
-        Ok(None)
+fn atomic_fact_in_forall_lookup_arg_shape_keys(
+    atomic_fact: &AtomicFact,
+) -> Vec<AtomicFactInForallArgShapeKey> {
+    let exact_key = atomic_fact_in_forall_arg_shape_key(atomic_fact);
+    let forall_param_key_part = (ObjKind::ForallFreeParam, String::new());
+    let mut keys = Vec::new();
+    push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, exact_key.clone());
+
+    for index in 0..exact_key.len() {
+        let known_keys_count = keys.len();
+        for key_index in 0..known_keys_count {
+            let mut key = keys[key_index].clone();
+            key[index] = forall_param_key_part.clone();
+            push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, key);
+        }
+    }
+
+    keys
+}
+
+fn push_atomic_fact_in_forall_arg_shape_key_if_new(
+    keys: &mut Vec<AtomicFactInForallArgShapeKey>,
+    key: AtomicFactInForallArgShapeKey,
+) {
+    if !keys.contains(&key) {
+        keys.push(key);
     }
 }

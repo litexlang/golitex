@@ -243,6 +243,12 @@ impl ByClosedRangeAsCasesStmt {
     }
 }
 
+impl ByEnumerateRangeStmt {
+    pub fn to_latex_string(&self) -> String {
+        latex_texttt_escape(&self.to_string())
+    }
+}
+
 impl ByEnumerateFiniteSetStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
@@ -699,6 +705,17 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\mathrm{{{}}}", CLEAR)
+    }
+}
+
+impl StopImportStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\ \operatorname{{{}}}\ {}",
+            STOP,
+            IMPORT,
+            latex_local_ident(&self.module_name)
+        )
     }
 }
 
@@ -1687,16 +1704,6 @@ impl RunFileStmt {
     }
 }
 
-impl RunFileInStd {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \texttt{{{}}}",
-            RUN_FILE,
-            latex_texttt_escape(&self.file_path)
-        )
-    }
-}
-
 impl SeqSet {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1869,19 +1876,11 @@ impl WitnessNonemptySet {
 
 impl ImportGlobalModuleStmt {
     pub fn to_latex_string(&self) -> String {
-        match &self.as_mod_name {
-            Some(m) => format!(
-                r"\operatorname{{{}}}\ {}\ \mathrm{{as}}\ {}",
-                IMPORT,
-                latex_local_ident(&self.mod_name),
-                latex_local_ident(m)
-            ),
-            None => format!(
-                r"\operatorname{{{}}}\ {}",
-                IMPORT,
-                latex_local_ident(&self.mod_name)
-            ),
-        }
+        format!(
+            r"\operatorname{{{}}}\ {}",
+            IMPORT,
+            latex_local_ident(&self.mod_name)
+        )
     }
 }
 
@@ -2082,8 +2081,8 @@ impl Stmt {
             Stmt::ImportStmt(x) => x.to_latex_string(),
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
             Stmt::ClearStmt(x) => x.to_latex_string(),
+            Stmt::StopImportStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
-            Stmt::RunFileInStd(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::EvalByStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),
@@ -2097,11 +2096,17 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByEnumerateRangeStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
             Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
+            Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::UseStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::StopStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefTemplateStmt(x) => latex_texttt_escape(&x.to_string()),
         }

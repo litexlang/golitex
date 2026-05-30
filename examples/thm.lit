@@ -1,0 +1,126 @@
+# Basic named theorem with aliases and no domain facts.
+thm thm_refl_r, thm_refl_r_alias:
+    prove:
+        forall x R:
+            x = x
+
+by thm thm_refl_r(0)
+0 = 0
+
+by thm thm_refl_r_alias(0)
+0 = 0
+
+# A theorem with one domain fact.
+thm thm_one_succ:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 1 = 2
+    x + 1 = 1 + 1 = 2
+
+by thm thm_one_succ(1)
+1 + 1 = 2
+
+# Multiple arguments and multiple domain facts.
+thm thm_add_equal_with_unit:
+    prove:
+        forall a, b, c R:
+            a = b
+            c = 1
+            =>:
+                a + c = b + 1
+    a + c = b + c = b + 1
+
+by thm thm_add_equal_with_unit(2, 2, 1)
+2 + 1 = 2 + 1
+
+# Multiple then-facts are all released by the named theorem call.
+thm thm_many_then:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+                x + 1 = 2
+                x + 2 = 3
+    x = 1
+    x + 1 = 1 + 1 = 2
+    x + 2 = 1 + 2 = 3
+
+by thm thm_many_then(1)
+1 + 2 = 3
+
+# A theorem can release an and-fact.
+thm thm_and_then:
+    prove:
+        forall x R:
+            x = 0
+            =>:
+                x = 0 and x + 1 = 1
+    x = 0
+    x + 1 = 0 + 1 = 1
+    x = 0 and x + 1 = 1
+
+by thm thm_and_then(0)
+0 + 1 = 1
+
+# A theorem can release a chain fact.
+thm thm_chain_then:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 1 = 1 + 1 = 2
+    x + 1 = 1 + 1 = 2
+
+by thm thm_chain_then(1)
+1 + 1 = 2
+
+# The explicit call works inside a claim proof.
+claim:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 1 = 2
+    by thm thm_one_succ(x)
+
+# A named theorem may use another named theorem in its proof.
+thm thm_use_thm_inside_thm:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 2 = 3
+    by thm thm_one_succ(x)
+    x + 2 = 1 + 2 = 3
+
+by thm thm_use_thm_inside_thm(1)
+1 + 2 = 3
+
+# Argument type checking still applies for theorem calls.
+thm thm_nat_refl:
+    prove:
+        forall n N:
+            n = n
+
+by thm thm_nat_refl(1)
+1 = 1
+
+# A proved theorem is named-only. Use an explicit theorem call when you want
+# to release its instantiated then-facts into the current context.
+abstract_prop thm_match_p(x)
+abstract_prop thm_match_q(x)
+
+thm thm_named_only:
+    prove:
+        forall x R:
+            $thm_match_p(x)
+            =>:
+                $thm_match_q(x)
+    know $thm_match_q(x)
+
+know $thm_match_p(1)
+by thm thm_named_only(1)
+$thm_match_q(1)

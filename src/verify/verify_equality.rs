@@ -85,7 +85,8 @@ impl Runtime {
         let left_string = left.to_string();
         let right_string = right.to_string();
 
-        let known_pairs = self.collect_known_equality_pairs_from_envs(&left_string, &right_string);
+        let known_pairs =
+            self.collect_known_equality_pairs_from_envs(&left_string, &right_string, left, right);
         for (known_left, known_right) in known_pairs {
             if let Some(result) = self
                 .try_verify_equality_with_known_equalities_by_builtin_rules_only(
@@ -218,6 +219,8 @@ impl Runtime {
         &self,
         left_string: &str,
         right_string: &str,
+        left: &Obj,
+        right: &Obj,
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
         let mut pairs = Vec::with_capacity(self.environment_stack.len());
         for env in self.iter_environments_from_top() {
@@ -230,6 +233,28 @@ impl Runtime {
                 .get(right_string)
                 .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
             pairs.push((known_left, known_right));
+        }
+        let mut module_names = self.obj_referenced_module_names(left);
+        for module_name in self.obj_referenced_module_names(right) {
+            if !module_names
+                .iter()
+                .any(|existing_module_name| existing_module_name == &module_name)
+            {
+                module_names.push(module_name);
+            }
+        }
+        for module_name in module_names.iter() {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                let known_left = env
+                    .known_equality
+                    .get(left_string)
+                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
+                let known_right = env
+                    .known_equality
+                    .get(right_string)
+                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
+                pairs.push((known_left, known_right));
+            }
         }
         pairs
     }

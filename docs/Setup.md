@@ -71,10 +71,10 @@ sudo apt-get install -f
 ```
 
 The `.deb` package installs the standard library at `/usr/share/litex/std`.
-To verify that `run_file` can find it, run:
+To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
+litex -e $'import Trig' | grep '"stmt": "import Trig"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'run_file trigonometry\nsin(0) = 0' | grep '"stmt": "sin(0) = 0"'
+litex -e $'import Trig' | grep '"stmt": "import Trig"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "run_file trigonometry`nsin(0) = 0" | Select-String '"stmt": "sin\(0\) = 0"'
+litex -e "import Trig" | Select-String '"stmt": "import Trig"'
 ```
 
 ---
@@ -277,9 +277,9 @@ Basic behavior:
 | `-e <code>` | Run a Litex source string. |
 | `-f <file>` | Run a file. The path may be relative to the current working directory or absolute. |
 | `-r <repo>` | Same as running `<repo>/main.lit`. Place `main.lit` at the repo root. |
-| `-harness -e <code>` | Run a source string through the agent harness. |
-| `-harness -f <file>` | Run a file through the agent harness. |
-| `-harness -r <repo>` | Run a repository through the agent harness. |
+| `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
+| `-runner -f <file>` | Run a file and return one wrapper JSON object. |
+| `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
 | `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
 | `-latex` | Enter LaTeX-related mode. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
@@ -291,7 +291,7 @@ Basic behavior:
 | `-update <module>` | Update a module, when available. |
 | `-tutorial` | Run the tutorial, when available. |
 
-Options like `-e`, `-f`, `-r`, `-harness -e`, `-harness -f`, `-harness -r`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments.
+Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments.
 
 Hint: if your Litex code contains spaces, newlines, or shell-sensitive characters, wrap it in quotes when using `-e`, or put it in a `.lit` file and run it with `-f`.
 
@@ -302,7 +302,7 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
 By default, Litex omits empty arrays and empty strings, and it does not print
 raw file paths. Cross-source references still keep safe provenance labels such
-as `builtin_code`, `std/trigonometry`, or `external_file`. Use
+as `builtin_code`, `std/Trig`, or `external_file`. Use
 `-detail` when you need full trace details and raw paths for debugging.
 
 If the whole run succeeds:
@@ -358,19 +358,18 @@ Example error output looks like this. The exact output may differ by version:
 }
 ```
 
-## Agent harness output
+## Runner output
 
-`litex -harness -e <code>`, `litex -harness -f <file>`, and `litex -harness -r <repo>` run the same verifier but return one wrapper JSON object designed for agents, scripts, and CI checks.
+`litex -runner -e <code>`, `litex -runner -f <file>`, and `litex -runner -r <repo>` run the same verifier but return one wrapper JSON object for scripts and CI checks.
 
 The wrapper includes:
 
 - `"ok"` and `"result"` for the whole run;
-- a `"summary"` with checked statement count, successful statement count, `know` proof-debt count, and error count;
-- `"next_action"`, such as `"done"`, `"reduce_proof_debt"`, `"add_intermediate_fact"`, or `"fix_error"`;
-- `"failure"` with the local failing line, statement, root cause, and error chain when the run fails;
+- `"target"` with the requested source kind and label;
+- `"error"` with target-read failure information when the source cannot be loaded;
 - `"trace"`, containing the ordinary Litex statement-by-statement JSON output.
 
-Unlike the basic `-e`, `-f`, and `-r` commands, the harness exits with a nonzero code when the checked run fails or when checked source still contains `know` proof debt.
+Unlike the basic `-e`, `-f`, and `-r` commands, the runner exits with a nonzero code when the checked run fails or when the target source cannot be loaded.
 
 ---
 

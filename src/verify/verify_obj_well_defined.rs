@@ -149,8 +149,28 @@ impl Runtime {
         &self,
         x: &IdentifierWithMod,
     ) -> Result<(), RuntimeError> {
-        let _ = x;
-        unreachable!()
+        if self.is_current_parse_module(&x.mod_name) {
+            for env in self.iter_environments_from_top() {
+                if env.defined_identifiers.contains_key(&x.name)
+                    || env.defined_structs.contains_key(&x.name)
+                {
+                    return Ok(());
+                }
+            }
+        } else if let Some(env) = self.imported_module_environment(&x.mod_name) {
+            if env.defined_identifiers.contains_key(&x.name)
+                || env.defined_structs.contains_key(&x.name)
+            {
+                return Ok(());
+            }
+        }
+
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "identifier `{}` not defined",
+                x.to_string()
+            )),
+        )))
     }
 
     fn verify_fn_obj_well_defined(
@@ -1625,10 +1645,7 @@ impl Runtime {
                 )));
             }
             let function_name_obj: Obj = (*fo.head).clone().into();
-            let Some(fs_body) = self
-                .get_object_in_fn_set_or_restrict(&function_name_obj)
-                .cloned()
-            else {
+            let Some(fs_body) = self.get_object_in_fn_set_or_restrict(&function_name_obj) else {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
@@ -2434,10 +2451,9 @@ impl Runtime {
         struct_obj: &StructObj,
         verify_state: &VerifyState,
     ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
-        let struct_name = struct_obj.name.to_name_string();
+        let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
-            .cloned()
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
@@ -2556,7 +2572,7 @@ impl Runtime {
         struct_obj: &StructObj,
         field_name: &str,
     ) -> Result<usize, RuntimeError> {
-        let struct_name = struct_obj.name.to_name_string();
+        let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
             .ok_or_else(|| {

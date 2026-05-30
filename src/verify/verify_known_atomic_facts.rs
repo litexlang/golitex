@@ -26,24 +26,22 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut all_objs_equal_to_arg =
-            self.get_all_objs_equal_to_given(&atomic_fact.args()[0].to_string());
-
-        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
-            if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
-                all_objs_equal_to_arg.extend(equal_tos);
-            }
-        }
-
-        if all_objs_equal_to_arg.is_empty() {
-            all_objs_equal_to_arg.push(atomic_fact.args()[0].to_string());
-        }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        let all_objs_equal_to_arg =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[0], &module_names);
 
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
             if result.is_true() {
                 return Ok(result);
+            }
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment.as_ref(), atomic_fact, &all_objs_equal_to_arg)?;
+                if result.is_true() {
+                    return Ok(result);
+                }
             }
         }
 
@@ -63,33 +61,24 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut all_objs_equal_to_arg0 =
-            self.get_all_objs_equal_to_given(&atomic_fact.args()[0].to_string());
-        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
-            if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
-                all_objs_equal_to_arg0.extend(equal_tos);
-            }
-        }
-        if all_objs_equal_to_arg0.is_empty() {
-            all_objs_equal_to_arg0.push(atomic_fact.args()[0].to_string());
-        }
-        let mut all_objs_equal_to_arg1 =
-            self.get_all_objs_equal_to_given(&atomic_fact.args()[1].to_string());
-        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[1]) {
-            if calculated_obj.to_string() != atomic_fact.args()[1].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
-                all_objs_equal_to_arg1.extend(equal_tos);
-            }
-        }
-        if all_objs_equal_to_arg1.is_empty() {
-            all_objs_equal_to_arg1.push(atomic_fact.args()[1].to_string());
-        }
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        let all_objs_equal_to_arg0 =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[0], &module_names);
+        let all_objs_equal_to_arg1 =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[1], &module_names);
 
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
             if result.is_true() {
                 return Ok(result);
+            }
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment.as_ref(), atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+                if result.is_true() {
+                    return Ok(result);
+                }
             }
         }
 
@@ -116,14 +105,11 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in atomic_fact.args().iter() {
-            let mut all_objs_equal_to_current_arg =
-                self.get_all_objs_equal_to_given(&arg.to_string());
-            if all_objs_equal_to_current_arg.is_empty() {
-                all_objs_equal_to_current_arg.push(arg.to_string());
-            }
-            all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
+            all_objs_equal_to_each_arg
+                .push(self.all_objs_equal_to_arg_for_known_atomic_fact(arg, &module_names));
         }
 
         for environment in self.iter_environments_from_top() {
@@ -134,6 +120,18 @@ impl Runtime {
             )?;
             if result.is_true() {
                 return Ok(result);
+            }
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+                    environment.as_ref(),
+                    atomic_fact,
+                    &all_objs_equal_to_each_arg,
+                )?;
+                if result.is_true() {
+                    return Ok(result);
+                }
             }
         }
 
@@ -156,6 +154,52 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn all_objs_equal_to_arg_for_known_atomic_fact(
+        &self,
+        arg: &Obj,
+        module_names: &[String],
+    ) -> Vec<String> {
+        let mut all_objs_equal_to_arg = vec![];
+        self.extend_all_objs_equal_to_given_from_current_and_imported_envs(
+            &mut all_objs_equal_to_arg,
+            &arg.to_string(),
+            module_names,
+        );
+
+        if let Some(calculated_obj) = self.resolve_obj_to_number(arg) {
+            if calculated_obj.to_string() != arg.to_string() {
+                self.extend_all_objs_equal_to_given_from_current_and_imported_envs(
+                    &mut all_objs_equal_to_arg,
+                    &calculated_obj.to_string(),
+                    module_names,
+                );
+            }
+        }
+
+        if all_objs_equal_to_arg.is_empty() {
+            all_objs_equal_to_arg.push(arg.to_string());
+        }
+        dedup_strings(&mut all_objs_equal_to_arg);
+        all_objs_equal_to_arg
+    }
+
+    fn extend_all_objs_equal_to_given_from_current_and_imported_envs(
+        &self,
+        result: &mut Vec<String>,
+        given: &str,
+        module_names: &[String],
+    ) {
+        result.extend(self.get_all_objs_equal_to_given(given));
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                result.extend(Self::get_all_objs_equal_to_given_in_environment(
+                    environment.as_ref(),
+                    given,
+                ));
+            }
+        }
     }
 
     fn atomic_fact_with_resolved_unary_operand(fact: &AtomicFact, x: Obj) -> AtomicFact {
@@ -386,4 +430,14 @@ impl Runtime {
 
         Ok((StmtUnknown::new()).into())
     }
+}
+
+fn dedup_strings(values: &mut Vec<String>) {
+    let mut deduped = Vec::with_capacity(values.len());
+    for value in values.drain(..) {
+        if !deduped.iter().any(|existing| existing == &value) {
+            deduped.push(value);
+        }
+    }
+    *values = deduped;
 }

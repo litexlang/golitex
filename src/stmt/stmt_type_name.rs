@@ -48,12 +48,6 @@ impl RunFileStmt {
     }
 }
 
-impl RunFileInStd {
-    pub fn stmt_type_name(&self) -> String {
-        "RunFileInStd".to_string()
-    }
-}
-
 impl ImportRelativePathStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportRelativePathStmt".to_string()
@@ -84,6 +78,12 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClearStmt".to_string()
+    }
+}
+
+impl StopImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "StopImportStmt".to_string()
     }
 }
 
@@ -147,6 +147,12 @@ impl ByFnSetAsSetStmt {
     }
 }
 
+impl ByEnumerateRangeStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByEnumerateRangeStmt".to_string()
+    }
+}
+
 impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleAsSetStmt".to_string()
@@ -180,6 +186,36 @@ impl ByReflexivePropStmt {
 impl ByAntisymmetricPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByAntisymmetricPropStmt".to_string()
+    }
+}
+
+impl ByThmStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByThmStmt".to_string()
+    }
+}
+
+impl DefThmStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefThmStmt".to_string()
+    }
+}
+
+impl UseStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "UseStrategyStmt".to_string()
+    }
+}
+
+impl StopStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "StopStrategyStmt".to_string()
+    }
+}
+
+impl DefStrategyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefStrategyStmt".to_string()
     }
 }
 

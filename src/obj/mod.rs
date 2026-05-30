@@ -5,6 +5,7 @@ mod fn_obj_head;
 mod fn_set;
 mod free_param_obj;
 mod obj;
+mod obj_contrain_free_params;
 mod standard_set;
 pub use atom::{
     identifier_to_string, identifier_with_mod_to_string, Identifier, IdentifierWithMod,
@@ -23,8 +24,8 @@ pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
     FiniteSeqListObj, FiniteSeqSet, FnObj, InstantiatedTemplateObj, Intersect, IntervalObj,
     IntervalObjStruct, ListSet, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
-    MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, NameWithOrWithoutMod, Number, Obj,
-    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, OneSideInfinityIntervalObj,
+    MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, Number, Obj,
+    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
     OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product, Proj, Range, SeqSet, SetBuilder,
     SetDiff, SetMinus, Sqrt, StructObj, Sub, Sum, Tuple, TupleDim, Union,
 };

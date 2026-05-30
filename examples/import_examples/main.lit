@@ -1,0 +1,62 @@
+# Import examples.
+# Local import paths are module directories containing main.lit.
+
+
+# Transitive import. UsesNat imports Nat, and imports are global within this run.
+
+import "local_repo/UsesNat" as ImportExamplesUsesNat
+
+$Nat::Prime(2)
+$ImportExamplesUsesNat::local_nat_fact(2)
+
+
+# Reimporting the same std module is idempotent.
+
+import Nat
+
+by thm Nat::Prime_one_lt(2)
+1 < 2
+
+witness exist k N st {12 = 3 * k} from 4:
+    12 = 3 * 4
+$Nat::Dvd(3, 12)
+
+import Trig
+
+Trig::sin(0) = 0
+Trig::cos(0) = 1
+Trig::cos(2 * pi) = 1
+
+
+# Local module imports expose top-level module facts by qualified names.
+
+import "local_repo/DemoFacts" as ImportExamplesDemo
+
+$ImportExamplesDemo::demo_prop(2)
+$ImportExamplesDemo::demo_is_two(2)
+
+by thm ImportExamplesDemo::demo_prop_when_three(3)
+$ImportExamplesDemo::demo_prop(3)
+
+use strategy ImportExamplesDemo::demo_prop_when_four
+$ImportExamplesDemo::demo_prop(4)
+
+
+# stop import disables automatic use; importing the same name and path reactivates it.
+
+stop import ImportExamplesDemo
+import "local_repo/DemoFacts" as ImportExamplesDemo
+
+$ImportExamplesDemo::demo_prop(2)
+
+
+# clear stops all imports but keeps the import registry. Reimporting reactivates modules.
+
+clear
+
+import Nat
+import "local_repo/UsesNat" as ImportExamplesUsesNat
+import "local_repo/DemoFacts" as ImportExamplesDemo
+
+$ImportExamplesUsesNat::local_nat_fact(2)
+$ImportExamplesDemo::demo_prop(2)

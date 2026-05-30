@@ -13,4 +13,4 @@ know forall s power_set(R), f, g set:
     =>:
         $integrable(s, '(x s)R{f(x) + g(x)})
 
-        \integral{s, f} + \integral{s, g} = \integral{s, '(x s)R{f(x) + g(x)}}
+        \integral<s, f> + \integral<s, g> = \integral<s, '(x s)R{f(x) + g(x)}>

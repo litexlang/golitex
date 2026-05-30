@@ -1,9 +1,7 @@
-run_file trigonometry
-
-(2*pi/3 - pi/2) / pi = 1/6
-
-not 1/6 $in Z
-
-not (2*pi/3 - pi/2) / pi $in Z
-
-cos(2*pi/3) != 0
+forall x cart(R, R):
+    3 * x[1] + 2 * x[2] = 12
+    x[1] = 4
+    =>:
+        2 * x[2] = 12 - 3 * x[1] = 12 - 3 * 4 = 0
+        x[2] = (2 * x[2]) / 2 = 0 / 2 = 0
+        

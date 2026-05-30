@@ -36,3 +36,7 @@ test-litex/
 litex_agent/
 
 tmp/
+
+std/todo.md
+
+std/*/todo.md

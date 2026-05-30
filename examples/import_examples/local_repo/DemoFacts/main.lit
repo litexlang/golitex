@@ -1,0 +1,37 @@
+# This directory acts like a separate local Litex module.
+# It is imported by examples/import_examples/main.lit.
+
+abstract_prop demo_prop(x)
+
+prop demo_is_two(x Z):
+    x = 2
+
+know:
+    $demo_prop(2)
+
+    forall x Z:
+        x = 3
+        =>:
+            $demo_prop(x)
+
+thm demo_prop_when_three:
+    prove:
+        forall x Z:
+            x = 3
+            =>:
+                $demo_prop(x)
+
+    $demo_prop(x)
+
+strategy demo_prop_when_four:
+    prove:
+        forall x Z:
+            x = 4
+            =>:
+                $demo_prop(x)
+
+    know:
+        forall y Z:
+            y = 4
+            =>:
+                $demo_prop(y)

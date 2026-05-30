@@ -60,6 +60,80 @@ pub enum Obj {
     IntervalObj(IntervalObj),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ObjKind {
+    Atom = 0,
+    FnObj = 1,
+    Number = 2,
+    Add = 3,
+    Sub = 4,
+    Mul = 5,
+    Div = 6,
+    Mod = 7,
+    Pow = 8,
+    Abs = 9,
+    Sqrt = 10,
+    Log = 11,
+    Max = 12,
+    Min = 13,
+    Union = 14,
+    Intersect = 15,
+    SetMinus = 16,
+    SetDiff = 17,
+    Cup = 18,
+    Cap = 19,
+    PowerSet = 20,
+    ListSet = 21,
+    SetBuilder = 22,
+    FnSet = 23,
+    AnonymousFn = 24,
+    Cart = 25,
+    CartDim = 26,
+    Proj = 27,
+    TupleDim = 28,
+    Tuple = 29,
+    Count = 30,
+    Sum = 31,
+    Product = 32,
+    Range = 33,
+    ClosedRange = 34,
+    FiniteSeqSet = 35,
+    SeqSet = 36,
+    FiniteSeqListObj = 37,
+    Choose = 38,
+    ObjAtIndex = 39,
+    StandardSet = 40,
+    MatrixSet = 41,
+    MatrixListObj = 42,
+    MatrixAdd = 43,
+    MatrixSub = 44,
+    MatrixMul = 45,
+    MatrixScalarMul = 46,
+    MatrixPow = 47,
+    StructObj = 48,
+    ObjAsStructInstanceWithFieldAccess = 49,
+    InstantiatedTemplateObj = 50,
+    OneSideInfinityIntervalObj = 51,
+    IntervalObj = 52,
+    Identifier = 53,
+    IdentifierWithMod = 54,
+    ForallFreeParam = 55,
+    DefHeaderFreeParam = 56,
+    ExistFreeParam = 57,
+    SetBuilderFreeParam = 58,
+    FnSetFreeParam = 59,
+    ByInducFreeParam = 60,
+    DefAlgoFreeParam = 61,
+    DefStructFieldFreeParam = 62,
+}
+
+impl ObjKind {
+    pub fn as_u8(self) -> u8 {
+        self as u8
+    }
+}
+
 #[derive(Clone)]
 pub enum OneSideInfinityIntervalObj {
     LeftOpen(OneSideInfinityIntervalObjStruct),
@@ -224,14 +298,8 @@ pub struct Sqrt {
 }
 
 #[derive(Clone)]
-pub enum NameWithOrWithoutMod {
-    WithoutMod(String),
-    WithMod(String, String),
-}
-
-#[derive(Clone)]
 pub struct StructObj {
-    pub name: NameWithOrWithoutMod,
+    pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
@@ -244,29 +312,12 @@ pub struct ObjAsStructInstanceWithFieldAccess {
 
 #[derive(Clone)]
 pub struct InstantiatedTemplateObj {
-    pub template_name: String,
+    pub template_name: AtomicName,
     pub args: Vec<Obj>,
 }
 
-impl NameWithOrWithoutMod {
-    pub fn to_name_string(&self) -> String {
-        match self {
-            NameWithOrWithoutMod::WithoutMod(name) => name.clone(),
-            NameWithOrWithoutMod::WithMod(mod_name, name) => {
-                format!("{}{}{}", mod_name, MOD_SIGN, name)
-            }
-        }
-    }
-}
-
-impl fmt::Display for NameWithOrWithoutMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_name_string())
-    }
-}
-
 impl StructObj {
-    pub fn new(name: NameWithOrWithoutMod, params: Vec<Obj>) -> Self {
+    pub fn new(name: AtomicName, params: Vec<Obj>) -> Self {
         StructObj { name, params }
     }
 }
@@ -282,7 +333,7 @@ impl ObjAsStructInstanceWithFieldAccess {
 }
 
 impl InstantiatedTemplateObj {
-    pub fn new(template_name: String, args: Vec<Obj>) -> Self {
+    pub fn new(template_name: AtomicName, args: Vec<Obj>) -> Self {
         InstantiatedTemplateObj {
             template_name,
             args,
@@ -955,6 +1006,129 @@ impl fmt::Display for Obj {
 }
 
 impl Obj {
+    pub fn kind(&self) -> ObjKind {
+        match self {
+            Obj::Atom(atom) => match atom {
+                AtomObj::Identifier(_) => ObjKind::Identifier,
+                AtomObj::IdentifierWithMod(_) => ObjKind::IdentifierWithMod,
+                AtomObj::Forall(_) => ObjKind::ForallFreeParam,
+                AtomObj::Def(_) => ObjKind::DefHeaderFreeParam,
+                AtomObj::Exist(_) => ObjKind::ExistFreeParam,
+                AtomObj::SetBuilder(_) => ObjKind::SetBuilderFreeParam,
+                AtomObj::FnSet(_) => ObjKind::FnSetFreeParam,
+                AtomObj::Induc(_) => ObjKind::ByInducFreeParam,
+                AtomObj::DefAlgo(_) => ObjKind::DefAlgoFreeParam,
+                AtomObj::DefStructField(_) => ObjKind::DefStructFieldFreeParam,
+            },
+            Obj::FnObj(_) => ObjKind::FnObj,
+            Obj::Number(_) => ObjKind::Number,
+            Obj::Add(_) => ObjKind::Add,
+            Obj::Sub(_) => ObjKind::Sub,
+            Obj::Mul(_) => ObjKind::Mul,
+            Obj::Div(_) => ObjKind::Div,
+            Obj::Mod(_) => ObjKind::Mod,
+            Obj::Pow(_) => ObjKind::Pow,
+            Obj::Abs(_) => ObjKind::Abs,
+            Obj::Sqrt(_) => ObjKind::Sqrt,
+            Obj::Log(_) => ObjKind::Log,
+            Obj::Max(_) => ObjKind::Max,
+            Obj::Min(_) => ObjKind::Min,
+            Obj::Union(_) => ObjKind::Union,
+            Obj::Intersect(_) => ObjKind::Intersect,
+            Obj::SetMinus(_) => ObjKind::SetMinus,
+            Obj::SetDiff(_) => ObjKind::SetDiff,
+            Obj::Cup(_) => ObjKind::Cup,
+            Obj::Cap(_) => ObjKind::Cap,
+            Obj::PowerSet(_) => ObjKind::PowerSet,
+            Obj::ListSet(_) => ObjKind::ListSet,
+            Obj::SetBuilder(_) => ObjKind::SetBuilder,
+            Obj::FnSet(_) => ObjKind::FnSet,
+            Obj::AnonymousFn(_) => ObjKind::AnonymousFn,
+            Obj::Cart(_) => ObjKind::Cart,
+            Obj::CartDim(_) => ObjKind::CartDim,
+            Obj::Proj(_) => ObjKind::Proj,
+            Obj::TupleDim(_) => ObjKind::TupleDim,
+            Obj::Tuple(_) => ObjKind::Tuple,
+            Obj::Count(_) => ObjKind::Count,
+            Obj::Sum(_) => ObjKind::Sum,
+            Obj::Product(_) => ObjKind::Product,
+            Obj::Range(_) => ObjKind::Range,
+            Obj::ClosedRange(_) => ObjKind::ClosedRange,
+            Obj::FiniteSeqSet(_) => ObjKind::FiniteSeqSet,
+            Obj::SeqSet(_) => ObjKind::SeqSet,
+            Obj::FiniteSeqListObj(_) => ObjKind::FiniteSeqListObj,
+            Obj::Choose(_) => ObjKind::Choose,
+            Obj::ObjAtIndex(_) => ObjKind::ObjAtIndex,
+            Obj::StandardSet(_) => ObjKind::StandardSet,
+            Obj::MatrixSet(_) => ObjKind::MatrixSet,
+            Obj::MatrixListObj(_) => ObjKind::MatrixListObj,
+            Obj::MatrixAdd(_) => ObjKind::MatrixAdd,
+            Obj::MatrixSub(_) => ObjKind::MatrixSub,
+            Obj::MatrixMul(_) => ObjKind::MatrixMul,
+            Obj::MatrixScalarMul(_) => ObjKind::MatrixScalarMul,
+            Obj::MatrixPow(_) => ObjKind::MatrixPow,
+            Obj::StructObj(_) => ObjKind::StructObj,
+            Obj::ObjAsStructInstanceWithFieldAccess(_) => {
+                ObjKind::ObjAsStructInstanceWithFieldAccess
+            }
+            Obj::InstantiatedTemplateObj(_) => ObjKind::InstantiatedTemplateObj,
+            Obj::OneSideInfinityIntervalObj(_) => ObjKind::OneSideInfinityIntervalObj,
+            Obj::IntervalObj(_) => ObjKind::IntervalObj,
+        }
+    }
+
+    pub fn kind_id(&self) -> u8 {
+        self.kind().as_u8()
+    }
+
+    pub fn equality_in_forall_key_part(&self) -> (ObjKind, ObjOperatorString) {
+        (self.kind(), self.obj_operator_string())
+    }
+
+    fn obj_operator_string(&self) -> ObjOperatorString {
+        match self {
+            Obj::FnObj(fn_obj) => fn_obj.head.to_string(),
+            Obj::Add(_) => ADD.to_string(),
+            Obj::Sub(_) => SUB.to_string(),
+            Obj::Mul(_) => MUL.to_string(),
+            Obj::Div(_) => DIV.to_string(),
+            Obj::Mod(_) => MOD.to_string(),
+            Obj::Pow(_) => POW.to_string(),
+            Obj::Abs(_) => ABS.to_string(),
+            Obj::Sqrt(_) => SQRT.to_string(),
+            Obj::Log(_) => LOG.to_string(),
+            Obj::Max(_) => MAX.to_string(),
+            Obj::Min(_) => MIN.to_string(),
+            Obj::Union(_) => UNION.to_string(),
+            Obj::Intersect(_) => INTERSECT.to_string(),
+            Obj::SetMinus(_) => SET_MINUS.to_string(),
+            Obj::SetDiff(_) => SET_DIFF.to_string(),
+            Obj::Cup(_) => CUP.to_string(),
+            Obj::Cap(_) => CAP.to_string(),
+            Obj::PowerSet(_) => POWER_SET.to_string(),
+            Obj::Cart(_) => CART.to_string(),
+            Obj::CartDim(_) => CART_DIM.to_string(),
+            Obj::Proj(_) => PROJ.to_string(),
+            Obj::TupleDim(_) => TUPLE_DIM.to_string(),
+            Obj::Count(_) => COUNT.to_string(),
+            Obj::Sum(_) => SUM.to_string(),
+            Obj::Product(_) => PRODUCT.to_string(),
+            Obj::Range(_) => RANGE.to_string(),
+            Obj::ClosedRange(_) => CLOSED_RANGE.to_string(),
+            Obj::MatrixAdd(_) => MATRIX_ADD.to_string(),
+            Obj::MatrixSub(_) => MATRIX_SUB.to_string(),
+            Obj::MatrixMul(_) => MATRIX_MUL.to_string(),
+            Obj::MatrixScalarMul(_) => MATRIX_SCALAR_MUL.to_string(),
+            Obj::MatrixPow(_) => MATRIX_POW.to_string(),
+            Obj::StructObj(struct_obj) => struct_obj.name.to_string(),
+            Obj::InstantiatedTemplateObj(template_obj) => template_obj.template_name.to_string(),
+            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                field_access.field_name.clone()
+            }
+            _ => String::new(),
+        }
+    }
+
     /// Precedence-aware display: add parens when a child binds looser than the parent (e.g. + under *).
     /// For same-precedence `+`/`-`, pass a stricter bound (2) on Sub's sides and Add's right so
     /// `a - (b + c)` and `a + (b - c)` do not print as the ambiguous `a - b + c` / `a + b - c`.
@@ -1629,9 +1803,9 @@ impl fmt::Display for InstantiatedTemplateObj {
             "{}{}{}{}{}",
             TEMPLATE_INSTANCE_PREFIX,
             self.template_name,
-            LEFT_CURLY_BRACE,
+            LESS,
             vec_to_string_join_by_comma(&self.args),
-            RIGHT_CURLY_BRACE
+            GREATER
         )
     }
 }

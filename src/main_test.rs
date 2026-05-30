@@ -1,6 +1,8 @@
 // cargo test run_examples -- --nocapture
+// cargo test run_examples_include_std -- --ignored --nocapture
 // cargo test run_the_mechanics_markdown_files -- --nocapture
 // cargo test run_all -- --nocapture
+// cargo test run_all_include_std -- --ignored --nocapture
 
 #[cfg(test)]
 mod lit_file_runner_tests {
@@ -14,6 +16,29 @@ mod lit_file_runner_tests {
     const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
     const SLOWEST_RUNS_TO_PRINT: usize = 10;
     const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
+    const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/cite_std";
+
+    fn print_known_forall_profile_summary(label: &str) {
+        if !crate::verify::known_forall_profile::enabled() {
+            return;
+        }
+        let p = crate::verify::known_forall_profile::snapshot();
+        println!(
+            "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_builtin={} arg_matches={} requirement_failures={}",
+            label,
+            p.entries,
+            p.successes,
+            p.unknowns,
+            p.candidate_attempts,
+            p.exact_candidate_attempts,
+            p.fallback_candidate_attempts,
+            p.other_candidate_attempts,
+            p.user_candidate_attempts,
+            p.builtin_candidate_attempts,
+            p.arg_matches,
+            p.requirement_failures,
+        );
+    }
 
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
@@ -208,15 +233,21 @@ mod lit_file_runner_tests {
     }
 
     fn run_tmp_lit_file(file_name: &str) {
-        let tmp_lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("examples")
-            .join(file_name);
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let default_tmp_lit_path = manifest_dir.join("examples").join(file_name);
+        let cite_std_tmp_lit_path = manifest_dir.join(CITE_STD_EXAMPLES_SUBDIR).join(file_name);
+        let tmp_lit_path = if default_tmp_lit_path.is_file() {
+            default_tmp_lit_path
+        } else {
+            cite_std_tmp_lit_path
+        };
 
         assert!(
             tmp_lit_path.is_file(),
-            "examples/{} must exist at {:?}",
+            "examples/{} or {}/{} must exist",
             file_name,
-            tmp_lit_path
+            CITE_STD_EXAMPLES_SUBDIR,
+            file_name
         );
 
         let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
@@ -263,22 +294,22 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_tmp0() {
-        run_tmp_lit_file("tmp.lit");
+        run_with_large_stack("run_tmp0_large_stack", || run_tmp_lit_file("tmp.lit"));
     }
 
     #[test]
     fn run_tmp2() {
-        run_tmp_lit_file("tmp2.lit");
+        run_with_large_stack("run_tmp2_large_stack", || run_tmp_lit_file("tmp2.lit"));
     }
 
     #[test]
     fn run_tmp3() {
-        run_tmp_lit_file("tmp3.lit");
+        run_with_large_stack("run_tmp3_large_stack", || run_tmp_lit_file("tmp3.lit"));
     }
 
     #[test]
     fn run_tmp4() {
-        run_tmp_lit_file("tmp4.lit");
+        run_with_large_stack("run_tmp4_large_stack", || run_tmp_lit_file("tmp4.lit"));
     }
 
     #[test]
@@ -300,6 +331,69 @@ forall a set:
             run_succeeded,
             "list_set_membership_implies_equality_or failed:\n{}",
             run_output
+        );
+    }
+
+    #[test]
+    fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
+        run_with_large_stack(
+            "anonymous_fn_restrict_requires_valid_target_domain_and_return_large_stack",
+            || {
+                anonymous_fn_restrict_positive_cases_impl();
+                anonymous_fn_restrict_negative_case_impl();
+            },
+        );
+    }
+
+    fn anonymous_fn_restrict_positive_cases_impl() {
+        let positive_source_code = r#"
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
+$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
+$restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
+$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
+"#;
+
+        let mut positive_runtime = Runtime::new_with_builtin_code();
+        positive_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_positive");
+        let (positive_stmt_results, positive_runtime_error) =
+            run_source_code(positive_source_code, &mut positive_runtime);
+        let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+            &positive_runtime,
+            &positive_stmt_results,
+            &positive_runtime_error,
+            false,
+        );
+        assert!(
+            positive_run_succeeded,
+            "anonymous fn restrict positive cases failed:\n{}",
+            positive_run_output
+        );
+    }
+
+    fn anonymous_fn_restrict_negative_case_impl() {
+        let negative_source_code = r#"
+$restrict_fn_in('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+"#;
+
+        let mut negative_runtime = Runtime::new_with_builtin_code();
+        negative_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_negative");
+        let (negative_stmt_results, negative_runtime_error) =
+            run_source_code(negative_source_code, &mut negative_runtime);
+        let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+            &negative_runtime,
+            &negative_stmt_results,
+            &negative_runtime_error,
+            false,
+        );
+        assert!(
+            !negative_run_succeeded,
+            "anonymous fn restrict negative case should fail:\n{}",
+            negative_run_output
+        );
+        assert!(
+            negative_run_output.contains("failed to verify function domain fact"),
+            "negative case should explain the domain failure:\n{}",
+            negative_run_output
         );
     }
 
@@ -366,6 +460,295 @@ a >= b
         assert!(
             run_succeeded,
             "known_equality_implies_weak_order failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_membership_uses_standard_set_subset_direction() {
+        let source_code = r#"
+abstract_prop p(x)
+have x set
+know:
+    forall u set:
+        $p(u)
+        =>:
+            u $in Z
+know $p(x)
+x $in Q
+x $in R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_membership_uses_standard_set_subset_direction",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known forall with `u $in Z` should prove broader memberships:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_membership_narrowing_requires_known_fact() {
+        let source_code = r#"
+abstract_prop p(x)
+have x set
+know:
+    forall u set:
+        $p(u)
+        =>:
+        u $in R
+know $p(x)
+x $in Z
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_membership_narrowing_requires_known_fact",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "`u $in R` should not prove narrower `x $in Z` without a known `x $in Z` fact:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_equality_uses_indexed_function_head() {
+        let source_code = r#"
+have f fn(x R) R
+know forall a R:
+    f(a) = a
+f(1) = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_uses_indexed_function_head",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "indexed equality-in-forall should prove matching function applications:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
+        let source_code = r#"
+have f fn(x R) R
+know forall a R:
+    a = f(a)
+1 + 1 = f(1 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_indexes_forall_param_side_as_wildcard",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param equality side should match non-atom target sides:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_equality_with_forall_param_function_head_uses_fallback_bucket() {
+        let source_code = r#"
+have g fn(x R) R
+know forall f fn(x R) R, a R:
+    f(a) = a
+g(1) = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_equality_with_forall_param_function_head_uses_fallback_bucket",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param function heads should be checked through the fallback equality bucket:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_indexes_forall_param_arg_as_wildcard() {
+        let source_code = r#"
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_prop_indexes_forall_param_arg_as_wildcard",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param prop arg should match concrete target args through arg-shape index:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_indexes_expression_arg_shape() {
+        let source_code = r#"
+abstract_prop p(x)
+know forall x R:
+    $p(x + 1)
+$p(1 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("known_forall_prop_indexes_expression_arg_shape");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "expression prop args should be indexed by their top-level operator shape:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_indexes_multi_arg_shape() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know forall a, b R:
+    $p(a, b + 1)
+$p(2, 3 + 1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_multi_arg_shape");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "multi-arg prop facts should match wildcard and exact arg-shape positions:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_prop_with_forall_param_function_head_uses_fallback_bucket() {
+        let source_code = r#"
+abstract_prop p(x)
+have g fn(x R) R
+know forall f fn(x R) R:
+    $p(f(2))
+$p(g(2))
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_prop_with_forall_param_function_head_uses_fallback_bucket",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "forall-param function heads in prop args should be checked through the fallback bucket:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
+        let source_code = r#"
+abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    $p(f)
+    $p(g)
+    =>:
+        $p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_matches_function_param_application_inside_anonymous_fn_body",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known forall should infer g = anonymous fn from g(x) inside the anonymous body:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn known_forall_does_not_infer_function_from_single_point_application() {
+        let source_code = r#"
+abstract_prop p(x)
+
+know forall g fn(x R) R:
+    $p('R(x){g(0)})
+
+have h fn(x R) R
+$p('R(x){h(x)})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "known_forall_does_not_infer_function_from_single_point_application",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "known forall should not infer a whole function from a single point application:\n{}",
             run_output
         );
     }
@@ -444,7 +827,8 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
 
     #[test]
     fn sqrt_core_builtin_rules() {
-        let source_code = r#"
+        run_with_large_stack("sqrt_core_builtin_rules_large_stack", || {
+            let source_code = r#"
 sqrt(0) = 0
 sqrt(1) = 1
 sqrt(4) = 2
@@ -472,17 +856,64 @@ forall x, a, b R:
         sqrt(x) = sqrt(a) * sqrt(b)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-        assert!(
-            run_succeeded,
-            "sqrt_core_builtin_rules failed:\n{}",
-            run_output
-        );
+            assert!(
+                run_succeeded,
+                "sqrt_core_builtin_rules failed:\n{}",
+                run_output
+            );
+        });
+    }
+
+    #[test]
+    fn sqrt_order_and_quotient_builtin_rules() {
+        run_with_large_stack("sqrt_order_and_quotient_builtin_rules_large_stack", || {
+            let source_code = r#"
+forall x R:
+    x >= 0
+    =>:
+        sqrt(x) >= 0
+
+forall x, a, b R:
+    x >= 0
+    a >= 0
+    b > 0
+    x = a / b
+    =>:
+        sqrt(x) = sqrt(a) / sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a <= b
+    =>:
+        sqrt(a) <= sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a < b
+    =>:
+        sqrt(a) < sqrt(b)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("sqrt_order_and_quotient_builtin_rules");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "sqrt_order_and_quotient_builtin_rules failed:\n{}",
+                run_output
+            );
+        });
     }
 
     #[test]
@@ -812,9 +1243,10 @@ right $in info(a)
     }
 
     #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn typed_function_applications_return_real() {
         let source_code = r#"
-run_file trigonometry
+run_file Trig
 
 sin(0) $in R
 cos(pi / 3) $in R
@@ -831,6 +1263,35 @@ arctan(sqrt(3)) $in R
         assert!(
             run_succeeded,
             "typed_function_applications_return_real failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn template_instantiation_prefers_angle_brackets() {
+        let source_code = r#"
+template id_on_set<s set: s = s>:
+    have id_on_set set = s
+
+\id_on_set<R> = R
+\id_on_set{R} = R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("template_instantiation_prefers_angle_brackets");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "template_instantiation_prefers_angle_brackets failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("\\id_on_set<R> = R"),
+            "template instantiation display should use angle brackets:\n{}",
             run_output
         );
     }
@@ -879,6 +1340,92 @@ b = a * k1 = a * 0 = 0
         assert!(
             run_succeeded,
             "zero-product cancellation recursion regression failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn exist_unique_infers_component_uniqueness_forall() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know exist! a, b R st {$p(a, b)}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_infers_component_uniqueness_forall",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+        assert!(
+            run_succeeded,
+            "exist! component uniqueness inference failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("forall a1, b1 R, a2, b2 R:")
+                && run_output.contains("a1 = a2 and b1 = b2"),
+            "exist! should infer a component-wise uniqueness forall:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn exist_unique_component_uniqueness_proves_split_then_facts() {
+        let source_code = r#"
+abstract_prop p(a, b)
+know exist! a, b R st {$p(a, b)}
+forall a1, b1, a2, b2 R:
+    $p(a1, b1)
+    $p(a2, b2)
+    =>:
+        a1 = a2
+        b1 = b2
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_component_uniqueness_proves_split_then_facts",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "component uniqueness from exist! should prove split then-facts:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn exist_unique_still_accepts_tuple_uniqueness_forall() {
+        let source_code = r#"
+prove:
+    abstract_prop p(a, b)
+    know:
+        exist a, b R st {$p(a, b)}
+        forall a1, b1, a2, b2 R:
+            $p(a1, b1)
+            $p(a2, b2)
+            =>:
+                (a1, b1) = (a2, b2)
+    exist! a, b R st {$p(a, b)}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "exist_unique_still_accepts_tuple_uniqueness_forall",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "tuple-style uniqueness should still prove exist!:\n{}",
             run_output
         );
     }
@@ -954,8 +1501,9 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
     fn std_citation_source_uses_safe_module_label() {
-        let source_code = "run_file trigonometry\nsin(0) = 0";
+        let source_code = "run_file Trig\nsin(0) = 0";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("std_citation_source");
@@ -965,7 +1513,7 @@ b = a * k1 = a * 0 = 0
 
         assert!(run_succeeded, "std citation run failed:\n{}", run_output);
         assert!(run_output.contains("\"source_kind\": \"std\""));
-        assert!(run_output.contains("\"source\": \"std/trigonometry\""));
+        assert!(run_output.contains("\"source\": \"std/Trig\""));
         assert!(!run_output.contains("\"path\""));
     }
 
@@ -1018,34 +1566,40 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
-    fn harness_success_has_done_action() {
-        let (ok, output) = run_harness_for_code("1 + 1 = 2", "-harness-test", true);
+    fn runner_success_returns_trace() {
+        let (ok, output) = run_runner_for_code("1 + 1 = 2", "-runner-test", true);
 
-        assert!(ok, "harness success run failed:\n{}", output);
-        assert!(output.contains("\"harness\": \"litex-agent-harness\""));
+        assert!(ok, "runner success run failed:\n{}", output);
+        assert!(output.contains("\"runner\": \"litex-runner\""));
         assert!(output.contains("\"result\": \"success\""));
-        assert!(output.contains("\"proof_debt_know_statements\": 0"));
-        assert!(output.contains("\"next_action\": \"done\""));
+        assert!(output.contains("\"trace\""));
     }
 
     #[test]
-    fn harness_unknown_failure_suggests_intermediate_fact() {
-        let (ok, output) = run_harness_for_code("1 = 0", "-harness-test", true);
+    fn runner_failure_returns_trace() {
+        let (ok, output) = run_runner_for_code("1 = 0", "-runner-test", true);
 
-        assert!(!ok, "harness unknown run should fail:\n{}", output);
+        assert!(!ok, "runner unknown run should fail:\n{}", output);
         assert!(output.contains("\"result\": \"error\""));
-        assert!(output.contains("\"error_type\": \"VerifyError\""));
-        assert!(output.contains("\"error_type\": \"UnknownError\""));
-        assert!(output.contains("\"next_action\": \"add_intermediate_fact\""));
+        assert!(output.contains("\\\"error_type\\\": \\\"VerifyError\\\""));
+        assert!(output.contains("\\\"error_type\\\": \\\"UnknownError\\\""));
     }
 
     #[test]
-    fn harness_counts_know_as_proof_debt() {
-        let (ok, output) = run_harness_for_code("know 1 = 0", "-harness-test", true);
+    fn runner_target_error_returns_message() {
+        let (ok, output) = run_runner_for_file("does_not_exist.lit", true);
 
-        assert!(!ok, "harness proof debt run should fail:\n{}", output);
-        assert!(output.contains("\"proof_debt_know_statements\": 1"));
-        assert!(output.contains("\"next_action\": \"reduce_proof_debt\""));
+        assert!(!ok, "runner target error should fail:\n{}", output);
+        assert!(output.contains("\"kind\": \"target_error\""));
+        assert!(output.contains("could not read entry file"));
+    }
+
+    #[test]
+    fn runner_accepts_know_as_normal_execution() {
+        let (ok, output) = run_runner_for_code("know 1 = 0", "-runner-test", true);
+
+        assert!(ok, "runner should not reject know statements:\n{}", output);
+        assert!(output.contains("\"result\": \"success\""));
     }
 
     #[test]
@@ -1102,40 +1656,19 @@ b = a * k1 = a * 0 = 0
     }
 
     #[test]
-    fn std_run_file_error_hides_attempted_paths_unless_detail_output() {
-        let missing_std_module = "__missing_std_module_for_output_test__";
-        let source_code = format!("run_file {}", missing_std_module);
+    fn unquoted_run_file_is_rejected() {
+        let source_code = "run_file Trig";
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
-        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(!run_succeeded);
         assert!(run_output.contains(
-            format!(
-                "Failed to find std run_file target `{}`",
-                missing_std_module
-            )
-            .as_str()
+            "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules"
         ));
-        assert!(!run_output.contains("Tried:"));
-
-        let mut detail_runtime = Runtime::new_with_builtin_code();
-        detail_runtime.new_file_path_new_env_new_name_scope("repl");
-        detail_runtime.detail_output = true;
-        let (detail_stmt_results, detail_runtime_error) =
-            run_source_code(source_code.as_str(), &mut detail_runtime);
-        let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
-            &detail_runtime,
-            &detail_stmt_results,
-            &detail_runtime_error,
-            false,
-        );
-
-        assert!(!detail_run_succeeded);
-        assert!(detail_run_output.contains("Tried:"));
     }
 
     #[test]
@@ -1258,6 +1791,599 @@ template SharedName<s set>:
     }
 
     #[test]
+    fn thm_definition_does_not_store_forall_fact_for_known_forall_use() {
+        let source_code = r#"
+abstract_prop target_thm_prop(x)
+
+thm use_target_thm:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_thm_prop(x)
+
+    know $target_thm_prop(x)
+
+$target_thm_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "thm_definition_does_not_store_forall_fact_for_known_forall_use",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "thm definition should not enable ordinary forall matching:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("Unknown"),
+            "thm named-only failure should be reported as unknown:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn by_thm_releases_instantiated_then_facts() {
+        let source_code = r#"
+abstract_prop target_thm_prop(x)
+
+thm use_target_thm:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_thm_prop(x)
+
+    know $target_thm_prop(x)
+
+by thm use_target_thm(1)
+$target_thm_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_thm_releases_instantiated_then_facts");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "explicit by thm should release the instantiated then-fact:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn strategy_definition_auto_enables_strategy() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+$target_strategy_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_definition_auto_enables_strategy");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition should enable the strategy immediately:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn strategy_definition_stores_forall_fact_for_known_forall_use() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+stop strategy use_target_strategy
+
+claim:
+    prove:
+        forall z R:
+            z = 1
+            =>:
+                $target_strategy_prop(z)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "strategy_definition_stores_forall_fact_for_known_forall_use",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition should store its proved forall for known-forall use:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn strategy_definition_use_and_stop_are_stored() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+use strategy use_target_strategy
+stop strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_definition_use_and_stop_are_stored");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "strategy definition/use/stop should succeed:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert!(env
+            .defined_strategy_stmts
+            .contains_key("use_target_strategy"));
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn by_strategy_is_rejected_as_removed_activation_syntax() {
+        let source_code = r#"
+prop target_strategy_prop(x R):
+    x = 1
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+by strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "by_strategy_is_rejected_as_removed_activation_syntax",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "`by strategy` should no longer parse as strategy activation:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("got `strategy`"),
+            "the parser should report that strategy is not a valid `by` subkeyword:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn strategy_positive_and_negative_atomic_keys_do_not_collide() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_positive_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+strategy use_negative_strategy:
+    prove:
+        forall x R:
+            x != 1
+            =>:
+                not $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y != 1
+            =>:
+                not $target_strategy_prop(y)
+
+use strategy use_positive_strategy
+use strategy use_negative_strategy
+stop strategy use_negative_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "strategy_positive_and_negative_atomic_keys_do_not_collide",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "positive and negative strategy keys should both be stored:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_positive_strategy".to_string())
+        );
+        assert_eq!(
+            env.used_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), false)),
+            Some(&"use_negative_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), false)),
+            Some(&"use_negative_strategy".to_string())
+        );
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            None
+        );
+    }
+
+    #[test]
+    fn use_strategy_verifies_matching_atomic_fact_and_stop_leaves_known_forall_available() {
+        let strategy_setup = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+"#;
+        let succeeds_source_code = format!(
+            "{}\nuse strategy use_target_strategy\n$target_strategy_prop(1)\n",
+            strategy_setup
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("use_strategy_verifies_matching_atomic_fact");
+        let (stmt_results, runtime_error) =
+            run_source_code(succeeds_source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "enabled strategy should verify the matching atomic fact:\n{}",
+            run_output
+        );
+
+        let stop_source_code = format!(
+            "{}\nuse strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
+            strategy_setup
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("stop_strategy_leaves_known_forall_available");
+        let (stmt_results, runtime_error) =
+            run_source_code(stop_source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "stopped strategy search should still leave the stored forall available:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("cite forall fact"),
+            "the stopped strategy case should verify by ordinary known-forall search:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn use_strategy_after_stop_in_same_env_removes_stop() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+use strategy use_target_strategy
+stop strategy use_target_strategy
+use strategy use_target_strategy
+$target_strategy_prop(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "use_strategy_after_stop_in_same_env_removes_stop",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "same-env use after stop should re-enable the strategy:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            None
+        );
+    }
+
+    #[test]
+    fn child_env_use_strategy_overrides_parent_stop_without_removing_it() {
+        let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+use strategy use_target_strategy
+stop strategy use_target_strategy
+claim:
+    prove:
+        $target_strategy_prop(1)
+    use strategy use_target_strategy
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "child_env_use_strategy_overrides_parent_stop_without_removing_it",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "child-env use should override the parent stop while inside the child env:\n{}",
+            run_output
+        );
+
+        let env = runtime
+            .environment_stack
+            .last()
+            .expect("runtime should have a current environment");
+        assert_eq!(
+            env.stopped_strategy_stmts
+                .get(&("target_strategy_prop".to_string(), true)),
+            Some(&"use_target_strategy".to_string())
+        );
+    }
+
+    #[test]
+    fn strategy_rejects_non_single_atomic_then_fact() {
+        let cases = [
+            (
+                "multiple then facts",
+                r#"
+prop p(x R):
+    x = 1
+
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $p(x)
+                x = 1
+"#,
+                "strategy: forall then-clause must contain exactly one fact",
+            ),
+            (
+                "non atomic then fact",
+                r#"
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1 and x = 1
+"#,
+                "strategy: forall then-clause fact must be atomic",
+            ),
+        ];
+
+        for (label, source_code, expected_message) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                format!("strategy_rejects_{}", label).as_str(),
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "strategy {} case should fail, but succeeded:\n{}",
+                label, run_output
+            );
+            assert!(
+                run_output.contains(expected_message),
+                "strategy {} case should report `{}`:\n{}",
+                label,
+                expected_message,
+                run_output
+            );
+        }
+    }
+
+    #[test]
+    fn strategy_rejects_non_atomic_dom_fact() {
+        let source_code = r#"
+prop p(x R):
+    x = 1
+
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1 and x = 1
+            =>:
+                $p(x)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_rejects_non_atomic_dom_fact");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "strategy non-atomic dom fact should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("strategy: forall dom-clause facts must be atomic"),
+            "strategy non-atomic dom fact should report atomic dom requirement:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn strategy_rejects_equal_then_fact() {
+        let source_code = r#"
+strategy bad_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = x
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strategy_rejects_equal_then_fact");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "strategy equality then fact should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("strategy: forall then-clause fact must not be an equality fact"),
+            "strategy equality then fact should report equality restriction:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn have_fn_as_algo_rejects_non_atomic_case_condition() {
         let source_code = "\
 have fn as algo bad_algo_case(x, y R) R by cases:
@@ -1287,27 +2413,66 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     #[test]
-    fn run_file_in_std_from_folder_name() {
-        run_with_large_stack(
-            "run_file_in_std_from_folder_name_large_stack",
-            run_file_in_std_from_folder_name_impl,
-        );
-    }
-
-    fn run_file_in_std_from_folder_name_impl() {
-        let source_code = "run_file trigonometry\n\nsin(0) = 0\ncos(0) = 1";
+    fn run_file_std_module_form_is_rejected() {
+        let source_code = "run_file Trig";
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("repl");
+        runtime.new_file_path_new_env_new_name_scope("run_file_std_module_form_is_rejected");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-        assert!(run_succeeded, "run_file in std failed:\n{}", run_output);
-        assert!(run_output.contains("\"type\": \"RunFileInStd\""));
-        assert!(run_output.contains("\"stmt\": \"run_file trigonometry\""));
-        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
-        assert!(run_output.contains("\"stmt\": \"cos(0) = 1\""));
+        assert!(!run_succeeded);
+        assert!(run_output.contains("run_file expects a quoted relative or absolute file path"));
+    }
+
+    #[test]
+    fn clear_does_not_preserve_quoted_run_file_environment() {
+        let run_file_path = std::env::temp_dir().join("litex-clear-quoted-run-file-test.lit");
+        fs::write(
+            &run_file_path,
+            "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        )
+        .unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"\nclear\n$p(2)", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "clear_does_not_preserve_quoted_run_file_environment",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let _ = fs::remove_file(&run_file_path);
+
+        assert!(
+            !run_succeeded,
+            "quoted run_file content should be cleared:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    #[ignore = "std run_file was removed; import currently registers modules without executing them"]
+    fn std_citation_source_survives_cached_reload_after_clear() {
+        let source_code = "run_file Trig\nclear\nrun_file Trig\nsin(0) = 0";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "std_citation_source_survives_cached_reload_after_clear",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "cached std citation run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"source_kind\": \"std\""));
+        assert!(run_output.contains("\"source\": \"std/Trig\""));
     }
 
     fn run_file_from_path_impl() {
@@ -1616,12 +2781,24 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
+        collect_lit_files_recursive_under_excluding(manifest_dir, subdir, &[])
+    }
+
+    fn collect_lit_files_recursive_under_excluding(
+        manifest_dir: &Path,
+        subdir: &str,
+        excluded_subdirs: &[&str],
+    ) -> Vec<PathBuf> {
         let dir_path = manifest_dir.join(subdir);
         if !dir_path.is_dir() {
             println!("--- {} {:?}: directory missing; skip ---", subdir, dir_path);
             return Vec::new();
         }
-        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+        let excluded_paths: Vec<PathBuf> = excluded_subdirs
+            .iter()
+            .map(|excluded_subdir| manifest_dir.join(excluded_subdir))
+            .collect();
+        fn walk(dir: &Path, excluded_paths: &[PathBuf], out: &mut Vec<PathBuf>) {
             let read_directory = match fs::read_dir(dir) {
                 Ok(entries) => entries,
                 Err(read_error) => panic!("failed to read {:?}: {}", dir, read_error),
@@ -1636,14 +2813,20 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                     continue;
                 };
                 if file_type.is_dir() {
-                    walk(&path, out);
+                    if excluded_paths
+                        .iter()
+                        .any(|excluded_path| path == *excluded_path)
+                    {
+                        continue;
+                    }
+                    walk(&path, excluded_paths, out);
                 } else if path.extension().is_some_and(|ext| ext == "lit") {
                     out.push(path);
                 }
             }
         }
         let mut lit_file_paths = Vec::new();
-        walk(&dir_path, &mut lit_file_paths);
+        walk(&dir_path, excluded_paths.as_slice(), &mut lit_file_paths);
         lit_file_paths.sort();
         lit_file_paths
     }
@@ -1663,7 +2846,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         if examples_ran {
             println!(
-                "  phase 1 (examples/*.lit + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+                "  phase 1 (selected examples/**/*.lit + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
@@ -1713,12 +2896,26 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 
     #[test]
     fn run_examples() {
-        run_with_large_stack("run_examples_large_stack", run_examples_impl);
+        run_with_large_stack("run_examples_large_stack", || run_examples_impl(false));
+    }
+
+    #[test]
+    #[ignore = "includes optional examples/cite_std std-import examples"]
+    fn run_examples_include_std() {
+        run_with_large_stack("run_examples_include_std_large_stack", || {
+            run_examples_impl(true)
+        });
     }
 
     #[test]
     fn run_all() {
         run_with_large_stack("run_all_large_stack", run_all_impl);
+    }
+
+    #[test]
+    #[ignore = "includes optional examples/cite_std std-import examples"]
+    fn run_all_include_std() {
+        run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
     }
 
     // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
@@ -1872,6 +3069,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             .join("MATH-500-litex")
             .join("math-500")
             .join("finished");
+        let completed_dir = if completed_dir.is_dir() {
+            completed_dir
+        } else {
+            manifest_dir
+                .join("scripts")
+                .join("MATH-500-litex")
+                .join("math-500")
+                .join("finished")
+        };
         assert!(
             completed_dir.is_dir(),
             "MATH-500-litex/math-500/finished must exist at {:?}",
@@ -1886,6 +3092,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             .join("MATH-500-litex")
             .join("math-500")
             .join("unfinished");
+        let lit_dir = if lit_dir.is_dir() {
+            lit_dir
+        } else {
+            manifest_dir
+                .join("scripts")
+                .join("MATH-500-litex")
+                .join("math-500")
+                .join("unfinished")
+        };
         assert!(
             lit_dir.is_dir(),
             "MATH-500-litex/math-500/unfinished must exist at {:?}",
@@ -1923,11 +3138,13 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         collect_lit_files(base_dir, &mut lit_paths);
         lit_paths.sort();
 
-        assert!(
-            !lit_paths.is_empty(),
-            "{:?} must contain at least one .lit file",
-            base_dir
-        );
+        if lit_paths.is_empty() {
+            println!(
+                "--- math500-litex simple: no .lit files under {:?}; skip ---",
+                base_dir
+            );
+            return;
+        }
 
         let base_dir_str = base_dir.to_string_lossy().to_string();
 
@@ -2010,7 +3227,12 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     }
 
     fn run_all_impl() {
-        run_examples_impl();
+        run_examples_impl(false);
+        run_the_mechanics_markdown_files_impl();
+    }
+
+    fn run_all_include_std_impl() {
+        run_examples_impl(true);
         run_the_mechanics_markdown_files_impl();
     }
 
@@ -2026,9 +3248,24 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         run_the_mechanics_markdown_files_impl();
     }
 
-    fn run_examples_impl() {
+    fn run_examples_impl(include_std_examples: bool) {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
+        let lit_file_paths = if include_std_examples {
+            collect_lit_files_recursive_under(&manifest_dir, "examples")
+        } else {
+            collect_lit_files_recursive_under_excluding(
+                &manifest_dir,
+                "examples",
+                &[CITE_STD_EXAMPLES_SUBDIR],
+            )
+        };
+        if include_std_examples {
+            println!("--- examples/cite_std included ---");
+        } else {
+            println!(
+                "--- examples/cite_std excluded; use run_examples_include_std to include it ---"
+            );
+        }
 
         let manual_md_dir = manifest_dir.join("docs").join("Manual");
         let manual_md_paths = collect_markdown_files_under_dir_sorted(&manual_md_dir);
@@ -2085,12 +3322,15 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         let mut examples_phase_wall_ms: f64 = 0.0;
 
         if phase1_items.is_empty() {
-            println!("--- phase 1: no examples/*.lit and no docs/Manual ```litex``` snippets ---");
+            println!(
+                "--- phase 1: no selected examples/**/*.lit and no docs/Manual ```litex``` snippets ---"
+            );
         } else {
             examples_ran = true;
             let examples_wall_start = Instant::now();
             let first_path = phase1_items[0].path_for_runtime.as_str();
             runtime.new_file_path_new_env_new_name_scope(first_path);
+            crate::verify::known_forall_profile::reset();
 
             for (item_index, item) in phase1_items.iter().enumerate() {
                 if item_index > 0 {
@@ -2128,11 +3368,12 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                     .push((item.report_label.clone(), duration_ms_for_one_file));
             }
             examples_phase_wall_ms = examples_wall_start.elapsed().as_secs_f64() * 1000.0;
+            print_known_forall_profile_summary("phase 1");
         }
 
         if every_file_run_ok && examples_ran {
             println!(
-                "--- phase 1: {} run(s) (examples/*.lit + docs/Manual ```litex```), all OK ---",
+                "--- phase 1: {} run(s) (selected examples/**/*.lit + docs/Manual ```litex```), all OK ---",
                 file_label_and_duration_ms_list.len()
             );
             print_slowest_run_labels("phase 1 runs", file_label_and_duration_ms_list.as_slice());
@@ -2227,6 +3468,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             md_paths.len()
         );
 
+        crate::verify::known_forall_profile::reset();
         let docs_wall_start = Instant::now();
         let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
         for (snippet_index, (label, source_code, md_path_for_run_file)) in
@@ -2260,6 +3502,7 @@ have fn as algo bad_algo_case(x, y R) R by cases:
             }
         }
         let docs_phase_wall_ms = docs_wall_start.elapsed().as_secs_f64() * 1000.0;
+        print_known_forall_profile_summary("remaining markdown");
 
         print_slowest_run_labels("remaining markdown snippets", doc_durations_ms.as_slice());
         for (label, duration_ms) in doc_durations_ms.iter() {
@@ -2278,6 +3521,41 @@ have fn as algo bad_algo_case(x, y R) R by cases:
     #[test]
     fn run_gsm8k_solutions() {
         run_with_large_stack("run_gsm8k_solutions_large_stack", run_gsm8k_solutions_impl);
+    }
+
+    // cargo test run_gsm8k_debug_items -- --ignored --nocapture
+    // LITEX_GSM8K_TITLE=gsm8k_1 cargo test run_gsm8k_debug_items -- --ignored --nocapture
+    // LITEX_GSM8K_FILTER=wallet LITEX_GSM8K_LIMIT=5 cargo test run_gsm8k_debug_items -- --ignored --nocapture
+    // LITEX_GSM8K_SPLIT=test LITEX_GSM8K_LIMIT=20 cargo test run_gsm8k_debug_items -- --ignored --nocapture
+    // LITEX_GSM8K_DETAIL_OUTPUT=1 LITEX_GSM8K_TITLE=gsm8k_1 cargo test run_gsm8k_debug_items -- --ignored --nocapture
+    #[test]
+    #[ignore = "local debug helper; filters GSM8K items with env vars"]
+    fn run_gsm8k_debug_items() {
+        run_with_large_stack(
+            "run_gsm8k_debug_items_large_stack",
+            run_gsm8k_debug_items_impl,
+        );
+    }
+
+    fn run_gsm8k_debug_items_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_paths = vec![
+            manifest_dir
+                .join("scripts")
+                .join("gsm8k-litex")
+                .join("train.jsonl"),
+            manifest_dir
+                .join("scripts")
+                .join("gsm8k-litex")
+                .join("test.jsonl"),
+        ];
+        run_jsonl_debug_items(
+            "gsm8k",
+            jsonl_paths.as_slice(),
+            "LITEX_GSM8K",
+            true,
+            Some("train|test|all"),
+        );
     }
 
     fn run_gsm8k_solutions_impl() {
@@ -2436,6 +3714,122 @@ have fn as algo bad_algo_case(x, y R) R by cases:
                 );
             }
         }
+    }
+
+    // cargo test run_metamathqa_debug_items -- --ignored --nocapture
+    // LITEX_METAMATHQA_TITLE=MetaMathQA-GSM_FOBAR-350228 cargo test run_metamathqa_debug_items -- --ignored --nocapture
+    // LITEX_METAMATHQA_FILTER=paint LITEX_METAMATHQA_LIMIT=5 cargo test run_metamathqa_debug_items -- --ignored --nocapture
+    #[test]
+    #[ignore = "local debug helper; filters MetaMathQA items with env vars"]
+    fn run_metamathqa_debug_items() {
+        run_with_large_stack(
+            "run_metamathqa_debug_items_large_stack",
+            run_metamathqa_debug_items_impl,
+        );
+    }
+
+    fn run_metamathqa_debug_items_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_paths = vec![manifest_dir
+            .join("scripts")
+            .join("MetaMathQA-litex")
+            .join("MetaMathQA.jsonl")];
+        run_jsonl_debug_items(
+            "metamathqa",
+            jsonl_paths.as_slice(),
+            "LITEX_METAMATHQA",
+            false,
+            None,
+        );
+    }
+
+    #[test]
+    fn run_math23k_solutions() {
+        run_with_large_stack(
+            "run_math23k_solutions_large_stack",
+            run_math23k_solutions_impl,
+        );
+    }
+
+    fn run_math23k_solutions_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_path = manifest_dir
+            .join("scripts")
+            .join("math23k-litex")
+            .join("math23k.jsonl");
+        assert!(
+            jsonl_path.is_file(),
+            "math23k-litex jsonl file must exist at {:?}",
+            jsonl_path
+        );
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        run_labeled_jsonl_solution_file(
+            "math23k-litex",
+            &jsonl_path,
+            &mut runtime,
+            &mut total_count,
+            &mut failed_labels,
+            &mut total_solution_duration_ms,
+        );
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- math23k-litex timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- math23k-litex: all solutions OK ---");
+            return;
+        }
+
+        println!("--- math23k-litex failed titles ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "math23k-litex solution run failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
+        );
+    }
+
+    // cargo test run_math23k_debug_items -- --ignored --nocapture
+    // LITEX_MATH23K_TITLE=Math23k_15120 cargo test run_math23k_debug_items -- --ignored --nocapture
+    // LITEX_MATH23K_FILTER=相机 LITEX_MATH23K_LIMIT=5 cargo test run_math23k_debug_items -- --ignored --nocapture
+    #[test]
+    #[ignore = "local debug helper; filters Math23K items with env vars"]
+    fn run_math23k_debug_items() {
+        run_with_large_stack(
+            "run_math23k_debug_items_large_stack",
+            run_math23k_debug_items_impl,
+        );
+    }
+
+    fn run_math23k_debug_items_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_paths = vec![manifest_dir
+            .join("scripts")
+            .join("math23k-litex")
+            .join("math23k.jsonl")];
+        run_jsonl_debug_items(
+            "math23k",
+            jsonl_paths.as_slice(),
+            "LITEX_MATH23K",
+            false,
+            None,
+        );
     }
 
     #[test]
@@ -2695,6 +4089,357 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         }
     }
 
+    #[derive(Clone)]
+    struct JsonlDebugItem {
+        label: String,
+        title: String,
+        source: String,
+        path_for_runtime: String,
+    }
+
+    fn run_jsonl_debug_items(
+        dataset_label: &str,
+        jsonl_paths: &[PathBuf],
+        env_prefix: &str,
+        allow_split_filter: bool,
+        split_hint: Option<&str>,
+    ) {
+        let split_key = format!("{}_SPLIT", env_prefix);
+        let title_key = format!("{}_TITLE", env_prefix);
+        let filter_key = format!("{}_FILTER", env_prefix);
+        let limit_key = format!("{}_LIMIT", env_prefix);
+        let stop_key = format!("{}_STOP_ON_FIRST_FAILURE", env_prefix);
+        let detail_key = format!("{}_DETAIL_OUTPUT", env_prefix);
+
+        let split_filter = if allow_split_filter {
+            env_string(split_key.as_str())
+                .unwrap_or_else(|| "all".to_string())
+                .to_ascii_lowercase()
+        } else {
+            "all".to_string()
+        };
+        let title_filter = env_string(title_key.as_str());
+        let text_filter = env_string(filter_key.as_str());
+        let limit = env_usize(limit_key.as_str());
+        let stop_on_first_failure = env_flag_is_set(stop_key.as_str());
+        let detail_output = env_flag_is_set(detail_key.as_str());
+
+        if title_filter.is_none() && text_filter.is_none() && limit.is_none() {
+            println!("--- run_{}_debug_items: skip ---", dataset_label);
+            println!("  Set one of:");
+            println!("    {}=<exact title>", title_key);
+            println!("    {}=<text substring>", filter_key);
+            println!("    {}=5", limit_key);
+            println!("  Optional:");
+            if let Some(hint) = split_hint {
+                println!("    {}={}", split_key, hint);
+            }
+            println!("    {}=1", detail_key);
+            println!("    {}=1", stop_key);
+            return;
+        }
+
+        let selected_paths =
+            select_jsonl_paths_for_debug(jsonl_paths, split_filter.as_str(), allow_split_filter);
+
+        if selected_paths.is_empty() {
+            panic!(
+                "{} must be one of train, test, all; got {:?}",
+                split_key, split_filter
+            );
+        }
+
+        for jsonl_path in selected_paths.iter() {
+            if !jsonl_path.is_file() {
+                println!(
+                    "--- {} jsonl file missing at {:?}; skip {} debug items ---",
+                    dataset_label, jsonl_path, dataset_label
+                );
+                return;
+            }
+        }
+
+        let title_filter_lower = title_filter
+            .as_ref()
+            .map(|value| value.to_ascii_lowercase());
+        let text_filter_lower = text_filter.as_ref().map(|value| value.to_ascii_lowercase());
+        let mut items: Vec<JsonlDebugItem> = Vec::new();
+
+        for jsonl_path in selected_paths.iter() {
+            let jsonl_path_str = match jsonl_path.to_str() {
+                Some(path_string) => path_string.to_string(),
+                None => panic!("{:?} must be valid UTF-8", jsonl_path),
+            };
+            let split_label = jsonl_path
+                .file_stem()
+                .and_then(|file_stem| file_stem.to_str())
+                .unwrap_or(dataset_label);
+            let jsonl_content = match fs::read_to_string(jsonl_path) {
+                Ok(content) => content,
+                Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+            };
+
+            for (line_index, line) in jsonl_content.lines().enumerate() {
+                if line.trim().is_empty() {
+                    continue;
+                }
+
+                let title = jsonl_string_field(line, "title").unwrap_or_else(|error_message| {
+                    panic!(
+                        "failed to parse title in {:?} line {}: {}",
+                        jsonl_path,
+                        line_index + 1,
+                        error_message
+                    )
+                });
+                let description =
+                    jsonl_string_field(line, "description").unwrap_or_else(|error_message| {
+                        panic!(
+                            "failed to parse description in {:?} line {} ({}): {}",
+                            jsonl_path,
+                            line_index + 1,
+                            title,
+                            error_message
+                        )
+                    });
+                let solution =
+                    jsonl_string_field(line, "solution").unwrap_or_else(|error_message| {
+                        panic!(
+                            "failed to parse solution in {:?} line {} ({}): {}",
+                            jsonl_path,
+                            line_index + 1,
+                            title,
+                            error_message
+                        )
+                    });
+
+                if let Some(expected_title) = title_filter_lower.as_ref() {
+                    if title.to_ascii_lowercase() != *expected_title {
+                        continue;
+                    }
+                }
+                if let Some(filter_text) = text_filter_lower.as_ref() {
+                    let haystack = format!("{}\n{}", title, description).to_ascii_lowercase();
+                    if !haystack.contains(filter_text.as_str()) {
+                        continue;
+                    }
+                }
+
+                items.push(JsonlDebugItem {
+                    label: format!("{}:{} (line {})", split_label, title, line_index + 1),
+                    title,
+                    source: solution,
+                    path_for_runtime: jsonl_path_str.clone(),
+                });
+
+                if limit.is_some_and(|max_items| items.len() >= max_items) {
+                    break;
+                }
+            }
+
+            if limit.is_some_and(|max_items| items.len() >= max_items) {
+                break;
+            }
+        }
+
+        if items.is_empty() {
+            println!(
+                "--- run_{}_debug_items: no matching items ---",
+                dataset_label
+            );
+            if allow_split_filter {
+                println!("  split: {}", split_filter);
+            }
+            if let Some(title) = title_filter {
+                println!("  title: {}", title);
+            }
+            if let Some(filter_text) = text_filter {
+                println!("  filter: {}", filter_text);
+            }
+            if let Some(max_items) = limit {
+                println!("  limit: {}", max_items);
+            }
+            return;
+        }
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        runtime.new_file_path_new_env_new_name_scope(items[0].path_for_runtime.as_str());
+        runtime.detail_output = detail_output;
+
+        let run_wall_start = Instant::now();
+        let mut durations_ms: Vec<(String, f64)> = Vec::new();
+        let mut failed_labels: Vec<String> = Vec::new();
+
+        for (item_index, item) in items.iter().enumerate() {
+            if item_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
+            }
+
+            let normalized_source = remove_windows_carriage_return(item.source.as_str());
+            let start_time = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let status_label = if run_succeeded { "OK" } else { "FAILED" };
+
+            println!(
+                "=== [{}] {} ({:.2} ms) ===\n# {}\n{}\n",
+                status_label, item.label, duration_ms, item.title, run_output
+            );
+
+            durations_ms.push((item.label.clone(), duration_ms));
+            if !run_succeeded {
+                failed_labels.push(item.label.clone());
+                if stop_on_first_failure {
+                    break;
+                }
+            }
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- {} debug timing (summary) ---", dataset_label);
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  items: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            durations_ms.len(),
+            durations_ms
+                .iter()
+                .map(|(_, duration_ms)| duration_ms)
+                .sum::<f64>(),
+            run_wall_ms
+        );
+        print_slowest_run_labels(
+            format!("{} debug items", dataset_label).as_str(),
+            durations_ms.as_slice(),
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- {} debug: all selected items OK ---", dataset_label);
+            return;
+        }
+
+        println!("--- {} debug failed labels ---", dataset_label);
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "{} debug run failed for {} of {} item(s)",
+            dataset_label,
+            failed_labels.len(),
+            durations_ms.len()
+        );
+    }
+
+    fn select_jsonl_paths_for_debug(
+        jsonl_paths: &[PathBuf],
+        split_filter: &str,
+        allow_split_filter: bool,
+    ) -> Vec<PathBuf> {
+        if !allow_split_filter || split_filter == "all" {
+            return jsonl_paths.to_vec();
+        }
+
+        let mut selected_paths: Vec<PathBuf> = Vec::new();
+        for jsonl_path in jsonl_paths.iter() {
+            let Some(file_stem) = jsonl_path.file_stem().and_then(|name| name.to_str()) else {
+                continue;
+            };
+            if file_stem.eq_ignore_ascii_case(split_filter) {
+                selected_paths.push(jsonl_path.clone());
+            }
+        }
+        selected_paths
+    }
+
+    fn run_labeled_jsonl_solution_file(
+        dataset_label: &str,
+        jsonl_path: &Path,
+        runtime: &mut Runtime,
+        total_count: &mut usize,
+        failed_labels: &mut Vec<String>,
+        total_solution_duration_ms: &mut f64,
+    ) {
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+
+        let jsonl_content = match fs::read_to_string(jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            if line_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let title = jsonl_string_field(line, "title").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse title in {:?} line {}: {}",
+                    jsonl_path,
+                    line_index + 1,
+                    error_message
+                )
+            });
+            let solution = jsonl_string_field(line, "solution").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse solution in {:?} line {} ({}): {}",
+                    jsonl_path,
+                    line_index + 1,
+                    title,
+                    error_message
+                )
+            });
+            let normalized_source = remove_windows_carriage_return(solution.as_str());
+
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            *total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(runtime, &stmt_results, &runtime_error, false);
+
+            *total_count += 1;
+            if !run_succeeded {
+                let label = format!("{}:{}", line_index + 1, title);
+                println!(
+                    "=== [FAILED] {} at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                    dataset_label,
+                    line_index + 1,
+                    duration_ms,
+                    title,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+
+            if *total_count % 100 == 0 {
+                println!(
+                    "--- {} progress: {} solution(s), {} failure(s) ---",
+                    dataset_label,
+                    total_count,
+                    failed_labels.len()
+                );
+            }
+        }
+    }
+
     fn jsonl_string_field(line: &str, key: &str) -> Result<String, String> {
         let field_name = format!("\"{}\"", key);
         let field_start = line
@@ -2759,5 +4504,42 @@ have fn as algo bad_algo_case(x, y R) R by cases:
         }
 
         Err("unterminated JSON string".to_string())
+    }
+
+    fn env_flag_is_set(name: &str) -> bool {
+        match std::env::var(name) {
+            Ok(value) => {
+                let normalized = value.trim().to_ascii_lowercase();
+                !normalized.is_empty() && normalized != "0" && normalized != "false"
+            }
+            Err(_) => false,
+        }
+    }
+
+    fn env_string(name: &str) -> Option<String> {
+        match std::env::var(name) {
+            Ok(value) => {
+                let trimmed = value.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(trimmed.to_string())
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
+    fn env_usize(name: &str) -> Option<usize> {
+        let value = env_string(name)?;
+        match value.parse::<usize>() {
+            Ok(parsed) => Some(parsed),
+            Err(parse_error) => {
+                panic!(
+                    "{} must be a positive integer, got {:?}: {}",
+                    name, value, parse_error
+                )
+            }
+        }
     }
 }

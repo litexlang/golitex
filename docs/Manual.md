@@ -18,9 +18,9 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
-This is the sense in which Litex aims to be **the language where mathematics verifies itself**.
+This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
@@ -59,28 +59,24 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
-> You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
-
 > If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
-### Working With AI Agents
+### Iterative Proof Workflow
 
-Litex works well with AI agents because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
+Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
-1. Ask the agent to solve the theorem first in natural language, step by step.
-2. Ask it to formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
+1. Solve the theorem first in natural language, step by step.
+2. Formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
 3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
-4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
 This turns `know` into temporary scaffolding rather than the final proof. The
-agent can read this manual, run Litex, inspect verification output and error
-messages, and keep shrinking the informal gaps. This is the same loop used for
-larger Mechanics examples and benchmark-style tasks: first build a readable
-proof skeleton, then replace broad assumptions by smaller verified branches or
-record the exact language, library, rule, or diagnostic gap that blocks the
-next step.
+same loop is used for larger Mechanics examples and benchmark-style tasks:
+first build a readable proof skeleton, then replace broad assumptions by
+smaller verified branches or record the exact language, library, rule, or
+diagnostic gap that blocks the next step.
 
-For algebra, agents should prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
+For algebra, prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
 
 ```litex
 claim:
@@ -93,7 +89,7 @@ claim:
     3 * a + b = 0 / (2 * a - b) = 0
 ```
 
-This style matches the verifier feedback loop better than a large algebraic jump. It also gives an agent a reusable pattern: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
+This style matches the verifier feedback loop better than a large algebraic jump: first isolate a factor by division, then simplify `0 / nonzero` to `0`.
 
 ---
 
@@ -187,7 +183,7 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
-Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`. The common functions `floor` and `ceil` are available as maps from `R` to `Z`, with the basic bounds `floor(x) <= x < floor(x) + 1` and `ceil(x) - 1 < x <= ceil(x)`. They also have uniqueness-style facts: if `y $in Z`, `0 <= x - y`, and `x - y < 1`, then `y = floor(x)`; if `0 <= y - x` and `y - x < 1`, then `y = ceil(x)`.
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`. Integer floor and ceiling live in `std/Int`, not the builtin environment: after `import Int`, use `Int::floor(x)` and `Int::ceil(x)` with the bounds and uniqueness theorems from that module.
 
 #### `abs`, `sqrt`, `log`, `max`, `min`
 
@@ -1085,6 +1081,42 @@ forall x R:
 
 ---
 
+### Parameterized definitions over arbitrary sets (`template`)
+
+Use **`template`** when you want to define a whole family of objects or functions, indexed by parameters such as a set `s`.
+
+The main use case is: the parameter belongs in the *header of the definition itself*, not as an ordinary function input. In Litex, a function input must range over some object domain such as `R`, `Z`, or a previously given set. It cannot range over a condition like `$is_set(s)`. So if you want to say "for every set `s`, define a function on `s`", a plain `have fn` is not the right form.
+
+For example, suppose that for every nonempty set `s` you want a function that sends every element of `s` to `1`. This is naturally a template:
+
+<!-- litex:skip-test -->
+```litex
+template always_one<s set: $is_nonempty_set(s)>:
+    have fn always_one(x s) R = 1
+
+\always_one<R>(2) = 1
+```
+
+The point is that `s` is a parameter of the definition. After you instantiate the template at `R`, the result `\always_one<R>` is an ordinary function with domain `R`.
+
+Templates are also useful when the result is not a function. For example, you may want a family of objects that sends every parameter to `1`. This is not an ordinary function definition either, because the "domain" would be "all objects that are sets", not one fixed set object.
+
+```litex
+template always_one<s set>:
+    have always_one set = 1
+
+\always_one<R> = 1
+\always_one<2> = 1
+```
+
+Here `\always_one<R>` and `\always_one<2>` are two instantiated objects, and both reduce to `1`.
+
+> Hint: a good rule of thumb is: if you want to define something uniformly for every choice of a parameter such as a set, and that parameter cannot be the input of one ordinary function, use `template`.
+
+> Hint: a template instance is materialized only after instantiation. You write the family once, then use `\name<args>` to get the concrete object or function for those arguments.
+
+---
+
 ### Piecewise function (`have fn ... by cases`)
 
 Use **`case`** branches when the formula for a function depends on conditions.
@@ -1292,9 +1324,15 @@ prove:
 
 ### run file
 
-**`run_file "path.lit"`** runs a file as a separate episode. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects.
+Use **`import Nat`** or **`import "local_module_dir" as Local`** to load a module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. A local import path must be a directory containing `main.lit`; importing a `.lit` file directly is not allowed. Each imported module name and resolved module directory must be unique in the current runtime, except that importing the same module with the same name again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
+
+Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
+
+**`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
 ```text
+import Nat
+stop import Nat
 run_file "local_path_to_file.lit"
 ```
 
@@ -1313,7 +1351,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current top environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block).
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block). Builtin facts remain available. Imported modules remain registered, but they are stopped for automatic verification until the same module is imported again.
 
 ```litex
 let a R:
@@ -1471,6 +1509,24 @@ by enumerate finite_set:
 # inline by enumerate finite_set: put the forall goal on the header line
 by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
     ...
+```
+
+For a known integer interval membership, **`by enumerate range`** and **`by enumerate closed_range`** expand the member into equality cases. `range(lo, hi)` is half-open, so it enumerates `lo, lo + 1, ..., hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
+
+```litex
+let a range(7, 8)
+
+by enumerate range: a $in range(7, 8)
+
+a = 7
+```
+
+```litex
+let x closed_range(1, 3)
+
+by enumerate closed_range: x $in 1...3
+
+x = 1 or x = 2 or x = 3
 ```
 
 ---
@@ -1725,6 +1781,7 @@ a = b
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 For a one-point range, it records the single equality directly instead of a one-branch `or`.
+The equivalent spelling **`by enumerate closed_range: x $in lo...hi`** is also accepted.
 
 ```litex
 have x closed_range(0, 10)
@@ -1768,6 +1825,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have x S = expr` | Introduce a named value |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
+| `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
@@ -1971,6 +2029,32 @@ If direct known facts do not close the goal, Litex searches applicable universal
 4. Check that the substituted assumptions are already known or can be verified.
 
 Object matching is structural. If the `forall` conclusion has a parameter such as `x`, that parameter may bind to the object in the goal. If the conclusion has a structured object such as `f(x)`, `x + 1`, or `(x, y)`, Litex matches the outer shape first, then recursively matches the inner objects.
+
+Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p('R(x){f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `'R(x){b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
+
+The following example shows why this matters. The known `forall` fact says that a predicate `p` is closed under pointwise addition of real-valued functions. The proof still uses the known `forall` fact one layer at a time: first it establishes the inner sum function, then it uses that result as the second summand in the outer function.
+
+```litex
+abstract_prop p(x)
+
+know forall f, g fn(x R) R:
+    $p(f)
+    $p(g)
+    =>:
+        $p('R(x){f(x) + g(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})
+```
+
+In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the known-forall conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `'R(x){b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
 
 ```text
 know forall x R:
@@ -2899,6 +2983,29 @@ forall a, b, c, d R:
 ```
 
 ```litex
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a - d < b - c
+```
+
+```litex
+forall x, a, b R:
+    x < b
+    0 <= a
+    =>:
+        x - a < b
+```
+
+```litex
+forall a, b, c R:
+    a + c < b
+    =>:
+        a < b - c
+```
+
+```litex
 forall a, b R:
     0 <= a
     1 <= b
@@ -3297,7 +3404,7 @@ Most builtin inference rules are triggered by **atomic facts**: equalities, memb
 
 Some larger fact shapes have special inference behavior:
 
-- `exist!` adds a uniqueness statement: any two witnesses satisfying the body must agree.
+- `exist!` adds a uniqueness statement: any two witnesses satisfying the body must agree. For multiple witness parameters, the inferred statement concludes component equalities such as `a1 = a2 and b1 = b2`.
 - `not exist` adds the usual universal De Morgan form.
 - `not forall` adds an existential counterexample.
 - equality chains add every equality forced by transitivity along the chain, and those equalities then infer as usual.
