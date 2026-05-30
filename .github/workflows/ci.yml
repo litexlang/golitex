@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_MIN_STACK: 8388608
 
 jobs:
   check:
@@ -31,5 +32,13 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -W warnings
 
-      - name: Test
-        run: cargo test
+      - name: Core tests
+        run: |
+          cargo test --lib common::
+          cargo test --lib infer::
+          cargo test --lib obj::
+          cargo test --lib parse::
+          cargo test --lib pipeline::
+          cargo test --lib rational_expression::
+          cargo test --lib stmt::
+          cargo test --lib verify::
