@@ -87,8 +87,8 @@ Litex is useful if it helps answer concrete questions:
    trust, debugging, or portability?
 4. Can verifier output explain accepted facts well enough for users to audit
    proof steps?
-5. Does local fact-level feedback help AI agents repair proofs more effectively
-   than lower-level proof states?
+5. Does local fact-level feedback make proof repair more effective than
+   lower-level proof states?
 6. Can Litex serve as a preformal or intermediate layer for systems with deeper
    foundations and larger libraries?
 
@@ -102,9 +102,7 @@ continue growing the context.
 
 That corpus matters because it exercises many proof shapes at once:
 calculation, logic, induction, functions, tuples, sets, relations, existential
-witnesses, reusable universal facts, and longer proof repair. It is also a
-practical AI-agent test: Codex can read the Litex manual and verifier output,
-then iteratively shrink broad proof debt into smaller checked facts.
+witnesses, reusable universal facts, and longer proof repair.
 
 MATH500 and MiniF2F-style tasks are the next pressure tests. They are useful
 even when they fail, because each failure can be classified as a language,

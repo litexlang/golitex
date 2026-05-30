@@ -14,17 +14,21 @@ forall a, b, n N_pos:
     =>:
         a^n < b^n
 
-forall a, b R_pos:
-    a^6 < b^6
-    =>:
-        $pos_pow_strict_order_reflects(a, b, 6)
-        a < b
+claim:
+    prove:
+        forall a, b R_pos:
+            a^6 < b^6
+            =>:
+                a < b
+    by thm pos_pow_strict_order_reflects(a, b, 6)
 
-forall a, b R_pos:
-    a^6 <= b^6
-    =>:
-        $pos_pow_order_reflects(a, b, 6)
-        a <= b
+claim:
+    prove:
+        forall a, b R_pos:
+            a^6 <= b^6
+            =>:
+                a <= b
+    by thm pos_pow_order_reflects(a, b, 6)
 
 forall a, b R:
     a * b = 0

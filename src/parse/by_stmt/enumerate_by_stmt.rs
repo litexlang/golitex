@@ -64,9 +64,12 @@ impl Runtime {
             tb.skip_token(COLON)?;
             return self.parse_by_enumerate_finite_set_stmt_forall_in_prove(tb);
         }
+        if tb.current_token_is_equal_to(RANGE) || tb.current_token_is_equal_to(CLOSED_RANGE) {
+            return self.parse_by_enumerate_range_stmt(tb);
+        }
         Err(RuntimeError::from(ParseRuntimeError(
             RuntimeErrorStruct::new_with_msg_and_line_file(
-                "by enumerate: expected `finite_set` after `enumerate`; use `by closed_range as cases: x $in a...b` for closed ranges"
+                "by enumerate: expected `finite_set`, `range`, or `closed_range` after `enumerate`"
                     .to_string(),
                 tb.line_file.clone(),
             ),
@@ -181,5 +184,53 @@ impl Runtime {
         )?;
 
         Ok(ByEnumerateFiniteSetStmt::new(forall_fact, proof, tb.line_file.clone()).into())
+    }
+
+    fn parse_by_enumerate_range_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        let range_keyword = tb.current()?.to_string();
+        tb.skip_token(range_keyword.as_str())?;
+        tb.skip_token(COLON)?;
+
+        let element = self.parse_obj(tb)?;
+        tb.skip_token(FACT_PREFIX)?;
+        tb.skip_token(IN)?;
+        let range_obj = self.parse_obj(tb)?;
+        let range = match (range_keyword.as_str(), range_obj) {
+            (RANGE, Obj::Range(range)) => ClosedRangeOrRange::Range(range),
+            (CLOSED_RANGE, Obj::ClosedRange(closed_range)) => {
+                ClosedRangeOrRange::ClosedRange(closed_range)
+            }
+            (RANGE, _) => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by enumerate range: expected range(lo, hi) after `$in`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            (CLOSED_RANGE, _) => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by enumerate closed_range: expected closed_range(lo, hi) or lo ... hi after `$in`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            _ => unreachable!(),
+        };
+
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "by enumerate {}: expected end of line after membership fact",
+                        range_keyword
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(ByEnumerateRangeStmt::new(element, range, tb.line_file.clone()).into())
     }
 }

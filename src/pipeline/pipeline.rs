@@ -43,7 +43,6 @@ fn run_source_code_with_output(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     runtime.detail_output = detail_output;
-    runtime.module_manager.hide_file_paths_in_output = !detail_output;
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
 }
@@ -53,13 +52,13 @@ pub fn run_source_code(
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let mut tokenizer = Tokenizer::new();
-    let blocks =
-        match tokenizer.parse_blocks(source_code, runtime.module_manager.current_file_path_rc()) {
-            Ok(b) => b,
-            Err(e) => {
-                return (vec![], Some(e));
-            }
-        };
+    let current_file_path = runtime.module_manager.borrow().current_file_path_rc();
+    let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
+        Ok(b) => b,
+        Err(e) => {
+            return (vec![], Some(e));
+        }
+    };
 
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {

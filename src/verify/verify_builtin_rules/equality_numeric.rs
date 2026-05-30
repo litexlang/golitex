@@ -920,6 +920,86 @@ impl Runtime {
         ))
     }
 
+    // Square root distributes over quotients with nonnegative numerator and positive denominator.
+    // Example: from `a >= 0`, `b > 0`, and `x = a / b`, prove
+    // `sqrt(x) = sqrt(a) / sqrt(b)`.
+    pub(crate) fn try_verify_sqrt_quotient_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (sqrt, quotient) = match (left, right) {
+            (Obj::Sqrt(sqrt), Obj::Div(quotient)) => (sqrt, quotient),
+            (Obj::Div(quotient), Obj::Sqrt(sqrt)) => (sqrt, quotient),
+            _ => return Ok(None),
+        };
+        let (Obj::Sqrt(numerator_sqrt), Obj::Sqrt(denominator_sqrt)) =
+            (quotient.left.as_ref(), quotient.right.as_ref())
+        else {
+            return Ok(None);
+        };
+
+        let numerator_nonnegative: AtomicFact = LessEqualFact::new(
+            Self::literal_zero_obj_for_abs_builtin(),
+            numerator_sqrt.arg.as_ref().clone(),
+            line_file.clone(),
+        )
+        .into();
+        let numerator_nonnegative_result = self
+            .verify_non_equational_known_then_builtin_rules_only(
+                &numerator_nonnegative,
+                verify_state,
+            )?;
+        if !numerator_nonnegative_result.is_true() {
+            return Ok(None);
+        }
+
+        let denominator_positive: AtomicFact = LessFact::new(
+            Self::literal_zero_obj_for_abs_builtin(),
+            denominator_sqrt.arg.as_ref().clone(),
+            line_file.clone(),
+        )
+        .into();
+        let denominator_positive_result = self
+            .verify_non_equational_known_then_builtin_rules_only(
+                &denominator_positive,
+                verify_state,
+            )?;
+        if !denominator_positive_result.is_true() {
+            return Ok(None);
+        }
+
+        let arg_quotient: Obj = Div::new(
+            numerator_sqrt.arg.as_ref().clone(),
+            denominator_sqrt.arg.as_ref().clone(),
+        )
+        .into();
+        let arg_quotient_result = self.verify_objs_are_equal_in_equality_builtin(
+            sqrt.arg.as_ref(),
+            &arg_quotient,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !arg_quotient_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "sqrt: sqrt(a / b) = sqrt(a) / sqrt(b)".to_string(),
+                vec![
+                    numerator_nonnegative_result,
+                    denominator_positive_result,
+                    arg_quotient_result,
+                ],
+            )
+            .into(),
+        ))
+    }
+
     pub(crate) fn try_verify_sqrt_equalities(
         &mut self,
         left: &Obj,
@@ -948,7 +1028,12 @@ impl Runtime {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_product_identity(left, right, line_file, verify_state)?
+            self.try_verify_sqrt_product_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) =
+            self.try_verify_sqrt_quotient_identity(left, right, line_file, verify_state)?
         {
             return Ok(Some(done));
         }

@@ -10,6 +10,67 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Stoppable imports (2026-05)
+
+`stop import Name` keeps an imported module registered but removes it from ordinary automatic verification. This is useful when a loaded module has many known facts and `forall` facts that should not be searched for later goals. Local imports now name module directories containing `main.lit`, not `.lit` files, and std imports must use the std folder name as the module name. Re-importing the same module with the same module name is idempotent and re-enables the module if it was stopped; `clear` stops all currently imported modules. Explicit citations such as `by thm Name::theorem(...)` can still cite a stopped module.
+
+### Named theorem calls with `thm` (2026-05)
+
+`thm name:` records a verified `forall` theorem under an explicit name. `thm name1, name2:` records the same theorem under multiple names. Calling `by thm name(args...)` checks the argument types and domain facts, then stores the instantiated then-facts. Defining a theorem does not add it to ordinary automatic forall-pattern matching; use `by thm` when you want the named theorem.
+
+```litex
+thm one_succ, succ_one:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x + 1 = 2
+    x + 1 = 1 + 1 = 2
+
+by thm one_succ(1)
+1 + 1 = 2
+
+by thm succ_one(1)
+1 + 1 = 2
+```
+
+### Strategy registration with `strategy` (2026-05)
+
+`strategy name:` records a verified `forall` rule for future strategy-driven proof search. The `prove:` block has the same shape as `thm`, but the `forall` conclusion must contain exactly one atomic fact. A successfully defined strategy is enabled immediately for that conclusion predicate, as if `use strategy name` had been run. The proved `forall` is also stored as an ordinary known fact, so later proofs can use normal `forall` instantiation even if strategy search is stopped or another strategy is active for the same predicate. `use strategy name` can still re-enable a stopped strategy, and `stop strategy name` records that the strategy should be stopped for the same predicate.
+
+```litex
+prop is_one(x R):
+    x = 1
+
+strategy prove_is_one:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $is_one(x)
+
+$is_one(1)
+stop strategy prove_is_one
+use strategy prove_is_one
+```
+
+### Component uniqueness inferred from `exist!` (2026-05)
+
+When an `exist!` fact is recorded, Litex stores a generated uniqueness `forall`. For multiple witness parameters, the stored theorem now concludes component equalities, so it can be used either as one `and` fact or as split then-facts later.
+
+```litex
+abstract_prop p(a, b)
+
+know exist! a, b R st {$p(a, b)}
+
+forall a1, b1, a2, b2 R:
+    $p(a1, b1)
+    $p(a2, b2)
+    =>:
+        a1 = a2
+        b1 = b2
+```
+
 ### Exact rational `eval` results (2026-05)
 
 `eval` can now keep exact rational results when a concrete division does not terminate as a decimal. The same exact arithmetic is used inside matrix `eval`, so matrices with rational entries can be added, scaled, and multiplied.
@@ -19,13 +80,26 @@ eval 1 + 1 / 3
 eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
 ```
 
-### Square-root product equalities (2026-05)
+### Square-root builtin facts (2026-05)
 
-Builtin equality can now prove square-root product steps when the factors are nonnegative and the argument equality is checkable, such as `sqrt(x) = sqrt(a) * sqrt(b)` from `x = a * b`. The same group also handles equal square-root arguments and `sqrt(a^2) = a` for nonnegative `a`.
+Builtin equality can prove square-root product and quotient steps when the factors are in the principal-root domain, such as `sqrt(x) = sqrt(a) * sqrt(b)` from `x = a * b`, and `sqrt(x) = sqrt(a) / sqrt(b)` from `x = a / b` with `b > 0`. The same group also handles equal square-root arguments and `sqrt(a^2) = a` for nonnegative `a`. Builtin order can prove `sqrt(x) >= 0` from `x >= 0`, plus weak and strict monotonicity of `sqrt` on nonnegative reals.
 
 ```litex
 prove:
     sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
+
+forall a, b R:
+    a >= 0
+    b > 0
+    =>:
+        sqrt(a / b) = sqrt(a) / sqrt(b)
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    a <= b
+    =>:
+        sqrt(a) <= sqrt(b)
 ```
 
 ### Numeric quotient non-integer detection (2026-05)
@@ -56,7 +130,7 @@ prove:
 
 ### Function application return membership (2026-05)
 
-If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after importing trigonometry.
+If a function application is well-defined and the function's known return set is `R`, Litex can verify that application belongs to `R`. This covers builtin objects such as `sqrt(2)` and declared functions such as `sin(0)` after loading `Trig`.
 
 ### Real interval objects (2026-05)
 
@@ -66,41 +140,13 @@ The endpoints must be well-defined real objects. The verifier does not require `
 
 These intervals are continuous real sets. They are separate from integer `range` and `closed_range`, so they do not support `count`, `by for`, or `by closed_range as cases`.
 
-### Agent harness design sketch (2026-05)
-
-Litex already exposes statement-level JSON output that is useful to humans and agents. A future agent harness should be a thin wrapper around that verifier surface, not a second verifier and not a hidden proof search engine.
-
-The basic loop should be:
-
-1. receive a Litex source string, file, or repository entry;
-2. run the normal Litex verifier in a fresh runtime;
-3. collect the ordinary statement-by-statement JSON trace;
-4. summarize the run for an outer agent loop;
-5. return a stable machine-readable result that says what to do next.
-
-The harness result should include:
-
-- whole-run status, such as `ok` and `result`;
-- the target kind, such as source string, file, or repository;
-- checked statement count and successful statement count;
-- `know` count, treated as explicit proof debt;
-- verifier failure information, including the failing line, statement, root cause, and error chain;
-- a small `next_action` label, such as `done`, `reduce_proof_debt`, `add_intermediate_fact`, or `fix_error`;
-- the original Litex JSON trace, so no verifier detail is lost.
-
-The important design choice is that `know` should not be silently accepted as final success. For agent work, `know` is useful scaffolding, but a harness should report remaining `know` facts as proof debt so the outer loop can keep shrinking the informal gap.
-
-The harness should also use process exit status in the ordinary scripting way: successful verified source with no proof debt exits successfully; verifier failure, target-file failure, or remaining proof debt exits nonzero. This gives agents, CI jobs, and batch experiments a simple control signal while preserving the detailed JSON feedback needed for repair.
-
-This is a harness design note, not a language feature. It should not change Litex syntax, proof semantics, or trusted verification logic.
-
 ### Dependent function parameter domains (2026-05)
 
 Later function parameter domains may now cite earlier parameters, such as `fn(n N_pos, x closed_range(1, n)) R`. Function return sets remain non-dependent and cannot cite the function parameters. See **Manual — Function types and anonymous functions**.
 
 ### Templates (2026-05)
 
-`template name<params: dom_facts>:` defines a one-result template around a supported `have ...` definition statement. Instantiating `\name{args}` checks that the arguments satisfy the template parameter types and domain facts, then materializes the body definition with the instantiated object as the defined result. Template instances can be ordinary objects, and if the body defines a function, the instance can be used as a function head such as `\const_zero{R}(0)`.
+`template name<params: dom_facts>:` defines a parameterized family of objects or functions. The typical use case is when you want to define something uniformly for every set `s`, but `s` itself cannot be an ordinary function input because function inputs must range over a concrete domain object, not over a condition like `$is_set(s)`. After instantiation, `\name<args>` materializes the corresponding object or function. For example, `template const_zero<s set: $is_nonempty_set(s)>: ...` can define a function `\const_zero<s>` on each chosen set `s`, and the instantiated function can be called as `\const_zero<R>(0)`.
 
 ### Restriction-only function calls (2026-05)
 
@@ -117,6 +163,10 @@ Litex now knows more count identities for finite set operations, including `unio
 ### Singleton integer intervals infer equality (2026-05)
 
 Membership in `range(a, b)` and `closed_range(a, b)` now records the element equality directly when the integer interval has exactly one value, such as `range(1, 2)` or `closed_range(1, 1)`. `by closed_range as cases` likewise records the single equality instead of a one-branch `or`. See **Manual — Builtin Inference — Ranges** and **Manual — Closed range as cases**.
+
+### Enumerate integer interval membership (2026-05)
+
+`by enumerate range: x $in range(lo, hi)` and `by enumerate closed_range: x $in lo...hi` expand known integer interval membership into equality cases. Half-open `range(lo, hi)` enumerates through `hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
 
 ### Natural membership from nonnegative integers (2026-05)
 

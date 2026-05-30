@@ -57,6 +57,21 @@ impl Runtime {
         &self,
         exist_fact: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
+        self.build_exist_unique_uniqueness_forall_fact_inner(exist_fact, false)
+    }
+
+    pub(crate) fn build_exist_unique_component_uniqueness_forall_fact(
+        &self,
+        exist_fact: &ExistFactEnum,
+    ) -> Result<ForallFact, RuntimeError> {
+        self.build_exist_unique_uniqueness_forall_fact_inner(exist_fact, true)
+    }
+
+    fn build_exist_unique_uniqueness_forall_fact_inner(
+        &self,
+        exist_fact: &ExistFactEnum,
+        component_conclusion: bool,
+    ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
         let flat_orig = exist_fact.params_def_with_type().collect_param_names();
         let n = flat_orig.len();
@@ -140,6 +155,19 @@ impl Runtime {
                 lf.clone(),
             );
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
+        } else if component_conclusion {
+            let mut equal_facts: Vec<AtomicFact> = Vec::new();
+            for (left_name, right_name) in flat_a.iter().zip(flat_b.iter()) {
+                equal_facts.push(
+                    EqualFact::new(
+                        obj_for_bound_param_in_scope(left_name.clone(), ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(right_name.clone(), ParamObjType::Forall),
+                        lf.clone(),
+                    )
+                    .into(),
+                );
+            }
+            then_facts.push(AndFact::new(equal_facts, lf.clone()).into());
         } else {
             let left_tuple: Obj = Tuple::new(
                 flat_a

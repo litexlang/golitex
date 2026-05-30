@@ -1,0 +1,178 @@
+# Mathlib-facing integer definitions and theorems.
+#
+# Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
+# `Odd n` are exposed here as typed lowering targets for Int arguments.
+
+import Nat
+
+# Mathlib generic notation: `d ∣ n` with Int arguments.
+prop Dvd(d, n Z):
+    exist k Z st {n = d * k}
+
+# Mathlib generic predicate: `Even n` with an Int argument.
+prop Even(n Z):
+    exist k Z st {n = 2 * k}
+
+# Mathlib generic predicate: `Odd n` with an Int argument.
+prop Odd(n Z):
+    exist k Z st {n = 2 * k + 1}
+
+# Mathlib: Int.ModEq. Litex `%` currently requires a nonzero modulus, so this
+# lowering target covers the nonzero-modulus fragment.
+prop ModEq(n Z_nz, a, b Z):
+    a % n = b % n
+
+# Mathlib: Int.floor / Int.ceil-style aliases used by compatibility examples.
+have floor fn(x R) Z
+have ceil fn(x R) Z
+
+# Mathlib: Int.natAbs, Int.gcd, Int.lcm, Int.gcdA, Int.gcdB.
+have natAbs fn(a Z) N
+have gcd fn(a, b Z) N
+have lcm fn(a, b Z) N
+have gcdA fn(a, b Z) Z
+have gcdB fn(a, b Z) Z
+
+know:
+    forall x R:
+        floor(x) <= x < floor(x) + 1
+        ceil(x) - 1 < x <= ceil(x)
+
+    forall x R, y Z:
+        0 <= x - y
+        x - y < 1
+        =>:
+            y = floor(x)
+
+    forall x R, y Z:
+        0 <= y - x
+        y - x < 1
+        =>:
+            y = ceil(x)
+
+    # Mathlib: Int.gcd_def
+    forall a, b Z:
+        gcd(a, b) = Nat::gcd(natAbs(a), natAbs(b))
+
+    # Mathlib: Int.lcm_def
+    forall a, b Z:
+        lcm(a, b) = Nat::lcm(natAbs(a), natAbs(b))
+
+    # Mathlib: Int.gcd_eq_gcd_ab
+    forall a, b Z:
+        gcd(a, b) = a * gcdA(a, b) + b * gcdB(a, b)
+
+    # Mathlib: Int.gcd_dvd_left / Int.gcd_dvd_right.
+    forall a, b Z:
+        $Dvd(gcd(a, b), a)
+        $Dvd(gcd(a, b), b)
+
+    # Mathlib: Int.dvd_coe_gcd-style gcd divisibility.
+    forall a, b, d Z:
+        $Dvd(d, a)
+        $Dvd(d, b)
+        =>:
+            $Dvd(d, gcd(a, b))
+
+# Mathlib: Int.floor_le / Int.lt_floor_add_one, bundled for examples that
+# want the standard floor interval.
+thm floor_bounds:
+    prove:
+        forall x R:
+            floor(x) <= x < floor(x) + 1
+    floor(x) <= x < floor(x) + 1
+
+thm floor_le:
+    prove:
+        forall x R:
+            floor(x) <= x
+    floor(x) <= x
+
+thm lt_floor_add_one:
+    prove:
+        forall x R:
+            x < floor(x) + 1
+    x < floor(x) + 1
+
+# Mathlib: Int.ceil_le / Int.sub_one_lt_ceil, bundled for examples that want
+# the standard ceil interval.
+thm ceil_bounds:
+    prove:
+        forall x R:
+            ceil(x) - 1 < x <= ceil(x)
+    ceil(x) - 1 < x <= ceil(x)
+
+thm ceil_sub_one_lt:
+    prove:
+        forall x R:
+            ceil(x) - 1 < x
+    ceil(x) - 1 < x
+
+thm le_ceil:
+    prove:
+        forall x R:
+            x <= ceil(x)
+    x <= ceil(x)
+
+thm floor_eq_of_bounds:
+    prove:
+        forall x R, y Z:
+            0 <= x - y
+            x - y < 1
+            =>:
+                y = floor(x)
+    y = floor(x)
+
+thm ceil_eq_of_bounds:
+    prove:
+        forall x R, y Z:
+            0 <= y - x
+            y - x < 1
+            =>:
+                y = ceil(x)
+    y = ceil(x)
+
+# Mathlib: Int.gcd_def
+thm gcd_def:
+    prove:
+        forall a, b Z:
+            gcd(a, b) = Nat::gcd(natAbs(a), natAbs(b))
+    gcd(a, b) = Nat::gcd(natAbs(a), natAbs(b))
+
+# Mathlib: Int.lcm_def
+thm lcm_def:
+    prove:
+        forall a, b Z:
+            lcm(a, b) = Nat::lcm(natAbs(a), natAbs(b))
+    lcm(a, b) = Nat::lcm(natAbs(a), natAbs(b))
+
+# Mathlib: Int.gcd_eq_gcd_ab
+thm gcd_eq_gcd_ab:
+    prove:
+        forall a, b Z:
+            gcd(a, b) = a * gcdA(a, b) + b * gcdB(a, b)
+    gcd(a, b) = a * gcdA(a, b) + b * gcdB(a, b)
+
+# Mathlib: Int.gcd_dvd_left
+thm gcd_dvd_left:
+    prove:
+        forall a, b Z:
+            $Dvd(gcd(a, b), a)
+    $Dvd(gcd(a, b), a)
+
+# Mathlib: Int.gcd_dvd_right
+thm gcd_dvd_right:
+    prove:
+        forall a, b Z:
+            $Dvd(gcd(a, b), b)
+    $Dvd(gcd(a, b), b)
+
+# Mathlib: Int.dvd_coe_gcd-style gcd divisibility.
+thm dvd_gcd:
+    prove:
+        forall a, b, d Z:
+            $Dvd(d, a)
+            $Dvd(d, b)
+            =>:
+                $Dvd(d, gcd(a, b))
+    $Dvd(d, gcd(a, b))

@@ -104,6 +104,9 @@ pub const PROP: &str = "prop";
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
+pub const THM: &str = "thm";
+pub const STOP: &str = "stop";
+pub const USE: &str = "use";
 
 pub const BY: &str = "by";
 pub const CASES: &str = "cases";
@@ -152,8 +155,6 @@ pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
 pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
 pub const STRATEGY: &str = "strategy";
-pub const USE_STRATEGY: &str = "use_strategy";
-pub const END_STRATEGY: &str = "end_strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
 /// `$fn_eq(f, g)`: mutual function-space typing and pointwise equality on the shared dom (see verify).
@@ -269,6 +270,9 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         ABSTRACT_PROP,
         CLAIM,
         PROVE,
+        THM,
+        STOP,
+        USE,
         BY,
         CASES,
         CONTRA,
@@ -309,8 +313,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TEMPLATE,
         RESTRICT_FN_IN,
         STRATEGY,
-        USE_STRATEGY,
-        END_STRATEGY,
         FN_EQ_IN,
         FN_EQ,
     ];

@@ -1,0 +1,62 @@
+# Mathlib-facing Fintype compatibility layer.
+#
+# Litex has sets rather than typeclasses. Here a `Fintype(alpha)` proposition
+# records that the carrier set `alpha` is finite, and typed card fragments
+# expose `Fintype.card` for common dataset domains.
+
+prop Fintype(alpha set):
+    $is_finite_set(alpha)
+
+# Mathlib generic `Finite` predicate, lowered to the same carrier-set model.
+prop Finite(alpha set):
+    $Fintype(alpha)
+
+prop Card(alpha set, n N):
+    $Fintype(alpha)
+    count(alpha) = n
+
+have fn card(alpha power_set(N): $Fintype(alpha)) N = count(alpha)
+have fn card_Z(alpha power_set(Z): $Fintype(alpha)) N = count(alpha)
+have fn card_R(alpha power_set(R): $Fintype(alpha)) N = count(alpha)
+
+# Mathlib: construct a Fintype instance from finiteness of the carrier.
+thm of_finite:
+    prove:
+        forall alpha set:
+            $is_finite_set(alpha)
+            =>:
+                $Fintype(alpha)
+    $Fintype(alpha)
+
+thm Finite_of_fintype:
+    prove:
+        forall alpha set:
+            $Fintype(alpha)
+            =>:
+                $Finite(alpha)
+    $Finite(alpha)
+
+thm of_finite_pred:
+    prove:
+        forall alpha set:
+            $Finite(alpha)
+            =>:
+                $Fintype(alpha)
+    $Fintype(alpha)
+
+# Mathlib: Fintype.card, Nat-set fragment.
+thm card_eq_count:
+    prove:
+        forall alpha power_set(N):
+            $Fintype(alpha)
+            =>:
+                card(alpha) = count(alpha)
+    card(alpha) = count(alpha)
+
+thm Card_eq:
+    prove:
+        forall alpha set, n N:
+            $Card(alpha, n)
+            =>:
+                count(alpha) = n
+    count(alpha) = n

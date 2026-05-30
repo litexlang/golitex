@@ -15,3 +15,20 @@ have f fn(x R) R = 'R(x){x}
 
 f(1) = 'R(x){x}(1) = 1
 
+abstract_prop p(fn_value)
+
+know forall u, v fn(x R) R:
+    $p(u)
+    $p(v)
+    =>:
+        $p('R(x){u(x) + v(x)})
+
+claim:
+    prove:
+        forall a, b, c fn(x R) R:
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p('R(x){a(x) + (b(x) + c(x))})
+    $p('R(x){b(x) + c(x)})

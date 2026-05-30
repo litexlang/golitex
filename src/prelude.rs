@@ -1,11 +1,14 @@
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
-    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
-    OrFactKey, PropName, StructName, TemplateName,
+    AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
+    IdentifierName, ObjOperatorString, ObjString, OrFactKey, PropName, StrategyName, StructName,
+    TemplateName, ThmName,
 };
 pub use crate::environment::{
-    Environment, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+    atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
+    AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
+    KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -73,9 +76,6 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
-pub use crate::harness::{
-    resolve_litex_file_path, run_harness_for_code, run_harness_for_file, run_harness_for_repo,
-};
 pub use crate::infer::InferResult;
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;
@@ -125,11 +125,11 @@ pub use crate::obj::Max;
 pub use crate::obj::Min;
 pub use crate::obj::Mod;
 pub use crate::obj::Mul;
-pub use crate::obj::NameWithOrWithoutMod;
 pub use crate::obj::Number;
 pub use crate::obj::Obj;
 pub use crate::obj::ObjAsStructInstanceWithFieldAccess;
 pub use crate::obj::ObjAtIndex;
+pub use crate::obj::ObjKind;
 pub use crate::obj::OneSideInfinityIntervalObj;
 pub use crate::obj::OneSideInfinityIntervalObjStruct;
 pub use crate::obj::ParamObjType;
@@ -175,6 +175,9 @@ pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
+pub use crate::runner::{
+    resolve_litex_file_path, run_runner_for_code, run_runner_for_file, run_runner_for_repo,
+};
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::Runtime;
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
@@ -229,13 +232,19 @@ pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::tooling_stmt::RunFileStmt;
+pub use crate::stmt::tooling_stmt::StopImportStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
+pub use crate::stmt::ByEnumerateRangeStmt;
+pub use crate::stmt::ByThmStmt;
+pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::EvalByStmt;
-pub use crate::stmt::RunFileInStd;
 pub use crate::stmt::Stmt;
+pub use crate::stmt::StopStrategyStmt;
+pub use crate::stmt::UseStrategyStmt;
 pub use crate::verify::VerifyState;
 
 pub use crate::cli::run_cli;
@@ -389,6 +398,8 @@ pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
+pub use crate::common::keywords::STOP;
+pub use crate::common::keywords::STRATEGY;
 pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::STRUCT;
 pub use crate::common::keywords::STRUCT_VIEW_PREFIX;
@@ -401,11 +412,13 @@ pub use crate::common::keywords::SURJECTIVE;
 pub use crate::common::keywords::SYMMETRIC_PROP;
 pub use crate::common::keywords::TEMPLATE;
 pub use crate::common::keywords::TEMPLATE_INSTANCE_PREFIX;
+pub use crate::common::keywords::THM;
 pub use crate::common::keywords::TRANSITIVE_PROP;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;
 pub use crate::common::keywords::UNION;
 pub use crate::common::keywords::UNKNOWN_COLON;
+pub use crate::common::keywords::USE;
 pub use crate::common::keywords::WITNESS;
 pub use crate::common::keywords::Z;
 pub use crate::common::keywords::Z_NEG;

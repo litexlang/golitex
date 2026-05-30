@@ -1,0 +1,192 @@
+# Mathlib-facing Finset compatibility layer.
+#
+# Finsets are modeled as finite Litex sets. This file keeps the existing
+# MiniF2F finite-index surface and adds stable Finset names for later
+# mathlib-style translations.
+
+prop Finset(s set):
+    $is_finite_set(s)
+
+prop Mem(x, s set):
+    x $in s
+
+prop Subset(s, t set):
+    s $subset t
+
+prop Nonempty(s set):
+    $is_nonempty_set(s)
+
+prop Card(s set, n N):
+    $Finset(s)
+    count(s) = n
+
+# Coercion/underlying-set fragments for common typed finsets.
+have fn val(s power_set(N): $is_finite_set(s)) power_set(N) = s
+have fn val_Z(s power_set(Z): $is_finite_set(s)) power_set(Z) = s
+have fn val_R(s power_set(R): $is_finite_set(s)) power_set(R) = s
+
+# MiniF2F-facing finite-index objects.
+#
+# This is the focused part of Mathlib.Algebra.BigOperators.Basic that appears
+# in MiniF2F statements: ranges, closed natural intervals, cardinality, and
+# aliases into Litex's builtin finite sum/product expressions.
+
+prop range_value(n N, s power_set(N)):
+    forall x N:
+        =>:
+            x $in s
+        <=>:
+            x < n
+
+know:
+    forall n N:
+        exist! s power_set(N) st {$range_value(n, s)}
+
+have fn range_nat as set:
+    forall n N:
+        exist! s power_set(N) st {$range_value(n, s)}
+
+prop Icc_value(a, b N, s power_set(N)):
+    forall x N:
+        =>:
+            x $in s
+        <=>:
+            a <= x <= b
+
+know:
+    forall a, b N:
+        exist! s power_set(N) st {$Icc_value(a, b, s)}
+
+have fn Icc as set:
+    forall a, b N:
+        exist! s power_set(N) st {$Icc_value(a, b, s)}
+
+have fn card(s power_set(N): $is_finite_set(s)) N = count(s)
+have fn card_Z(s power_set(Z): $is_finite_set(s)) N = count(s)
+have fn card_R(s power_set(R): $is_finite_set(s)) N = count(s)
+
+have fn sum_range(n N, f fn(x Z) Z) Z = sum(0, n - 1, f)
+have fn prod_range(n N, f fn(x Z) Z) Z = product(0, n - 1, f)
+have fn sum_Icc(a, b Z, f fn(x Z) Z) Z = sum(a, b, f)
+have fn prod_Icc(a, b Z, f fn(x Z) Z) Z = product(a, b, f)
+
+know:
+    forall n N:
+        $range_value(n, range_nat(n))
+
+    forall n N:
+        $is_finite_set(range_nat(n))
+
+    forall n N:
+        card(range_nat(n)) = n
+
+    forall n N:
+        $is_finite_set(range_nat(n))
+        =>:
+            card(range_nat(n)) = n
+
+    forall a, b N:
+        $Icc_value(a, b, Icc(a, b))
+
+    forall a, b N:
+        a <= b
+        =>:
+            $is_finite_set(Icc(a, b))
+
+    forall a, b N:
+        a <= b
+        $is_finite_set(Icc(a, b))
+        =>:
+            card(Icc(a, b)) = b - a + 1
+
+# Mathlib: finite wrapper introduction.
+thm of_finite:
+    prove:
+        forall s set:
+            $is_finite_set(s)
+            =>:
+                $Finset(s)
+    $Finset(s)
+
+# Mathlib: Finset.card for the Nat-set fragment.
+thm card_eq_count:
+    prove:
+        forall s power_set(N):
+            $is_finite_set(s)
+            =>:
+                card(s) = count(s)
+    card(s) = count(s)
+
+thm Card_eq:
+    prove:
+        forall s set, n N:
+            $Card(s, n)
+            =>:
+                count(s) = n
+    count(s) = n
+
+# Mathlib: Finset.mem_range
+thm mem_range:
+    prove:
+        forall x, n N:
+            x $in range_nat(n)
+            =>:
+                x < n
+    $range_value(n, range_nat(n))
+    x < n
+
+# Mathlib: Finset.card_range
+thm card_range:
+    prove:
+        forall n N:
+            card(range_nat(n)) = n
+    $is_finite_set(range_nat(n))
+    card(range_nat(n)) = n
+
+# Mathlib: Finset.mem_Icc
+thm mem_Icc:
+    prove:
+        forall a, b, x N:
+            x $in Icc(a, b)
+            =>:
+                a <= x <= b
+    $Icc_value(a, b, Icc(a, b))
+    a <= x <= b
+
+# Mathlib: Finset.card_Icc for natural closed intervals.
+thm card_Icc:
+    prove:
+        forall a, b N:
+            a <= b
+            =>:
+                card(Icc(a, b)) = b - a + 1
+    $is_finite_set(Icc(a, b))
+    card(Icc(a, b)) = b - a + 1
+
+# Finite closure of finset-shaped set operations.
+thm union_finset:
+    prove:
+        forall s, t set:
+            $Finset(s)
+            $Finset(t)
+            =>:
+                $Finset(union(s, t))
+    $Finset(union(s, t))
+
+thm inter:
+    prove:
+        forall s, t set:
+            $Finset(s)
+            $Finset(t)
+            =>:
+                $Finset(intersect(s, t))
+    $Finset(intersect(s, t))
+
+thm sdiff:
+    prove:
+        forall s, t set:
+            $Finset(s)
+            $Finset(t)
+            =>:
+                $Finset(set_minus(s, t))
+    $Finset(set_minus(s, t))

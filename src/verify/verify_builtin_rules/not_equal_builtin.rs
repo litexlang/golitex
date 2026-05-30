@@ -523,11 +523,8 @@ impl Runtime {
 
         let base = pow.base.as_ref().clone();
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
-        let mut result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&base_neq_zero)?;
-        if !result.is_true() {
-            result = self.verify_non_equational_atomic_fact(&base_neq_zero, verify_state, true)?;
-        }
+        let result =
+            self.verify_non_equational_known_then_builtin_rules_only(&base_neq_zero, verify_state)?;
         if result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -572,26 +569,18 @@ impl Runtime {
         let denominator_nonzero: AtomicFact =
             NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
 
-        let mut numerator_result = self.verify_non_equational_known_then_builtin_rules_only(
+        let numerator_result = self.verify_non_equational_known_then_builtin_rules_only(
             &numerator_nonzero,
             verify_state,
         )?;
         if !numerator_result.is_true() {
-            numerator_result =
-                self.verify_non_equational_atomic_fact(&numerator_nonzero, verify_state, true)?;
-        }
-        if !numerator_result.is_true() {
             return Ok(None);
         }
 
-        let mut denominator_result = self.verify_non_equational_known_then_builtin_rules_only(
+        let denominator_result = self.verify_non_equational_known_then_builtin_rules_only(
             &denominator_nonzero,
             verify_state,
         )?;
-        if !denominator_result.is_true() {
-            denominator_result =
-                self.verify_non_equational_atomic_fact(&denominator_nonzero, verify_state, true)?;
-        }
         if !denominator_result.is_true() {
             return Ok(None);
         }
@@ -646,7 +635,8 @@ impl Runtime {
         );
 
         let mut steps = Vec::new();
-        let known_or_result = self.verify_or_fact(&known_or, verify_state)?;
+        let known_or_result =
+            self.verify_or_fact_known_then_builtin_rules_only(&known_or, verify_state)?;
         if known_or_result.is_true() {
             steps.push(known_or_result);
             return Ok(Some(
@@ -661,7 +651,7 @@ impl Runtime {
         }
 
         let left_result =
-            self.verify_non_equational_atomic_fact(&left_nonzero, verify_state, true)?;
+            self.verify_non_equational_known_then_builtin_rules_only(&left_nonzero, verify_state)?;
         if left_result.is_true() {
             steps.push(left_result);
             return Ok(Some(
@@ -676,7 +666,7 @@ impl Runtime {
         }
 
         let right_result =
-            self.verify_non_equational_atomic_fact(&right_nonzero, verify_state, true)?;
+            self.verify_non_equational_known_then_builtin_rules_only(&right_nonzero, verify_state)?;
         if right_result.is_true() {
             steps.push(right_result);
             return Ok(Some(
@@ -788,14 +778,14 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_left =
             LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &zero_less_than_left,
             verify_state,
         )? {
             return Ok(false);
         }
         let zero_less_than_right = LessFact::new(zero_obj, right_operand.clone(), line_file).into();
-        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &zero_less_than_right,
             verify_state,
         )
@@ -811,14 +801,14 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero =
             LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &left_less_than_zero,
             verify_state,
         )? {
             return Ok(false);
         }
         let right_less_than_zero = LessFact::new(right_operand.clone(), zero_obj, line_file).into();
-        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &right_less_than_zero,
             verify_state,
         )
@@ -836,10 +826,10 @@ impl Runtime {
             LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into();
         let zero_less_than_right =
             LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into();
-        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        if self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &left_less_than_zero,
             verify_state,
-        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        )? && self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &zero_less_than_right,
             verify_state,
         )? {
@@ -849,10 +839,10 @@ impl Runtime {
             LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into();
         let right_less_than_zero = LessFact::new(right_factor.clone(), zero_obj, line_file).into();
         Ok(
-            self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                 &zero_less_than_left,
                 verify_state,
-            )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            )? && self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                 &right_less_than_zero,
                 verify_state,
             )?,
@@ -871,10 +861,10 @@ impl Runtime {
             LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into();
         let subtrahend_less_than_zero =
             LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into();
-        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        if self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &zero_less_than_minuend,
             verify_state,
-        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+        )? && self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &subtrahend_less_than_zero,
             verify_state,
         )? {
@@ -885,10 +875,10 @@ impl Runtime {
         let zero_less_than_subtrahend =
             LessFact::new(zero_obj, subtrahend.clone(), line_file).into();
         Ok(
-            self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                 &minuend_less_than_zero,
                 verify_state,
-            )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            )? && self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                 &zero_less_than_subtrahend,
                 verify_state,
             )?,
@@ -977,7 +967,7 @@ impl Runtime {
 
                 let final_round_verify_state = verify_state.make_final_round_state();
 
-                if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                if self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                     &zero_lt_a,
                     &final_round_verify_state,
                 )? {
@@ -988,7 +978,7 @@ impl Runtime {
                         zero_obj,
                         line_file.clone(),
                     ).into();
-                    if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                    if self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
                         &a_lt_0,
                         &final_round_verify_state,
                     )? {

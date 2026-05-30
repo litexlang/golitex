@@ -120,6 +120,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_subtraction_from_known_addition(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
         {
             return Ok(done);
@@ -481,6 +487,79 @@ impl Runtime {
         }
     }
 
+    fn try_verify_subtraction_from_known_addition(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) = self.try_verify_one_subtraction_from_known_addition(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+        )? {
+            return Ok(Some(done));
+        }
+        self.try_verify_one_subtraction_from_known_addition(left, right, right, left, line_file)
+    }
+
+    // Moves one addend across a known sum equality.
+    // Example: from a known `a + b = c` or `b + a = c`, prove `a = c - b`.
+    fn try_verify_one_subtraction_from_known_addition(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        target_a: &Obj,
+        subtraction_side: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Sub(subtraction) = subtraction_side else {
+            return Ok(None);
+        };
+
+        let candidate_sum_1: Obj =
+            Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
+        let known_sum_1 = self.verify_objs_are_equal_known_only(
+            &candidate_sum_1,
+            subtraction.left.as_ref(),
+            line_file.clone(),
+        );
+        if known_sum_1.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "equality: a = c - b from known a + b = c".to_string(),
+                    vec![known_sum_1],
+                )
+                .into(),
+            ));
+        }
+
+        let candidate_sum_2: Obj =
+            Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
+        let known_sum_2 = self.verify_objs_are_equal_known_only(
+            &candidate_sum_2,
+            subtraction.left.as_ref(),
+            line_file.clone(),
+        );
+        if known_sum_2.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "equality: a = c - b from known b + a = c".to_string(),
+                    vec![known_sum_2],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
+
     // Tuple extensionality: a tuple is equal to `(a, b, ...)` when its dimension matches
     // and each projection matches the corresponding component.
     // Example: from `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`, prove `t = (a, b)`.
@@ -503,7 +582,8 @@ impl Runtime {
 
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
-        let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
+        let is_tuple_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_true() {
             return Ok(None);
         }
@@ -512,7 +592,8 @@ impl Runtime {
         let tuple_dim_value_obj: Obj = Number::new(tuple_obj.args.len().to_string()).into();
         let tuple_dim_fact: AtomicFact =
             EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
-        let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
+        let tuple_dim_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_true() {
             return Ok(None);
         }
@@ -523,7 +604,8 @@ impl Runtime {
             let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
             let component_fact: AtomicFact =
                 EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
-            let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
+            let component_result = self
+                .verify_atomic_fact_known_then_builtin_rules_only(&component_fact, verify_state)?;
             if !component_result.is_true() {
                 return Ok(None);
             }
@@ -802,7 +884,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        self.verify_non_equational_atomic_fact(&fact, &VerifyState::new(0, true), true)
+        self.verify_non_equational_known_then_builtin_rules_only(&fact, &VerifyState::new(0, true))
     }
 
     // Antisymmetry rule for registered user-defined props.

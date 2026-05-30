@@ -8,8 +8,8 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Benchmarks_
 ## Purpose
 
 Litex needs reproducible evidence, not only examples that look good in a page.
-Benchmarks should let humans and agents run the same tasks, compare verifier
-feedback, and measure progress over time.
+Benchmarks should make the same tasks runnable, compare verifier feedback, and
+measure progress over time.
 
 The current best source of tasks is The Mechanics of Litex Proof. It contains
 many textbook-style examples, from short calculations to larger function and
@@ -19,8 +19,8 @@ set arguments.
 
 A useful Litex benchmark suite should be layered:
 
-1. **Syntax and well-definedness.** Can the system or agent write meaningful
-   Litex expressions with correct scopes and domains?
+1. **Syntax and well-definedness.** Are the Litex expressions meaningful, with
+   correct scopes and domains?
 2. **Single fact verification.** Can a line be proved from builtin rules or
    a small context?
 3. **Local proof repair.** Given an `unknown` or `error`, can the next attempt
@@ -74,13 +74,13 @@ theorem. The Mechanics examples show whether fact-oriented repair scales
 beyond tiny snippets; MATH500 and MiniF2F-style tasks show which library,
 language, rule, and diagnostic gaps appear under external problem pressure.
 
-## AI Evaluation
+## Feedback Evaluation
 
-For AI agents, the benchmark should measure interaction, not just final success:
+The benchmark should measure interaction, not just final success:
 
 - how many attempts are needed;
 - which failures are `unknown` versus `error`;
-- whether the agent reduces proof debt over time;
+- whether proof debt is reduced over time;
 - whether added facts are mathematically local and readable;
 - whether final proofs avoid broad unchecked assumptions.
 
@@ -120,7 +120,7 @@ from a fresh checkout.
 Benchmarks should support modest claims:
 
 - Litex can check a growing set of textbook-style proofs.
-- Litex gives local feedback that humans and agents can use.
+- Litex gives useful local feedback for proof repair.
 - Certain proof patterns become shorter or more direct in a fact-oriented
   interface.
 - Some failures reveal missing background facts or missing builtin support.
