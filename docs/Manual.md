@@ -215,7 +215,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets—see comments in `examples/litex_object_examples.lit`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets—see comments in `examples/03_objects_and_data/litex_object_examples.lit`.
 
 #### Power set
 
@@ -1728,7 +1728,7 @@ Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_pr
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
+See `examples/01_proof_patterns/by_symmetric_reflexive_antisymmetric_prop.lit`.
 
 ```litex
 abstract_prop p(x, y)
