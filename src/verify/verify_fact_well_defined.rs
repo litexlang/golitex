@@ -66,7 +66,7 @@ impl Runtime {
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
-            let actual_args = atomic_fact.args();
+            let actual_args = atomic_fact.args_ref();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -100,7 +100,7 @@ impl Runtime {
                 .into());
             };
 
-            let actual_args = atomic_fact.args();
+            let actual_args = atomic_fact.args_ref();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -118,8 +118,8 @@ impl Runtime {
         }
 
         // 2. all args are well-defined
-        for arg in atomic_fact.args() {
-            self.verify_obj_well_defined_and_store_cache(&arg, verify_state)?;
+        for arg in atomic_fact.args_ref() {
+            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
         Ok(())

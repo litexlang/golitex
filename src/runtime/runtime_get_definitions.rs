@@ -11,7 +11,8 @@ impl Runtime {
             return self
                 .imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name).cloned()
+                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name.to_string())
+                        .cloned()
                 });
         }
 
@@ -29,7 +30,8 @@ impl Runtime {
             return self
                 .active_imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name).cloned()
+                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name.to_string())
+                        .cloned()
                 });
         }
 
@@ -42,7 +44,7 @@ impl Runtime {
         predicate_name: &str,
     ) -> Option<&DefPropStmt> {
         for environment in self.iter_environments_from_top() {
-            match get_prop_definition_by_name_in_env(environment, predicate_name) {
+            match get_prop_definition_by_name_in_env(environment, predicate_name.to_string()) {
                 Some(definition) => return Some(definition),
                 None if environment
                     .defined_abstract_props
@@ -71,8 +73,11 @@ impl Runtime {
             return self
                 .imported_module_environment(module_name)
                 .and_then(|environment| {
-                    get_abstract_prop_definition_by_name_in_env(environment.as_ref(), local_name)
-                        .cloned()
+                    get_abstract_prop_definition_by_name_in_env(
+                        environment.as_ref(),
+                        local_name.to_string(),
+                    )
+                    .cloned()
                 });
         }
 
@@ -85,7 +90,10 @@ impl Runtime {
         predicate_name: &str,
     ) -> Option<&DefAbstractPropStmt> {
         for environment in self.iter_environments_from_top() {
-            match get_abstract_prop_definition_by_name_in_env(environment, predicate_name) {
+            match get_abstract_prop_definition_by_name_in_env(
+                environment,
+                predicate_name.to_string(),
+            ) {
                 Some(definition) => return Some(definition),
                 None if environment.defined_def_props.contains_key(predicate_name) => return None,
                 None => {}
@@ -229,30 +237,36 @@ fn split_module_qualified_name(name: &str) -> Option<(&str, &str)> {
     }
 }
 
-fn get_prop_definition_by_name_in_env<'a>(
-    environment: &'a Environment,
-    predicate_name: &str,
-) -> Option<&'a DefPropStmt> {
-    if let Some(definition) = environment.defined_def_props.get(predicate_name) {
+fn get_prop_definition_by_name_in_env(
+    environment: &Environment,
+    predicate_name: String,
+) -> Option<&DefPropStmt> {
+    if let Some(definition) = environment.defined_def_props.get(predicate_name.as_str()) {
         return Some(definition);
     }
     if environment
         .defined_abstract_props
-        .contains_key(predicate_name)
+        .contains_key(predicate_name.as_str())
     {
         return None;
     }
     None
 }
 
-fn get_abstract_prop_definition_by_name_in_env<'a>(
-    environment: &'a Environment,
-    predicate_name: &str,
-) -> Option<&'a DefAbstractPropStmt> {
-    if let Some(definition) = environment.defined_abstract_props.get(predicate_name) {
+fn get_abstract_prop_definition_by_name_in_env(
+    environment: &Environment,
+    predicate_name: String,
+) -> Option<&DefAbstractPropStmt> {
+    if let Some(definition) = environment
+        .defined_abstract_props
+        .get(predicate_name.as_str())
+    {
         return Some(definition);
     }
-    if environment.defined_def_props.contains_key(predicate_name) {
+    if environment
+        .defined_def_props
+        .contains_key(predicate_name.as_str())
+    {
         return None;
     }
     None

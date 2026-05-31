@@ -51,7 +51,7 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
-                let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
+                let current_known_forall = {
                     let env = &self.environment_stack[stack_idx];
                     let Some(known_forall_facts_in_env) =
                         env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
@@ -62,12 +62,10 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    (
-                        current_known_forall.0.get_args_from_fact(),
-                        given_or_fact.get_args_from_fact(),
-                        current_known_forall.clone(),
-                    )
+                    current_known_forall.clone()
                 };
+                let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact_ref();
+                let given_fact_args = given_or_fact.get_args_from_fact_ref();
                 let match_result = self.match_args_in_fact_in_known_forall_fact_with_given_args(
                     &fact_args_in_known_forall,
                     &given_fact_args,
