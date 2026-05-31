@@ -73,7 +73,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_atomic_fact_known_then_builtin_rules_only(
+    pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -96,6 +96,39 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn verify_atomic_fact_known_then_builtin_rules_only(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+    }
+
+    pub(crate) fn verify_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        match fact {
+            Fact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+            }
+            Fact::AndFact(and_fact) => {
+                self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
+            }
+            Fact::ChainFact(chain_fact) => {
+                self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
+            }
+            Fact::OrFact(or_fact) => {
+                self.verify_or_fact_known_then_builtin_rules_only(or_fact, verify_state)
+            }
+            Fact::ForallFact(_)
+            | Fact::ForallFactWithIff(_)
+            | Fact::NotForall(_)
+            | Fact::ExistFact(_) => Ok(StmtUnknown::new().into()),
+        }
+    }
+
     pub(crate) fn non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -104,6 +137,27 @@ impl Runtime {
         let result =
             self.verify_non_equational_known_then_builtin_rules_only(atomic_fact, verify_state)?;
         Ok(result.is_true())
+    }
+
+    pub(crate) fn verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        fact: &OrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        match fact {
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+            }
+            OrAndChainAtomicFact::AndFact(and_fact) => {
+                self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
+            }
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
+            }
+            OrAndChainAtomicFact::OrFact(or_fact) => {
+                self.verify_or_fact_known_then_builtin_rules_only(or_fact, verify_state)
+            }
+        }
     }
 
     pub(crate) fn verify_and_chain_atomic_fact_known_then_builtin_rules_only(

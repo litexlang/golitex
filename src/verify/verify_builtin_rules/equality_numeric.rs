@@ -1775,7 +1775,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let then_fact: ExistOrAndChainAtomicFact =
+        let then_fact: AtomicFact =
             EqualFact::new(l_inst, Add::new(a_inst, b_inst).into(), line_file.clone()).into();
 
         let dom_lo: Fact =
@@ -1783,18 +1783,12 @@ impl Runtime {
         let dom_hi: Fact =
             LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
-        let forall_fact: Fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![x_name],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
+        let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            x_name,
             vec![dom_lo, dom_hi],
-            vec![then_fact],
-            line_file.clone(),
-        )?
-        .into();
-
-        let r = self.verify_fact(&forall_fact, verify_state)?;
+            &then_fact,
+            verify_state,
+        )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -1836,6 +1830,26 @@ impl Runtime {
             &param_to_arg_map,
             ParamObjType::FnSet,
         )?))
+    }
+
+    fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        param_name: String,
+        dom_facts: Vec<Fact>,
+        then_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![param_name],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            for dom_fact in dom_facts {
+                rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
+            }
+            rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
+        })
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
@@ -2501,23 +2515,17 @@ impl Runtime {
             else {
                 continue;
             };
-            let then_fact: ExistOrAndChainAtomicFact =
-                EqualFact::new(at_l, at_r, line_file.clone()).into();
+            let then_fact: AtomicFact = EqualFact::new(at_l, at_r, line_file.clone()).into();
             let dom_lo: Fact =
                 LessEqualFact::new((*r_sum.start).clone(), y_obj.clone(), line_file.clone()).into();
             let dom_hi: Fact =
                 LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
-            let forall_fact: Fact = ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![y_name],
-                    ParamType::Obj(StandardSet::Z.into()),
-                )]),
+            let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                y_name,
                 vec![dom_lo, dom_hi],
-                vec![then_fact],
-                line_file.clone(),
-            )?
-            .into();
-            let r = self.verify_fact(&forall_fact, verify_state)?;
+                &then_fact,
+                verify_state,
+            )?;
             if r.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,

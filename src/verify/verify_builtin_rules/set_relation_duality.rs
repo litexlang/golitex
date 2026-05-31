@@ -7,6 +7,22 @@ impl Runtime {
         subset_fact: &SubsetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        // Standard number sets form a fixed inclusion chain. Example: `N $subset R`.
+        if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
+            (&subset_fact.left, &subset_fact.right)
+        {
+            if Self::standard_set_is_subset_eq(left, right) {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        subset_fact.clone().into(),
+                        "standard_set_subset".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         if subset_fact.left.to_string() == subset_fact.right.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -46,6 +62,22 @@ impl Runtime {
         superset_fact: &SupersetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        // Standard number sets form a fixed inclusion chain. Example: `R $supset N`.
+        if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
+            (&superset_fact.left, &superset_fact.right)
+        {
+            if Self::standard_set_is_subset_eq(right, left) {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        superset_fact.clone().into(),
+                        "standard_set_superset".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         if superset_fact.left.to_string() == superset_fact.right.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

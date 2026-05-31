@@ -8,6 +8,49 @@ use crate::prelude::*;
 use super::helper::run_with_large_stack;
 
 #[test]
+fn builtin_rules_do_not_call_full_verifier_pipeline() {
+    let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("verify")
+        .join("verify_builtin_rules");
+    let disallowed_calls = [
+        "verify_fact(",
+        "verify_atomic_fact(",
+        "verify_forall_fact(",
+        "verify_exist_or_and_chain_atomic_fact(",
+        "verify_or_and_chain_atomic_fact(",
+    ];
+    let mut violations = Vec::new();
+
+    for entry in fs::read_dir(&builtin_rules_dir).expect("read verify_builtin_rules dir") {
+        let entry = entry.expect("read verify_builtin_rules entry");
+        let path = entry.path();
+        if path.extension().and_then(|ext| ext.to_str()) != Some("rs") {
+            continue;
+        }
+        let content = fs::read_to_string(&path).expect("read verify_builtin_rules source file");
+        for (line_index, line) in content.lines().enumerate() {
+            for disallowed_call in disallowed_calls {
+                if line.contains(disallowed_call) {
+                    violations.push(format!(
+                        "{}:{} contains `{}`",
+                        path.display(),
+                        line_index + 1,
+                        disallowed_call
+                    ));
+                }
+            }
+        }
+    }
+
+    assert!(
+        violations.is_empty(),
+        "builtin rules must use restricted known-atomic/builtin helpers, not the full verifier:\n{}",
+        violations.join("\n")
+    );
+}
+
+#[test]
 fn list_set_membership_implies_equality_or() {
     let source_code = r#"
 forall a set:

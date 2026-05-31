@@ -484,7 +484,10 @@ impl Runtime {
         if r.is_true() {
             return Ok(r);
         }
-        self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)
+        self.verify_non_equational_atomic_fact_with_restricted_builtin_rules(
+            atomic_fact,
+            verify_state,
+        )
     }
 
     fn verify_zero_order_on_sub_expr(
