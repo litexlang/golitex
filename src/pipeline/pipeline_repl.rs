@@ -27,16 +27,12 @@ fn run_repl_loop_internal(version_banner: &str, detail_output: bool) {
     }
 }
 
-fn run_repl_loop_with_readers<R, W>(
+fn run_repl_loop_with_readers(
     version_banner: &str,
     detail_output: bool,
-    stdin_reader: &mut R,
-    stdout_writer: &mut W,
-) -> io::Result<()>
-where
-    R: BufRead,
-    W: Write,
-{
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
     writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
     writeln!(stdout_writer, "website: https://litexlang.com")?;

@@ -49,4 +49,12 @@ impl OrFact {
         }
         result
     }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        let mut result: Vec<&Obj> = Vec::new();
+        for and_chain_atomic_fact in self.facts.iter() {
+            result.extend(and_chain_atomic_fact.get_args_from_fact_ref());
+        }
+        result
+    }
 }

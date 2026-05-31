@@ -290,11 +290,13 @@ fn imported_module_info(
 ) -> Result<ImportModuleInfo, RuntimeError> {
     match import_stmt {
         ImportStmt::ImportRelativePath(stmt) => {
-            let module_name = import_module_name(
-                stmt.as_mod_name.as_ref(),
-                || module_name_from_path(&stmt.path, import_stmt),
-                import_stmt,
-            )?;
+            let module_name = match stmt.as_mod_name.as_ref() {
+                Some(name) => validate_import_module_name(name.clone(), import_stmt)?,
+                None => validate_import_module_name(
+                    module_name_from_path(&stmt.path, import_stmt)?,
+                    import_stmt,
+                )?,
+            };
             let current_lit_path = runtime.module_manager.borrow().current_file_path_rc();
             let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
             let module_root_path = absolute_path_string(PathBuf::from(path));
@@ -309,7 +311,7 @@ fn imported_module_info(
             ))
         }
         ImportStmt::ImportGlobalModule(stmt) => {
-            let module_name = import_module_name(None, || Ok(stmt.mod_name.clone()), import_stmt)?;
+            let module_name = validate_import_module_name(stmt.mod_name.clone(), import_stmt)?;
             let (module_root_path, main_lit_path) = std_import_paths(stmt.mod_name.as_str());
             Ok(ImportModuleInfo::new(
                 module_name,
@@ -321,18 +323,10 @@ fn imported_module_info(
     }
 }
 
-fn import_module_name<F>(
-    as_mod_name: Option<&String>,
-    default_name: F,
+fn validate_import_module_name(
+    name: String,
     import_stmt: &ImportStmt,
-) -> Result<String, RuntimeError>
-where
-    F: FnOnce() -> Result<String, RuntimeError>,
-{
-    let name = match as_mod_name {
-        Some(name) => name.clone(),
-        None => default_name()?,
-    };
+) -> Result<String, RuntimeError> {
     if let Err(msg) = is_valid_litex_name(name.as_str()) {
         return Err(import_stmt_error(
             import_stmt,

@@ -1020,7 +1020,7 @@ fn build_previous_error_field_line(
     }
 }
 
-fn get_previous_error_reference<'b>(error: &'b RuntimeError) -> Option<&'b RuntimeError> {
+fn get_previous_error_reference(error: &RuntimeError) -> Option<&RuntimeError> {
     match error {
         RuntimeError::DefineParamsError(e) => match &e.previous_error {
             Some(previous_error) => Some(previous_error.as_ref()),

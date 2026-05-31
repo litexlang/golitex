@@ -149,7 +149,7 @@ impl Runtime {
         left.to_string() == right.to_string()
     }
 
-    fn add_common_remaining<'a>(left: &'a Add, right: &'a Add) -> Option<(&'a Obj, &'a Obj)> {
+    fn add_common_remaining(left: &Add, right: &Add) -> Option<(Obj, Obj)> {
         let pairs = [
             (
                 left.left.as_ref(),
@@ -178,7 +178,7 @@ impl Runtime {
         ];
         for (left_common, left_remaining, right_common, right_remaining) in pairs {
             if Self::objs_same_by_display(left_common, right_common) {
-                return Some((left_remaining, right_remaining));
+                return Some((left_remaining.clone(), right_remaining.clone()));
             }
         }
         None
@@ -815,8 +815,7 @@ impl Runtime {
                 Self::add_common_remaining(left_add, right_add)
             {
                 let subgoal: AtomicFact =
-                    LessEqualFact::new(left_remaining.clone(), right_remaining.clone(), lf.clone())
-                        .into();
+                    LessEqualFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal)?;
                 if result.is_true() {
                     return Ok(Some(StmtResult::FactualStmtSuccess(
@@ -1204,8 +1203,7 @@ impl Runtime {
                 Self::add_common_remaining(left_add, right_add)
             {
                 let subgoal: AtomicFact =
-                    LessFact::new(left_remaining.clone(), right_remaining.clone(), lf.clone())
-                        .into();
+                    LessFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal)?;
                 if result.is_true() {
                     return Ok(Some(StmtResult::FactualStmtSuccess(
