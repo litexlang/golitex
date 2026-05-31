@@ -128,4 +128,13 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => o.get_args_from_fact(),
         }
     }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => a.get_args_from_fact_ref(),
+            OrAndChainAtomicFact::AndFact(a) => a.get_args_from_fact_ref(),
+            OrAndChainAtomicFact::ChainFact(c) => c.get_args_from_fact_ref(),
+            OrAndChainAtomicFact::OrFact(o) => o.get_args_from_fact_ref(),
+        }
+    }
 }

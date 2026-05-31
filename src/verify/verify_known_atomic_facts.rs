@@ -27,8 +27,9 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        let args = atomic_fact.args_ref();
         let all_objs_equal_to_arg =
-            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[0], &module_names);
+            self.all_objs_equal_to_arg_for_known_atomic_fact(args[0], &module_names);
 
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
@@ -45,7 +46,7 @@ impl Runtime {
             }
         }
 
-        let arg = atomic_fact.args()[0].clone();
+        let arg = args[0].clone();
         let arg_resolved = self.resolve_obj(&arg);
         if arg_resolved.to_string() != arg.to_string() {
             let rewritten =
@@ -62,10 +63,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        let args = atomic_fact.args_ref();
         let all_objs_equal_to_arg0 =
-            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[0], &module_names);
+            self.all_objs_equal_to_arg_for_known_atomic_fact(args[0], &module_names);
         let all_objs_equal_to_arg1 =
-            self.all_objs_equal_to_arg_for_known_atomic_fact(&atomic_fact.args()[1], &module_names);
+            self.all_objs_equal_to_arg_for_known_atomic_fact(args[1], &module_names);
 
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
@@ -82,8 +84,8 @@ impl Runtime {
             }
         }
 
-        let left = atomic_fact.args()[0].clone();
-        let right = atomic_fact.args()[1].clone();
+        let left = args[0].clone();
+        let right = args[1].clone();
         let left_resolved = self.resolve_obj(&left);
         let right_resolved = self.resolve_obj(&right);
         if left_resolved.to_string() != left.to_string()
@@ -107,7 +109,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
-        for arg in atomic_fact.args().iter() {
+        let args = atomic_fact.args_ref();
+        for arg in args.iter() {
             all_objs_equal_to_each_arg
                 .push(self.all_objs_equal_to_arg_for_known_atomic_fact(arg, &module_names));
         }
@@ -135,10 +138,9 @@ impl Runtime {
             }
         }
 
-        let old_args = atomic_fact.args();
-        let mut new_args: Vec<Obj> = Vec::with_capacity(old_args.len());
+        let mut new_args: Vec<Obj> = Vec::with_capacity(args.len());
         let mut any_changed = false;
-        for a in old_args.iter() {
+        for a in args.iter() {
             let r = self.resolve_obj(a);
             if r.to_string() != a.to_string() {
                 any_changed = true;
@@ -378,8 +380,10 @@ impl Runtime {
             .known_atomic_facts_with_0_or_more_than_2_args
             .get(&(atomic_fact.key(), atomic_fact.is_true()))
         {
+            let atomic_fact_args = atomic_fact.args_ref();
             for known_fact in known_facts.iter() {
-                if known_fact.args().len() != atomic_fact.args().len() {
+                let known_fact_args = known_fact.args_ref();
+                if known_fact_args.len() != atomic_fact_args.len() {
                     let message = format!(
                         "known atomic fact {} has different number of args than the given fact {}",
                         known_fact.to_string(),
@@ -406,7 +410,7 @@ impl Runtime {
                     });
                 }
                 let mut all_args_match = true;
-                for (index, known_arg) in known_fact.args().iter().enumerate() {
+                for (index, known_arg) in known_fact_args.iter().enumerate() {
                     let known_arg_string = known_arg.to_string();
                     if !all_objs_equal_to_each_arg[index].contains(&known_arg_string) {
                         all_args_match = false;

@@ -136,7 +136,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
         Obj::AnonymousFn(anon) => {
-            for g in &anon.body.params_def_with_set {
+            for g in anon.body.params_def_with_set.iter() {
                 let mentions = obj_expr_mentions_bare_id(g.set_obj(), id);
                 if mentions {
                     return true;

@@ -49,7 +49,7 @@ fn latex_texttt_escape(s: &str) -> String {
 
 fn fn_set_clause_latex(clause: &FnSetClause) -> String {
     let mut slots: Vec<String> = Vec::new();
-    for g in &clause.params_def_with_set {
+    for g in clause.params_def_with_set.iter() {
         let set = fn_param_group_type_to_latex(g);
         for p in &g.params {
             slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
@@ -853,7 +853,7 @@ impl FnObj {
 impl AnonymousFn {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in &self.body.params_def_with_set {
+        for g in self.body.params_def_with_set.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
@@ -883,7 +883,7 @@ impl AnonymousFn {
 impl FnSet {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in &self.body.params_def_with_set {
+        for g in self.body.params_def_with_set.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));

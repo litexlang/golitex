@@ -602,7 +602,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let args_in_or_fact = or_fact.get_args_from_fact();
+        let args_in_or_fact = or_fact.get_args_from_fact_ref();
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
             let mut all_objs_equal_to_current_arg =
@@ -634,21 +634,21 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_or_facts) = environment.known_or_facts.get(&or_fact.key()) {
             for known_or_fact in known_or_facts.iter() {
-                let result = Self::_verify_or_fact_the_same_type_and_return_matched_args(
-                    known_or_fact,
-                    or_fact,
-                )?;
+                if !Self::_verify_or_fact_the_same_type_ref(known_or_fact, or_fact)? {
+                    continue;
+                }
                 let mut all_args_match = true;
-                if let Some(matched_args) = result {
-                    for (index, matched_arg) in matched_args.iter().enumerate() {
-                        let known_arg_string = matched_arg.0.to_string();
+                let known_args = known_or_fact.get_args_from_fact_ref();
+                let given_args = or_fact.get_args_from_fact_ref();
+                for (index, known_arg) in known_args.iter().enumerate() {
+                    let given_arg = given_args[index];
+                    let known_arg_string = known_arg.to_string();
 
-                        if known_arg_string != matched_arg.1.to_string()
-                            && !all_objs_equal_to_each_arg[index].contains(&known_arg_string)
-                        {
-                            all_args_match = false;
-                            break;
-                        }
+                    if known_arg_string != given_arg.to_string()
+                        && !all_objs_equal_to_each_arg[index].contains(&known_arg_string)
+                    {
+                        all_args_match = false;
+                        break;
                     }
                 }
 
