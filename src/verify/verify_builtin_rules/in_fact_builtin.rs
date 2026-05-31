@@ -441,7 +441,10 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
+                self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                    &expanded.into(),
+                    verify_state,
+                )
             }
             (_, Obj::SeqSet(ss)) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
@@ -450,7 +453,10 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
+                self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                    &expanded.into(),
+                    verify_state,
+                )
             }
             (_, Obj::MatrixSet(ms)) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
@@ -459,7 +465,10 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
+                self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                    &expanded.into(),
+                    verify_state,
+                )
             }
             (_, target_set_obj) => {
                 let finite_seq_literal_application_result = self
@@ -511,8 +520,10 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let element_in_param_set_result =
-            self.verify_atomic_fact(&element_in_param_set, verify_state)?;
+        let element_in_param_set_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+            &element_in_param_set,
+            verify_state,
+        )?;
         if !element_in_param_set_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -543,8 +554,11 @@ impl Runtime {
                     )))
                 })?;
 
-            let instantiated_fact_result =
-                self.verify_or_and_chain_atomic_fact(&instantiated_fact, verify_state)?;
+            let instantiated_fact_result = self
+                .verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+                    &instantiated_fact,
+                    verify_state,
+                )?;
             if !instantiated_fact_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -575,7 +589,8 @@ impl Runtime {
         let cart_obj: Obj = Cart::new(field_types).into();
         let cart_membership: AtomicFact =
             InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
-        let cart_result = self.verify_atomic_fact(&cart_membership, verify_state)?;
+        let cart_result = self
+            .verify_atomic_fact_by_known_atomic_or_builtin_only(&cart_membership, verify_state)?;
         if !cart_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -607,7 +622,8 @@ impl Runtime {
                 ParamObjType::DefStructField,
                 Some(in_fact.line_file.clone()),
             )?;
-            let fact_result = self.verify_fact(&instantiated_fact, verify_state)?;
+            let fact_result =
+                self.verify_fact_by_known_atomic_or_builtin_only(&instantiated_fact, verify_state)?;
             if !fact_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -2012,7 +2028,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let verify_subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
+        let verify_subset_result =
+            self.verify_atomic_fact_by_known_atomic_or_builtin_only(&subset_fact, verify_state)?;
         if !verify_subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -2055,8 +2072,11 @@ impl Runtime {
             let element_obj = *element_box.clone();
             let element_in_base_fact =
                 InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
-            let verify_one_element_result =
-                self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
+            let verify_one_element_result = self
+                .verify_atomic_fact_by_known_atomic_or_builtin_only(
+                    &element_in_base_fact,
+                    verify_state,
+                )?;
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
