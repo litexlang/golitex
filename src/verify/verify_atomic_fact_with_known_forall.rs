@@ -2078,7 +2078,7 @@ impl Runtime {
         )
     }
 
-    fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
+    pub(crate) fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
         match (subset, superset) {
             (StandardSet::NPos, StandardSet::NPos)
             | (StandardSet::NPos, StandardSet::N)

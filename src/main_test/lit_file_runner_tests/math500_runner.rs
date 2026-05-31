@@ -151,9 +151,7 @@ fn run_math500_litex_all() {
 
 fn run_math500_litex_simple_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let completed_dir = manifest_dir
-        .join("MATH-500-litex")
-        .join("litex_file");
+    let completed_dir = manifest_dir.join("MATH-500-litex").join("litex_file");
     let completed_dir = if completed_dir.is_dir() {
         completed_dir
     } else {
