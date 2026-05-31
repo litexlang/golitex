@@ -182,7 +182,7 @@ After you prove the standard associativity-shaped `forall` for a binary user-def
 
 ### `by reflexive_prop`, `by symmetric_prop`, `by antisymmetric_prop` (2026-05)
 
-These register basic relation properties for user-defined props only, not builtin predicates. Reflexive registrations can close `$p(a, a)`. Symmetric registrations retry positive atoms with the registered argument permutation. Antisymmetric registrations can close `a = b` from `$p(a, b)` and `$p(b, a)`. See the corresponding Manual sections and `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
+These register basic relation properties for user-defined props only, not builtin predicates. Reflexive registrations can close `$p(a, a)`. Symmetric registrations retry positive atoms with the registered argument permutation. Antisymmetric registrations can close `a = b` from `$p(a, b)` and `$p(b, a)`. See the corresponding Manual sections and `examples/01_proof_patterns/by_symmetric_reflexive_antisymmetric_prop.lit`.
 
 ### Explicit struct views (2026-05)
 

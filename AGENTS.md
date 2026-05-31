@@ -117,7 +117,7 @@ For each item, proceed in this order:
 
 4. Put unfinished attempts in the local unfinished-explanation area. In
    MiniF2F this is
-   `scripts/litex-minif2f/unfinished_problems_and_why_they_are_unfiniishded/`.
+   `scripts/litex-minif2f/unfinished_dataset/problem_notes/`.
    For another dataset or textbook workspace, create the analogous nearby
    folder if it does not already exist. Name the file by the problem or theorem
    id. Record the proof idea, the current Litex attempt, the exact verifier
@@ -135,7 +135,7 @@ For each item, proceed in this order:
 
 7. After solving a formerly unfinished item, write a short "war story" in the
    local solved-experience area. In MiniF2F this is
-   `scripts/litex-minif2f/how_unfinshed_problems_are_solved/`. For another
+   `scripts/litex-minif2f/experience/problem_notes/`. For another
    source, create the analogous nearby folder if needed. Record the natural
    idea, where the attempt got stuck, the exact trick or Litex pattern that
    solved it, and any reusable lesson for later items.
