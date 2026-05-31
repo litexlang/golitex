@@ -71,3 +71,29 @@ impl fmt::Display for ForallFact {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    fn set_param(name: &str) -> ParamDefWithType {
+        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![name.to_string()],
+            ParamType::Set(Set::new()),
+        )])
+    }
+
+    #[test]
+    fn new_rejects_nested_forall_reusing_outer_param() {
+        let inner = ForallFact::new(set_param("x"), vec![], vec![], default_line_file()).unwrap();
+
+        let outer = ForallFact::new(
+            set_param("x"),
+            vec![inner.into()],
+            vec![],
+            default_line_file(),
+        );
+
+        assert!(outer.is_err());
+    }
+}

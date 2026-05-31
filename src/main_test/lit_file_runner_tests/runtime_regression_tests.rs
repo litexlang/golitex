@@ -73,6 +73,35 @@ forall a set:
 }
 
 #[test]
+fn nested_forall_reusing_outer_param_is_rejected() {
+    let source_code = r#"
+forall x R:
+    forall x R:
+        x = x
+    =>:
+        x = x
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("nested_forall_reusing_outer_param_is_rejected");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "nested forall with duplicate param should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("free parameter `x` is already bound as Forall in an active scope")
+            || run_output.contains("duplicate Forall free parameter `x` in nested scope"),
+        "failure should mention duplicate forall parameter:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
     run_with_large_stack(
         "anonymous_fn_restrict_requires_valid_target_domain_and_return_large_stack",

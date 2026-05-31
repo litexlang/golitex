@@ -653,6 +653,61 @@ mod tests {
     }
 
     #[test]
+    fn nested_then_top_level_same_import_runs_once() {
+        let root = temp_test_dir("nested-then-top-level-import-runs-once");
+        let b_dir = root.join("B");
+        let a_dir = root.join("A");
+        fs::create_dir_all(&b_dir).expect("create B module dir");
+        fs::create_dir_all(&a_dir).expect("create A module dir");
+        fs::write(
+            b_dir.join("main.lit"),
+            "abstract_prop b_prop(x)\nknow $b_prop(2)",
+        )
+        .expect("write B module");
+        fs::write(
+            a_dir.join("main.lit"),
+            "import \"../B\" as B\nabstract_prop a_prop(x)",
+        )
+        .expect("write A module");
+
+        let source_code = format!(
+            "import \"{}\" as A\nimport \"{}\" as B\n$B::b_prop(2)",
+            a_dir.to_string_lossy(),
+            b_dir.to_string_lossy()
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
+            run_succeeded,
+            "top-level reimport after nested import should succeed:\n{}",
+            run_output
+        );
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 2);
+        assert!(module_manager.imported_modules.contains_key("A"));
+        assert!(module_manager.imported_modules.contains_key("B"));
+        let b_main_path = absolute_path_string(b_dir.join("main.lit"));
+        let b_main_run_count = module_manager
+            .run_file_paths
+            .iter()
+            .filter(|path| path.as_ref() == b_main_path.as_str())
+            .count();
+        assert_eq!(
+            b_main_run_count, 1,
+            "B/main.lit should be loaded exactly once"
+        );
+    }
+
+    #[test]
     fn failed_nested_import_rolls_back_shared_module_manager() {
         let root = temp_test_dir("failed-nested-import-rolls-back-manager");
         let nested_dir = root.join("Nested");
