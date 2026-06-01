@@ -329,23 +329,46 @@ fn run_metamathqa_litex_solutions() {
 }
 
 #[test]
-fn run_minif2f_litex_completed() {
+fn run_minif2f_litex_finished() {
     run_with_large_stack(
-        "run_minif2f_litex_completed_large_stack",
-        run_minif2f_litex_completed_impl,
+        "run_minif2f_litex_finished_large_stack",
+        run_minif2f_litex_finished_impl,
     );
 }
 
-fn run_minif2f_litex_completed_impl() {
+#[test]
+fn run_math500_litex_finished() {
+    run_with_large_stack(
+        "run_math500_litex_finished_large_stack",
+        run_math500_litex_finished_impl,
+    );
+}
+
+fn run_minif2f_litex_finished_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let jsonl_path = manifest_dir
-        .parent()
-        .unwrap_or(manifest_dir.as_path())
-        .join("MiniF2F-litex")
-        .join("litex_completed.jsonl");
+        .join("scripts")
+        .join("litex-minif2f")
+        .join("litex_dataset")
+        .join("finished.jsonl");
+    run_finished_litex_jsonl_dataset("MiniF2F-litex finished", &jsonl_path, "name");
+}
+
+fn run_math500_litex_finished_impl() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let jsonl_path = manifest_dir
+        .join("scripts")
+        .join("MATH-500-litex")
+        .join("litex_dataset")
+        .join("test-litex.jsonl");
+    run_finished_litex_jsonl_dataset("MATH-500-litex finished", &jsonl_path, "unique_id");
+}
+
+fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, label_field: &str) {
     assert!(
         jsonl_path.is_file(),
-        "MiniF2F-litex/litex_completed.jsonl must exist at {:?}",
+        "{} JSONL file must exist at {:?}",
+        dataset_label,
         jsonl_path
     );
 
@@ -353,7 +376,7 @@ fn run_minif2f_litex_completed_impl() {
         Some(path_string) => path_string.to_string(),
         None => panic!("{:?} must be valid UTF-8", jsonl_path),
     };
-    let jsonl_content = match fs::read_to_string(&jsonl_path) {
+    let jsonl_content = match fs::read_to_string(jsonl_path) {
         Ok(content) => content,
         Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
     };
@@ -366,7 +389,7 @@ fn run_minif2f_litex_completed_impl() {
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
     let mut failed_labels: Vec<String> = Vec::new();
-    let mut total_solution_duration_ms: f64 = 0.0;
+    let mut durations_ms: Vec<(String, f64)> = Vec::new();
 
     for (line_index, line) in jsonl_content.lines().enumerate() {
         if line.trim().is_empty() {
@@ -377,9 +400,10 @@ fn run_minif2f_litex_completed_impl() {
             runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
         }
 
-        let name = jsonl_string_field(line, "name").unwrap_or_else(|error_message| {
+        let item_label = jsonl_string_field(line, label_field).unwrap_or_else(|error_message| {
             panic!(
-                "failed to parse name in {:?} line {}: {}",
+                "failed to parse {} in {:?} line {}: {}",
+                label_field,
                 jsonl_path,
                 line_index + 1,
                 error_message
@@ -390,7 +414,7 @@ fn run_minif2f_litex_completed_impl() {
                 "failed to parse litex_code in {:?} line {} ({}): {}",
                 jsonl_path,
                 line_index + 1,
-                name,
+                item_label,
                 error_message
             )
         });
@@ -400,44 +424,70 @@ fn run_minif2f_litex_completed_impl() {
         let (stmt_results, runtime_error) =
             run_source_code(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
-        total_solution_duration_ms += duration_ms;
 
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         total_count += 1;
+        durations_ms.push((item_label.clone(), duration_ms));
         if !run_succeeded {
-            let label = format!("{}:{}", line_index + 1, name);
+            let label = format!("{}:{}", line_index + 1, item_label);
             println!(
-                "=== [FAILED] MiniF2F-litex at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                "=== [FAILED] {} at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                dataset_label,
                 line_index + 1,
                 duration_ms,
-                name,
+                item_label,
                 run_output
             );
             failed_labels.push(label);
         }
+
+        if total_count % 100 == 0 {
+            println!(
+                "--- {} progress: {} snippet(s), {} failure(s) ---",
+                dataset_label,
+                total_count,
+                failed_labels.len()
+            );
+        }
     }
 
+    assert!(
+        total_count > 0,
+        "{} JSONL file must contain at least one non-empty row at {:?}",
+        dataset_label,
+        jsonl_path
+    );
+
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
-    println!("--- MiniF2F-litex timing (summary) ---");
+    let total_duration_ms: f64 = durations_ms
+        .iter()
+        .map(|(_, duration_ms)| *duration_ms)
+        .sum();
+    println!("--- {} timing (summary) ---", dataset_label);
     println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
     println!(
-        "  completed snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
-        total_count, total_solution_duration_ms, run_wall_ms
+        "  finished snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+        total_count, total_duration_ms, run_wall_ms
+    );
+    print_slowest_run_labels(
+        format!("{} snippets", dataset_label).as_str(),
+        durations_ms.as_slice(),
     );
 
     if failed_labels.is_empty() {
-        println!("--- MiniF2F-litex: all completed snippets OK ---");
+        println!("--- {}: all finished snippets OK ---", dataset_label);
         return;
     }
 
-    println!("--- MiniF2F-litex failed names ---");
+    println!("--- {} failed labels ---", dataset_label);
     for label in failed_labels.iter() {
         println!("{}", label);
     }
     panic!(
-        "MiniF2F-litex completed snippet run failed for {} of {} item(s)",
+        "{} snippet run failed for {} of {} item(s)",
+        dataset_label,
         failed_labels.len(),
         total_count
     );
@@ -979,6 +1029,40 @@ fn parse_json_string_at(line: &str, start_index: usize) -> Result<String, String
                 }
                 let code = u32::from_str_radix(hex.as_str(), 16)
                     .map_err(|_| format!("invalid JSON unicode escape: {}", hex))?;
+                let code =
+                    if (0xD800..=0xDBFF).contains(&code) {
+                        let backslash = chars
+                            .next()
+                            .ok_or_else(|| "unfinished JSON unicode surrogate pair".to_string())?;
+                        let unicode_marker = chars
+                            .next()
+                            .ok_or_else(|| "unfinished JSON unicode surrogate pair".to_string())?;
+                        if backslash != '\\' || unicode_marker != 'u' {
+                            return Err(
+                                "high JSON unicode surrogate must be followed by \\u".to_string()
+                            );
+                        }
+
+                        let mut low_hex = String::new();
+                        for _ in 0..4 {
+                            low_hex.push(chars.next().ok_or_else(|| {
+                                "unfinished JSON unicode low surrogate".to_string()
+                            })?);
+                        }
+                        let low = u32::from_str_radix(low_hex.as_str(), 16)
+                            .map_err(|_| format!("invalid JSON unicode escape: {}", low_hex))?;
+                        if !(0xDC00..=0xDFFF).contains(&low) {
+                            return Err(format!(
+                                "high JSON unicode surrogate {} followed by non-low surrogate {}",
+                                hex, low_hex
+                            ));
+                        }
+                        0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00)
+                    } else if (0xDC00..=0xDFFF).contains(&code) {
+                        return Err(format!("unexpected JSON unicode low surrogate: {}", hex));
+                    } else {
+                        code
+                    };
                 let decoded = char::from_u32(code)
                     .ok_or_else(|| format!("invalid JSON unicode code point: {}", hex))?;
                 result.push(decoded);

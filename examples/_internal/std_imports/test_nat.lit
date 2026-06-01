@@ -15,6 +15,9 @@ $Nat::Dvd(3, 12)
 
 $Nat::ModEq(4, 11, 3)
 
+by thm Nat::euclidean_division(17, 5)
+exist m, r N st {$Nat::EuclideanDivision(17, 5, m, r)}
+
 # Prime, gcd, and coprime Mathlib-facing theorem names.
 by thm Nat::Prime_two(0)
 $Nat::Prime(2)

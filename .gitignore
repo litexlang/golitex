@@ -3,7 +3,8 @@
 
 # From former litex/.gitignore (paths now at root)
 binary/
-scripts/
+scripts/*
+!scripts/update_external_repos.sh
 examples/hidden
 
 # Editor / tooling
