@@ -11,3 +11,5 @@ by extension:
                 y $in {1, 2}
 
 {1, 2} = {2, 1}
+
+by extension {1} = {1}

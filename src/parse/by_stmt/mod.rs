@@ -14,6 +14,7 @@ mod reflexive_prop_by_stmt;
 mod symmetric_prop_by_stmt;
 mod thm_by_stmt;
 mod transitive_prop_by_stmt;
+mod zorn_lemma_by_stmt;
 
 impl Runtime {
     pub fn parse_by_prefixed_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -31,12 +32,13 @@ impl Runtime {
             SYMMETRIC_PROP => self.parse_by_symmetric_prop_stmt(tb),
             REFLEXIVE_PROP => self.parse_by_reflexive_prop_stmt(tb),
             ANTISYMMETRIC_PROP => self.parse_by_antisymmetric_prop_stmt(tb),
+            ZORN_LEMMA => self.parse_by_zorn_lemma_stmt(tb),
             THM => self.parse_by_thm_stmt(tb),
             CLOSED_RANGE => self.parse_by_closed_range_as_cases_stmt(tb),
             FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, thm, fn as set, fn set as set, or tuple as set after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, zorn_lemma, thm, fn as set, fn set as set, or tuple as set after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

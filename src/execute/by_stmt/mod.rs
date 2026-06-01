@@ -16,3 +16,4 @@ mod symmetric_prop_by_stmt;
 mod thm_by_stmt;
 mod transitive_prop_by_stmt;
 mod tuple_by_stmt;
+mod zorn_lemma_by_stmt;

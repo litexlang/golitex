@@ -27,7 +27,7 @@ impl FnSetBody {
         let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
             &self.params_def_with_set,
         ));
-        for param_def_with_set in &self.params_def_with_set {
+        for param_def_with_set in self.params_def_with_set.iter() {
             ret.extend(param_def_with_set.params.iter().cloned());
         }
         ret

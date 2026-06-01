@@ -470,7 +470,7 @@ fn check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     free_param_type: ParamObjType,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
-    for obj in fact.get_args_from_fact().iter() {
+    for obj in fact.get_args_from_fact_ref() {
         check_obj_has_no_duplicate_free_parameter(obj, free_param_type, params_already_used)?;
     }
     Ok(())

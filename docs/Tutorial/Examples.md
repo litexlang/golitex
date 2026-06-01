@@ -19,6 +19,11 @@ For an abstract mathematics example, start with the
 tutorial. It shows how Litex can introduce primitive domains and relations,
 record Hilbert-style axioms, and then reason from that abstract structure.
 
+**Boundary note:** these examples are small runnable demonstrations of the
+Litex proof interface. Lines introduced by `know` are assumptions or reusable
+background facts; they are not proved by the example unless a later checked
+proof replaces them.
+
 ## Example 1: A Bare Fact
 
 ```litex
@@ -59,8 +64,8 @@ know $some_property(a)
 $some_property(2)
 ```
 
-`know` stores the fact in the context.  
-The second line shows that the fact is now available.
+`know` stores the fact in the context without proving it in this snippet. The
+second line shows that the fact is now available.
 
 ## Example 5: Membership
 

@@ -18,6 +18,12 @@ The fastest correct mental model is:
 
 So Litex is not mainly about writing tactics. It is mainly about writing mathematical facts in a good order.
 
+**Boundary note:** this tutorial teaches the Litex feedback loop, not a
+production verification guarantee. Litex is still beta research infrastructure.
+When a fact is checked, it has been justified by the current context, builtin
+rules, known facts, or known `forall` facts. When a fact is introduced with
+`know`, it is an assumption or proof debt, not a fact proved by Litex.
+
 ## The Three Things You Need First
 
 You can understand a lot of Litex with only these three ideas.
@@ -59,22 +65,31 @@ This is why the order of lines matters.
 ## The Smallest Useful Example
 
 ```litex
-have x R = 2
-x + 1 = 3
-x^2 = 4
+1 + 1 = 2
 ```
 
-Read it like this:
+This line is already a complete Litex proof script. It states one fact, and
+Litex verifies it by arithmetic.
 
-1. Introduce a real number `x` and fix it to `2`.
-2. Since Litex now knows `x = 2`, it can verify `x + 1 = 3`.
-3. It can also verify `x^2 = 4`.
+Now create a tiny local world:
 
-That is already a large part of the user experience.
+```litex
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4
+```
 
-## `have`, `know`, and bare facts
+Read it like this: for every real number `x`, if `x = 2`, then `x + 1 = 3`
+and `x^2 = 4`. Litex checks the two conclusion lines from the assumption.
 
-These are the first three surface forms most people need.
+That is already a large part of the user experience: create enough context,
+write the next fact, and let the checker justify it.
+
+## `have`, bare facts, and local worlds
+
+These are the first surface forms most people need.
 
 ### `have`
 
@@ -87,18 +102,6 @@ have a R = 5
 ```
 
 Now Litex knows `a` is a real number and `a = 5`.
-
-### `know`
-
-Use `know` to store a fact directly in the context.
-
-Example:
-
-```litex
-know 2 < 3
-```
-
-Now later lines can reuse `2 < 3`.
 
 ### Bare fact line
 
@@ -113,14 +116,31 @@ a + 1 = 6
 
 The second line is not a definition. It is a claim Litex must verify.
 
-## `forall` Means a Reusable General Fact
+### `forall`
 
-One of the most important ideas in Litex is that a known `forall` fact can be reused later by instantiating it.
+Use `forall` when you want to prove a fact in a local world created by
+parameters and assumptions.
 
 Example:
 
 ```litex
-know forall x R:
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+```
+
+The line under `=>:` is checked using the local assumption `x = 2`.
+
+## `forall` Means a Reusable General Fact
+
+One of the most important ideas in Litex is that a checked `forall` fact can be
+reused later by instantiating it.
+
+Example:
+
+```litex
+forall x R:
     x = 2
     =>:
         x + 1 = 3
@@ -131,7 +151,7 @@ a + 1 = 3
 
 What happens:
 
-1. Litex stores the general statement.
+1. Litex checks and stores the general statement.
 2. Later it sees `a = 2`.
 3. It matches the general fact with `a`.
 4. It verifies `a + 1 = 3`.
@@ -230,10 +250,10 @@ This distinction is important: `unknown` is a proof gap, while `error` is a malf
 A good beginner workflow is:
 
 1. Introduce objects with `have`.
-2. State known assumptions with `know`.
+2. Put local assumptions inside a `forall` block.
 3. Write the next fact you want.
 4. If it fails, make the missing step explicit.
-5. Turn repeated patterns into a `forall`.
+5. Turn repeated patterns into reusable `forall` facts.
 
 If you do only that, you can already write a surprising amount of Litex.
 

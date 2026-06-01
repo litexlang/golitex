@@ -595,8 +595,8 @@ impl Runtime {
             return Ok(match_result);
         }
 
-        let atomic_fact_args_in_known_forall = atomic_fact_in_known_forall.args();
-        let given_args = given_fact.args();
+        let atomic_fact_args_in_known_forall = atomic_fact_in_known_forall.args_ref();
+        let given_args = given_fact.args_ref();
         let forward = self.match_args_in_fact_in_known_forall_fact_with_given_args(
             &atomic_fact_args_in_known_forall,
             &given_args,
@@ -647,38 +647,30 @@ impl Runtime {
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
         &mut self,
-        fact_args_in_known_forall: &Vec<Obj>,
-        given_fact_args: &Vec<Obj>,
+        fact_args_in_known_forall: &[&Obj],
+        given_fact_args: &[&Obj],
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if fact_args_in_known_forall.len() != given_fact_args.len() {
             return Ok(None);
         }
 
-        let mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map: HashMap<String, Obj> =
-            HashMap::new();
-
+        let mut merged: HashMap<String, Obj> = HashMap::new();
         for (arg_in_atomic_fact_in_known_forall, arg_in_given) in
             fact_args_in_known_forall.iter().zip(given_fact_args.iter())
         {
-            let sub_map_option = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            let sub_map = match self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                 arg_in_atomic_fact_in_known_forall,
                 arg_in_given,
-            )?;
-            let sub_map = match sub_map_option {
+            )? {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            if !self.merge_arg_match_map_into(
-                &mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map,
-                sub_map,
-            ) {
+            if !self.merge_arg_match_map_into(&mut merged, sub_map) {
                 return Ok(None);
             }
         }
 
-        Ok(Some(
-            atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map,
-        ))
+        Ok(Some(merged))
     }
 
     // Return None if the given arg does not match the known arg.
@@ -1474,9 +1466,9 @@ impl Runtime {
     }
 
     /// Zip known/given argument pairs of equal length; merge substitution maps from each recursive match.
-    fn match_arg_pairs_then_merge<'a>(
+    fn match_arg_pairs_then_merge(
         &mut self,
-        pairs: impl Iterator<Item = (&'a Obj, &'a Obj)>,
+        pairs: Vec<(&Obj, &Obj)>,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (left_elem, given_elem) in pairs {
@@ -1501,12 +1493,12 @@ impl Runtime {
         if left_elements.len() != given_elements.len() {
             return Ok(None);
         }
-        self.match_arg_pairs_then_merge(
-            left_elements
-                .iter()
-                .zip(given_elements.iter())
-                .map(|(l, g)| (l.as_ref(), g.as_ref())),
-        )
+        let pairs = left_elements
+            .iter()
+            .zip(given_elements.iter())
+            .map(|(l, g)| (l.as_ref(), g.as_ref()))
+            .collect();
+        self.match_arg_pairs_then_merge(pairs)
     }
 
     fn match_arg_vec_then_merge(
@@ -1517,7 +1509,8 @@ impl Runtime {
         if left.len() != given.len() {
             return Ok(None);
         }
-        self.match_arg_pairs_then_merge(left.iter().zip(given.iter()).map(|(l, g)| (l, g)))
+        let pairs = left.iter().zip(given.iter()).collect();
+        self.match_arg_pairs_then_merge(pairs)
     }
 
     fn match_arg_matrix_rows_then_merge(
@@ -1557,14 +1550,13 @@ impl Runtime {
         left: &OrAndChainAtomicFact,
         given: &OrAndChainAtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let Some(pairs) =
-            Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
-                left, given,
-            )?
-        else {
+        if !Self::_verify_or_and_chain_atomic_facts_the_same_type_ref(left, given)? {
             return Ok(None);
-        };
-        self.match_arg_pairs_then_merge(pairs.iter().map(|(l, g)| (l, g)))
+        }
+
+        let left_args = left.get_args_from_fact_ref();
+        let given_args = given.get_args_from_fact_ref();
+        self.match_args_in_fact_in_known_forall_fact_with_given_args(&left_args, &given_args)
     }
 
     fn match_arg_when_left_is_set_builder(
@@ -2078,7 +2070,7 @@ impl Runtime {
         )
     }
 
-    fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
+    pub(crate) fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
         match (subset, superset) {
             (StandardSet::NPos, StandardSet::NPos)
             | (StandardSet::NPos, StandardSet::N)

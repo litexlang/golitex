@@ -123,6 +123,7 @@ pub const TRANSITIVE_PROP: &str = "transitive_prop";
 pub const SYMMETRIC_PROP: &str = "symmetric_prop";
 pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
+pub const ZORN_LEMMA: &str = "zorn_lemma";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -293,6 +294,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         WITNESS,
         EXTENSION,
         TRANSITIVE_PROP,
+        ZORN_LEMMA,
         IMPOSSIBLE,
         TUPLE,
         ALGO,

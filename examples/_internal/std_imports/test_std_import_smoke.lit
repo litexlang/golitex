@@ -1,15 +1,28 @@
-import mathlib_compat
+import Rat
+import Nat
+import C
+import Real
+import Trig
+import Finset
+import ZMod
+import Int
 
 sqrt(4) = 2
 Real::logb(2, 8) = 3
-Real::sin(0) = 0
-Real::cos(0) = 1
+Trig::sin(0) = 0
+Trig::cos(0) = 1
 pi = pi
 
-have z &complex::C = (3, 4)
-&complex::C{z}.re^2 + &complex::C{z}.im^2 = 3^2 + 4^2 = 25
-complex::C_normSq(z) = 25
-complex::C_abs(z) = complex::C_norm(z) = 5
+by thm Real::exists_rat_between(1, 2)
+exist q Q st {1 < q < 2}
+
+by thm Real::exists_rat_seq_converging_to_real(sqrt(2))
+exist a seq(Q) st {$Real::rat_seq_converges_to_R(a, sqrt(2)), $Real::rat_seq_cauchy_in_R(a)}
+
+have z &C::C = (3, 4)
+&C::C{z}.re^2 + &C::C{z}.im^2 = 3^2 + 4^2 = 25
+C::normSq(z) = 25
+C::norm(z) = 5
 
 Finset::card({1, 2, 3}) = 3
 
@@ -50,10 +63,12 @@ by thm Int::gcd_def(4, 6)
 Int::gcd(4, 6) = Nat::gcd(Int::natAbs(4), Int::natAbs(6))
 
 Rat::den(3 / 2) != 0
-3 / 2 = Rat::num(3 / 2) / Rat::den(3 / 2)
+Rat::num(3 / 2) $in Z
+
+by thm Rat::num_den_coprime(3 / 2)
+$Nat::Coprime(Int::natAbs(Rat::num(3 / 2)), Rat::den(3 / 2))
 
 by thm Int::floor_le(3 / 2)
 Int::floor(3 / 2) <= 3 / 2
 
-by thm Int::lt_floor_add_one(3 / 2)
-3 / 2 < Int::floor(3 / 2) + 1
+Int::floor(3 / 2) $in Z
