@@ -178,6 +178,20 @@ impl Runtime {
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
+            (_, Obj::StandardSet(StandardSet::QPos)) => self
+                .verify_in_fact_standard_positive_by_zero_less_and_base_set(
+                    in_fact,
+                    verify_state,
+                    StandardSet::Q,
+                    "Q_pos: 0 < x and x in Q",
+                ),
+            (_, Obj::StandardSet(StandardSet::RPos)) => self
+                .verify_in_fact_standard_positive_by_zero_less_and_base_set(
+                    in_fact,
+                    verify_state,
+                    StandardSet::R,
+                    "R_pos: 0 < x and x in R",
+                ),
             (_, Obj::ClosedRange(closed_range)) => self
                 .verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state),
             (_, Obj::Range(range)) => {
@@ -1455,6 +1469,39 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    // `Q_pos` and `R_pos` are the positive elements of their base sets.
+    // Example: from `a $in Q` and `0 < a`, prove `a $in Q_pos`.
+    fn verify_in_fact_standard_positive_by_zero_less_and_base_set(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+        base_set: StandardSet,
+        rule_name: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let zero_lt_elem: AtomicFact = LessFact::new(zero, elem.clone(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
+            &zero_lt_elem,
+            verify_state,
+        )? {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let in_base_set: AtomicFact = InFact::new(elem.clone(), base_set.into(), lf).into();
+        if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
+            &in_base_set,
+            verify_state,
+        )? {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact, rule_name,
+        ))
     }
 
     // `N` = nonnegative integers: from `x $in Z` and `x >= 0`; strict `x > 0` also suffices.

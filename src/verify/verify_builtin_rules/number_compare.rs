@@ -116,6 +116,13 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) = self
+            .verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
+                atomic_fact,
+            )?
+        {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(atomic_fact)?
         {
@@ -1825,6 +1832,54 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "0 <= a^b from 0 < a and b in R".to_string(),
                 vec![base_result, in_r_result],
+            ),
+        )))
+    }
+
+    // `0 <= a^n` / `a^n >= 0` when `0 <= a` and `n in N_pos`.
+    // This covers symbolic positive integer exponents without needing `a > 0`.
+    // Example: `forall a R, n N_pos: a >= 0 =>: a^n >= 0`.
+    fn verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_equal_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Pow(pow_obj) = &less_equal_fact.right else {
+            return Ok(None);
+        };
+        let zero = &less_equal_fact.left;
+        let line_file = &less_equal_fact.line_file;
+        let base = pow_obj.base.as_ref();
+        let base_result = self.verify_zero_order_on_sub_expr(zero, base, true, line_file)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        let in_n_pos: AtomicFact = InFact::new(
+            (*pow_obj.exponent).clone(),
+            StandardSet::NPos.into(),
+            line_file.clone(),
+        )
+        .into();
+        let in_n_pos_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &in_n_pos,
+            &VerifyState::new(0, true),
+        )?;
+        if !in_n_pos_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 <= a^n from 0 <= a and n in N_pos".to_string(),
+                vec![base_result, in_n_pos_result],
             ),
         )))
     }

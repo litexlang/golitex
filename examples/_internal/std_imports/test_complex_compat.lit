@@ -1,0 +1,9 @@
+import complex
+
+have z &complex::C = (3, 4)
+
+&complex::C{z}.re = 3
+&complex::C{z}.im = 4
+complex::C_conj(z) = (3, -4)
+complex::C_normSq(z) = 25
+complex::C_abs(z) = complex::C_norm(z) = 5

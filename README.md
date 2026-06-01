@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Write the Next Fact. Let the Checker Explain Why.
+# Litex: The Formal Language Where Code Verifies Itself
 
 *by Jiachen Shen and The Litex Team, version 0.9.88-beta*
 
@@ -156,6 +156,39 @@ construct proof terms through a general proof-programming environment, Litex
 asks whether the next mathematical fact follows from the current verified
 context. *In one local run, more than 240 runnable examples from The Mechanics
 of Litex Proof checked in about 13 seconds.*
+
+A tiny example makes the interface difference concrete. In Litex, the user
+writes the facts they want checked:
+
+```litex
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4
+```
+
+One Lean proof of the same elementary facts names the hypothesis, proves the
+two conclusions, and then packages them together:
+
+```lean
+import Mathlib.Tactic
+
+example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
+  have h_add : x + 1 = 3 := by
+    rw [h]
+    norm_num
+  have h_square : x ^ 2 = 4 := by
+    rw [h]
+    norm_num
+  exact ⟨h_add, h_square⟩
+```
+
+The point is not that Lean cannot prove this. It can, and Lean's proof engine
+is much more general. The point is where the default attention goes: Lean asks
+the user to work through a proof language, while Litex lets the user put the
+mathematical facts on the surface and asks the checker to justify them from
+context.
 
 For readers who want the detailed comparison with Lean-style proof writing, see
 [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean) and

@@ -542,7 +542,7 @@ Execution:
 
 ### `by contra`
 
-**Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
+**Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense. Existential goals are supported: `exist ...` temporarily assumes `not exist ...`, and `not exist ...` temporarily assumes `exist ...`.
 
 **Syntax.** `by contra` `:` `prove` `:` *goal fact* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *goal fact* `:` on the header line, then optional proof blocks and closing `impossible`.
 
@@ -810,7 +810,7 @@ by for forall! n range(0, 10): n < 10:
 
 **Meaning.** Set equality by extensionality (typically mutual inclusion).
 
-**Syntax.** Either **`by extension`** `:` **`prove`** `:` *set* `=` *set* newline, proof blocks; or shorthand **`by extension`** *set* `=` *set* `:` newline, proof blocks only.
+**Syntax.** Either **`by extension`** `:` **`prove`** `:` *set* `=` *set* newline, proof blocks; or shorthand **`by extension`** *set* `=` *set* `:` newline, proof blocks only. If no proof blocks are needed, the shorthand may omit the trailing `:`.
 
 **Example.**
 
@@ -826,6 +826,8 @@ by extension {1, 2} = {2, 1}:
                 y $in {1, 2}
 
 {1, 2} = {2, 1}
+
+by extension {1} = {1}
 ```
 
 ---

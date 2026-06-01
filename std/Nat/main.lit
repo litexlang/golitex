@@ -22,6 +22,13 @@ prop Odd(n N):
 prop ModEq(n N_pos, a, b N):
     a % n = b % n
 
+# Textbook-facing Euclidean division for naturals. This exposes the reusable
+# quotient-remainder interface; constructive textbook proofs can target it.
+prop EuclideanDivision(n N, q N_pos, m N, r N):
+    0 <= r
+    r < q
+    n = m * q + r
+
 # Mathlib: Nat.Prime.
 prop Prime(p N):
     2 <= p
@@ -100,6 +107,9 @@ know:
         n != 0
         =>:
             0 < n
+
+    forall n N, q N_pos:
+        exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
     forall n N:
         (-1)^n $in Z
@@ -244,6 +254,15 @@ thm not_prime_one:
         forall _ N:
             not $Prime(1)
     not $Prime(1)
+
+# Textbook/API bridge: Euclidean division is currently available as a named
+# Nat theorem backed by std proof debt. Tao-style constructive proofs should
+# eventually replace the broad `know` fact above.
+thm euclidean_division:
+    prove:
+        forall n N, q N_pos:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
 # Mathlib: Nat.dvd_refl
 thm dvd_refl:

@@ -20,6 +20,8 @@ A Litex file is not just a list of theorem declarations. It executes as a sequen
 
 Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
+Named theorems still matter. A `claim` exports a proved fact into the current context, so it is a good fit for short, local, or common facts that later goals should reuse by pattern matching. A `thm` gives an important `forall` fact a name and asks the user to call that name explicitly with `by thm name(args...)`; this is the right style for longer, classic, standard-library, or parameter-sensitive theorems. In short: use `claim` when the fact should behave like stored context, and use `thm` when the name is part of the proof interface.
+
 This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
@@ -1085,7 +1087,11 @@ forall x R:
 
 Use **`template`** when you want to define a whole family of objects or functions, indexed by parameters such as a set `s`.
 
-The main use case is: the parameter belongs in the *header of the definition itself*, not as an ordinary function input. In Litex, a function input must range over some object domain such as `R`, `Z`, or a previously given set. It cannot range over a condition like `$is_set(s)`. So if you want to say "for every set `s`, define a function on `s`", a plain `have fn` is not the right form.
+The word is inspired by C++ templates. In C++, a template is used to define a function or data structure uniformly over many possible types. Litex uses the same idea for mathematics: a template defines a family of mathematical objects, functions, or structures uniformly over many possible parameters.
+
+Why not just use an ordinary Litex function? Because Litex functions are set-theoretic functions. A function input must range over one object domain, such as `R`, `Z`, or a previously introduced set. But `set` in a header is not a single set containing all sets; it is a parameter kind that says the new parameter must satisfy `$is_set(s)`. The collection of all sets is not itself treated as one Litex set object. So if you want to say "for every set `s`, define a function on `s`", the parameter `s` belongs in the *header of the definition itself*, not as an ordinary function input.
+
+This also explains why the body of a template contains ordinary statements such as `have`. A template does not bypass mathematical existence checks. It opens a parameterized context, assumes the header parameters and header facts, and then checks the declarations inside that context. If the template declares a function, object, or other data by `have`, Litex still has to verify that the declaration is meaningful under the template assumptions.
 
 For example, suppose that for every nonempty set `s` you want a function that sends every element of `s` to `1`. This is naturally a template:
 
@@ -1265,6 +1271,16 @@ g(3) = 3
 **`claim:`** states a goal and bundles a sub-proof (and optional lemmas) that establishes it.
 
 The point of `claim` is that the proof process does not enter the main environment. The temporary facts used inside the proof stay inside the claim; only the final fact you wanted to prove is added to the surrounding context.
+
+When the claimed goal is a `forall` fact, that verified `forall` is stored as
+ordinary context. Later proof lines can often just write the desired concrete
+conclusion, and Litex will try to match it against the stored pattern. This is
+why `claim forall ...` is common for short helper facts, local rules, and
+reusable facts whose parameters are visible from the goal shape.
+
+For an important theorem that readers should remember by name, especially one
+whose useful parameters are not all visible in the final conclusion, prefer
+`thm name:` and call it explicitly with `by thm name(args...)`.
 
 ```litex
 claim:
@@ -1456,9 +1472,12 @@ by cases 1 = 1:
 ### Proof by contradiction (`by contra`)
 
 Assumes the positive form of a statement, derives a contradiction (`impossible`), and concludes the negation.
-The goal may be an atomic fact, a `forall` fact, or a `not forall` fact. The
-closing `impossible` line still names an atomic fact whose two opposite forms
-are both known in the temporary proof context.
+The goal may be an atomic fact, an `exist` / `not exist` fact, a `forall` fact,
+or a `not forall` fact. For an existential goal, `by contra` temporarily assumes
+the opposite existential shape: `exist ...` assumes `not exist ...`, and
+`not exist ...` assumes `exist ...`. The closing `impossible` line still names
+an atomic fact whose two opposite forms are both known in the temporary proof
+context.
 
 ```litex
 abstract_prop p0(x, y)
@@ -1633,7 +1652,7 @@ by for forall! i range(0, 10) => {i < 10}:
 
 Proves **`A = B`** by mutual inclusion, often with **`by enumerate finite_set`** on each side.
 
-Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`prove:`** wrapper).
+Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`prove:`** wrapper). If the needed subset facts are already known, the body can be empty and the trailing colon can be omitted: **`by extension A = B`**.
 
 ```litex
 by extension {1, 2} = {2, 1}:
@@ -1647,6 +1666,8 @@ by extension {1, 2} = {2, 1}:
                 y $in {1, 2}
 
 {1, 2} = {2, 1}
+
+by extension {1} = {1}
 ```
 
 Long form (still supported):
@@ -1832,6 +1853,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `let` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
+| `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
 | `know` | Add facts or axioms to the current context |
 | `prove` | Open a nested proof block |
 | `import` / `run_file` | Use code from another file |
@@ -1947,10 +1969,13 @@ by thm all_humans_are_mortal(Socrates)
 $mortal(Socrates)
 ```
 
-This is the traditional style: name a reusable theorem, then call it at the
+This is the named-theorem style: name a reusable theorem, then call it at the
 point where the proof needs its consequences. It is especially useful when a
-theorem is famous, comes from the standard library, or needs explicit parameters
-that are not obvious from the final goal alone.
+theorem is famous, comes from the standard library, is long enough that a reader
+should recognize it by name, or needs explicit parameters that are not obvious
+from the final goal alone. Defining a `thm` does not turn it into an ordinary
+automatic `forall` pattern; the proof uses it by making the one intended call
+explicit.
 
 The lightweight route leaves the universal fact in the current context and
 writes the desired conclusion directly:
@@ -1969,7 +1994,7 @@ The known fact says that every human is mortal. When the goal is
 `$mortal(Socrates)`, Litex matches `x` with `Socrates`, checks that
 `Socrates human` is known, and verifies the instantiated conclusion.
 
-This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact.
+This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `thm` for long, classic, or important theorems where the name and explicit arguments make the proof more readable.
 
 ---
 

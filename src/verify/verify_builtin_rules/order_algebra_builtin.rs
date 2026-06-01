@@ -184,7 +184,7 @@ impl Runtime {
         None
     }
 
-    // a^n <= b^n from 0 <= a, 0 <= b, a <= b, and positive integer n.
+    // a^n <= b^n from 0 <= a, a <= b, and positive integer n.
     // Example: from `0 <= a <= b`, prove `a^2 <= b^2`.
     fn try_pow_le_same_positive_integer_exponent_nonnegative_base(
         &mut self,
@@ -209,9 +209,8 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        let subgoals: [AtomicFact; 3] = [
-            LessEqualFact::new(z.clone(), left_base.clone(), lf.clone()).into(),
-            LessEqualFact::new(z, right_base.clone(), lf.clone()).into(),
+        let subgoals: [AtomicFact; 2] = [
+            LessEqualFact::new(z, left_base.clone(), lf.clone()).into(),
             LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into(),
         ];
         for subgoal in subgoals {
@@ -225,7 +224,7 @@ impl Runtime {
         Ok(Some(StmtResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "a^n <= b^n from 0 <= a, 0 <= b, a <= b, and positive integer n".to_string(),
+                "a^n <= b^n from 0 <= a, a <= b, and positive integer n".to_string(),
                 step_results,
             ),
         )))

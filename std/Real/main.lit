@@ -1,18 +1,15 @@
-# Lean/Mathlib-facing real-function compatibility layer.
+# Lean/Mathlib-facing real-number compatibility layer.
 #
 # Litex names cannot contain `.`, so Mathlib names such as `Real.logb`
 # are represented as `logb`. This file is a
 # focused MiniF2F surface, not a complete port of Mathlib's real analysis API.
-
-import Trig
+# Trigonometric functions live in `Trig`; keep this module focused on real
+# numbers and real-analysis fragments that do not depend on trigonometry.
 
 # Mathlib `Real.sqrt` is not aliased here because `sqrt` is a Litex builtin.
 # Use the builtin `sqrt(x)` directly with its verifier-visible domain facts.
 
 have pi R = pi
-have fn sin(x R) R = Trig::sin(x)
-have fn cos(x R) R = Trig::cos(x)
-have fn tan(x R: Trig::cos(x) != 0) R = Trig::tan(x)
 
 # Natural logarithm is kept abstract for now. The verifier has a builtin
 # two-argument logarithm `log(base, x)`, which gives a direct alias for
@@ -21,12 +18,28 @@ have fn tan(x R: Trig::cos(x) != 0) R = Trig::tan(x)
 have ln fn(x R_pos) R
 have fn logb(a, x R_pos: a != 1) R = log(a, x)
 
-know:
-    sin(0) = 0
-    cos(0) = 1
-    Trig::cos(0) != 0
-    tan(0) = 0
+prop rat_seq_tail_close_to_R(a seq(Q), x R, epsilon R_pos, n0 N_pos):
+    forall n N_pos:
+        n >= n0
+        =>:
+            abs(a(n) - x) < epsilon
 
+prop rat_seq_converges_to_R(a seq(Q), x R):
+    forall epsilon R_pos:
+        exist n0 N_pos st {$rat_seq_tail_close_to_R(a, x, epsilon, n0)}
+
+prop rat_seq_cauchy_tail_R(a seq(Q), epsilon R_pos, n0 N_pos):
+    forall j, k N_pos:
+        j >= n0
+        k >= n0
+        =>:
+            abs(a(j) - a(k)) < epsilon
+
+prop rat_seq_cauchy_R(a seq(Q)):
+    forall epsilon R_pos:
+        exist n0 N_pos st {$rat_seq_cauchy_tail_R(a, epsilon, n0)}
+
+know:
     forall x R:
         0 <= x
         =>:
@@ -34,14 +47,16 @@ know:
             0 <= sqrt(x)
             sqrt(x)^2 = x
 
-    forall x R:
-        sin(x) = Trig::sin(x)
-        cos(x) = Trig::cos(x)
-
-    forall x R:
-        Trig::cos(x) != 0
+    # Mathlib: `exists_rat_btwn` / `Rat.denseRange_cast`.
+    forall a, b R:
+        a < b
         =>:
-            tan(x) = Trig::tan(x)
+            exist q Q st {a < q < b}
+
+    # Every real is the limit of a Cauchy sequence of rationals.  This is the
+    # sequence form of rational density used by Cauchy-completion arguments.
+    forall x R:
+        exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}
 
     ln(1) = 0
 
@@ -75,3 +90,20 @@ know:
         =>:
             logb(a, x * y) = logb(a, x) + logb(a, y)
             logb(a, x / y) = logb(a, x) - logb(a, y)
+
+# Mathlib: `exists_rat_btwn`; equivalently the cast from `Q` to `R` has dense range.
+thm exists_rat_between, exists_rat_btwn:
+    prove:
+        forall a, b R:
+            a < b
+            =>:
+                exist q Q st {a < q < b}
+    exist q Q st {a < q < b}
+
+# Sequence form of rational density: every real has a rational Cauchy
+# sequence converging to it.
+thm exists_rat_seq_converging_to_real:
+    prove:
+        forall x R:
+            exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}
+    exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}

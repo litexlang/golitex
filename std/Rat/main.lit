@@ -4,10 +4,14 @@
 # numerator/denominator surface that appears in Mathlib proofs as `Rat.num`,
 # `Rat.den`, `Rat.num_div_den`, and `Rat.den_nz`.
 
+import Nat
+import Int
+
 have num fn(q Q) Z
 have den fn(q Q) N_pos
 
 prop reduced(q Q):
+    $Nat::Coprime(Int::natAbs(num(q)), den(q))
     forall d N_pos:
         num(q) % d = 0
         den(q) % d = 0
@@ -19,6 +23,7 @@ know:
         den(q) != 0
         q = num(q) / den(q)
         $reduced(q)
+        $Nat::Coprime(Int::natAbs(num(q)), den(q))
 
     forall q1, q2 Q:
         num(q1) = num(q2)
@@ -42,6 +47,13 @@ thm rational_equals_numerator_divided_by_denominator, num_div_den:
                 q = num(q) / den(q)
     den(q) != 0
     q = num(q) / den(q)
+
+# Mathlib: Rat.num_den_coprime
+thm numerator_denominator_coprime, num_den_coprime:
+    prove:
+        forall q Q:
+            $Nat::Coprime(Int::natAbs(num(q)), den(q))
+    $Nat::Coprime(Int::natAbs(num(q)), den(q))
 
 # Mathlib: Rat.ext-style reasoning by reduced numerator and denominator.
 thm rational_extensionality_by_num_den, ext:
