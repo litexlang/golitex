@@ -1,8 +1,7 @@
-# Lean/Mathlib-facing real-number compatibility layer.
+# Real-number constants, functions, and analysis theorem fragments.
 #
-# Litex names cannot contain `.`, so Mathlib names such as `Real.logb`
-# are represented as `logb`. This file is a
-# focused MiniF2F surface, not a complete port of Mathlib's real analysis API.
+# Litex names cannot contain `.`, so external names such as `Real.logb` are
+# represented as `logb` when useful.
 # Trigonometric functions live in `Trig`; keep this module focused on real
 # numbers and real-analysis fragments that do not depend on trigonometry.
 
@@ -38,13 +37,6 @@ prop rat_seq_cauchy_tail_in_R(a seq(Q), epsilon R_pos, n0 N_pos):
 prop rat_seq_cauchy_in_R(a seq(Q)):
     forall epsilon R_pos:
         exist n0 N_pos st {$rat_seq_cauchy_tail_in_R(a, epsilon, n0)}
-
-# Backward-compatible names kept for existing MiniF2F-facing code.
-prop rat_seq_cauchy_tail_R(a seq(Q), epsilon R_pos, n0 N_pos):
-    $rat_seq_cauchy_tail_in_R(a, epsilon, n0)
-
-prop rat_seq_cauchy_R(a seq(Q)):
-    $rat_seq_cauchy_in_R(a)
 
 prop seq_tail_close_to_R(a seq(R), x R, epsilon R_pos, n0 N_pos):
     forall n N_pos:
@@ -84,7 +76,7 @@ know:
     # Every real is the limit of a Cauchy sequence of rationals.  This is the
     # sequence form of rational density used by Cauchy-completion arguments.
     forall x R:
-        exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}
+        exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
 
     ln(1) = 0
 
@@ -133,5 +125,5 @@ thm exists_rat_between, exists_rat_btwn:
 thm exists_rat_seq_converging_to_real:
     prove:
         forall x R:
-            exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}
-    exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_R(a)}
+            exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
+    exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}

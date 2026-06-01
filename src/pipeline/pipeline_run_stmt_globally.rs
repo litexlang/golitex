@@ -152,7 +152,12 @@ fn run_import_stmt(
             .reactivate_imported_module(&import_info.module_name);
         return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
     }
-    let module_manager_snapshot = runtime.module_manager.borrow().clone();
+    // Imported-module runtimes share this ModuleManager with the parent runtime.
+    // Loading an import can therefore mutate parent-visible state before the import
+    // finishes, for example by registering nested imports or changing file context.
+    // If any later step fails, restore this snapshot so a failed import leaves no
+    // partial module state behind.
+    let module_manager_before_import = runtime.module_manager.borrow().clone();
     if let Err(msg) = runtime
         .module_manager
         .borrow_mut()
@@ -169,7 +174,7 @@ fn run_import_stmt(
     ) {
         Ok(environment) => environment,
         Err(error) => {
-            *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+            *runtime.module_manager.borrow_mut() = module_manager_before_import;
             return Err(error);
         }
     };
@@ -187,7 +192,7 @@ fn run_import_stmt(
             import_info.is_std,
         );
     if let Err(msg) = register_result {
-        *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+        *runtime.module_manager.borrow_mut() = module_manager_before_import;
         return Err(import_name_already_used_error(import_stmt, msg));
     }
 

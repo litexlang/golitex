@@ -149,11 +149,11 @@ prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
 
-For the full verifier pipeline, see the diagram below:
+For the full Litex run pipeline, see the diagram below:
 
 <div align="center">
   <img src="assets/verifier_flow.png" alt="Litex verifier flow" width="900">
-  <p><em>Verifier flow: checked facts, know assumptions, context update, and trusted boundary.</em></p>
+  <p><em>Whole-run flow: ordinary statements, verify statements, context update, and trusted boundary.</em></p>
 </div>
 
 Editable source: [docs/diagrams/verifier_flow.mmd](docs/diagrams/verifier_flow.mmd).

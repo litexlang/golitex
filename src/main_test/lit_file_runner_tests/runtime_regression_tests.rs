@@ -102,6 +102,147 @@ forall x R:
 }
 
 #[test]
+fn by_zorn_lemma_stores_maximal_element_exist_fact() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma s from leq:
+    know $is_nonempty_set(s)
+    know:
+        forall x s:
+            $leq(x, x)
+        forall x, y, z s:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y s:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall C power_set(s):
+            forall x, y C:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u s st {forall! x C: {$leq(x, u)}}
+
+exist m s st {forall! x s: $leq(m, x) => {x = m}}
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_stores_maximal_element_exist_fact",
+    );
+
+    assert!(
+        run_succeeded,
+        "by_zorn_lemma_stores_maximal_element_exist_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_zorn_lemma_rejects_non_binary_prop() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x)
+
+by zorn_lemma s from leq:
+    know $is_nonempty_set(s)
+"#;
+
+    let (run_succeeded, run_output) =
+        run_zorn_lemma_regression_source(source_code, "by_zorn_lemma_rejects_non_binary_prop");
+
+    assert!(
+        !run_succeeded,
+        "unary prop should make by zorn_lemma fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("must be a binary user-defined prop"),
+        "failure should mention binary prop arity:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_zorn_lemma_reports_missing_chain_upper_bound() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma s from leq:
+    know $is_nonempty_set(s)
+    know:
+        forall x s:
+            $leq(x, x)
+        forall x, y, z s:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y s:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_reports_missing_chain_upper_bound",
+    );
+
+    assert!(
+        !run_succeeded,
+        "missing chain upper-bound should make by zorn_lemma fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("chain_upper_bound obligation"),
+        "failure should name the missing chain upper-bound obligation:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_zorn_lemma_failed_body_stmt_does_not_continue() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma s from leq:
+    1 = 2
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_failed_body_stmt_does_not_continue",
+    );
+
+    assert!(
+        !run_succeeded,
+        "failed body statement should make by zorn_lemma fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("failed to execute proof stmt"),
+        "failure should mention the body statement:\n{}",
+        run_output
+    );
+}
+
+fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(file_label);
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+}
+
+#[test]
 fn have_by_exist_body_well_defined_can_use_forall_domain_fact() {
     let source_code = r#"
 prop image_like(S, T set, f fn(x S) T, A, B set):
