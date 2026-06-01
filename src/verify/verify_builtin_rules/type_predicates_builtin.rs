@@ -167,6 +167,51 @@ impl Runtime {
                     .into(),
                 )
             }
+            // A union is nonempty when either side is nonempty.
+            // Example: from `$is_nonempty_set(A)`, prove `$is_nonempty_set(union(A, B))`.
+            Obj::Union(union) => {
+                let left_nonempty: AtomicFact = IsNonemptySetFact::new(
+                    union.left.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &left_nonempty,
+                    _verify_state,
+                )?;
+                if left_result.is_true() {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "union_is_nonempty_set_when_left_side_is_nonempty_set".to_string(),
+                            vec![left_result],
+                        ))
+                        .into(),
+                    );
+                }
+
+                let right_nonempty: AtomicFact = IsNonemptySetFact::new(
+                    union.right.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &right_nonempty,
+                    _verify_state,
+                )?;
+                if right_result.is_true() {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "union_is_nonempty_set_when_right_side_is_nonempty_set".to_string(),
+                            vec![right_result],
+                        ))
+                        .into(),
+                    );
+                }
+
+                Ok((StmtUnknown::new()).into())
+            }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self

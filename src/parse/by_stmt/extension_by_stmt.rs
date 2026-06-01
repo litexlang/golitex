@@ -4,23 +4,27 @@ impl Runtime {
     /// `by extension:` then `prove:` with exactly one equality, plus proof blocks.
     ///
     /// Shorthand: `by extension A = B:` puts the goal on the header line; body is only proof blocks.
+    /// If no proof blocks are needed, `by extension A = B` may omit the trailing colon.
     pub fn parse_by_extension_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(EXTENSION)?;
 
         let (left, right, proof_lo): (Obj, Obj, usize) = if tb.current()? != COLON {
             let header = &tb.header;
-            if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
-            {
+            let has_trailing_colon = header.last().map(|t| t.as_str()) == Some(COLON);
+            let equality_end = if has_trailing_colon {
+                header.len() - 1
+            } else {
+                header.len()
+            };
+            if equality_end < tb.parse_index + 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by extension ... : expected one set equality and a trailing `:` on the same line"
-                            .to_string(),
+                        "by extension ... : expected one set equality on the same line".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
             }
-            let colon_pos = header.len() - 1;
-            let fact_tokens = header[tb.parse_index..colon_pos].to_vec();
+            let fact_tokens = header[tb.parse_index..equality_end].to_vec();
             if fact_tokens.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -52,7 +56,10 @@ impl Runtime {
                     )));
                 }
             };
-            tb.parse_index = colon_pos + 1;
+            tb.parse_index = equality_end;
+            if has_trailing_colon {
+                tb.skip_token(COLON)?;
+            }
             if !tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(

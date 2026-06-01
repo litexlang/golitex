@@ -17,6 +17,13 @@ _— Hotel California_
 
 ## Two Styles Of Formal Mathematics
 
+**Boundary note.** This page compares user interfaces and proof-writing style.
+It is not a ranking, a migration argument, or a claim that Litex replaces Lean.
+Lean has a mature foundation, Mathlib, expert tooling, and a much larger
+community. Litex is a younger research system with a larger trusted base and a
+narrower goal: testing whether fact-oriented checked mathematics can reduce
+interaction cost for textbook-style proofs and AI repair loops.
+
 Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language, and they expose different models of formal proof to the user.
 
 Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. Its user community is large, active, and highly professional, and this gives Lean a significant present-day advantage in library coverage, tooling, examples, and expert support. Litex is younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
@@ -45,6 +52,12 @@ at the start.
 
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions, and at present its ecosystem advantage is substantial. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
+This also explains why Litex has a larger trusted base. Litex deliberately puts
+many ordinary mathematical relationships into the checker instead of requiring
+the user to surface every such relationship through explicit library calls or
+proof commands. That choice is made for user convenience and local feedback, not
+because mature proof-assistant kernel minimality is unimportant.
+
 Lean is a powerful formal mathematics ecosystem. Litex explores a different
 layer: a readable, fact-oriented verification interface for ordinary
 mathematical reasoning and AI repair loops.
@@ -56,6 +69,12 @@ that trail as it is produced, so wrong turns can fail early and remaining
 assumptions can be made explicit instead of hidden in fluent prose.
 
 This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
+
+The Lean snippets are meant to be readable counterparts, not claims of shortest
+possible Lean code. The Litex snippets are meant to show the current interface,
+not to hide the fact that builtin rules, infer rules, and any `know` facts are
+part of the trust boundary explained in
+[Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
 
 ---
 

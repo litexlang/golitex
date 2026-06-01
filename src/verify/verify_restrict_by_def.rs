@@ -281,7 +281,7 @@ impl Runtime {
     ) -> Result<ParamDefWithType, RuntimeError> {
         let mut groups: Vec<ParamGroupWithParamType> = Vec::new();
         let mut param_to_forall_obj: HashMap<String, Obj> = HashMap::new();
-        for param_def_with_set in &rhs_body.params_def_with_set {
+        for param_def_with_set in rhs_body.params_def_with_set.iter() {
             let param_type = ParamType::Obj(self.inst_obj(
                 param_def_with_set.set_obj(),
                 &param_to_forall_obj,

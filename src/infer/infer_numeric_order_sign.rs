@@ -113,7 +113,7 @@ impl Runtime {
         infer_result.new_fact(&fact_to_store);
         // Do not run full `verify_fact_well_defined` here: well-defined for the flipped atom can re-enter
         // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
-        // causing mutual recursion / stack overflow (see `examples/euler_phi.lit`).
+        // causing mutual recursion / stack overflow (see `examples/_internal/regression/euler_phi.lit`).
         let inner = self
             .store_atomic_fact_without_well_defined_verified_and_infer(inferred_atomic)
             .map_err(|previous_error| {

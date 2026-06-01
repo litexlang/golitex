@@ -119,6 +119,26 @@ impl Runtime {
             );
         }
 
+        if let Some(done) = self.try_verify_union_set_equalities(left, right, line_file.clone()) {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_intersection_set_equalities(left, right, line_file.clone())
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_cart_count_product_equality(left, right, line_file.clone())
+        {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_subtraction_from_known_addition(left, right, line_file.clone())?
         {
@@ -186,6 +206,27 @@ impl Runtime {
             line_file.clone(),
             verify_state,
         )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_power_product_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_base_zero_from_known_positive_power_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_abs_power_rule(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
@@ -485,6 +526,372 @@ impl Runtime {
             Obj::ListSet(list_set) => list_set.list.get(index - 1).map(|x| x.as_ref().clone()),
             _ => None,
         }
+    }
+
+    fn try_verify_union_set_equalities(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        // Union commutativity for sets.
+        // Example: `union(A, B) = union(B, A)`.
+        if Self::union_commutative_shape(left, right) {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "union_commutative",
+            ));
+        }
+
+        // Union associativity for sets, accepted in either equality direction.
+        // Example: `union(union(A, B), C) = union(A, union(B, C))`.
+        if Self::union_associative_shape(left, right) || Self::union_associative_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "union_associative",
+            ));
+        }
+
+        // Union idempotence for sets, accepted in either equality direction.
+        // Example: `union(A, A) = A`.
+        if Self::union_idempotent_shape(left, right) || Self::union_idempotent_shape(right, left) {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "union_idempotent",
+            ));
+        }
+
+        // Empty set is a two-sided identity for union, accepted in either equality direction.
+        // Example: `union(A, {}) = A` and `union({}, A) = A`.
+        if Self::union_empty_identity_shape(left, right)
+            || Self::union_empty_identity_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "union_empty_identity",
+            ));
+        }
+
+        None
+    }
+
+    fn try_verify_intersection_set_equalities(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        // Intersection commutativity for sets.
+        // Example: `intersect(A, B) = intersect(B, A)`.
+        if Self::intersect_commutative_shape(left, right) {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "intersect_commutative",
+            ));
+        }
+
+        // Intersection associativity for sets, accepted in either equality direction.
+        // Example: `intersect(intersect(A, B), C) = intersect(A, intersect(B, C))`.
+        if Self::intersect_associative_shape(left, right)
+            || Self::intersect_associative_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "intersect_associative",
+            ));
+        }
+
+        // Intersection distributes over union for sets, accepted in either equality direction.
+        // Example: `intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))`.
+        if Self::intersect_union_distributive_shape(left, right)
+            || Self::intersect_union_distributive_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "intersect_union_distributive",
+            ));
+        }
+
+        None
+    }
+
+    fn try_verify_set_minus_equalities(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        // Set-minus distributes over union by De Morgan's law, accepted in either direction.
+        // Example: `set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))`.
+        if Self::set_minus_union_de_morgan_shape(left, right)
+            || Self::set_minus_union_de_morgan_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "set_minus_union_de_morgan",
+            ));
+        }
+
+        // Set-minus distributes over intersection by De Morgan's law, accepted in either direction.
+        // Example: `set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))`.
+        if Self::set_minus_intersect_de_morgan_shape(left, right)
+            || Self::set_minus_intersect_de_morgan_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "set_minus_intersect_de_morgan",
+            ));
+        }
+
+        None
+    }
+
+    fn try_verify_cart_count_product_equality(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        // Cardinality of a finite Cartesian product is the product of factor cardinalities.
+        // Example: `count(cart(A, B)) = count(A) * count(B)`.
+        if Self::cart_count_product_shape(left, right)
+            || Self::cart_count_product_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "cart_count_product",
+            ));
+        }
+
+        None
+    }
+
+    fn set_equality_success(
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        reason: &str,
+    ) -> StmtResult {
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            EqualFact::new(left.clone(), right.clone(), line_file).into(),
+            reason.to_string(),
+            Vec::new(),
+        )
+        .into()
+    }
+
+    fn union_commutative_shape(left: &Obj, right: &Obj) -> bool {
+        let (Obj::Union(left_union), Obj::Union(right_union)) = (left, right) else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&left_union.left, &right_union.right)
+            && verify_equality_by_they_are_the_same(&left_union.right, &right_union.left)
+    }
+
+    fn union_associative_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::Union(left_outer) = left else {
+            return false;
+        };
+        let Obj::Union(left_inner) = left_outer.left.as_ref() else {
+            return false;
+        };
+        let Obj::Union(right_outer) = right else {
+            return false;
+        };
+        let Obj::Union(right_inner) = right_outer.right.as_ref() else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&left_inner.left, &right_outer.left)
+            && verify_equality_by_they_are_the_same(&left_inner.right, &right_inner.left)
+            && verify_equality_by_they_are_the_same(&left_outer.right, &right_inner.right)
+    }
+
+    fn intersect_commutative_shape(left: &Obj, right: &Obj) -> bool {
+        let (Obj::Intersect(left_intersect), Obj::Intersect(right_intersect)) = (left, right)
+        else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&left_intersect.left, &right_intersect.right)
+            && verify_equality_by_they_are_the_same(&left_intersect.right, &right_intersect.left)
+    }
+
+    fn intersect_associative_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::Intersect(left_outer) = left else {
+            return false;
+        };
+        let Obj::Intersect(left_inner) = left_outer.left.as_ref() else {
+            return false;
+        };
+        let Obj::Intersect(right_outer) = right else {
+            return false;
+        };
+        let Obj::Intersect(right_inner) = right_outer.right.as_ref() else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&left_inner.left, &right_outer.left)
+            && verify_equality_by_they_are_the_same(&left_inner.right, &right_inner.left)
+            && verify_equality_by_they_are_the_same(&left_outer.right, &right_inner.right)
+    }
+
+    fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::Intersect(left_intersect) = left else {
+            return false;
+        };
+        let Obj::Union(left_union) = left_intersect.right.as_ref() else {
+            return false;
+        };
+        let Obj::Union(right_union) = right else {
+            return false;
+        };
+        let Obj::Intersect(right_left_intersect) = right_union.left.as_ref() else {
+            return false;
+        };
+        let Obj::Intersect(right_right_intersect) = right_union.right.as_ref() else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&left_intersect.left, &right_left_intersect.left)
+            && verify_equality_by_they_are_the_same(
+                &left_intersect.left,
+                &right_right_intersect.left,
+            )
+            && verify_equality_by_they_are_the_same(&left_union.left, &right_left_intersect.right)
+            && verify_equality_by_they_are_the_same(&left_union.right, &right_right_intersect.right)
+    }
+
+    fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::SetMinus(left_set_minus) = left else {
+            return false;
+        };
+        let Obj::Union(left_union) = left_set_minus.right.as_ref() else {
+            return false;
+        };
+        let Obj::Intersect(right_intersect) = right else {
+            return false;
+        };
+        let Obj::SetMinus(right_left_set_minus) = right_intersect.left.as_ref() else {
+            return false;
+        };
+        let Obj::SetMinus(right_right_set_minus) = right_intersect.right.as_ref() else {
+            return false;
+        };
+        Self::set_minus_de_morgan_args_match(
+            left_set_minus,
+            left_union.left.as_ref(),
+            left_union.right.as_ref(),
+            right_left_set_minus,
+            right_right_set_minus,
+        )
+    }
+
+    fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::SetMinus(left_set_minus) = left else {
+            return false;
+        };
+        let Obj::Intersect(left_intersect) = left_set_minus.right.as_ref() else {
+            return false;
+        };
+        let Obj::Union(right_union) = right else {
+            return false;
+        };
+        let Obj::SetMinus(right_left_set_minus) = right_union.left.as_ref() else {
+            return false;
+        };
+        let Obj::SetMinus(right_right_set_minus) = right_union.right.as_ref() else {
+            return false;
+        };
+        Self::set_minus_de_morgan_args_match(
+            left_set_minus,
+            left_intersect.left.as_ref(),
+            left_intersect.right.as_ref(),
+            right_left_set_minus,
+            right_right_set_minus,
+        )
+    }
+
+    fn set_minus_de_morgan_args_match(
+        left_set_minus: &SetMinus,
+        first_removed_set: &Obj,
+        second_removed_set: &Obj,
+        right_left_set_minus: &SetMinus,
+        right_right_set_minus: &SetMinus,
+    ) -> bool {
+        verify_equality_by_they_are_the_same(&left_set_minus.left, &right_left_set_minus.left)
+            && verify_equality_by_they_are_the_same(
+                &left_set_minus.left,
+                &right_right_set_minus.left,
+            )
+            && verify_equality_by_they_are_the_same(first_removed_set, &right_left_set_minus.right)
+            && verify_equality_by_they_are_the_same(
+                second_removed_set,
+                &right_right_set_minus.right,
+            )
+    }
+
+    fn cart_count_product_shape(count_side: &Obj, product_side: &Obj) -> bool {
+        let Obj::Count(count) = count_side else {
+            return false;
+        };
+        let Obj::Cart(cart) = count.set.as_ref() else {
+            return false;
+        };
+        let Some(expected_product) = Self::count_product_for_cart_args(&cart.args) else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&expected_product, product_side)
+    }
+
+    fn count_product_for_cart_args(args: &[Box<Obj>]) -> Option<Obj> {
+        let mut iter = args.iter();
+        let first = iter.next()?;
+        let mut product: Obj = Count::new(first.as_ref().clone()).into();
+        for arg in iter {
+            let factor_count: Obj = Count::new(arg.as_ref().clone()).into();
+            product = Mul::new(product, factor_count).into();
+        }
+        Some(product)
+    }
+
+    fn union_idempotent_shape(union_side: &Obj, other_side: &Obj) -> bool {
+        let Obj::Union(union) = union_side else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&union.left, &union.right)
+            && verify_equality_by_they_are_the_same(&union.left, other_side)
+    }
+
+    fn union_empty_identity_shape(union_side: &Obj, other_side: &Obj) -> bool {
+        let Obj::Union(union) = union_side else {
+            return false;
+        };
+        (Self::is_empty_list_set(&union.left)
+            && verify_equality_by_they_are_the_same(&union.right, other_side))
+            || (Self::is_empty_list_set(&union.right)
+                && verify_equality_by_they_are_the_same(&union.left, other_side))
+    }
+
+    fn is_empty_list_set(obj: &Obj) -> bool {
+        matches!(obj, Obj::ListSet(list_set) if list_set.list.is_empty())
     }
 
     fn try_verify_subtraction_from_known_addition(

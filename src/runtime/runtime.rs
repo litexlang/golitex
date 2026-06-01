@@ -4,6 +4,9 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct Runtime {
+    /// Shared by the entry runtime and every imported-module runtime in one top-level run.
+    /// Do not give import runtimes a fresh manager: nested imports, source labels, cycles,
+    /// and stopped-module state must all go through the same table.
     pub module_manager: Rc<RefCell<ModuleManager>>,
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
@@ -47,6 +50,7 @@ impl Runtime {
             unreachable!("parent runtime has no builtin environment")
         };
         Runtime {
+            // Import runtimes isolate their environment stack but share module-manager state.
             module_manager: Rc::clone(&parent_runtime.module_manager),
             environment_stack: vec![builtin_env.clone()],
             parsing_free_param_collection: FreeParamCollection::new(),

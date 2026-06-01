@@ -18,6 +18,13 @@ The short version is:
 > fact-oriented proof interface experiment, but it should not yet be treated as
 > production-grade formal verification.
 
+Equally important:
+
+> Litex is not trying to replace Lean, Coq, or Isabelle. It tests a different
+> interface hypothesis: that a smaller, readable, fact-oriented language can
+> make useful checked mathematical data cheaper to produce, while keeping
+> assumptions and verifier boundaries visible.
+
 This page is written for readers who care about proof assistant design,
 foundations, and the boundary between a checked theorem and an assumed fact.
 
@@ -46,6 +53,25 @@ A verified fact becomes part of the current context. Later statements can cite
 it directly, use it through substitution, or use routine consequences inferred
 from it.
 
+## Verifier Flow
+
+The following diagram gives the high-level flow from source code to statement
+execution and verifier output. It separates ordinary statements from verify
+statements: ordinary statements execute, define, import, or organize local
+proof state, while verify statements check facts, goals, generated obligations,
+or explicit `know` assumptions.
+
+![Litex verifier flow](../assets/verifier_flow.png)
+
+Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
+
+The diagram is intentionally explicit about the trusted boundary. Builtin rules
+and builtin inference make Litex convenient for relation-first mathematics, but
+they are part of the implementation users must trust and audit. The useful
+output is not only `true`, `unknown`, or `error`; it is also the `verified_by`,
+inferred-fact, nested-result, and context-update information that explains what
+route was used and what became available afterward.
+
 ## The Role of `know`
 
 `know` is not a proof-producing command. It adds a fact to the current context
@@ -62,6 +88,10 @@ may depend on it. A Litex development that uses `know` should distinguish
 checked facts from assumptions. For serious uses, the remaining `know` facts are
 part of the trusted input, not consequences proved by Litex.
 
+This means a Litex file with `know` facts should not be described simply as
+"fully proved" unless the remaining assumptions are listed and accepted as part
+of the intended theory, benchmark skeleton, or local proof debt.
+
 ## Trusted Base
 
 The current trusted base includes the parser, the object and fact
@@ -73,6 +103,14 @@ This trusted base is larger and less minimal than the kernel of mature systems
 such as Lean, Coq, or Isabelle. That is an intentional design trade-off at the
 prototype stage: Litex puts more ordinary mathematical background into the
 checker so that proof scripts can stay closer to textbook reasoning.
+
+The reason is structural, not cosmetic. Litex is relation-first: facts about
+membership, subset, equality, order, functions, domains, tuples, finite sets,
+and user-defined predicates are meant to interact directly in the checker.
+Rather than asking every user to expose this interaction through a layered
+abstract interface, Litex makes many of these ordinary relationships builtin.
+The cost is a larger trusted implementation. The benefit is a shorter and more
+natural checked feedback loop for everyday mathematics.
 
 The important design question is not whether this trusted base is small today.
 It is whether the boundary can be made explicit enough for users and
@@ -123,6 +161,12 @@ Important limitations:
 These limitations are part of the research value. Litex is exploring whether a
 fact-oriented interface can make ordinary mathematical formalization and proof
 repair easier.
+
+The intended public claim is therefore modest: Litex can demonstrate a
+checkable feedback loop on a growing set of examples and benchmark slices. It
+should not be used to claim replacement of mature proof assistants,
+certification of mission-critical systems, or automatic discovery of correct
+mathematics.
 
 ## Current Evidence
 

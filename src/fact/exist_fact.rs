@@ -64,6 +64,21 @@ impl ExistFactBody {
 
         args
     }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        let mut args: Vec<&Obj> = Vec::new();
+        for param_def_with_type in self.params_def_with_type.groups.iter() {
+            if let ParamType::Obj(obj) = &param_def_with_type.param_type {
+                args.push(obj);
+            }
+        }
+
+        for fact in self.facts.iter() {
+            args.extend(fact.get_args_from_fact_ref());
+        }
+
+        args
+    }
 }
 
 impl ExistBodyFact {
@@ -94,6 +109,16 @@ impl ExistBodyFact {
             ExistBodyFact::ChainFact(c) => c.get_args_from_fact(),
             ExistBodyFact::OrFact(o) => o.get_args_from_fact(),
             ExistBodyFact::InlineForall(f) => forall_fact_args(f),
+        }
+    }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        match self {
+            ExistBodyFact::AtomicFact(a) => a.get_args_from_fact_ref(),
+            ExistBodyFact::AndFact(a) => a.get_args_from_fact_ref(),
+            ExistBodyFact::ChainFact(c) => c.get_args_from_fact_ref(),
+            ExistBodyFact::OrFact(o) => o.get_args_from_fact_ref(),
+            ExistBodyFact::InlineForall(f) => forall_fact_args_ref(f),
         }
     }
 
@@ -207,6 +232,36 @@ fn forall_fact_args(forall_fact: &ForallFact) -> Vec<Obj> {
             ExistOrAndChainAtomicFact::ChainFact(c) => args.extend(c.get_args_from_fact()),
             ExistOrAndChainAtomicFact::OrFact(o) => args.extend(o.get_args_from_fact()),
             ExistOrAndChainAtomicFact::ExistFact(e) => args.extend(e.get_args_from_fact()),
+        }
+    }
+    args
+}
+
+fn forall_fact_args_ref(forall_fact: &ForallFact) -> Vec<&Obj> {
+    let mut args: Vec<&Obj> = Vec::new();
+    for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
+        if let ParamType::Obj(obj) = &param_def_with_type.param_type {
+            args.push(obj);
+        }
+    }
+    for fact in forall_fact.dom_facts.iter() {
+        match fact {
+            Fact::AtomicFact(a) => args.extend(a.get_args_from_fact_ref()),
+            Fact::ExistFact(e) => args.extend(e.get_args_from_fact_ref()),
+            Fact::OrFact(o) => args.extend(o.get_args_from_fact_ref()),
+            Fact::AndFact(a) => args.extend(a.get_args_from_fact_ref()),
+            Fact::ChainFact(c) => args.extend(c.get_args_from_fact_ref()),
+            Fact::ForallFact(f) => args.extend(forall_fact_args_ref(f)),
+            Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
+        }
+    }
+    for fact in forall_fact.then_facts.iter() {
+        match fact {
+            ExistOrAndChainAtomicFact::AtomicFact(a) => args.extend(a.get_args_from_fact_ref()),
+            ExistOrAndChainAtomicFact::AndFact(a) => args.extend(a.get_args_from_fact_ref()),
+            ExistOrAndChainAtomicFact::ChainFact(c) => args.extend(c.get_args_from_fact_ref()),
+            ExistOrAndChainAtomicFact::OrFact(o) => args.extend(o.get_args_from_fact_ref()),
+            ExistOrAndChainAtomicFact::ExistFact(e) => args.extend(e.get_args_from_fact_ref()),
         }
     }
     args
@@ -467,6 +522,10 @@ impl ExistFactEnum {
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
         self.body().get_args_from_fact()
+    }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        self.body().get_args_from_fact_ref()
     }
 }
 

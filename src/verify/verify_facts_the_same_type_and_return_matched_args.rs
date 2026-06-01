@@ -632,4 +632,185 @@ impl Runtime {
             },
         }
     }
+
+    pub fn _verify_or_and_chain_atomic_facts_the_same_type_ref(
+        fact: &OrAndChainAtomicFact,
+        other: &OrAndChainAtomicFact,
+    ) -> Result<bool, RuntimeError> {
+        match fact {
+            OrAndChainAtomicFact::AndFact(f) => match other {
+                OrAndChainAtomicFact::AndFact(other) => {
+                    Self::_verify_and_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+            OrAndChainAtomicFact::OrFact(f) => match other {
+                OrAndChainAtomicFact::OrFact(other) => {
+                    Self::_verify_or_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+            OrAndChainAtomicFact::AtomicFact(f) => match other {
+                OrAndChainAtomicFact::AtomicFact(other) => {
+                    Self::_verify_atomic_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+            OrAndChainAtomicFact::ChainFact(f) => match other {
+                OrAndChainAtomicFact::ChainFact(other) => {
+                    Self::_verify_chain_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+        }
+    }
+
+    pub fn _verify_and_chain_atomic_facts_the_same_type_ref(
+        fact: &AndChainAtomicFact,
+        other: &AndChainAtomicFact,
+    ) -> Result<bool, RuntimeError> {
+        match fact {
+            AndChainAtomicFact::AndFact(f) => match other {
+                AndChainAtomicFact::AndFact(other) => {
+                    Self::_verify_and_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+            AndChainAtomicFact::AtomicFact(f) => match other {
+                AndChainAtomicFact::AtomicFact(other) => {
+                    Self::_verify_atomic_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+            AndChainAtomicFact::ChainFact(f) => match other {
+                AndChainAtomicFact::ChainFact(other) => {
+                    Self::_verify_chain_fact_the_same_type_ref(f, other)
+                }
+                _ => Ok(false),
+            },
+        }
+    }
+
+    pub fn _verify_chain_fact_the_same_type_ref(
+        fact: &ChainFact,
+        other: &ChainFact,
+    ) -> Result<bool, RuntimeError> {
+        if fact.prop_names.len() != other.prop_names.len() {
+            return Ok(false);
+        }
+        if fact.objs.len() != other.objs.len() {
+            return Ok(false);
+        }
+
+        for (fact_prop_name, other_prop_name) in fact.prop_names.iter().zip(other.prop_names.iter())
+        {
+            if fact_prop_name.to_string() != other_prop_name.to_string() {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
+
+    pub fn _verify_or_fact_the_same_type_ref(
+        fact: &OrFact,
+        other: &OrFact,
+    ) -> Result<bool, RuntimeError> {
+        if fact.facts.len() != other.facts.len() {
+            return Ok(false);
+        }
+
+        for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
+            if !Self::_verify_and_chain_atomic_facts_the_same_type_ref(fact_item, other_item)? {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
+
+    pub fn _verify_and_fact_the_same_type_ref(
+        fact: &AndFact,
+        other: &AndFact,
+    ) -> Result<bool, RuntimeError> {
+        if fact.facts.len() != other.facts.len() {
+            return Ok(false);
+        }
+
+        for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
+            if !Self::_verify_atomic_fact_the_same_type_ref(fact_item, other_item)? {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
+
+    pub fn _verify_atomic_fact_the_same_type_ref(
+        fact: &AtomicFact,
+        other: &AtomicFact,
+    ) -> Result<bool, RuntimeError> {
+        match (fact, other) {
+            (
+                AtomicFact::NormalAtomicFact(fact_normal_atomic_fact),
+                AtomicFact::NormalAtomicFact(other_normal_atomic_fact),
+            ) => {
+                if fact_normal_atomic_fact.predicate.to_string()
+                    != other_normal_atomic_fact.predicate.to_string()
+                {
+                    return Ok(false);
+                }
+                if fact_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len() {
+                    return Ok(false);
+                }
+            }
+            (
+                AtomicFact::NormalAtomicFact(fact_normal_atomic_fact),
+                AtomicFact::NotNormalAtomicFact(other_not_normal_atomic_fact),
+            ) => {
+                if fact_normal_atomic_fact.predicate.to_string()
+                    != other_not_normal_atomic_fact.predicate.to_string()
+                {
+                    return Ok(false);
+                }
+                if fact_normal_atomic_fact.body.len() != other_not_normal_atomic_fact.body.len() {
+                    return Ok(false);
+                }
+            }
+            (
+                AtomicFact::NotNormalAtomicFact(fact_not_normal_atomic_fact),
+                AtomicFact::NotNormalAtomicFact(other_not_normal_atomic_fact),
+            ) => {
+                if fact_not_normal_atomic_fact.predicate.to_string()
+                    != other_not_normal_atomic_fact.predicate.to_string()
+                {
+                    return Ok(false);
+                }
+                if fact_not_normal_atomic_fact.body.len() != other_not_normal_atomic_fact.body.len()
+                {
+                    return Ok(false);
+                }
+            }
+            (
+                AtomicFact::NotNormalAtomicFact(fact_not_normal_atomic_fact),
+                AtomicFact::NormalAtomicFact(other_normal_atomic_fact),
+            ) => {
+                if fact_not_normal_atomic_fact.predicate.to_string()
+                    != other_normal_atomic_fact.predicate.to_string()
+                {
+                    return Ok(false);
+                }
+                if fact_not_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len() {
+                    return Ok(false);
+                }
+            }
+            _ => {
+                if std::mem::discriminant(fact) != std::mem::discriminant(other) {
+                    return Ok(false);
+                }
+            }
+        }
+
+        Ok(true)
+    }
 }

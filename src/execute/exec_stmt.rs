@@ -47,6 +47,7 @@ impl Runtime {
             Stmt::BySymmetricPropStmt(s) => self.exec_by_symmetric_prop_stmt(s),
             Stmt::ByReflexivePropStmt(s) => self.exec_by_reflexive_prop_stmt(s),
             Stmt::ByAntisymmetricPropStmt(s) => self.exec_by_antisymmetric_prop_stmt(s),
+            Stmt::ByZornLemmaStmt(s) => self.exec_by_zorn_lemma_stmt(s),
             Stmt::ByThmStmt(s) => self.exec_by_thm_stmt(s),
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
             Stmt::UseStrategyStmt(s) => self.exec_use_strategy_stmt(s),

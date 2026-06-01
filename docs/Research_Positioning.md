@@ -20,6 +20,50 @@ research question is different:
 > mathematics by making facts, context growth, and verifier feedback the main
 > interface?
 
+## Non-Goals and Boundary
+
+Litex should not be presented as a replacement for mature proof assistants, a
+production verification platform, or a system whose current examples settle
+large foundational questions. The project is a pressure test for one interface
+hypothesis:
+
+> Litex is not trying to replace Lean. It tests a different hypothesis: that a
+> smaller, readable, fact-oriented formal language can make checked mathematics
+> cheap enough for students, domain scientists, and AI agents to produce useful
+> formal data at scale.
+
+The main risks should be stated directly in research-facing material:
+
+- the trusted base is larger than a small proof kernel;
+- builtin and infer rules need clear mathematical specifications and tests;
+- `know` introduces assumptions or proof debt, not checked consequences;
+- current examples and benchmark slices are prototype evidence, not production
+  certification;
+- AI-generated Litex proof attempts still need verifier output, assumption
+  tracking, and human or automated audit.
+
+## Why Accept a Larger Trusted Base
+
+Litex intentionally shifts more ordinary mathematical structure into the
+checker. The surface language is relation-first: users write facts about
+objects, sets, functions, domains, equality, order, and predicates, and the
+checker tries to grow the context from those facts.
+
+This is different from a design where the user first navigates a large hierarchy
+of abstractions, typeclass instances, library lemmas, and proof commands. Litex
+instead makes many common mathematical relationships available as builtin or
+inferred background. The trade-off is explicit:
+
+- the trusted implementation becomes larger;
+- builtin and inferred steps require documentation and tests;
+- the user-facing proof language becomes smaller, more direct, and closer to
+  textbook reasoning;
+- the feedback loop becomes more convenient for students, applied users, and AI
+  agents that need to repair local derivations.
+
+This is not a claim that a larger trusted base is better in general. It is the
+specific prototype choice that makes the Litex interface worth testing.
+
 ## Design Point
 
 Most Litex scripts are sequences of proof actions over mathematical facts:

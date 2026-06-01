@@ -63,6 +63,7 @@ impl Runtime {
             .params_def_with_type()
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
+        let body_fact_verify_state = VerifyState::new(0, false);
         for fact in exist_fact_in_have_obj_stmt.facts().iter() {
             let instantiated_fact = self
                 .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
@@ -74,9 +75,7 @@ impl Runtime {
                 })?
                 .to_fact();
             let fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                    instantiated_fact,
-                )
+                .verify_well_defined_and_store_and_infer(instantiated_fact, &body_fact_verify_state)
                 .map_err(|store_fact_error| {
                     exec_stmt_error_with_stmt_and_cause(
                         have_exist_obj_stmt.clone().into(),

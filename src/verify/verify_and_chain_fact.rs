@@ -89,8 +89,8 @@ impl Runtime {
                     current_known_forall.clone()
                 };
                 let match_result = self.match_args_in_fact_in_known_forall_fact_with_given_args(
-                    &and_fact_in_known_forall.get_args_from_fact(),
-                    &and_fact.get_args_from_fact(),
+                    &and_fact_in_known_forall.get_args_from_fact_ref(),
+                    &and_fact.get_args_from_fact_ref(),
                 )?;
                 if let Some(arg_map) = match_result {
                     if let Some(fact_verified) = self

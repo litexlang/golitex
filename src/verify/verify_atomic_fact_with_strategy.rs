@@ -19,10 +19,10 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
 
-        let Some(arg_map) = self.match_args_in_fact_in_known_forall_fact_with_given_args(
-            &then_atomic_fact.args(),
-            &atomic_fact.args(),
-        )?
+        let then_args = then_atomic_fact.args_ref();
+        let atomic_args = atomic_fact.args_ref();
+        let Some(arg_map) =
+            self.match_args_in_fact_in_known_forall_fact_with_given_args(&then_args, &atomic_args)?
         else {
             return Ok(StmtUnknown::new().into());
         };

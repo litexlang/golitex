@@ -1,0 +1,21 @@
+forall A, B set:
+    intersect(A, B) = intersect(B, A)
+
+forall A, B, C set:
+    intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+
+forall A, B, C set:
+    intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+
+forall A, B, C set:
+    set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+
+forall A, B, C set:
+    set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+
+have A, B, C set
+intersect(A, B) = intersect(B, A)
+intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))

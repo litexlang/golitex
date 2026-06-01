@@ -27,8 +27,7 @@ impl ForallFact {
     }
 
     pub fn expand_then_facts_with_order_chain_closure(&mut self) -> Result<(), RuntimeError> {
-        let mut new_then: Vec<ExistOrAndChainAtomicFact> =
-            Vec::with_capacity(self.then_facts.len().saturating_mul(2));
+        let mut new_then: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         for tf in std::mem::take(&mut self.then_facts) {
             match tf {
                 ExistOrAndChainAtomicFact::ChainFact(c) => {
@@ -69,5 +68,31 @@ impl fmt::Display for ForallFact {
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 2)
             ),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    fn set_param(name: &str) -> ParamDefWithType {
+        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![name.to_string()],
+            ParamType::Set(Set::new()),
+        )])
+    }
+
+    #[test]
+    fn new_rejects_nested_forall_reusing_outer_param() {
+        let inner = ForallFact::new(set_param("x"), vec![], vec![], default_line_file()).unwrap();
+
+        let outer = ForallFact::new(
+            set_param("x"),
+            vec![inner.into()],
+            vec![],
+            default_line_file(),
+        );
+
+        assert!(outer.is_err());
     }
 }

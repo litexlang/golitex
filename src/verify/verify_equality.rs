@@ -61,6 +61,15 @@ impl Runtime {
             );
         }
 
+        if let Some(done) = self.try_verify_anonymous_functions_equal_by_fn_eq(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if verify_state.is_round_0() && verify_state.equality_can_use_known_forall {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
             result = self.verify_atomic_fact_with_known_forall(
@@ -73,6 +82,37 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn try_verify_anonymous_functions_equal_by_fn_eq(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !matches!((left, right), (Obj::AnonymousFn(_), Obj::AnonymousFn(_))) {
+            return Ok(None);
+        }
+
+        // Function extensionality for anonymous function values.
+        // Example: `'R(x){f(x) + g(x)} = 'R(y){g(y) + f(y)}` follows from
+        // the existing `$fn_eq` pointwise equality verifier.
+        let fn_eq_fact = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
+        let fn_eq_result =
+            self.verify_fn_equal_fact_with_builtin_rules(&fn_eq_fact, verify_state)?;
+        if !fn_eq_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "anonymous fn equality: pointwise function equality".to_string(),
+                vec![fn_eq_result],
+            )
+            .into(),
+        ))
     }
 
     pub(crate) fn verify_equality_with_known_equalities(
@@ -245,13 +285,17 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             if let Some(env) = self.active_imported_module_environment(module_name) {
+                let left_key =
+                    equality_lookup_key_for_module_env(left, left_string, module_name.as_str());
+                let right_key =
+                    equality_lookup_key_for_module_env(right, right_string, module_name.as_str());
                 let known_left = env
                     .known_equality
-                    .get(left_string)
+                    .get(left_key.as_str())
                     .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
                 let known_right = env
                     .known_equality
-                    .get(right_string)
+                    .get(right_key.as_str())
                     .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
                 pairs.push((known_left, known_right));
             }
@@ -306,6 +350,35 @@ impl Runtime {
             return Ok(true);
         }
         Ok(false)
+    }
+
+    fn verify_function_args_are_equal_for_iterated_operator(
+        &mut self,
+        left_func: &Obj,
+        right_func: &Obj,
+        verify_state: &VerifyState,
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
+        // Iterated operators such as sum/product compare their summand
+        // functions extensionally. Example:
+        // `sum(1, n, 'Z(x){f(x)}) = sum(1, n, 'Z(y){f(y)})`.
+        let fn_eq_fact = FnEqualFact::new(
+            left_func.clone(),
+            right_func.clone(),
+            equality_line_file.clone(),
+        );
+        let fn_eq_result =
+            self.verify_fn_equal_fact_with_builtin_rules(&fn_eq_fact, verify_state)?;
+        if fn_eq_result.is_true() {
+            return Ok(true);
+        }
+
+        self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+            left_func,
+            right_func,
+            verify_state,
+            equality_line_file,
+        )
     }
 
     fn verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
@@ -683,7 +756,7 @@ impl Runtime {
                 )? {
                     return Ok(false);
                 }
-                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                self.verify_function_args_are_equal_for_iterated_operator(
                     ls.func.as_ref(),
                     rs.func.as_ref(),
                     verify_state,
@@ -701,7 +774,7 @@ impl Runtime {
                 )? {
                     return Ok(false);
                 }
-                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                self.verify_function_args_are_equal_for_iterated_operator(
                     ls.func.as_ref(),
                     rs.func.as_ref(),
                     verify_state,
@@ -871,6 +944,15 @@ impl Runtime {
 
         Ok((StmtUnknown::new()).into())
     }
+}
+
+fn equality_lookup_key_for_module_env(obj: &Obj, default_key: &str, module_name: &str) -> String {
+    if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = obj {
+        if identifier.mod_name == module_name {
+            return identifier.name.clone();
+        }
+    }
+    default_key.to_string()
 }
 
 fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) -> Obj {

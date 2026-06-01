@@ -22,6 +22,11 @@ impl ImportedModule {
     }
 }
 
+/// Tracks module/import state for one top-level run.
+///
+/// The entry runtime and all imported-module runtimes hold the same
+/// `Rc<RefCell<ModuleManager>>`, so nested imports update the state visible to
+/// the original runtime.
 #[derive(Clone)]
 pub struct ModuleManager {
     pub run_file_paths: Vec<Rc<str>>,

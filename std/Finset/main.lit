@@ -1,8 +1,7 @@
-# Mathlib-facing Finset compatibility layer.
+# Finite-set API modeled as finite Litex sets.
 #
-# Finsets are modeled as finite Litex sets. This file keeps the existing
-# MiniF2F finite-index surface and adds stable Finset names for later
-# mathlib-style translations.
+# This module exposes stable Finset names for membership, cardinality, ranges,
+# closed natural intervals, and finite sum/product fragments.
 
 prop Finset(s set):
     $is_finite_set(s)
@@ -25,11 +24,8 @@ have fn val(s power_set(N): $is_finite_set(s)) power_set(N) = s
 have fn val_Z(s power_set(Z): $is_finite_set(s)) power_set(Z) = s
 have fn val_R(s power_set(R): $is_finite_set(s)) power_set(R) = s
 
-# MiniF2F-facing finite-index objects.
-#
-# This is the focused part of Mathlib.Algebra.BigOperators.Basic that appears
-# in MiniF2F statements: ranges, closed natural intervals, cardinality, and
-# aliases into Litex's builtin finite sum/product expressions.
+# Finite-index objects and aliases into Litex's builtin finite sum/product
+# expressions.
 
 prop range_value(n N, s power_set(N)):
     forall x N:

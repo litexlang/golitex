@@ -1,7 +1,7 @@
-# Mathlib-facing integer definitions and theorems.
+# Integer definitions and theorem fragments.
 #
-# Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
-# `Odd n` are exposed here as typed lowering targets for Int arguments.
+# Generic notation and predicates such as `d ∣ n`, `Even n`, and `Odd n` are
+# exposed here as typed lowering targets for Int arguments.
 
 import Nat
 
@@ -22,7 +22,7 @@ prop Odd(n Z):
 prop ModEq(n Z_nz, a, b Z):
     a % n = b % n
 
-# Mathlib: Int.floor / Int.ceil-style aliases used by compatibility examples.
+# Integer-part functions.
 have floor fn(x R) Z
 have ceil fn(x R) Z
 

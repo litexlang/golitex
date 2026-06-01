@@ -75,6 +75,25 @@ better diagnostics. It is acceptable to use `know` or `abstract_prop` only when
 the blocked part is clearly labeled and the rest of the development remains
 explicit and checkable.
 
+When a textbook theorem overlaps with Litex builtin behavior, kernel support,
+or a broad standard-library theorem, keep both roles visible. Preserve the
+source theorem as a local textbook-facing statement so chapter coverage and
+dependencies remain traceable. Use the Litex/std theorem as the main proof
+source when it exists or is the intended trusted interface. If the source proof
+is pedagogically important but not yet the main checked path, place its proof
+shape in a local `prove` block, proof sketch, or nearby todo as an alternate
+route/proof debt rather than replacing the chapter statement.
+
+For textbook chapter files, follow the source order when introducing local
+definitions. Do not put a large block of chapter-wide `prop` or
+`abstract_prop` declarations at the top unless the source itself starts that
+way. If Litex already has a builtin concept or standard predicate such as
+membership, subset, finite sets, `count`, tuples, Cartesian products, or
+function equality, use it directly instead of adding a Tao-specific wrapper.
+Record broad proof debt in nearby comments or todo files; only introduce a
+named prop when it is a real source definition or a reusable local interface
+that later checked statements actually depend on.
+
 By September, a good outcome is not only a large number of translated items. A
 good outcome is a working translation pipeline, checkable examples across the
 main source families, a clear standard library gap map, a benchmark set for
@@ -109,33 +128,40 @@ For each item, proceed in this order:
    small intermediate facts, finite case splits, witnesses, named theorem
    calls, and local reusable lemmas.
 
-3. If the proof cannot be completed immediately, write the best partial Litex
+3. For textbook work, if the source theorem can be proved by following the
+   text but Litex also has builtin/kernel/stdlib support for the same fact,
+   record both routes. Keep the source theorem statement in the chapter file,
+   use the named Litex/std interface as the main checked route when available,
+   and keep the textbook proof idea in a local `prove` block, proof sketch, or
+   nearby todo until it is checkable.
+
+4. If the proof cannot be completed immediately, write the best partial Litex
    proof first. It is acceptable to use `know` temporarily, but only for the
    blocked step. Next to each temporary `know`, add a concise comment saying
    why the step is not yet proved and what kind of missing support it appears
    to need.
 
-4. Put unfinished attempts in the local unfinished-explanation area. In
+5. Put unfinished attempts in the local unfinished-explanation area. In
    MiniF2F this is
-   `scripts/litex-minif2f/unfinished_problems_and_why_they_are_unfiniishded/`.
+   `scripts/litex-minif2f/unfinished_dataset/problem_notes/`.
    For another dataset or textbook workspace, create the analogous nearby
    folder if it does not already exist. Name the file by the problem or theorem
    id. Record the proof idea, the current Litex attempt, the exact verifier
    failure if any, every remaining `know`, and the primary blocker label.
 
-5. Iterate by removing proof debt one step at a time. Run the verifier after
+6. Iterate by removing proof debt one step at a time. Run the verifier after
    each small change and use the exact output to decide the next correction.
    Try splitting algebraic or numeric jumps into smaller equalities before
    searching for new theorems.
 
-6. When the item becomes checkable, move it out of the unfinished area and into
+7. When the item becomes checkable, move it out of the unfinished area and into
    the finished area for that source. Delete the matching unfinished-explanation
    file, update any local JSONL/status/todo bookkeeping, and keep the final
    `.lit` file runnable.
 
-7. After solving a formerly unfinished item, write a short "war story" in the
+8. After solving a formerly unfinished item, write a short "war story" in the
    local solved-experience area. In MiniF2F this is
-   `scripts/litex-minif2f/how_unfinshed_problems_are_solved/`. For another
+   `scripts/litex-minif2f/experience/problem_notes/`. For another
    source, create the analogous nearby folder if needed. Record the natural
    idea, where the attempt got stuck, the exact trick or Litex pattern that
    solved it, and any reusable lesson for later items.
@@ -182,19 +208,27 @@ label.
 
 10. When implementing an infer rule, write comments about the condition under which the rule is applied and what new fact is inferred. Include an example.
 
+11. All runtimes created within one top-level run must share the same module manager. In particular, imported-module runtimes should be created with `Runtime::new_for_import_from_parent` so nested imports, cycle checks, source labels, and stopped-module state all update the same `Rc<RefCell<ModuleManager>>`.
+
 ## Litex Language And Proof Style
 
 1. Litex examples should expose a tight verifier feedback loop: write a small proof, run it, read the exact verifier output, and make the next smallest correction until the proof is checkable.
 
 2. Before writing Litex code, first explain the proof idea in natural language and look for the local proof pattern. Prefer starting from the mathematical move that should work in Litex rather than searching for theorem names as if the task were Lean.
 
-3. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
+3. When several formulations are possible, prefer the most Litex-native and
+   simplest checkable formulation. Do not preserve a source text's original
+   shape, or Litex's lower-level raw expression shape, if doing so creates
+   special cases or a harder proof. If preserving the source shape is important
+   for comparison, record it separately and keep the main checked proof simple.
 
-4. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
+4. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
 
-5. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+5. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
 
-6. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
+6. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+
+7. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
 
 ```litex
 forall x R:
@@ -211,15 +245,15 @@ forall x R:
 
 The current `forall ... <=>:` syntax is an exception: if there are no shared hypotheses, keep the required `=>:` block for the left side of the iff.
 
-7. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
+8. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-8. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+9. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
 
-9. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
+10. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
 
-10. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+11. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
 
-11. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+12. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
 ## Dataset Translation To Litex
 
@@ -229,13 +263,18 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 3. After understanding the mathematics, design a Litex formulation that matches the current verifier and proof style of this repository.
 
-4. The translation process should be iterative: write a small Litex proof, run it, inspect the verifier output, and make the next smallest correction.
+4. Prefer the most Litex-native simple formulation as the main checked
+   version. A formulation closer to the source text, or closer to Litex's raw
+   underlying expression, is secondary unless the user explicitly asks for that
+   comparison.
 
-5. Before using `know` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
+5. The translation process should be iterative: write a small Litex proof, run it, inspect the verifier output, and make the next smallest correction.
 
-6. If part of the formalization is temporarily blocked, it is acceptable to use `know` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
+6. Before using `know` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
 
-7. Prefer a mathematically natural Litex proof over a source-language-shaped translation. The goal is a verifiable Litex development, not a line-by-line transcription.
+7. If part of the formalization is temporarily blocked, it is acceptable to use `know` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
+
+8. Prefer a mathematically natural Litex proof over a source-language-shaped translation. The goal is a verifiable Litex development, not a line-by-line transcription.
 
 ## Testing And Verification
 

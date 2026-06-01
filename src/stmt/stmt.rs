@@ -42,6 +42,7 @@ pub enum Stmt {
     BySymmetricPropStmt(BySymmetricPropStmt),
     ByReflexivePropStmt(ByReflexivePropStmt),
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
+    ByZornLemmaStmt(ByZornLemmaStmt),
     ByThmStmt(ByThmStmt),
     DefThmStmt(DefThmStmt),
     UseStrategyStmt(UseStrategyStmt),
@@ -404,6 +405,7 @@ impl fmt::Display for Stmt {
             Stmt::BySymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
+            Stmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
             Stmt::ByThmStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
             Stmt::UseStrategyStmt(x) => write!(f, "{}", x),
@@ -457,6 +459,7 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByReflexivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByZornLemmaStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
@@ -508,6 +511,7 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByReflexivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByZornLemmaStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
@@ -755,6 +759,12 @@ impl From<ByReflexivePropStmt> for Stmt {
 impl From<ByAntisymmetricPropStmt> for Stmt {
     fn from(v: ByAntisymmetricPropStmt) -> Self {
         Stmt::ByAntisymmetricPropStmt(v)
+    }
+}
+
+impl From<ByZornLemmaStmt> for Stmt {
+    fn from(v: ByZornLemmaStmt) -> Self {
+        Stmt::ByZornLemmaStmt(v)
     }
 }
 

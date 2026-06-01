@@ -1,9 +1,9 @@
-# Natural-number number theory, organized with Mathlib-facing names.
+# Natural-number number theory and arithmetic theorem fragments.
 #
-# Litex theorem names cannot contain `.`, so Mathlib names such as
-# `Nat.Prime.dvd_or_dvd` are represented as `Prime_dvd_or_dvd`.
-# Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
-# `Odd n` are exposed here as typed lowering targets for Nat arguments.
+# Litex theorem names cannot contain `.`, so external names such as
+# `Nat.Prime.dvd_or_dvd` are represented as `Prime_dvd_or_dvd` when useful.
+# Generic notation and predicates such as `d ∣ n`, `Even n`, and `Odd n` are
+# exposed here as typed lowering targets for Nat arguments.
 
 # Mathlib generic notation: `d ∣ n` with Nat arguments.
 prop Dvd(d, n N):
@@ -22,6 +22,13 @@ prop Odd(n N):
 prop ModEq(n N_pos, a, b N):
     a % n = b % n
 
+# Textbook-facing Euclidean division for naturals. This exposes the reusable
+# quotient-remainder interface; constructive textbook proofs can target it.
+prop EuclideanDivision(n N, q N_pos, m N, r N):
+    0 <= r
+    r < q
+    n = m * q + r
+
 # Mathlib: Nat.Prime.
 prop Prime(p N):
     2 <= p
@@ -29,21 +36,6 @@ prop Prime(p N):
         $Dvd(d, p)
         =>:
             d = 1 or d = p
-
-# MiniF2F legacy predicate: old translations used unqualified `$divides`.
-# Example: `$divides(11, 10^n - (-1)^n)`.
-prop divides(d, n Z):
-    exist k Z st {n = d * k}
-
-# MiniF2F legacy predicate: old translations used unqualified `$odd`.
-# Example: `$odd(a)` means `a % 2 = 1`.
-prop odd(n Z):
-    n % 2 = 1
-
-# MiniF2F legacy predicate: old translations used unqualified `$prime`.
-# Example: `$prime(p)` for a natural prime.
-prop prime(p N):
-    $Prime(p)
 
 # Mathlib: Nat.gcd / Nat.lcm.
 have gcd fn(a, b N) N
@@ -53,7 +45,7 @@ have lcm fn(a, b N) N
 prop Coprime(a, b N):
     gcd(a, b) = 1
 
-# Mathlib: Nat.choose / integer square-root compatibility objects.
+# Nat.choose / integer square-root API.
 # `choose` and `sqrt` are Litex keywords, so these short module-local names use suffixes.
 have choose_fn fn(n, k N) N
 have sqrt_nat fn(n N) N
@@ -100,6 +92,9 @@ know:
         n != 0
         =>:
             0 < n
+
+    forall n N, q N_pos:
+        exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
     forall n N:
         (-1)^n $in Z
@@ -244,6 +239,15 @@ thm not_prime_one:
         forall _ N:
             not $Prime(1)
     not $Prime(1)
+
+# Textbook/API bridge: Euclidean division is currently available as a named
+# Nat theorem backed by std proof debt. Tao-style constructive proofs should
+# eventually replace the broad `know` fact above.
+thm euclidean_division:
+    prove:
+        forall n N, q N_pos:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
 # Mathlib: Nat.dvd_refl
 thm dvd_refl:
@@ -447,7 +451,7 @@ thm choose_succ_succ:
                 choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
     choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
-# Mathlib-facing sqrt bounds.
+# Integer square-root bounds.
 thm sqrt_sq_le:
     prove:
         forall n N:

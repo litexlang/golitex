@@ -428,7 +428,7 @@ impl Runtime {
                 .known_atomic_facts_with_2_args
                 .get(&(fact.key(), fact.is_true()))
             {
-                let args = fact.args();
+                let args = fact.args_ref();
                 let key = (args[0].to_string(), args[1].to_string());
                 if let Some(known_fact) = known_facts_map.get(&key) {
                     return Ok(Some(StmtResult::FactualStmtSuccess(

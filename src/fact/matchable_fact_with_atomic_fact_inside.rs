@@ -162,6 +162,14 @@ impl AndFact {
         }
         result
     }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        let mut result: Vec<&Obj> = Vec::new();
+        for atomic_fact in self.facts.iter() {
+            result.extend(atomic_fact.get_args_from_fact_ref());
+        }
+        result
+    }
 }
 
 impl fmt::Display for ChainFact {
@@ -196,6 +204,10 @@ impl ChainFact {
             result.push(obj.clone());
         }
         result
+    }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        self.objs.iter().collect()
     }
 }
 
@@ -235,6 +247,14 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.get_args_from_fact(),
             AndChainAtomicFact::AndFact(and_fact) => and_fact.get_args_from_fact(),
             AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.get_args_from_fact(),
+        }
+    }
+
+    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
+        match self {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.get_args_from_fact_ref(),
+            AndChainAtomicFact::AndFact(and_fact) => and_fact.get_args_from_fact_ref(),
+            AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.get_args_from_fact_ref(),
         }
     }
 }

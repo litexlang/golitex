@@ -278,15 +278,6 @@ impl IntoIterator for ParamDefWithSet {
     }
 }
 
-impl<'a> IntoIterator for &'a ParamDefWithSet {
-    type Item = &'a ParamGroupWithSet;
-    type IntoIter = std::slice::Iter<'a, ParamGroupWithSet>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.groups.iter()
-    }
-}
-
 impl From<Vec<ParamGroupWithSet>> for ParamDefWithSet {
     fn from(groups: Vec<ParamGroupWithSet>) -> Self {
         ParamDefWithSet::new(groups)
