@@ -55,10 +55,11 @@ from it.
 
 ## Verifier Flow
 
-The following diagram gives the high-level flow from source code to verifier
-output. It separates checked facts from the `know` path: checked facts must be
-proved by the verifier, while `know` facts are well-defined assumptions or proof
-debt that enter the context as trusted input.
+The following diagram gives the high-level flow from source code to statement
+execution and verifier output. It separates ordinary statements from verify
+statements: ordinary statements execute, define, import, or organize local
+proof state, while verify statements check facts, goals, generated obligations,
+or explicit `know` assumptions.
 
 ![Litex verifier flow](../assets/verifier_flow.png)
 
@@ -67,9 +68,9 @@ Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
 The diagram is intentionally explicit about the trusted boundary. Builtin rules
 and builtin inference make Litex convenient for relation-first mathematics, but
 they are part of the implementation users must trust and audit. The useful
-output is not only `true`, `unknown`, or `error`; it is also the `verified_by`
-and inferred-fact information that explains which route was used and what
-context became available afterward.
+output is not only `true`, `unknown`, or `error`; it is also the `verified_by`,
+inferred-fact, nested-result, and context-update information that explains what
+route was used and what became available afterward.
 
 ## The Role of `know`
 

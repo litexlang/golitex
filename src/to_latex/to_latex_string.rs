@@ -382,6 +382,23 @@ impl ByAntisymmetricPropStmt {
     }
 }
 
+impl ByZornLemmaStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by zorn_lemma}}}} {} \text{{from}} {}",
+            self.set.to_latex_string(),
+            latex_texttt_escape(&self.prop_name.to_string())
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
 impl ByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let goals = self
@@ -2102,6 +2119,7 @@ impl Stmt {
             Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
+            Stmt::ByZornLemmaStmt(x) => x.to_latex_string(),
             Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::UseStrategyStmt(x) => latex_texttt_escape(&x.to_string()),

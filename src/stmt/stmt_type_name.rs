@@ -189,6 +189,12 @@ impl ByAntisymmetricPropStmt {
     }
 }
 
+impl ByZornLemmaStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByZornLemmaStmt".to_string()
+    }
+}
+
 impl ByThmStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByThmStmt".to_string()

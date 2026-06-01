@@ -1,8 +1,8 @@
-# Lean/Mathlib-facing rational metadata used by a small MiniF2F slice.
+# Rational numerator and denominator theorem fragments.
 #
 # Litex already has the rational set `Q`. This file adds the namespace-shaped
-# numerator/denominator surface that appears in Mathlib proofs as `Rat.num`,
-# `Rat.den`, `Rat.num_div_den`, and `Rat.den_nz`.
+# numerator/denominator surface exposed as `num`, `den`, `num_div_den`, and
+# `den_nz`.
 
 import Nat
 import Int

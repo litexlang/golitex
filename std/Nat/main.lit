@@ -1,9 +1,9 @@
-# Natural-number number theory, organized with Mathlib-facing names.
+# Natural-number number theory and arithmetic theorem fragments.
 #
-# Litex theorem names cannot contain `.`, so Mathlib names such as
-# `Nat.Prime.dvd_or_dvd` are represented as `Prime_dvd_or_dvd`.
-# Generic Mathlib notation and predicates such as `d ∣ n`, `Even n`, and
-# `Odd n` are exposed here as typed lowering targets for Nat arguments.
+# Litex theorem names cannot contain `.`, so external names such as
+# `Nat.Prime.dvd_or_dvd` are represented as `Prime_dvd_or_dvd` when useful.
+# Generic notation and predicates such as `d ∣ n`, `Even n`, and `Odd n` are
+# exposed here as typed lowering targets for Nat arguments.
 
 # Mathlib generic notation: `d ∣ n` with Nat arguments.
 prop Dvd(d, n N):
@@ -37,21 +37,6 @@ prop Prime(p N):
         =>:
             d = 1 or d = p
 
-# MiniF2F legacy predicate: old translations used unqualified `$divides`.
-# Example: `$divides(11, 10^n - (-1)^n)`.
-prop divides(d, n Z):
-    exist k Z st {n = d * k}
-
-# MiniF2F legacy predicate: old translations used unqualified `$odd`.
-# Example: `$odd(a)` means `a % 2 = 1`.
-prop odd(n Z):
-    n % 2 = 1
-
-# MiniF2F legacy predicate: old translations used unqualified `$prime`.
-# Example: `$prime(p)` for a natural prime.
-prop prime(p N):
-    $Prime(p)
-
 # Mathlib: Nat.gcd / Nat.lcm.
 have gcd fn(a, b N) N
 have lcm fn(a, b N) N
@@ -60,7 +45,7 @@ have lcm fn(a, b N) N
 prop Coprime(a, b N):
     gcd(a, b) = 1
 
-# Mathlib: Nat.choose / integer square-root compatibility objects.
+# Nat.choose / integer square-root API.
 # `choose` and `sqrt` are Litex keywords, so these short module-local names use suffixes.
 have choose_fn fn(n, k N) N
 have sqrt_nat fn(n N) N
@@ -466,7 +451,7 @@ thm choose_succ_succ:
                 choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
     choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
-# Mathlib-facing sqrt bounds.
+# Integer square-root bounds.
 thm sqrt_sq_le:
     prove:
         forall n N:
