@@ -18,6 +18,12 @@
 
 **Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
 
+**Scope notice:** Litex is not trying to replace Lean, Coq, Isabelle, or other
+mature proof assistants. It tests a different hypothesis: that a smaller,
+readable, fact-oriented formal language can make checked mathematics cheap
+enough for students, domain scientists, and AI agents to produce useful formal
+data at scale.
+
 </div>
 
 ## What is Litex?
@@ -143,6 +149,15 @@ prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
 
+For the full verifier pipeline, see the diagram below:
+
+<div align="center">
+  <img src="assets/verifier_flow.png" alt="Litex verifier flow" width="900">
+  <p><em>Verifier flow: checked facts, know assumptions, context update, and trusted boundary.</em></p>
+</div>
+
+Editable source: [docs/diagrams/verifier_flow.mmd](docs/diagrams/verifier_flow.mmd).
+
 ## How Litex Is Different
 
 Litex is not trying to be a faster Lean. Lean is a powerful formal mathematics
@@ -225,7 +240,7 @@ For different readers:
 3. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
 4. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
 5. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
-6. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
+6. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): for Chinese strategic and project discussions.
 7. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:

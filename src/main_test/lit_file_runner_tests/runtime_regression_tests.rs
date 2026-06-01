@@ -207,6 +207,113 @@ $restrict_fn_in('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
 }
 
 #[test]
+fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
+    let positive_source_code = r#"
+'R(x){x} = 'R(y){y}
+
+forall f, g fn(x R) R:
+    'R(x){f(x) + g(x)} = 'R(x){g(x) + f(x)}
+
+forall f, g fn(x R) R:
+    'R(x){f(x) + g(x)} = 'R(x){'R(y){f(y)}(x) + 'R(y){g(y)}(x)}
+
+'(x R: x > 0) R {x} = '(y R: y > 0) R {y}
+"#;
+
+    let mut positive_runtime = Runtime::new_with_builtin_code();
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
+    );
+    let (positive_stmt_results, positive_runtime_error) =
+        run_source_code(positive_source_code, &mut positive_runtime);
+    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+        &positive_runtime,
+        &positive_stmt_results,
+        &positive_runtime_error,
+        false,
+    );
+    assert!(
+        positive_run_succeeded,
+        "anonymous fn direct equality should use pointwise extensionality:\n{}",
+        positive_run_output
+    );
+
+    let negative_source_code = r#"
+'(x N) R {x} = 'R(x){x}
+"#;
+
+    let mut negative_runtime = Runtime::new_with_builtin_code();
+    negative_runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
+    );
+    let (negative_stmt_results, negative_runtime_error) =
+        run_source_code(negative_source_code, &mut negative_runtime);
+    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+        &negative_runtime,
+        &negative_stmt_results,
+        &negative_runtime_error,
+        false,
+    );
+    assert!(
+        !negative_run_succeeded,
+        "anonymous fn direct equality should not ignore domain differences:\n{}",
+        negative_run_output
+    );
+}
+
+#[test]
+fn iterated_operator_equality_uses_fn_eq_for_function_arg() {
+    let positive_source_code = r#"
+sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
+product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
+
+forall f, g fn(x Z) Z:
+    sum(1, 3, 'Z(x){f(x) + g(x)}) = sum(1, 3, 'Z(y){g(y) + f(y)})
+
+forall f, g fn(x Z) Z:
+    product(1, 3, 'Z(x){f(x) * g(x)}) = product(1, 3, 'Z(y){g(y) * f(y)})
+"#;
+
+    let mut positive_runtime = Runtime::new_with_builtin_code();
+    positive_runtime
+        .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_positive");
+    let (positive_stmt_results, positive_runtime_error) =
+        run_source_code(positive_source_code, &mut positive_runtime);
+    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+        &positive_runtime,
+        &positive_stmt_results,
+        &positive_runtime_error,
+        false,
+    );
+    assert!(
+        positive_run_succeeded,
+        "sum/product equality should compare function args by fn_eq:\n{}",
+        positive_run_output
+    );
+
+    let negative_source_code = r#"
+product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
+"#;
+
+    let mut negative_runtime = Runtime::new_with_builtin_code();
+    negative_runtime
+        .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_negative");
+    let (negative_stmt_results, negative_runtime_error) =
+        run_source_code(negative_source_code, &mut negative_runtime);
+    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+        &negative_runtime,
+        &negative_stmt_results,
+        &negative_runtime_error,
+        false,
+    );
+    assert!(
+        !negative_run_succeeded,
+        "product equality should still require equal ranges:\n{}",
+        negative_run_output
+    );
+}
+
+#[test]
 fn dependent_fn_param_set_uses_previous_arg() {
     let source_code = r#"
 have f fn(n N_pos, x closed_range(1, n)) R

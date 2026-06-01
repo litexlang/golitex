@@ -1,0 +1,84 @@
+%% Litex verifier flow.
+%% This is the canonical editable source for assets/verifier_flow.png.
+%% The rendered PNG keeps the top pipeline linear and uses separate lanes
+%% below it to avoid cross-region connector clutter.
+flowchart TB
+    subgraph run["1. Run pipeline"]
+        direction LR
+        source["Litex source<br/>file, -e code, or import"]
+        runtime["Runtime setup<br/>builtin code + module manager"]
+        tokenize["Tokenize and block parse"]
+        parse["Parse statement"]
+        classify["Statement classification<br/>definition/proof block<br/>checked fact<br/>know assumption"]
+
+        source --> runtime --> tokenize --> parse --> classify
+    end
+
+    subgraph verify["2. Fact verification"]
+        direction TB
+
+        subgraph checked_lane["Checked fact lane"]
+            direction LR
+            checked["Checked fact<br/>bare fact, claim goal,<br/>or proof obligation"]
+            wd["Well-definedness check<br/>scope, predicates, domains"]
+            shape["Dispatch by fact shape<br/>atomic, chain, and/or,<br/>forall, exist"]
+            routes["Try proof routes<br/>builtins, known facts,<br/>definitions, forall matching,<br/>registered relation rules"]
+            route_ok{"Route closes?"}
+            proved["true<br/>verified_by records route"]
+            unknown["unknown<br/>well-defined,<br/>but no route closed it"]
+            err["error<br/>syntax or well-definedness failure"]
+
+            checked --> wd
+            wd -->|"passes"| shape --> routes --> route_ok
+            wd -->|"fails"| err
+            route_ok -->|"yes"| proved
+            route_ok -->|"no"| unknown
+        end
+
+        subgraph know_lane["know lane"]
+            direction LR
+            know["know fact<br/>assumption / proof debt"]
+            know_wd["Well-definedness check<br/>for assumed fact"]
+            assumed["Accepted as trusted input<br/>not proved by verifier"]
+            know_err["error<br/>invalid assumed fact"]
+
+            know --> know_wd
+            know_wd -->|"passes"| assumed
+            know_wd -->|"fails"| know_err
+        end
+    end
+
+    subgraph update["3. Context update"]
+        direction LR
+        accepted["Accepted facts<br/>verified true facts<br/>+ know assumptions"]
+        store["Store in environment<br/>and known-fact cache"]
+        index["Index reusable information<br/>forall lookup, chain closure,<br/>transitive relation closure"]
+        infer["Builtin inference<br/>routine consequences,<br/>domain facts, equalities,<br/>memberships"]
+        context["Expanded verified context<br/>available to later statements"]
+        output["Output<br/>true / unknown / error<br/>verified_by / infer_facts"]
+
+        accepted --> store --> index --> infer --> context --> output
+    end
+
+    classify -. "checked facts" .-> checked
+    classify -. "know facts" .-> know
+    proved --> accepted
+    assumed --> accepted
+    unknown -. "reported" .-> output
+    err -. "reported" .-> output
+    know_err -. "reported" .-> output
+
+    boundary["Trusted boundary<br/>parser, well-definedness checker, builtin rules, infer rules,<br/>known-fact indexing, and explicit know facts"]
+    classDef input fill:#eef6ff,stroke:#3673b8,color:#10233f;
+    classDef process fill:#f6f7f9,stroke:#79808a,color:#151922;
+    classDef decision fill:#fff5d9,stroke:#b98300,color:#2c2100;
+    classDef success fill:#e8f7ed,stroke:#348a50,color:#12351d;
+    classDef warn fill:#fff0eb,stroke:#c45b3c,color:#42170d;
+    classDef trusted fill:#f3ecff,stroke:#7a4fc2,color:#25153e;
+
+    class source,runtime input;
+    class classify,checked,know,wd,shape,routes,store,index,infer,context,output,know_wd process;
+    class route_ok decision;
+    class proved,accepted,assumed success;
+    class err,unknown,know_err warn;
+    class boundary trusted;
