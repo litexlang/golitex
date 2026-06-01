@@ -111,18 +111,29 @@ fn reverse_fact_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
         Fact::AtomicFact(atomic_fact) => Ok(atomic_fact.make_reversed().into()),
         Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact.clone()).into()),
         Fact::NotForall(not_forall) => Ok(not_forall.forall_fact.clone().into()),
-        Fact::ExistFact(_)
-        | Fact::OrFact(_)
-        | Fact::AndFact(_)
-        | Fact::ChainFact(_)
-        | Fact::ForallFactWithIff(_) => Err(RuntimeError::ExecStmtError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(
-                format!(
-                    "by contra: cannot build reverse assumption for `{}` yet",
-                    fact
+        Fact::ExistFact(exist_fact) => match exist_fact {
+            ExistFactEnum::ExistFact(body) => Ok(ExistFactEnum::NotExistFact(body.clone()).into()),
+            ExistFactEnum::NotExistFact(body) => Ok(ExistFactEnum::ExistFact(body.clone()).into()),
+            ExistFactEnum::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "by contra: cannot build reverse assumption for `{}` yet",
+                        fact
+                    ),
+                    fact.line_file(),
                 ),
-                fact.line_file(),
-            ),
-        )),
+            )),
+        },
+        Fact::OrFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::ForallFactWithIff(_) => {
+            Err(RuntimeError::ExecStmtError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "by contra: cannot build reverse assumption for `{}` yet",
+                        fact
+                    ),
+                    fact.line_file(),
+                ),
+            ))
+        }
     }
 }

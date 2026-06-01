@@ -102,6 +102,48 @@ forall x R:
 }
 
 #[test]
+fn have_by_exist_body_well_defined_can_use_forall_domain_fact() {
+    let source_code = r#"
+prop image_like(S, T set, f fn(x S) T, A, B set):
+    A $subset S
+    forall y B:
+        exist a A st {y = f(a)}
+
+claim:
+    prove:
+        forall S, T set, f fn(x S) T, A, B set, x S:
+            A $subset S
+            $image_like(S, T, f, A, B)
+            f(x) $in B
+            =>:
+                x = x
+    claim:
+        prove:
+            forall a A:
+                a $in S
+        a $in S
+    have by exist a A st {f(x) = f(a)}: a
+    a $in S
+    f(x) = f(a)
+    x = x
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "have_by_exist_body_well_defined_can_use_forall_domain_fact",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have_by_exist_body_well_defined_can_use_forall_domain_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
     run_with_large_stack(
         "anonymous_fn_restrict_requires_valid_target_domain_and_return_large_stack",
@@ -984,6 +1026,161 @@ right $in info(a)
     assert!(
         run_succeeded,
         "real_interval_nonempty_and_well_defined_rules failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn common_power_equalities_and_order_are_builtin() {
+    let source_code = r#"
+forall x Q_nz, n, m N:
+    x^n * x^m = x^(n + m)
+
+forall x, y Q, n N_pos:
+    (x * y)^n = x^n * y^n
+
+forall x Q, n N_pos:
+    x^n = 0
+    =>:
+        x = 0
+
+forall x, y Q, n N_pos:
+    x >= y
+    y >= 0
+    =>:
+        x^n >= y^n
+        y^n >= 0
+
+forall x Q, n N_pos:
+    abs(x^n) = abs(x)^n
+
+forall x Q_nz, n, m Z:
+    x^n * x^m = x^(n + m)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "common_power_equalities_and_order_are_builtin failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn union_nonempty_when_either_side_nonempty() {
+    let source_code = r#"
+$is_nonempty_set(union({1}, {}))
+$is_nonempty_set(union({}, {2}))
+
+have A, B set
+know:
+    $is_nonempty_set(A)
+
+$is_nonempty_set(union(A, B))
+
+have C, D set
+know:
+    $is_nonempty_set(D)
+
+$is_nonempty_set(union(C, D))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("union_nonempty_when_either_side_nonempty");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "union_nonempty_when_either_side_nonempty failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn union_set_equalities_are_builtin() {
+    let source_code = r#"
+forall A, B set:
+    union(A, B) = union(B, A)
+
+forall A, B, C set:
+    union(union(A, B), C) = union(A, union(B, C))
+
+forall A set:
+    union(A, A) = A
+    union(A, {}) = A
+    union({}, A) = A
+
+have A, B, C set
+union(A, B) = union(B, A)
+union(union(A, B), C) = union(A, union(B, C))
+union(A, union(B, C)) = union(union(A, B), C)
+union(A, A) = A
+union(A, {}) = A
+union({}, A) = A
+A = union(A, A)
+A = union(A, {})
+A = union({}, A)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("union_set_equalities_are_builtin");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "union_set_equalities_are_builtin failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn common_set_algebra_equalities_are_builtin() {
+    let source_code = r#"
+forall A, B set:
+    intersect(A, B) = intersect(B, A)
+
+forall A, B, C set:
+    intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+
+forall A, B, C set:
+    intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+
+forall A, B, C set:
+    set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+
+forall A, B, C set:
+    set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+
+have A, B, C set
+intersect(A, B) = intersect(B, A)
+intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+intersect(A, intersect(B, C)) = intersect(intersect(A, B), C)
+intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+union(intersect(A, B), intersect(A, C)) = intersect(A, union(B, C))
+set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+intersect(set_minus(A, B), set_minus(A, C)) = set_minus(A, union(B, C))
+set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+union(set_minus(A, B), set_minus(A, C)) = set_minus(A, intersect(B, C))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("common_set_algebra_equalities_are_builtin");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "common_set_algebra_equalities_are_builtin failed:\n{}",
         run_output
     );
 }

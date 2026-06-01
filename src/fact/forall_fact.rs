@@ -27,8 +27,7 @@ impl ForallFact {
     }
 
     pub fn expand_then_facts_with_order_chain_closure(&mut self) -> Result<(), RuntimeError> {
-        let mut new_then: Vec<ExistOrAndChainAtomicFact> =
-            Vec::with_capacity(self.then_facts.len().saturating_mul(2));
+        let mut new_then: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         for tf in std::mem::take(&mut self.then_facts) {
             match tf {
                 ExistOrAndChainAtomicFact::ChainFact(c) => {

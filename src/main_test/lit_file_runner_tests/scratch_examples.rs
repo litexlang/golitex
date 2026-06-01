@@ -5,25 +5,34 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{run_with_large_stack, CITE_STD_EXAMPLES_SUBDIR};
+use super::helper::{run_with_large_stack, CITE_STD_EXAMPLES_SUBDIR, SCRATCH_EXAMPLES_SUBDIR};
 
 fn run_tmp_lit_file(file_name: &str) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let default_tmp_lit_path = manifest_dir.join("examples").join(file_name);
-    let cite_std_tmp_lit_path = manifest_dir.join(CITE_STD_EXAMPLES_SUBDIR).join(file_name);
-    let tmp_lit_path = if default_tmp_lit_path.is_file() {
-        default_tmp_lit_path
-    } else {
-        cite_std_tmp_lit_path
-    };
-
-    assert!(
-        tmp_lit_path.is_file(),
-        "examples/{} or {}/{} must exist",
-        file_name,
-        CITE_STD_EXAMPLES_SUBDIR,
-        file_name
-    );
+    let candidate_paths = [
+        manifest_dir.join("examples").join(file_name),
+        manifest_dir.join(CITE_STD_EXAMPLES_SUBDIR).join(file_name),
+        manifest_dir.join(SCRATCH_EXAMPLES_SUBDIR).join(file_name),
+    ];
+    let tmp_lit_path = candidate_paths
+        .iter()
+        .find(|path| path.is_file())
+        .unwrap_or_else(|| {
+            panic!(
+                "{} must exist in one of: {}",
+                file_name,
+                candidate_paths
+                    .iter()
+                    .map(|path| {
+                        path.strip_prefix(&manifest_dir)
+                            .unwrap_or(path)
+                            .display()
+                            .to_string()
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        });
 
     let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
         Ok(content) => content,

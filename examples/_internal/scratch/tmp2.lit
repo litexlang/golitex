@@ -1,7 +1,80 @@
-forall x cart(R, R):
-    3 * x[1] + 2 * x[2] = 12
-    x[1] = 4
-    =>:
-        2 * x[2] = 12 - 3 * x[1] = 12 - 3 * 4 = 0
-        x[2] = (2 * x[2]) / 2 = 0 / 2 = 0
-        
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop forward_image_value(S, T set, f fn(x S) T, A, B set):
+    A $subset S
+    B $subset T
+    forall x A:
+        f(x) $in B
+    forall y B:
+        exist x A st {y = f(x)}
+
+prop inverse_image_value(S, T set, f fn(x S) T, U, A set):
+    U $subset T
+    A $subset S
+    forall x A:
+        f(x) $in U
+    forall x S:
+        f(x) $in U
+        =>:
+            x $in A
+
+claim:
+    prove:
+        forall S, T set, f fn(x S) T, A, B set:
+            $forward_image_value(S, T, f, A, B)
+            =>:
+                B $subset T
+    B $subset T
+
+claim:
+    prove:
+        forall S, T set, f fn(x S) T, U, A set:
+            $inverse_image_value(S, T, f, U, A)
+            =>:
+                A $subset S
+    A $subset S
+
+claim:
+    prove:
+        forall S, T set, f fn(x S) T, A, B set:
+            A $subset S
+            $injective_fn(S, T, f)
+            $forward_image_value(S, T, f, A, B)
+            =>:
+                $inverse_image_value(S, T, f, B, A)
+    A $subset S
+    B $subset T
+    claim:
+        prove:
+            forall x A:
+                f(x) $in B
+        f(x) $in B
+    claim:
+        prove:
+            forall x S:
+                f(x) $in B
+                =>:
+                    x $in A
+        A $subset S
+        claim:
+            prove:
+                forall a A:
+                    a $in S
+            a $in S
+        claim:
+            prove:
+                forall a A:
+                    f(a) $in T
+            a $in S
+            f(a) $in T
+        have by exist a A st {f(x) = f(a)}: a
+        a $in S
+        f(x) = f(a)
+        f(a) = f(x)
+        x = a
+        x $in A
+    $inverse_image_value(S, T, f, B, A)

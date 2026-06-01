@@ -91,6 +91,18 @@ fn run_the_mechanics_chapter_5_markdown_file_impl() {
 }
 
 #[test]
+fn run_the_mechanics_chapter_6_markdown_file() {
+    run_with_large_stack(
+        "run_the_mechanics_chapter_6_markdown_file_large_stack",
+        run_the_mechanics_chapter_6_markdown_file_impl,
+    );
+}
+
+fn run_the_mechanics_chapter_6_markdown_file_impl() {
+    run_single_the_mechanics_chapter_markdown_file_impl("Chapter_6_Induction.md", "Chapter 6");
+}
+
+#[test]
 fn run_the_mechanics_chapter_7_markdown_file() {
     run_with_large_stack(
         "run_the_mechanics_chapter_7_markdown_file_large_stack",
@@ -100,6 +112,18 @@ fn run_the_mechanics_chapter_7_markdown_file() {
 
 fn run_the_mechanics_chapter_7_markdown_file_impl() {
     run_single_the_mechanics_chapter_markdown_file_impl("Chapter_7_Number_Theory.md", "Chapter 7");
+}
+
+#[test]
+fn run_the_mechanics_chapter_8_markdown_file() {
+    run_with_large_stack(
+        "run_the_mechanics_chapter_8_markdown_file_large_stack",
+        run_the_mechanics_chapter_8_markdown_file_impl,
+    );
+}
+
+fn run_the_mechanics_chapter_8_markdown_file_impl() {
+    run_single_the_mechanics_chapter_markdown_file_impl("Chapter_8_Functions.md", "Chapter 8");
 }
 
 #[test]
@@ -156,28 +180,27 @@ pub(super) fn run_the_mechanics_markdown_files_impl() {
         THE_MECHANICS_SUBDIR
     );
 
-    let mut runtime = Runtime::new_with_builtin_code();
-
     let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
     let mut failed_labels: Vec<String> = Vec::new();
     let wall_start = Instant::now();
     let mut file_count_with_snippets: usize = 0;
-    let mut snippet_count_run: usize = 0;
     for snippets in snippets_by_file.iter() {
         if snippets.is_empty() {
             continue;
         }
 
         file_count_with_snippets += 1;
+        let mut runtime = Runtime::new_with_builtin_code();
 
-        for (label, source_code, md_path_for_run_file) in snippets.iter() {
-            if snippet_count_run == 0 {
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            snippets.iter().enumerate()
+        {
+            if snippet_index == 0 {
                 runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
             } else {
                 runtime.clear_current_env_and_parse_name_scope();
                 runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
             }
-            snippet_count_run += 1;
 
             let normalized_source = remove_windows_carriage_return(source_code);
             let start_snippet = Instant::now();
