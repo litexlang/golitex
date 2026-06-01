@@ -1,7 +1,25 @@
-by zorn_lemma(集合名S，prop名P)
+have s set
+abstract_prop leq(x, y)
 
-意义：证明一下：P在s上确实是偏序关系
+by zorn_lemma s from leq:
+    know $is_nonempty_set(s)
+    know:
+        forall x s:
+            $leq(x, x)
+        forall x, y, z s:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y s:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall C power_set(s):
+            forall x, y C:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u s st {forall! x C: {$leq(x, u)}}
 
-然后 s 上关于 P 的全序子集又一个上界
-
-那么生成一个事实s 关于 P 存在一个极大元
+exist m s st {forall! x s: $leq(m, x) => {x = m}}

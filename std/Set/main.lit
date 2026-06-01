@@ -1,8 +1,7 @@
-# Mathlib-facing Set compatibility layer.
+# Set theorem fragments.
 #
 # Litex already has builtin set membership, subset, finite-set, and cardinality
-# support. This file gives those operations stable Mathlib-shaped names for
-# translation work.
+# support. This file gives those operations stable named interfaces.
 
 # Mathlib: `x in S`.
 prop Mem(x, S set):

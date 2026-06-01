@@ -1,4 +1,4 @@
-# A small ZMod compatibility layer for MiniF2F number-theory statements.
+# ZMod API for modular-arithmetic statements.
 #
 # `ZMod(n)` is modeled as the natural representatives `{0, ..., n - 1}`.
 # Arithmetic helpers normalize integer representatives with `% n`.

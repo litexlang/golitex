@@ -1756,6 +1756,21 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
+### Zorn lemma preview (`by zorn_lemma`)
+
+Use **`by zorn_lemma S from P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
+
+<!-- litex:skip-test -->
+```litex
+exist m S st {forall! x S: $P(m, x) => {x = m}}
+```
+
+This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet quantify over prop names as first-class relation objects.
+
+See `examples/01_proof_patterns/by_zorn_lemma.lit`.
+
+---
+
 ### Register a symmetric predicate (`by symmetric_prop`)
 
 Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
@@ -1885,6 +1900,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by transitive_prop` | Register a binary user-defined predicate as transitive |
 | `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
 | `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
+| `by zorn_lemma` | Preview trusted Zorn step for binary user-defined order predicates |
 | `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
@@ -1927,19 +1943,22 @@ The exact details depend on the shape of the fact, but this loop is the main men
 
 ### Full Verifier Flow
 
-The complete execution path has three layers: statement execution, fact
-verification, and context update. The diagram below shows where `error`,
-`unknown`, `true`, `verified_by`, and inferred facts come from.
+The complete execution path has three layers: statement dispatch, ordinary or
+verify statement execution, and shared context update. The diagram below shows
+where definitions, proof blocks, `know`, generated obligations, `error`,
+`unknown`, `true`, `verified_by`, and inferred facts fit into one run.
 
 ![Litex verifier flow](../assets/verifier_flow.png)
 
 Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
 
-The checked-fact path is different from the `know` path. A bare fact, claim
-goal, or proof obligation must be verified by one of the proof routes. A `know`
-fact is checked for well-definedness and then stored as an assumption or proof
-debt. After either path accepts a fact, Litex stores it, updates lookup indexes,
-and runs builtin inference so later statements can reuse the expanded context.
+Ordinary statements can define objects and concepts, import modules, evaluate
+expressions, or open local proof/control blocks. Verify statements are the
+places where Litex checks facts, goals, theorem clauses, witness obligations,
+or explicit `know` assumptions. After a declaration, verified fact, or
+well-defined `know` assumption is accepted, Litex stores it, updates lookup
+indexes, and runs builtin inference so later statements can reuse the expanded
+context.
 
 #### A builtin rule proves it
 
