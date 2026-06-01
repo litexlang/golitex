@@ -16,6 +16,13 @@ _– Steve Jobs_
 
 Litex is a **simple, set-theoretic** formal language for mathematics: enough structure for everyday arguments without a long apprenticeship. Each construct is meant to match a **real mathematical idea** and stays as close to natural language as possible.
 
+**Boundary note:** Litex is beta research infrastructure, not a production
+verification platform or a replacement for mature proof assistants. A line is
+checked only when the verifier proves it from the current context, builtin
+rules, known facts, or known `forall` facts. `know` records an assumption or
+proof debt, and builtin/infer rules are part of the trusted boundary documented
+in [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
+
 This quick reference summarizes Litex syntax and meaning alongside minimal examples.
 
 ---

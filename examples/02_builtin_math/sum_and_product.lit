@@ -1,5 +1,7 @@
 sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
 product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
+product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
 
 eval sum(1, 3, 'Z(x){x})
 eval product(1, 3, 'Z(x){x^2})

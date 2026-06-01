@@ -1,6 +1,0 @@
-# Legacy MiniF2F entry point.
-#
-# New translations should load `Finset` directly. Keep this module as a
-# compatibility shim for older files that still say `run_file finite_index`.
-
-run_file "../Finset/main.lit"

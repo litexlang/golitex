@@ -18,6 +18,12 @@ The fastest correct mental model is:
 
 So Litex is not mainly about writing tactics. It is mainly about writing mathematical facts in a good order.
 
+**Boundary note:** this tutorial teaches the Litex feedback loop, not a
+production verification guarantee. Litex is still beta research infrastructure.
+When a fact is checked, it has been justified by the current context, builtin
+rules, known facts, or known `forall` facts. When a fact is introduced with
+`know`, it is an assumption or proof debt, not a fact proved by Litex.
+
 ## The Three Things You Need First
 
 You can understand a lot of Litex with only these three ideas.

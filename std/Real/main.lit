@@ -28,16 +28,44 @@ prop rat_seq_converges_to_R(a seq(Q), x R):
     forall epsilon R_pos:
         exist n0 N_pos st {$rat_seq_tail_close_to_R(a, x, epsilon, n0)}
 
-prop rat_seq_cauchy_tail_R(a seq(Q), epsilon R_pos, n0 N_pos):
+prop rat_seq_cauchy_tail_in_R(a seq(Q), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
         j >= n0
         k >= n0
         =>:
             abs(a(j) - a(k)) < epsilon
 
-prop rat_seq_cauchy_R(a seq(Q)):
+prop rat_seq_cauchy_in_R(a seq(Q)):
     forall epsilon R_pos:
-        exist n0 N_pos st {$rat_seq_cauchy_tail_R(a, epsilon, n0)}
+        exist n0 N_pos st {$rat_seq_cauchy_tail_in_R(a, epsilon, n0)}
+
+# Backward-compatible names kept for existing MiniF2F-facing code.
+prop rat_seq_cauchy_tail_R(a seq(Q), epsilon R_pos, n0 N_pos):
+    $rat_seq_cauchy_tail_in_R(a, epsilon, n0)
+
+prop rat_seq_cauchy_R(a seq(Q)):
+    $rat_seq_cauchy_in_R(a)
+
+prop seq_tail_close_to_R(a seq(R), x R, epsilon R_pos, n0 N_pos):
+    forall n N_pos:
+        n >= n0
+        =>:
+            abs(a(n) - x) < epsilon
+
+prop seq_converges_to_R(a seq(R), x R):
+    forall epsilon R_pos:
+        exist n0 N_pos st {$seq_tail_close_to_R(a, x, epsilon, n0)}
+
+prop cauchy_tail_R(a seq(R), epsilon R_pos, n0 N_pos):
+    forall j, k N_pos:
+        j >= n0
+        k >= n0
+        =>:
+            abs(a(j) - a(k)) < epsilon
+
+prop cauchy_R(a seq(R)):
+    forall epsilon R_pos:
+        exist n0 N_pos st {$cauchy_tail_R(a, epsilon, n0)}
 
 know:
     forall x R:

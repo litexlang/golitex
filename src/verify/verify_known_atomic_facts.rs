@@ -196,9 +196,14 @@ impl Runtime {
         result.extend(self.get_all_objs_equal_to_given(given));
         for module_name in module_names.iter() {
             if let Some(environment) = self.active_imported_module_environment(module_name) {
+                let module_given =
+                    known_atomic_lookup_key_for_module_env(given, module_name.as_str());
+                if module_given != given && !result.iter().any(|item| item == &module_given) {
+                    result.push(module_given.clone());
+                }
                 result.extend(Self::get_all_objs_equal_to_given_in_environment(
                     environment.as_ref(),
-                    given,
+                    module_given.as_str(),
                 ));
             }
         }
@@ -433,6 +438,15 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+}
+
+fn known_atomic_lookup_key_for_module_env(given: &str, module_name: &str) -> String {
+    let parts = given.split(MOD_SIGN).collect::<Vec<&str>>();
+    if parts.len() == 2 && parts[0] == module_name && !parts[1].is_empty() {
+        parts[1].to_string()
+    } else {
+        given.to_string()
     }
 }
 
