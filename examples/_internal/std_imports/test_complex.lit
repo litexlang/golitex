@@ -1,0 +1,58 @@
+import C
+
+(1, 2) $in &C::C
+have z0 &C::C = (1, 2)
+
+&C::C{z0}.re = z0[1]
+&C::C{z0}.im = z0[2]
+&C::C{(1, 2)}.re = 1
+&C::C{(1, 2)}.im = 2
+
+forall z &C::C:
+    &C::C{z}.re $in R
+    &C::C{z}.im $in R
+
+forall a, b &C::C:
+    C::add(a, b) = (&C::C{a}.re + &C::C{b}.re, &C::C{a}.im + &C::C{b}.im)
+
+forall a &C::C:
+    C::neg(a) = (-&C::C{a}.re, -&C::C{a}.im)
+
+forall a, b &C::C:
+    C::sub(a, b) = (&C::C{a}.re - &C::C{b}.re, &C::C{a}.im - &C::C{b}.im)
+
+forall a, b &C::C:
+    C::mul(a, b) = (&C::C{a}.re * &C::C{b}.re - &C::C{a}.im * &C::C{b}.im, &C::C{a}.re * &C::C{b}.im + &C::C{a}.im * &C::C{b}.re)
+
+forall a &C::C:
+    C::conj(a) = (&C::C{a}.re, -&C::C{a}.im)
+
+forall z &C::C:
+    C::normSq(z) = &C::C{z}.re^2 + &C::C{z}.im^2
+    C::norm(z)^2 = C::normSq(z)
+
+forall x R:
+    C::ofReal(x) = (x, 0)
+
+C::I $in &C::C
+C::I = (0, 1)
+C::I[1] = 0
+&C::C{C::I}.im = 1
+C::add((1, 2), (3, 4)) = (1 + 3, 2 + 4) = (4, 6)
+
+forall a, b &C::C:
+    C::add(a, b) = (&C::C{a}.re + &C::C{b}.re, &C::C{a}.im + &C::C{b}.im) = (&C::C{b}.re + &C::C{a}.re, &C::C{b}.im + &C::C{a}.im) = C::add(b, a)
+
+forall a &C::C:
+    C::add(a, (0, 0)) = (&C::C{a}.re + 0, &C::C{a}.im + 0) = (&C::C{a}.re, &C::C{a}.im) = a
+    C::add((0, 0), a) = (0 + &C::C{a}.re, 0 + &C::C{a}.im) = (&C::C{a}.re, &C::C{a}.im) = a
+
+C::neg((1, 2)) = (-1 * 1, -1 * 2)
+C::sub((5, 7), (2, 3)) = (5 - 2, 7 - 3) = (3, 4)
+C::mul((1, 2), (3, 4)) = (1 * 3 - 2 * 4, 1 * 4 + 2 * 3) = (-5, 10)
+C::conj((3, 5)) = (3, -1 * 5)
+C::normSq((3, 4)) = 3^2 + 4^2 = 25
+C::norm((3, 4)) = 5
+C::ofReal(2) = (2, 0)
+C::add((1, 2), C::neg((1, 2))) = C::add((1, 2), (-1 * 1, -1 * 2)) = (1 + -1 * 1, 2 + -1 * 2) = (0, 0)
+C::add(C::neg((1, 2)), (1, 2)) = C::add((-1 * 1, -1 * 2), (1, 2)) = (-1 * 1 + 1, -1 * 2 + 2) = (0, 0)

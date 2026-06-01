@@ -1,4 +1,4 @@
-# Mathlib-facing Fintype compatibility layer.
+# Finite carrier-set API.
 #
 # Litex has sets rather than typeclasses. Here a `Fintype(alpha)` proposition
 # records that the carrier set `alpha` is finite, and typed card fragments

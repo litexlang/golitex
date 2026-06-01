@@ -160,6 +160,18 @@ impl Runtime {
                 return Some(known_cart_obj.clone());
             }
         }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(local_name) {
+                    return Some(known_cart_obj.clone());
+                }
+                if let Some((_, Some(known_cart_obj), _)) =
+                    env.known_objs_equal_to_tuple.get(local_name)
+                {
+                    return Some(known_cart_obj.clone());
+                }
+            }
+        }
         None
     }
 
@@ -167,6 +179,14 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(name) {
                 return Some(set_builder.clone());
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
+                {
+                    return Some(set_builder.clone());
+                }
             }
         }
         None
@@ -178,6 +198,15 @@ impl Runtime {
                 return Some(known_tuple_obj.clone());
             }
         }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((Some(known_tuple_obj), _, _)) =
+                    env.known_objs_equal_to_tuple.get(local_name)
+                {
+                    return Some(known_tuple_obj.clone());
+                }
+            }
+        }
         None
     }
 
@@ -185,6 +214,15 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
                 return Some(known_list.clone());
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((known_list, _, _)) =
+                    env.known_objs_equal_to_finite_seq_list.get(local_name)
+                {
+                    return Some(known_list.clone());
+                }
             }
         }
         None
@@ -196,6 +234,15 @@ impl Runtime {
                 return member_of.clone();
             }
         }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((_, member_of, _)) =
+                    env.known_objs_equal_to_finite_seq_list.get(local_name)
+                {
+                    return member_of.clone();
+                }
+            }
+        }
         None
     }
 
@@ -203,6 +250,15 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if let Some((known_matrix, _, _)) = env.known_objs_equal_to_matrix_list.get(name) {
                 return Some(known_matrix.clone());
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((known_matrix, _, _)) =
+                    env.known_objs_equal_to_matrix_list.get(local_name)
+                {
+                    return Some(known_matrix.clone());
+                }
             }
         }
         None
@@ -214,6 +270,14 @@ impl Runtime {
                 return member_of.clone();
             }
         }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(local_name)
+                {
+                    return member_of.clone();
+                }
+            }
+        }
         None
     }
 
@@ -221,6 +285,13 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {
                 return cart.1.clone();
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some(cart) = env.known_objs_equal_to_tuple.get(local_name) {
+                    return cart.1.clone();
+                }
             }
         }
         None
@@ -233,6 +304,15 @@ impl Runtime {
                 return Some(number.clone());
             }
         }
+        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some(KnownObjValue::SimplifiedNumber(number)) =
+                    env.known_obj_values.get(local_name)
+                {
+                    return Some(number.clone());
+                }
+            }
+        }
         None
     }
 
@@ -243,6 +323,16 @@ impl Runtime {
                     KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
                     KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
                 };
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                if let Some(known_value) = env.known_obj_values.get(local_name) {
+                    return match known_value {
+                        KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
+                        KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
+                    };
+                }
             }
         }
         None

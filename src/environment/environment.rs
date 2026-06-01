@@ -280,8 +280,14 @@ impl Environment {
             _ => {
                 let key: AtomicFactKey = atomic_fact.key();
                 let is_true = atomic_fact.is_true();
-                if atomic_fact.args().len() == 1 {
-                    let arg_key: ObjString = atomic_fact.args()[0].to_string();
+                let (arg_len, arg_key1, arg_key2) = {
+                    let args = atomic_fact.args_ref();
+                    let arg_key1 = args.first().map(|arg| arg.to_string());
+                    let arg_key2 = args.get(1).map(|arg| arg.to_string());
+                    (args.len(), arg_key1, arg_key2)
+                };
+                if arg_len == 1 {
+                    let arg_key: ObjString = arg_key1.expect("one argument key should exist");
                     if let Some(map) = self
                         .known_atomic_facts_with_1_arg
                         .get_mut(&(key.clone(), is_true))
@@ -291,9 +297,9 @@ impl Environment {
                         self.known_atomic_facts_with_1_arg
                             .insert((key, is_true), HashMap::from([(arg_key, atomic_fact)]));
                     }
-                } else if atomic_fact.args().len() == 2 {
-                    let arg_key1: ObjString = atomic_fact.args()[0].to_string();
-                    let arg_key2: ObjString = atomic_fact.args()[1].to_string();
+                } else if arg_len == 2 {
+                    let arg_key1: ObjString = arg_key1.expect("first argument key should exist");
+                    let arg_key2: ObjString = arg_key2.expect("second argument key should exist");
                     if let Some(map) = self
                         .known_atomic_facts_with_2_args
                         .get_mut(&(key.clone(), is_true))
@@ -872,8 +878,8 @@ pub fn atomic_fact_in_forall_arg_shape_key(
     atomic_fact: &AtomicFact,
 ) -> AtomicFactInForallArgShapeKey {
     atomic_fact
-        .args()
-        .iter()
+        .args_ref()
+        .into_iter()
         .map(|arg| arg.equality_in_forall_key_part())
         .collect()
 }
@@ -919,8 +925,8 @@ fn symmetric_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
 
 fn atomic_fact_has_top_level_fn_arg_head_with_forall_free_param(atomic_fact: &AtomicFact) -> bool {
     atomic_fact
-        .args()
-        .iter()
+        .args_ref()
+        .into_iter()
         .any(obj_is_fn_obj_with_forall_free_param_in_head)
 }
 

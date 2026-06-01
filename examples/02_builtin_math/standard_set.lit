@@ -49,3 +49,13 @@ forall a N_pos, b N:
 forall a, b N_pos:
     a * b $in N_pos
 
+forall a Q:
+    a > 0
+    =>:
+        a $in Q_pos
+        a / 2 $in Q_pos
+
+forall a R:
+    a > 0
+    =>:
+        a $in R_pos

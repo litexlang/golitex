@@ -16,6 +16,18 @@ optimization.
 For AI for Science, the key problem is not only generating formulas. It is
 knowing when a generated derivation is locally valid.
 
+## Scope Boundary
+
+Litex does not validate empirical assumptions, simulation models, experimental
+data, numerical stability, or the scientific meaning of a derivation. It also
+does not turn AI-generated text into trustworthy mathematics by itself.
+
+The intended layer is narrower: given a mathematical derivation written as
+explicit facts, Litex can check which local facts follow from the current
+context, which facts are malformed, and which facts remain as assumptions or
+proof debt. Any use of `know` must be treated as trusted input unless it is
+later replaced by checked Litex proof.
+
 ## Why Litex Fits This Layer
 
 Scientific derivations often use notation that is close to ordinary

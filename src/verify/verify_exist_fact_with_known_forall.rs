@@ -60,8 +60,8 @@ impl Runtime {
                     let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
                         let current_known_forall = &merged_bucket[entry_idx];
                         (
-                            current_known_forall.0.get_args_from_fact(),
-                            given_exist_fact.get_args_from_fact(),
+                            current_known_forall.0.get_args_from_fact_ref(),
+                            given_exist_fact.get_args_from_fact_ref(),
                             current_known_forall.clone(),
                         )
                     };
@@ -532,8 +532,8 @@ impl Runtime {
         fact: &OrAndChainAtomicFact,
         names: &[String],
     ) -> bool {
-        fact.get_args_from_fact()
-            .iter()
+        fact.get_args_from_fact_ref()
+            .into_iter()
             .any(|obj| Self::obj_depends_on_given_exist_param(obj, names))
     }
 }

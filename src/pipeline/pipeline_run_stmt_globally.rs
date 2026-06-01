@@ -152,7 +152,12 @@ fn run_import_stmt(
             .reactivate_imported_module(&import_info.module_name);
         return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
     }
-    let module_manager_snapshot = runtime.module_manager.borrow().clone();
+    // Imported-module runtimes share this ModuleManager with the parent runtime.
+    // Loading an import can therefore mutate parent-visible state before the import
+    // finishes, for example by registering nested imports or changing file context.
+    // If any later step fails, restore this snapshot so a failed import leaves no
+    // partial module state behind.
+    let module_manager_before_import = runtime.module_manager.borrow().clone();
     if let Err(msg) = runtime
         .module_manager
         .borrow_mut()
@@ -169,7 +174,7 @@ fn run_import_stmt(
     ) {
         Ok(environment) => environment,
         Err(error) => {
-            *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+            *runtime.module_manager.borrow_mut() = module_manager_before_import;
             return Err(error);
         }
     };
@@ -187,7 +192,7 @@ fn run_import_stmt(
             import_info.is_std,
         );
     if let Err(msg) = register_result {
-        *runtime.module_manager.borrow_mut() = module_manager_snapshot;
+        *runtime.module_manager.borrow_mut() = module_manager_before_import;
         return Err(import_name_already_used_error(import_stmt, msg));
     }
 
@@ -290,11 +295,13 @@ fn imported_module_info(
 ) -> Result<ImportModuleInfo, RuntimeError> {
     match import_stmt {
         ImportStmt::ImportRelativePath(stmt) => {
-            let module_name = import_module_name(
-                stmt.as_mod_name.as_ref(),
-                || module_name_from_path(&stmt.path, import_stmt),
-                import_stmt,
-            )?;
+            let module_name = match stmt.as_mod_name.as_ref() {
+                Some(name) => validate_import_module_name(name.clone(), import_stmt)?,
+                None => validate_import_module_name(
+                    module_name_from_path(&stmt.path, import_stmt)?,
+                    import_stmt,
+                )?,
+            };
             let current_lit_path = runtime.module_manager.borrow().current_file_path_rc();
             let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
             let module_root_path = absolute_path_string(PathBuf::from(path));
@@ -309,7 +316,7 @@ fn imported_module_info(
             ))
         }
         ImportStmt::ImportGlobalModule(stmt) => {
-            let module_name = import_module_name(None, || Ok(stmt.mod_name.clone()), import_stmt)?;
+            let module_name = validate_import_module_name(stmt.mod_name.clone(), import_stmt)?;
             let (module_root_path, main_lit_path) = std_import_paths(stmt.mod_name.as_str());
             Ok(ImportModuleInfo::new(
                 module_name,
@@ -321,18 +328,10 @@ fn imported_module_info(
     }
 }
 
-fn import_module_name<F>(
-    as_mod_name: Option<&String>,
-    default_name: F,
+fn validate_import_module_name(
+    name: String,
     import_stmt: &ImportStmt,
-) -> Result<String, RuntimeError>
-where
-    F: FnOnce() -> Result<String, RuntimeError>,
-{
-    let name = match as_mod_name {
-        Some(name) => name.clone(),
-        None => default_name()?,
-    };
+) -> Result<String, RuntimeError> {
     if let Err(msg) = is_valid_litex_name(name.as_str()) {
         return Err(import_stmt_error(
             import_stmt,
@@ -650,6 +649,61 @@ mod tests {
         let module_manager = runtime.module_manager.borrow();
         assert!(module_manager.imported_modules.contains_key("Child"));
         assert!(module_manager.imported_modules.contains_key("Nested"));
+    }
+
+    #[test]
+    fn nested_then_top_level_same_import_runs_once() {
+        let root = temp_test_dir("nested-then-top-level-import-runs-once");
+        let b_dir = root.join("B");
+        let a_dir = root.join("A");
+        fs::create_dir_all(&b_dir).expect("create B module dir");
+        fs::create_dir_all(&a_dir).expect("create A module dir");
+        fs::write(
+            b_dir.join("main.lit"),
+            "abstract_prop b_prop(x)\nknow $b_prop(2)",
+        )
+        .expect("write B module");
+        fs::write(
+            a_dir.join("main.lit"),
+            "import \"../B\" as B\nabstract_prop a_prop(x)",
+        )
+        .expect("write A module");
+
+        let source_code = format!(
+            "import \"{}\" as A\nimport \"{}\" as B\n$B::b_prop(2)",
+            a_dir.to_string_lossy(),
+            b_dir.to_string_lossy()
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
+            run_succeeded,
+            "top-level reimport after nested import should succeed:\n{}",
+            run_output
+        );
+        let module_manager = runtime.module_manager.borrow();
+        assert_eq!(module_manager.imported_modules.len(), 2);
+        assert!(module_manager.imported_modules.contains_key("A"));
+        assert!(module_manager.imported_modules.contains_key("B"));
+        let b_main_path = absolute_path_string(b_dir.join("main.lit"));
+        let b_main_run_count = module_manager
+            .run_file_paths
+            .iter()
+            .filter(|path| path.as_ref() == b_main_path.as_str())
+            .count();
+        assert_eq!(
+            b_main_run_count, 1,
+            "B/main.lit should be loaded exactly once"
+        );
     }
 
     #[test]

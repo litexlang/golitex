@@ -1102,6 +1102,58 @@ impl Runtime {
             .is_true())
     }
 
+    fn obj_is_verified_in_standard_set_for_power_builtin(
+        &mut self,
+        obj: &Obj,
+        standard_set: StandardSet,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let in_set: AtomicFact = InFact::new(obj.clone(), standard_set.into(), line_file).into();
+        Ok(self
+            .verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?
+            .is_true())
+    }
+
+    fn obj_is_verified_integer_exponent_for_power_builtin(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if self.obj_is_verified_in_standard_set_for_power_builtin(
+            obj,
+            StandardSet::Z,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(true);
+        }
+        self.obj_is_verified_in_standard_set_for_power_builtin(
+            obj,
+            StandardSet::N,
+            line_file,
+            verify_state,
+        )
+    }
+
+    fn obj_is_verified_nonzero_for_power_builtin(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let nonzero: AtomicFact = NotEqualFact::new(
+            obj.clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file,
+        )
+        .into();
+        Ok(self
+            .verify_non_equational_known_then_builtin_rules_only(&nonzero, verify_state)?
+            .is_true())
+    }
+
     fn power_addition_exponent_rule_holds_one_direction(
         &mut self,
         combined_power: &Pow,
@@ -1149,10 +1201,34 @@ impl Runtime {
             )? {
                 continue;
             }
-            if !self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), verify_state)? {
+            let exponents_are_positive =
+                self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), verify_state)?
+                    && self.obj_is_verified_in_n_pos(right_exp, line_file.clone(), verify_state)?;
+            if exponents_are_positive {
+                return Ok(true);
+            }
+
+            // Power law for integer exponents needs a nonzero base, so negative and zero
+            // exponents do not accidentally justify undefined `0^0` or `0^(-n)`.
+            // Example: `forall a R_nz, m, n Z: a^m * a^n = a^(m+n)`.
+            let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
+                left_exp,
+                line_file.clone(),
+                verify_state,
+            )? && self
+                .obj_is_verified_integer_exponent_for_power_builtin(
+                    right_exp,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+            if !exponents_are_integer {
                 return Ok(false);
             }
-            if !self.obj_is_verified_in_n_pos(right_exp, line_file.clone(), verify_state)? {
+            if !self.obj_is_verified_nonzero_for_power_builtin(
+                combined_power.base.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )? {
                 return Ok(false);
             }
             return Ok(true);
@@ -1190,10 +1266,219 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: a^(m+n) = a^m * a^n for m,n in N_pos",
+                "equality: a^(m+n) = a^m * a^n for positive exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)
+    }
+
+    fn power_product_rule_holds_one_direction(
+        &mut self,
+        combined_power: &Pow,
+        product: &Mul,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let Obj::Mul(combined_base) = combined_power.base.as_ref() else {
+            return Ok(false);
+        };
+        if !self.obj_is_verified_in_n_pos(
+            combined_power.exponent.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(false);
+        }
+
+        // Product power law for positive integer exponents:
+        // `(a*b)^n = a^n * b^n`. Example: `forall a,b R, n N_pos: (a*b)^n = a^n*b^n`.
+        let candidates = [
+            (
+                product.left.as_ref(),
+                product.right.as_ref(),
+                combined_base.left.as_ref(),
+                combined_base.right.as_ref(),
+            ),
+            (
+                product.right.as_ref(),
+                product.left.as_ref(),
+                combined_base.left.as_ref(),
+                combined_base.right.as_ref(),
+            ),
+        ];
+
+        for (left_factor, right_factor, left_base, right_base) in candidates {
+            if !self.power_factor_matches_base_and_exponent(
+                left_factor,
+                left_base,
+                combined_power.exponent.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            if !self.power_factor_matches_base_and_exponent(
+                right_factor,
+                right_base,
+                combined_power.exponent.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    pub(crate) fn try_verify_power_product_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let holds = match (left, right) {
+            (Obj::Pow(pow), Obj::Mul(product)) => self.power_product_rule_holds_one_direction(
+                pow,
+                product,
+                line_file.clone(),
+                verify_state,
+            )?,
+            (Obj::Mul(product), Obj::Pow(pow)) => self.power_product_rule_holds_one_direction(
+                pow,
+                product,
+                line_file.clone(),
+                verify_state,
+            )?,
+            _ => false,
+        };
+        if holds {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: (a*b)^n = a^n * b^n for n in N_pos",
+            )));
+        }
+        Ok(None)
+    }
+
+    pub(crate) fn try_verify_base_zero_from_known_positive_power_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let zero_obj = Self::literal_zero_obj_for_abs_builtin();
+        let target_base = if Self::obj_is_builtin_literal_zero(left) {
+            right
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            left
+        } else {
+            return Ok(None);
+        };
+
+        let zero_key = zero_obj.to_string();
+        let zero_equal_objs_by_env: Vec<Vec<Obj>> = self
+            .iter_environments_from_top()
+            .filter_map(|env| {
+                env.known_equality
+                    .get(&zero_key)
+                    .map(|(_, equal_objs)| equal_objs.iter().cloned().collect())
+            })
+            .collect();
+
+        for zero_equal_objs in zero_equal_objs_by_env {
+            for equal_obj in zero_equal_objs {
+                let Obj::Pow(pow) = equal_obj else {
+                    continue;
+                };
+                let base_result = self.verify_zero_product_factor_matches_target(
+                    target_base,
+                    pow.base.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !base_result.is_true() {
+                    continue;
+                }
+                let exponent_result = self.obj_is_verified_in_n_pos(
+                    pow.exponent.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !exponent_result {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: a = 0 from a^n = 0 and n in N_pos",
+                )));
+            }
+        }
+
+        Ok(None)
+    }
+
+    pub(crate) fn try_verify_abs_power_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (abs, pow) = match (left, right) {
+            (Obj::Abs(abs), Obj::Pow(pow)) => (abs, pow),
+            (Obj::Pow(pow), Obj::Abs(abs)) => (abs, pow),
+            _ => return Ok(None),
+        };
+        let Obj::Pow(inner_pow) = abs.arg.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::Abs(abs_base) = pow.base.as_ref() else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                inner_pow.base.as_ref(),
+                abs_base.arg.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                inner_pow.exponent.as_ref(),
+                pow.exponent.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self.obj_is_verified_in_n_pos(
+            inner_pow.exponent.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: abs(a^n) = abs(a)^n for n in N_pos",
+        )))
     }
 
     fn verify_context_arg_equality(
@@ -1775,7 +2060,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let then_fact: ExistOrAndChainAtomicFact =
+        let then_fact: AtomicFact =
             EqualFact::new(l_inst, Add::new(a_inst, b_inst).into(), line_file.clone()).into();
 
         let dom_lo: Fact =
@@ -1783,18 +2068,12 @@ impl Runtime {
         let dom_hi: Fact =
             LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
-        let forall_fact: Fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![x_name],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
+        let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            x_name,
             vec![dom_lo, dom_hi],
-            vec![then_fact],
-            line_file.clone(),
-        )?
-        .into();
-
-        let r = self.verify_fact(&forall_fact, verify_state)?;
+            &then_fact,
+            verify_state,
+        )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -1836,6 +2115,26 @@ impl Runtime {
             &param_to_arg_map,
             ParamObjType::FnSet,
         )?))
+    }
+
+    fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        param_name: String,
+        dom_facts: Vec<Fact>,
+        then_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![param_name],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            for dom_fact in dom_facts {
+                rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
+            }
+            rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
+        })
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
@@ -2501,23 +2800,17 @@ impl Runtime {
             else {
                 continue;
             };
-            let then_fact: ExistOrAndChainAtomicFact =
-                EqualFact::new(at_l, at_r, line_file.clone()).into();
+            let then_fact: AtomicFact = EqualFact::new(at_l, at_r, line_file.clone()).into();
             let dom_lo: Fact =
                 LessEqualFact::new((*r_sum.start).clone(), y_obj.clone(), line_file.clone()).into();
             let dom_hi: Fact =
                 LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
-            let forall_fact: Fact = ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![y_name],
-                    ParamType::Obj(StandardSet::Z.into()),
-                )]),
+            let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                y_name,
                 vec![dom_lo, dom_hi],
-                vec![then_fact],
-                line_file.clone(),
-            )?
-            .into();
-            let r = self.verify_fact(&forall_fact, verify_state)?;
+                &then_fact,
+                verify_state,
+            )?;
             if r.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,

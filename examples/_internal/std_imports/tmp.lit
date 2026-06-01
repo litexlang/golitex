@@ -1,0 +1,27 @@
+import C
+
+have r R = sqrt(2) / 2
+have z &C::C = (r, r)
+have z_inv &C::C = (r, -r)
+
+r^2 = (sqrt(2) / 2)^2 = sqrt(2)^2 / 4 = 2 / 4 = 1 / 2
+C::mul(z, z_inv) = C::mul((r, r), (r, -r))
+C::mul((r, r), (r, -r)) = (r * r - r * (-r), r * (-r) + r * r)
+r * r = r^2 = 1 / 2
+r * -1 * r = -1 * r^2 = -1 / 2
+r * r - r * -1 * r = 1
+r * -1 * r + r * r = 0
+(r * r - r * (-r), r * (-r) + r * r) = (1, 0)
+C::mul(z, z_inv) = C::mul((r, r), (r, -r)) = (r * r - r * (-r), r * (-r) + r * r) = (1, 0)
+
+have S &C::C = (3 * sqrt(2), 3 * sqrt(2))
+have T &C::C = (3 * sqrt(2), -3 * sqrt(2))
+
+C::mul(S, T) = C::mul((3 * sqrt(2), 3 * sqrt(2)), (3 * sqrt(2), -3 * sqrt(2)))
+C::mul((3 * sqrt(2), 3 * sqrt(2)), (3 * sqrt(2), -3 * sqrt(2))) = (3 * sqrt(2) * (3 * sqrt(2)) - 3 * sqrt(2) * (-3 * sqrt(2)), 3 * sqrt(2) * (-3 * sqrt(2)) + 3 * sqrt(2) * (3 * sqrt(2)))
+3 * sqrt(2) * (3 * sqrt(2)) = 9 * sqrt(2)^2 = 18
+3 * sqrt(2) * (-3 * sqrt(2)) = -9 * sqrt(2)^2 = -18
+(3 * sqrt(2) * (3 * sqrt(2)) - 3 * sqrt(2) * (-3 * sqrt(2))) = 36
+(3 * sqrt(2) * (-3 * sqrt(2)) + 3 * sqrt(2) * (3 * sqrt(2))) = 0
+(3 * sqrt(2) * (3 * sqrt(2)) - 3 * sqrt(2) * (-3 * sqrt(2)), 3 * sqrt(2) * (-3 * sqrt(2)) + 3 * sqrt(2) * (3 * sqrt(2))) = (36, 0)
+C::mul(S, T) = C::mul((3 * sqrt(2), 3 * sqrt(2)), (3 * sqrt(2), -3 * sqrt(2))) = (3 * sqrt(2) * (3 * sqrt(2)) - 3 * sqrt(2) * (-3 * sqrt(2)), 3 * sqrt(2) * (-3 * sqrt(2)) + 3 * sqrt(2) * (3 * sqrt(2))) = (36, 0)
