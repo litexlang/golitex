@@ -8,6 +8,12 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Ex
 
 This example is a good way to see what Litex is designed for. It does not try to build a rich geometric universe into the kernel. Instead, it lets the file introduce the objects and relations it needs, then checks that later statements use those relations consistently.
 
+**Boundary note:** this tutorial works under explicit Hilbert-style assumptions.
+The `know` blocks are axioms or background facts supplied by the file. The value
+of the example is that Litex can check consequences and reuse patterns from
+those assumptions; it is not a proof that the axioms themselves are true or
+that Litex has a complete geometry library.
+
 The important style is:
 
 - domains such as `point`, `line`, and `plane` are objects introduced by the file;

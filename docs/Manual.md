@@ -14,6 +14,13 @@ _- Jeff Hinton_
 
 > **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion.
 
+> **Boundary notice:** Litex is not a replacement for Lean, Coq, or Isabelle.
+> It explores a narrower interface hypothesis: users write mathematical facts,
+> and the checker grows an explainable verified context. `know` facts are
+> assumptions or proof debt, and builtin/infer rules are part of the trusted
+> mathematical background. For details, read
+> [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
+
 This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
@@ -25,6 +32,12 @@ Named theorems still matter. A `claim` exports a proved fact into the current co
 This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
+
+This is an intentional convenience trade-off. The trusted base is larger because
+the checker directly understands many relation-level interactions between
+ordinary mathematical objects. The design goal is not kernel minimality at this
+stage; it is a short, explainable feedback loop where the user can write the
+next mathematical fact and see whether it follows from the current context.
 
 This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
 
@@ -1911,6 +1924,22 @@ proof routes closes it, Litex reports `unknown`. If one route closes it, Litex
 reports `true`.
 
 The exact details depend on the shape of the fact, but this loop is the main mental model.
+
+### Full Verifier Flow
+
+The complete execution path has three layers: statement execution, fact
+verification, and context update. The diagram below shows where `error`,
+`unknown`, `true`, `verified_by`, and inferred facts come from.
+
+![Litex verifier flow](../assets/verifier_flow.png)
+
+Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
+
+The checked-fact path is different from the `know` path. A bare fact, claim
+goal, or proof obligation must be verified by one of the proof routes. A `know`
+fact is checked for well-definedness and then stored as an assumption or proof
+debt. After either path accepts a fact, Litex stores it, updates lookup indexes,
+and runs builtin inference so later statements can reuse the expanded context.
 
 #### A builtin rule proves it
 

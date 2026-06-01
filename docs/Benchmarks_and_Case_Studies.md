@@ -15,6 +15,18 @@ The current best source of tasks is The Mechanics of Litex Proof. It contains
 many textbook-style examples, from short calculations to larger function and
 set arguments.
 
+## Evidence Boundary
+
+Benchmark results should be used conservatively. They can show that a concrete
+Litex version checks a concrete corpus under a concrete command, and they can
+show which failures become language, library, builtin-rule, infer-rule, or
+diagnostic work items.
+
+They should not be presented as evidence that Litex is production-ready,
+soundness-complete, or a replacement for mature proof assistants. Remaining
+`know` facts, skipped tasks, broad builtin rules, and manual repair steps are
+part of the benchmark record, not details to hide.
+
 ## Benchmark Levels
 
 A useful Litex benchmark suite should be layered:
