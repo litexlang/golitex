@@ -9,6 +9,8 @@ impl Runtime {
             HAVE => {
                 if tb.token_at_index(1)? == FN_LOWER_CASE {
                     self.parse_have_fn_stmt(tb)
+                } else if tb.token_at_index(1)? == BY && tb.token_at_index(2)? == PREIMAGE {
+                    self.parse_have_preimage(tb)
                 } else if tb.token_at_index(1)? == BY && tb.token_at_index(2)? == EXIST {
                     self.parse_have_exist(tb)
                 } else {

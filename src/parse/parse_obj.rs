@@ -1259,6 +1259,28 @@ impl Runtime {
             })?;
             return Ok(Count::new(value).into());
         }
+        if tok == FN_RANGE {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "fn_range expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let function = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "fn_range expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(FnRange::new(function).into());
+        }
         if tok == SUM {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;

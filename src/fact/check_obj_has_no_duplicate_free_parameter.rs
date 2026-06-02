@@ -178,6 +178,11 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::FnRange(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.function,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Sum(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.start,

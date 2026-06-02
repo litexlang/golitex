@@ -385,7 +385,7 @@ impl ByAntisymmetricPropStmt {
 impl ByZornLemmaStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by zorn_lemma}}}} {} \text{{from}} {}",
+            r"\text{{\textbf{{by zorn_lemma:}}}} \text{{set }} {}, \text{{prop }} {}",
             self.set.to_latex_string(),
             latex_texttt_escape(&self.prop_name.to_string())
         )];
@@ -402,7 +402,7 @@ impl ByZornLemmaStmt {
 impl ByAxiomOfChoiceStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by axiom_of_choice}}}} {}",
+            r"\text{{\textbf{{by axiom_of_choice:}}}} \text{{set }} {}",
             self.family.to_latex_string()
         )];
         for st in &self.proof {
@@ -566,6 +566,16 @@ impl Count {
             r"\operatorname{{{}}}\left( {}\right)",
             COUNT,
             self.set.to_latex_string()
+        )
+    }
+}
+
+impl FnRange {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}\right)",
+            FN_RANGE,
+            self.function.to_latex_string()
         )
     }
 }
@@ -2049,6 +2059,7 @@ impl Obj {
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
             Obj::Count(x) => x.to_latex_string(),
+            Obj::FnRange(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
@@ -2092,6 +2103,7 @@ impl Stmt {
             Stmt::HaveObjInNonemptySetStmt(x) => x.to_latex_string(),
             Stmt::HaveObjEqualStmt(x) => x.to_latex_string(),
             Stmt::HaveByExistStmt(x) => x.to_latex_string(),
+            Stmt::HaveByPreimageStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),

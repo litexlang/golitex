@@ -137,6 +137,7 @@ fn run_import_stmt(
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let import_info = imported_module_info(import_stmt, runtime)?;
+    let importing_module_name = runtime.module_manager.borrow().current_module_name.clone();
     let reactivate_existing = runtime
         .module_manager
         .borrow()
@@ -150,6 +151,10 @@ fn run_import_stmt(
             .module_manager
             .borrow_mut()
             .reactivate_imported_module(&import_info.module_name);
+        runtime
+            .module_manager
+            .borrow_mut()
+            .record_import_dependency(&importing_module_name, &import_info.module_name);
         return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
     }
     // Imported-module runtimes share this ModuleManager with the parent runtime.
@@ -182,6 +187,7 @@ fn run_import_stmt(
         .module_manager
         .borrow_mut()
         .finish_loading_import(&import_info.module_name, &import_info.module_root_path);
+    let imported_module_name = import_info.module_name.clone();
     let register_result = runtime
         .module_manager
         .borrow_mut()
@@ -195,6 +201,10 @@ fn run_import_stmt(
         *runtime.module_manager.borrow_mut() = module_manager_before_import;
         return Err(import_name_already_used_error(import_stmt, msg));
     }
+    runtime
+        .module_manager
+        .borrow_mut()
+        .record_import_dependency(&importing_module_name, &imported_module_name);
 
     Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into())
 }
@@ -704,6 +714,52 @@ mod tests {
             b_main_run_count, 1,
             "B/main.lit should be loaded exactly once"
         );
+    }
+
+    #[test]
+    fn reimport_cached_module_reactivates_nested_imports_after_clear() {
+        let root = temp_test_dir("reimport-cached-module-reactivates-nested");
+        let nested_dir = root.join("Nested");
+        let child_dir = root.join("Child");
+        fs::create_dir_all(&nested_dir).expect("create nested module dir");
+        fs::create_dir_all(&child_dir).expect("create child module dir");
+        fs::write(
+            nested_dir.join("main.lit"),
+            "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+        )
+        .expect("write nested module");
+        fs::write(
+            child_dir.join("main.lit"),
+            "import \"../Nested\" as Nested\nabstract_prop child_prop(x)",
+        )
+        .expect("write child module");
+
+        let source_code = format!(
+            "import \"{}\" as Child\nclear\nimport \"{}\" as Child\n$Nested::nested_prop(2)",
+            child_dir.to_string_lossy(),
+            child_dir.to_string_lossy()
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "reimport_cached_module_reactivates_nested_imports_after_clear",
+        );
+
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
+            run_succeeded,
+            "reimporting Child should reactivate its Nested import:\n{}",
+            run_output
+        );
+        let module_manager = runtime.module_manager.borrow();
+        assert!(!module_manager.stopped_module.contains("Child"));
+        assert!(!module_manager.stopped_module.contains("Nested"));
     }
 
     #[test]

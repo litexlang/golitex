@@ -69,6 +69,7 @@ impl Runtime {
             Obj::TupleDim(inner) => self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type),
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
+            Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
             Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
@@ -752,6 +753,18 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?).into())
+    }
+
+    pub fn inst_fn_range(
+        &self,
+        fn_range: &FnRange,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(
+            FnRange::new(self.inst_obj(&fn_range.function, param_to_arg_map, param_obj_type)?)
+                .into(),
+        )
     }
 
     pub fn inst_sum(

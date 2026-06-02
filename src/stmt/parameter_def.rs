@@ -782,6 +782,12 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::FnRange(x) => collect_cited_param_indices_from_obj(
+            &x.function,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Sum(x) => {
             collect_cited_param_indices_from_obj(
                 &x.start,

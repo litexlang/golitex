@@ -1,6 +1,6 @@
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     know forall A S:
         $is_nonempty_set(A)
 

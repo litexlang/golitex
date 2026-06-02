@@ -237,8 +237,12 @@ litex
 Typical successful output:
 
 ```text
-Litex-beta - Type your code or 'exit' to quit
-Warning: not yet ready for production use.
+Litex version <version>
+Upgrade Litex? Run `litex -upgrade` for platform instructions.
+Copyright (C) 2024-2026 Jiachen Shen
+website: https://litexlang.com
+github: https://github.com/litexlang/golitex
+Ctrl+D to exit.
 >>>
 ```
 
@@ -252,6 +256,13 @@ Run Litex source directly:
 
 ```bash
 litex -e "1 + 1 = 2"
+```
+
+Show the installed version and platform upgrade instructions:
+
+```bash
+litex -version
+litex -upgrade
 ```
 
 ---
@@ -274,6 +285,7 @@ Basic behavior:
 |--------|-------------|
 | `-help` | Print help and exit. |
 | `-version` | Print the Litex version and exit. |
+| `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
 | `-f <file>` | Run a file. The path may be relative to the current working directory or absolute. |
 | `-r <repo>` | Same as running `<repo>/main.lit`. Place `main.lit` at the repo root. |
