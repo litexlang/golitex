@@ -43,6 +43,7 @@ pub enum Stmt {
     ByReflexivePropStmt(ByReflexivePropStmt),
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
+    ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByThmStmt(ByThmStmt),
     DefThmStmt(DefThmStmt),
     UseStrategyStmt(UseStrategyStmt),
@@ -406,6 +407,7 @@ impl fmt::Display for Stmt {
             Stmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
+            Stmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
             Stmt::ByThmStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
             Stmt::UseStrategyStmt(x) => write!(f, "{}", x),
@@ -460,6 +462,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByZornLemmaStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByAxiomOfChoiceStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
@@ -512,6 +515,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByZornLemmaStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByAxiomOfChoiceStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
@@ -765,6 +769,12 @@ impl From<ByAntisymmetricPropStmt> for Stmt {
 impl From<ByZornLemmaStmt> for Stmt {
     fn from(v: ByZornLemmaStmt) -> Self {
         Stmt::ByZornLemmaStmt(v)
+    }
+}
+
+impl From<ByAxiomOfChoiceStmt> for Stmt {
+    fn from(v: ByAxiomOfChoiceStmt) -> Self {
+        Stmt::ByAxiomOfChoiceStmt(v)
     }
 }
 

@@ -1,5 +1,6 @@
 //! Surface syntax for `by …` proof statements (one submodule per form).
 mod antisymmetric_prop;
+mod axiom_of_choice;
 mod cases;
 mod contra;
 mod enumerate;
@@ -12,6 +13,7 @@ mod symmetric_prop;
 mod transitive_prop;
 mod zorn_lemma;
 pub use antisymmetric_prop::ByAntisymmetricPropStmt;
+pub use axiom_of_choice::ByAxiomOfChoiceStmt;
 pub use cases::ByCasesStmt;
 pub use contra::ByContraStmt;
 pub use enumerate::ByEnumerateFiniteSetStmt;

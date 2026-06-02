@@ -43,7 +43,6 @@ pub enum Obj {
     FiniteSeqSet(FiniteSeqSet),
     SeqSet(SeqSet),
     FiniteSeqListObj(FiniteSeqListObj),
-    Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     MatrixSet(MatrixSet),
@@ -101,31 +100,30 @@ pub enum ObjKind {
     FiniteSeqSet = 35,
     SeqSet = 36,
     FiniteSeqListObj = 37,
-    Choose = 38,
-    ObjAtIndex = 39,
-    StandardSet = 40,
-    MatrixSet = 41,
-    MatrixListObj = 42,
-    MatrixAdd = 43,
-    MatrixSub = 44,
-    MatrixMul = 45,
-    MatrixScalarMul = 46,
-    MatrixPow = 47,
-    StructObj = 48,
-    ObjAsStructInstanceWithFieldAccess = 49,
-    InstantiatedTemplateObj = 50,
-    OneSideInfinityIntervalObj = 51,
-    IntervalObj = 52,
-    Identifier = 53,
-    IdentifierWithMod = 54,
-    ForallFreeParam = 55,
-    DefHeaderFreeParam = 56,
-    ExistFreeParam = 57,
-    SetBuilderFreeParam = 58,
-    FnSetFreeParam = 59,
-    ByInducFreeParam = 60,
-    DefAlgoFreeParam = 61,
-    DefStructFieldFreeParam = 62,
+    ObjAtIndex = 38,
+    StandardSet = 39,
+    MatrixSet = 40,
+    MatrixListObj = 41,
+    MatrixAdd = 42,
+    MatrixSub = 43,
+    MatrixMul = 44,
+    MatrixScalarMul = 45,
+    MatrixPow = 46,
+    StructObj = 47,
+    ObjAsStructInstanceWithFieldAccess = 48,
+    InstantiatedTemplateObj = 49,
+    OneSideInfinityIntervalObj = 50,
+    IntervalObj = 51,
+    Identifier = 52,
+    IdentifierWithMod = 53,
+    ForallFreeParam = 54,
+    DefHeaderFreeParam = 55,
+    ExistFreeParam = 56,
+    SetBuilderFreeParam = 57,
+    FnSetFreeParam = 58,
+    ByInducFreeParam = 59,
+    DefAlgoFreeParam = 60,
+    DefStructFieldFreeParam = 61,
 }
 
 impl ObjKind {
@@ -401,11 +399,6 @@ pub struct MatrixListObj {
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
     pub index: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct Choose {
-    pub set: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -793,12 +786,6 @@ impl PowerSet {
     }
 }
 
-impl Choose {
-    pub fn new(set: Obj) -> Self {
-        Choose { set: Box::new(set) }
-    }
-}
-
 impl CartDim {
     pub fn new(set: Obj) -> Self {
         CartDim { set: Box::new(set) }
@@ -1057,7 +1044,6 @@ impl Obj {
             Obj::FiniteSeqSet(_) => ObjKind::FiniteSeqSet,
             Obj::SeqSet(_) => ObjKind::SeqSet,
             Obj::FiniteSeqListObj(_) => ObjKind::FiniteSeqListObj,
-            Obj::Choose(_) => ObjKind::Choose,
             Obj::ObjAtIndex(_) => ObjKind::ObjAtIndex,
             Obj::StandardSet(_) => ObjKind::StandardSet,
             Obj::MatrixSet(_) => ObjKind::MatrixSet,
@@ -1259,7 +1245,6 @@ impl Obj {
             Obj::MatrixSet(x) => write!(f, "{}", x)?,
             Obj::MatrixListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
-            Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
@@ -1552,7 +1537,6 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.exponent, from, to),
             )
             .into(),
-            Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
                 Obj::replace_bound_identifier(*x.index, from, to),
@@ -1830,17 +1814,6 @@ impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
             RIGHT_CURLY_BRACE,
             DOT_AKA_FIELD_ACCESS_SIGN,
             self.field_name
-        )
-    }
-}
-
-impl fmt::Display for Choose {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            CHOOSE,
-            braced_vec_to_string(&vec![self.set.as_ref()])
         )
     }
 }
@@ -2567,12 +2540,6 @@ impl From<MatrixSet> for Obj {
 impl From<MatrixListObj> for Obj {
     fn from(v: MatrixListObj) -> Self {
         Obj::MatrixListObj(v)
-    }
-}
-
-impl From<Choose> for Obj {
-    fn from(c: Choose) -> Self {
-        Obj::Choose(c)
     }
 }
 

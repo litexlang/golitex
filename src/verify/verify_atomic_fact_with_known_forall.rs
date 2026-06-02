@@ -801,9 +801,6 @@ impl Runtime {
             Obj::PowerSet(ref left) => {
                 self.match_arg_when_left_is_power_set(left.set.as_ref(), given_arg)
             }
-            Obj::Choose(ref left) => {
-                self.match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
-            }
             Obj::ObjAtIndex(ref left) => self.match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
                 left.index.as_ref(),
@@ -2487,20 +2484,6 @@ impl Runtime {
                     left_set,
                     given.set.as_ref(),
                 ),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_choose(
-        &mut self,
-        left_set: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::Choose(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_set,
-                given.set.as_ref(),
-            ),
             _ => Ok(None),
         }
     }

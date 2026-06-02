@@ -111,7 +111,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             row.iter()
                 .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
         }),
-        Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
         Obj::StructObj(so) => so.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::ObjAsStructInstanceWithFieldAccess(fa) => {
             obj_expr_mentions_bare_id(fa.obj.as_ref(), id)
