@@ -2013,13 +2013,10 @@ The exact details depend on the shape of the fact, but this loop is the main men
 
 The complete execution path has three layers: source parsing and global
 statement dispatch, executor or fact-verification/storage execution, and shared
-context update. The diagram below shows where definitions, proof blocks,
-`know`, generated obligations, `error`, `unknown`, `true`, `verified_by`, and
-inferred facts fit into one run.
+context update. Definitions, proof blocks, `know`, generated obligations,
+`error`, `unknown`, `true`, `verified_by`, and inferred facts all fit into
+this one-run model.
 
-![Litex verifier flow](../assets/verifier_flow.png)
-
-Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
 Detailed examples for each flow node: [Verifier Flow Examples](Verifier_Flow_Examples.md).
 
 Non-factual executor statements can define objects and concepts, import
