@@ -195,6 +195,13 @@ be a usable, readable medium for learning, communication, and research, close
 enough to everyday math that students, mathematicians, AI agents, and curious
 readers can benefit from rigor without losing sight of the ideas.
 
+Here is the whole landscape of Litex kernel:
+
+<div align="center">
+  <img src="assets/verifier_flow.png" alt="Litex kernel" width="1000">
+  <p><em>Litex kernel: the core components and their relationships.</em></p>
+</div>
+
 ## Starting Points
 
 If this is your first formal proof language, start with the textbook path:
