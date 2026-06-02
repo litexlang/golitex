@@ -63,9 +63,10 @@ context**. A Litex file introduces objects, states facts about them, checks
 which facts follow, stores the accepted ones, and makes them available to the
 lines that come after.
 
-The goal is not to make proof scripts look clever. The goal is to make ordinary
-mathematical reasoning precise enough that it can be checked while still
-looking like mathematical reasoning.
+Litex is not intended to replace any other proof assistant, but to explore a different path in formal mathematics: whether a smaller and more readable formal language,
+closer to ordinary mathematical writing, can make it easier for AI systems or human to
+to translate natural-language problems, textbook theorems into checkable formal proofs. *The goal is to make ordinary mathematical reasoning precise enough to be machine-checkable while still preserving the structure and appearance of mathematical reasoning itself.*
+
 
 ## The First Mental Model
 
@@ -155,12 +156,7 @@ because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
 
 For the full Litex run pipeline, including the executor and fact-verification
-subpath, see the diagram below:
-
-<div align="center">
-  <img src="assets/verifier_flow.png" alt="Litex verifier flow" width="1000">
-  <p><em>Whole-run flow: executor statements, fact verification/storage, context update, and trusted boundary.</em></p>
-</div>
+subpath, see [Verifier Flow Examples](docs/Verifier_Flow_Examples.md).
 
 *Litex runs very fast. In one local run, more than 240 runnable examples from [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction) checked in about 13 seconds.*
 

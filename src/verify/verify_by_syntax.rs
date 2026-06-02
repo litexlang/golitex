@@ -12,17 +12,14 @@ impl Runtime {
                     if a.mod_name == b.mod_name {
                         a.to_string() == b.to_string()
                     } else {
+                        let module_manager = self.module_manager.borrow();
                         match (
-                            self.module_manager
-                                .borrow()
-                                .module_name_and_path_map
-                                .get(&a.mod_name),
-                            self.module_manager
-                                .borrow()
-                                .module_name_and_path_map
-                                .get(&b.mod_name),
+                            module_manager.imported_modules.get(&a.mod_name),
+                            module_manager.imported_modules.get(&b.mod_name),
                         ) {
-                            (Some(p1), Some(p2)) => p1 == p2 && a.name == b.name,
+                            (Some(m1), Some(m2)) => {
+                                m1.absolute_path == m2.absolute_path && a.name == b.name
+                            }
                             _ => false,
                         }
                     }

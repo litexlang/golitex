@@ -109,13 +109,12 @@ claim:
 
 claim:
     prove:
-        forall E set, s R, a seq(R), n N_pos:
-            $Real::is_least_upper_bound(E, s)
-            $Real::seq_range(a, E)
+        forall a seq(R), s R, n N_pos:
+            $Real::is_least_upper_bound(fn_range(a), s)
             =>:
                 a(n) <= s
-    a(n) $in E
-    $Real::is_upper_bound(E, s)
+    a(n) $in fn_range(a)
+    $Real::is_upper_bound(fn_range(a), s)
     a(n) <= s
 
 claim:
@@ -141,9 +140,8 @@ claim:
 
 claim:
     prove:
-        forall a seq(R), E set, s R:
-            $Real::seq_range(a, E)
-            $Real::is_least_upper_bound(E, s)
+        forall a seq(R), s R:
+            $Real::is_least_upper_bound(fn_range(a), s)
             forall m, n N_pos:
                 n >= m
                 =>:
@@ -154,9 +152,9 @@ claim:
         prove:
             forall epsilon R_pos:
                 exist n0 N_pos st {$Real::seq_tail_close(a, s, epsilon, n0)}
-        by thm Real::least_upper_bound_member_above_of_lt(E, s, epsilon)
-        have by exist x E st {s - epsilon < x}: x
-        have by exist m N_pos st {x = a(m)}: m
+        by thm Real::least_upper_bound_member_above_of_lt(fn_range(a), s, epsilon)
+        have by exist x fn_range(a) st {s - epsilon < x}: x
+        have by preimage m from x $in fn_range(a)
         witness exist n0 N_pos st {$Real::seq_tail_close(a, s, epsilon, n0)} from m:
             forall n N_pos:
                 n >= m
@@ -170,8 +168,8 @@ claim:
                     (a(n) - a(m)) + (a(m) - (s - epsilon)) > 0
                     a(n) - (s - epsilon) > 0
                     s - epsilon < a(n)
-                    a(n) $in E
-                    $Real::is_upper_bound(E, s)
+                    a(n) $in fn_range(a)
+                    $Real::is_upper_bound(fn_range(a), s)
                     a(n) <= s
                     abs(a(n) - s) < epsilon
             $Real::seq_tail_close(a, s, epsilon, m)
@@ -230,72 +228,39 @@ claim:
 claim:
     prove:
         forall a seq(R):
-            exist E set st {$Real::seq_range(a, E)}
-    # Blocked: the natural value-range set is
-    # `{ x R : exist n N_pos st {x = a(n)} }`, but set-builder bodies
-    # currently parse only atomic/and/or/chain facts, not existential facts.
-    # So this exact bridge still needs a reusable range/sup interface.
-    know:
-        exist E set st {$Real::seq_range(a, E)}
-    exist E set st {$Real::seq_range(a, E)}
+            $Real::nonempty_subset(fn_range(a))
+    fn_range(a) $subset R
+    a(1) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(1):
+        a(1) $in fn_range(a)
+    $Real::nonempty_subset(fn_range(a))
 
 claim:
     prove:
-        forall a seq(R), E set:
-            $Real::seq_range(a, E)
-            =>:
-                $Real::nonempty_subset(E)
-    E $subset R
-    a(1) $in E
-    witness $is_nonempty_set(E) from a(1):
-        a(1) $in E
-    $Real::nonempty_subset(E)
-
-claim:
-    prove:
-        forall a seq(R), E set:
-            $Real::seq_range(a, E)
+        forall a seq(R):
             $Monotone::bounded_above_seq(a)
             =>:
-                $Real::has_upper_bound(E)
+                $Real::has_upper_bound(fn_range(a))
     have by exist M R st {$Monotone::is_seq_upper_bound(a, M)}: M
-    witness exist B R st {$Real::is_upper_bound(E, B)} from M:
-        claim:
-            prove:
-                forall x E:
-                    x <= M
-            have by exist n N_pos st {x = a(n)}: n
-            a(n) <= M
-            x <= M
-        $Real::is_upper_bound(E, M)
-    $Real::has_upper_bound(E)
+    witness exist B R st {$Real::is_upper_bound(fn_range(a), B)} from M:
+        $Real::is_upper_bound(fn_range(a), M)
+    $Real::has_upper_bound(fn_range(a))
 
 claim:
     prove:
-        forall a seq(R), E set:
-            $Real::seq_range(a, E)
+        forall a seq(R):
             $Monotone::bounded_above_seq(a)
             =>:
-                exist s R st {$Real::is_least_upper_bound(E, s)}
-    E $subset R
-    a(1) $in E
-    witness $is_nonempty_set(E) from a(1):
-        a(1) $in E
-    $Real::nonempty_subset(E)
-    have by exist M R st {$Monotone::is_seq_upper_bound(a, M)}: M
-    witness exist B R st {$Real::is_upper_bound(E, B)} from M:
-        claim:
-            prove:
-                forall x E:
-                    x <= M
-            have by exist n N_pos st {x = a(n)}: n
-            a(n) <= M
-            x <= M
-        $Real::is_upper_bound(E, M)
-    $Real::has_upper_bound(E)
-    by thm Real::exists_least_upper_bound(E)
-    $Real::has_least_upper_bound(E)
-    exist s R st {$Real::is_least_upper_bound(E, s)}
+                exist s R st {$Real::is_least_upper_bound(fn_range(a), s)}
+    fn_range(a) $subset R
+    a(1) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(1):
+        a(1) $in fn_range(a)
+    $Real::nonempty_subset(fn_range(a))
+    $Real::has_upper_bound(fn_range(a))
+    by thm Real::exists_least_upper_bound(fn_range(a))
+    $Real::has_least_upper_bound(fn_range(a))
+    exist s R st {$Real::is_least_upper_bound(fn_range(a), s)}
 
 claim:
     prove:
@@ -304,26 +269,15 @@ claim:
             $Monotone::bounded_above_seq(a)
             =>:
                 $Real::convergent_seq(a)
-    have by exist E set st {$Real::seq_range(a, E)}: E
-    E $subset R
-    a(1) $in E
-    witness $is_nonempty_set(E) from a(1):
-        a(1) $in E
-    $Real::nonempty_subset(E)
-    have by exist M R st {$Monotone::is_seq_upper_bound(a, M)}: M
-    witness exist B R st {$Real::is_upper_bound(E, B)} from M:
-        claim:
-            prove:
-                forall x E:
-                    x <= M
-            have by exist n N_pos st {x = a(n)}: n
-            a(n) <= M
-            x <= M
-        $Real::is_upper_bound(E, M)
-    $Real::has_upper_bound(E)
-    by thm Real::exists_least_upper_bound(E)
-    $Real::has_least_upper_bound(E)
-    have by exist s R st {$Real::is_least_upper_bound(E, s)}: s
+    fn_range(a) $subset R
+    a(1) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(1):
+        a(1) $in fn_range(a)
+    $Real::nonempty_subset(fn_range(a))
+    $Real::has_upper_bound(fn_range(a))
+    by thm Real::exists_least_upper_bound(fn_range(a))
+    $Real::has_least_upper_bound(fn_range(a))
+    have by exist s R st {$Real::is_least_upper_bound(fn_range(a), s)}: s
     claim:
         prove:
             forall m, n N_pos:
@@ -335,9 +289,9 @@ claim:
         prove:
             forall epsilon R_pos:
                 exist n0 N_pos st {$Real::seq_tail_close(a, s, epsilon, n0)}
-        by thm Real::least_upper_bound_member_above_of_lt(E, s, epsilon)
-        have by exist x E st {s - epsilon < x}: x
-        have by exist m N_pos st {x = a(m)}: m
+        by thm Real::least_upper_bound_member_above_of_lt(fn_range(a), s, epsilon)
+        have by exist x fn_range(a) st {s - epsilon < x}: x
+        have by preimage m from x $in fn_range(a)
         witness exist n0 N_pos st {$Real::seq_tail_close(a, s, epsilon, n0)} from m:
             forall n N_pos:
                 n >= m
@@ -351,8 +305,8 @@ claim:
                     (a(n) - a(m)) + (a(m) - (s - epsilon)) > 0
                     a(n) - (s - epsilon) > 0
                     s - epsilon < a(n)
-                    a(n) $in E
-                    $Real::is_upper_bound(E, s)
+                    a(n) $in fn_range(a)
+                    $Real::is_upper_bound(fn_range(a), s)
                     a(n) <= s
                     abs(a(n) - s) < epsilon
             $Real::seq_tail_close(a, s, epsilon, m)

@@ -10,14 +10,27 @@ pub struct ImportedModule {
     pub absolute_path: String,
     pub environment: Rc<Environment>,
     pub is_std: bool,
+    /// Modules imported while this module was loaded.
+    ///
+    /// This is not a textual include list for display. It is runtime state used
+    /// after `clear`: imports are cached but marked stopped, so reimporting this
+    /// module must also reactivate these nested imports. For example, reimporting
+    /// `Int` should reactivate the cached `Nat` module that `Int` imports.
+    pub import_dependencies: Vec<String>,
 }
 
 impl ImportedModule {
-    pub fn new(absolute_path: String, environment: Environment, is_std: bool) -> Self {
+    pub fn new(
+        absolute_path: String,
+        environment: Environment,
+        is_std: bool,
+        import_dependencies: Vec<String>,
+    ) -> Self {
         ImportedModule {
             absolute_path,
             environment: Rc::new(environment),
             is_std,
+            import_dependencies,
         }
     }
 }
@@ -29,15 +42,18 @@ impl ImportedModule {
 /// the original runtime.
 #[derive(Clone)]
 pub struct ModuleManager {
-    pub run_file_paths: Vec<Rc<str>>,
-    pub module_name_and_path_map: HashMap<String, String>,
-    /// Module A -> modules imported while A was loaded.
-    /// Cached reimports use this to reactivate nested imports after `clear`.
-    pub module_import_dependencies: HashMap<String, Vec<String>>,
+    pub current_source_path_rc: Rc<str>,
+    /// Dependencies collected for modules that are still loading.
+    ///
+    /// Example: while loading `Int`, the statement `import Nat` is seen before
+    /// `Int` can be registered as an `ImportedModule`. We temporarily store
+    /// `Int -> Nat` here, then move that list into `ImportedModule.import_dependencies`
+    /// when `Int` finishes loading. If loading fails, the import rollback restores
+    /// this map with the rest of the module-manager snapshot.
+    pub pending_import_dependencies: HashMap<String, Vec<String>>,
     pub loading_import_stack: Vec<(String, String)>,
     pub current_module_path: String,
     pub current_module_name: String,
-    pub current_file_index: usize,
     pub entry_path_rc: Rc<str>,
     pub imported_modules: HashMap<String, ImportedModule>,
     pub stopped_module: HashSet<String>,
@@ -47,13 +63,11 @@ impl ModuleManager {
     pub fn new_empty_module_manager(initial_path: &str) -> Self {
         let initial_path_rc: Rc<str> = Rc::from(initial_path);
         ModuleManager {
-            run_file_paths: vec![initial_path_rc.clone()],
-            module_name_and_path_map: HashMap::new(),
-            module_import_dependencies: HashMap::new(),
+            current_source_path_rc: initial_path_rc.clone(),
+            pending_import_dependencies: HashMap::new(),
             loading_import_stack: vec![],
             current_module_path: String::new(),
             current_module_name: String::new(),
-            current_file_index: FILE_INDEX_FOR_BUILTIN,
             entry_path_rc: initial_path_rc,
             imported_modules: HashMap::new(),
             stopped_module: HashSet::new(),
@@ -61,7 +75,7 @@ impl ModuleManager {
     }
 
     pub fn current_file_path_rc(&self) -> Rc<str> {
-        self.run_file_paths[self.current_file_index].clone()
+        self.current_source_path_rc.clone()
     }
 
     pub fn validate_imported_module_is_new(
@@ -69,18 +83,16 @@ impl ModuleManager {
         module_name: &str,
         absolute_path: &str,
     ) -> Result<(), String> {
-        if self.module_name_and_path_map.contains_key(module_name)
-            || self.imported_modules.contains_key(module_name)
-        {
+        if self.imported_modules.contains_key(module_name) {
             return Err(format!(
                 "module name `{}` has already been used",
                 module_name
             ));
         }
         if let Some((used_module_name, _)) = self
-            .module_name_and_path_map
+            .imported_modules
             .iter()
-            .find(|(_, used_path)| used_path.as_str() == absolute_path)
+            .find(|(_, imported)| imported.absolute_path == absolute_path)
         {
             return Err(format!(
                 "module path `{}` has already been imported as module name `{}`",
@@ -95,15 +107,6 @@ impl ModuleManager {
         module_name: &str,
         absolute_path: &str,
     ) -> Result<bool, String> {
-        if let Some(existing_path) = self.module_name_and_path_map.get(module_name) {
-            if existing_path.as_str() == absolute_path {
-                return Ok(true);
-            }
-            return Err(format!(
-                "module name `{}` has already been used",
-                module_name
-            ));
-        }
         if let Some(imported_module) = self.imported_modules.get(module_name) {
             if imported_module.absolute_path == absolute_path {
                 return Ok(true);
@@ -114,9 +117,9 @@ impl ModuleManager {
             ));
         }
         if let Some((used_module_name, _)) = self
-            .module_name_and_path_map
+            .imported_modules
             .iter()
-            .find(|(_, used_path)| used_path.as_str() == absolute_path)
+            .find(|(_, imported)| imported.absolute_path == absolute_path)
         {
             return Err(format!(
                 "module path `{}` has already been imported as module name `{}`",
@@ -157,6 +160,9 @@ impl ModuleManager {
 
         self.loading_import_stack
             .push((module_name.to_string(), absolute_path.to_string()));
+        self.pending_import_dependencies
+            .entry(module_name.to_string())
+            .or_default();
         Ok(())
     }
 
@@ -191,15 +197,14 @@ impl ModuleManager {
         is_std: bool,
     ) -> Result<(), String> {
         self.validate_imported_module_is_new(&module_name, &absolute_path)?;
-        self.module_name_and_path_map
-            .insert(module_name.clone(), absolute_path.clone());
+        let import_dependencies = self
+            .pending_import_dependencies
+            .remove(&module_name)
+            .unwrap_or_default();
         self.imported_modules.insert(
             module_name.clone(),
-            ImportedModule::new(absolute_path, environment, is_std),
+            ImportedModule::new(absolute_path, environment, is_std, import_dependencies),
         );
-        self.module_import_dependencies
-            .entry(module_name.clone())
-            .or_default();
         self.stopped_module.remove(&module_name);
         Ok(())
     }
@@ -209,7 +214,7 @@ impl ModuleManager {
             return;
         }
         let dependencies = self
-            .module_import_dependencies
+            .pending_import_dependencies
             .entry(module_name.to_string())
             .or_default();
         if dependencies
@@ -235,8 +240,8 @@ impl ModuleManager {
             return;
         }
         self.stopped_module.remove(module_name);
-        let dependencies = match self.module_import_dependencies.get(module_name) {
-            Some(dependencies) => dependencies.clone(),
+        let dependencies = match self.imported_modules.get(module_name) {
+            Some(imported_module) => imported_module.import_dependencies.clone(),
             None => return,
         };
         for dependency_name in dependencies.iter() {
