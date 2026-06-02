@@ -1,7 +1,7 @@
 have s set
 abstract_prop leq(x, y)
 
-by zorn_lemma s from leq:
+by zorn_lemma: set s, prop leq:
     know $is_nonempty_set(s)
     know:
         forall x s:

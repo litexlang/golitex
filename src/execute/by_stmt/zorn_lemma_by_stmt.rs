@@ -87,7 +87,7 @@ impl Runtime {
 
         // Trusted Zorn step: once the local section proves nonempty, partial order,
         // and chain upper-bound obligations on S, infer a maximal element of S.
-        // Example: by zorn_lemma S from leq: stores exist m S st {forall! x S: $leq(m, x) => {x = m}}.
+        // Example: by zorn_lemma: set S, prop leq: stores exist m S st {forall! x S: $leq(m, x) => {x = m}}.
         let maximal_fact = zorn_lemma_maximal_fact(
             stmt.set.clone(),
             stmt.prop_name.clone(),

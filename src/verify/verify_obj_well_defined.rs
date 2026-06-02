@@ -70,6 +70,7 @@ impl Runtime {
             Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
+            Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
@@ -1396,6 +1397,23 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "set {} is not a finite set",
                     x.set.to_string()
+                )),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_fn_range_well_defined(
+        &mut self,
+        x: &FnRange,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
+        if self.get_fn_range_function_body(&x.function).is_none() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range expects a function with a known function set, got {}",
+                    x.function
                 )),
             )));
         }

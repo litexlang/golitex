@@ -106,6 +106,7 @@ impl Obj {
                 .iter()
                 .any(|obj| obj.contains_forall_free_param_obj()),
             Obj::Count(x) => x.set.contains_forall_free_param_obj(),
+            Obj::FnRange(x) => x.function.contains_forall_free_param_obj(),
             Obj::Sum(x) => {
                 x.start.contains_forall_free_param_obj()
                     || x.end.contains_forall_free_param_obj()

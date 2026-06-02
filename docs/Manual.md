@@ -262,6 +262,8 @@ A **function space** is written `fn(x S) T`; an anonymous function value can be 
 
 Later parameter domains may depend on earlier parameters. The return set is not dependent on the function parameters, so a signature such as `fn(n N_pos) closed_range(1, n)` is rejected.
 
+The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
+
 ```litex
 have g set = fn(x R) R
 ```
@@ -279,6 +281,15 @@ prove:
 
 ```litex
 'R(x){x + 1}(2) = 3
+```
+
+```litex
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    fn_range(f) $subset R
+    fn_range(f) $in power_set(R)
 ```
 
 #### Cartesian product and dimension
@@ -411,12 +422,12 @@ Some indexed objects use **sequence** types or matrix index domains (repeated in
 
 #### Choice functions
 
-Use `by axiom_of_choice` to assert the existence of a function that picks one element from each member of a family of nonempty sets. Litex no longer has a special `choose(s)` object constructor.
+Use `by axiom_of_choice: set S:` to assert the existence of a function that picks one element from each member of a family of nonempty sets. Litex no longer has a special `choose(s)` object constructor.
 
 ```litex
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     know forall A S:
         $is_nonempty_set(A)
 
@@ -1079,6 +1090,39 @@ When an existential fact is already known, **`have by exist`** gives names to it
 know exist u R st {u > 0, u < 1}
 have by exist v R st {v > 0, v < 1}: w
 w > 0
+```
+
+---
+
+### Naming preimages (`have by preimage`)
+
+When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application.
+
+```litex
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    have by preimage x from f(1) $in fn_range(f)
+
+    x $in R
+    x > 0
+    f(1) = f(x)
+```
+
+For a multi-argument function, provide one preimage name per function parameter:
+
+```litex
+prove:
+    have g fn(x R, y R: x < y) R
+
+    g(0, 1) $in fn_range(g)
+    have by preimage a, b from g(0, 1) $in fn_range(g)
+
+    a $in R
+    b $in R
+    a < b
+    g(0, 1) = g(a, b)
 ```
 
 ---
@@ -1761,7 +1805,7 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ### Zorn lemma preview (`by zorn_lemma`)
 
-Use **`by zorn_lemma S from P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
+Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
 
 <!-- litex:skip-test -->
 ```litex
@@ -1776,12 +1820,12 @@ See `examples/01_proof_patterns/by_zorn_lemma.lit`.
 
 ### Axiom of choice preview (`by axiom_of_choice`)
 
-Use **`by axiom_of_choice S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
+Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
 
 ```litex
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     know forall A S:
         $is_nonempty_set(A)
 

@@ -73,6 +73,99 @@ forall a set:
 }
 
 #[test]
+fn fn_range_intro_subset_and_preimage_work() {
+    let source_code = r#"
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    fn_range(f) $subset R
+    fn_range(f) $in power_set(R)
+
+    have by preimage x from f(1) $in fn_range(f)
+    x $in R
+    x > 0
+    f(1) = f(x)
+
+prove:
+    have g fn(x R, y R: x < y) R
+
+    g(0, 1) $in fn_range(g)
+
+    have by preimage a, b from g(0, 1) $in fn_range(g)
+    a $in R
+    b $in R
+    a < b
+    g(0, 1) = g(a, b)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("fn_range_intro_subset_and_preimage_work");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "fn_range intro/subset/preimage failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_by_preimage_rejects_non_range_source() {
+    let source_code = r#"
+prove:
+    have f fn(x R) R
+    have by preimage x from f(1) $in R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_by_preimage_rejects_non_range_source");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "preimage with non-range source should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("have by preimage expects `from z $in fn_range(f)`"),
+        "preimage non-range error should be explicit:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_by_preimage_checks_witness_count() {
+    let source_code = r#"
+prove:
+    have f fn(x R) R
+    f(1) $in fn_range(f)
+    have by preimage x, y from f(1) $in fn_range(f)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_by_preimage_checks_witness_count");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "preimage witness count mismatch should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("have by preimage: expected 1 preimage name(s), got 2"),
+        "preimage witness count error should be explicit:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn typed_fn_return_standard_subset_allows_floor_bounds_for_reals() {
     run_with_large_stack(
         "typed_fn_return_standard_subset_allows_floor_bounds_for_reals_large_stack",
@@ -143,7 +236,7 @@ fn by_zorn_lemma_stores_maximal_element_exist_fact() {
 have s set
 abstract_prop leq(x, y)
 
-by zorn_lemma s from leq:
+by zorn_lemma: set s, prop leq:
     know $is_nonempty_set(s)
     know:
         forall x s:
@@ -185,7 +278,7 @@ fn by_zorn_lemma_rejects_non_binary_prop() {
 have s set
 abstract_prop leq(x)
 
-by zorn_lemma s from leq:
+by zorn_lemma: set s, prop leq:
     know $is_nonempty_set(s)
 "#;
 
@@ -210,7 +303,7 @@ fn by_zorn_lemma_reports_missing_chain_upper_bound() {
 have s set
 abstract_prop leq(x, y)
 
-by zorn_lemma s from leq:
+by zorn_lemma: set s, prop leq:
     know $is_nonempty_set(s)
     know:
         forall x s:
@@ -250,7 +343,7 @@ fn by_zorn_lemma_failed_body_stmt_does_not_continue() {
 have s set
 abstract_prop leq(x, y)
 
-by zorn_lemma s from leq:
+by zorn_lemma: set s, prop leq:
     1 = 2
 "#;
 
@@ -271,6 +364,31 @@ by zorn_lemma s from leq:
     );
 }
 
+#[test]
+fn by_zorn_lemma_rejects_old_from_syntax() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma s from leq:
+    know $is_nonempty_set(s)
+"#;
+
+    let (run_succeeded, run_output) =
+        run_zorn_lemma_regression_source(source_code, "by_zorn_lemma_rejects_old_from_syntax");
+
+    assert!(
+        !run_succeeded,
+        "old by_zorn_lemma syntax should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("expected `by zorn_lemma: set S, prop P:`"),
+        "failure should mention the new syntax:\n{}",
+        run_output
+    );
+}
+
 fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(file_label);
@@ -283,7 +401,7 @@ fn by_axiom_of_choice_stores_choice_function_exist_fact() {
     let source_code = r#"
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     know forall A S:
         $is_nonempty_set(A)
 
@@ -307,7 +425,7 @@ fn by_axiom_of_choice_reports_missing_members_nonempty() {
     let source_code = r#"
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     do_nothing
 "#;
 
@@ -333,7 +451,7 @@ fn by_axiom_of_choice_failed_body_stmt_does_not_continue() {
     let source_code = r#"
 have S set
 
-by axiom_of_choice S:
+by axiom_of_choice: set S:
     1 = 2
 "#;
 
@@ -350,6 +468,33 @@ by axiom_of_choice S:
     assert!(
         run_output.contains("failed to execute proof stmt"),
         "failure should mention the body statement:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_axiom_of_choice_rejects_old_set_syntax() {
+    let source_code = r#"
+have S set
+
+by axiom_of_choice S:
+    know forall A S:
+        $is_nonempty_set(A)
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_rejects_old_set_syntax",
+    );
+
+    assert!(
+        !run_succeeded,
+        "old by_axiom_of_choice syntax should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("expected `by axiom_of_choice: set S:`"),
+        "failure should mention the new syntax:\n{}",
         run_output
     );
 }

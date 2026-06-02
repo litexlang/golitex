@@ -5,7 +5,9 @@
 
 import Real
 
-prop increasing_on_R(S set, f fn(x R) R):
+# Monotonicity on a specified real domain. These are useful when a theorem only
+# controls a function on an interval or another subset of R.
+prop increasing_on(S set, f fn(x R) R):
     forall x, y R:
         x $in S
         y $in S
@@ -13,7 +15,7 @@ prop increasing_on_R(S set, f fn(x R) R):
         =>:
             f(x) <= f(y)
 
-prop decreasing_on_R(S set, f fn(x R) R):
+prop decreasing_on(S set, f fn(x R) R):
     forall x, y R:
         x $in S
         y $in S
@@ -21,7 +23,7 @@ prop decreasing_on_R(S set, f fn(x R) R):
         =>:
             f(y) <= f(x)
 
-prop strictly_increasing_on_R(S set, f fn(x R) R):
+prop strictly_increasing_on(S set, f fn(x R) R):
     forall x, y R:
         x $in S
         y $in S
@@ -29,7 +31,7 @@ prop strictly_increasing_on_R(S set, f fn(x R) R):
         =>:
             f(x) < f(y)
 
-prop strictly_decreasing_on_R(S set, f fn(x R) R):
+prop strictly_decreasing_on(S set, f fn(x R) R):
     forall x, y R:
         x $in S
         y $in S
@@ -37,70 +39,78 @@ prop strictly_decreasing_on_R(S set, f fn(x R) R):
         =>:
             f(y) < f(x)
 
-prop monotone_R(f fn(x R) R):
+# Global monotonicity on all real inputs.
+prop monotone(f fn(x R) R):
     forall x, y R:
         x <= y
         =>:
             f(x) <= f(y)
 
-prop antitone_R(f fn(x R) R):
+prop antitone(f fn(x R) R):
     forall x, y R:
         x <= y
         =>:
             f(y) <= f(x)
 
-prop increasing_sequence_R(a seq(R)):
+# Sequence-level monotonicity. These are separate from function monotonicity
+# because many textbook convergence arguments are stated directly for sequences.
+prop increasing_seq(a seq(R)):
     forall n N_pos:
         a(n) <= a(n + 1)
 
-prop decreasing_sequence_R(a seq(R)):
+prop decreasing_seq(a seq(R)):
     forall n N_pos:
         a(n + 1) <= a(n)
 
-prop sequence_upper_bound_R(a seq(R), M R):
+# Bounds for the range of a sequence.
+prop is_seq_upper_bound(a seq(R), M R):
     forall n N_pos:
         a(n) <= M
 
-prop sequence_lower_bound_R(a seq(R), M R):
+prop is_seq_lower_bound(a seq(R), M R):
     forall n N_pos:
         M <= a(n)
 
-prop bounded_above_sequence_R(a seq(R)):
-    exist M R st {$sequence_upper_bound_R(a, M)}
+prop bounded_above_seq(a seq(R)):
+    exist M R st {$is_seq_upper_bound(a, M)}
 
-prop bounded_below_sequence_R(a seq(R)):
-    exist M R st {$sequence_lower_bound_R(a, M)}
+prop bounded_below_seq(a seq(R)):
+    exist M R st {$is_seq_lower_bound(a, M)}
 
 know:
     # Monotone convergence for real sequences.  The intended proof takes the
     # supremum/infimum of the sequence range and uses the approximation
     # theorem for that extremum.
     forall a seq(R):
-        $increasing_sequence_R(a)
-        $bounded_above_sequence_R(a)
+        $increasing_seq(a)
+        $bounded_above_seq(a)
         =>:
-            $Real::convergent_sequence_R(a)
+            $Real::convergent_seq(a)
 
     forall a seq(R):
-        $decreasing_sequence_R(a)
-        $bounded_below_sequence_R(a)
+        $decreasing_seq(a)
+        $bounded_below_seq(a)
         =>:
-            $Real::convergent_sequence_R(a)
+            $Real::convergent_seq(a)
 
-thm increasing_bounded_above_sequence_converges_R, monotone_convergence_increasing_R:
+# Increasing monotone convergence theorem: an increasing real sequence bounded
+# above converges.
+thm increasing_bounded_above_seq_converges, monotone_convergence_increasing:
     prove:
         forall a seq(R):
-            $increasing_sequence_R(a)
-            $bounded_above_sequence_R(a)
+            $increasing_seq(a)
+            $bounded_above_seq(a)
             =>:
-                $Real::convergent_sequence_R(a)
-    $Real::convergent_sequence_R(a)
+                $Real::convergent_seq(a)
+    $Real::convergent_seq(a)
 
-thm decreasing_bounded_below_sequence_converges_R, monotone_convergence_decreasing_R:
+# Decreasing monotone convergence theorem: a decreasing real sequence bounded
+# below converges.
+thm decreasing_bounded_below_seq_converges, monotone_convergence_decreasing:
     prove:
         forall a seq(R):
-            $decreasing_sequence_R(a)
-            $bounded_below_sequence_R(a)
+            $decreasing_seq(a)
+            $bounded_below_seq(a)
             =>:
-                $Real::convergent_sequence_R(a)
-    $Real::convergent_sequence_R(a)
+                $Real::convergent_seq(a)
+    $Real::convergent_seq(a)

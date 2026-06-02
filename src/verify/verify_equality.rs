@@ -741,6 +741,13 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::FnRange(left_range), Obj::FnRange(right_range)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left_range.function,
+                    &right_range.function,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Range(left_range), Obj::Range(right_range)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_range.start,

@@ -62,6 +62,7 @@ pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
+pub const FN_RANGE: &str = "fn_range";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
@@ -137,6 +138,7 @@ pub const RUN_FILE: &str = "run_file";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
+pub const PREIMAGE: &str = "preimage";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
@@ -234,6 +236,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         COUNT,
+        FN_RANGE,
         SUM,
         PRODUCT,
         FINITE_SEQ,
@@ -291,6 +294,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         EVAL,
         FOR,
         WITNESS,
+        PREIMAGE,
         EXTENSION,
         TRANSITIVE_PROP,
         ZORN_LEMMA,

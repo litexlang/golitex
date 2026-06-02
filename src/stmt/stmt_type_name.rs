@@ -267,6 +267,12 @@ impl HaveByExistStmt {
     }
 }
 
+impl HaveByPreimageStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveByPreimageStmt".to_string()
+    }
+}
+
 impl HaveFnEqualStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveFnEqualStmt".to_string()

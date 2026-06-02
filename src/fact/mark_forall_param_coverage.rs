@@ -257,6 +257,9 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Count(count) => {
             mark_forall_param_coverage_in_obj(count.set.as_ref(), coverage_by_forall_param);
         }
+        Obj::FnRange(fn_range) => {
+            mark_forall_param_coverage_in_obj(fn_range.function.as_ref(), coverage_by_forall_param);
+        }
         Obj::Sum(s) => {
             mark_forall_param_coverage_in_obj(s.start.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(s.end.as_ref(), coverage_by_forall_param);

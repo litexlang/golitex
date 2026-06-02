@@ -31,6 +31,9 @@ impl ImportedModule {
 pub struct ModuleManager {
     pub run_file_paths: Vec<Rc<str>>,
     pub module_name_and_path_map: HashMap<String, String>,
+    /// Module A -> modules imported while A was loaded.
+    /// Cached reimports use this to reactivate nested imports after `clear`.
+    pub module_import_dependencies: HashMap<String, Vec<String>>,
     pub loading_import_stack: Vec<(String, String)>,
     pub current_module_path: String,
     pub current_module_name: String,
@@ -46,6 +49,7 @@ impl ModuleManager {
         ModuleManager {
             run_file_paths: vec![initial_path_rc.clone()],
             module_name_and_path_map: HashMap::new(),
+            module_import_dependencies: HashMap::new(),
             loading_import_stack: vec![],
             current_module_path: String::new(),
             current_module_name: String::new(),
@@ -193,12 +197,51 @@ impl ModuleManager {
             module_name.clone(),
             ImportedModule::new(absolute_path, environment, is_std),
         );
+        self.module_import_dependencies
+            .entry(module_name.clone())
+            .or_default();
         self.stopped_module.remove(&module_name);
         Ok(())
     }
 
+    pub fn record_import_dependency(&mut self, module_name: &str, imported_module_name: &str) {
+        if module_name.is_empty() || module_name == imported_module_name {
+            return;
+        }
+        let dependencies = self
+            .module_import_dependencies
+            .entry(module_name.to_string())
+            .or_default();
+        if dependencies
+            .iter()
+            .any(|existing| existing == imported_module_name)
+        {
+            return;
+        }
+        dependencies.push(imported_module_name.to_string());
+    }
+
     pub fn reactivate_imported_module(&mut self, module_name: &str) {
+        let mut visited_modules = HashSet::new();
+        self.reactivate_imported_module_with_dependencies(module_name, &mut visited_modules);
+    }
+
+    fn reactivate_imported_module_with_dependencies(
+        &mut self,
+        module_name: &str,
+        visited_modules: &mut HashSet<String>,
+    ) {
+        if !visited_modules.insert(module_name.to_string()) {
+            return;
+        }
         self.stopped_module.remove(module_name);
+        let dependencies = match self.module_import_dependencies.get(module_name) {
+            Some(dependencies) => dependencies.clone(),
+            None => return,
+        };
+        for dependency_name in dependencies.iter() {
+            self.reactivate_imported_module_with_dependencies(dependency_name, visited_modules);
+        }
     }
 
     pub fn stop_imported_module(&mut self, module_name: &str) -> Result<(), String> {

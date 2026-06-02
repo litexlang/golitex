@@ -9,6 +9,7 @@ mod exec_def_thm_stmt;
 mod exec_define_params_with_set;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
+mod exec_have_by_preimage_stmt;
 mod exec_have_exist_obj_stmt;
 mod exec_have_fn_as_algo;
 mod exec_have_fn_by_forall_exist_unique;

@@ -158,6 +158,9 @@ impl Runtime {
             | (Obj::Count(count), Obj::StandardSet(StandardSet::R)) => {
                 self.verify_count_in_standard_number_set(in_fact, count, verify_state)
             }
+            (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
+                self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
+            }
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
@@ -343,6 +346,8 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (Obj::FnRange(fn_range), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_fn_range_in_power_set(in_fact, fn_range, power_set, verify_state),
             (_, Obj::SetBuilder(set_builder)) => self
                 .verify_in_fact_in_set_builder_by_defining_facts(
                     in_fact,
@@ -362,11 +367,7 @@ impl Runtime {
                     verify_state,
                 ),
             (Obj::FnObj(fn_obj), Obj::FnSet(_)) => self
-                .verify_in_fact_fn_application_in_typed_return_set(
-                    fn_obj,
-                    in_fact,
-                    verify_state,
-                ),
+                .verify_in_fact_fn_application_in_typed_return_set(fn_obj, in_fact, verify_state),
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
@@ -509,6 +510,78 @@ impl Runtime {
 }
 
 impl Runtime {
+    // Function range introduction: if `f(a)` is well-defined, then it is in `fn_range(f)`.
+    // Example: `have f fn(x R: x > 0) R`, `1 > 0` proves `f(1) $in fn_range(f)`.
+    fn verify_in_fact_fn_application_in_fn_range(
+        &mut self,
+        in_fact: &InFact,
+        fn_obj: &FnObj,
+        fn_range: &FnRange,
+    ) -> Result<StmtResult, RuntimeError> {
+        let head_obj: Obj = fn_obj.head.as_ref().clone().into();
+        if head_obj.to_string() != fn_range.function.to_string() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if fn_obj.body.len() != 1
+            || fn_obj.body[0].len() != body.params_def_with_set.number_of_params()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, &VerifyState::new(0, false))
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range membership: a well-defined function application is in the function range"
+                    .to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
+    }
+
+    // The range of `f : ... -> T` is a subset of `T`; hence it is in `power_set(U)` when `T subset U`.
+    // Example: `have f fn(x S) T` proves `fn_range(f) $in power_set(T)`.
+    fn verify_in_fact_fn_range_in_power_set(
+        &mut self,
+        in_fact: &InFact,
+        fn_range: &FnRange,
+        power_set: &PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let subset_fact: AtomicFact = SubsetFact::new(
+            body.ret_set.as_ref().clone(),
+            power_set.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range power_set membership: function range is contained in the codomain"
+                    .to_string(),
+                vec![subset_result],
+            )
+            .into(),
+        )
+    }
+
     fn verify_in_fact_in_set_builder_by_defining_facts(
         &mut self,
         in_fact: &InFact,
@@ -1072,21 +1145,18 @@ impl Runtime {
             if let (Obj::FnSet(typed_fn_set), Obj::FnSet(target_fn_set)) = (&typed_ret, target) {
                 let flat_typed =
                     ParamGroupWithSet::collect_param_names(&typed_fn_set.body.params_def_with_set);
-                let flat_target = ParamGroupWithSet::collect_param_names(
-                    &target_fn_set.body.params_def_with_set,
-                );
+                let flat_target =
+                    ParamGroupWithSet::collect_param_names(&target_fn_set.body.params_def_with_set);
                 if flat_typed.len() == flat_target.len() {
                     let shared_names = self.generate_random_unused_names(flat_typed.len());
-                    let typed_norm = self
-                        .fn_set_alpha_renamed_for_display_compare(
-                            &typed_fn_set.body,
-                            &shared_names,
-                        )?;
-                    let target_norm = self
-                        .fn_set_alpha_renamed_for_display_compare(
-                            &target_fn_set.body,
-                            &shared_names,
-                        )?;
+                    let typed_norm = self.fn_set_alpha_renamed_for_display_compare(
+                        &typed_fn_set.body,
+                        &shared_names,
+                    )?;
+                    let target_norm = self.fn_set_alpha_renamed_for_display_compare(
+                        &target_fn_set.body,
+                        &shared_names,
+                    )?;
                     typed_norm.to_string() == target_norm.to_string()
                 } else {
                     false

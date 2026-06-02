@@ -1,5 +1,0 @@
-forall a, b R:
-    a * b = 0
-    a != 0
-    =>:
-        b = (a * b) / a = 0

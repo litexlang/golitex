@@ -6,12 +6,22 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(AXIOM_OF_CHOICE)?;
+        if !tb.current_token_is_equal_to(COLON) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by axiom_of_choice: expected `by axiom_of_choice: set S:`".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        tb.skip_token(COLON)?;
+        tb.skip_token(SET)?;
         let family = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by axiom_of_choice: expected end of head after `:`".to_string(),
+                    "by axiom_of_choice: expected end of head after trailing `:`".to_string(),
                     tb.line_file.clone(),
                 ),
             )));

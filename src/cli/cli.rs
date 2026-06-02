@@ -29,6 +29,10 @@ pub fn run_cli() {
                 println!("Litex Kernel: litex {}", VERSION);
                 return;
             }
+            "-upgrade" => {
+                println!("{}", upgrade_message(VERSION));
+                return;
+            }
             "-e" => {
                 index += 1;
                 let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
@@ -415,6 +419,34 @@ fn run_latex_interactive() -> String {
     return "-latex: interactive LaTeX mode is not implemented in the Rust kernel yet".to_string();
 }
 
+/// Print instructions instead of running a package manager.
+/// Litex can be installed by Homebrew, release packages, or source builds, so
+/// startup should not perform network or system changes on the user's machine.
+fn upgrade_message(version: &str) -> String {
+    let mut result = format!("Litex version {}\n\nUpgrade Litex:\n", version);
+
+    if cfg!(target_os = "macos") {
+        result.push_str("macOS with Homebrew:\n");
+        result.push_str("  brew update\n");
+        result.push_str("  brew upgrade litexlang/tap/litex\n\n");
+    } else if cfg!(target_os = "linux") {
+        result.push_str("Linux with the .deb release package:\n");
+        result.push_str(
+            "  Download the latest litex_<tag>_amd64.deb from GitHub Releases and run:\n",
+        );
+        result.push_str("  sudo dpkg -i litex_<tag>_amd64.deb\n\n");
+    } else if cfg!(target_os = "windows") {
+        result.push_str("Windows release zip install:\n");
+        result.push_str("  Rerun the PowerShell install command from docs/Setup.md.\n\n");
+    } else {
+        result.push_str("Open the latest GitHub Release and install the package for your OS.\n\n");
+    }
+
+    result.push_str("Release page: https://github.com/litexlang/golitex/releases/latest\n");
+    result.push_str("Full setup notes: https://litexlang.com/doc/Setup");
+    result
+}
+
 fn help_message() -> String {
     let result = r#"litex : run Litex interactively in your terminal
 litex -f <file> : run the given file
@@ -429,6 +461,7 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <repo> : compile the given repository to LaTeX
 litex -help : show the help message
 litex -version : show the version
+litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
 litex -fmt : format the given code
 litex -install <module> : install the given module
@@ -438,4 +471,22 @@ litex -update <module> : update the given module
 litex -tutorial : run the tutorial
 "#;
     result.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{help_message, upgrade_message};
+
+    #[test]
+    fn help_lists_upgrade_command() {
+        let message = help_message();
+        assert!(message.contains("litex -upgrade"));
+    }
+
+    #[test]
+    fn upgrade_message_mentions_version_and_release_page() {
+        let message = upgrade_message("test-version");
+        assert!(message.contains("Litex version test-version"));
+        assert!(message.contains("https://github.com/litexlang/golitex/releases/latest"));
+    }
 }

@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_subset_fact_with_builtin_rules(
         &mut self,
         subset_fact: &SubsetFact,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Standard number sets form a fixed inclusion chain. Example: `N $subset R`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
@@ -32,6 +32,33 @@ impl Runtime {
                 ))
                 .into(),
             );
+        }
+
+        // The range of `f : ... -> T` is a subset of `T`, and of any known superset of `T`.
+        // Example: `have f fn(x S) T` proves `fn_range(f) $subset T`.
+        if let Obj::FnRange(fn_range) = &subset_fact.left {
+            if let Some(body) = self.get_fn_range_function_body(&fn_range.function) {
+                let ret_subset: AtomicFact = SubsetFact::new(
+                    body.ret_set.as_ref().clone(),
+                    subset_fact.right.clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
+                let ret_subset_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &ret_subset,
+                    verify_state,
+                )?;
+                if ret_subset_result.is_true() {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            subset_fact.clone().into(),
+                            "fn_range_subset_codomain".to_string(),
+                            vec![ret_subset_result],
+                        ))
+                        .into(),
+                    );
+                }
+            }
         }
 
         let converted_superset_fact = SupersetFact::new(

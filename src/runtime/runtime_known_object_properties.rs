@@ -68,6 +68,13 @@ impl Runtime {
         Vec::new()
     }
 
+    pub fn get_fn_range_function_body(&self, function: &Obj) -> Option<FnSetBody> {
+        match function {
+            Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
+            _ => self.get_object_in_fn_set(function),
+        }
+    }
+
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
     /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
     pub fn get_known_fn_body_and_equal_to_for_key(
@@ -495,6 +502,7 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Cap(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::Count(x) => collect_module_names_from_obj(&x.set, module_names),
+        Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
         Obj::TupleDim(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::CartDim(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::OneSideInfinityIntervalObj(x) => {
