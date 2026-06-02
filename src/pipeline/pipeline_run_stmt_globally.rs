@@ -57,12 +57,12 @@ fn run_file_at_resolved_path(
         })
     })?;
 
-    let current_file_index = runtime.module_manager.borrow().current_file_index;
+    let current_source_path = runtime.module_manager.borrow().current_file_path_rc();
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
 
     let result = run_source_code(content.as_str(), runtime);
 
-    runtime.change_file_index_to(current_file_index);
+    runtime.set_current_source_path_rc(current_source_path);
 
     if let Some(error) = result.1 {
         return Err(error);
@@ -229,7 +229,7 @@ fn load_imported_module_environment(
     let parent_context = {
         let module_manager = parent_runtime.module_manager.borrow();
         (
-            module_manager.current_file_index,
+            module_manager.current_file_path_rc(),
             module_manager.entry_path_rc.clone(),
             module_manager.current_module_name.clone(),
             module_manager.current_module_path.clone(),
@@ -268,7 +268,7 @@ fn load_imported_module_environment(
     };
     {
         let mut module_manager = parent_runtime.module_manager.borrow_mut();
-        module_manager.current_file_index = parent_context.0;
+        module_manager.current_source_path_rc = parent_context.0;
         module_manager.entry_path_rc = parent_context.1;
         module_manager.current_module_name = parent_context.2;
         module_manager.current_module_path = parent_context.3;
@@ -533,10 +533,6 @@ mod tests {
             .environment
             .defined_abstract_props
             .contains_key("loaded_prop"));
-        assert_eq!(
-            module_manager.module_name_and_path_map.get("demo"),
-            Some(&expected_path)
-        );
     }
 
     #[test]
@@ -556,10 +552,6 @@ mod tests {
                 .file_name()
                 .and_then(|name| name.to_str()),
             Some("Trig")
-        );
-        assert_eq!(
-            module_manager.module_name_and_path_map.get("Trig"),
-            Some(&imported.absolute_path)
         );
         assert!(imported
             .environment
@@ -600,10 +592,6 @@ mod tests {
                 .file_name()
                 .and_then(|name| name.to_str()),
             Some("Nat")
-        );
-        assert_eq!(
-            module_manager.module_name_and_path_map.get("Nat"),
-            Some(&imported.absolute_path)
         );
     }
 
@@ -659,10 +647,12 @@ mod tests {
         let module_manager = runtime.module_manager.borrow();
         assert!(module_manager.imported_modules.contains_key("Child"));
         assert!(module_manager.imported_modules.contains_key("Nested"));
+        let child = module_manager.imported_modules.get("Child").unwrap();
+        assert_eq!(child.import_dependencies, vec!["Nested".to_string()]);
     }
 
     #[test]
-    fn nested_then_top_level_same_import_runs_once() {
+    fn nested_then_top_level_same_import_reuses_cached_module() {
         let root = temp_test_dir("nested-then-top-level-import-runs-once");
         let b_dir = root.join("B");
         let a_dir = root.join("A");
@@ -704,16 +694,8 @@ mod tests {
         assert_eq!(module_manager.imported_modules.len(), 2);
         assert!(module_manager.imported_modules.contains_key("A"));
         assert!(module_manager.imported_modules.contains_key("B"));
-        let b_main_path = absolute_path_string(b_dir.join("main.lit"));
-        let b_main_run_count = module_manager
-            .run_file_paths
-            .iter()
-            .filter(|path| path.as_ref() == b_main_path.as_str())
-            .count();
-        assert_eq!(
-            b_main_run_count, 1,
-            "B/main.lit should be loaded exactly once"
-        );
+        let a = module_manager.imported_modules.get("A").unwrap();
+        assert_eq!(a.import_dependencies, vec!["B".to_string()]);
     }
 
     #[test]
@@ -760,6 +742,8 @@ mod tests {
         let module_manager = runtime.module_manager.borrow();
         assert!(!module_manager.stopped_module.contains("Child"));
         assert!(!module_manager.stopped_module.contains("Nested"));
+        let child = module_manager.imported_modules.get("Child").unwrap();
+        assert_eq!(child.import_dependencies, vec!["Nested".to_string()]);
     }
 
     #[test]

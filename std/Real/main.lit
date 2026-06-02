@@ -106,15 +106,6 @@ prop is_greatest_lower_bound(E set, s R):
 prop has_greatest_lower_bound(E set):
     exist s R st {$is_greatest_lower_bound(E, s)}
 
-# Image set of a real sequence, used to connect sequence arguments with
-# supremum/infimum arguments such as monotone convergence.
-prop seq_range(a seq(R), E set):
-    E $subset R
-    forall x E:
-        exist n N_pos st {x = a(n)}
-    forall n N_pos:
-        a(n) $in E
-
 # Trusted real-analysis backbone. These facts are the current stdlib interface
 # for density, completeness, logarithms, and basic sqrt behavior. Single-use
 # textbook facts should stay in the source file that needs them unless they

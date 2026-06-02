@@ -64,18 +64,22 @@ prop decreasing_seq(a seq(R)):
 
 # Bounds for the range of a sequence.
 prop is_seq_upper_bound(a seq(R), M R):
+    $Real::is_upper_bound(fn_range(a), M)
     forall n N_pos:
         a(n) <= M
 
 prop is_seq_lower_bound(a seq(R), M R):
+    $Real::is_lower_bound(fn_range(a), M)
     forall n N_pos:
         M <= a(n)
 
 prop bounded_above_seq(a seq(R)):
     exist M R st {$is_seq_upper_bound(a, M)}
+    $Real::has_upper_bound(fn_range(a))
 
 prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
+    $Real::has_lower_bound(fn_range(a))
 
 know:
     # Monotone convergence for real sequences.  The intended proof takes the

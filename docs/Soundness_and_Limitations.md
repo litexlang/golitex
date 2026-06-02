@@ -55,24 +55,19 @@ from it.
 
 ## Verifier Flow
 
-The following diagram gives the high-level flow from source code to statement
-execution and verifier output. It separates the executor path from the fact
-verification/storage path: non-factual statements execute, define, import,
-evaluate, open local proof state, or generate obligations, while facts are
-either proved through the verifier or explicitly stored as well-defined context
-assumptions.
+Litex separates executor paths from fact verification and context storage.
+Non-factual statements execute, define, import, evaluate, open local proof
+state, or generate obligations. Facts are either proved through the verifier or
+explicitly stored as well-defined context assumptions.
 
-![Litex verifier flow](../assets/verifier_flow.png)
-
-Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
 Detailed examples for each flow node: [Verifier Flow Examples](Verifier_Flow_Examples.md).
 
-The diagram is intentionally explicit about the trusted boundary. Builtin rules
-and builtin inference make Litex convenient for relation-first mathematics, but
-they are part of the implementation users must trust and audit. The useful
-output is not only `true`, `unknown`, or `error`; it is also the
-`verified_by`, `infer_facts`, nested-result, and context-update information
-that explains what route was used and what became available afterward.
+Builtin rules and builtin inference make Litex convenient for relation-first
+mathematics, but they are part of the implementation users must trust and
+audit. The useful output is not only `true`, `unknown`, or `error`; it is also
+the `verified_by`, `infer_facts`, nested-result, and context-update
+information that explains what route was used and what became available
+afterward.
 
 ## The Role of `know`
 

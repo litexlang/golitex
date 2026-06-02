@@ -7,9 +7,8 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Verifier_Fl
 
 ## Purpose
 
-This page is the companion guide for the verifier-flow diagram. The diagram is
-kept compact enough to read in the README. This page expands the same flow with
-small Litex shapes and the main Rust entrypoints they exercise.
+This page explains the verifier flow with small Litex shapes and the main Rust
+entrypoints they exercise.
 
 The examples below are short shapes, not all standalone files. They are meant to
 show which part of the executor or verifier is active. For runnable syntax
@@ -74,5 +73,5 @@ Litex statements do not all ask the verifier the same question.
 | Explicit assumptions | `know x = 2` and some `let`/domain assumptions can enter context without a proof route. | This is useful for axioms and proof debt, but later results can depend on it. |
 
 The important reading discipline is: **proved facts**, **non-factual executor
-success**, and **stored assumptions** are different things. Litex's output and
-the verifier-flow diagram are meant to keep that distinction visible.
+success**, and **stored assumptions** are different things. Litex's output is
+structured to keep that distinction visible.
