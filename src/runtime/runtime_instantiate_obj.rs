@@ -69,6 +69,7 @@ impl Runtime {
             Obj::TupleDim(inner) => self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type),
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
+            Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
             Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
@@ -93,7 +94,6 @@ impl Runtime {
                 self.inst_matrix_list_obj(inner, param_to_arg_map, param_obj_type)
             }
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, param_obj_type),
-            Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map, param_obj_type),
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
@@ -755,6 +755,18 @@ impl Runtime {
         Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?).into())
     }
 
+    pub fn inst_fn_range(
+        &self,
+        fn_range: &FnRange,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(
+            FnRange::new(self.inst_obj(&fn_range.function, param_to_arg_map, param_obj_type)?)
+                .into(),
+        )
+    }
+
     pub fn inst_sum(
         &self,
         sum: &Sum,
@@ -920,15 +932,6 @@ impl Runtime {
             rows.push(inst_row);
         }
         Ok(MatrixListObj::new(rows).into())
-    }
-
-    pub fn inst_choose(
-        &self,
-        choose: &Choose,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_obj_at_index(

@@ -434,8 +434,8 @@ impl Runtime {
             Obj::CartDim(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::TupleDim(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Count(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
+            Obj::FnRange(x) => Self::obj_depends_on_given_exist_param(x.function.as_ref(), names),
             Obj::SeqSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
-            Obj::Choose(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::Sum(x) => {
                 Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)

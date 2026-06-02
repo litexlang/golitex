@@ -1,6 +1,0 @@
-let s nonempty_set:
-    forall x s:
-        $is_nonempty_set(x)
-
-choose(s) = choose(s)
-choose(s) $in s

@@ -1,0 +1,7 @@
+have S set
+
+by axiom_of_choice: set S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}

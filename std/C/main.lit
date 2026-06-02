@@ -1,3 +1,10 @@
+# Complex numbers as pairs of real coordinates.
+#
+# This is intentionally a small algebraic surface: the file gives constructors,
+# coordinate operations, conjugation, squared norm, norm, and the imaginary
+# unit. Field-level complex analysis facts should be added only when examples
+# repeatedly need them.
+
 struct C:
     re R
     im R

@@ -6,6 +6,7 @@
 # exposed here as typed lowering targets for Nat arguments.
 
 # Mathlib generic notation: `d ∣ n` with Nat arguments.
+# Divisibility is represented by an explicit natural-number witness.
 prop Dvd(d, n N):
     exist k N st {n = d * k}
 
@@ -30,6 +31,7 @@ prop EuclideanDivision(n N, q N_pos, m N, r N):
     n = m * q + r
 
 # Mathlib: Nat.Prime.
+# A natural prime is at least 2 and has no divisors except 1 and itself.
 prop Prime(p N):
     2 <= p
     forall d N:
@@ -67,6 +69,10 @@ have fn divisors as set:
         exist! s power_set(N) st {$divisors_value(n, s)}
 
 know:
+    # Current Nat stdlib backbone. Many of these are elementary number-theory
+    # facts that should eventually be proved from induction, Euclidean
+    # division, and gcd/lcm definitions; for now they provide stable theorem
+    # interfaces for examples and dataset translations.
     $Prime(2)
 
     forall p N:
@@ -400,6 +406,7 @@ thm one_coprime:
     $Coprime(1, a)
 
 # Mathlib: Nat.Prime.dvd_or_dvd
+# Euclid's lemma for primes: a prime dividing a product divides one factor.
 thm Prime_dvd_or_dvd:
     prove:
         forall p, a, b N:
@@ -410,6 +417,9 @@ thm Prime_dvd_or_dvd:
     $Dvd(p, a) or $Dvd(p, b)
 
 # Mathlib: Nat.Prime.dvd_of_dvd_pow
+# Prime divisibility descends through a positive power. The checked theorem
+# shape is useful for number-theory problems even while the proof is still
+# backed by local proof debt.
 thm Prime_dvd_of_dvd_pow:
     prove:
         forall p, a N, k N_pos:
@@ -421,6 +431,8 @@ thm Prime_dvd_of_dvd_pow:
     $Dvd(p, a)
 
 # Mathlib: Nat.exists_prime_and_dvd
+# Every natural number at least 2 has a prime divisor. This is a standard first
+# step toward prime factorization arguments.
 thm exists_prime_and_dvd:
     prove:
         forall n N:

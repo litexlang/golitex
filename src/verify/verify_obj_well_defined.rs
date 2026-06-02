@@ -70,6 +70,7 @@ impl Runtime {
             Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
+            Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
@@ -91,7 +92,6 @@ impl Runtime {
             Obj::MatrixScalarMul(x) => self.verify_matrix_scalar_mul_well_defined(x, verify_state),
             Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
-            Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
             Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
@@ -1403,6 +1403,23 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_fn_range_well_defined(
+        &mut self,
+        x: &FnRange,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
+        if self.get_fn_range_function_body(&x.function).is_none() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range expects a function with a known function set, got {}",
+                    x.function
+                )),
+            )));
+        }
+        Ok(())
+    }
+
     fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
@@ -2208,50 +2225,6 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        Ok(())
-    }
-
-    fn verify_choose_well_defined(
-        &mut self,
-        _x: &Choose,
-        _verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        let choose_from = *_x.set.clone();
-
-        let choose_from_is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(
-            IsNonemptySetFact::new(choose_from.clone(), default_line_file()),
-        );
-        let choose_from_is_nonempty_set_result =
-            self.verify_atomic_fact(&choose_from_is_nonempty_set_fact, _verify_state)?;
-        if choose_from_is_nonempty_set_result.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "set {} is not a nonempty set",
-                    choose_from.to_string()
-                )),
-            )));
-        }
-
-        let random_param = self.generate_random_unused_name();
-
-        let nonempty_set_fact = IsNonemptySetFact::new(
-            obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::Forall),
-            default_line_file(),
-        );
-
-        let forall_x_in_choose_from_x_is_nonempty = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![random_param.clone().to_string()],
-                ParamType::Obj(choose_from),
-            )]),
-            vec![],
-            vec![nonempty_set_fact.into()],
-            default_line_file(),
-        )?
-        .into();
-
-        self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;
-
         Ok(())
     }
 

@@ -2,7 +2,7 @@
 # IdentifierWithMod uses `::` between name parts (`MOD_SIGN`).
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
 # Union/Intersect/SetMinus/SetDiff, infix ` then name (e.g. `union as in lhs `union rhs), Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
-# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FnObj (via `have fn`).
+# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
 # --- Obj::Number ---
@@ -113,12 +113,15 @@ prove:
 # --- Obj::Cup, Obj::Cap ---
 # Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).
 
-# --- Obj::Choose ---
+# --- Axiom of choice proof step ---
 prove:
-    let s nonempty_set:
-        forall x s:
-            $is_nonempty_set(x)
-    choose(s) $in s
+    have S set
+
+    by axiom_of_choice: set S:
+        know forall A S:
+            $is_nonempty_set(A)
+
+    exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
 # --- Obj::Identifier, Obj::FnObj (e.g. `f(0)` after `have fn f(x R) R = ...`) ---
 prove:

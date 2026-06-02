@@ -522,15 +522,6 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Choose(l), Obj::Choose(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
             (Obj::CartDim(l), Obj::CartDim(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
                     Some(factual_equal_success_by_builtin_reason(
@@ -551,6 +542,15 @@ impl Runtime {
             }
             (Obj::Count(l), Obj::Count(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::FnRange(l), Obj::FnRange(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.function, &r.function) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
                     ))

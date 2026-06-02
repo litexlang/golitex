@@ -34,6 +34,10 @@ fn run_repl_loop_with_readers(
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
+    writeln!(
+        stdout_writer,
+        "Upgrade Litex? Run `litex -upgrade` for platform instructions."
+    )?;
     writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(
@@ -156,5 +160,19 @@ mod tests {
 
         let output_text = String::from_utf8(stdout_writer).unwrap();
         assert!(output_text.contains("\"result\": \"success\""));
+    }
+
+    #[test]
+    fn repl_startup_shows_version_and_upgrade_hint() {
+        let input = b"";
+        let mut stdin_reader = Cursor::new(input.as_slice());
+        let mut stdout_writer = Vec::new();
+
+        run_repl_loop_with_readers("test-version", false, &mut stdin_reader, &mut stdout_writer)
+            .unwrap();
+
+        let output_text = String::from_utf8(stdout_writer).unwrap();
+        assert!(output_text.contains("Litex version test-version"));
+        assert!(output_text.contains("litex -upgrade"));
     }
 }

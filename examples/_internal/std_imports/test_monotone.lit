@@ -1,0 +1,20 @@
+import Real
+import Monotone
+
+have a seq(R)
+
+know:
+    $Monotone::increasing_seq(a)
+    $Monotone::bounded_above_seq(a)
+
+by thm Monotone::increasing_bounded_above_seq_converges(a)
+$Real::convergent_seq(a)
+
+have b seq(R)
+
+know:
+    $Monotone::decreasing_seq(b)
+    $Monotone::bounded_below_seq(b)
+
+by thm Monotone::decreasing_bounded_below_seq_converges(b)
+$Real::convergent_seq(b)

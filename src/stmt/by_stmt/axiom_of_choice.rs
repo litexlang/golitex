@@ -2,30 +2,28 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ByZornLemmaStmt {
-    pub set: Obj,
-    pub prop_name: AtomicName,
+pub struct ByAxiomOfChoiceStmt {
+    pub family: Obj,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
-impl ByZornLemmaStmt {
-    pub fn new(set: Obj, prop_name: AtomicName, proof: Vec<Stmt>, line_file: LineFile) -> Self {
-        ByZornLemmaStmt {
-            set,
-            prop_name,
+impl ByAxiomOfChoiceStmt {
+    pub fn new(family: Obj, proof: Vec<Stmt>, line_file: LineFile) -> Self {
+        ByAxiomOfChoiceStmt {
+            family,
             proof,
             line_file,
         }
     }
 }
 
-impl fmt::Display for ByZornLemmaStmt {
+impl fmt::Display for ByAxiomOfChoiceStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{} {} {}, {} {}{}",
-            BY, ZORN_LEMMA, COLON, SET, self.set, PROP, self.prop_name, COLON
+            "{} {}{} {} {}{}",
+            BY, AXIOM_OF_CHOICE, COLON, SET, self.family, COLON
         )?;
         if !self.proof.is_empty() {
             write!(

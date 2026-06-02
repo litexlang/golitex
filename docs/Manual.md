@@ -262,6 +262,8 @@ A **function space** is written `fn(x S) T`; an anonymous function value can be 
 
 Later parameter domains may depend on earlier parameters. The return set is not dependent on the function parameters, so a signature such as `fn(n N_pos) closed_range(1, n)` is rejected.
 
+The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
+
 ```litex
 have g set = fn(x R) R
 ```
@@ -279,6 +281,15 @@ prove:
 
 ```litex
 'R(x){x + 1}(2) = 3
+```
+
+```litex
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    fn_range(f) $subset R
+    fn_range(f) $in power_set(R)
 ```
 
 #### Cartesian product and dimension
@@ -409,15 +420,18 @@ Membership unfolds to real membership and the endpoint bounds. For example, `x $
 
 Some indexed objects use **sequence** types or matrix index domains (repeated indices, `closed_range` on each axis) instead of a single `sum` index. Typical patterns appear with `have fn M(i …, j …) …` (see below).
 
-#### Choice (`choose`)
+#### Choice functions
 
-From a collection of nonempty sets, pick an element from each member once typing guarantees nonemptiness.
+Use `by axiom_of_choice: set S:` to assert the existence of a function that picks one element from each member of a family of nonempty sets. Litex no longer has a special `choose(s)` object constructor.
 
 ```litex
-let s nonempty_set:
-    forall x s:
-        $is_nonempty_set(x)
-choose(s) $in s
+have S set
+
+by axiom_of_choice: set S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 ```
 
 #### Standard number sets
@@ -1076,6 +1090,39 @@ When an existential fact is already known, **`have by exist`** gives names to it
 know exist u R st {u > 0, u < 1}
 have by exist v R st {v > 0, v < 1}: w
 w > 0
+```
+
+---
+
+### Naming preimages (`have by preimage`)
+
+When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application.
+
+```litex
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    have by preimage x from f(1) $in fn_range(f)
+
+    x $in R
+    x > 0
+    f(1) = f(x)
+```
+
+For a multi-argument function, provide one preimage name per function parameter:
+
+```litex
+prove:
+    have g fn(x R, y R: x < y) R
+
+    g(0, 1) $in fn_range(g)
+    have by preimage a, b from g(0, 1) $in fn_range(g)
+
+    a $in R
+    b $in R
+    a < b
+    g(0, 1) = g(a, b)
 ```
 
 ---
@@ -1758,7 +1805,7 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ### Zorn lemma preview (`by zorn_lemma`)
 
-Use **`by zorn_lemma S from P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
+Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
 
 <!-- litex:skip-test -->
 ```litex
@@ -1768,6 +1815,26 @@ exist m S st {forall! x S: $P(m, x) => {x = m}}
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet quantify over prop names as first-class relation objects.
 
 See `examples/01_proof_patterns/by_zorn_lemma.lit`.
+
+---
+
+### Axiom of choice preview (`by axiom_of_choice`)
+
+Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
+
+```litex
+have S set
+
+by axiom_of_choice: set S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+```
+
+This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
+
+See `examples/01_proof_patterns/by_axiom_of_choice.lit`.
 
 ---
 
@@ -1901,6 +1968,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
 | `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
 | `by zorn_lemma` | Preview trusted Zorn step for binary user-defined order predicates |
+| `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
@@ -1943,22 +2011,21 @@ The exact details depend on the shape of the fact, but this loop is the main men
 
 ### Full Verifier Flow
 
-The complete execution path has three layers: statement dispatch, ordinary or
-verify statement execution, and shared context update. The diagram below shows
-where definitions, proof blocks, `know`, generated obligations, `error`,
-`unknown`, `true`, `verified_by`, and inferred facts fit into one run.
+The complete execution path has three layers: source parsing and global
+statement dispatch, executor or fact-verification/storage execution, and shared
+context update. Definitions, proof blocks, `know`, generated obligations,
+`error`, `unknown`, `true`, `verified_by`, and inferred facts all fit into
+this one-run model.
 
-![Litex verifier flow](../assets/verifier_flow.png)
+Detailed examples for each flow node: [Verifier Flow Examples](Verifier_Flow_Examples.md).
 
-Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
-
-Ordinary statements can define objects and concepts, import modules, evaluate
-expressions, or open local proof/control blocks. Verify statements are the
-places where Litex checks facts, goals, theorem clauses, witness obligations,
-or explicit `know` assumptions. After a declaration, verified fact, or
-well-defined `know` assumption is accepted, Litex stores it, updates lookup
-indexes, and runs builtin inference so later statements can reuse the expanded
-context.
+Non-factual executor statements can define objects and concepts, import
+modules, evaluate expressions, or open local proof/control blocks. Some of
+those statements call the fact verifier for proof-required obligations; others
+store well-defined context facts or explicit `know` assumptions without using a
+proof route. After a declaration, verified fact, or accepted context assumption
+is stored, Litex updates lookup indexes and runs builtin inference so later
+statements can reuse the expanded context.
 
 #### A builtin rule proves it
 

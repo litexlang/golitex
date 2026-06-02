@@ -2,7 +2,12 @@
 # This file intentionally treats trigonometry as background mathematics: the
 # functions are declared as objects, and standard identities are recorded with
 # `know` instead of being derived from limits or power series.
+#
+# The long special-angle section is problem-facing stdlib support, not a claim
+# that these are fundamental theorem interfaces. New one-off trig facts should
+# usually stay in the example or dataset file that needs them.
 
+# Primary trigonometric and inverse trigonometric functions.
 have sin fn(x R) R
 have cos fn(x R) R
 have fn tan(x R: cos(x) != 0) R = sin(x) / cos(x)
@@ -71,6 +76,7 @@ prop cot_periodic_with_period(p R):
             cot(x + p) = cot(x)
 
 know:
+    # Values at the basic axis angles and immediate well-definedness facts.
     sin(0) = 0
     cos(0) = 1
     tan(0) = 0
@@ -88,6 +94,7 @@ know:
     sin(1 * pi) = 0
     cos(1 * pi) = -1
 
+    # Z-indexed zero and sign-pattern facts used by periodicity arguments.
     forall k Z:
         cos(pi / 2 + k * pi) = 0
         cos((2 * k + 1) / 2 * pi) = 0
@@ -103,11 +110,14 @@ know:
         cos((2 * k + 1) * pi) = -1
     
 
+    # Pythagorean identity and range bounds.
     forall x R:
         -1 <= sin(x) <= 1
         -1 <= cos(x) <= 1
         sin(x)^2 + cos(x)^2 = 1
 
+    # Definitions and reciprocal identities for tan/sec and cot/csc, guarded by
+    # the required nonzero denominator facts.
     forall x R:
         cos(x) != 0
         =>:
@@ -122,6 +132,7 @@ know:
             csc(x) = 1 / sin(x)
             1 + cot(x)^2 = csc(x)^2
 
+    # Parity identities.
     forall x R:
         sin(-x) = -sin(x)
         cos(-x) = cos(x)
@@ -140,6 +151,7 @@ know:
             cot(-x) = -cot(x)
             csc(-x) = -csc(x)
 
+    # Periodicity identities.
     forall x R:
         sin(x + 2 * pi) = sin(x)
         cos(x + 2 * pi) = cos(x)
@@ -188,6 +200,7 @@ know:
         =>:
             cot(x + k * pi) = cot(x)
 
+    # Addition, subtraction, double-angle, and half-angle identities.
     forall x, y R:
         sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
         cos(x + y) = cos(x) * cos(y) - sin(x) * sin(y)
@@ -212,6 +225,7 @@ know:
         sin(x)^2 = (1 - cos(2 * x)) / 2
         cos(x)^2 = (1 + cos(2 * x)) / 2
 
+    # Characterizations of zeros of sin and cos.
     forall x R:
         sin(x) = 0
         =>:
@@ -323,6 +337,7 @@ know:
         =>:
             sin(x + k * pi) != 0
 
+    # Monotonicity and injectivity on principal intervals and their translates.
     forall x, y R:
         -pi / 2 < x < y < pi / 2
         =>:
@@ -415,7 +430,9 @@ know:
         =>:
             y1 = y2
 
-    # Common exact values at special angles, with the standard periods.
+    # Common exact values at special angles, with the standard periods. These
+    # are retained because many contest and high-school dataset items expect
+    # them as background computation.
     forall k Z:
         sin(pi / 6 + 2 * k * pi) = 1 / 2
         sin(pi / 4 + 2 * k * pi) = sqrt(2) / 2
@@ -459,7 +476,7 @@ know:
         cos(5 * pi / 6 + k * pi) != 0
         tan(5 * pi / 6 + k * pi) = (-1 * sqrt(3)) / 3
 
-    # Principal-value inverse trigonometric functions.
+    # Principal-value inverse trigonometric functions and their monotonicity.
     forall x R:
         -1 <= x <= 1
         =>:
@@ -543,6 +560,7 @@ know:
     forall x R:
         arctan(-x) = -arctan(x)
 
+    # Domain side conditions for the listed inverse-trig exact values.
     -1 <= -sqrt(3) / 2 <= 1
     -1 <= -sqrt(2) / 2 <= 1
     -1 <= (-1 * sqrt(3)) / 2 <= 1
@@ -579,10 +597,3 @@ know:
     arctan(sqrt(3) / 3) = pi / 6
     arctan(1) = pi / 4
     arctan(sqrt(3)) = pi / 3
-
-# Special-angle nonzero fact used by std import examples.
-thm cos_two_pi_over_three_ne_zero:
-    prove:
-        forall _ N:
-            cos(2 * pi / 3) != 0
-    cos(2 * pi / 3) != 0

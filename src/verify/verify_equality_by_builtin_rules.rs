@@ -77,6 +77,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             .iter()
             .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
         Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::FnRange(r) => obj_expr_mentions_bare_id(r.function.as_ref(), id),
         Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
         Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
         Obj::Proj(p) => {
@@ -111,7 +112,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             row.iter()
                 .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
         }),
-        Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
         Obj::StructObj(so) => so.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::ObjAsStructInstanceWithFieldAccess(fa) => {
             obj_expr_mentions_bare_id(fa.obj.as_ref(), id)

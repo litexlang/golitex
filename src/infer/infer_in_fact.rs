@@ -253,6 +253,9 @@ impl Runtime {
             Obj::FnSet(fn_set_with_dom) => {
                 self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }
+            // Function range: `z $in fn_range(f)` implies `z` is in the codomain of `f`.
+            // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers `z $in T`.
+            Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
             // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
@@ -672,6 +675,28 @@ impl Runtime {
                 }
             }
         }
+    }
+
+    fn infer_membership_in_fn_range(
+        &mut self,
+        in_fact: &InFact,
+        fn_range: &FnRange,
+    ) -> Result<InferResult, RuntimeError> {
+        let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+            return Ok(InferResult::new());
+        };
+        let codomain_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            body.ret_set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&codomain_fact);
+        infer_result.new_infer_result_inside(
+            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
+        );
+        Ok(infer_result)
     }
 
     // Shared integer interval body: always `element $in Z`, lower `start <= element`, upper strict or closed.

@@ -17,48 +17,99 @@ have pi R = pi
 have ln fn(x R_pos) R
 have fn logb(a, x R_pos: a != 1) R = log(a, x)
 
-prop rat_seq_tail_close_to_R(a seq(Q), x R, epsilon R_pos, n0 N_pos):
+# Rational-sequence predicates are Cauchy-completion bridges. They are kept in
+# `Real` because textbook constructions often pass through rational
+# approximations before using completeness of the real line.
+prop rat_seq_tail_close(a seq(Q), x R, epsilon R_pos, n0 N_pos):
     forall n N_pos:
         n >= n0
         =>:
             abs(a(n) - x) < epsilon
 
-prop rat_seq_converges_to_R(a seq(Q), x R):
+prop rat_seq_converges(a seq(Q), x R):
     forall epsilon R_pos:
-        exist n0 N_pos st {$rat_seq_tail_close_to_R(a, x, epsilon, n0)}
+        exist n0 N_pos st {$rat_seq_tail_close(a, x, epsilon, n0)}
 
-prop rat_seq_cauchy_tail_in_R(a seq(Q), epsilon R_pos, n0 N_pos):
+prop rat_seq_cauchy_tail(a seq(Q), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
         j >= n0
         k >= n0
         =>:
             abs(a(j) - a(k)) < epsilon
 
-prop rat_seq_cauchy_in_R(a seq(Q)):
+prop rat_seq_cauchy(a seq(Q)):
     forall epsilon R_pos:
-        exist n0 N_pos st {$rat_seq_cauchy_tail_in_R(a, epsilon, n0)}
+        exist n0 N_pos st {$rat_seq_cauchy_tail(a, epsilon, n0)}
 
-prop seq_tail_close_to_R(a seq(R), x R, epsilon R_pos, n0 N_pos):
+# Real-valued sequence convergence in the usual epsilon-N form.
+prop seq_tail_close(a seq(R), x R, epsilon R_pos, n0 N_pos):
     forall n N_pos:
         n >= n0
         =>:
             abs(a(n) - x) < epsilon
 
-prop seq_converges_to_R(a seq(R), x R):
+prop seq_converges(a seq(R), x R):
     forall epsilon R_pos:
-        exist n0 N_pos st {$seq_tail_close_to_R(a, x, epsilon, n0)}
+        exist n0 N_pos st {$seq_tail_close(a, x, epsilon, n0)}
 
-prop cauchy_tail_R(a seq(R), epsilon R_pos, n0 N_pos):
+prop convergent_seq(a seq(R)):
+    exist x R st {$seq_converges(a, x)}
+
+prop cauchy_tail(a seq(R), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
         j >= n0
         k >= n0
         =>:
             abs(a(j) - a(k)) < epsilon
 
-prop cauchy_R(a seq(R)):
+prop cauchy(a seq(R)):
     forall epsilon R_pos:
-        exist n0 N_pos st {$cauchy_tail_R(a, epsilon, n0)}
+        exist n0 N_pos st {$cauchy_tail(a, epsilon, n0)}
 
+# Order-completeness vocabulary for subsets of R. These names are intentionally
+# textbook-readable; short aliases such as `lub` can be added later for objects.
+prop nonempty_subset(E set):
+    $is_nonempty_set(E)
+    E $subset R
+
+prop is_upper_bound(E set, M R):
+    forall x E:
+        x <= M
+
+prop has_upper_bound(E set):
+    exist M R st {$is_upper_bound(E, M)}
+
+prop is_least_upper_bound(E set, s R):
+    $is_upper_bound(E, s)
+    forall M R:
+        $is_upper_bound(E, M)
+        =>:
+            s <= M
+
+prop has_least_upper_bound(E set):
+    exist s R st {$is_least_upper_bound(E, s)}
+
+prop is_lower_bound(E set, M R):
+    forall x E:
+        M <= x
+
+prop has_lower_bound(E set):
+    exist M R st {$is_lower_bound(E, M)}
+
+prop is_greatest_lower_bound(E set, s R):
+    $is_lower_bound(E, s)
+    forall M R:
+        $is_lower_bound(E, M)
+        =>:
+            M <= s
+
+prop has_greatest_lower_bound(E set):
+    exist s R st {$is_greatest_lower_bound(E, s)}
+
+# Trusted real-analysis backbone. These facts are the current stdlib interface
+# for density, completeness, logarithms, and basic sqrt behavior. Single-use
+# textbook facts should stay in the source file that needs them unless they
+# become repeated proof patterns.
 know:
     forall x R:
         0 <= x
@@ -76,7 +127,52 @@ know:
     # Every real is the limit of a Cauchy sequence of rationals.  This is the
     # sequence form of rational density used by Cauchy-completion arguments.
     forall x R:
-        exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
+        exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
+
+    # Every real is also the limit of a Cauchy sequence of reals.  This is
+    # trivial by a constant sequence, but exposed as a stable theorem shape.
+    forall x R:
+        exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
+
+    # Sequential completeness of the real line.  This is equivalent to the
+    # least-upper-bound completeness interface above, but kept as a direct
+    # sequence theorem for textbook limit arguments.
+    forall a seq(R):
+        $cauchy(a)
+        =>:
+            $convergent_seq(a)
+
+    # Completeness of the real line in least-upper-bound form.
+    forall E set:
+        $nonempty_subset(E)
+        $has_upper_bound(E)
+        =>:
+            $has_least_upper_bound(E)
+
+    forall E set, s, t R:
+        $is_least_upper_bound(E, s)
+        $is_least_upper_bound(E, t)
+        =>:
+            s = t
+
+    # Supremum approximation: anything below the least upper bound is below
+    # some member of the set. This is the reusable witness form needed for
+    # monotone convergence.
+    forall E set, s R, epsilon R_pos:
+        $is_least_upper_bound(E, s)
+        =>:
+            exist x E st {s - epsilon < x}
+
+    forall E set, s, t R:
+        $is_greatest_lower_bound(E, s)
+        $is_greatest_lower_bound(E, t)
+        =>:
+            s = t
+
+    forall E set, s R, epsilon R_pos:
+        $is_greatest_lower_bound(E, s)
+        =>:
+            exist x E st {x < s + epsilon}
 
     ln(1) = 0
 
@@ -125,5 +221,99 @@ thm exists_rat_between, exists_rat_btwn:
 thm exists_rat_seq_converging_to_real:
     prove:
         forall x R:
-            exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
-    exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
+            exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
+    exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
+
+# Every real has a real-valued Cauchy sequence converging to it.  The intended
+# concrete witness is the constant sequence, but this theorem keeps the std
+# interface independent of sequence-construction proof details for now.
+thm exists_seq_converging_to_real, exists_cauchy_seq_converging_to_real:
+    prove:
+        forall x R:
+            exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
+    exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
+
+# Sequential completeness: every real Cauchy sequence has a real limit.
+thm cauchy_seq_converges, seq_completeness:
+    prove:
+        forall a seq(R):
+            $cauchy(a)
+            =>:
+                $convergent_seq(a)
+    $convergent_seq(a)
+
+# Completeness of R in least-upper-bound form.  This is the standard analysis
+# interface used by Tao-style supremum arguments.
+thm exists_least_upper_bound, supremum_existence:
+    prove:
+        forall E set:
+            $nonempty_subset(E)
+            $has_upper_bound(E)
+            =>:
+                $has_least_upper_bound(E)
+    $has_least_upper_bound(E)
+
+# Least upper bounds are unique because each is an upper bound and each is
+# below every upper bound.
+thm least_upper_bound_unique:
+    prove:
+        forall E set, s, t R:
+            $is_least_upper_bound(E, s)
+            $is_least_upper_bound(E, t)
+            =>:
+                s = t
+    forall M R:
+        $is_upper_bound(E, M)
+        =>:
+            s <= M
+    $is_upper_bound(E, t)
+    s <= t
+    forall M R:
+        $is_upper_bound(E, M)
+        =>:
+            t <= M
+    $is_upper_bound(E, s)
+    t <= s
+    s = t
+
+# Supremum approximation from below: any positive distance below the supremum
+# is crossed by some element of the set.
+thm least_upper_bound_member_above_of_lt:
+    prove:
+        forall E set, s R, epsilon R_pos:
+            $is_least_upper_bound(E, s)
+            =>:
+                exist x E st {s - epsilon < x}
+    exist x E st {s - epsilon < x}
+
+# Greatest lower bounds are unique by the dual argument to supremum uniqueness.
+thm greatest_lower_bound_unique:
+    prove:
+        forall E set, s, t R:
+            $is_greatest_lower_bound(E, s)
+            $is_greatest_lower_bound(E, t)
+            =>:
+                s = t
+    forall M R:
+        $is_lower_bound(E, M)
+        =>:
+            M <= s
+    $is_lower_bound(E, t)
+    t <= s
+    forall M R:
+        $is_lower_bound(E, M)
+        =>:
+            M <= t
+    $is_lower_bound(E, s)
+    s <= t
+    s = t
+
+# Infimum approximation from above: any positive distance above the infimum
+# contains some element of the set.
+thm greatest_lower_bound_member_below_of_lt:
+    prove:
+        forall E set, s R, epsilon R_pos:
+            $is_greatest_lower_bound(E, s)
+            =>:
+                exist x E st {x < s + epsilon}
+    exist x E st {x < s + epsilon}
