@@ -10,3 +10,10 @@ claim:
             =>:
                 a = b or a < b
 
+import Int
+
+claim:
+    prove:
+        forall x R:
+            Int::floor(x) $in R
+    Int::floor(x) $in R

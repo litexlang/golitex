@@ -93,7 +93,6 @@ impl Runtime {
                 self.inst_matrix_list_obj(inner, param_to_arg_map, param_obj_type)
             }
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, param_obj_type),
-            Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map, param_obj_type),
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
@@ -920,15 +919,6 @@ impl Runtime {
             rows.push(inst_row);
         }
         Ok(MatrixListObj::new(rows).into())
-    }
-
-    pub fn inst_choose(
-        &self,
-        choose: &Choose,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_obj_at_index(

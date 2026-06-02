@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### `by axiom_of_choice S` (2026-06)
+
+`by axiom_of_choice S:` runs one local proof section, checks that `S` is a set and every member of `S` is nonempty, then stores `exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}`. This replaces the old special `choose(s)` object constructor with an explicit trusted `by` statement.
+
 ### `by zorn_lemma S from P` (2026-06)
 
 `by zorn_lemma S from P:` runs one local proof section, checks that `S` is nonempty, `P` is a partial order on `S`, and every `P`-chain subset of `S` has an upper bound in `S`, then stores `exist m S st {forall! x S: $P(m, x) => {x = m}}`. This is a trusted `by` statement because Litex does not yet quantify over proposition names as first-class relation objects.

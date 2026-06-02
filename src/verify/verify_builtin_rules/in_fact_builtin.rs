@@ -349,23 +349,6 @@ impl Runtime {
                     set_builder,
                     verify_state,
                 ),
-            (Obj::Choose(choose), where_is_obj) => {
-                let choose_from = choose.set.clone();
-                let equal_fact_verify_result = self.verify_objs_are_equal_known_only(
-                    choose_from.as_ref(),
-                    where_is_obj,
-                    in_fact.line_file.clone(),
-                );
-                if equal_fact_verify_result.is_true() {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            in_fact.clone().into(),
-                            "By ZFC, we can choose an element from a nonempty set whose elements are all nonempty.".to_string(),
-                            Vec::new(),
-                        )).into());
-                } else {
-                    return Ok((StmtUnknown::new()).into());
-                }
-            }
             (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
                 in_fact,
                 list_set,
@@ -375,6 +358,12 @@ impl Runtime {
                 .verify_in_fact_anonymous_fn_signature_matches_fn_set(
                     anon,
                     expected_fn_set,
+                    in_fact,
+                    verify_state,
+                ),
+            (Obj::FnObj(fn_obj), Obj::FnSet(_)) => self
+                .verify_in_fact_fn_application_in_typed_return_set(
+                    fn_obj,
                     in_fact,
                     verify_state,
                 ),
@@ -1055,8 +1044,10 @@ impl Runtime {
         ))
     }
 
-    /// `f(args) $in S` when `S` agrees with the head's typing return set and the application is
-    /// well-defined in the current environment (e.g. domain facts already assumed).
+    /// `f(args) $in S` when the head's declared return set is `S`, or a standard numeric
+    /// subset of `S`, and the application is well-defined in the current environment.
+    /// This also covers function-valued returns, e.g. `seq_add_R(a, b) $in fn(k N_pos) R`.
+    /// Example: if `floor fn(x R) Z`, then `floor(x) $in R` because `Z subset R`.
     fn verify_in_fact_fn_application_in_typed_return_set(
         &mut self,
         fn_obj: &FnObj,
@@ -1077,7 +1068,39 @@ impl Runtime {
         let ret_matches = self
             .verify_objs_are_equal_known_only(target, &typed_ret, in_fact.line_file.clone())
             .is_true();
-        if !ret_matches {
+        let ret_matches_alpha_renamed_fn_set =
+            if let (Obj::FnSet(typed_fn_set), Obj::FnSet(target_fn_set)) = (&typed_ret, target) {
+                let flat_typed =
+                    ParamGroupWithSet::collect_param_names(&typed_fn_set.body.params_def_with_set);
+                let flat_target = ParamGroupWithSet::collect_param_names(
+                    &target_fn_set.body.params_def_with_set,
+                );
+                if flat_typed.len() == flat_target.len() {
+                    let shared_names = self.generate_random_unused_names(flat_typed.len());
+                    let typed_norm = self
+                        .fn_set_alpha_renamed_for_display_compare(
+                            &typed_fn_set.body,
+                            &shared_names,
+                        )?;
+                    let target_norm = self
+                        .fn_set_alpha_renamed_for_display_compare(
+                            &target_fn_set.body,
+                            &shared_names,
+                        )?;
+                    typed_norm.to_string() == target_norm.to_string()
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+        let ret_is_standard_subset = match (&typed_ret, target) {
+            (Obj::StandardSet(ret_set), Obj::StandardSet(target_set)) => {
+                Self::standard_set_is_subset_eq(ret_set, target_set)
+            }
+            _ => false,
+        };
+        if !ret_matches && !ret_matches_alpha_renamed_fn_set && !ret_is_standard_subset {
             return Ok((StmtUnknown::new()).into());
         }
         if self
@@ -1089,7 +1112,7 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "fn application in declared return set (well-defined under typing)".to_string(),
+                "fn application in declared return set or standard numeric superset (well-defined under typing)".to_string(),
                 Vec::new(),
             )
             .into(),

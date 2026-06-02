@@ -1,4 +1,4 @@
-use super::helpers_by_stmt::user_defined_prop_arity;
+use super::helpers_by_stmt::{section_inferred_fact, user_defined_prop_arity};
 use crate::prelude::*;
 
 impl Runtime {
@@ -105,38 +105,6 @@ impl Runtime {
             })?;
 
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
-    }
-}
-
-fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) -> bool {
-    let target = fact.to_string();
-    for result in inside_results.iter() {
-        if stmt_result_inferred_fact(result, &target) {
-            return true;
-        }
-    }
-    false
-}
-
-fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
-    match result {
-        StmtResult::NonFactualStmtSuccess(success) => {
-            success
-                .infers
-                .inferred_facts()
-                .iter()
-                .any(|fact| fact.to_string() == target)
-                || success
-                    .inside_results
-                    .iter()
-                    .any(|inside| stmt_result_inferred_fact(inside, target))
-        }
-        StmtResult::FactualStmtSuccess(success) => success
-            .infers
-            .inferred_facts()
-            .iter()
-            .any(|fact| fact.to_string() == target),
-        StmtResult::StmtUnknown(_) => false,
     }
 }
 

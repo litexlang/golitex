@@ -19,6 +19,17 @@ exist q Q st {1 < q < 2}
 by thm Real::exists_rat_seq_converging_to_real(sqrt(2))
 exist a seq(Q) st {$Real::rat_seq_converges_to_R(a, sqrt(2)), $Real::rat_seq_cauchy_in_R(a)}
 
+by thm Real::exists_R_seq_converging_to_real(sqrt(2))
+exist b seq(R) st {$Real::seq_converges_to_R(b, sqrt(2)), $Real::cauchy_R(b)}
+
+have E set
+know:
+    $Real::nonempty_R_subset(E)
+    $Real::has_upper_bound_R(E)
+
+by thm Real::exists_least_upper_bound_R(E)
+$Real::has_least_upper_bound_R(E)
+
 have z &C::C = (3, 4)
 &C::C{z}.re^2 + &C::C{z}.im^2 = 3^2 + 4^2 = 25
 C::normSq(z) = 25

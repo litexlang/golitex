@@ -1,25 +1,31 @@
-have s set
-abstract_prop leq(x, y)
+import Int
+import Real
 
-by zorn_lemma s from leq:
-    know $is_nonempty_set(s)
-    know:
-        forall x s:
-            $leq(x, x)
-        forall x, y, z s:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y s:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall C power_set(s):
-            forall x, y C:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u s st {forall! x C: {$leq(x, u)}}
+claim:
+    prove:
+        forall x R:
+            exist n Z st {n <= x and x < n + 1}
+    Int::floor(x) $in R
+    by thm Int::floor_bounds(x)
+    Int::floor(x) <= x < Int::floor(x) + 1
+    witness exist n Z st {n <= x and x < n + 1} from Int::floor(x):
+        Int::floor(x) <= x and x < Int::floor(x) + 1
 
-exist m s st {forall! x s: $leq(m, x) => {x = m}}
+have S set
+
+by axiom_of_choice S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+
+by thm Real::exists_R_seq_converging_to_real(sqrt(2))
+exist b seq(R) st {$Real::seq_converges_to_R(b, sqrt(2)), $Real::cauchy_R(b)}
+
+have E set
+know:
+    $Real::nonempty_R_subset(E)
+    $Real::has_upper_bound_R(E)
+
+by thm Real::exists_least_upper_bound_R(E)
+$Real::has_least_upper_bound_R(E)

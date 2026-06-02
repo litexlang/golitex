@@ -872,12 +872,6 @@ fn collect_cited_param_indices_from_obj(
                 );
             }
         }
-        Obj::Choose(x) => collect_cited_param_indices_from_obj(
-            &x.set,
-            previous_param_indices,
-            shadowed_names,
-            out,
-        ),
         Obj::ObjAtIndex(x) => collect_cited_param_indices_from_two_objs(
             &x.obj,
             &x.index,

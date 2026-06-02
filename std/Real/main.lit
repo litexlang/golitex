@@ -48,6 +48,9 @@ prop seq_converges_to_R(a seq(R), x R):
     forall epsilon R_pos:
         exist n0 N_pos st {$seq_tail_close_to_R(a, x, epsilon, n0)}
 
+prop convergent_sequence_R(a seq(R)):
+    exist x R st {$seq_converges_to_R(a, x)}
+
 prop cauchy_tail_R(a seq(R), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
         j >= n0
@@ -58,6 +61,51 @@ prop cauchy_tail_R(a seq(R), epsilon R_pos, n0 N_pos):
 prop cauchy_R(a seq(R)):
     forall epsilon R_pos:
         exist n0 N_pos st {$cauchy_tail_R(a, epsilon, n0)}
+
+prop nonempty_R_subset(E set):
+    $is_nonempty_set(E)
+    E $subset R
+
+prop upper_bound_R(E set, M R):
+    forall x E:
+        x <= M
+
+prop has_upper_bound_R(E set):
+    exist M R st {$upper_bound_R(E, M)}
+
+prop least_upper_bound_R(E set, s R):
+    $upper_bound_R(E, s)
+    forall M R:
+        $upper_bound_R(E, M)
+        =>:
+            s <= M
+
+prop has_least_upper_bound_R(E set):
+    exist s R st {$least_upper_bound_R(E, s)}
+
+prop lower_bound_R(E set, M R):
+    forall x E:
+        M <= x
+
+prop has_lower_bound_R(E set):
+    exist M R st {$lower_bound_R(E, M)}
+
+prop greatest_lower_bound_R(E set, s R):
+    $lower_bound_R(E, s)
+    forall M R:
+        $lower_bound_R(E, M)
+        =>:
+            M <= s
+
+prop has_greatest_lower_bound_R(E set):
+    exist s R st {$greatest_lower_bound_R(E, s)}
+
+prop sequence_range_R(a seq(R), E set):
+    E $subset R
+    forall x E:
+        exist n N_pos st {x = a(n)}
+    forall n N_pos:
+        a(n) $in E
 
 know:
     forall x R:
@@ -77,6 +125,49 @@ know:
     # sequence form of rational density used by Cauchy-completion arguments.
     forall x R:
         exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
+
+    # Every real is also the limit of a Cauchy sequence of reals.  This is
+    # trivial by a constant sequence, but exposed as a stable theorem shape.
+    forall x R:
+        exist a seq(R) st {$seq_converges_to_R(a, x), $cauchy_R(a)}
+
+    # Completeness of the real line in least-upper-bound form.
+    forall E set:
+        $nonempty_R_subset(E)
+        $has_upper_bound_R(E)
+        =>:
+            $has_least_upper_bound_R(E)
+
+    forall E set, s, t R:
+        $least_upper_bound_R(E, s)
+        $least_upper_bound_R(E, t)
+        =>:
+            s = t
+
+    # Supremum approximation: anything below the least upper bound is below
+    # some member of the set. This is the reusable witness form needed for
+    # monotone convergence.
+    forall E set, s R, epsilon R_pos:
+        $least_upper_bound_R(E, s)
+        =>:
+            exist x E st {s - epsilon < x}
+
+    forall E set, s, t R:
+        $greatest_lower_bound_R(E, s)
+        $greatest_lower_bound_R(E, t)
+        =>:
+            s = t
+
+    forall E set, s R, epsilon R_pos:
+        $greatest_lower_bound_R(E, s)
+        =>:
+            exist x E st {x < s + epsilon}
+
+    forall x R:
+        0 < x
+        x < 1
+        =>:
+            $seq_converges_to_R('(n N_pos) R {x^n}, 0)
 
     ln(1) = 0
 
@@ -127,3 +218,90 @@ thm exists_rat_seq_converging_to_real:
         forall x R:
             exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
     exist a seq(Q) st {$rat_seq_converges_to_R(a, x), $rat_seq_cauchy_in_R(a)}
+
+# Every real has a real-valued Cauchy sequence converging to it.  The intended
+# concrete witness is the constant sequence, but this theorem keeps the std
+# interface independent of sequence-construction proof details for now.
+thm exists_R_seq_converging_to_real, exists_cauchy_R_seq_converging_to_real:
+    prove:
+        forall x R:
+            exist a seq(R) st {$seq_converges_to_R(a, x), $cauchy_R(a)}
+    exist a seq(R) st {$seq_converges_to_R(a, x), $cauchy_R(a)}
+
+# Completeness of R in least-upper-bound form.  This is the standard analysis
+# interface used by Tao-style supremum arguments.
+thm exists_least_upper_bound_R, supremum_existence_R:
+    prove:
+        forall E set:
+            $nonempty_R_subset(E)
+            $has_upper_bound_R(E)
+            =>:
+                $has_least_upper_bound_R(E)
+    $has_least_upper_bound_R(E)
+
+thm least_upper_bound_unique_R:
+    prove:
+        forall E set, s, t R:
+            $least_upper_bound_R(E, s)
+            $least_upper_bound_R(E, t)
+            =>:
+                s = t
+    forall M R:
+        $upper_bound_R(E, M)
+        =>:
+            s <= M
+    $upper_bound_R(E, t)
+    s <= t
+    forall M R:
+        $upper_bound_R(E, M)
+        =>:
+            t <= M
+    $upper_bound_R(E, s)
+    t <= s
+    s = t
+
+thm lub_member_above_of_lt_R:
+    prove:
+        forall E set, s R, epsilon R_pos:
+            $least_upper_bound_R(E, s)
+            =>:
+                exist x E st {s - epsilon < x}
+    exist x E st {s - epsilon < x}
+
+thm greatest_lower_bound_unique_R:
+    prove:
+        forall E set, s, t R:
+            $greatest_lower_bound_R(E, s)
+            $greatest_lower_bound_R(E, t)
+            =>:
+                s = t
+    forall M R:
+        $lower_bound_R(E, M)
+        =>:
+            M <= s
+    $lower_bound_R(E, t)
+    t <= s
+    forall M R:
+        $lower_bound_R(E, M)
+        =>:
+            M <= t
+    $lower_bound_R(E, s)
+    s <= t
+    s = t
+
+thm glb_member_below_of_lt_R:
+    prove:
+        forall E set, s R, epsilon R_pos:
+            $greatest_lower_bound_R(E, s)
+            =>:
+                exist x E st {x < s + epsilon}
+    exist x E st {x < s + epsilon}
+
+thm pow_tends_to_zero_of_between_zero_and_one_R:
+    prove:
+        forall x R:
+            0 < x
+            x < 1
+            =>:
+                $seq_converges_to_R('(n N_pos) R {x^n}, 0)
+    $seq_converges_to_R('(n N_pos) R {x^n}, 0)

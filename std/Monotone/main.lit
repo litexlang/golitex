@@ -1,0 +1,106 @@
+# Monotonicity predicates and basic monotone-convergence interfaces.
+#
+# This module keeps order-theoretic vocabulary separate from `Real`, while
+# depending on `Real` for sequence convergence and completeness interfaces.
+
+import Real
+
+prop increasing_on_R(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x <= y
+        =>:
+            f(x) <= f(y)
+
+prop decreasing_on_R(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x <= y
+        =>:
+            f(y) <= f(x)
+
+prop strictly_increasing_on_R(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x < y
+        =>:
+            f(x) < f(y)
+
+prop strictly_decreasing_on_R(S set, f fn(x R) R):
+    forall x, y R:
+        x $in S
+        y $in S
+        x < y
+        =>:
+            f(y) < f(x)
+
+prop monotone_R(f fn(x R) R):
+    forall x, y R:
+        x <= y
+        =>:
+            f(x) <= f(y)
+
+prop antitone_R(f fn(x R) R):
+    forall x, y R:
+        x <= y
+        =>:
+            f(y) <= f(x)
+
+prop increasing_sequence_R(a seq(R)):
+    forall n N_pos:
+        a(n) <= a(n + 1)
+
+prop decreasing_sequence_R(a seq(R)):
+    forall n N_pos:
+        a(n + 1) <= a(n)
+
+prop sequence_upper_bound_R(a seq(R), M R):
+    forall n N_pos:
+        a(n) <= M
+
+prop sequence_lower_bound_R(a seq(R), M R):
+    forall n N_pos:
+        M <= a(n)
+
+prop bounded_above_sequence_R(a seq(R)):
+    exist M R st {$sequence_upper_bound_R(a, M)}
+
+prop bounded_below_sequence_R(a seq(R)):
+    exist M R st {$sequence_lower_bound_R(a, M)}
+
+know:
+    # Monotone convergence for real sequences.  The intended proof takes the
+    # supremum/infimum of the sequence range and uses the approximation
+    # theorem for that extremum.
+    forall a seq(R):
+        $increasing_sequence_R(a)
+        $bounded_above_sequence_R(a)
+        =>:
+            $Real::convergent_sequence_R(a)
+
+    forall a seq(R):
+        $decreasing_sequence_R(a)
+        $bounded_below_sequence_R(a)
+        =>:
+            $Real::convergent_sequence_R(a)
+
+thm increasing_bounded_above_sequence_converges_R, monotone_convergence_increasing_R:
+    prove:
+        forall a seq(R):
+            $increasing_sequence_R(a)
+            $bounded_above_sequence_R(a)
+            =>:
+                $Real::convergent_sequence_R(a)
+    $Real::convergent_sequence_R(a)
+
+thm decreasing_bounded_below_sequence_converges_R, monotone_convergence_decreasing_R:
+    prove:
+        forall a seq(R):
+            $decreasing_sequence_R(a)
+            $bounded_below_sequence_R(a)
+            =>:
+                $Real::convergent_sequence_R(a)
+    $Real::convergent_sequence_R(a)

@@ -195,6 +195,12 @@ impl ByZornLemmaStmt {
     }
 }
 
+impl ByAxiomOfChoiceStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByAxiomOfChoiceStmt".to_string()
+    }
+}
+
 impl ByThmStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByThmStmt".to_string()
