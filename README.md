@@ -53,11 +53,6 @@ Read it as ordinary mathematics: for every real number `x`, if `x = 2`, then
 `x + 1 = 3` and `x^2 = 4`. Litex checks the two conclusions by using the
 assumption `x = 2`, routine rewriting, and arithmetic.
 
-For a side-by-side Lean comparison of this same tiny example, see
-[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean). The short version is
-that Litex asks whether the next fact follows from context, while Lean exposes
-a general proof language.
-
 This is the central idea of Litex: **users write facts; Litex grows a verified
 context**. A Litex file introduces objects, states facts about them, checks
 which facts follow, stores the accepted ones, and makes them available to the
@@ -67,85 +62,54 @@ Litex is not intended to replace any other proof assistant, but to explore a dif
 closer to ordinary mathematical writing, can make it easier for AI systems or human to
 to translate natural-language problems, textbook theorems into checkable formal proofs. *The goal is to make ordinary mathematical reasoning precise enough to be machine-checkable while still preserving the structure and appearance of mathematical reasoning itself.*
 
-
 ## The First Mental Model
 
-Think of a Litex proof as checked mathematical notes.
+Think of a Litex file as a small mathematical world that grows one checked fact
+at a time. You introduce the objects in the world, give yourself vocabulary,
+store general rules, and then ask Litex whether a new fact follows.
+
+A classical syllogism shows the shape:
 
 ```litex
-forall a, b Q:
-    a - b = 4
-    a * b = 1
-    =>:
-        (a + b)^2 = (a - b)^2 + 4 * (a * b) = 4^2 + 4 * 1 = 20
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)
 ```
 
-The last line is a calculation chain. Litex checks each link:
+This says: Socrates is human; every human is mortal; therefore Socrates is
+mortal.
 
-1. the algebraic identity,
-2. the substitutions from `a - b = 4` and `a * b = 1`,
-3. the final arithmetic.
+The four moves are the basic Litex loop:
 
-You do not have to name a special command for each small move. The line exposes
-the mathematical shape, and the checker tries to justify that shape from the
-current context.
+1. `have human nonempty_set, Socrates human` builds a tiny world.
+2. `abstract_prop mortal(x)` adds a new word that can be used in facts.
+3. `know forall x human: ...` stores the general rule.
+4. `$mortal(Socrates)` asks Litex to verify the particular conclusion.
 
-As proofs grow, the same loop continues:
-
-```litex
-forall r, s R:
-    r + 2 * s = -1
-    s = 3
-    =>:
-        r = (r + 2 * s) - 2 * s = -7
-```
-
-The assumptions create a small mathematical world. Inside that world, the final
-fact becomes checkable.
-
-## What You Can Create
-
-Litex is designed to help you build mathematical worlds one verified fact at a
-time.
-
-1. Start with calculations over numbers.
-2. Reuse facts you proved earlier.
-3. Define your own mathematical vocabulary.
-4. Prove properties of functions, sets, relations, and finite structures.
-5. Use the verifier output to see why a line succeeded or where more context is
-   needed.
-
-The online textbook, [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof),
-is the best starting point. It begins with calculation and gradually moves to
-structured proofs, logic, induction, functions, sets, relations, and
-cardinality.
-
-## What the Checker Reports
-
-When Litex accepts a factual line, it can also report why. For example, a line
-may be accepted because it follows from arithmetic, from a previously verified
-fact, or from a matching universal fact.
-
-A simplified output record names the accepted statement and the kind of reason
-Litex found. The exact JSON may include line numbers and more detailed trace
-fields, but the important shape is:
+When Litex accepts that final line, the verifier output can explain the route
+it found. The exact JSON may include line numbers and more trace fields, but
+the important shape is:
 
 ```text
 {
   "result": "success",
   "type": "AtomicFact",
-  "stmt": "x + 1 = 3",
+  "stmt": "$mortal(Socrates)",
   "verified_by": {
-    "type": "known equality and arithmetic"
+    "type": "cite forall fact",
+    "cited_stmt": "forall x human: $mortal(x)"
   }
 }
 ```
 
-The useful part is not only that a line succeeds. The output explains the proof
-route Litex found: a builtin rule, a known fact, a matching `forall`, or an
-inferred consequence. That makes Litex useful as a feedback loop: write the
-next fact, run the checker, read what happened, and add the next piece of
-context.
+The useful part is not only that a line succeeds. The output tells you whether
+the route was arithmetic, a known fact, a matching `forall`, or an inferred
+consequence. That makes Litex a feedback loop: write the next fact, run the
+checker, read what happened, and add the next piece of context.
 
 Every factual statement has exactly one of three outcomes: **true**,
 **unknown**, or **error**. `true` means Litex found a proof path, such as a
@@ -155,10 +119,70 @@ prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
 
+The online textbook, [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof),
+is the best starting point for learning this loop gradually. It begins with
+calculation and then moves to structured proofs, logic, induction, functions,
+sets, relations, and cardinality.
+
 For the full Litex run pipeline, including the executor and fact-verification
 subpath, see [Verifier Flow Examples](docs/Verifier_Flow_Examples.md).
 
 *Litex runs very fast. In one local run, more than 240 runnable examples from [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction) checked in about 13 seconds.*
+
+## How is Litex Different
+
+Litex supports two complementary ways to verify a fact.
+
+The explicit route is `by thm`: give a theorem a name, remember that name, and
+cite it with the required arguments. This is closer to the named-theorem style
+used by Lean and other formal proof systems.
+
+```litex
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+thm all_humans_are_mortal:
+    prove:
+        forall x human:
+            $mortal(x)
+    know $mortal(x)
+
+by thm all_humans_are_mortal(Socrates)
+$mortal(Socrates)
+```
+
+The Lean shape is similar: keep the universal fact under a name, then apply
+that name to the object you need.
+
+```lean
+variable (Human : Type)
+variable (Socrates : Human)
+variable (mortal : Human -> Prop)
+variable (all_humans_are_mortal : forall x : Human, mortal x)
+
+example : mortal Socrates := by
+  exact all_humans_are_mortal Socrates
+```
+
+The Litex-native route is pattern matching against the verified context. Instead
+of naming and citing the theorem, you can leave the universal fact in context
+and write the conclusion directly:
+
+```litex
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)
+```
+
+Here Litex matches `$mortal(Socrates)` against the known `forall`, checks that
+`Socrates human` is already in context, substitutes `x` with `Socrates`, and
+verifies the conclusion. This is the core difference in proof style: Litex can
+use named theorem calls when names make the proof clearer, but it also lets
+ordinary factual lines drive verification by their mathematical shape.
 
 ## Goals of Litex
 
@@ -170,6 +194,13 @@ Litex is experimental, but it is aiming at three simple things:
 be a usable, readable medium for learning, communication, and research, close
 enough to everyday math that students, mathematicians, AI agents, and curious
 readers can benefit from rigor without losing sight of the ideas.
+
+Here is the whole landscape of Litex kernel:
+
+<div align="center">
+  <img src="assets/verifier_flow.png" alt="Litex kernel" width="1000">
+  <p><em>Litex kernel: the core components and their relationships.</em></p>
+</div>
 
 ## Starting Points
 
