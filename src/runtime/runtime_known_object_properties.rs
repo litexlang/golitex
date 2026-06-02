@@ -501,7 +501,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(x.start(), module_names)
         }
         Obj::SeqSet(x) => collect_module_names_from_obj(&x.set, module_names),
-        Obj::Choose(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::ListSet(x) => {
             for obj in x.list.iter() {
                 collect_module_names_from_obj(obj, module_names);

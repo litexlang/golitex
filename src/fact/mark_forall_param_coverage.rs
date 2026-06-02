@@ -309,9 +309,6 @@ fn mark_forall_param_coverage_in_obj(
                 }
             }
         }
-        Obj::Choose(choose) => {
-            mark_forall_param_coverage_in_obj(choose.set.as_ref(), coverage_by_forall_param);
-        }
         Obj::ObjAtIndex(obj_at_index) => {
             mark_forall_param_coverage_in_obj(obj_at_index.obj.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(

@@ -409,15 +409,18 @@ Membership unfolds to real membership and the endpoint bounds. For example, `x $
 
 Some indexed objects use **sequence** types or matrix index domains (repeated indices, `closed_range` on each axis) instead of a single `sum` index. Typical patterns appear with `have fn M(i …, j …) …` (see below).
 
-#### Choice (`choose`)
+#### Choice functions
 
-From a collection of nonempty sets, pick an element from each member once typing guarantees nonemptiness.
+Use `by axiom_of_choice` to assert the existence of a function that picks one element from each member of a family of nonempty sets. Litex no longer has a special `choose(s)` object constructor.
 
 ```litex
-let s nonempty_set:
-    forall x s:
-        $is_nonempty_set(x)
-choose(s) $in s
+have S set
+
+by axiom_of_choice S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 ```
 
 #### Standard number sets
@@ -1771,6 +1774,26 @@ See `examples/01_proof_patterns/by_zorn_lemma.lit`.
 
 ---
 
+### Axiom of choice preview (`by axiom_of_choice`)
+
+Use **`by axiom_of_choice S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
+
+```litex
+have S set
+
+by axiom_of_choice S:
+    know forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+```
+
+This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
+
+See `examples/01_proof_patterns/by_axiom_of_choice.lit`.
+
+---
+
 ### Register a symmetric predicate (`by symmetric_prop`)
 
 Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
@@ -1901,6 +1924,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
 | `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
 | `by zorn_lemma` | Preview trusted Zorn step for binary user-defined order predicates |
+| `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
@@ -1943,22 +1967,24 @@ The exact details depend on the shape of the fact, but this loop is the main men
 
 ### Full Verifier Flow
 
-The complete execution path has three layers: statement dispatch, ordinary or
-verify statement execution, and shared context update. The diagram below shows
-where definitions, proof blocks, `know`, generated obligations, `error`,
-`unknown`, `true`, `verified_by`, and inferred facts fit into one run.
+The complete execution path has three layers: source parsing and global
+statement dispatch, executor or fact-verification/storage execution, and shared
+context update. The diagram below shows where definitions, proof blocks,
+`know`, generated obligations, `error`, `unknown`, `true`, `verified_by`, and
+inferred facts fit into one run.
 
 ![Litex verifier flow](../assets/verifier_flow.png)
 
 Source: [docs/diagrams/verifier_flow.mmd](diagrams/verifier_flow.mmd).
+Detailed examples for each flow node: [Verifier Flow Examples](Verifier_Flow_Examples.md).
 
-Ordinary statements can define objects and concepts, import modules, evaluate
-expressions, or open local proof/control blocks. Verify statements are the
-places where Litex checks facts, goals, theorem clauses, witness obligations,
-or explicit `know` assumptions. After a declaration, verified fact, or
-well-defined `know` assumption is accepted, Litex stores it, updates lookup
-indexes, and runs builtin inference so later statements can reuse the expanded
-context.
+Non-factual executor statements can define objects and concepts, import
+modules, evaluate expressions, or open local proof/control blocks. Some of
+those statements call the fact verifier for proof-required obligations; others
+store well-defined context facts or explicit `know` assumptions without using a
+proof route. After a declaration, verified fact, or accepted context assumption
+is stored, Litex updates lookup indexes and runs builtin inference so later
+statements can reuse the expanded context.
 
 #### A builtin rule proves it
 

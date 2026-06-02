@@ -124,7 +124,6 @@ impl Obj {
                 .objs
                 .iter()
                 .any(|obj| obj.contains_forall_free_param_obj()),
-            Obj::Choose(x) => x.set.contains_forall_free_param_obj(),
             Obj::ObjAtIndex(x) => contains_forall_free_param_obj_in_pair(&x.obj, &x.index),
             Obj::MatrixSet(x) => {
                 x.set.contains_forall_free_param_obj()

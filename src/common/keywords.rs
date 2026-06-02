@@ -46,7 +46,6 @@ pub const SET_DIFF: &str = "set_diff";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
-pub const CHOOSE: &str = "choose";
 pub const FN_LOWER_CASE: &str = "fn";
 /// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
 pub const ANONYMOUS_FN_PREFIX: &str = "'";
@@ -124,6 +123,7 @@ pub const SYMMETRIC_PROP: &str = "symmetric_prop";
 pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
+pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -220,7 +220,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CUP,
         CAP,
         POWER_SET,
-        CHOOSE,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,
@@ -295,6 +294,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         EXTENSION,
         TRANSITIVE_PROP,
         ZORN_LEMMA,
+        AXIOM_OF_CHOICE,
         IMPOSSIBLE,
         TUPLE,
         ALGO,

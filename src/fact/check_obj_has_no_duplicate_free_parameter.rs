@@ -247,11 +247,6 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
-        Obj::Choose(obj) => check_obj_has_no_duplicate_free_parameter(
-            &obj.set,
-            free_param_type,
-            params_already_used,
-        ),
         Obj::ObjAtIndex(obj) => {
             check_two_objs(&obj.obj, &obj.index, free_param_type, params_already_used)
         }

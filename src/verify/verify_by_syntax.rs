@@ -225,10 +225,6 @@ impl Runtime {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Choose(a) => match right {
-                Obj::Choose(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,

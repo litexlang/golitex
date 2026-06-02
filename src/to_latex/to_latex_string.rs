@@ -399,6 +399,22 @@ impl ByZornLemmaStmt {
     }
 }
 
+impl ByAxiomOfChoiceStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by axiom_of_choice}}}} {}",
+            self.family.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
 impl ByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let goals = self
@@ -584,16 +600,6 @@ impl Cup {
             r"\operatorname{{{}}}\left( {}\right)",
             CUP,
             self.left.to_latex_string()
-        )
-    }
-}
-
-impl Choose {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\left( {}\right)",
-            CHOOSE,
-            self.set.to_latex_string()
         )
     }
 }
@@ -2050,7 +2056,6 @@ impl Obj {
             Obj::FiniteSeqSet(x) => x.to_latex_string(),
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
-            Obj::Choose(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
@@ -2120,6 +2125,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::ByZornLemmaStmt(x) => x.to_latex_string(),
+            Stmt::ByAxiomOfChoiceStmt(x) => x.to_latex_string(),
             Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::UseStrategyStmt(x) => latex_texttt_escape(&x.to_string()),

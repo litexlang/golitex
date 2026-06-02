@@ -24,6 +24,38 @@ pub(super) fn user_defined_prop_arity(rt: &Runtime, prop_name: &str) -> Option<u
     None
 }
 
+pub(super) fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) -> bool {
+    let target = fact.to_string();
+    for result in inside_results.iter() {
+        if stmt_result_inferred_fact(result, &target) {
+            return true;
+        }
+    }
+    false
+}
+
+fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
+    match result {
+        StmtResult::NonFactualStmtSuccess(success) => {
+            success
+                .infers
+                .inferred_facts()
+                .iter()
+                .any(|fact| fact.to_string() == target)
+                || success
+                    .inside_results
+                    .iter()
+                    .any(|inside| stmt_result_inferred_fact(inside, target))
+        }
+        StmtResult::FactualStmtSuccess(success) => success
+            .infers
+            .inferred_facts()
+            .iter()
+            .any(|fact| fact.to_string() == target),
+        StmtResult::StmtUnknown(_) => false,
+    }
+}
+
 pub(super) fn or_branches_integer_closed_range_equalities(
     element: Obj,
     closed: &ClosedRange,
