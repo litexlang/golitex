@@ -9,6 +9,7 @@ pub enum Stmt {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveByExistStmt(HaveByExistStmt),
+    HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -373,6 +374,7 @@ impl fmt::Display for Stmt {
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveByExistStmt(x) => write!(f, "{}", x),
+            Stmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
@@ -428,6 +430,7 @@ impl Stmt {
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveByExistStmt(stmt) => stmt.line_file.clone(),
+            Stmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
@@ -481,6 +484,7 @@ impl Stmt {
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveByExistStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
@@ -565,6 +569,12 @@ impl From<HaveObjEqualStmt> for Stmt {
 impl From<HaveByExistStmt> for Stmt {
     fn from(v: HaveByExistStmt) -> Self {
         Stmt::HaveByExistStmt(v)
+    }
+}
+
+impl From<HaveByPreimageStmt> for Stmt {
+    fn from(v: HaveByPreimageStmt) -> Self {
+        Stmt::HaveByPreimageStmt(v)
     }
 }
 

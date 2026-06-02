@@ -138,6 +138,14 @@ pub struct HaveByExistStmt {
     pub line_file: LineFile,
 }
 
+// have by preimage x from z $in fn_range(f)
+#[derive(Clone)]
+pub struct HaveByPreimageStmt {
+    pub preimage_names: Vec<String>,
+    pub range_membership: InFact,
+    pub line_file: LineFile,
+}
+
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
     pub param_def: ParamDefWithType,
@@ -330,6 +338,31 @@ impl fmt::Display for HaveByExistStmt {
             self.exist_fact_in_have_obj_st,
             COLON,
             vec_to_string_join_by_comma(&self.equal_tos),
+        )
+    }
+}
+
+impl HaveByPreimageStmt {
+    pub fn new(preimage_names: Vec<String>, range_membership: InFact, line_file: LineFile) -> Self {
+        HaveByPreimageStmt {
+            preimage_names,
+            range_membership,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for HaveByPreimageStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {}",
+            HAVE,
+            BY,
+            PREIMAGE,
+            vec_to_string_join_by_comma(&self.preimage_names),
+            FROM,
+            self.range_membership,
         )
     }
 }

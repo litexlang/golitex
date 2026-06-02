@@ -11,6 +11,7 @@ impl Runtime {
             }
             Stmt::HaveObjEqualStmt(d) => self.exec_have_obj_equal_stmt(d),
             Stmt::HaveByExistStmt(d) => self.exec_have_exist_obj_stmt(d),
+            Stmt::HaveByPreimageStmt(d) => self.exec_have_by_preimage_stmt(d),
             Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d),
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self.exec_have_fn_equal_case_by_case_stmt(d),
             Stmt::HaveFnByInducStmt(d) => self.exec_have_fn_by_induc_stmt(d),

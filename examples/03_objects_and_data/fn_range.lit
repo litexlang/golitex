@@ -1,0 +1,22 @@
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    fn_range(f) $subset R
+    fn_range(f) $in power_set(R)
+
+    have by preimage x from f(1) $in fn_range(f)
+    x $in R
+    x > 0
+    f(1) = f(x)
+
+prove:
+    have g fn(x R, y R: x < y) R
+
+    g(0, 1) $in fn_range(g)
+
+    have by preimage a, b from g(0, 1) $in fn_range(g)
+    a $in R
+    b $in R
+    a < b
+    g(0, 1) = g(a, b)

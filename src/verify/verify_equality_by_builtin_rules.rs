@@ -77,6 +77,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             .iter()
             .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
         Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::FnRange(r) => obj_expr_mentions_bare_id(r.function.as_ref(), id),
         Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
         Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
         Obj::Proj(p) => {

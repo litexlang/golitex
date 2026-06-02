@@ -913,6 +913,72 @@ impl Runtime {
         Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
     }
 
+    pub fn parse_have_preimage(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(BY)?;
+        tb.skip_token(PREIMAGE)?;
+
+        let mut preimage_names = Vec::new();
+        loop {
+            if tb.current_token_is_equal_to(FROM) {
+                if preimage_names.is_empty() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "have by preimage expects at least one preimage name".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                break;
+            }
+            let name = tb.advance()?;
+            is_valid_litex_name(&name).map_err(|msg| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                ))
+            })?;
+            preimage_names.push(name);
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+            } else if tb.current_token_is_equal_to(FROM) {
+                break;
+            } else {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have by preimage expects `,` or `from` after a preimage name".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        }
+
+        tb.skip_token(FROM)?;
+        let source_fact = self.parse_atomic_fact(tb, true)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unexpected token after have by preimage source fact".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let range_membership = match source_fact {
+            AtomicFact::InFact(in_fact) => in_fact,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have by preimage expects `from z $in fn_range(f)`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+
+        self.register_collected_param_names_for_def_parse(&preimage_names, tb.line_file.clone())?;
+
+        Ok(HaveByPreimageStmt::new(preimage_names, range_membership, tb.line_file.clone()).into())
+    }
+
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;

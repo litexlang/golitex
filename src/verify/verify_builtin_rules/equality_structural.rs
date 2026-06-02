@@ -549,6 +549,15 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::FnRange(l), Obj::FnRange(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.function, &r.function) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Range(l), Obj::Range(r)) => {
                 if self
                     .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])
