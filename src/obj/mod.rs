@@ -21,8 +21,8 @@ pub use free_param_obj::{
     ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj,
 };
 pub use obj::{
-    fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
-    FiniteSeqListObj, FiniteSeqSet, FnObj, InstantiatedTemplateObj, Intersect, IntervalObj,
+    fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, ClosedRange, Count, Cup, Div, FiniteSeqListObj,
+    FiniteSeqSet, FnObj, FnRange, InstantiatedTemplateObj, Intersect, IntervalObj,
     IntervalObjStruct, ListSet, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
     MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, Number, Obj,
     ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,

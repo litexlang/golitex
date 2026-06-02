@@ -11,6 +11,7 @@ impl Runtime {
             }
             Stmt::HaveObjEqualStmt(d) => self.exec_have_obj_equal_stmt(d),
             Stmt::HaveByExistStmt(d) => self.exec_have_exist_obj_stmt(d),
+            Stmt::HaveByPreimageStmt(d) => self.exec_have_by_preimage_stmt(d),
             Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d),
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self.exec_have_fn_equal_case_by_case_stmt(d),
             Stmt::HaveFnByInducStmt(d) => self.exec_have_fn_by_induc_stmt(d),
@@ -48,6 +49,7 @@ impl Runtime {
             Stmt::ByReflexivePropStmt(s) => self.exec_by_reflexive_prop_stmt(s),
             Stmt::ByAntisymmetricPropStmt(s) => self.exec_by_antisymmetric_prop_stmt(s),
             Stmt::ByZornLemmaStmt(s) => self.exec_by_zorn_lemma_stmt(s),
+            Stmt::ByAxiomOfChoiceStmt(s) => self.exec_by_axiom_of_choice_stmt(s),
             Stmt::ByThmStmt(s) => self.exec_by_thm_stmt(s),
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
             Stmt::UseStrategyStmt(s) => self.exec_use_strategy_stmt(s),

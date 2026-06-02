@@ -46,7 +46,6 @@ pub const SET_DIFF: &str = "set_diff";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
-pub const CHOOSE: &str = "choose";
 pub const FN_LOWER_CASE: &str = "fn";
 /// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
 pub const ANONYMOUS_FN_PREFIX: &str = "'";
@@ -63,6 +62,7 @@ pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
+pub const FN_RANGE: &str = "fn_range";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
@@ -124,6 +124,7 @@ pub const SYMMETRIC_PROP: &str = "symmetric_prop";
 pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
+pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -137,6 +138,7 @@ pub const RUN_FILE: &str = "run_file";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
+pub const PREIMAGE: &str = "preimage";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
@@ -220,7 +222,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CUP,
         CAP,
         POWER_SET,
-        CHOOSE,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,
@@ -235,6 +236,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         COUNT,
+        FN_RANGE,
         SUM,
         PRODUCT,
         FINITE_SEQ,
@@ -292,9 +294,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         EVAL,
         FOR,
         WITNESS,
+        PREIMAGE,
         EXTENSION,
         TRANSITIVE_PROP,
         ZORN_LEMMA,
+        AXIOM_OF_CHOICE,
         IMPOSSIBLE,
         TUPLE,
         ALGO,

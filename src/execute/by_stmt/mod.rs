@@ -1,5 +1,6 @@
 //! Execution for `by …` statements (one file per form).
 mod antisymmetric_prop_by_stmt;
+mod axiom_of_choice_by_stmt;
 mod by_fn_and_by_fn_set;
 mod cases_by_stmt;
 mod closed_range_by_stmt;

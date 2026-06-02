@@ -1,0 +1,102 @@
+%% Litex whole-run flow.
+%% Editable asset source for verifier-flow experiments.
+%% Keep labels reader-facing: describe each stage, not Rust function names.
+%% The README PNG can be manually laid out from this structure for readability.
+flowchart TB
+    subgraph source["1. Read The Program"]
+        direction LR
+        input["User input<br/>file, command-line code,<br/>import, or run_file"]
+        session["Start a checking session<br/>load builtin facts/rules<br/>and shared import context"]
+        blocks["Split into statements<br/>respect indentation<br/>and nested proof blocks"]
+        understand["Understand each statement<br/>command, fact,<br/>or assumption"]
+
+        input --> session --> blocks --> understand
+    end
+
+    dispatch["Choose A Path<br/>execute a command,<br/>prove a fact,<br/>or store context"]
+
+    subgraph paths["2. Handle The Statement"]
+        direction LR
+
+        subgraph command_path["2A. Commands Build Context Or Control Proof"]
+            direction TB
+            command_kinds["Command-like statements<br/>definitions, declarations,<br/>theorems, proof commands,<br/>witnesses, algorithms"]
+            command_work["Run the command<br/>bind local variables,<br/>resolve names,<br/>open temporary contexts"]
+            side_checks["Check side conditions<br/>valid domains,<br/>argument membership,<br/>generated obligations"]
+            new_decls["New declarations/context<br/>objects, functions, predicates,<br/>theorems, strategies,<br/>module facts"]
+            command_goals["Generated proof goals<br/>facts that must be proved<br/>before the command succeeds"]
+            command_done["Command succeeds<br/>with nested results<br/>and inferred facts"]
+            command_bad["Command fails<br/>bad input, failed side check,<br/>or unknown required proof step"]
+
+            command_kinds --> command_work --> side_checks
+            side_checks --> new_decls --> command_done
+            side_checks --> command_goals --> command_done
+            side_checks -->|"fails"| command_bad
+        end
+
+        subgraph fact_path["2B. Facts Must Be Proved"]
+            direction TB
+            fact_input["Fact to check<br/>equation, inequality,<br/>membership, logic,<br/>forall, or exists"]
+            meaningful["Check meaning first<br/>objects are valid,<br/>domains fit,<br/>predicates exist"]
+            split_fact["Break complex facts<br/>into smaller obligations<br/>and branches"]
+            search["Try available reasons<br/>calculation, known facts,<br/>definitions, theorem instances,<br/>standard set rules,<br/>equality/order rules,<br/>active strategies"]
+            proved["Proved<br/>Litex records why<br/>in verified_by"]
+            unknown["Unknown<br/>meaningful, but no<br/>available route closed it"]
+            invalid["Invalid/error<br/>not meaningful,<br/>or a required step failed"]
+
+            fact_input --> meaningful --> split_fact --> search
+            search -->|"closed"| proved
+            search -->|"not closed"| unknown
+            meaningful -->|"fails"| invalid
+        end
+
+        subgraph assume_path["2C. Assumptions Store Context"]
+            direction TB
+            assume_input["Assumption-like input<br/>know blocks,<br/>local domain facts,<br/>or caller-checked facts"]
+            assume_check["Check it is meaningful<br/>then store it without<br/>finding a proof route here"]
+            assumed["Stored as context<br/>later proof steps<br/>may depend on it"]
+
+            assume_input --> assume_check --> assumed
+        end
+    end
+
+    subgraph context["3. Grow Reusable Context"]
+        direction LR
+        accepted["Accepted information<br/>declarations, proved facts,<br/>and explicit assumptions"]
+        remember["Remember it<br/>current environment,<br/>modules, definitions,<br/>theorem records"]
+        index["Make it reusable<br/>fact lookup, equalities,<br/>universal facts,<br/>chain consequences"]
+        infer["Add routine consequences<br/>memberships, domain facts,<br/>equality/order consequences"]
+        reuse["Richer context<br/>available to later statements<br/>and nested proof steps"]
+        output["User-visible result<br/>command success,<br/>proved fact, unknown,<br/>or error"]
+
+        accepted --> remember --> index --> infer --> reuse --> output
+    end
+
+    boundary["Trusted Implementation Boundary<br/>parser, meaning checks, builtin proof rules,<br/>storage/indexing, inference, theorem/strategy registration,<br/>and explicit assumptions"]
+
+    understand --> dispatch
+    dispatch --> command_kinds
+    dispatch --> fact_input
+    dispatch --> assume_input
+
+    command_goals -. "prove" .-> fact_input
+    new_decls --> accepted
+    command_done --> output
+    command_bad --> output
+    proved --> accepted
+    assumed --> accepted
+    unknown --> output
+    invalid --> output
+    boundary -. "trusted by every path" .-> dispatch
+
+    classDef input fill:#eef6ff,stroke:#3673b8,color:#10233f;
+    classDef process fill:#f6f7f9,stroke:#79808a,color:#151922;
+    classDef success fill:#e8f7ed,stroke:#348a50,color:#12351d;
+    classDef warn fill:#fff0eb,stroke:#c45b3c,color:#42170d;
+    classDef trusted fill:#f3ecff,stroke:#7a4fc2,color:#25153e;
+
+    class input,session input;
+    class blocks,understand,dispatch,command_kinds,command_work,side_checks,command_goals,fact_input,meaningful,split_fact,search,assume_input,assume_check,remember,index,infer,reuse,output process;
+    class new_decls,command_done,proved,assumed,accepted success;
+    class unknown,invalid,command_bad warn;
+    class boundary trusted;

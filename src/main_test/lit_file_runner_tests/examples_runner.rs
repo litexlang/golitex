@@ -57,8 +57,10 @@ fn run_examples() {
 }
 
 #[test]
-#[ignore = "includes optional examples/_internal/std_imports std-import examples"]
 fn run_examples_include_std() {
+    if !include_std_test_selected_directly("run_examples_include_std") {
+        return;
+    }
     run_with_large_stack("run_examples_include_std_large_stack", || {
         run_examples_impl(true)
     });
@@ -70,8 +72,10 @@ fn run_all() {
 }
 
 #[test]
-#[ignore = "includes optional examples/_internal/std_imports std-import examples"]
 fn run_all_include_std() {
+    if !include_std_test_selected_directly("run_all_include_std") {
+        return;
+    }
     run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
 }
 
@@ -364,4 +368,18 @@ fn run_examples_impl(include_std_examples: bool) {
         doc_durations_ms.as_slice(),
         docs_phase_wall_ms,
     );
+}
+
+fn include_std_test_selected_directly(test_name: &str) -> bool {
+    let full_path_suffix = format!("::{}", test_name);
+    let selected = std::env::args()
+        .skip(1)
+        .any(|arg| arg == test_name || arg.ends_with(&full_path_suffix));
+    if !selected {
+        println!(
+            "--- {} skipped; select it directly with `cargo test {} -- --nocapture` ---",
+            test_name, test_name
+        );
+    }
+    selected
 }

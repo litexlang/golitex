@@ -123,26 +123,18 @@ impl Runtime {
         let path_rc: Rc<str> = Rc::from(path);
         {
             let mut module_manager = self.module_manager.borrow_mut();
-            module_manager.run_file_paths.push(path_rc.clone());
-            module_manager.current_file_index += 1;
+            module_manager.current_source_path_rc = path_rc.clone();
             module_manager.entry_path_rc = path_rc;
         }
         self.push_env();
     }
 
-    /// After `new_file_path_new_env_new_name_scope`, point the current user entry slot at another
-    /// path without pushing more layers (pair with `clear_current_env_and_parse_name_scope`).
+    /// After `new_file_path_new_env_new_name_scope`, point the current user source label at
+    /// another path without pushing more layers (pair with `clear_current_env_and_parse_name_scope`).
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        let idx = self.module_manager.borrow().current_file_index;
-        debug_assert!(
-            idx > FILE_INDEX_FOR_BUILTIN,
-            "set_current_user_lit_file_path requires a prior new_file_path_new_env_new_name_scope"
-        );
         let mut module_manager = self.module_manager.borrow_mut();
-        if let Some(slot) = module_manager.run_file_paths.get_mut(idx) {
-            *slot = path_rc.clone();
-        }
+        module_manager.current_source_path_rc = path_rc.clone();
         module_manager.entry_path_rc = path_rc;
     }
 }
@@ -302,13 +294,11 @@ impl Runtime {
 impl Runtime {
     pub fn new_file_and_update_runtime_with_file_content(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        let mut module_manager = self.module_manager.borrow_mut();
-        module_manager.run_file_paths.push(path_rc.clone());
-        module_manager.current_file_index = module_manager.run_file_paths.len() - 1;
+        self.module_manager.borrow_mut().current_source_path_rc = path_rc;
     }
 
-    pub fn change_file_index_to(&mut self, file_index: usize) {
-        self.module_manager.borrow_mut().current_file_index = file_index;
+    pub fn set_current_source_path_rc(&mut self, path_rc: Rc<str>) {
+        self.module_manager.borrow_mut().current_source_path_rc = path_rc;
     }
 }
 

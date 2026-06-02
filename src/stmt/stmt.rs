@@ -9,6 +9,7 @@ pub enum Stmt {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveByExistStmt(HaveByExistStmt),
+    HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -43,6 +44,7 @@ pub enum Stmt {
     ByReflexivePropStmt(ByReflexivePropStmt),
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
+    ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByThmStmt(ByThmStmt),
     DefThmStmt(DefThmStmt),
     UseStrategyStmt(UseStrategyStmt),
@@ -372,6 +374,7 @@ impl fmt::Display for Stmt {
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveByExistStmt(x) => write!(f, "{}", x),
+            Stmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
@@ -406,6 +409,7 @@ impl fmt::Display for Stmt {
             Stmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
             Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
+            Stmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
             Stmt::ByThmStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
             Stmt::UseStrategyStmt(x) => write!(f, "{}", x),
@@ -426,6 +430,7 @@ impl Stmt {
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveByExistStmt(stmt) => stmt.line_file.clone(),
+            Stmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
@@ -460,6 +465,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByZornLemmaStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByAxiomOfChoiceStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
@@ -478,6 +484,7 @@ impl Stmt {
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveByExistStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
@@ -512,6 +519,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByZornLemmaStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByAxiomOfChoiceStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
@@ -561,6 +569,12 @@ impl From<HaveObjEqualStmt> for Stmt {
 impl From<HaveByExistStmt> for Stmt {
     fn from(v: HaveByExistStmt) -> Self {
         Stmt::HaveByExistStmt(v)
+    }
+}
+
+impl From<HaveByPreimageStmt> for Stmt {
+    fn from(v: HaveByPreimageStmt) -> Self {
+        Stmt::HaveByPreimageStmt(v)
     }
 }
 
@@ -765,6 +779,12 @@ impl From<ByAntisymmetricPropStmt> for Stmt {
 impl From<ByZornLemmaStmt> for Stmt {
     fn from(v: ByZornLemmaStmt) -> Self {
         Stmt::ByZornLemmaStmt(v)
+    }
+}
+
+impl From<ByAxiomOfChoiceStmt> for Stmt {
+    fn from(v: ByAxiomOfChoiceStmt) -> Self {
+        Stmt::ByAxiomOfChoiceStmt(v)
     }
 }
 

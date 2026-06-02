@@ -53,14 +53,20 @@ Read it as ordinary mathematics: for every real number `x`, if `x = 2`, then
 `x + 1 = 3` and `x^2 = 4`. Litex checks the two conclusions by using the
 assumption `x = 2`, routine rewriting, and arithmetic.
 
+For a side-by-side Lean comparison of this same tiny example, see
+[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean). The short version is
+that Litex asks whether the next fact follows from context, while Lean exposes
+a general proof language.
+
 This is the central idea of Litex: **users write facts; Litex grows a verified
 context**. A Litex file introduces objects, states facts about them, checks
 which facts follow, stores the accepted ones, and makes them available to the
 lines that come after.
 
-The goal is not to make proof scripts look clever. The goal is to make ordinary
-mathematical reasoning precise enough that it can be checked while still
-looking like mathematical reasoning.
+Litex is not intended to replace any other proof assistant, but to explore a different path in formal mathematics: whether a smaller and more readable formal language,
+closer to ordinary mathematical writing, can make it easier for AI systems or human to
+to translate natural-language problems, textbook theorems into checkable formal proofs. *The goal is to make ordinary mathematical reasoning precise enough to be machine-checkable while still preserving the structure and appearance of mathematical reasoning itself.*
+
 
 ## The First Mental Model
 
@@ -149,65 +155,10 @@ prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
 
-For the full Litex run pipeline, see the diagram below:
+For the full Litex run pipeline, including the executor and fact-verification
+subpath, see [Verifier Flow Examples](docs/Verifier_Flow_Examples.md).
 
-<div align="center">
-  <img src="assets/verifier_flow.png" alt="Litex verifier flow" width="900">
-  <p><em>Whole-run flow: ordinary statements, verify statements, context update, and trusted boundary.</em></p>
-</div>
-
-Editable source: [docs/diagrams/verifier_flow.mmd](docs/diagrams/verifier_flow.mmd).
-
-## How Litex Is Different
-
-Litex is not trying to be a faster Lean. Lean is a powerful formal mathematics
-ecosystem with a broad library and mature tooling. Litex explores a different
-interface: for textbook-style mathematics and AI repair loops, the user writes
-a sequence of checkable facts, and the checker uses context plus builtin
-relationships to keep the feedback loop short.
-
-The important difference is the default task. Instead of asking the user to
-construct proof terms through a general proof-programming environment, Litex
-asks whether the next mathematical fact follows from the current verified
-context. *In one local run, more than 240 runnable examples from The Mechanics
-of Litex Proof checked in about 13 seconds.*
-
-A tiny example makes the interface difference concrete. In Litex, the user
-writes the facts they want checked:
-
-```litex
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
-        x^2 = 4
-```
-
-One Lean proof of the same elementary facts names the hypothesis, proves the
-two conclusions, and then packages them together:
-
-```lean
-import Mathlib.Tactic
-
-example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
-  have h_add : x + 1 = 3 := by
-    rw [h]
-    norm_num
-  have h_square : x ^ 2 = 4 := by
-    rw [h]
-    norm_num
-  exact ⟨h_add, h_square⟩
-```
-
-The point is not that Lean cannot prove this. It can, and Lean's proof engine
-is much more general. The point is where the default attention goes: Lean asks
-the user to work through a proof language, while Litex lets the user put the
-mathematical facts on the surface and asks the checker to justify them from
-context.
-
-For readers who want the detailed comparison with Lean-style proof writing, see
-[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean) and
-[Research Positioning](https://litexlang.com/doc/Research_Positioning).
+*Litex runs very fast. In one local run, more than 240 runnable examples from [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction) checked in about 13 seconds.*
 
 ## Goals of Litex
 
@@ -215,7 +166,10 @@ Litex is experimental, but it is aiming at three simple things:
 
 1. **Verify AI-generated mathematics.** As generation gets cheaper, checking becomes the bottleneck.
 2. **Support scientific discovery.** Turn verification into a fast loop of trying ideas, repairing arguments, and reusing patterns.
-3. **A formal mathematical language that inspires everyone.** Formal math should not only be backend code for proof-assistant experts; it should also become a medium for ordinary mathematical learning, communication, and research. To make that possible, the language has to be usable, understandable, and close to everyday mathematical expression, so mathematicians, students, AI agents, and curious readers can benefit from formal rigor while still seeing ideas in a form that can inspire their own work.
+3. **A formal mathematical language that inspires everyone.** Formal math should
+be a usable, readable medium for learning, communication, and research, close
+enough to everyday math that students, mathematicians, AI agents, and curious
+readers can benefit from rigor without losing sight of the ideas.
 
 ## Starting Points
 
@@ -241,7 +195,8 @@ For different readers:
 4. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
 5. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
 6. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): for Chinese strategic and project discussions.
-7. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
+7. [How to Contribute](https://litexlang.com/doc/How_To_Contribute): for mathematically trained new contributors who want useful first tasks.
+8. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:
 

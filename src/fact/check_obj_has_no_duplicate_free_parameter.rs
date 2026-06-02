@@ -178,6 +178,11 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::FnRange(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.function,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Sum(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.start,
@@ -247,11 +252,6 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
-        Obj::Choose(obj) => check_obj_has_no_duplicate_free_parameter(
-            &obj.set,
-            free_param_type,
-            params_already_used,
-        ),
         Obj::ObjAtIndex(obj) => {
             check_two_objs(&obj.obj, &obj.index, free_param_type, params_already_used)
         }
