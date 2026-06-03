@@ -59,7 +59,7 @@ of the mathematical surface.
 
 | Area | File | What to look for | Status |
 | --- | --- | --- | --- |
-| Algebra: quotient groups | [`examples/04_structures/group_quotient.lit`](../examples/04_structures/group_quotient.lit) | A group structure, normal subgroups, left cosets, the quotient set `G/H`, and the quotient multiplication interface `(xH)(yH) = (xy)H`. | Checked quotient-set construction and checked quotient-operation interface for normal subgroups. |
+| Algebra: quotient groups | [`examples/04_structures/group_quotient.lit`](../examples/04_structures/group_quotient.lit) | A group structure, normal subgroups, left cosets, the quotient set `G/H`, and the quotient multiplication interface `(xH)(yH) = (xy)H`. | Checked quotient-set construction, checked quotient-operation interface for normal subgroups, and a concrete real-additive-group example modulo `{0}`. |
 | Algebra: presentation skeleton | [`examples/04_structures/group_property.lit`](../examples/04_structures/group_property.lit) | Homomorphisms, isomorphisms, two-generator presentations, normal forms, and cardinality-bound interfaces. | Assumption-backed proof skeleton. The file verifies as an interface, but many group-theory lemmas are explicitly marked by `abstract_prop` or `know`. |
 | Geometry | [`examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit`](../examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit) | Points, lines, planes, primitive incidence/congruence relations, and functions such as `line_of(A, B)` and `plane_of(A, B, C)` introduced from unique existence. | Axiomatic development. The verifier checks use of the stated Hilbert-style axioms; it does not construct a Euclidean model. |
 | Set theory: maximal principles | [`examples/01_proof_patterns/by_zorn_lemma.lit`](../examples/01_proof_patterns/by_zorn_lemma.lit) | A partial order, chain upper-bound condition, and a maximal element obtained through the Zorn interface. | Checked use of a trusted theorem interface. Zorn's lemma itself is part of the trusted background here. |
@@ -81,8 +81,7 @@ macro G "&Group<s>{g}"
 
 prop is_left_coset_with_representative(s nonempty_set, g &Group<s>, h power_set(s), x s, c power_set(s)):
     forall y s:
-        =>:
-            y $in c
+        y $in c
         <=>:
             exist a s st {a $in h, y = @G.op(x, a)}
 
@@ -156,6 +155,36 @@ thm quotient_op_interface_thm:
                 $quotient_product_well_defined(R, g, h, q)
                 $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))
 ```
+
+The file also closes with a concrete checked instance: the additive group on
+`R` modulo the trivial normal subgroup `{0}`. The group object and quotient set
+are introduced as `forall` parameters, not as `let` bindings, and the macro is
+only a readable abbreviation for the explicit structure view:
+
+```text
+$GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
+
+macro RG "&Group<R>{real_add_group}"
+
+claim:
+    prove:
+        forall real_add_group &Group<R>, real_add_quotient power_set(power_set(R)), c1, c2 real_add_quotient:
+            real_add_group = ('R(x){-x}, 'R(x, y){x + y}, 0)
+            real_add_quotient = \group_quotient<R>(real_add_group, {@RG.e})
+            =>:
+                @RG.e = 0
+                $is_normal_subgroup(R, real_add_group, {@RG.e})
+                $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+                $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+                $is_quotient_product_coset(R, real_add_group, {@RG.e}, c1, c2, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e})(c1, c2))
+```
+
+The proof uses the general theorem that `{@G.e}` is a normal subgroup of any
+group, then applies the quotient-operation interface. This keeps the example
+close to the ordinary mathematical reading: in the real additive group, the
+identity subgroup is `{0}`, so the quotient operation is well-defined on
+cosets.
 
 ## What Is Checked
 

@@ -468,3 +468,91 @@ thm quotient_op_interface_thm:
     by thm quotient_product_well_defined_thm(R, g, h, q)
     $quotient_product_well_defined(R, g, h, q)
     $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))
+
+thm identity_subgroup_is_normal:
+    prove:
+        forall s nonempty_set, g &Group<s>:
+            $is_normal_subgroup(s, g, {@G.e})
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    claim:
+        prove:
+            forall a, b s:
+                a $in {@G.e}
+                b $in {@G.e}
+                =>:
+                    @G.op(a, b) $in {@G.e}
+        a = @G.e
+        b = @G.e
+        @G.op(a, b) = @G.op(@G.e, @G.e) = @G.e
+        @G.op(a, b) $in {@G.e}
+    claim:
+        prove:
+            forall a s:
+                a $in {@G.e}
+                =>:
+                    @G.inv(a) $in {@G.e}
+        a = @G.e
+        @G.op(@G.e, @G.inv(@G.e)) = @G.e
+        @G.op(@G.e, @G.inv(@G.e)) = @G.inv(@G.e)
+        @G.inv(a) = @G.inv(@G.e) = @G.e
+        @G.inv(a) $in {@G.e}
+    $is_subgroup(s, g, {@G.e})
+    claim:
+        prove:
+            forall x, a s:
+                a $in {@G.e}
+                =>:
+                    @G.op(@G.op(x, a), @G.inv(x)) $in {@G.e}
+        a = @G.e
+        @G.op(x, a) = @G.op(x, @G.e) = x
+        @G.op(@G.op(x, a), @G.inv(x)) = @G.op(x, @G.inv(x)) = @G.e
+        @G.op(@G.op(x, a), @G.inv(x)) $in {@G.e}
+    $is_normal_subgroup(s, g, {@G.e})
+
+# Example: the quotient operation for the real additive group modulo {0}.
+$GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
+
+macro RG "&Group<R>{real_add_group}"
+
+claim:
+    prove:
+        forall real_add_group &Group<R>, real_add_quotient power_set(power_set(R)):
+            real_add_group = ('R(x){-x}, 'R(x, y){x + y}, 0)
+            real_add_quotient = \group_quotient<R>(real_add_group, {@RG.e})
+            =>:
+                @RG.e = 0
+                $is_normal_subgroup(R, real_add_group, {@RG.e})
+                $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+                $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+                $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+    @RG.e = 0
+    by thm identity_subgroup_is_normal(R, real_add_group)
+    $is_normal_subgroup(R, real_add_group, {@RG.e})
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, \group_quotient<R>(real_add_group, {@RG.e}))
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+    by thm quotient_op_interface_thm(real_add_group, {@RG.e}, real_add_quotient)
+    $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+    $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+
+claim:
+    prove:
+        forall real_add_group &Group<R>, real_add_quotient power_set(power_set(R)), c1, c2 real_add_quotient:
+            real_add_group = ('R(x){-x}, 'R(x, y){x + y}, 0)
+            real_add_quotient = \group_quotient<R>(real_add_group, {@RG.e})
+            =>:
+                @RG.e = 0
+                $is_normal_subgroup(R, real_add_group, {@RG.e})
+                $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+                $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+                $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+                $is_quotient_product_coset(R, real_add_group, {@RG.e}, c1, c2, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e})(c1, c2))
+    @RG.e = 0
+    by thm identity_subgroup_is_normal(R, real_add_group)
+    $is_normal_subgroup(R, real_add_group, {@RG.e})
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, \group_quotient<R>(real_add_group, {@RG.e}))
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+    by thm quotient_op_interface_thm(real_add_group, {@RG.e}, real_add_quotient)
+    $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+    $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+    $is_quotient_product_coset(R, real_add_group, {@RG.e}, c1, c2, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e})(c1, c2))
