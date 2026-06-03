@@ -59,7 +59,7 @@ claim:
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
 
-template group_quotient<s set>:
+template<s set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
@@ -108,7 +108,7 @@ know forall s set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
     =>:
         exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
 
-template quotient_op<s set, q power_set(power_set(s))>:
+template<s set, q power_set(power_set(s))>:
     have fn quotient_op as set:
         forall g &Group<s>, h power_set(s):
             $is_normal_subgroup(s, g, h)

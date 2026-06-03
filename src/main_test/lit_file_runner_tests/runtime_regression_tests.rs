@@ -1965,6 +1965,31 @@ template<s set: s = s>:
 }
 
 #[test]
+fn template_header_rejects_redundant_name() {
+    let source_code = r#"
+template id_on_set<s set>:
+    have id_on_set set = s
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("template_header_rejects_redundant_name");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "template header with redundant name should fail, but succeeded:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("template definition expects `template<...>:`"),
+        "old template header syntax should report the new syntax:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn template_can_use_struct_with_function_valued_fields() {
     let source_code = r#"
 prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):

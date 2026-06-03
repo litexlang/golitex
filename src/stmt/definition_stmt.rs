@@ -124,6 +124,7 @@ pub enum TemplateDefEnum {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    DefLetStmt(DefLetStmt),
     HaveByExistStmt(HaveByExistStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
@@ -360,6 +361,17 @@ impl HaveObjEqualStmt {
     }
 }
 
+impl DefLetStmt {
+    pub fn single_defined_name(&self) -> Option<String> {
+        let names = self.param_def.collect_param_names();
+        if names.len() == 1 {
+            Some(names[0].clone())
+        } else {
+            None
+        }
+    }
+}
+
 impl HaveByExistStmt {
     pub fn new(
         equal_tos: Vec<String>,
@@ -508,6 +520,7 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.single_defined_name(),
+            TemplateDefEnum::DefLetStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveByExistStmt(stmt) => {
                 if stmt.equal_tos.len() == 1 {
                     Some(stmt.equal_tos[0].clone())
@@ -527,6 +540,7 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::DefLetStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveByExistStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
@@ -542,6 +556,7 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::DefLetStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveByExistStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),

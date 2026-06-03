@@ -1,0 +1,5 @@
+template<x R>:
+    let alias R:
+        alias = x
+
+\alias<2> = 2

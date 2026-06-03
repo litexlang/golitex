@@ -158,7 +158,7 @@ Later function parameter domains may now cite earlier parameters, such as `fn(n 
 
 ### Templates (2026-05)
 
-`template<params: dom_facts>:` defines a parameterized family of objects or functions. The template name is the single object or function name defined by the body statement. The typical use case is when you want to define something uniformly for every set `s`, but `s` itself cannot be an ordinary function input because function inputs must range over a concrete domain object, not over a condition like `$is_set(s)`. After instantiation, `\name<args>` materializes the corresponding object or function. For example, `template<s set: $is_nonempty_set(s)>: have fn const_zero(x s) R = 0` can define `\const_zero<s>` on each chosen set `s`, and the instantiated function can be called as `\const_zero<R>(0)`.
+`template<params: dom_facts>:` defines a parameterized family of objects or functions. The template name is the single object or function name defined by the body statement, which may be a `have` definition or a `let` definition. The typical use case is when you want to define something uniformly for every set `s`, but `s` itself cannot be an ordinary function input because function inputs must range over a concrete domain object, not over a condition like `$is_set(s)`. After instantiation, `\name<args>` materializes the corresponding object or function. For example, `template<s set: $is_nonempty_set(s)>: have fn const_zero(x s) R = 0` can define `\const_zero<s>` on each chosen set `s`, and the instantiated function can be called as `\const_zero<R>(0)`.
 
 ### Restriction-only function calls (2026-05)
 
