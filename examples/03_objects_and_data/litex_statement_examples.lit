@@ -257,7 +257,7 @@ prove:
 prove:
     abstract_prop bs(b, c, d)
 
-    struct sq(a set):
+    struct sq<a set>:
         b1 a
         c1 fn(x a) a
         d1 fn(x, y a) a

@@ -866,6 +866,8 @@ impl FnObj {
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
+            FnObjHead::ObjAtIndex(v) => v.to_latex_string(),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => latex_texttt_escape(&v.to_string()),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
             FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),

@@ -158,7 +158,7 @@ Later function parameter domains may now cite earlier parameters, such as `fn(n 
 
 ### Templates (2026-05)
 
-`template name<params: dom_facts>:` defines a parameterized family of objects or functions. The typical use case is when you want to define something uniformly for every set `s`, but `s` itself cannot be an ordinary function input because function inputs must range over a concrete domain object, not over a condition like `$is_set(s)`. After instantiation, `\name<args>` materializes the corresponding object or function. For example, `template const_zero<s set: $is_nonempty_set(s)>: ...` can define a function `\const_zero<s>` on each chosen set `s`, and the instantiated function can be called as `\const_zero<R>(0)`.
+`template<params: dom_facts>:` defines a parameterized family of objects or functions. The template name is the single object or function name defined by the body statement. The typical use case is when you want to define something uniformly for every set `s`, but `s` itself cannot be an ordinary function input because function inputs must range over a concrete domain object, not over a condition like `$is_set(s)`. After instantiation, `\name<args>` materializes the corresponding object or function. For example, `template<s set: $is_nonempty_set(s)>: have fn const_zero(x s) R = 0` can define `\const_zero<s>` on each chosen set `s`, and the instantiated function can be called as `\const_zero<R>(0)`.
 
 ### Restriction-only function calls (2026-05)
 
@@ -198,9 +198,9 @@ These register basic relation properties for user-defined props only, not builti
 
 ### Explicit struct views (2026-05)
 
-Struct usage is being redesigned around explicit views. Bare field access such as `P.x` is not part of the language. A field access must say which struct is being used, such as `&Point{P}.x` or `&Group(R){G}.op`.
+Struct usage is being redesigned around explicit views. Bare field access such as `P.x` is not part of the language. A field access must say which struct is being used, such as `&Point{P}.x` or `&Group<R>{G}.op`.
 
-The intended model is simple: `&Name(args)` is a set object, and `&Name(args){x}.field` is a named projection after proving `x $in &Name(args)`.
+The intended model is simple: `&Name<args>` is a set object, and `&Name<args>{x}.field` is a named projection after proving `x $in &Name<args>`.
 
 ### Design Note: Object Meaning
 
@@ -216,12 +216,12 @@ struct Point:
     y R
 ```
 
-Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `&Group(R)`.
+Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `&Group<R>`.
 
 ```litex
 abstract_prop group_property(s, zero, add, inv)
 
-struct Group(s set):
+struct Group<s set>:
     zero s
     add fn(x, y s) s
     inv fn(x s) s
@@ -233,7 +233,7 @@ The `<=>:` block is still part of the definition record. Its body may refer to f
 
 ## Struct Objects
 
-`&Name(args)` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
+`&Name<args>` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
 
 For example:
 
@@ -252,7 +252,7 @@ For a parameterized struct:
 ```litex
 abstract_prop group_property(s, zero, add, inv)
 
-struct Group(s set):
+struct Group<s set>:
     zero s
     add fn(x, y s) s
     inv fn(x s) s
@@ -260,7 +260,7 @@ struct Group(s set):
         $group_property(s, zero, add, inv)
 ```
 
-`&Group(R)` is read as a named set-builder like:
+`&Group<R>` is read as a named set-builder like:
 
 ```text
 { g $in cart(R, fn(x, y R) R, fn(x R) R) | $group_property(R, g[1], g[2], g[3]) }
@@ -274,7 +274,7 @@ Field access is explicit:
 
 ```text
 &Point{P}.x
-&Group(R){G}.add
+&Group<R>{G}.add
 ```
 
 The prefix says how the object is being viewed. This avoids the ambiguity of bare `P.x`, because the same tuple could be viewed through different struct definitions. A bare field name is not enough: two structs may use the same field name for different tuple positions.
@@ -297,34 +297,34 @@ struct Point2:
 The well-definedness check for:
 
 ```text
-&Group(R){G}.add
+&Group<R>{G}.add
 ```
 
 reduces to proving:
 
 ```text
-G $in &Group(R)
+G $in &Group<R>
 ```
 
-When `G $in &Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access and its corresponding tuple projection belong to the field type, and each `<=>:` fact is instantiated in both forms. One form replaces field names by explicit field accesses, and the other replaces them by tuple projections. When checking tuple membership in a struct object, Litex can use the tuple components directly for the `<=>:` facts.
+When `G $in &Group<R>` is known, Litex also stores the facts carried by the struct view: each explicit field access and its corresponding tuple projection belong to the field type, and each `<=>:` fact is instantiated in both forms. One form replaces field names by explicit field accesses, and the other replaces them by tuple projections. When checking tuple membership in a struct object, Litex can use the tuple components directly for the `<=>:` facts.
 
 Once that membership is available, the field access is only a named form of tuple projection:
 
 ```text
-forall G &Group(R):
-    &Group(R){G}.zero = G[1]
-    &Group(R){G}.add = G[2]
-    &Group(R){G}.inv = G[3]
+forall G &Group<R>:
+    &Group<R>{G}.zero = G[1]
+    &Group<R>{G}.add = G[2]
+    &Group<R>{G}.inv = G[3]
 ```
 
 If a parameter is declared with a struct object, the membership fact is available in the local context:
 
 ```text
-forall G &Group(R):
-    &Group(R){G}.add = &Group(R){G}.add
+forall G &Group<R>:
+    &Group<R>{G}.add = &Group<R>{G}.add
 ```
 
-Here the parameter declaration provides `G $in &Group(R)`, so the field access is well-defined inside the body.
+Here the parameter declaration provides `G $in &Group<R>`, so the field access is well-defined inside the body.
 
 If the explicit view becomes visually heavy, use a macro to keep the proof readable. The macro does not change the meaning; it only abbreviates the required explicit view.
 

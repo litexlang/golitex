@@ -7,7 +7,7 @@ prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
         add(x, inv(x)) = zero
         add(inv(x), x) = zero
 
-struct group(s set):
+struct group<s set>:
     zero s
     add fn(x, y s) s
     inv fn(x s) s

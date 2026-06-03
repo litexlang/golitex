@@ -590,6 +590,17 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
                 collect_module_names_from_obj(obj, module_names);
             }
         }
+        FnObjHead::ObjAtIndex(obj_at_index) => {
+            collect_module_names_from_obj(&obj_at_index.obj, module_names);
+            collect_module_names_from_obj(&obj_at_index.index, module_names);
+        }
+        FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+            collect_module_name_from_atomic_name(&field_access.struct_obj.name, module_names);
+            for param in field_access.struct_obj.params.iter() {
+                collect_module_names_from_obj(param, module_names);
+            }
+            collect_module_names_from_obj(&field_access.obj, module_names);
+        }
         FnObjHead::InstantiatedTemplateObj(template_obj) => {
             collect_module_name_from_atomic_name(&template_obj.template_name, module_names);
             for arg in template_obj.args.iter() {

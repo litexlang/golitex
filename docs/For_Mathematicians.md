@@ -1,3 +1,35 @@
+# For Mathematicians
+
+Litex is not trying to replace Lean. It tests a different hypothesis: that a
+smaller, readable, fact-oriented formal language can make checked mathematics
+cheap enough for students, domain scientists, and AI agents to produce useful
+formal data at scale.
+
+This page is for readers who want to see a mathematical object built in the
+style of ordinary algebra, not only a short arithmetic proof.
+
+## Classic Example: A Quotient Set
+
+The file `examples/04_structures/group_quotient.lit` is a compact quotient-set
+construction for groups. It is a good first serious example because it uses
+several high-level Litex tools in one small development:
+
+1. `struct` builds a parameterized group structure over an arbitrary carrier
+   set.
+2. `template` expresses a family of quotient-set functions indexed by the
+   carrier set.
+3. The construction isolates the quotient-set layer: for any subset `h`, the
+   set of left cosets is a definite object.
+4. The last step uses the set-theoretic definition of function: a `forall ...
+   exist!` theorem is turned into a callable function by `have fn ... as set`.
+
+The checked slice here is the quotient set, defined as the set of left cosets.
+Normality is still defined, but it is not needed for the existence and
+uniqueness of this set. The next classical theorem would put the group
+operation on the quotient and use normality to prove that multiplication of
+cosets is well-defined.
+
+```litex
 # A classic quotient-set construction.
 #
 # This example builds a group as a parameterized struct, defines is_subgroup and
@@ -77,3 +109,35 @@ template group_quotient<s set>:
 # `\group_quotient<R>(g, h)` and immediately recover its defining property.
 forall g &Group<R>, h power_set(R):
     $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))
+```
+
+## The Prompt
+
+This example came from an ordinary GPT/Litex feedback loop: ask for the
+mathematical shape, run the verifier, repair the next smallest issue, and keep
+the checked result. A prompt like this is enough to get a strong first draft:
+
+```text
+In Litex, build a small quotient-set example for groups.
+Define `Group<s set>` with `struct`, then define `is_subgroup` and
+`is_normal_subgroup`. Define `is_left_coset_with_representative`,
+`is_left_coset`, and `is_group_quotient_set` as the set of left cosets.
+
+Prove, without `abstract_prop` or a `know` placeholder, that for every carrier
+set `s`, group `g`, and subset `h power_set(s)`, there exists a unique
+`q power_set(power_set(s))` satisfying `is_group_quotient_set`. Do not use
+`is_normal_subgroup` as a prerequisite for this quotient-set existence theorem;
+normality should be kept as the condition needed later for quotient-group
+multiplication to be well-defined.
+
+Then inside `template group_quotient<s set>:`, use
+`have fn group_quotient as set:` to turn that unique-existence theorem into
+the callable function `\group_quotient<s>(g, h)`.
+
+Keep the file runnable.
+```
+
+The point is not that an AI draft should be trusted. The point is that the
+Litex surface syntax is close enough to the mathematical plan that the draft is
+easy to generate, while the verifier gives a concrete feedback loop for turning
+the draft into checked code.

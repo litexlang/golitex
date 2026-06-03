@@ -31,7 +31,7 @@ prove:
             op(x, e) = x
             op(e, x) = x
 
-    struct Group(s set):
+    struct Group<s set>:
         inv fn(x s) s
         op fn(x, y s) s
         e s
@@ -39,7 +39,7 @@ prove:
             $GroupProperty(s, inv, op, e)
 
     $GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
-    ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group(R)
+    ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
     
 prove:
     struct StandardTwoSimplex:
