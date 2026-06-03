@@ -5,69 +5,77 @@ smaller, readable, fact-oriented formal language can make checked mathematics
 cheap enough for students, domain scientists, and AI agents to produce useful
 formal data at scale.
 
-This page is for readers who want to see a mathematical object built in the
-style of ordinary algebra, not only a short arithmetic proof.
+This page is for mathematicians who want to know whether Litex can express
+ordinary mathematical objects, not only short arithmetic calculations. The
+answer is currently mixed in the useful way: some examples are fully checked;
+some examples are axiomatic interfaces; some examples deliberately expose
+proof debt through `know`, `abstract_prop`, or a trusted theorem interface.
 
-## Classic Example: A Quotient Set
+## Mathematical Surface
 
-The file `examples/04_structures/group_quotient.lit` is a compact quotient-set
-construction for groups. It is a good first serious example because it uses
-several high-level Litex tools in one small development:
+Litex starts from the same two things mathematicians write on a page:
+objects and statements. A file builds a local mathematical world by declaring
+objects, naming predicates, proving claims, and reusing the resulting facts.
 
-1. `struct` builds a parameterized group structure over an arbitrary carrier
-   set.
-2. `template` expresses a family of quotient-set functions indexed by the
-   carrier set.
-3. The construction isolates the quotient-set layer: for any subset `h`, the
-   set of left cosets is a definite object.
-4. The last step uses the set-theoretic definition of function: a `forall ...
-   exist!` theorem is turned into a callable function by `have fn ... as set`.
+| Litex form | Mathematical reading |
+| --- | --- |
+| `S set` | A set. |
+| `x S` | An element `x` of the set `S`. |
+| `S nonempty_set` | A nonempty set, with nonemptiness available to the verifier. |
+| `power_set(S)` | The set of subsets of `S`. |
+| `cart(S, T)` | The Cartesian product `S x T`. |
+| `fn(x S) T` | A function from `S` to `T`. |
+| `fn(i I, j J) R` | An indexed family, such as a matrix entry function. |
+| `prop P(...)` | A reusable mathematical predicate or relation. |
+| `abstract_prop P(...)` | A named primitive relation whose meaning is supplied axiomatically. |
+| `struct Group<s set>` | A structure over a carrier set, with fields and defining properties. |
+| `template` | A parameterized construction, such as a quotient-set function for every carrier. |
+| `forall`, `exist`, `exist!` | Universal, existential, and unique-existence statements. |
+| `claim`, `thm` | A checked local claim or named theorem. |
+| `witness` | The explicit witness for an existential statement. |
+| `know` | A trusted fact or background theorem. It is not a proof step hidden from view; it marks exactly what is being assumed. |
 
-The checked slice here is the quotient set, defined as the set of left cosets.
-Normality is still defined, but it is not needed for the existence and
-uniqueness of this set. The next classical theorem would put the group
-operation on the quotient and use normality to prove that multiplication of
-cosets is well-defined.
+The important design choice is that proofs usually move forward. Instead of
+asking the reader to decode tactic scripts, a Litex proof tends to read as a
+sequence of intermediate facts:
 
-```litex
-# A classic quotient-set construction.
-#
-# This example builds a group as a parameterized struct, defines is_subgroup and
-# is_normal_subgroup predicates, defines left cosets, and then turns a
-# unique-existence theorem into a template-level quotient-set function.
+```text
+have fn f(x R: x > 0) R = x^2
 
-prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
-    forall x, y, z s:
-        op(x, op(y, z)) = op(op(x, y), z)
-    forall x s:
-        op(e, x) = x
-        op(x, e) = x
-    forall x s:
-        op(x, inv(x)) = e
-        op(inv(x), x) = e
+claim $increasing({x R: x > 0}, f):
+    claim forall! x, y R: x > 0, y > 0, x < y => f(x) < f(y):
+        f(y) - f(x) = y^2 - x^2 = (y - x) * (y + x) > 0
+```
 
-struct Group<s set>:
-    inv fn(x s) s
-    op fn(x, y s) s
-    e s
-    <=>:
-        $GroupProperty(s, inv, op, e)
+This is not a claim that the current standard library is as broad as mathlib.
+It is a claim about interface: the first object a mathematician sees is the
+mathematical argument, with assumptions and trusted gaps made explicit.
 
-prop is_subgroup(s set, g &Group<s>, h power_set(s)):
-    &Group<s>{g}.e $in h
-    forall a, b h:
-        &Group<s>{g}.op(a, b) $in h
-    forall a h:
-        &Group<s>{g}.inv(a) $in h
+## Example Gallery
 
-prop is_normal_subgroup(s set, g &Group<s>, h power_set(s)):
-    $is_subgroup(s, g, h)
-    forall x s, a h:
-        &Group<s>{g}.op(&Group<s>{g}.op(x, a), &Group<s>{g}.inv(x)) $in h
+The examples below are meant to be read as artifacts, not screenshots. Each
+file is runnable with the Litex verifier, and each one shows a different part
+of the mathematical surface.
 
-# Normality is not needed to form the quotient set below. It is the condition
-# needed later when defining the group operation on quotient classes.
+| Area | File | What to look for | Status |
+| --- | --- | --- | --- |
+| Algebra: quotient sets | [`examples/04_structures/group_quotient.lit`](../examples/04_structures/group_quotient.lit) | A group structure, subgroups, left cosets, the quotient set `G/H`, and a callable `group_quotient` function built from a unique-existence proof. | Checked quotient-set construction. Normality is defined but quotient-group multiplication is intentionally not included yet. |
+| Algebra: presentation skeleton | [`examples/04_structures/group_property.lit`](../examples/04_structures/group_property.lit) | Homomorphisms, isomorphisms, two-generator presentations, normal forms, and cardinality-bound interfaces. | Assumption-backed proof skeleton. The file verifies as an interface, but many group-theory lemmas are explicitly marked by `abstract_prop` or `know`. |
+| Geometry | [`examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit`](../examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit) | Points, lines, planes, primitive incidence/congruence relations, and functions such as `line_of(A, B)` and `plane_of(A, B, C)` introduced from unique existence. | Axiomatic development. The verifier checks use of the stated Hilbert-style axioms; it does not construct a Euclidean model. |
+| Set theory: maximal principles | [`examples/01_proof_patterns/by_zorn_lemma.lit`](../examples/01_proof_patterns/by_zorn_lemma.lit) | A partial order, chain upper-bound condition, and a maximal element obtained through the Zorn interface. | Checked use of a trusted theorem interface. Zorn's lemma itself is part of the trusted background here. |
+| Linear algebra | [`examples/04_structures/diagonal_matrix.lit`](../examples/04_structures/diagonal_matrix.lit) | An indexed matrix as `fn(i closed_range(1, n), j closed_range(1, n)) R`, plus a proof that a displayed `3 x 3` identity matrix is diagonal. | Checked finite-index example. |
+| Analysis | [`examples/04_structures/monotonicity_of_a_function.lit`](../examples/04_structures/monotonicity_of_a_function.lit) | Monotonicity of `x^2` on positive reals proved by the algebraic identity `y^2 - x^2 = (y - x)(y + x)`. | Checked elementary analysis example. |
+| Analysis interface | [`examples/04_structures/abstract_integral.lit`](../examples/04_structures/abstract_integral.lit) | An abstract integral predicate, integrability, and an additivity theorem exposed as a reusable interface. | Axiomatic interface. Useful for expressing downstream arguments before a full integration library exists. |
+| Countability | [`examples/05_case_studies/exist_N^2_to_N_bijection.lit`](../examples/05_case_studies/exist_N%5E2_to_N_bijection.lit) | Triangular numbers, Cantor pairing, injectivity, surjectivity, and an explicit bijection from `N x N` to `N`. | Checked in the current verifier; relies on arithmetic and induction support. |
+| Number theory | [`examples/05_case_studies/detailed_there_exists_infinite_number_of_prime_numbers.lit`](../examples/05_case_studies/detailed_there_exists_infinite_number_of_prime_numbers.lit) | A Euclid-style proof that beyond every positive integer there is a larger prime, using products and divisibility. | Checked in the current verifier; relies on product and divisibility rules. |
+| Algorithms and number theory | [`examples/05_case_studies/euclid_algorithm.lit`](../examples/05_case_studies/euclid_algorithm.lit) | Recursive quotient/remainder functions, induction on a measure, and Bezout-style extended gcd structure. | Checked larger development, useful for testing recursive definitions and measure induction. |
 
+## A Close-Up: Quotient Sets
+
+The quotient-set example is a good first serious algebra file because it is
+not just a proposition. It constructs a reusable object.
+
+```text
 prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, c power_set(s)):
     forall y s:
         =>:
@@ -75,69 +83,80 @@ prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, 
         <=>:
             exist a h st {y = &Group<s>{g}.op(x, a)}
 
-prop is_left_coset(s set, g &Group<s>, h power_set(s), c power_set(s)):
-    exist x s st {$is_left_coset_with_representative(s, g, h, x, c)}
-
-# This predicate is the graph of the quotient-set construction. The fourth
-# argument `q` is intended to be exactly the set of all left cosets of `h`.
-# In ordinary notation this is the underlying set often written as G/H.
 prop is_group_quotient_set(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
     q = {c power_set(s): $is_left_coset(s, g, h, c)}
+```
 
-# To introduce a real Litex function `group_quotient`, we first prove the
-# set-theoretic function condition: for every input `(s, g, h)`, there exists a
-# unique output `q`. Here the witness is the displayed set builder itself.
-# Uniqueness is easy because any valid `q` must be equal to that same set.
-claim:
-    prove:
-        forall s set, g &Group<s>, h power_set(s):
-            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
-    witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
-        $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
+The file then proves the set-theoretic function condition:
 
-# `have fn ... as set` consumes the `forall ... exist!` theorem above. It is not
-# saying the return type is just `set`; `as set` means "build the function from
-# its set-theoretic graph." The actual return set is read from the witness type
-# in the `exist!`, namely `power_set(power_set(s))`.
+```text
+forall s set, g &Group<s>, h power_set(s):
+    exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+```
+
+After that, Litex can turn the unique-existence theorem into a callable
+function:
+
+```text
 template group_quotient<s set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
-
-# After the template, the function value is the unique witness promised by the
-# graph predicate. This final check is the usable API: callers can write
-# `\group_quotient<R>(g, h)` and immediately recover its defining property.
-forall g &Group<R>, h power_set(R):
-    $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))
 ```
 
-## The Prompt
+This is the pattern mathematicians should look for: define the graph of a
+construction, prove unique existence, and then
+obtain a function with the right defining property.
 
-This example came from an ordinary GPT/Litex feedback loop: ask for the
-mathematical shape, run the verifier, repair the next smallest issue, and keep
-the checked result. A prompt like this is enough to get a strong first draft:
+## What Is Checked
+
+Litex checks that a proof line follows from the current local context,
+definitions, previous claims, imported facts, builtin rules, infer rules, and
+trusted declarations. It also checks well-formedness of objects such as
+functions, set comprehensions, structures, templates, and witnesses.
+
+The current trusted surface is intentionally visible:
+
+1. `know` introduces a trusted theorem, axiom, or temporary proof-debt fact.
+2. `abstract_prop` introduces a primitive predicate whose semantics are not
+   reduced by the verifier.
+3. `by zorn_lemma` and similar interfaces expose a high-level theorem as a
+   trusted rule.
+4. Builtin arithmetic and inference rules are part of the verifier's trusted
+   implementation.
+
+This makes Litex useful for pressure-testing mathematics. If a proof needs a
+missing theorem, the file can still say exactly which theorem is missing, and
+the rest of the argument can remain checkable.
+
+## How To Evaluate The Examples
+
+From the repository root, run a selected file directly:
 
 ```text
-In Litex, build a small quotient-set example for groups.
-Define `Group<s set>` with `struct`, then define `is_subgroup` and
-`is_normal_subgroup`. Define `is_left_coset_with_representative`,
-`is_left_coset`, and `is_group_quotient_set` as the set of left cosets.
-
-Prove, without `abstract_prop` or a `know` placeholder, that for every carrier
-set `s`, group `g`, and subset `h power_set(s)`, there exists a unique
-`q power_set(power_set(s))` satisfying `is_group_quotient_set`. Do not use
-`is_normal_subgroup` as a prerequisite for this quotient-set existence theorem;
-normality should be kept as the condition needed later for quotient-group
-multiplication to be well-defined.
-
-Then inside `template group_quotient<s set>:`, use
-`have fn group_quotient as set:` to turn that unique-existence theorem into
-the callable function `\group_quotient<s>(g, h)`.
-
-Keep the file runnable.
+target/debug/litex -f examples/04_structures/group_quotient.lit
+target/debug/litex -f examples/04_structures/diagonal_matrix.lit
+target/debug/litex -f examples/04_structures/monotonicity_of_a_function.lit
 ```
 
-The point is not that an AI draft should be trusted. The point is that the
-Litex surface syntax is close enough to the mathematical plan that the draft is
-easy to generate, while the verifier gives a concrete feedback loop for turning
-the draft into checked code.
+For a broader pass over examples, use the repository test suite described in
+the setup and contribution docs.
+
+## Coming Next
+
+Good next examples for this page are not marketing examples; they should be
+runnable mathematical files with clear status labels. The natural targets are:
+
+1. simplicial complexes and simplex-like constructions, where the objects are
+   finite sets, faces, boundary maps, and incidence relations;
+2. finite-dimensional linear algebra and optimization, where matrix, vector,
+   convexity, and order statements should remain close to paper mathematics;
+3. real analysis theorem fragments, such as monotone convergence, where the
+   missing least-upper-bound and sequence-limit interfaces can be isolated
+   cleanly;
+4. probability and expectation interfaces, where downstream finance,
+   engineering, and science arguments often need formal reliability before a
+   full measure-theory library is available.
+
+Those examples should appear here only after their files exist and their
+checked, axiomatic, or blocked status is explicit.

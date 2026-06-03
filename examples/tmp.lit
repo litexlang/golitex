@@ -1,8 +1,9 @@
-# A classic quotient-set construction.
+# A classic quotient-set and quotient-operation construction.
 #
-# This example builds a group as a parameterized struct, defines is_subgroup and
-# is_normal_subgroup predicates, defines left cosets, and then turns a
-# unique-existence theorem into a template-level quotient-set function.
+# This example builds a group as a parameterized struct, defines subgroups and
+# left cosets, turns the quotient set into a callable function, and then adds
+# the quotient multiplication interface. The multiplication is the familiar
+# formula `(xH)(yH) = (xy)H`, but it is only well-defined when H is normal.
 
 prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
     forall x, y, z s:
@@ -34,7 +35,7 @@ prop is_normal_subgroup(s set, g &Group<s>, h power_set(s)):
         &Group<s>{g}.op(&Group<s>{g}.op(x, a), &Group<s>{g}.inv(x)) $in h
 
 # Normality is not needed to form the quotient set below. It is the condition
-# needed later when defining the group operation on quotient classes.
+# needed later when defining multiplication on quotient classes.
 
 prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, c power_set(s)):
     forall y s:
@@ -46,16 +47,11 @@ prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, 
 prop is_left_coset(s set, g &Group<s>, h power_set(s), c power_set(s)):
     exist x s st {$is_left_coset_with_representative(s, g, h, x, c)}
 
-# This predicate is the graph of the quotient-set construction. The fourth
-# argument `q` is intended to be exactly the set of all left cosets of `h`.
-# In ordinary notation this is the underlying set often written as G/H.
+# The fourth argument `q` is the set of all left cosets of `h`, usually written
+# as G/H.
 prop is_group_quotient_set(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
     q = {c power_set(s): $is_left_coset(s, g, h, c)}
 
-# To introduce a real Litex function `group_quotient`, we first prove the
-# set-theoretic function condition: for every input `(s, g, h)`, there exists a
-# unique output `q`. Here the witness is the displayed set builder itself.
-# Uniqueness is easy because any valid `q` must be equal to that same set.
 claim:
     prove:
         forall s set, g &Group<s>, h power_set(s):
@@ -63,17 +59,81 @@ claim:
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
 
-# `have fn ... as set` consumes the `forall ... exist!` theorem above. It is not
-# saying the return type is just `set`; `as set` means "build the function from
-# its set-theoretic graph." The actual return set is read from the witness type
-# in the `exist!`, namely `power_set(power_set(s))`.
 template group_quotient<s set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 
-# After the template, the function value is the unique witness promised by the
-# graph predicate. This final check is the usable API: callers can write
-# `\group_quotient<R>(g, h)` and immediately recover its defining property.
+# A quotient multiplication should send `(xH, yH)` to `(xy)H`. The predicate
+# below states that formula without choosing a privileged representative:
+# every pair of representatives for the input cosets gives the output coset.
+prop is_quotient_product_coset(s set, g &Group<s>, h power_set(s), c1 power_set(s), c2 power_set(s), c3 power_set(s)):
+    forall x, y s:
+        $is_left_coset_with_representative(s, g, h, x, c1)
+        $is_left_coset_with_representative(s, g, h, y, c2)
+        =>:
+            $is_left_coset_with_representative(s, g, h, &Group<s>{g}.op(x, y), c3)
+
+# This is the representative-independence obligation. In textbook notation it
+# says that if c1 = xH = x'H and c2 = yH = y'H, then (xy)H = (x'y')H.
+prop quotient_product_well_defined(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
+    forall c1, c2 q, x1, x2, y1, y2 s, out1, out2 q:
+        $is_left_coset_with_representative(s, g, h, x1, c1)
+        $is_left_coset_with_representative(s, g, h, x2, c1)
+        $is_left_coset_with_representative(s, g, h, y1, c2)
+        $is_left_coset_with_representative(s, g, h, y2, c2)
+        $is_left_coset_with_representative(s, g, h, &Group<s>{g}.op(x1, y1), out1)
+        $is_left_coset_with_representative(s, g, h, &Group<s>{g}.op(x2, y2), out2)
+        =>:
+            out1 = out2
+
+prop is_quotient_multiplication(s set, g &Group<s>, h power_set(s), q power_set(power_set(s)), quotient_mul fn(c1, c2 q) q):
+    forall c1, c2 q:
+        $is_quotient_product_coset(s, g, h, c1, c2, quotient_mul(c1, c2))
+
+# Proof debt: the missing algebra lemma is exactly the standard normal-subgroup
+# argument that moves h1 past y by using y^-1 h1 y in H.
+know forall s set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
+    $is_normal_subgroup(s, g, h)
+    $is_group_quotient_set(s, g, h, q)
+    =>:
+        $quotient_product_well_defined(s, g, h, q)
+
+# Proof debt: after the representative-independence lemma, each pair of quotient
+# classes has a unique product class, so Litex may introduce a callable
+# multiplication function.
+know forall s set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
+    $is_normal_subgroup(s, g, h)
+    $is_group_quotient_set(s, g, h, q)
+    =>:
+        exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+
+template quotient_op<s set, q power_set(power_set(s))>:
+    have fn quotient_op as set:
+        forall g &Group<s>, h power_set(s):
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+
+struct QuotientGroup<s set, q power_set(power_set(s))>:
+    base &Group<s>
+    normal_subgroup power_set(s)
+    quotient_mul fn(c1, c2 q) q
+    <=>:
+        $is_normal_subgroup(s, base, normal_subgroup)
+        $is_group_quotient_set(s, base, normal_subgroup, q)
+        $is_quotient_multiplication(s, base, normal_subgroup, q, quotient_mul)
+
 forall g &Group<R>, h power_set(R):
     $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))
+
+# Current Litex requires naming the quotient set `q` before instantiating the
+# quotient-operation template; using `\group_quotient<R>(g, h)` directly as the
+# template argument would make the returned function type depend on `g, h`.
+forall g &Group<R>, h power_set(R), q power_set(power_set(R)):
+    $is_normal_subgroup(R, g, h)
+    $is_group_quotient_set(R, g, h, q)
+    =>:
+        $quotient_product_well_defined(R, g, h, q)
+        $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))

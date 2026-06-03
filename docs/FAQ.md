@@ -233,3 +233,218 @@ not a replacement for them. Those systems expose deeper foundations and much
 larger mature libraries. Litex tests a narrower hypothesis: many ordinary
 mathematical arguments may become cheaper to check if the main proof interface
 is verified context growth through matching and substitution.
+
+## Why does Litex think of proof as context growth?
+
+Litex's proof interface is fact-oriented. A proof is usually written as a
+sequence of mathematical facts. When a fact is verified, Litex stores it in the
+current context, and later facts may use it by matching, substitution, builtin
+rules, or known `forall` instantiation.
+
+For example:
+
+```litex
+have x R = 2
+x + 1 = 3
+```
+
+The second line is not a tactic script. It is the mathematical fact the user
+wants. Litex checks that `x` is known to be `2`, reduces the equality to an
+ordinary numeric calculation, and then stores the new fact. This is the core
+reader experience: write the next useful fact, let the checker explain why it
+follows, then continue from the stronger context.
+
+## Why does Litex distinguish `true`, `unknown`, and `error`?
+
+The three statuses separate three different situations that are easy to
+confuse.
+
+`true` means Litex found a proof route from builtin rules, known facts, known
+`forall` facts, definitions, or other accepted context. `unknown` means the
+statement is meaningful, but Litex did not find enough information to prove it.
+The statement may be false, or it may only need a smaller intermediate step.
+`error` means the statement is not a valid checkable fact yet, for example
+because the syntax is wrong, a name is undeclared, or an expression is not
+well-defined.
+
+This makes the feedback loop more useful. An `unknown` result usually suggests
+"add the missing mathematical fact." An `error` result suggests "fix the
+expression or its domain information before discussing truth."
+
+## Why does Litex check well-definedness before truth?
+
+Litex treats mathematical expressions as meaningful only when their objects,
+domains, and side conditions are justified. This happens before the checker
+tries to prove or disprove the fact.
+
+For example, a function application must have an argument in the function's
+domain, and a division must have a nonzero denominator. If those facts are not
+available, Litex should report a problem with the expression, not merely say
+that the desired equality is `unknown`.
+
+This design matters because many mathematical mistakes are not false theorems
+but ill-formed statements: applying a function outside its domain, using a
+projection from the wrong Cartesian product, or writing an expression with a
+missing side condition. Litex tries to make that distinction explicit.
+
+## Why does Litex have both `claim` and `thm`?
+
+`claim` and `thm` both prove facts, but they have different proof-interface
+roles.
+
+A `claim` is good for short, local, reusable context. After it is proved, its
+fact is available to later lines in the ordinary context. This is useful for
+helper facts that should behave like part of the current mathematical
+environment.
+
+A `thm` is good for important named results whose use should be visible. A
+theorem is stored under a name and used explicitly with `by thm name(args...)`.
+This keeps large, classic, parameter-sensitive, or standard-library results
+from silently becoming background search noise.
+
+The distinction is partly about performance, but mostly about readability.
+When a result is mathematically important, naming the theorem at the use site
+often makes the proof easier to audit.
+
+## Is `know` a proof?
+
+No. `know` is not a proof-producing command. It adds a fact to the current
+context after checking that the statement is meaningful enough to store. Later
+checked facts may depend on it.
+
+This is useful for three narrow purposes:
+
+- introducing background assumptions in a small example;
+- marking exact proof debt while translating or experimenting;
+- temporarily stating a theorem or library fact that should later become a
+  checked `claim`, `thm`, builtin rule, or standard-library result.
+
+The cost is explicit. If a false statement is introduced with `know`, later
+results can inherit that assumption. Serious Litex developments should keep
+remaining `know` facts visible and treat them as assumptions or proof debt, not
+as completed proof.
+
+## Why does Litex infer extra facts after accepting a line?
+
+Some mathematical facts carry routine consequences. Litex stores those
+consequences so the user does not have to restate every projection, membership,
+domain fact, or set-builder condition by hand.
+
+For example, after Litex knows that an object belongs to a struct set, it can
+store facts about the corresponding tuple components and explicit struct-field
+views. After it knows a function object and a valid input, it can use the
+function's domain and return-set information. After it records certain set or
+Cartesian-product facts, it can infer basic membership and projection facts.
+
+This is one reason Litex proofs can stay close to ordinary mathematical prose.
+The user states the meaningful structural fact once, and the checker records
+the small consequences that a human reader would normally keep in mind.
+
+## Why does `have by exist` name witnesses explicitly?
+
+An existential fact says that some object exists. A later proof often needs to
+choose a name for such an object and use its properties. `have by exist` is the
+Litex form of that ordinary mathematical move.
+
+For example:
+
+```litex
+know exist u R st {u > 0, u < 1}
+have by exist v R st {v > 0, v < 1}: w
+w > 0
+```
+
+The first line records an existential fact. The `have by exist` line introduces
+the witness name `w` for a matching existential statement. After that, the
+witness properties are available in the context.
+
+The design keeps the difference clear: the existential statement itself is a
+fact, while the witness name is a local object introduced for the current
+argument.
+
+## What are `fn_range` and `have by preimage` for?
+
+`fn_range(f)` is the set of values reached by a function `f`. If Litex knows
+that a value is in this range, then ordinary mathematics allows us to choose a
+preimage. `have by preimage` turns that move into an explicit proof step.
+
+For example:
+
+```litex
+prove:
+    have f fn(x R: x > 0) R
+
+    f(1) $in fn_range(f)
+    have by preimage x from f(1) $in fn_range(f)
+
+    x $in R
+    x > 0
+    f(1) = f(x)
+```
+
+For multi-argument functions, one preimage name is provided for each function
+parameter. This feature is small but important: it makes "since this value is
+in the range, take a point mapping to it" a checkable, named move rather than
+an implicit jump.
+
+## Why does Litex have `stop import`?
+
+Imports add useful facts, theorems, and proof routes. But a large imported
+module can also make automatic search harder to understand. `stop import Name`
+keeps the module registered while removing it from ordinary automatic
+verification.
+
+This lets users control the active proof environment. A stopped module can
+still be cited explicitly, for example with a named theorem call, but its facts
+do not silently participate in every later search.
+
+The point is not only speed. It is auditability. If a proof depends on a large
+external result, the proof is often clearer when that dependency appears as an
+explicit citation instead of an invisible background match.
+
+## What is `strategy` for?
+
+`strategy` is for proof patterns where the hard part is not the outer
+predicate name, but the internal structure of the object being checked.
+Ordinary `forall` matching is intentionally shallow: it can apply a stored rule
+when the goal shape matches, but it should not blindly search through every
+subexpression of a large object. Deep search would be expensive and hard to
+audit.
+
+This matters for predicates that also serve as practical well-definedness
+interfaces. Suppose `f`, `g`, `h`, and `t` are known to have a property such as
+being differentiable or integrable, and the library knows that this property is
+closed under pointwise addition, subtraction, and multiplication. For a nested
+anonymous function such as:
+
+```text
+'R(x R){f(x) + (g(x) - h(x)) * t(x)}
+```
+
+without a strategy, the user may have to introduce the intermediate pieces by
+hand: first `g - h`, then `(g - h) * t`, then the final sum with `f`. The proof
+is mathematically routine, but the object is syntactically deep.
+
+A `strategy` lets Litex attach a dedicated proof route to the target predicate
+shape, so this kind of structural proof can be handled in a controlled place
+instead of being baked into unrestricted global `forall` search. In other
+words, a strategy is not just "more automation"; it is a scoped way to teach
+Litex how to descend into a particular family of objects when proving a
+particular predicate.
+
+The shape is:
+
+```text
+strategy name:
+    prove:
+        forall parameters:
+            assumptions
+            =>:
+                $target_predicate(...)
+```
+
+After the strategy is registered, Litex can use it when it sees a matching
+predicate goal. The strategy can also be stopped and re-enabled, so this form
+of automation remains local and controllable. In serious files, a strategy
+should be backed by a real checked proof or by clearly marked proof debt, just
+like any other reusable proof route.
