@@ -80,6 +80,28 @@ to belong to several sets. Litex uses the currently verified membership,
 function-space, and set-property facts to decide whether expressions are
 well-defined and whether later facts can be proved.
 
+## What are the boundaries of Litex's type system?
+
+Litex deliberately does not try to be a full dependent type theory in the Lean,
+Coq, or Agda sense. Its surface is closer to set-theoretic ordinary
+mathematics: objects belong to sets, structures are subsets of Cartesian
+products with named views, predicates express properties, and proofs grow a
+verified context of facts.
+
+The design keeps some dependent-looking forms because ordinary mathematics
+needs them. Later parameter domains may depend on earlier parameters, as in
+`fn(c1, c2 q) q`, and `template` supports parameterized families such as
+structures, sequence spaces, and quotient constructions indexed by a carrier
+or by hypotheses. But Litex does not currently expose general dependent return
+types, universe-polymorphic type families, or proof terms as ordinary
+computational data. The choice is pragmatic: the project is testing whether a
+fact-oriented, readable, set-theoretic interface can cover a large amount of
+day-to-day mathematics with a smaller user-facing language.
+
+For a concrete quotient-group construction and a broader mathematical example
+gallery, see the official page:
+https://litexlang.com/doc/For_Mathematicians
+
 ## What is a `struct` in Litex?
 
 A `struct` is not a class or a record object with hidden fields. It is a named
@@ -233,41 +255,6 @@ not a replacement for them. Those systems expose deeper foundations and much
 larger mature libraries. Litex tests a narrower hypothesis: many ordinary
 mathematical arguments may become cheaper to check if the main proof interface
 is verified context growth through matching and substitution.
-
-## Why translate Tao Analysis with Litex builtins instead of rebuilding the foundations?
-
-For Tao Analysis translation, the main target is a verifiable analysis library,
-not a faithful reconstruction of every foundational construction in the book.
-Litex gives users basic mathematical objects such as `N`, `Z`, `Q`, `R`, sets,
-membership, subsets, finite sets, tuples, Cartesian products, functions, order,
-and equality as builtin or standard-library interfaces. Translation work should
-use those interfaces when they express the intended mathematics.
-
-This is a deliberate design choice. Tao's constructions of integers, rationals,
-and reals are mathematically valuable, but they are not the only possible
-constructions of those objects. Different constructions can produce structures
-with the same ordinary relationships needed for analysis. Litex's surface
-language is not organized as a user-visible rebuild from foundational layers;
-it treats those basic objects and relationships as part of the shared
-mathematical background that must be documented, tested, and audited.
-
-The chapter coverage still matters. A Tao-facing definition or theorem should
-remain traceable in the chapter file when it matters for source coverage, and a
-constructive proof route can be kept as a proof sketch, local proof debt, or a
-future standard-library task. But the checked main route should use the
-Litex-native object or theorem when it exists. In Chapters 3-5, this means that
-set axioms, integer/rational constructions, and the Cauchy quotient
-construction of the reals guide proof debt and API design; they do not block
-the main analysis library from using builtin/std `N`, `Z`, `Q`, and `R`.
-
-For Chapter 5 specifically, the intended policy is bridge-only. Litex should
-not build a new first-class quotient/completion type just to mirror Tao's
-construction of the reals. It is enough to keep source-traceable bridge facts:
-rational Cauchy sequences can have formal limits in builtin `R`, every builtin
-real can be represented by such a sequence, and equivalent representatives with
-formal limits determine the same real. Product, reciprocal, and
-bounded-away-from-zero estimates are useful rational Cauchy-sequence algebra
-lemmas, but they are not prerequisites for constructing `R`.
 
 ## Why does Litex think of proof as context growth?
 
