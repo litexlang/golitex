@@ -3,17 +3,14 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_def_template_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TEMPLATE)?;
-        let explicit_template_name = if tb.current_token_is_equal_to(LESS) {
-            None
-        } else {
-            let name = tb.advance()?;
-            is_valid_litex_name(&name).map_err(|msg| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-                ))
-            })?;
-            Some(name)
-        };
+        if !tb.current_token_is_equal_to(LESS) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "template definition expects `template<...>:`; define the template name in the single body `have` or `let` statement".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
 
         let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(LESS)?;
@@ -94,22 +91,7 @@ impl Runtime {
 
             let template_def_stmt = this.parse_template_body_stmt(&mut tb.body[0])?;
             let template_name = match template_def_stmt.defined_name() {
-                Some(name) => {
-                    if let Some(explicit_name) = &explicit_template_name {
-                        if name != *explicit_name {
-                            return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    format!(
-                                        "template body defines `{}`, but template name is `{}`",
-                                        name, explicit_name
-                                    ),
-                                    tb.body[0].line_file.clone(),
-                                ),
-                            )));
-                        }
-                    }
-                    name
-                }
+                Some(name) => name,
                 None => {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1192,6 +1174,7 @@ impl Runtime {
             Stmt::HaveObjByExistFactsStmt(stmt) => {
                 Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
             }
+            Stmt::DefLetStmt(stmt) => Ok(TemplateDefEnum::DefLetStmt(stmt)),
             Stmt::HaveByExistStmt(stmt) => Ok(TemplateDefEnum::HaveByExistStmt(stmt)),
             Stmt::HaveFnEqualStmt(stmt) => Ok(TemplateDefEnum::HaveFnEqualStmt(stmt)),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => {
@@ -1203,7 +1186,8 @@ impl Runtime {
             }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "template body only supports `have` definition statements".to_string(),
+                    "template body only supports `have` and `let` definition statements"
+                        .to_string(),
                     tb.line_file.clone(),
                 ),
             ))),

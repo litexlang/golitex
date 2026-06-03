@@ -100,7 +100,7 @@ After that, Litex can turn the unique-existence theorem into a callable
 quotient-set function:
 
 ```text
-template group_quotient<s nonempty_set>:
+template<s nonempty_set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
@@ -134,7 +134,7 @@ thm quotient_product_well_defined_thm:
 It then uses unique existence to build the quotient multiplication function:
 
 ```text
-template quotient_op<s nonempty_set, q power_set(power_set(s))>:
+template<s nonempty_set, q power_set(power_set(s))>:
     have fn quotient_op as set:
         forall g &Group<s>, h power_set(s):
             $is_normal_subgroup(s, g, h)
@@ -185,6 +185,41 @@ group, then applies the quotient-operation interface. This keeps the example
 close to the ordinary mathematical reading: in the real additive group, the
 identity subgroup is `{0}`, so the quotient operation is well-defined on
 cosets.
+
+### Why This Example Is Typical
+
+This example is typical of Litex's intended mathematical surface. It does not
+start by importing a large algebra library or by locating a prepackaged
+quotient-group API. The file builds the local theory from the same ingredients
+an abstract algebra course would put on the board: group laws, subgroups,
+normal subgroups, left cosets, quotient sets, representative independence, and
+the induced operation on cosets.
+
+The comparison with Lean is therefore not that Litex is more general or has a
+larger library. Lean and Mathlib are far more mature for deep reuse, advanced
+abstractions, and large formalization projects. The difference is the default
+interface. In Lean, a beginner often meets typeclasses, coercions, subtypes,
+quotient constructions, tactic state, and library naming conventions early. In
+this Litex file, the first objects are the mathematical objects themselves:
+`g &Group<s>`, `h power_set(s)`, a predicate saying that `h` is normal, and
+facts saying that the quotient multiplication is well-defined.
+
+The proof style is also different. Litex asks the user to state the facts that
+move the argument forward, then checks them against the current context,
+definitions, builtin rules, and previously proved theorems. The main activity
+is not selecting a tactic that transforms an internal proof state; it is laying
+out the mathematical relationships that a reader already expects. In this
+sense, the file shows the central hypothesis behind Litex: ordinary formal
+mathematics may become cheaper to write when the surface language is close to
+the working memory of the mathematician.
+
+This is especially visible in the final real-additive-group instance. The code
+does not need a separate library theorem saying "the quotient of `R` by `{0}` is
+available." It proves the general identity-subgroup fact in the same file,
+specializes it to the real additive group, and obtains the quotient operation
+through the same interface theorem. That is a small but representative example
+of how Litex can support local mathematical world-building without first asking
+the reader to learn a large type-theoretic API.
 
 ## What Is Checked
 

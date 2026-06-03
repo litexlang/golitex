@@ -1255,7 +1255,7 @@ independence lemmas needed for well-definedness.
 
 <!-- litex:skip-test -->
 ```litex
-template group_quotient<s set>:
+template<s set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
