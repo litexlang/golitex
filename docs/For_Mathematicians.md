@@ -59,7 +59,7 @@ of the mathematical surface.
 
 | Area | File | What to look for | Status |
 | --- | --- | --- | --- |
-| Algebra: quotient sets | [`examples/04_structures/group_quotient.lit`](../examples/04_structures/group_quotient.lit) | A group structure, subgroups, left cosets, the quotient set `G/H`, and a callable `group_quotient` function built from a unique-existence proof. | Checked quotient-set construction. Normality is defined but quotient-group multiplication is intentionally not included yet. |
+| Algebra: quotient groups | [`examples/04_structures/group_quotient.lit`](../examples/04_structures/group_quotient.lit) | A group structure, normal subgroups, left cosets, the quotient set `G/H`, and the quotient multiplication interface `(xH)(yH) = (xy)H`. | Checked quotient-set construction and checked quotient-operation interface for normal subgroups. |
 | Algebra: presentation skeleton | [`examples/04_structures/group_property.lit`](../examples/04_structures/group_property.lit) | Homomorphisms, isomorphisms, two-generator presentations, normal forms, and cardinality-bound interfaces. | Assumption-backed proof skeleton. The file verifies as an interface, but many group-theory lemmas are explicitly marked by `abstract_prop` or `know`. |
 | Geometry | [`examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit`](../examples/05_case_studies/Hilbert_axioms_on_Euclidean_geometry.lit) | Points, lines, planes, primitive incidence/congruence relations, and functions such as `line_of(A, B)` and `plane_of(A, B, C)` introduced from unique existence. | Axiomatic development. The verifier checks use of the stated Hilbert-style axioms; it does not construct a Euclidean model. |
 | Set theory: maximal principles | [`examples/01_proof_patterns/by_zorn_lemma.lit`](../examples/01_proof_patterns/by_zorn_lemma.lit) | A partial order, chain upper-bound condition, and a maximal element obtained through the Zorn interface. | Checked use of a trusted theorem interface. Zorn's lemma itself is part of the trusted background here. |
@@ -70,10 +70,11 @@ of the mathematical surface.
 | Number theory | [`examples/05_case_studies/detailed_there_exists_infinite_number_of_prime_numbers.lit`](../examples/05_case_studies/detailed_there_exists_infinite_number_of_prime_numbers.lit) | A Euclid-style proof that beyond every positive integer there is a larger prime, using products and divisibility. | Checked in the current verifier; relies on product and divisibility rules. |
 | Algorithms and number theory | [`examples/05_case_studies/euclid_algorithm.lit`](../examples/05_case_studies/euclid_algorithm.lit) | Recursive quotient/remainder functions, induction on a measure, and Bezout-style extended gcd structure. | Checked larger development, useful for testing recursive definitions and measure induction. |
 
-## A Close-Up: Quotient Sets
+## A Close-Up: Quotient Groups
 
-The quotient-set example is a good first serious algebra file because it is
-not just a proposition. It constructs a reusable object.
+The quotient-group example is a good first serious algebra file because it is
+not just a proposition. It constructs reusable objects and makes the
+well-definedness obligation visible.
 
 ```text
 prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, c power_set(s)):
@@ -81,7 +82,7 @@ prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, 
         =>:
             y $in c
         <=>:
-            exist a h st {y = &Group<s>{g}.op(x, a)}
+            exist a s st {a $in h, y = &Group<s>{g}.op(x, a)}
 
 prop is_group_quotient_set(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
     q = {c power_set(s): $is_left_coset(s, g, h, c)}
@@ -95,7 +96,7 @@ forall s set, g &Group<s>, h power_set(s):
 ```
 
 After that, Litex can turn the unique-existence theorem into a callable
-function:
+quotient-set function:
 
 ```text
 template group_quotient<s set>:
@@ -105,8 +106,19 @@ template group_quotient<s set>:
 ```
 
 This is the pattern mathematicians should look for: define the graph of a
-construction, prove unique existence, and then
-obtain a function with the right defining property.
+construction, prove unique existence, and then obtain a function with the right
+defining property.
+
+The same file then records the quotient multiplication shape:
+
+```text
+prop is_quotient_multiplication(s set, g &Group<s>, h power_set(s), q power_set(power_set(s)), quotient_mul fn(c1, c2 q) q):
+    forall c1, c2 q:
+        $is_quotient_product_coset(s, g, h, c1, c2, quotient_mul(c1, c2))
+```
+
+The file proves the normal-subgroup representative-independence step, then uses
+unique existence to build the quotient multiplication function.
 
 ## What Is Checked
 

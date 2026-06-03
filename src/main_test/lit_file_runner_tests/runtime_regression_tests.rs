@@ -1258,6 +1258,78 @@ have fn half_power(x R: x >= 0) R = x^(1/2)
 }
 
 #[test]
+fn zero_to_zero_power_uses_natural_exponent_convention() {
+    let source_code = r#"
+0^0 = 1
+eval 0^0
+
+forall a R:
+    a^0 = 1
+
+forall a R, m, n N:
+    a^(m+n) = a^m * a^n
+
+forall a, b R, n N:
+    (a * b)^n = a^n * b^n
+
+forall a Z, n N:
+    a^n $in Z
+
+forall a N, n N:
+    a^n $in N
+
+forall a N_pos, n N:
+    a^n $in N_pos
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zero_to_zero_power_uses_natural_exponent_convention",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"EvalStmt\"") && run_output.contains("\"0 ^ 0 = 1\""),
+        "eval 0^0 should produce 1:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn zero_base_real_power_still_requires_positive_exponent() {
+    let source_code = r#"
+forall x R:
+    0^x = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zero_base_real_power_still_requires_positive_exponent",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "zero_base_real_power_still_requires_positive_exponent should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("base and exponent do not satisfy the pow domain"),
+        "failure should still come from pow domain checking:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn sqrt_core_builtin_rules() {
     run_with_large_stack("sqrt_core_builtin_rules_large_stack", || {
         let source_code = r#"
@@ -1658,10 +1730,10 @@ right $in info(a)
 #[test]
 fn common_power_equalities_and_order_are_builtin() {
     let source_code = r#"
-forall x Q_nz, n, m N:
+forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
-forall x, y Q, n N_pos:
+forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
 forall x Q, n N_pos:
