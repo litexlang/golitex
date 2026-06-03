@@ -25,6 +25,11 @@ know:
         $reduced(q)
         $Nat::Coprime(Int::natAbs(num(q)), den(q))
 
+    forall q Q:
+        q > 0
+        =>:
+            exist p N_pos, d N_pos st {q = p / d}
+
     forall q1, q2 Q:
         num(q1) = num(q2)
         den(q1) = den(q2)
@@ -47,6 +52,15 @@ thm rational_equals_numerator_divided_by_denominator, num_div_den:
                 q = num(q) / den(q)
     den(q) != 0
     q = num(q) / den(q)
+
+# A positive rational can be represented as a ratio of positive natural numbers.
+thm positive_rational_as_positive_natural_ratio, pos_nat_div:
+    prove:
+        forall q Q:
+            q > 0
+            =>:
+                exist p N_pos, d N_pos st {q = p / d}
+    exist p N_pos, d N_pos st {q = p / d}
 
 # Mathlib: Rat.num_den_coprime
 thm numerator_denominator_coprime, num_den_coprime:

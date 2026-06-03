@@ -222,7 +222,7 @@ For different readers:
 
 1. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and evaluation.
 2. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
-3. [For Mathematicians](https://litexlang.com/doc/For_Mathematicians): for a classic left-coset quotient-set example using `struct`, `template`, and unique existence.
+3. [For Mathematicians](https://litexlang.com/doc/For_Mathematicians): for stronger mathematical examples, including quotient sets, axiomatic structures, geometry, Zorn-style existence, linear algebra, and analysis interfaces.
 4. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
 5. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
 6. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
