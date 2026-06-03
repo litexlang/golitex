@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
+use crate::to_latex::to_latex_from_source_after_builtins;
 
 use super::helper::run_with_large_stack;
 
@@ -48,6 +49,25 @@ fn builtin_rules_do_not_call_full_verifier_pipeline() {
         "builtin rules must use restricted known-atomic/builtin helpers, not the full verifier:\n{}",
         violations.join("\n")
     );
+}
+
+#[test]
+fn latex_output_is_fragment_without_default_packages() {
+    let output = to_latex_from_source_after_builtins(
+        "1 = 1",
+        "latex_output_is_fragment_without_default_packages",
+    )
+    .expect("simple Litex source should convert to LaTeX");
+
+    assert!(output.contains(r"\["));
+    assert!(output.contains(r"\]"));
+    assert!(output.contains("1 = 1"));
+    assert!(!output.contains(r"\documentclass{article}"));
+    assert!(!output.contains(r"\begin{document}"));
+    assert!(!output.contains(r"\end{document}"));
+    assert!(!output.contains(r"\paragraph{Stmt 1}"));
+    assert!(!output.contains(r"\usepackage{amsmath}"));
+    assert!(!output.contains(r"\usepackage{amssymb}"));
 }
 
 #[test]
