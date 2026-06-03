@@ -1082,6 +1082,36 @@ fn collect_cited_param_indices_from_fn_head(
                 );
             }
         }
+        FnObjHead::ObjAtIndex(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.obj,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.index,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
+        FnObjHead::ObjAsStructInstanceWithFieldAccess(x) => {
+            for arg in x.struct_obj.params.iter() {
+                collect_cited_param_indices_from_obj(
+                    arg,
+                    previous_param_indices,
+                    shadowed_names,
+                    out,
+                );
+            }
+            collect_cited_param_indices_from_obj(
+                &x.obj,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
         FnObjHead::Induc(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }

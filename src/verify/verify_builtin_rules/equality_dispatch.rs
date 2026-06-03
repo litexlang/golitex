@@ -181,6 +181,10 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_pow_zero_identity(left, right, line_file.clone())? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_one_pow_identity(left, right, line_file.clone())? {
             return Ok(done);
         }

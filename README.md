@@ -222,12 +222,14 @@ For different readers:
 
 1. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and evaluation.
 2. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
-3. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
-4. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
-5. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
-6. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): for Chinese strategic and project discussions.
-7. [How to Contribute](https://litexlang.com/doc/How_To_Contribute): for mathematically trained new contributors who want useful first tasks.
-8. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
+3. [For Mathematicians](https://litexlang.com/doc/For_Mathematicians): for stronger mathematical examples, including quotient sets, axiomatic structures, geometry, Zorn-style existence, linear algebra, and analysis interfaces.
+4. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
+5. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
+6. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
+7. [FAQ](https://litexlang.com/doc/FAQ): for common design and performance questions.
+8. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): for Chinese strategic and project discussions.
+9. [How to Contribute](https://litexlang.com/doc/How_To_Contribute): for mathematically trained new contributors who want useful first tasks.
+10. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:
 

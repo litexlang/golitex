@@ -123,6 +123,8 @@ pub struct DefTemplateStmt {
 pub enum TemplateDefEnum {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
+    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    DefLetStmt(DefLetStmt),
     HaveByExistStmt(HaveByExistStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
@@ -156,6 +158,13 @@ pub struct HaveObjEqualStmt {
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: ParamDefWithType,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct HaveObjByExistFactsStmt {
+    pub param_def: ParamDefWithType,
+    pub facts: Vec<ExistBodyFact>,
     pub line_file: LineFile,
 }
 
@@ -269,6 +278,33 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
     }
 }
 
+impl HaveObjByExistFactsStmt {
+    pub fn new(
+        param_def: ParamDefWithType,
+        facts: Vec<ExistBodyFact>,
+        line_file: LineFile,
+    ) -> Self {
+        HaveObjByExistFactsStmt {
+            param_def,
+            facts,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for HaveObjByExistFactsStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}\n{}",
+            HAVE,
+            self.param_def,
+            COLON,
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)
+        )
+    }
+}
+
 impl HaveObjEqualStmt {
     pub fn new(param_def: ParamDefWithType, objs_equal_to: Vec<Obj>, line_file: LineFile) -> Self {
         HaveObjEqualStmt {
@@ -303,7 +339,29 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
     }
 }
 
+impl HaveObjByExistFactsStmt {
+    pub fn single_defined_name(&self) -> Option<String> {
+        let names = self.param_def.collect_param_names();
+        if names.len() == 1 {
+            Some(names[0].clone())
+        } else {
+            None
+        }
+    }
+}
+
 impl HaveObjEqualStmt {
+    pub fn single_defined_name(&self) -> Option<String> {
+        let names = self.param_def.collect_param_names();
+        if names.len() == 1 {
+            Some(names[0].clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl DefLetStmt {
     pub fn single_defined_name(&self) -> Option<String> {
         let names = self.param_def.collect_param_names();
         if names.len() == 1 {
@@ -461,6 +519,8 @@ impl TemplateDefEnum {
         match self {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.single_defined_name(),
+            TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.single_defined_name(),
+            TemplateDefEnum::DefLetStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveByExistStmt(stmt) => {
                 if stmt.equal_tos.len() == 1 {
                     Some(stmt.equal_tos[0].clone())
@@ -479,6 +539,8 @@ impl TemplateDefEnum {
         match self {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::DefLetStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveByExistStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
@@ -493,6 +555,8 @@ impl fmt::Display for TemplateDefEnum {
         match self {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::DefLetStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveByExistStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
@@ -506,9 +570,8 @@ impl fmt::Display for DefTemplateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}{}{}{}{}\n{}",
+            "{}{}{}{}{}{}\n{}",
             TEMPLATE,
-            self.template_name,
             LESS,
             self.template_arg_def,
             if self.template_arg_dom.is_empty() {

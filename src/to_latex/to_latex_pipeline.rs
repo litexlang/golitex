@@ -1,39 +1,26 @@
 use crate::prelude::*;
 
-fn standalone_latex_document(math_blocks: &[String]) -> String {
-    let mut body = String::new();
+fn latex_fragment(math_blocks: &[String]) -> String {
+    let mut blocks = Vec::new();
     if math_blocks.is_empty() {
-        body.push_str("% No statements parsed.\n");
+        blocks.push("% No statements parsed.".to_string());
     } else {
-        for (i, block) in math_blocks.iter().enumerate() {
+        for block in math_blocks.iter() {
             let t = block.trim();
             if t.is_empty() {
                 continue;
             }
-            body.push_str(&format!(
-                "\\paragraph{{Stmt {}}}\n\\[\n{}\n\\]\n\n",
-                i + 1,
-                t
-            ));
+            blocks.push(format!("\\[\n{}\n\\]", t));
         }
-        if body.trim().is_empty() {
-            body.push_str("% No non-empty LaTeX blocks.\n");
+        if blocks.is_empty() {
+            blocks.push("% No non-empty LaTeX blocks.".to_string());
         }
     }
-    format!(
-        r"\documentclass{{article}}
-\usepackage{{amsmath}}
-\usepackage{{amssymb}}
-\begin{{document}}
-{}
-\end{{document}}
-",
-        body
-    )
+    blocks.join("\n\n")
 }
 
 // Parse-only path: one blank-separated block per top-level stmt via `Stmt::to_latex_string`.
-// Returns a full LaTeX file (preamble + each stmt in display math) ready for pdflatex/lualatex.
+// Returns a LaTeX fragment; callers can embed it in their own document wrapper if needed.
 pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
     let mut tokenizer = Tokenizer::new();
     let current_file_path = runtime.module_manager.borrow().current_file_path_rc();
@@ -43,7 +30,7 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
         let stmt = runtime.parse_stmt(&mut block)?;
         math_blocks.push(stmt.to_latex_string());
     }
-    Ok(standalone_latex_document(&math_blocks))
+    Ok(latex_fragment(&math_blocks))
 }
 
 pub fn to_latex_from_source_after_builtins(

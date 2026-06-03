@@ -242,6 +242,15 @@ claim:
             =>:
                 $Real::has_upper_bound(fn_range(a))
     have by exist M R st {$Monotone::is_seq_upper_bound(a, M)}: M
+    claim:
+        prove:
+            forall x fn_range(a):
+                x <= M
+        have by preimage n from x $in fn_range(a)
+        x = a(n)
+        a(n) <= M
+        x <= M
+    $Real::is_upper_bound(fn_range(a), M)
     witness exist B R st {$Real::is_upper_bound(fn_range(a), B)} from M:
         $Real::is_upper_bound(fn_range(a), M)
     $Real::has_upper_bound(fn_range(a))

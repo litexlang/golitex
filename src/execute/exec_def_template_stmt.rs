@@ -153,6 +153,51 @@ impl Runtime {
                 }
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
             }
+            TemplateDefEnum::HaveObjByExistFactsStmt(s) => {
+                let body =
+                    ExistFactBody::new(s.param_def.clone(), s.facts.clone(), s.line_file.clone())?;
+                let exist_fact = self.inst_exist_fact(
+                    &ExistFactEnum::ExistFact(body),
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                Ok(HaveByExistStmt::new(
+                    vec![instance_name.to_string()],
+                    exist_fact,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            TemplateDefEnum::DefLetStmt(s) => {
+                let param_def = self.inst_single_result_param_def(
+                    &s.param_def,
+                    param_to_arg_map,
+                    instance_name,
+                )?;
+                let defined_name = s.single_defined_name().ok_or_else(|| {
+                    RuntimeError::from(InstantiateRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(
+                            "template `let` body must define exactly one object".to_string(),
+                        ),
+                    ))
+                })?;
+                let mut body_param_to_arg_map = param_to_arg_map.clone();
+                body_param_to_arg_map.insert(
+                    defined_name,
+                    Identifier::new(instance_name.to_string()).into(),
+                );
+                let mut facts = Vec::with_capacity(s.facts.len());
+                for fact in s.facts.iter() {
+                    facts.push(self.inst_fact(
+                        fact,
+                        &body_param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file.clone()),
+                    )?);
+                }
+                Ok(DefLetStmt::new(param_def, facts, line_file.clone()).into())
+            }
             TemplateDefEnum::HaveByExistStmt(s) => {
                 let exist_fact = self.inst_exist_fact(
                     &s.exist_fact_in_have_obj_st,

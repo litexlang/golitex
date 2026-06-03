@@ -306,7 +306,11 @@ fn imported_module_info(
     match import_stmt {
         ImportStmt::ImportRelativePath(stmt) => {
             let module_name = match stmt.as_mod_name.as_ref() {
-                Some(name) => validate_import_module_name(name.clone(), import_stmt)?,
+                Some(name) => {
+                    let module_name = validate_import_module_name(name.clone(), import_stmt)?;
+                    validate_relative_import_alias_not_std_module(&module_name, import_stmt)?;
+                    module_name
+                }
                 None => validate_import_module_name(
                     module_name_from_path(&stmt.path, import_stmt)?,
                     import_stmt,
@@ -349,6 +353,22 @@ fn validate_import_module_name(
         ));
     }
     Ok(name)
+}
+
+fn validate_relative_import_alias_not_std_module(
+    name: &str,
+    import_stmt: &ImportStmt,
+) -> Result<(), RuntimeError> {
+    if std_module_exists(name) {
+        return Err(import_stmt_error(
+            import_stmt,
+            format!(
+                "relative import alias `{}` conflicts with standard-library module `{}`; use a different alias",
+                name, name
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn module_name_from_path(path: &str, import_stmt: &ImportStmt) -> Result<String, RuntimeError> {
@@ -397,6 +417,15 @@ fn validate_import_module_root(
         ));
     }
     Ok(())
+}
+
+fn std_module_exists(module_name: &str) -> bool {
+    for std_root in candidate_std_roots() {
+        if std_root.join(module_name).join("main.lit").is_file() {
+            return true;
+        }
+    }
+    false
 }
 
 fn std_import_paths(module_name: &str) -> (String, String) {
@@ -577,21 +606,42 @@ mod tests {
     }
 
     #[test]
+    fn import_relative_path_alias_matching_std_module_is_rejected() {
+        let path = write_temp_module("relative-import-std-alias", "abstract_prop p(x)");
+        let source_code = format!("import \"{}\" as Nat", path.to_string_lossy());
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+
+        let runtime_error = runtime_error.expect("relative import std alias should fail");
+        let output = format!("{:?}", runtime_error);
+        assert!(
+            output.contains(
+                "relative import alias `Nat` conflicts with standard-library module `Nat`"
+            ),
+            "relative import std alias should report std-name conflict, got: {}",
+            output
+        );
+        assert!(runtime.module_manager.borrow().imported_modules.is_empty());
+    }
+
+    #[test]
     fn import_std_module_without_as_uses_module_name() {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) = run_source_code("import Nat", &mut runtime);
+        let (_, runtime_error) = run_source_code("import Set", &mut runtime);
 
         assert!(runtime_error.is_none());
         let module_manager = runtime.module_manager.borrow();
-        let imported = module_manager.imported_modules.get("Nat").unwrap();
+        let imported = module_manager.imported_modules.get("Set").unwrap();
         assert!(imported.is_std);
         assert_eq!(
             Path::new(imported.absolute_path.as_str())
                 .file_name()
                 .and_then(|name| name.to_str()),
-            Some("Nat")
+            Some("Set")
         );
     }
 

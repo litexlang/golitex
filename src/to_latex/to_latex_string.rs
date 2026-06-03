@@ -866,6 +866,8 @@ impl FnObj {
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
+            FnObjHead::ObjAtIndex(v) => v.to_latex_string(),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => latex_texttt_escape(&v.to_string()),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
             FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
@@ -1142,6 +1144,22 @@ impl HaveObjEqualStmt {
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\mathrm{{have}}\ {}", self.param_def.to_latex_string())
+    }
+}
+
+impl HaveObjByExistFactsStmt {
+    pub fn to_latex_string(&self) -> String {
+        let facts = self
+            .facts
+            .iter()
+            .map(|fact| fact.to_latex_string())
+            .collect::<Vec<_>>()
+            .join(r"; ");
+        format!(
+            r"\mathrm{{have}}\ {} : \left\{{ {} \right\}}",
+            self.param_def.to_latex_string(),
+            facts
+        )
     }
 }
 
@@ -2102,6 +2120,7 @@ impl Stmt {
             Stmt::DefAbstractPropStmt(x) => x.to_latex_string(),
             Stmt::HaveObjInNonemptySetStmt(x) => x.to_latex_string(),
             Stmt::HaveObjEqualStmt(x) => x.to_latex_string(),
+            Stmt::HaveObjByExistFactsStmt(x) => x.to_latex_string(),
             Stmt::HaveByExistStmt(x) => x.to_latex_string(),
             Stmt::HaveByPreimageStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),

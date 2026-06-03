@@ -1,4 +1,9 @@
-forall a Z, m, n N_pos:
+0^0 = 1
+
+forall a R:
+    a^0 = 1
+
+forall a R, m, n N:
     a^(m+n) = a^m * a^n
 
 forall a Z, m, n Z:
@@ -9,6 +14,18 @@ forall a Z, m, n Z:
 
 forall a Z:
     a^1 = a
+
+forall a, b R, n N:
+    (a * b)^n = a^n * b^n
+
+forall a Z, n N:
+    a^n $in Z
+
+forall a N, n N:
+    a^n $in N
+
+forall a N_pos, n N:
+    a^n $in N_pos
 
 forall a R_pos, m R:
     a * a^m = a^(m + 1)
