@@ -397,35 +397,12 @@ impl Runtime {
             let facts_result: Result<Vec<Fact>, RuntimeError> = if tb.exceed_end_of_head() {
                 self.parse_facts_in_body(tb)
             } else {
-                let mut facts = Vec::new();
-                let parse_result = (|| {
-                    loop {
-                        facts.push(self.parse_fact(tb)?);
-                        if tb.exceed_end_of_head() {
-                            break;
-                        }
-                        tb.skip_token(COMMA)?;
-                        if tb.exceed_end_of_head() {
-                            return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "expected fact after comma in inline let statement".to_string(),
-                                    tb.line_file.clone(),
-                                ),
-                            )));
-                        }
-                    }
-                    if !tb.body.is_empty() {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "inline let statement cannot also have an indented body"
-                                    .to_string(),
-                                tb.line_file.clone(),
-                            ),
-                        )));
-                    }
-                    Ok(())
-                })();
-                parse_result.map(|_| facts)
+                Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "`let ...:` facts must be written in an indented body".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )))
             };
             if facts_result.is_err() && !all_param_names.is_empty() {
                 self.parsing_free_param_collection
@@ -445,20 +422,16 @@ impl Runtime {
         Ok(DefLetStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
 
-    // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
+    // return HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, or HaveObjByExistFactsStmt
     pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
-        let mut param_defs: Vec<ParamGroupWithParamType> = vec![];
-        loop {
-            param_defs.push(
-                self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Identifier)?,
-            );
-            match tb.current() {
-                Ok(t) if t == EQUAL => break,
-                Err(_) => break,
-                Ok(_) => {}
-            }
-        }
+        let has_fact_body = self.have_obj_stmt_has_fact_body(tb)?;
+        let binding_kind = if has_fact_body {
+            ParamObjType::Exist
+        } else {
+            ParamObjType::Identifier
+        };
+        let param_defs = self.parse_have_obj_param_defs_until_header_delimiter(tb, binding_kind)?;
         if param_defs.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -469,7 +442,41 @@ impl Runtime {
         }
         let param_defs = ParamDefWithType::new(param_defs);
         let have_param_names = param_defs.collect_param_names();
-        self.register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone())?;
+
+        if has_fact_body {
+            let facts_result = (|| -> Result<Vec<ExistBodyFact>, RuntimeError> {
+                tb.skip_token(COLON)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "`have ...:` facts must be written in an indented body".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                self.parse_exist_body_facts_in_body(tb)
+            })();
+            if !have_param_names.is_empty() {
+                self.parsing_free_param_collection
+                    .end_scope(ParamObjType::Exist, &have_param_names);
+            }
+            let facts = facts_result?;
+            self.register_collected_param_names_for_def_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
+            return Ok(
+                HaveObjByExistFactsStmt::new(param_defs, facts, tb.line_file.clone()).into(),
+            );
+        }
+
+        let register_result = self
+            .register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone());
+        if register_result.is_err() && !have_param_names.is_empty() {
+            self.parsing_free_param_collection
+                .end_scope(ParamObjType::Identifier, &have_param_names);
+        }
+        register_result?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             if !have_param_names.is_empty() {
@@ -492,6 +499,42 @@ impl Runtime {
             let objs_equal_to = objs_result?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
+    }
+
+    fn have_obj_stmt_has_fact_body(&mut self, tb: &TokenBlock) -> Result<bool, RuntimeError> {
+        let mut dry_tb = tb.clone();
+        self.run_in_local_parsing_time_name_scope(|this| {
+            let param_defs = this.parse_have_obj_param_defs_until_header_delimiter(
+                &mut dry_tb,
+                ParamObjType::Identifier,
+            )?;
+            if param_defs.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have expects at least one param type pair".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            Ok(dry_tb.current_token_is_equal_to(COLON))
+        })
+    }
+
+    fn parse_have_obj_param_defs_until_header_delimiter(
+        &mut self,
+        tb: &mut TokenBlock,
+        binding_kind: ParamObjType,
+    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
+        let mut param_defs: Vec<ParamGroupWithParamType> = vec![];
+        loop {
+            match tb.current() {
+                Ok(t) if t == EQUAL || t == COLON => break,
+                Err(_) => break,
+                Ok(_) => {}
+            }
+            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb, binding_kind)?);
+        }
+        Ok(param_defs)
     }
 
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -1124,6 +1167,9 @@ impl Runtime {
                 Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
             }
             Stmt::HaveObjEqualStmt(stmt) => Ok(TemplateDefEnum::HaveObjEqualStmt(stmt)),
+            Stmt::HaveObjByExistFactsStmt(stmt) => {
+                Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
+            }
             Stmt::HaveByExistStmt(stmt) => Ok(TemplateDefEnum::HaveByExistStmt(stmt)),
             Stmt::HaveFnEqualStmt(stmt) => Ok(TemplateDefEnum::HaveFnEqualStmt(stmt)),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => {

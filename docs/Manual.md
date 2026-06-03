@@ -1271,7 +1271,8 @@ let a R:
     a = 1
 a = 1
 
-let b, c R: b < c
+let b, c R:
+    b < c
 
 b < c
 ```

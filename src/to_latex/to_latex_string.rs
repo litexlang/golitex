@@ -1145,6 +1145,22 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
     }
 }
 
+impl HaveObjByExistFactsStmt {
+    pub fn to_latex_string(&self) -> String {
+        let facts = self
+            .facts
+            .iter()
+            .map(|fact| fact.to_latex_string())
+            .collect::<Vec<_>>()
+            .join(r"; ");
+        format!(
+            r"\mathrm{{have}}\ {} : \left\{{ {} \right\}}",
+            self.param_def.to_latex_string(),
+            facts
+        )
+    }
+}
+
 impl Identifier {
     pub fn to_latex_string(&self) -> String {
         latex_local_ident(&self.name)
@@ -2102,6 +2118,7 @@ impl Stmt {
             Stmt::DefAbstractPropStmt(x) => x.to_latex_string(),
             Stmt::HaveObjInNonemptySetStmt(x) => x.to_latex_string(),
             Stmt::HaveObjEqualStmt(x) => x.to_latex_string(),
+            Stmt::HaveObjByExistFactsStmt(x) => x.to_latex_string(),
             Stmt::HaveByExistStmt(x) => x.to_latex_string(),
             Stmt::HaveByPreimageStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),

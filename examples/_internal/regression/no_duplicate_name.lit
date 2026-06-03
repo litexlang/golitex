@@ -1,4 +1,5 @@
-let x R: x = 4
+let x R:
+    x = 4
 x = 4
 
 forall x R_pos:

@@ -153,6 +153,22 @@ impl Runtime {
                 }
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
             }
+            TemplateDefEnum::HaveObjByExistFactsStmt(s) => {
+                let body =
+                    ExistFactBody::new(s.param_def.clone(), s.facts.clone(), s.line_file.clone())?;
+                let exist_fact = self.inst_exist_fact(
+                    &ExistFactEnum::ExistFact(body),
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                Ok(HaveByExistStmt::new(
+                    vec![instance_name.to_string()],
+                    exist_fact,
+                    line_file.clone(),
+                )
+                .into())
+            }
             TemplateDefEnum::HaveByExistStmt(s) => {
                 let exist_fact = self.inst_exist_fact(
                     &s.exist_fact_in_have_obj_st,

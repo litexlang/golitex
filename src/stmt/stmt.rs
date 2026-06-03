@@ -8,6 +8,7 @@ pub enum Stmt {
     DefAbstractPropStmt(DefAbstractPropStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
+    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
     HaveByExistStmt(HaveByExistStmt),
     HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
@@ -373,6 +374,7 @@ impl fmt::Display for Stmt {
             Stmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
+            Stmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
             Stmt::HaveByExistStmt(x) => write!(f, "{}", x),
             Stmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
@@ -429,6 +431,7 @@ impl Stmt {
             Stmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
+            Stmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveByExistStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
@@ -483,6 +486,7 @@ impl Stmt {
             Stmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveByExistStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
@@ -563,6 +567,12 @@ impl From<HaveObjInNonemptySetOrParamTypeStmt> for Stmt {
 impl From<HaveObjEqualStmt> for Stmt {
     fn from(v: HaveObjEqualStmt) -> Self {
         Stmt::HaveObjEqualStmt(v)
+    }
+}
+
+impl From<HaveObjByExistFactsStmt> for Stmt {
+    fn from(v: HaveObjByExistFactsStmt) -> Self {
+        Stmt::HaveObjByExistFactsStmt(v)
     }
 }
 
