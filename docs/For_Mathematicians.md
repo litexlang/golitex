@@ -28,7 +28,7 @@ objects, naming predicates, proving claims, and reusing the resulting facts.
 | `fn(i I, j J) R` | An indexed family, such as a matrix entry function. |
 | `prop P(...)` | A reusable mathematical predicate or relation. |
 | `abstract_prop P(...)` | A named primitive relation whose meaning is supplied axiomatically. |
-| `struct Group<s set>` | A structure over a carrier set, with fields and defining properties. |
+| `struct Group<s nonempty_set>` | A structure over a nonempty carrier set, with fields and defining properties. |
 | `template` | A parameterized construction, such as a quotient-set function for every carrier. |
 | `forall`, `exist`, `exist!` | Universal, existential, and unique-existence statements. |
 | `claim`, `thm` | A checked local claim or named theorem. |
@@ -77,21 +77,23 @@ not just a proposition. It constructs reusable objects and makes the
 well-definedness obligation visible.
 
 ```text
-prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, c power_set(s)):
+macro G "&Group<s>{g}"
+
+prop is_left_coset_with_representative(s nonempty_set, g &Group<s>, h power_set(s), x s, c power_set(s)):
     forall y s:
         =>:
             y $in c
         <=>:
-            exist a s st {a $in h, y = &Group<s>{g}.op(x, a)}
+            exist a s st {a $in h, y = @G.op(x, a)}
 
-prop is_group_quotient_set(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
+prop is_group_quotient_set(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
     q = {c power_set(s): $is_left_coset(s, g, h, c)}
 ```
 
 The file then proves the set-theoretic function condition:
 
 ```text
-forall s set, g &Group<s>, h power_set(s):
+forall s nonempty_set, g &Group<s>, h power_set(s):
     exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 ```
 
@@ -99,7 +101,7 @@ After that, Litex can turn the unique-existence theorem into a callable
 quotient-set function:
 
 ```text
-template group_quotient<s set>:
+template group_quotient<s nonempty_set>:
     have fn group_quotient as set:
         forall g &Group<s>, h power_set(s):
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
@@ -112,13 +114,48 @@ defining property.
 The same file then records the quotient multiplication shape:
 
 ```text
-prop is_quotient_multiplication(s set, g &Group<s>, h power_set(s), q power_set(power_set(s)), quotient_mul fn(c1, c2 q) q):
+prop is_quotient_multiplication(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), quotient_mul fn(c1, c2 q) q):
     forall c1, c2 q:
         $is_quotient_product_coset(s, g, h, c1, c2, quotient_mul(c1, c2))
 ```
 
-The file proves the normal-subgroup representative-independence step, then uses
-unique existence to build the quotient multiplication function.
+The file proves the normal-subgroup representative-independence step as a named
+theorem:
+
+```text
+thm quotient_product_well_defined_thm:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                $quotient_product_well_defined(s, g, h, q)
+```
+
+It then uses unique existence to build the quotient multiplication function:
+
+```text
+template quotient_op<s nonempty_set, q power_set(power_set(s))>:
+    have fn quotient_op as set:
+        forall g &Group<s>, h power_set(s):
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+```
+
+The final interface theorem exposes both facts together for downstream use:
+
+```text
+thm quotient_op_interface_thm:
+    prove:
+        forall g &Group<R>, h power_set(R), q power_set(power_set(R)):
+            $is_normal_subgroup(R, g, h)
+            $is_group_quotient_set(R, g, h, q)
+            =>:
+                $quotient_product_well_defined(R, g, h, q)
+                $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))
+```
 
 ## What Is Checked
 
