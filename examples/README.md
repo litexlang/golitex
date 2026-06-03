@@ -25,9 +25,15 @@ Start with:
 4. [`01_proof_patterns/claim.lit`](01_proof_patterns/claim.lit)
 5. [`01_proof_patterns/thm.lit`](01_proof_patterns/thm.lit)
 6. [`03_objects_and_data/litex_statement_examples.lit`](03_objects_and_data/litex_statement_examples.lit)
+7. [`04_structures/group_quotient.lit`](04_structures/group_quotient.lit)
 
 Then browse by topic. Most files are intentionally small; the goal is to show a
 single proof pattern or language feature in a runnable form.
+
+For a first serious algebra example, `04_structures/group_quotient.lit` combines
+`struct`, `template`, `forall ... exist!`, and `have fn ... as set` to build the
+left-coset quotient set. It also records the `is_normal_subgroup` predicate as
+the condition needed later for quotient-group multiplication to be well-defined.
 
 ## Testing
 

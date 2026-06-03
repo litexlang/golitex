@@ -339,7 +339,6 @@ pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INFC;
-pub use crate::common::keywords::INFIX_FN_NAME_SIGN;
 pub use crate::common::keywords::INFO;
 pub use crate::common::keywords::INJECTIVE;
 pub use crate::common::keywords::INTERSECT;

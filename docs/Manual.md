@@ -214,7 +214,9 @@ forall x R:
 
 #### Union, intersection, set difference
 
-Set operations `A union B` and `A intersect B` (that is, union and intersection), and differences such as `set_minus` / `set_diff`. Keyword and infix forms are interchangeable.
+Set operations use ordinary function-call form: `union(A, B)` and
+`intersect(A, B)` for union and intersection, with `set_minus(A, B)` and
+`set_diff(A, B)` for differences.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
@@ -225,7 +227,7 @@ have t set = set_minus({1, 2}, {1})
 When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly. Likewise, **`x $in set_minus(A, B)`** yields **`x $in A`** and **`not x $in B`**.
 
 ```litex
-1 $in {1} `union {2}
+1 $in union({1}, {2})
 ```
 
 #### Big union and big intersection (`cup`, `cap`)
@@ -329,7 +331,7 @@ e[1] = 2
 
 #### Struct objects and explicit field access
 
-`&Name(args)` is a preview object form. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
+`&Name<args>` is a preview object form for parameterized structs. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
 
 ```litex
 struct Point:
@@ -364,7 +366,7 @@ The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A decla
 
 After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, those facts are stored twice: once with each field name replaced by its explicit field access, and once with each field name replaced by its tuple projection. When checking that a tuple itself belongs to a struct object, Litex can instantiate the `<=>:` facts directly with the tuple components.
 
-If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
+If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
 
 #### Counting members
 
@@ -402,7 +404,7 @@ have w set = closed_range(0, 1)
 ```
 
 ```litex
-have q set = 0 `closed_range 1
+have q set = 0 ... 1
 ```
 
 #### Real intervals as sets
@@ -1153,11 +1155,13 @@ Why not just use an ordinary Litex function? Because Litex functions are set-the
 
 This also explains why the body of a template contains ordinary statements such as `have`. A template does not bypass mathematical existence checks. It opens a parameterized context, assumes the header parameters and header facts, and then checks the declarations inside that context. If the template declares a function, object, or other data by `have`, Litex still has to verify that the declaration is meaningful under the template assumptions.
 
+The template name is the single object or function name introduced by the body statement. For example, `template<s set>:` followed by `have fn always_one(x s) R = 1` defines the template instance name `\always_one<...>`.
+
 For example, suppose that for every nonempty set `s` you want a function that sends every element of `s` to `1`. This is naturally a template:
 
 <!-- litex:skip-test -->
 ```litex
-template always_one<s set: $is_nonempty_set(s)>:
+template<s set: $is_nonempty_set(s)>:
     have fn always_one(x s) R = 1
 
 \always_one<R>(2) = 1
@@ -1168,7 +1172,7 @@ The point is that `s` is a parameter of the definition. After you instantiate th
 Templates are also useful when the result is not a function. For example, you may want a family of objects that sends every parameter to `1`. This is not an ordinary function definition either, because the "domain" would be "all objects that are sets", not one fixed set object.
 
 ```litex
-template always_one<s set>:
+template<s set>:
     have always_one set = 1
 
 \always_one<R> = 1
@@ -1240,6 +1244,26 @@ forall x A:
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
 > Hint: the `forall` after `by` must already be known. Its conclusion must be exactly one `exist!` fact with one output parameter.
+
+> Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
+
+Classic structure example: `examples/04_structures/group_quotient.lit` combines
+`struct`, `template`, and `have fn ... as set` to define the quotient set of a
+group by taking the set of left cosets. The checked theorem is the set-valued
+well-definedness step: for each group and subset `h`, there is a unique set of
+left cosets, so Litex can introduce the corresponding quotient-set function.
+Normality is the condition needed later for the quotient group operation.
+
+<!-- litex:skip-test -->
+```litex
+template group_quotient<s set>:
+    have fn group_quotient as set:
+        forall g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+```
+
+For a mathematician-facing walkthrough of this example and the prompt that
+generated the first draft, see `docs/For_Mathematicians.md`.
 
 ---
 

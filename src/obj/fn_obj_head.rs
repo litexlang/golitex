@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Function-application head: plain identifier pieces or tagged free-parameter binders.
+/// Function-application head: plain identifier pieces, tagged free-parameter
+/// binders, and the few structured objects that are deliberately callable.
 #[derive(Clone)]
 pub enum FnObjHead {
     Identifier(Identifier),
@@ -14,6 +15,8 @@ pub enum FnObjHead {
     /// Anonymous function literal used as applied head, e.g. `'(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
     FiniteSeqListObj(FiniteSeqListObj),
+    ObjAtIndex(ObjAtIndex),
+    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
@@ -31,6 +34,8 @@ impl fmt::Display for FnObjHead {
             FnObjHead::FnSet(p) => write!(f, "{}", p),
             FnObjHead::AnonymousFnLiteral(a) => write!(f, "{}", a),
             FnObjHead::FiniteSeqListObj(v) => write!(f, "{}", v),
+            FnObjHead::ObjAtIndex(v) => write!(f, "{}", v),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => write!(f, "{}", v),
             FnObjHead::Induc(p) => write!(f, "{}", p),
             FnObjHead::DefAlgo(p) => write!(f, "{}", p),
             FnObjHead::InstantiatedTemplateObj(t) => write!(f, "{}", t),
@@ -54,6 +59,21 @@ impl FnObjHead {
                 AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
                 AtomObj::DefStructField(_) => None,
             },
+            _ => None,
+        }
+    }
+
+    /// Return a function head for object shapes that Litex intentionally allows as callable heads.
+    pub fn from_callable_obj(obj: Obj) -> Option<FnObjHead> {
+        match obj {
+            Obj::Atom(_) => FnObjHead::given_an_atom_return_a_fn_obj_head(obj),
+            Obj::AnonymousFn(a) => Some(FnObjHead::AnonymousFnLiteral(Box::new(a))),
+            Obj::FiniteSeqListObj(v) => Some(FnObjHead::FiniteSeqListObj(v)),
+            Obj::ObjAtIndex(v) => Some(FnObjHead::ObjAtIndex(v)),
+            Obj::ObjAsStructInstanceWithFieldAccess(v) => {
+                Some(FnObjHead::ObjAsStructInstanceWithFieldAccess(v))
+            }
+            Obj::InstantiatedTemplateObj(t) => Some(FnObjHead::InstantiatedTemplateObj(t)),
             _ => None,
         }
     }
@@ -113,6 +133,8 @@ impl From<FnObjHead> for Obj {
             FnObjHead::FnSet(p) => p.into(),
             FnObjHead::AnonymousFnLiteral(a) => (*a).clone().into(),
             FnObjHead::FiniteSeqListObj(v) => v.into(),
+            FnObjHead::ObjAtIndex(v) => v.into(),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.into(),
             FnObjHead::Induc(p) => p.into(),
             FnObjHead::DefAlgo(p) => p.into(),
             FnObjHead::InstantiatedTemplateObj(t) => t.into(),

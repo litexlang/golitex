@@ -287,7 +287,7 @@ impl fmt::Display for DefStructStmt {
             write!(
                 f,
                 "{} {}{}{}{}{}",
-                STRUCT, self.name, LEFT_BRACE, params, RIGHT_BRACE, COLON
+                STRUCT, self.name, LESS, params, GREATER, COLON
             )
         }
     }

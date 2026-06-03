@@ -1,0 +1,79 @@
+# A classic quotient-set construction.
+#
+# This example builds a group as a parameterized struct, defines is_subgroup and
+# is_normal_subgroup predicates, defines left cosets, and then turns a
+# unique-existence theorem into a template-level quotient-set function.
+
+prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+
+prop is_subgroup(s set, g &Group<s>, h power_set(s)):
+    &Group<s>{g}.e $in h
+    forall a, b h:
+        &Group<s>{g}.op(a, b) $in h
+    forall a h:
+        &Group<s>{g}.inv(a) $in h
+
+prop is_normal_subgroup(s set, g &Group<s>, h power_set(s)):
+    $is_subgroup(s, g, h)
+    forall x s, a h:
+        &Group<s>{g}.op(&Group<s>{g}.op(x, a), &Group<s>{g}.inv(x)) $in h
+
+# Normality is not needed to form the quotient set below. It is the condition
+# needed later when defining the group operation on quotient classes.
+
+prop is_left_coset_with_representative(s set, g &Group<s>, h power_set(s), x s, c power_set(s)):
+    forall y s:
+        =>:
+            y $in c
+        <=>:
+            exist a h st {y = &Group<s>{g}.op(x, a)}
+
+prop is_left_coset(s set, g &Group<s>, h power_set(s), c power_set(s)):
+    exist x s st {$is_left_coset_with_representative(s, g, h, x, c)}
+
+# This predicate is the graph of the quotient-set construction. The fourth
+# argument `q` is intended to be exactly the set of all left cosets of `h`.
+# In ordinary notation this is the underlying set often written as G/H.
+prop is_group_quotient_set(s set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
+    q = {c power_set(s): $is_left_coset(s, g, h, c)}
+
+# To introduce a real Litex function `group_quotient`, we first prove the
+# set-theoretic function condition: for every input `(s, g, h)`, there exists a
+# unique output `q`. Here the witness is the displayed set builder itself.
+# Uniqueness is easy because any valid `q` must be equal to that same set.
+claim:
+    prove:
+        forall s set, g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+    witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
+        $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
+
+# `have fn ... as set` consumes the `forall ... exist!` theorem above. It is not
+# saying the return type is just `set`; `as set` means "build the function from
+# its set-theoretic graph." The actual return set is read from the witness type
+# in the `exist!`, namely `power_set(power_set(s))`.
+template group_quotient<s set>:
+    have fn group_quotient as set:
+        forall g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+
+# After the template, the function value is the unique witness promised by the
+# graph predicate. This final check is the usable API: callers can write
+# `\group_quotient<R>(g, h)` and immediately recover its defining property.
+forall g &Group<R>, h power_set(R):
+    $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))

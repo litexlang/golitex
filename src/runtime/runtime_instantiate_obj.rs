@@ -244,11 +244,8 @@ impl Runtime {
             merged_body.push(new_obj_vec);
         }
 
-        let inst_head = self.inst_obj(
-            &(*fn_obj.head.clone()).into(),
-            param_to_arg_map,
-            param_obj_type,
-        )?;
+        let head_obj: Obj = (*fn_obj.head.clone()).into();
+        let inst_head = self.inst_obj(&head_obj, param_to_arg_map, param_obj_type)?;
 
         let final_head: FnObjHead = match inst_head {
             Obj::Atom(AtomObj::Identifier(x)) => FnObjHead::Identifier(x.clone()),
@@ -277,8 +274,19 @@ impl Runtime {
                 *x.head.clone()
             }
             Obj::FiniteSeqListObj(list) => FnObjHead::FiniteSeqListObj(list),
-            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head)))
-            .into()),
+            Obj::ObjAtIndex(x) => FnObjHead::ObjAtIndex(x),
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                FnObjHead::ObjAsStructInstanceWithFieldAccess(x)
+            }
+            _ => {
+                return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                    format!(
+                        "instantiate fn object: after substitution, head must be a callable head, got {}",
+                        inst_head
+                    ),
+                ))
+                .into());
+            }
         };
 
         Ok(FnObj::new(final_head, merged_body).into())
