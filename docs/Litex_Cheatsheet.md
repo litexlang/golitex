@@ -299,7 +299,7 @@ abstract_prop P(a, b)
 
 **Meaning.** Preview syntax for named views of tuple / Cartesian-product shapes.
 
-`&Name(args)` can be used as a set object, and field access must explicitly state the struct view. Bare `p.x` is not supported.
+`&Name<args>` can be used as a set object for parameterized structs, and field access must explicitly state the struct view. Bare `p.x` is not supported.
 
 **Example.**
 

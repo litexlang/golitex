@@ -1857,7 +1857,7 @@ arctan(sqrt(3)) $in R
 #[test]
 fn template_instantiation_prefers_angle_brackets() {
     let source_code = r#"
-template id_on_set<s set: s = s>:
+template<s set: s = s>:
     have id_on_set set = s
 
 \id_on_set<R> = R
@@ -1876,8 +1876,57 @@ template id_on_set<s set: s = s>:
         run_output
     );
     assert!(
+        run_output.contains("template<"),
+        "template definition display should omit the redundant header name:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("template id_on_set"),
+        "template definition display should not repeat the body-defined name in the header:\n{}",
+        run_output
+    );
+    assert!(
         run_output.contains("\\id_on_set<R> = R"),
         "template instantiation display should use angle brackets:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_can_use_struct_with_function_valued_fields() {
+    let source_code = r#"
+prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+
+template<s set>:
+    have group_quotient fn (g &Group<s>) power_set(s)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_can_use_struct_with_function_valued_fields",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template_can_use_struct_with_function_valued_fields failed:\n{}",
         run_output
     );
 }
@@ -2295,7 +2344,7 @@ prop SharedName(x R)
 struct SharedName:
     value R
     other R
-template SharedName<s set>:
+template<s set>:
     have SharedName set = s
 "#;
 
@@ -2336,7 +2385,7 @@ fn duplicate_definition_names_fail_in_their_namespace() {
         ),
         (
             "template",
-            "template DupTemplate<s set>:\n    have DupTemplate set = s\ntemplate DupTemplate<s set>:\n    have DupTemplate set = s",
+            "template<s set>:\n    have DupTemplate set = s\ntemplate<s set>:\n    have DupTemplate set = s",
         ),
         (
             "algo",

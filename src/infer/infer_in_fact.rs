@@ -15,6 +15,8 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::Atom(AtomObj::FnSet(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
+            | Obj::ObjAtIndex(_)
+            | Obj::ObjAsStructInstanceWithFieldAccess(_)
     )
 }
 

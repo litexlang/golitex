@@ -14,7 +14,7 @@ have a, b R:
 a > b
 b > 0
 
-template positive_choice<s set: s = s>:
+template<s set: s = s>:
     have positive_choice R:
         positive_choice > 0
 

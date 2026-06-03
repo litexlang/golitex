@@ -3,12 +3,17 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_def_template_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TEMPLATE)?;
-        let template_name = tb.advance()?;
-        is_valid_litex_name(&template_name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
+        let explicit_template_name = if tb.current_token_is_equal_to(LESS) {
+            None
+        } else {
+            let name = tb.advance()?;
+            is_valid_litex_name(&name).map_err(|msg| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                ))
+            })?;
+            Some(name)
+        };
 
         let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(LESS)?;
@@ -88,18 +93,22 @@ impl Runtime {
             }
 
             let template_def_stmt = this.parse_template_body_stmt(&mut tb.body[0])?;
-            match template_def_stmt.defined_name() {
-                Some(name) if name == template_name => {}
+            let template_name = match template_def_stmt.defined_name() {
                 Some(name) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            format!(
-                                "template body defines `{}`, but template name is `{}`",
-                                name, template_name
-                            ),
-                            tb.body[0].line_file.clone(),
-                        ),
-                    )));
+                    if let Some(explicit_name) = &explicit_template_name {
+                        if name != *explicit_name {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    format!(
+                                        "template body defines `{}`, but template name is `{}`",
+                                        name, explicit_name
+                                    ),
+                                    tb.body[0].line_file.clone(),
+                                ),
+                            )));
+                        }
+                    }
+                    name
                 }
                 None => {
                     return Err(RuntimeError::from(ParseRuntimeError(
@@ -109,13 +118,13 @@ impl Runtime {
                         ),
                     )));
                 }
-            }
+            };
 
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::DefHeader, &template_arg_names);
 
             Ok(DefTemplateStmt::new(
-                template_name.clone(),
+                template_name,
                 template_arg_def,
                 template_arg_dom,
                 template_def_stmt,
@@ -141,7 +150,11 @@ impl Runtime {
         })?;
 
         let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
-            let param_def_with_dom = if tb.current_token_is_equal_to(LEFT_BRACE) {
+            let param_def_with_dom = if tb.current_token_is_equal_to(LESS) {
+                let param_def =
+                    this.parse_def_param_groups_with_param_type_between(tb, LESS, GREATER)?;
+                Some((param_def, Vec::new()))
+            } else if tb.current_token_is_equal_to(LEFT_BRACE) {
                 let param_def = this.parse_def_braced_param_groups_with_param_type(tb)?;
                 Some((param_def, Vec::new()))
             } else {
@@ -1117,14 +1130,23 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ParamDefWithType, RuntimeError> {
-        tb.skip_token(LEFT_BRACE)?;
+        self.parse_def_param_groups_with_param_type_between(tb, LEFT_BRACE, RIGHT_BRACE)
+    }
+
+    fn parse_def_param_groups_with_param_type_between(
+        &mut self,
+        tb: &mut TokenBlock,
+        left_token: &str,
+        right_token: &str,
+    ) -> Result<ParamDefWithType, RuntimeError> {
+        tb.skip_token(left_token)?;
         let mut groups = Vec::new();
-        while tb.current()? != RIGHT_BRACE {
+        while tb.current()? != right_token {
             groups.push(
                 self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::DefHeader)?,
             );
         }
-        tb.skip_token(RIGHT_BRACE)?;
+        tb.skip_token(right_token)?;
         let param_defs = ParamDefWithType::new(groups);
         let names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;

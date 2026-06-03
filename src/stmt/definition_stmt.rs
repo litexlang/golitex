@@ -555,9 +555,8 @@ impl fmt::Display for DefTemplateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}{}{}{}{}\n{}",
+            "{}{}{}{}{}{}\n{}",
             TEMPLATE,
-            self.template_name,
             LESS,
             self.template_arg_def,
             if self.template_arg_dom.is_empty() {

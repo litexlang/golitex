@@ -60,6 +60,18 @@ fn mark_forall_param_coverage_in_fn_obj_head(
                 coverage_by_forall_param,
             );
         }
+        FnObjHead::ObjAtIndex(v) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::ObjAtIndex(v.clone()),
+                coverage_by_forall_param,
+            );
+        }
+        FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::ObjAsStructInstanceWithFieldAccess(v.clone()),
+                coverage_by_forall_param,
+            );
+        }
         FnObjHead::AnonymousFnLiteral(a) => {
             mark_forall_param_coverage_in_obj(
                 &Obj::AnonymousFn((**a).clone()),
