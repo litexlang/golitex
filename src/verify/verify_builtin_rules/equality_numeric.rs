@@ -434,7 +434,7 @@ impl Runtime {
         Ok(None)
     }
 
-    // 0 = a^n when n is a literal integer > 0 (avoids 0^0 /0^negative), from a = 0.
+    // 0 = a^n when n is a literal integer > 0 (does not rewrite 0^0 or 0^negative), from a = 0.
     pub(crate) fn try_verify_zero_equals_pow_from_base_zero(
         &mut self,
         left: &Obj,
@@ -592,6 +592,39 @@ impl Runtime {
         )))
     }
 
+    // Zeroth power identity under the natural-exponent convention: `a^0 = 1`,
+    // including `0^0 = 1`.
+    // Example: `forall a R: a^0 = 1`.
+    pub(crate) fn try_verify_pow_zero_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let pow = if Self::obj_is_builtin_literal_one(left) {
+            match right {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_one(right) {
+            match left {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_zero(pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: a^0 = 1",
+        )))
+    }
+
     // One as a base is invariant under exponentiation: `1^x = 1`.
     // This is used for simplifying powers with arbitrary well-defined exponents.
     // Example: `forall x R: 1^x = 1`.
@@ -626,7 +659,7 @@ impl Runtime {
     }
 
     // Zero as a base stays zero for positive exponents: `0^x = 0` when `x > 0`.
-    // This is the real power rule used to avoid undefined cases such as `0^0`.
+    // This intentionally does not cover the zeroth power convention `0^0 = 1`.
     // Example: `forall x R_pos: 0^x = 0`.
     pub(crate) fn try_verify_zero_pow_positive_exponent_identity(
         &mut self,
@@ -1208,8 +1241,35 @@ impl Runtime {
                 return Ok(true);
             }
 
-            // Power law for integer exponents needs a nonzero base, so negative and zero
-            // exponents do not accidentally justify undefined `0^0` or `0^(-n)`.
+            // Natural-exponent power law for real bases:
+            // `a^(m+n) = a^m * a^n`, including the cases m=0 or n=0.
+            // Example: `forall a R, m, n N: a^m * a^n = a^(m+n)`.
+            let exponents_are_natural = self.obj_is_verified_in_standard_set_for_power_builtin(
+                left_exp,
+                StandardSet::N,
+                line_file.clone(),
+                verify_state,
+            )? && self
+                .obj_is_verified_in_standard_set_for_power_builtin(
+                    right_exp,
+                    StandardSet::N,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+            if exponents_are_natural {
+                let base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+                    combined_power.base.as_ref(),
+                    StandardSet::R,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if base_in_r {
+                    return Ok(true);
+                }
+            }
+
+            // The remaining integer-exponent branch needs a nonzero base so negative
+            // exponents do not accidentally justify undefined `0^(-n)`.
             // Example: `forall a R_nz, m, n Z: a^m * a^n = a^(m+n)`.
             let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
                 left_exp,
@@ -1266,7 +1326,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: a^(m+n) = a^m * a^n for positive exponents, or integer exponents with nonzero base",
+                "equality: a^(m+n) = a^m * a^n for natural exponents over real bases, positive exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)
@@ -1282,16 +1342,41 @@ impl Runtime {
         let Obj::Mul(combined_base) = combined_power.base.as_ref() else {
             return Ok(false);
         };
-        if !self.obj_is_verified_in_n_pos(
+        let exponent_in_n_pos = self.obj_is_verified_in_n_pos(
             combined_power.exponent.as_ref(),
             line_file.clone(),
             verify_state,
-        )? {
-            return Ok(false);
+        )?;
+        if !exponent_in_n_pos {
+            let exponent_in_n = self.obj_is_verified_in_standard_set_for_power_builtin(
+                combined_power.exponent.as_ref(),
+                StandardSet::N,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !exponent_in_n {
+                return Ok(false);
+            }
+            let left_base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+                combined_base.left.as_ref(),
+                StandardSet::R,
+                line_file.clone(),
+                verify_state,
+            )?;
+            let right_base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+                combined_base.right.as_ref(),
+                StandardSet::R,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !left_base_in_r || !right_base_in_r {
+                return Ok(false);
+            }
         }
 
-        // Product power law for positive integer exponents:
-        // `(a*b)^n = a^n * b^n`. Example: `forall a,b R, n N_pos: (a*b)^n = a^n*b^n`.
+        // Product power law for natural integer exponents over real bases, and the
+        // existing positive-integer exponent shape:
+        // `(a*b)^n = a^n * b^n`. Example: `forall a,b R, n N: (a*b)^n = a^n*b^n`.
         let candidates = [
             (
                 product.left.as_ref(),
@@ -1359,7 +1444,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a*b)^n = a^n * b^n for n in N_pos",
+                "equality: (a*b)^n = a^n * b^n for n in N over real bases, or n in N_pos",
             )));
         }
         Ok(None)

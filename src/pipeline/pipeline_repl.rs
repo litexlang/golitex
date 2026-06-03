@@ -1,5 +1,12 @@
 use crate::prelude::*;
+use crate::to_latex::to_latex;
 use std::io::{self, BufRead, Write};
+
+#[derive(Clone, Copy)]
+enum ReplOutputMode {
+    Json,
+    Latex,
+}
 
 pub fn run_repl(version: &str) {
     return run_repl_with_detail_output(version, false);
@@ -7,6 +14,10 @@ pub fn run_repl(version: &str) {
 
 pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
     return run_repl_loop_internal(version, detail_output);
+}
+
+pub fn run_latex_repl(version: &str) {
+    return run_latex_repl_loop_internal(version);
 }
 
 fn run_repl_loop_internal(version_banner: &str, detail_output: bool) {
@@ -27,11 +38,54 @@ fn run_repl_loop_internal(version_banner: &str, detail_output: bool) {
     }
 }
 
+fn run_latex_repl_loop_internal(version_banner: &str) {
+    let stdin_handle = io::stdin();
+    let stdout_handle = io::stdout();
+    let mut stdin_locked = stdin_handle.lock();
+    let mut stdout_locked = stdout_handle.lock();
+    match run_latex_repl_loop_with_readers(version_banner, &mut stdin_locked, &mut stdout_locked) {
+        Ok(()) => {}
+        Err(write_error) => {
+            eprintln!("repl output error: {}", write_error);
+        }
+    }
+}
+
 fn run_repl_loop_with_readers(
     version_banner: &str,
     detail_output: bool,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
+    run_repl_loop_with_readers_and_mode(
+        version_banner,
+        detail_output,
+        stdin_reader,
+        stdout_writer,
+        ReplOutputMode::Json,
+    )
+}
+
+fn run_latex_repl_loop_with_readers(
+    version_banner: &str,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
+    run_repl_loop_with_readers_and_mode(
+        version_banner,
+        false,
+        stdin_reader,
+        stdout_writer,
+        ReplOutputMode::Latex,
+    )
+}
+
+fn run_repl_loop_with_readers_and_mode(
+    version_banner: &str,
+    detail_output: bool,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+    output_mode: ReplOutputMode,
 ) -> io::Result<()> {
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
     writeln!(
@@ -72,7 +126,8 @@ fn run_repl_loop_with_readers(
         };
 
         if bytes_read == 0 {
-            let output_text = run_repl_source_if_not_empty(&source_buffer, &mut runtime);
+            let output_text =
+                run_repl_source_if_not_empty(&source_buffer, &mut runtime, output_mode);
             if !output_text.is_empty() {
                 writeln!(stdout_writer, "{}", output_text)?;
             }
@@ -83,7 +138,8 @@ fn run_repl_loop_with_readers(
         let trimmed_line = line_buffer.trim();
         if trimmed_line.is_empty() {
             if collecting_multiline {
-                let output_text = run_repl_source_if_not_empty(&source_buffer, &mut runtime);
+                let output_text =
+                    run_repl_source_if_not_empty(&source_buffer, &mut runtime, output_mode);
                 if !output_text.is_empty() {
                     writeln!(stdout_writer, "{}", output_text)?;
                 }
@@ -105,7 +161,7 @@ fn run_repl_loop_with_readers(
             continue;
         }
 
-        let output_text = run_repl_source_if_not_empty(trimmed_line, &mut runtime);
+        let output_text = run_repl_source_if_not_empty(trimmed_line, &mut runtime, output_mode);
         if !output_text.is_empty() {
             writeln!(stdout_writer, "{}", output_text)?;
         }
@@ -114,16 +170,31 @@ fn run_repl_loop_with_readers(
     Ok(())
 }
 
-fn run_repl_source_if_not_empty(source: &str, runtime: &mut Runtime) -> String {
+fn run_repl_source_if_not_empty(
+    source: &str,
+    runtime: &mut Runtime,
+    output_mode: ReplOutputMode,
+) -> String {
     if source.trim().is_empty() {
         return String::new();
     }
 
     let normalized_source = remove_windows_carriage_return(source);
-    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), runtime);
-    let (_, output_text) =
-        render_run_source_code_output(runtime, &stmt_results, &runtime_error, true);
-    output_text.trim().to_string()
+    match output_mode {
+        ReplOutputMode::Json => {
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), runtime);
+            let (_, output_text) =
+                render_run_source_code_output(runtime, &stmt_results, &runtime_error, true);
+            output_text.trim().to_string()
+        }
+        ReplOutputMode::Latex => match to_latex(normalized_source.as_str(), runtime) {
+            Ok(output_text) => output_text.trim().to_string(),
+            Err(error) => display_runtime_error_json(runtime, &error, true)
+                .trim()
+                .to_string(),
+        },
+    }
 }
 
 fn repl_line_starts_block(line: &str) -> bool {
@@ -132,7 +203,7 @@ fn repl_line_starts_block(line: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::run_repl_loop_with_readers;
+    use super::{run_latex_repl_loop_with_readers, run_repl_loop_with_readers};
     use std::io::Cursor;
 
     #[test]
@@ -174,5 +245,22 @@ mod tests {
         let output_text = String::from_utf8(stdout_writer).unwrap();
         assert!(output_text.contains("Litex version test-version"));
         assert!(output_text.contains("litex -upgrade"));
+    }
+
+    #[test]
+    fn latex_repl_outputs_latex_for_single_line_input() {
+        let input = b"1 = 1\n";
+        let mut stdin_reader = Cursor::new(input.as_slice());
+        let mut stdout_writer = Vec::new();
+
+        run_latex_repl_loop_with_readers("test", &mut stdin_reader, &mut stdout_writer).unwrap();
+
+        let output_text = String::from_utf8(stdout_writer).unwrap();
+        assert!(output_text.contains(r"\["));
+        assert!(output_text.contains(r"\]"));
+        assert!(output_text.contains("1 = 1"));
+        assert!(!output_text.contains(r"\documentclass{article}"));
+        assert!(!output_text.contains(r"\paragraph{Stmt 1}"));
+        assert!(!output_text.contains(r#""result": "success""#));
     }
 }

@@ -4,7 +4,7 @@ prop integrable(s set, f set):
     $restrict_fn_in(f, s)
     exist a R st {$has_integral(s, f, a)}
 
-template integral<s power_set(R), f set: $integrable(s, f)>:
+template<s power_set(R), f set: $integrable(s, f)>:
     have by exist a R st {$has_integral(s, f, a)}: integral
 
 know forall s power_set(R), f, g set:

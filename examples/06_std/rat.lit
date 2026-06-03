@@ -1,0 +1,13 @@
+import Rat
+
+Rat::den(3 / 2) != 0
+Rat::num(3 / 2) $in Z
+
+by thm Rat::den_nz(3 / 2)
+Rat::den(3 / 2) != 0
+
+by thm Rat::num_div_den(3 / 2)
+3 / 2 = Rat::num(3 / 2) / Rat::den(3 / 2)
+
+by thm Rat::num_den_coprime(3 / 2)
+$Nat::Coprime(Int::natAbs(Rat::num(3 / 2)), Rat::den(3 / 2))

@@ -5,7 +5,7 @@ know:
     * $in fn(a, b R) R
     / $in fn(a R, b R: b != 0) R
     % $in fn(a Z, b Z: b != 0) Z
-    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N_pos) R
+    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
 
 know:
     forall a, b R:
@@ -19,9 +19,25 @@ know:
         a <= max(a, b)
         b <= max(a, b)
 
+    # Max is the least upper bound of two real numbers.
+    # Example: if a <= c and b <= c, then max(a, b) <= c.
+    forall a, b, c R:
+        a <= c
+        b <= c
+        =>:
+            max(a, b) <= c
+
     forall a, b R:
         min(a, b) <= a
         min(a, b) <= b
+
+    # Min is the greatest lower bound of two real numbers.
+    # Example: if c <= a and c <= b, then c <= min(a, b).
+    forall a, b, c R:
+        c <= a
+        c <= b
+        =>:
+            c <= min(a, b)
 
     forall a, b R:
         max(a, b) = max(b, a)

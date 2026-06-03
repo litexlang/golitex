@@ -565,6 +565,26 @@ impl Runtime {
         }
     }
 
+    pub fn parse_exist_body_facts_in_body(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<ExistBodyFact>, RuntimeError> {
+        if tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`have ...:` expects at least one indented fact".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let mut facts: Vec<ExistBodyFact> = vec![];
+        for block in tb.body.iter_mut() {
+            facts.push(self.parse_exist_body_fact(block)?);
+        }
+        Ok(facts)
+    }
+
     pub fn parse_facts_in_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, RuntimeError> {
         let mut facts: Vec<Fact> = vec![];
         for block in tb.body.iter_mut() {

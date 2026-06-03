@@ -1,0 +1,15 @@
+import Set
+
+$Set::Mem(1, {1, 2})
+$Set::Subset({1}, {1, 2})
+$Set::Finite({1, 2})
+$Set::Ncard({1, 2}, 2)
+
+Set::ncard({1, 2}) = 2
+Set::toFinset({1, 2}) = {1, 2}
+
+by thm Set::subset_refl({1, 2})
+{1, 2} $subset {1, 2}
+
+by thm Set::Finite_union({1}, {2})
+$is_finite_set(union({1}, {2}))

@@ -517,6 +517,19 @@ impl Runtime {
                 Self::fn_set_body_depends_on_given_exist_param(&x.body, names)
                     || Self::obj_depends_on_given_exist_param(x.equal_to.as_ref(), names)
             }
+            FnObjHead::ObjAtIndex(x) => {
+                Self::obj_depends_on_given_exist_param(&Obj::ObjAtIndex(x.clone()), names)
+            }
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(x) => {
+                Self::obj_depends_on_given_exist_param(
+                    &Obj::ObjAsStructInstanceWithFieldAccess(x.clone()),
+                    names,
+                )
+            }
+            FnObjHead::InstantiatedTemplateObj(x) => Self::obj_depends_on_given_exist_param(
+                &Obj::InstantiatedTemplateObj(x.clone()),
+                names,
+            ),
             _ => false,
         }
     }

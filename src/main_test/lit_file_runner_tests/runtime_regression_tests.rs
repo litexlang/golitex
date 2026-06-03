@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
+use crate::to_latex::to_latex_from_source_after_builtins;
 
 use super::helper::run_with_large_stack;
 
@@ -48,6 +49,25 @@ fn builtin_rules_do_not_call_full_verifier_pipeline() {
         "builtin rules must use restricted known-atomic/builtin helpers, not the full verifier:\n{}",
         violations.join("\n")
     );
+}
+
+#[test]
+fn latex_output_is_fragment_without_default_packages() {
+    let output = to_latex_from_source_after_builtins(
+        "1 = 1",
+        "latex_output_is_fragment_without_default_packages",
+    )
+    .expect("simple Litex source should convert to LaTeX");
+
+    assert!(output.contains(r"\["));
+    assert!(output.contains(r"\]"));
+    assert!(output.contains("1 = 1"));
+    assert!(!output.contains(r"\documentclass{article}"));
+    assert!(!output.contains(r"\begin{document}"));
+    assert!(!output.contains(r"\end{document}"));
+    assert!(!output.contains(r"\paragraph{Stmt 1}"));
+    assert!(!output.contains(r"\usepackage{amsmath}"));
+    assert!(!output.contains(r"\usepackage{amssymb}"));
 }
 
 #[test]
@@ -1238,6 +1258,78 @@ have fn half_power(x R: x >= 0) R = x^(1/2)
 }
 
 #[test]
+fn zero_to_zero_power_uses_natural_exponent_convention() {
+    let source_code = r#"
+0^0 = 1
+eval 0^0
+
+forall a R:
+    a^0 = 1
+
+forall a R, m, n N:
+    a^(m+n) = a^m * a^n
+
+forall a, b R, n N:
+    (a * b)^n = a^n * b^n
+
+forall a Z, n N:
+    a^n $in Z
+
+forall a N, n N:
+    a^n $in N
+
+forall a N_pos, n N:
+    a^n $in N_pos
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zero_to_zero_power_uses_natural_exponent_convention",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"EvalStmt\"") && run_output.contains("\"0 ^ 0 = 1\""),
+        "eval 0^0 should produce 1:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn zero_base_real_power_still_requires_positive_exponent() {
+    let source_code = r#"
+forall x R:
+    0^x = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zero_base_real_power_still_requires_positive_exponent",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "zero_base_real_power_still_requires_positive_exponent should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("base and exponent do not satisfy the pow domain"),
+        "failure should still come from pow domain checking:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn sqrt_core_builtin_rules() {
     run_with_large_stack("sqrt_core_builtin_rules_large_stack", || {
         let source_code = r#"
@@ -1638,10 +1730,10 @@ right $in info(a)
 #[test]
 fn common_power_equalities_and_order_are_builtin() {
     let source_code = r#"
-forall x Q_nz, n, m N:
+forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
-forall x, y Q, n N_pos:
+forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
 forall x Q, n N_pos:
@@ -1837,7 +1929,7 @@ arctan(sqrt(3)) $in R
 #[test]
 fn template_instantiation_prefers_angle_brackets() {
     let source_code = r#"
-template id_on_set<s set: s = s>:
+template<s set: s = s>:
     have id_on_set set = s
 
 \id_on_set<R> = R
@@ -1856,8 +1948,82 @@ template id_on_set<s set: s = s>:
         run_output
     );
     assert!(
+        run_output.contains("template<"),
+        "template definition display should omit the redundant header name:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("template id_on_set"),
+        "template definition display should not repeat the body-defined name in the header:\n{}",
+        run_output
+    );
+    assert!(
         run_output.contains("\\id_on_set<R> = R"),
         "template instantiation display should use angle brackets:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_header_rejects_redundant_name() {
+    let source_code = r#"
+template id_on_set<s set>:
+    have id_on_set set = s
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("template_header_rejects_redundant_name");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "template header with redundant name should fail, but succeeded:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("template definition expects `template<...>:`"),
+        "old template header syntax should report the new syntax:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_can_use_struct_with_function_valued_fields() {
+    let source_code = r#"
+prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+
+template<s set>:
+    have group_quotient fn (g &Group<s>) power_set(s)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_can_use_struct_with_function_valued_fields",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template_can_use_struct_with_function_valued_fields failed:\n{}",
         run_output
     );
 }
@@ -2275,7 +2441,7 @@ prop SharedName(x R)
 struct SharedName:
     value R
     other R
-template SharedName<s set>:
+template<s set>:
     have SharedName set = s
 "#;
 
@@ -2316,7 +2482,7 @@ fn duplicate_definition_names_fail_in_their_namespace() {
         ),
         (
             "template",
-            "template DupTemplate<s set>:\n    have DupTemplate set = s\ntemplate DupTemplate<s set>:\n    have DupTemplate set = s",
+            "template<s set>:\n    have DupTemplate set = s\ntemplate<s set>:\n    have DupTemplate set = s",
         ),
         (
             "algo",

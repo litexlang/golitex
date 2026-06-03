@@ -132,7 +132,7 @@ pub(crate) fn build_curried_anonymous_fn_from_layers_forall(
 }
 
 /// Build `func` applied along `layers` using forall binders; `func` is a name, anonymous fn, or
-/// other shape accepted by [`FnObjHead::from_name_obj`].
+/// other shape accepted by [`FnObjHead::given_an_atom_return_a_fn_obj_head`].
 pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
     func: &Obj,
     layer_param_names: &[Vec<String>],

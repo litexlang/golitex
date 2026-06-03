@@ -789,8 +789,8 @@ impl Runtime {
 
     // Real pow domain (well-defined check): base>=0 and exp in R with exp>0
     // (e.g. x^(1/2) under x>=0); base>0 and exp in R; or base=0, exp in R and exp>0
-    // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1);
-    // or exp in N_pos (positive integer), any base (e.g. 0^3, (h+i)^2 without proving base != 0).
+    // (so 0^(non-positive real non-integers) is out); or exp in Z and base != 0
+    // (integer powers for nonzero bases); or base in R and exp in N, including 0^0 = 1.
     // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
     // rational exponents do not pull Mod(...) into every Or disjunct's well-defined pass.
     fn verify_pow_well_defined(
@@ -891,14 +891,23 @@ impl Runtime {
             default_line_file(),
         ));
 
-        let exponent_in_n_pos = AndChainAtomicFact::AtomicFact(
-            InFact::new(
-                (*pow.exponent).clone(),
-                StandardSet::NPos.into(),
-                default_line_file(),
-            )
-            .into(),
-        );
+        let real_base_and_natural_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+            vec![
+                InFact::new(
+                    (*pow.base).clone(),
+                    StandardSet::R.into(),
+                    default_line_file(),
+                )
+                .into(),
+                InFact::new(
+                    (*pow.exponent).clone(),
+                    StandardSet::N.into(),
+                    default_line_file(),
+                )
+                .into(),
+            ],
+            default_line_file(),
+        ));
 
         let pow_domain_or_fact = OrFact::new(
             vec![
@@ -906,7 +915,7 @@ impl Runtime {
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
                 nonzero_base_integer_exponent,
-                exponent_in_n_pos,
+                real_base_and_natural_exponent,
             ],
             default_line_file(),
         );

@@ -36,8 +36,6 @@ pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
-// Infix operator: one backtick before the name, e.g. A `union B (same role as former A \union B).
-pub const INFIX_FN_NAME_SIGN: &str = "`";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
@@ -203,7 +201,6 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         RIGHT_BRACKET,
         DOUBLE_QUOTE,
         COLON,
-        INFIX_FN_NAME_SIGN,
         ANONYMOUS_FN_PREFIX,
     ];
     for &s in &symbols {

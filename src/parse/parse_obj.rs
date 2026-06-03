@@ -3,52 +3,7 @@ use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        self.parse_obj_hierarchy0(tb)
-    }
-
-    /// Infix `name` (one backtick before the function name) is loosest; then `+-`, `*/%`, `^`, `[]`, `...`, primary.
-    fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let left = self.parse_obj_hierarchy1(tb)?;
-        if tb.exceed_end_of_head() {
-            return Ok(left);
-        }
-        if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
-            tb.skip()?; // consume the infix delimiter, then read the name
-            let mut fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
-            let right = self.parse_obj(tb)?;
-
-            if is_key_symbol_or_keyword(&fn_name.to_string()) {
-                return match fn_name.to_string().as_str() {
-                    UNION => Ok(Union::new(left, right).into()),
-                    INTERSECT => Ok(Intersect::new(left, right).into()),
-                    SET_MINUS => Ok(SetMinus::new(left, right).into()),
-                    SET_DIFF => Ok(SetDiff::new(left, right).into()),
-                    RANGE => Ok(Range::new(left, right).into()),
-                    CLOSED_RANGE => Ok(ClosedRange::new(left, right).into()),
-                    PROJ => Ok(Proj::new(left, right).into()),
-                    _ => Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            format!("{} does not support infix function syntax", fn_name),
-                            tb.line_file.clone(),
-                        ),
-                    ))),
-                };
-            }
-
-            if let Obj::Atom(AtomObj::Identifier(id)) = fn_name {
-                fn_name = self.qualify_bare_identifier_if_needed(id);
-            }
-
-            let body = vec![vec![Box::new(left), Box::new(right)]];
-
-            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(fn_name).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("infix (backtick) expects an identifier or single field-access name for the function"
-                        .to_string(), tb.line_file.clone())))
-            })?;
-            Ok(FnObj::new(head, body).into())
-        } else {
-            Ok(left)
-        }
+        self.parse_obj_hierarchy1(tb)
     }
 
     /// + - 优先级最低，左结合，可连续 2 + 3 - 4
@@ -143,9 +98,26 @@ impl Runtime {
                 tb.skip_token(RIGHT_BRACKET)?;
                 left = ObjAtIndex::new(left, obj).into();
             } else {
-                return Ok(left);
+                break;
             }
         }
+        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+            let head = match &left {
+                Obj::ObjAtIndex(x) => FnObjHead::ObjAtIndex(x.clone()),
+                Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                    FnObjHead::ObjAsStructInstanceWithFieldAccess(x.clone())
+                }
+                _ => return Ok(left),
+            };
+            let mut body_vectors = vec![];
+            while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+                let args = self.parse_fn_obj_arg_group(tb)?;
+                let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+                body_vectors.push(group);
+            }
+            left = FnObj::new(head, body_vectors).into();
+        }
+        Ok(left)
     }
 
     /// Infix closed interval `...` (`closed_range`); same band as `[]`, applied after subscripts.
@@ -610,7 +582,7 @@ impl Runtime {
         // 2. 多元关键字、或 atom（内建 `StandardSet` 名在 reclassify 中处理）
         let mut result = self.parse_primary_obj(tb)?;
 
-        // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
+        // 3. 若是 callable head，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
@@ -629,6 +601,11 @@ impl Runtime {
                 vec![],
             ),
             Obj::FiniteSeqListObj(list) => (FnObjHead::FiniteSeqListObj(list.clone()), vec![]),
+            Obj::ObjAtIndex(x) => (FnObjHead::ObjAtIndex(x.clone()), vec![]),
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => (
+                FnObjHead::ObjAsStructInstanceWithFieldAccess(x.clone()),
+                vec![],
+            ),
             Obj::InstantiatedTemplateObj(t) => {
                 (FnObjHead::InstantiatedTemplateObj(t.clone()), vec![])
             }
@@ -1438,6 +1415,24 @@ impl Runtime {
         Ok(objs)
     }
 
+    fn parse_angle_bracketed_objs(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<Obj>, RuntimeError> {
+        tb.skip_token(LESS)?;
+        if tb.current_token_is_equal_to(GREATER) {
+            tb.skip_token(GREATER)?;
+            return Ok(vec![]);
+        }
+        let mut objs = vec![self.parse_obj(tb)?];
+        while tb.current_token_is_equal_to(COMMA) {
+            tb.skip_token(COMMA)?;
+            objs.push(self.parse_obj(tb)?);
+        }
+        tb.skip_token(GREATER)?;
+        Ok(objs)
+    }
+
     fn parse_fn_obj_arg_group(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         let args = self.parse_braced_objs(tb)?;
         if args.is_empty() {
@@ -1653,7 +1648,9 @@ impl Runtime {
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
         let name = self.parse_module_qualified_reference_name(tb)?;
-        let params = if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+        let params = if !tb.exceed_end_of_head() && tb.current()? == LESS {
+            self.parse_angle_bracketed_objs(tb)?
+        } else if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
             self.parse_braced_objs(tb)?
         } else {
             vec![]
@@ -1891,6 +1888,42 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
+    fn parses_angle_bracketed_struct_params_and_field_access() {
+        let mut rt = Runtime::new();
+
+        let stmt = parse_one_stmt_line_with_runtime(
+            &mut rt,
+            "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    e s",
+        );
+        let Stmt::DefStructStmt(stmt) = stmt else {
+            panic!("expected struct definition");
+        };
+        let Some((param_def, _)) = &stmt.param_def_with_dom else {
+            panic!("expected struct parameter definition");
+        };
+        assert_eq!(param_def.collect_param_names(), vec!["s".to_string()]);
+        assert_eq!(format!("{}", stmt), "struct Group<s set>:");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op");
+        let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {
+            panic!("expected struct field access");
+        };
+        assert_without_mod(&access.struct_obj.name, "Group");
+        assert_eq!(access.struct_obj.params.len(), 1);
+        assert_eq!(access.field_name, "op");
+        assert_eq!(format!("{}", access), "&Group<s>{p}.op");
+
+        let old_obj = parse_one_obj_line_with_runtime(&mut rt, "&Group(s){p}.op");
+        assert_eq!(format!("{}", old_obj), "&Group<s>{p}.op");
+
+        let projected_call = parse_one_obj_line_with_runtime(&mut rt, "p[2](x, y)");
+        assert_eq!(format!("{}", projected_call), "p[2](x, y)");
+
+        let field_call = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op(x, y)");
+        assert_eq!(format!("{}", field_call), "&Group<s>{p}.op(x, y)");
+    }
+
+    #[test]
     fn module_qualification_keeps_definition_name_bare() {
         let mut rt = Runtime::new();
         rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
@@ -1945,20 +1978,14 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
-    fn module_qualification_qualifies_bare_infix_function_head() {
+    fn backtick_infix_function_syntax_is_rejected() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
-
-        let obj = parse_one_obj_line_with_runtime(&mut rt, "a ` f b");
-
-        let Obj::FnObj(fn_obj) = obj else {
-            panic!("expected infix function object");
-        };
-        let FnObjHead::IdentifierWithMod(id) = fn_obj.head.as_ref() else {
-            panic!("expected module-qualified infix function head");
-        };
-        assert_eq!(id.mod_name, "Nat");
-        assert_eq!(id.name, "f");
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks("a ` f b = c", Rc::from("test.lit"))
+            .expect("tokenize stmt line");
+        assert_eq!(blocks.len(), 1);
+        assert!(rt.parse_stmt(&mut blocks[0]).is_err());
     }
 
     #[test]

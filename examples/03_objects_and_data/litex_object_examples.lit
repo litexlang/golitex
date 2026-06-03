@@ -1,7 +1,7 @@
 # Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
 # IdentifierWithMod uses `::` between name parts (`MOD_SIGN`).
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
-# Union/Intersect/SetMinus/SetDiff, infix ` then name (e.g. `union as in lhs `union rhs), Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
+# Union/Intersect/SetMinus/SetDiff, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
 # TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
@@ -61,19 +61,6 @@ prove:
 prove:
     have u set = set_diff({1, 2}, {3})
 
-# --- infix `name` on Obj::Union, Intersect, Range, ClosedRange (SetMinus infix: same token as `set_minus`) ---
-prove:
-    1 $in {1} `union {2}
-    2 $in {1, 2} `intersect {2}
-    have p set = 0 `range 10
-    have q set = 0 `closed_range 1
-
-prove:
-    have v set = {1} `set_minus {2}
-
-prove:
-    cart(R, Q) `proj 1 = R
-
 # --- Obj::Range, ClosedRange (keyword forms; membership often via `know` / set equality) ---
 prove:
     have r set = range(0, 10)
@@ -131,13 +118,11 @@ prove:
     pair_value(0)[1] $in Z
     pair_value(0)[2] $in Z
 
-# --- Struct definitions keep field declarations, but no field-access object syntax is available. ---
+# --- Parameterized struct references use angle brackets; fields are accessed through a struct view. ---
 prove:
-    abstract_prop p(a)
-    struct rec(a set):
+    struct rec<a set>:
         fld a
         fld2 a
-        <=>:
-            $p(fld)
 
-# --- Struct type objects are not supported. ---
+    have r &rec<R>
+    &rec<R>{r}.fld $in R

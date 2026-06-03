@@ -1749,6 +1749,21 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnObjHead::FiniteSeqListObj(new_v)
         }
+        FnObjHead::ObjAtIndex(v) => {
+            let replaced = Obj::replace_bound_identifier(Obj::ObjAtIndex(v), from, to);
+            let Obj::ObjAtIndex(new_v) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::ObjAtIndex(new_v)
+        }
+        FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => {
+            let replaced =
+                Obj::replace_bound_identifier(Obj::ObjAsStructInstanceWithFieldAccess(v), from, to);
+            let Obj::ObjAsStructInstanceWithFieldAccess(new_v) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(new_v)
+        }
         FnObjHead::Induc(p) => {
             let name = if p.name == from {
                 to.to_string()
@@ -1792,9 +1807,9 @@ impl fmt::Display for StructObj {
             write!(
                 f,
                 "{}{}{}",
-                LEFT_BRACE,
+                LESS,
                 vec_to_string_join_by_comma(&self.params),
-                RIGHT_BRACE
+                GREATER
             )?;
         }
         Ok(())
@@ -1822,9 +1837,9 @@ impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
             write!(
                 f,
                 "{}{}{}",
-                LEFT_BRACE,
+                LESS,
                 vec_to_string_join_by_comma(&self.struct_obj.params),
-                RIGHT_BRACE
+                GREATER
             )?;
         }
         write!(

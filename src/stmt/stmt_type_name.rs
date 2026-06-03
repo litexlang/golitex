@@ -261,6 +261,12 @@ impl HaveObjEqualStmt {
     }
 }
 
+impl HaveObjByExistFactsStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveObjByExistFactsStmt".to_string()
+    }
+}
+
 impl HaveByExistStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveExistObjStmt".to_string()
