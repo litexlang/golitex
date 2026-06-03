@@ -5,6 +5,8 @@
 binary/
 scripts/*
 !scripts/update_external_repos.sh
+!scripts/build_dataset_current_data.py
+!scripts/dataset_review_dashboard.html
 examples/hidden
 
 # Editor / tooling

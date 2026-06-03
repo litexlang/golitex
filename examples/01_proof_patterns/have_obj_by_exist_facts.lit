@@ -1,0 +1,21 @@
+know exist x R st {x > 0}
+
+have x R:
+    x > 0
+
+x > 0
+
+know exist a, b R st {a > b, b > 0}
+
+have a, b R:
+    a > b
+    b > 0
+
+a > b
+b > 0
+
+template positive_choice<s set: s = s>:
+    have positive_choice R:
+        positive_choice > 0
+
+\positive_choice<R> > 0

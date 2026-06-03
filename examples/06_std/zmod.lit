@@ -1,0 +1,13 @@
+import ZMod
+
+by thm ZMod::value_ZMod(5)
+$ZMod::value(5, ZMod::ZMod(5))
+
+1 < 5
+1 $in ZMod::ZMod(5)
+
+ZMod::repr(6, 5) = 1
+ZMod::add(5, 3, 4) = 2
+ZMod::mul(5, 3, 4) = 2
+
+$ZMod::congruent(5, 6, 1)

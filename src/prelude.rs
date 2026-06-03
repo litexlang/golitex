@@ -157,8 +157,9 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_repl, run_repl_with_detail_output, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_for_cli, run_source_code_in_file_with_ok, run_stmt_at_global_env,
+    run_latex_repl, run_repl, run_repl_with_detail_output, run_source_code,
+    run_source_code_in_file, run_source_code_in_file_for_cli, run_source_code_in_file_with_ok,
+    run_stmt_at_global_env,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
@@ -215,6 +216,7 @@ pub use crate::stmt::definition_stmt::HaveFnByInducCaseBody;
 pub use crate::stmt::definition_stmt::HaveFnByInducStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
+pub use crate::stmt::definition_stmt::HaveObjByExistFactsStmt;
 pub use crate::stmt::definition_stmt::HaveObjEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;

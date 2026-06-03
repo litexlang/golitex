@@ -10,6 +10,7 @@ impl Runtime {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
             Stmt::HaveObjEqualStmt(d) => self.exec_have_obj_equal_stmt(d),
+            Stmt::HaveObjByExistFactsStmt(d) => self.exec_have_obj_by_exist_facts_stmt(d),
             Stmt::HaveByExistStmt(d) => self.exec_have_exist_obj_stmt(d),
             Stmt::HaveByPreimageStmt(d) => self.exec_have_by_preimage_stmt(d),
             Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d),

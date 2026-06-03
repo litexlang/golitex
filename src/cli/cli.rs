@@ -106,7 +106,7 @@ pub fn run_cli() {
             "-latex" => {
                 index += 1;
                 if index >= args.len() {
-                    println!("{}", run_latex_interactive());
+                    run_latex_repl(VERSION);
                     return;
                 }
                 let latex_target_flag = match read_any_value_after_flag(&args, &mut index, "-latex")
@@ -415,10 +415,6 @@ fn run_tutorial() -> String {
     return "-tutorial: not implemented in the Rust kernel yet".to_string();
 }
 
-fn run_latex_interactive() -> String {
-    return "-latex: interactive LaTeX mode is not implemented in the Rust kernel yet".to_string();
-}
-
 /// Print instructions instead of running a package manager.
 /// Litex can be installed by Homebrew, release packages, or source builds, so
 /// startup should not perform network or system changes on the user's machine.
@@ -455,7 +451,7 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <repo> : run a repository and return one wrapper JSON object
-litex -latex : compile the given file or code to LaTeX interactively in your terminal
+litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <repo> : compile the given repository to LaTeX
