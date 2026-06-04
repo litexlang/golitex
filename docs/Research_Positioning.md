@@ -28,9 +28,9 @@ large foundational questions. The project is a pressure test for one interface
 hypothesis:
 
 > Litex is not trying to replace Lean. It tests a different hypothesis: that a
-> smaller, readable, fact-oriented formal language can make checked mathematics
-> cheap enough for students, domain scientists, and AI agents to produce useful
-> formal data at scale.
+> readable, fact-oriented surface language, backed by a larger trusted
+> mathematical checker, can make useful checked mathematics cheaper for
+> students, domain scientists, and AI agents to produce.
 
 The main risks should be stated directly in research-facing material:
 

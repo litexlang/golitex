@@ -1472,6 +1472,27 @@ forall a, b R:
 }
 
 #[test]
+fn huge_integer_division_returns_error_instead_of_panicking() {
+    let source_code = r#"
+1 / 99999999999999999999999999999999999999999 = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "huge_integer_division_returns_error_instead_of_panicking",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "oversized division should fail normally instead of verifying:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn quotient_nonzero_from_numerator_nonzero_builtin_rule() {
     let source_code = r#"
 forall a, b R:
@@ -2328,6 +2349,100 @@ fn runner_accepts_know_as_normal_execution() {
 
     assert!(ok, "runner should not reject know statements:\n{}", output);
     assert!(output.contains("\"result\": \"success\""));
+}
+
+#[test]
+fn strict_mode_rejects_user_know() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_know");
+    runtime.reject_user_know = true;
+
+    let (stmt_results, runtime_error) = run_source_code("know 1 = 0", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "strict mode should reject user know statements:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("strict mode rejects user know statements"),
+        "strict mode should report the know boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_runner_rejects_user_know() {
+    let (ok, output) = run_runner_for_code_strict("know 1 = 0", "-runner-test", true);
+
+    assert!(
+        !ok,
+        "strict runner should reject know statements:\n{}",
+        output
+    );
+    assert!(output.contains("\"result\": \"error\""));
+    assert!(output.contains("strict mode rejects user know statements"));
+}
+
+#[test]
+fn strict_mode_allows_imported_module_know() {
+    let module_dir =
+        std::env::temp_dir().join(format!("litex-strict-import-{}", std::process::id()));
+    fs::create_dir_all(&module_dir).expect("create strict import test module");
+    fs::write(
+        module_dir.join("main.lit"),
+        "abstract_prop imported_prop(x)\nknow $imported_prop(2)\n",
+    )
+    .expect("write strict import test module");
+    let source_code = format!(
+        "import \"{}\" as Trusted\n$Trusted::imported_prop(2)",
+        module_dir.to_string_lossy()
+    );
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_know");
+    runtime.reject_user_know = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_dir_all(&module_dir);
+    assert!(
+        run_succeeded,
+        "strict mode should allow know inside imported modules:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_mode_rejects_run_file_know() {
+    let run_file_path = std::env::temp_dir().join(format!(
+        "litex-strict-run-file-{}.lit",
+        std::process::id()
+    ));
+    fs::write(&run_file_path, "know 1 = 0\n").expect("write strict run_file test file");
+    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_know");
+    runtime.reject_user_know = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_file(&run_file_path);
+    assert!(
+        !run_succeeded,
+        "strict mode should reject know inside run_file:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("strict mode rejects user know statements"),
+        "strict run_file failure should report the know boundary:\n{}",
+        run_output
+    );
 }
 
 #[test]

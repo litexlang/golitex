@@ -16,9 +16,11 @@ _- Jeff Hinton_
 
 > **Boundary notice:** Litex is not a replacement for Lean, Coq, or Isabelle.
 > It explores a narrower interface hypothesis: users write mathematical facts,
-> and the checker grows an explainable verified context. `know` facts are
-> assumptions or proof debt, and builtin/infer rules are part of the trusted
-> mathematical background. For details, read
+> and the checker grows an explainable verified context. This lowers the user's
+> proof-writing burden by putting more routine mathematical background in the
+> checker, so the trusted base is larger than a small proof kernel. `know`
+> facts are assumptions or proof debt, and builtin/infer rules are part of the
+> trusted mathematical background. For details, read
 > [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
 
 This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
@@ -39,7 +41,7 @@ ordinary mathematical objects. The design goal is not kernel minimality at this
 stage; it is a short, explainable feedback loop where the user can write the
 next mathematical fact and see whether it follows from the current context.
 
-This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
+This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a checked and explainable trace relative to the trusted background. For example, using a known value can be written as direct algebraic steps:
 
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
@@ -90,6 +92,12 @@ same loop is used for larger Mechanics examples and benchmark-style tasks:
 first build a readable proof skeleton, then replace broad assumptions by
 smaller verified branches or record the exact language, library, rule, or
 diagnostic gap that blocks the next step.
+
+When you want to audit a file, inspect the remaining `know` facts before
+calling the result complete. Each one should be replaced by a checked claim,
+accepted as background, or recorded as proof debt. This audit matters because
+Litex's convenience comes from a larger trusted mathematical background, not
+from a small proof kernel.
 
 For algebra, prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
 
@@ -1392,6 +1400,15 @@ claim forall! x R => {x = x}:
 **`know:`** (or **`know`** with a block) adds lemmas or axioms to the current environment without proving them in this snippet.
 
 > Hint: `know` is an axiom-like statement. Litex allows it and warns you, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
+
+A final artifact should not leave broad `know` facts unexplained. Either prove
+the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
+trusted assumption with a clear reason.
+
+If the run uses `-strict`, user `know` statements are rejected instead of being
+stored. Facts loaded from imported modules are still trusted inputs, so strict
+mode is an audit boundary for the current run, not a claim that all dependencies
+are assumption-free.
 
 ```litex
 # three primitive terms:

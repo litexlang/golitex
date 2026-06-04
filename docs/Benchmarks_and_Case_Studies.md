@@ -15,6 +15,11 @@ The current best source of tasks is The Mechanics of Litex Proof. It contains
 many textbook-style examples, from short calculations to larger function and
 set arguments.
 
+The benchmark question is not whether Litex has the smallest trusted base. It
+does not. The useful question is whether a larger trusted mathematical checker
+can substantially lower the user burden while still making assumptions,
+builtin-rule use, and remaining proof debt visible enough to audit.
+
 ## Evidence Boundary
 
 Benchmark results should be used conservatively. They can show that a concrete
@@ -63,7 +68,25 @@ Each benchmark item should record:
 
 The most important policy is the `know` policy. A task should say whether
 `know` is forbidden, allowed only for named background facts, or allowed as
-temporary proof debt during repair but not in the final answer.
+temporary proof debt during repair but not in the final answer. If `know` is
+forbidden for a benchmark item, the benchmark record should include an explicit
+source audit showing that no user `know` facts remain. If `know` is allowed,
+each remaining fact should be classified as accepted background or proof debt.
+
+## Public Slice Contract
+
+The public `benchmarks/` directory is for cleaned, reviewable slices, not raw
+local workspaces. A useful first slice is small: about 20-50 representative
+items from one source, with clear `translated`, `checkable`, or `blocked`
+status.
+
+Each slice should include a `current_data.json` status index, a short README,
+the relevant `.lit` files, verifier commands for checkable items, and blocker
+labels for unfinished items. Large full datasets should live in external
+dataset repositories, Hugging Face datasets, release artifacts, or private
+workspaces when size or licensing requires it.
+
+For review protocol, see [Reviewer Guide](Reviewer_Guide.md).
 
 ## Current Case Studies
 

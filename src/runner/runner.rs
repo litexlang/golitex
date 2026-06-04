@@ -8,10 +8,26 @@ const RUNNER_VERSION: &str = "0.1";
 const MAIN_DOT_LIT: &str = "main.lit";
 
 pub fn run_runner_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
-    run_runner_on_source("code", label, code, hide_file_paths)
+    run_runner_on_source("code", label, code, hide_file_paths, false)
+}
+
+pub fn run_runner_for_code_strict(
+    code: &str,
+    label: &str,
+    hide_file_paths: bool,
+) -> (bool, String) {
+    run_runner_on_source("code", label, code, hide_file_paths, true)
 }
 
 pub fn run_runner_for_file(file_path: &str, hide_file_paths: bool) -> (bool, String) {
+    run_runner_for_file_with_strict(file_path, hide_file_paths, false)
+}
+
+pub fn run_runner_for_file_with_strict(
+    file_path: &str,
+    hide_file_paths: bool,
+    reject_user_know: bool,
+) -> (bool, String) {
     let resolved_path = match resolve_litex_file_path(file_path) {
         Ok(path) => path,
         Err(message) => {
@@ -41,10 +57,19 @@ pub fn run_runner_for_file(file_path: &str, hide_file_paths: bool) -> (bool, Str
         resolved_path.as_str(),
         source_code.as_str(),
         hide_file_paths,
+        reject_user_know,
     )
 }
 
 pub fn run_runner_for_repo(repo_path: &str, hide_file_paths: bool) -> (bool, String) {
+    run_runner_for_repo_with_strict(repo_path, hide_file_paths, false)
+}
+
+pub fn run_runner_for_repo_with_strict(
+    repo_path: &str,
+    hide_file_paths: bool,
+    reject_user_know: bool,
+) -> (bool, String) {
     let joined = Path::new(repo_path).join(MAIN_DOT_LIT);
     let joined_string = match joined.to_str() {
         Some(path_string) => path_string.to_string(),
@@ -85,6 +110,7 @@ pub fn run_runner_for_repo(repo_path: &str, hide_file_paths: bool) -> (bool, Str
         resolved_path.as_str(),
         source_code.as_str(),
         hide_file_paths,
+        reject_user_know,
     )
 }
 
@@ -113,11 +139,13 @@ fn run_runner_on_source(
     target_label: &str,
     source_code: &str,
     hide_file_paths: bool,
+    reject_user_know: bool,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
+    runtime.reject_user_know = reject_user_know;
 
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     let (ok, trace_output) =
