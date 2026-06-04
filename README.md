@@ -6,7 +6,7 @@
 
 # Litex: A Fact-Oriented Language for Checked Mathematics
 
-*by Jiachen Shen and The Litex Team, version 0.9.88-beta*
+*by Jiachen Shen and The Litex Team, version 0.9.96-beta*
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -14,30 +14,9 @@
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
-[![Textbook](https://img.shields.io/badge/Textbook-orange?logo=book)](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof)
+[![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
 **Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
-
-**Scope notice:** Litex is not trying to replace Lean, Coq, Isabelle, or other
-mature proof assistants. It tests a different route: a readable,
-fact-oriented surface language where users write mathematical facts and the
-checker tries to grow a verified context from explicit assumptions, known
-facts, and builtin mathematical relationships.
-
-**Trust boundary notice:** Litex is not a small-kernel proof assistant. Its
-trusted base is intentionally larger because many routine relationships about
-numbers, sets, equality, membership, functions, tuples, and order live in the
-checker. The benefit is a much lower burden on the user: many ordinary
-bookkeeping steps can be checked by context growth and shape matching instead
-of being spelled out as tactic scripts or low-level proof terms.
-
-**Assumption notice:** `know` records an explicit assumption, background theorem,
-or proof-debt item. It is not a proof-producing command. A serious Litex
-artifact should say which facts were checked by the verifier, which facts
-remain as explicit assumptions, and which builtin or standard-library
-background it relies on. For assumption-sensitive checks after builtin
-initialization, run with `-strict`; user `know` statements are rejected, while
-imported-module `know` facts remain explicit trusted dependencies.
 
 </div>
 
@@ -81,11 +60,6 @@ attempts. The goal is to make ordinary mathematical reasoning precise enough
 for machine feedback while preserving the structure and appearance of
 mathematical reasoning itself.
 
-This path makes a deliberate trade-off. Litex accepts a larger trusted
-implementation than small-kernel systems in order to make the proof surface
-lighter. The system tries to do more routine checking in the verifier so users
-can spend more of their attention on the mathematical sequence of facts.
-
 ## The First Mental Model
 
 Think of a Litex file as a small mathematical world that grows one checked fact
@@ -113,6 +87,11 @@ The four moves are the basic Litex loop:
 2. `abstract_prop mortal(x)` adds a new word that can be used in facts.
 3. `know forall x human: ...` stores the general rule.
 4. `$mortal(Socrates)` asks Litex to verify the particular conclusion.
+
+The example is intentionally small, but it uses two assumption-facing tools:
+`abstract_prop` declares the vocabulary word `mortal`, and `know` assumes the
+general rule. Litex checks that the conclusion follows from that context; it
+does not prove the assumed rule from nothing.
 
 When Litex accepts that final line, the verifier output can explain the route
 it found. The exact JSON may include line numbers and more trace fields, but
@@ -142,20 +121,6 @@ statement is meaningful, but Litex did not find enough verified information to
 prove it. `error` means the line cannot be checked as a valid fact, often
 because the syntax is wrong or some object is not well-defined, such as an
 undeclared name, a function argument outside its domain, or `1 / 0`.
-
-The online textbook, [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof),
-is the best starting point for learning this loop gradually. It begins with
-calculation and then moves to structured proofs, logic, induction, functions,
-sets, relations, and cardinality.
-
-For the full Litex run pipeline, including the executor and fact-verification
-subpath, see [Verifier Flow Examples](docs/Verifier_Flow_Examples.md).
-
-*The Mechanics corpus is the current first-contact evidence, not just a toy
-README example. The local markdown runner checks the runnable book snippets
-with `cargo test run_the_mechanics_markdown_files`, and the extractor currently
-finds 250 Litex examples across calculation, logic, induction, functions, sets,
-relations, and cardinality.*
 
 ## How is Litex Different
 
@@ -212,6 +177,8 @@ verifies the conclusion. This is the core difference in proof style: Litex can
 use named theorem calls when names make the proof clearer, but it also lets
 ordinary factual lines drive verification by their mathematical shape.
 
+>  This example uses two assumption-facing tools. `abstract_prop` declares an uninterpreted predicate name, and `know` assumes a fact about it, similar in role to Lean's `by sorry`. They are useful for axioms and proof skeletons, but final artifacts should replace, justify, or explicitly record them as proof debt.
+
 ## Goals of Litex
 
 Litex is experimental, but it is aiming at three simple things:
@@ -241,41 +208,17 @@ Here is the whole landscape of Litex kernel:
 
 ## Starting Points
 
-If this is your first formal proof language, start with the textbook path:
+Litex keeps the public documentation small:
 
-1. [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof):
-   learn the proof style gradually, beginning with calculations.
-2. [Setup: Download Litex](https://litexlang.com/doc/Setup): run snippets
-   locally.
-3. [Manual](https://litexlang.com/doc/Manual): look up syntax once you have
-   written a few examples.
-
-A useful first ten minutes is to run the first Chapter 1 calculation, change
-one assumption, and see which later fact becomes `unknown`. Then add the missing
-intermediate line. That is the Litex learning loop in miniature: create a small
-world, state the next fact, and let the checker show what is still missing.
-
-For different readers:
-
-1. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and evaluation.
-2. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
-3. [For Mathematicians](https://litexlang.com/doc/For_Mathematicians): for stronger mathematical examples, including quotient sets, axiomatic structures, geometry, Zorn-style existence, linear algebra, and analysis interfaces.
-4. [Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry): for a complete abstract-mathematics example.
-5. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, explicit assumptions, builtin rules, and current limitations.
-6. [Reviewer Guide](docs/Reviewer_Guide.md): for structured human or AI reviews that separate Litex's interface hypothesis from its trusted-boundary risks.
-7. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
-8. [FAQ](https://litexlang.com/doc/FAQ): for common design and performance questions.
-9. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): for Chinese strategic and project discussions.
-10. [How to Contribute](https://litexlang.com/doc/How_To_Contribute): for mathematically trained new contributors who want useful first tasks.
-11. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
-
-Resources on the official website:
-
-1. [Official site](https://litexlang.com)
-2. [Textbook: The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof)
-3. [Setup: Download Litex](https://litexlang.com/doc/Setup)
-4. [Manual](https://litexlang.com/doc/Manual)
-5. [Reviewer Guide](docs/Reviewer_Guide.md)
+1. [Setup: Download Litex](https://litexlang.com/doc/Setup): install Litex,
+   run files, and understand CLI output.
+2. [Manual](https://litexlang.com/doc/Manual): the source of truth for syntax,
+   statements, proof flow, builtin rules, and inference.
+3. [FAQ](https://litexlang.com/doc/FAQ): design rationale, trust boundaries,
+   comparison notes, and old overview material in condensed form.
+4. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): dedicated
+   comparison with Lean's interface and ecosystem.
+5. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): Chinese introduction and project framing.
 
 Resources:
 
@@ -299,5 +242,10 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
+
+The path of Litex is a deliberate trade-off. Litex accepts a larger trusted
+implementation than small-kernel systems in order to make the proof surface
+lighter. The system tries to do more routine checking in the verifier so users
+can spend more of their attention on the mathematical sequence of facts. This uniqueness is the core value of Litex as a proof assistant, but it also makes contribution to Litex more difficult and demanding. We welcome young talents to try Litex and contribute to it.
 
 Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, and Yunwen Guo for their support and advice. I am sure this list will keep growing.

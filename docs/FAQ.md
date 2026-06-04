@@ -98,9 +98,8 @@ computational data. The choice is pragmatic: the project is testing whether a
 fact-oriented, readable, set-theoretic interface can cover a large amount of
 day-to-day mathematics with a smaller user-facing language.
 
-For a concrete quotient-group construction and a broader mathematical example
-gallery, see the official page:
-https://litexlang.com/doc/For_Mathematicians
+For a concrete quotient-group construction, see the quotient-group section in
+the Manual.
 
 ## What is a `struct` in Litex?
 
@@ -470,3 +469,111 @@ predicate goal. The strategy can also be stopped and re-enabled, so this form
 of automation remains local and controllable. In serious files, a strategy
 should be backed by a real checked proof or by clearly marked proof debt, just
 like any other reusable proof route.
+
+## Research Positioning
+
+Litex is not trying to replace Lean, Coq, or Isabelle. It tests whether a
+readable, fact-oriented surface language, backed by a larger trusted
+mathematical checker, can make useful checked mathematics cheaper for students,
+domain scientists, and AI agents.
+
+## Litex Vs Lean
+
+Lean is the stronger mature ecosystem, with Mathlib, tactics, proof terms, and
+a small trusted kernel. Litex explores a different interface: users write
+mathematical facts in order, and the checker grows an explainable context by
+matching shapes, known facts, known `forall` facts, builtin rules, and inferred
+facts.
+
+## AI For Science
+
+Litex is useful where a scientific or applied derivation already has local
+claims that should be checked, repaired, or audited. The goal is not to certify
+discovery by prose, but to put generated derivations into a fast verifier
+feedback loop.
+
+## For Mathematicians
+
+For mathematicians, the main point is that Litex can start from objects,
+functions, predicates, axioms, and reusable definitions before choosing a
+concrete model. This fits quotient-style constructions, axiomatic structures,
+set interfaces, and algebraic proof flows.
+
+## Soundness And Limitations
+
+A Litex success is relative to the trusted background. `know` is an
+assumption-facing tool, similar in role to Lean's `by sorry`: it adds facts to
+the context without proving them. `abstract_prop` declares an uninterpreted
+predicate name and gives it no mathematical content by itself. In final
+artifacts, each use should be replaced by a checked claim/theorem, justified as
+trusted background, or recorded as remaining proof debt.
+
+## Verifier Flow Examples
+
+The verifier pipeline has three different kinds of outcomes that should not be
+confused: proof-required facts that must verify, executor statements that update
+the environment, and store/assume-only paths such as `know` or local
+assumptions. The detailed reference belongs in the Manual's proof-process
+section.
+
+## Preview Features
+
+Preview features should be documented in the Manual when they are part of the
+current language surface. Features that are too unstable for the Manual should
+stay in code comments, examples, or issue notes until their behavior is clear.
+
+## Litex Cheatsheet
+
+Quick syntax reminders are useful, but they should not become a second reference
+manual. New users should start with `have`, bare fact lines, `forall`, `claim`,
+`witness`, and `by cases`; use `know` and `abstract_prop` only when
+intentionally modeling axioms or proof debt.
+
+## Tutorial Introduction
+
+The beginner path is: write a tiny checked fact, add context, define a concept,
+use a local proof block, and read `true`, `unknown`, and `error` as feedback.
+The Manual carries the durable version of this learning path.
+
+## Tutorial Examples
+
+Small examples are still valuable, but they should live as runnable `.lit` files
+or short Manual snippets rather than a separate prose page that can drift from
+the language reference.
+
+## Hilbert Axioms Of Euclidean Geometry
+
+The Hilbert geometry example demonstrated abstraction-first development:
+declare primitive objects and relations, record axioms explicitly, then build
+derived notions on top. The same lesson applies to any axiomatic interface where
+the structure should be visible before a concrete model is chosen.
+
+## How Litex Proves A Fact
+
+Litex proves a fact by trying proof routes such as builtin rules, known facts,
+known `forall` facts, prop definitions, and theorem calls. Those details belong
+in the Manual because they describe language behavior, not positioning.
+
+## How To Contribute
+
+Useful contribution work should be evidence-driven: translate small
+representative mathematical slices, run the verifier, keep successful items
+runnable, and record blockers precisely.
+
+## Dataset Contributor Flow
+
+Dataset work should keep a tight loop: understand the math, write natural
+Litex, run the verifier, classify the result as translated/checkable/blocked,
+and record the blocker when the proof cannot yet be completed.
+
+## Benchmarks And Case Studies
+
+Benchmark claims should come from runnable artifacts, not positioning text.
+Failed translations are useful data when they identify missing language, stdlib,
+inference, kernel, or diagnostic support.
+
+## Reviewer Guide
+
+Review Litex by separating the interface hypothesis from trust-boundary risks.
+A proof script can be readable and promising while builtin rules, `know`, stdlib
+coverage, and dataset bookkeeping still need careful audit.
