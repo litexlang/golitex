@@ -21,9 +21,11 @@ The short version is:
 Equally important:
 
 > Litex is not trying to replace Lean, Coq, or Isabelle. It tests a different
-> interface hypothesis: that a smaller, readable, fact-oriented language can
-> make useful checked mathematical data cheaper to produce, while keeping
-> assumptions and verifier boundaries visible.
+> interface hypothesis: a readable, fact-oriented surface language can reduce
+> the user's proof-engine burden by trusting more builtin mathematical
+> background. The trusted base is larger than a small proof kernel; the intended
+> benefit is a shorter feedback loop for ordinary mathematics, with assumptions
+> and verifier boundaries kept visible.
 
 This page is written for readers who care about proof assistant design,
 foundations, and the boundary between a checked theorem and an assumed fact.
@@ -89,6 +91,18 @@ This means a Litex file with `know` facts should not be described simply as
 "fully proved" unless the remaining assumptions are listed and accepted as part
 of the intended theory, benchmark skeleton, or local proof debt.
 
+For assumption-sensitive checks, audit `know` facts explicitly. A final
+artifact should either replace each `know` with a checked proof, justify it as
+accepted background, or list it as remaining proof debt. Strict mode makes this
+boundary executable for user code, but the soundness story should already treat
+any remaining `know` as trusted input.
+
+Litex also provides an executable strict mode after builtin initialization:
+`litex -strict -f proof.lit`, `litex -strict -e "..."`, and
+`litex -strict -runner ...` reject user `know` statements instead of storing
+them. This does not shrink the builtin trusted base. Imported modules may still
+contain `know`; those facts should be treated as explicit trusted dependencies.
+
 ## Trusted Base
 
 The current trusted base includes the parser, the object and fact
@@ -98,8 +112,9 @@ matches known facts.
 
 This trusted base is larger and less minimal than the kernel of mature systems
 such as Lean, Coq, or Isabelle. That is an intentional design trade-off at the
-prototype stage: Litex puts more ordinary mathematical background into the
-checker so that proof scripts can stay closer to textbook reasoning.
+prototype stage, not an accidental claim of kernel minimality: Litex puts more
+ordinary mathematical background into the checker so that proof scripts can
+stay closer to textbook reasoning.
 
 The reason is structural, not cosmetic. Litex is relation-first: facts about
 membership, subset, equality, order, functions, domains, tuples, finite sets,
@@ -107,7 +122,9 @@ and user-defined predicates are meant to interact directly in the checker.
 Rather than asking every user to expose this interaction through a layered
 abstract interface, Litex makes many of these ordinary relationships builtin.
 The cost is a larger trusted implementation. The benefit is a shorter and more
-natural checked feedback loop for everyday mathematics.
+natural checked feedback loop for everyday mathematics, because users do not
+have to manually expose every routine membership, equality, domain, or order
+bookkeeping step.
 
 The important design question is not whether this trusted base is small today.
 It is whether the boundary can be made explicit enough for users and
@@ -181,8 +198,9 @@ infer-rule, or diagnostic gaps.
 Litex is not trying to be a faster Lean. It chooses a different proof
 interface: for textbook-style mathematics, the user writes a sequence of
 checkable facts, and the checker uses context plus builtin relationships to
-keep the feedback loop short. *In a local run, more than 240 runnable examples
-from The Mechanics of Litex Proof checked in about 13 seconds.*
+keep the feedback loop short. The Mechanics extractor currently finds 250
+Litex examples, and the repository test `cargo test
+run_the_mechanics_markdown_files` checks the runnable markdown snippets.
 
 ## Feedback Wanted
 

@@ -1,9 +1,9 @@
 # For Mathematicians
 
-Litex is not trying to replace Lean. It tests a different hypothesis: that a
-smaller, readable, fact-oriented formal language can make checked mathematics
-cheap enough for students, domain scientists, and AI agents to produce useful
-formal data at scale.
+Litex is not trying to replace Lean. It tests a different route: a readable,
+fact-oriented surface language, backed by a larger trusted mathematical
+checker, can make useful checked mathematics cheaper for students, domain
+scientists, and AI agents to produce.
 
 This page is for mathematicians who want to know whether Litex can express
 ordinary mathematical objects, not only short arithmetic calculations. The

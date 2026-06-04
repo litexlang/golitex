@@ -26,7 +26,16 @@ The intended layer is narrower: given a mathematical derivation written as
 explicit facts, Litex can check which local facts follow from the current
 context, which facts are malformed, and which facts remain as assumptions or
 proof debt. Any use of `know` must be treated as trusted input unless it is
-later replaced by checked Litex proof.
+later replaced by checked Litex proof. For an assumption-sensitive audit, list
+the remaining `know` facts and decide whether each one is accepted background,
+temporary proof debt, or a generated claim that still needs proof.
+
+This is a different route from small-kernel proof assistants. Litex trusts a
+larger checker with more builtin mathematical background so the user or AI
+agent can write the derivation as a sequence of local facts instead of a long
+proof-engine script. The payoff is lower proof-writing friction; the cost is
+that builtin rules, inferred facts, standard-library assumptions, and explicit
+`know` lines must be part of the audit record.
 
 ## Why Litex Fits This Layer
 
@@ -73,6 +82,13 @@ A useful workflow is:
 5. Treat `unknown` as a missing mathematical step.
 6. Add the missing local fact, domain condition, lemma, or assumption.
 7. Keep the final derivation as a checked artifact with explicit assumptions.
+
+When the goal is to detect AI-inserted assumptions rather than develop a proof
+skeleton, do a final assumption audit. The common failure mode is that a
+plausible generated lemma is admitted through `know` and then reused as if it
+had been proved. The output artifact should make that impossible to miss: every
+unchecked fact should be replaced, justified as trusted background, or recorded
+as proof debt.
 
 This turns the broad problem of scientific reasoning hallucination into a more
 local problem: each generated line must be a well-defined mathematical fact

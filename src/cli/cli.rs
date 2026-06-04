@@ -9,10 +9,12 @@ pub const MAIN_DOT_LIT: &str = "main.lit";
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
+const STRICT_FLAG: &str = "-strict";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let detail_output = remove_flag(&mut args, DETAIL_FLAG);
+    let reject_user_know = remove_flag(&mut args, STRICT_FLAG);
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -46,6 +48,7 @@ pub fn run_cli() {
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
                 runtime.detail_output = detail_output;
+                runtime.reject_user_know = reject_user_know;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
                 let output =
@@ -63,7 +66,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str(), detail_output);
+                main_flag_file(file_path.as_str(), detail_output, reject_user_know);
                 return;
             }
             "-r" => {
@@ -84,19 +87,20 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str(), detail_output);
+                main_flag_file(joined_string.as_str(), detail_output, reject_user_know);
                 return;
             }
             "-runner" => {
                 index += 1;
-                let (ok, output) = match main_flag_runner(&args, &mut index, detail_output) {
-                    Ok(output) => output,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
+                let (ok, output) =
+                    match main_flag_runner(&args, &mut index, detail_output, reject_user_know) {
+                        Ok(output) => output,
+                        Err(message) => {
+                            eprintln!("{}", message);
+                            print_help_message();
+                            process::exit(2);
+                        }
+                    };
                 println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
                 if !ok {
                     process::exit(1);
@@ -244,7 +248,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl_with_detail_output(VERSION, detail_output);
+    run_repl_with_detail_output_and_strict(VERSION, detail_output, reject_user_know);
 }
 
 fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
@@ -291,7 +295,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str, detail_output: bool) {
+fn main_flag_file(file_flag: &str, detail_output: bool, reject_user_know: bool) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -321,7 +325,11 @@ fn main_flag_file(file_flag: &str, detail_output: bool) {
         }
     };
 
-    let output = run_source_code_in_file_for_cli(path_string.as_str(), detail_output);
+    let output = run_source_code_in_file_for_cli_with_strict(
+        path_string.as_str(),
+        detail_output,
+        reject_user_know,
+    );
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
@@ -329,25 +337,35 @@ fn main_flag_runner(
     args: &[String],
     index: &mut usize,
     detail_output: bool,
+    reject_user_know: bool,
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-runner")?;
     let hide_file_paths = !detail_output;
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            Ok(run_runner_for_code(
-                code.as_str(),
-                "-runner -e",
-                hide_file_paths,
-            ))
+            let output = if reject_user_know {
+                run_runner_for_code_strict(code.as_str(), "-runner -e", hide_file_paths)
+            } else {
+                run_runner_for_code(code.as_str(), "-runner -e", hide_file_paths)
+            };
+            Ok(output)
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            Ok(run_runner_for_file(file_path.as_str(), hide_file_paths))
+            Ok(run_runner_for_file_with_strict(
+                file_path.as_str(),
+                hide_file_paths,
+                reject_user_know,
+            ))
         }
         "-r" => {
             let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            Ok(run_runner_for_repo(repo_path.as_str(), hide_file_paths))
+            Ok(run_runner_for_repo_with_strict(
+                repo_path.as_str(),
+                hide_file_paths,
+                reject_user_know,
+            ))
         }
         _ => Err("-runner must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string()),
     }
@@ -459,6 +477,7 @@ litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
+litex -strict : reject user know statements after builtin initialization
 litex -fmt : format the given code
 litex -install <module> : install the given module
 litex -uninstall <module> : uninstall the given module
@@ -477,6 +496,12 @@ mod tests {
     fn help_lists_upgrade_command() {
         let message = help_message();
         assert!(message.contains("litex -upgrade"));
+    }
+
+    #[test]
+    fn help_lists_strict_command() {
+        let message = help_message();
+        assert!(message.contains("litex -strict"));
     }
 
     #[test]
