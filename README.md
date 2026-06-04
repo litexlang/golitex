@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: A Fact-Oriented Language for Checked Mathematics
+# Litex: The Formal Way to Write Math as It Looks
 
 *by Jiachen Shen and The Litex Team, version 0.9.96-beta*
 
