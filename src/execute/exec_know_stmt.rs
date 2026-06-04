@@ -2,6 +2,15 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_know_stmt(&mut self, know_stmt: &KnowStmt) -> Result<StmtResult, RuntimeError> {
+        if self.reject_user_know {
+            return Err(short_exec_error(
+                know_stmt.clone().into(),
+                "strict mode rejects user know statements; use claim/thm/prove or move trusted background into an imported module",
+                None,
+                vec![],
+            ));
+        }
+
         let mut infer_result = InferResult::new();
         for fact in know_stmt.facts.iter() {
             let fact_infer_result = self

@@ -16,10 +16,13 @@ _- Jeff Hinton_
 
 > **Boundary notice:** Litex is not a replacement for Lean, Coq, or Isabelle.
 > It explores a narrower interface hypothesis: users write mathematical facts,
-> and the checker grows an explainable verified context. `know` facts are
-> assumptions or proof debt, and builtin/infer rules are part of the trusted
-> mathematical background. For details, read
-> [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
+> and the checker grows an explainable verified context. This lowers the user's
+> proof-writing burden by putting more routine mathematical background in the
+> checker, so the trusted base is larger than a small proof kernel. `know`
+> facts are assumptions or proof debt, and builtin/infer rules are part of the
+> trusted mathematical background. For a compact discussion of trust boundaries,
+> comparison with Lean, and project positioning, read
+> [FAQ](https://litexlang.com/doc/FAQ).
 
 This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
@@ -39,7 +42,7 @@ ordinary mathematical objects. The design goal is not kernel minimality at this
 stage; it is a short, explainable feedback loop where the user can write the
 next mathematical fact and see whether it follows from the current context.
 
-This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
+This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a checked and explainable trace relative to the trusted background. For example, using a known value can be written as direct algebraic steps:
 
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
@@ -70,7 +73,7 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
 
 Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs. The deeper design goal is to make formal proof feel like context growth: write facts in mathematical order, let the checker explain how each accepted fact follows, and reuse the verified context as the argument develops.
 
-> Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
+> Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. For the dedicated comparison, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
@@ -90,6 +93,12 @@ same loop is used for larger Mechanics examples and benchmark-style tasks:
 first build a readable proof skeleton, then replace broad assumptions by
 smaller verified branches or record the exact language, library, rule, or
 diagnostic gap that blocks the next step.
+
+When you want to audit a file, inspect the remaining `know` facts before
+calling the result complete. Each one should be replaced by a checked claim,
+accepted as background, or recorded as proof debt. This audit matters because
+Litex's convenience comes from a larger trusted mathematical background, not
+from a small proof kernel.
 
 For algebra, prefer explicit local steps over "obvious" jumps. A common case is zero-product reasoning: if the context has `u * v = 0` and `v != 0`, do not jump straight to `u = 0`. Write the division step and then simplify it:
 
@@ -1013,7 +1022,15 @@ $p(1)
 
 Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. It only declares the name; it does not give the predicate any mathematical property by itself.
 
-If you want an abstract predicate to have a property, introduce that property with `know`.
+This is useful and dangerous. It is useful for axiomatized theories, examples,
+and proof skeletons where the vocabulary must exist before all definitions are
+ready. It is dangerous because a reader may see `$p(x)` and assume the predicate
+already has meaning. It does not. The meaning must come from a later checked
+definition or theorem, or from an explicit trusted assumption.
+
+If you want an abstract predicate to have a property before proving it,
+introduce that property with `know`; that makes the property trusted input for
+the current development.
 
 ```litex
 abstract_prop p(x)
@@ -1024,7 +1041,7 @@ know forall x R:
 $p(1)
 ```
 
-> Hint: `abstract_prop` is useful for examples, axiomatized theories, and temporary placeholders while developing a proof.
+> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate, and audit every `know` fact that gives it mathematical behavior.
 
 ---
 
@@ -1261,8 +1278,9 @@ template<s set>:
             exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 ```
 
-For a mathematician-facing walkthrough of this example and the prompt that
-generated the first draft, see `docs/For_Mathematicians.md`.
+This quotient construction is the main mathematician-facing example inside the
+manual: it shows how Litex can define a reusable abstract interface and then
+check the well-definedness lemmas around it.
 
 ---
 
@@ -1391,7 +1409,22 @@ claim forall! x R => {x = x}:
 
 **`know:`** (or **`know`** with a block) adds lemmas or axioms to the current environment without proving them in this snippet.
 
-> Hint: `know` is an axiom-like statement. Litex allows it and warns you, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
+`know` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
+`by sorry`: it lets development continue by adding a fact whose proof is not
+present. That is sometimes exactly what you want when you are stating axioms,
+building a large proof skeleton, or marking a precise proof-debt item. It is
+also dangerous, because every later proof may depend on the unproved fact.
+
+> Hint: `know` is an axiom-like statement. Litex allows it because it is useful for modeling and incremental proof development, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
+
+A final artifact should not leave broad `know` facts unexplained. Either prove
+the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
+trusted assumption with a clear reason.
+
+If the run uses `-strict`, user `know` statements are rejected instead of being
+stored. Facts loaded from imported modules are still trusted inputs, so strict
+mode is an audit boundary for the current run, not a claim that all dependencies
+are assumption-free.
 
 ```litex
 # three primitive terms:
@@ -1995,7 +2028,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
-> Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `know` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
 ---
 
@@ -2040,8 +2073,6 @@ statement dispatch, executor or fact-verification/storage execution, and shared
 context update. Definitions, proof blocks, `know`, generated obligations,
 `error`, `unknown`, `true`, `verified_by`, and inferred facts all fit into
 this one-run model.
-
-Detailed examples for each flow node: [Verifier Flow Examples](Verifier_Flow_Examples.md).
 
 Non-factual executor statements can define objects and concepts, import
 modules, evaluate expressions, or open local proof/control blocks. Some of

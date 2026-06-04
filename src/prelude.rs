@@ -157,9 +157,10 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_latex_repl, run_repl, run_repl_with_detail_output, run_source_code,
-    run_source_code_in_file, run_source_code_in_file_for_cli, run_source_code_in_file_with_ok,
-    run_stmt_at_global_env,
+    run_latex_repl, run_repl, run_repl_with_detail_output,
+    run_repl_with_detail_output_and_strict, run_source_code, run_source_code_in_file,
+    run_source_code_in_file_for_cli, run_source_code_in_file_for_cli_with_strict,
+    run_source_code_in_file_with_ok, run_stmt_at_global_env,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
@@ -177,7 +178,9 @@ pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
 pub use crate::runner::{
-    resolve_litex_file_path, run_runner_for_code, run_runner_for_file, run_runner_for_repo,
+    resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
+    run_runner_for_file, run_runner_for_file_with_strict, run_runner_for_repo,
+    run_runner_for_repo_with_strict,
 };
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::Runtime;
