@@ -399,7 +399,38 @@ impl Runtime {
                     .into(),
                 )
             }
-            _ => Ok((StmtUnknown::new()).into()),
+            _ => {
+                // Equality alias rule: a set alias is nonempty when it is already known equal
+                // to a structural set whose nonemptiness is verified by builtin rules.
+                // Example: from `T = fn(i closed_range(1, 3)) R`, prove `$is_nonempty_set(T)`.
+                for equal_set in self
+                    .get_all_obj_representatives_equal_to_given(&is_nonempty_set_fact.set)
+                    .into_iter()
+                {
+                    if !obj_can_trigger_nonempty_structural_builtin(&equal_set) {
+                        continue;
+                    }
+                    let equal_nonempty: AtomicFact =
+                        IsNonemptySetFact::new(equal_set, is_nonempty_set_fact.line_file.clone())
+                            .into();
+                    let equal_result = self.verify_non_equational_known_then_builtin_rules_only(
+                        &equal_nonempty,
+                        _verify_state,
+                    )?;
+                    if equal_result.is_true() {
+                        return Ok(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                                is_nonempty_set_fact.clone().into(),
+                                InferResult::new(),
+                                "nonempty_set_from_equal_structural_set".to_string(),
+                                vec![equal_result],
+                            )
+                            .into(),
+                        );
+                    }
+                }
+                Ok((StmtUnknown::new()).into())
+            }
         }
     }
 
@@ -699,4 +730,24 @@ impl Runtime {
         }
         Ok((StmtUnknown::new()).into())
     }
+}
+
+fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::StandardSet(_)
+            | Obj::ListSet(_)
+            | Obj::PowerSet(_)
+            | Obj::ClosedRange(_)
+            | Obj::IntervalObj(_)
+            | Obj::OneSideInfinityIntervalObj(_)
+            | Obj::Union(_)
+            | Obj::Cart(_)
+            | Obj::FnSet(_)
+            | Obj::AnonymousFn(_)
+            | Obj::FiniteSeqSet(_)
+            | Obj::SeqSet(_)
+            | Obj::MatrixSet(_)
+            | Obj::StructObj(_)
+    )
 }

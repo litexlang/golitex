@@ -16,7 +16,7 @@
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
-**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
+**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome everyone to try it.**
 
 </div>
 
@@ -64,7 +64,8 @@ mathematical reasoning itself.
 
 Think of a Litex file as a small mathematical world that grows one checked fact
 at a time. You introduce the objects in the world, give yourself vocabulary,
-store general rules, and then ask Litex whether a new fact follows.
+prove or explicitly assume general rules, and then ask Litex whether a new fact
+follows.
 
 A classical syllogism shows the shape:
 
@@ -72,6 +73,7 @@ A classical syllogism shows the shape:
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
+# Assumption injection: trusted input for this example, not a checked proof.
 know forall x human:
     $mortal(x)
 
@@ -89,9 +91,10 @@ The four moves are the basic Litex loop:
 4. `$mortal(Socrates)` asks Litex to verify the particular conclusion.
 
 The example is intentionally small, but it uses two assumption-facing tools:
-`abstract_prop` declares the vocabulary word `mortal`, and `know` assumes the
-general rule. Litex checks that the conclusion follows from that context; it
-does not prove the assumed rule from nothing.
+`abstract_prop` declares the vocabulary word `mortal`, and `know` injects the
+general rule as an explicit assumption. Litex checks that the conclusion follows
+from that injected assumption and the rest of the context; it does not prove the
+assumed rule from nothing.
 
 When Litex accepts that final line, the verifier output can explain the route
 it found. The exact JSON may include line numbers and more trace fields, but
@@ -114,13 +117,23 @@ the route was arithmetic, a known fact, a matching `forall`, or an inferred
 consequence. That makes Litex a feedback loop: write the next fact, run the
 checker, read what happened, and add the next piece of context.
 
+When a route cites a fact that came from `know`, read the success as conditional
+on that assumption. `verified_by` explains how the current line was justified
+relative to the stored context; it does not mean every cited assumption was
+itself proved by Litex.
+
+The same caution applies when the runner reports `result: "success"` for a
+`KnowStmt`: that success means the assumption was accepted into the context. It
+does not mean Litex proved the assumption.
+
 Every factual statement has exactly one of three outcomes: **true**,
-**unknown**, or **error**. `true` means Litex found a proof path, such as a
-builtin rule, a known fact, or a known `forall` fact. `unknown` means the
-statement is meaningful, but Litex did not find enough verified information to
-prove it. `error` means the line cannot be checked as a valid fact, often
-because the syntax is wrong or some object is not well-defined, such as an
-undeclared name, a function argument outside its domain, or `1 / 0`.
+**unknown**, or **error**. `true` means Litex found a proof path relative to the
+current context, such as a builtin rule, a checked fact, or an explicitly
+injected `know` assumption. `unknown` means the statement is meaningful, but
+Litex did not find enough verified or assumed information to prove it. `error`
+means the line cannot be checked as a valid fact, often because the syntax is
+wrong or some object is not well-defined, such as an undeclared name, a function
+argument outside its domain, or `1 / 0`.
 
 ## How is Litex Different
 
@@ -177,7 +190,11 @@ verifies the conclusion. This is the core difference in proof style: Litex can
 use named theorem calls when names make the proof clearer, but it also lets
 ordinary factual lines drive verification by their mathematical shape.
 
->  This example uses two assumption-facing tools. `abstract_prop` declares an uninterpreted predicate name, and `know` assumes a fact about it, similar in role to Lean's `by sorry`. They are useful for axioms and proof skeletons, but final artifacts should replace, justify, or explicitly record them as proof debt.
+> This example uses two assumption-facing tools. `abstract_prop` declares an
+> uninterpreted predicate name, and `know` is explicit assumption injection,
+> similar in role to Lean's `by sorry`. They are useful for axioms and proof
+> skeletons, but final artifacts should replace, justify, or explicitly record
+> them as proof debt.
 
 ## A Quick Gallery
 
@@ -192,13 +209,13 @@ derive the modular contradiction, and return the larger prime as a witness.
 <!-- litex:skip-test -->
 ```litex
 claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
-    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    2 <= a <= product(1, a, '(x N_pos) N_pos {x}) <= product(1, a, '(x N_pos) N_pos {x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = 0}: k
     by cases k > a:
         case k <= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+            product(1, a, '(x N_pos) N_pos {x}) % k = 0
+            (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = (product(1, a, '(x N_pos) N_pos {x}) % k + 1 % k) % k = 1
+            impossible (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = 0
         case k > a:
             do_nothing
     witness exist k N_pos st {k > a, $prime(k)} from k
@@ -234,28 +251,39 @@ instantiate it for real-valued `3 x 3 x 3` arrays:
 <!-- litex:skip-test -->
 ```litex
 template<S set, n N_pos>:
-    have tensor3 set =
-        fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
 
 have A \tensor3<R, 3>
-A $in fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
 A(1, 2, 3) $in R
 ```
 
-For a broader tour, see the [objects and data examples](https://litexlang.com/doc/Examples/03_objects_and_data),
-the [structures examples](https://litexlang.com/doc/Examples/04_structures),
-the [infinite-primes case study](https://litexlang.com/doc/Examples/05_case_studies/there_exists_infinite_number_of_prime_numbers),
-and the [dataset gallery](https://litexlang.com/doc/Examples/07_dataset_gallery).
+`by contra`, `by cases`, `by for`, `by induc`, `by extension`, `by zorn_lemma` are builtin statements that prove by contradiction, cases, for, induction, extension and Zorn's lemma respectively. Here `by contra` proves that the square function is not surjective by finding a counterexample.
+
+```litex
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+have fn square(x R) R = x^2
+forall x R:
+    square(x) = x^2
+
+by contra not $surjective_fn(R, R, square):
+    have by exist x R st {-1 = square(x)}: x
+    0 <= x^2
+    -1 = square(x) = x^2
+    0 <= -1
+    impossible 0 <= -1
+```
+
+Visit online textbook for more examples: https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction .
 
 ## Goals of Litex
 
 Litex is experimental, but it is aiming at three simple things:
 
-1. **Audit AI-generated mathematical derivations.** As generation gets cheaper,
-checking assumptions, malformed facts, missing steps, and remaining proof debt
-becomes the bottleneck.
-2. **Support scientific discovery.** Turn verification into a fast loop of
-trying ideas, repairing arguments, and reusing patterns.
+1. **Human-in-the-Loop AI for Mathematical Exploration** As AI makes mathematical generation abundant, Litex helps turn fragmented reasoning into scalable, verifiable, and reusable mathematical knowledge, scale users' ability to use AI for mathematical exploration.
+2. **Support scientific discovery.** Provide an accessible, scalable framework that enables both experts and non-experts to verify, refine, and reuse mathematical reasoning across science, engineering, and AI.
 3. **A formal mathematical language that inspires everyone.** Formal math should
 be a usable, readable medium for learning, communication, and research, close
 enough to everyday math that students, mathematicians, AI agents, and curious
@@ -263,9 +291,10 @@ readers can benefit from rigor without losing sight of the ideas.
 
 This route comes with a clear audit obligation. A Litex result should be read
 relative to its trusted background: builtin rules, inference rules,
-standard-library facts, and any explicit `know` assumptions. The project goal
-is not to hide that boundary; it is to make the boundary visible while keeping
-the user-facing proof script close to ordinary mathematical writing.
+standard-library facts, and any explicit `know` assumption injections. The
+project goal is not to hide that boundary; it is to make the boundary visible
+while keeping the user-facing proof script close to ordinary mathematical
+writing.
 
 Here is the whole landscape of Litex kernel:
 

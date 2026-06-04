@@ -193,6 +193,34 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    // Alias-to-function-space inference: if `S = fn(...) T`, then `x $in S` also gives
+    // `x $in fn(...) T`, which registers `x` as callable with that function signature.
+    // Example: `A $in \tensor3<R, 3>` and `\tensor3<R, 3> = fn(i, j, k closed_range(1, 3)) R`.
+    fn infer_membership_in_equal_fn_set_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        for equal_set in self
+            .get_all_obj_representatives_equal_to_given(&in_fact.set)
+            .into_iter()
+        {
+            let Obj::FnSet(fn_set) = equal_set else {
+                continue;
+            };
+            let expanded_atomic: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                fn_set.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            infer_result.new_infer_result_inside(
+                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+            );
+        }
+        Ok(infer_result)
+    }
+
     // RHS is set-builder `{ x $in S | ... }`: emit `element $in S` and each defining fact with `x := element`.
     pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
@@ -670,6 +698,10 @@ impl Runtime {
                 Ok(infer_result)
             }
             set_obj => {
+                let alias_infer = self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
+                if !alias_infer.is_empty() {
+                    return Ok(alias_infer);
+                }
                 if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
                     self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
                 } else {

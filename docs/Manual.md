@@ -18,9 +18,10 @@ _- Jeff Hinton_
 > It explores a narrower interface hypothesis: users write mathematical facts,
 > and the checker grows an explainable verified context. This lowers the user's
 > proof-writing burden by putting more routine mathematical background in the
-> checker, so the trusted base is larger than a small proof kernel. `know`
-> facts are assumptions or proof debt, and builtin/infer rules are part of the
-> trusted mathematical background. For a compact discussion of trust boundaries,
+> checker, so the trusted base is larger than a small proof kernel. `know` is
+> explicit assumption injection: it stores assumptions or proof debt, not facts
+> proved by Litex. Builtin/infer rules are also part of the trusted
+> mathematical background. For a compact discussion of trust boundaries,
 > comparison with Lean, and project positioning, read
 > [FAQ](https://litexlang.com/doc/FAQ).
 
@@ -84,7 +85,7 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
 1. Solve the theorem first in natural language, step by step.
-2. Formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
+2. Formalize every step in Litex, using `know` as explicit assumption injection only when a step is not formalized yet.
 3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
@@ -1435,15 +1436,26 @@ claim forall! x R => {x = x}:
 
 ---
 
-### Assume known facts (`know`)
+### Inject explicit assumptions (`know`)
 
-**`know:`** (or **`know`** with a block) adds lemmas or axioms to the current environment without proving them in this snippet.
+**`know:`** (or **`know`** with a block) injects explicit assumptions into the
+current environment. It may store lemmas, axioms, or proof-debt facts, but it
+does not call the verifier to prove those facts.
 
 `know` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
 `by sorry`: it lets development continue by adding a fact whose proof is not
 present. That is sometimes exactly what you want when you are stating axioms,
 building a large proof skeleton, or marking a precise proof-debt item. It is
 also dangerous, because every later proof may depend on the unproved fact.
+
+Read every `know` line as: "assume this fact from here onward." If later output
+says a fact was `verified_by` citing a `know`ed fact or `forall`, that is a
+conditional proof route relative to the injected assumption. It does not mean
+Litex has proved the injected assumption itself.
+
+If the runner prints `result: "success"` for a `KnowStmt`, that means the
+assumption was accepted and stored. It is not a proof result for the injected
+fact.
 
 > Hint: `know` is an axiom-like statement. Litex allows it because it is useful for modeling and incremental proof development, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
 
@@ -2107,10 +2119,10 @@ this one-run model.
 Non-factual executor statements can define objects and concepts, import
 modules, evaluate expressions, or open local proof/control blocks. Some of
 those statements call the fact verifier for proof-required obligations; others
-store well-defined context facts or explicit `know` assumptions without using a
-proof route. After a declaration, verified fact, or accepted context assumption
-is stored, Litex updates lookup indexes and runs builtin inference so later
-statements can reuse the expanded context.
+store well-defined context facts or explicit `know` assumption injections
+without using a proof route. After a declaration, verified fact, or injected
+context assumption is stored, Litex updates lookup indexes and runs builtin
+inference so later statements can reuse the expanded context.
 
 #### A builtin rule proves it
 

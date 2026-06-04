@@ -15,6 +15,7 @@ fact saying that every human is mortal.
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
+# Assumption injection: trusted input for this example, not a checked proof.
 know forall x human:
     $mortal(x)
 
@@ -44,8 +45,10 @@ The accepted fact can also carry an explanation like this:
 ```
 
 Here `abstract_prop mortal(x)` only declares the predicate vocabulary. The
-`know` line records an assumed background rule. Once `$mortal(Socrates)` is
-accepted, it becomes part of the verified context for later facts.
+`know` line is assumption injection: it stores the general rule as trusted input
+for this example, without proving that rule. Once `$mortal(Socrates)` is
+accepted, it becomes part of the verified context for later facts, but its proof
+still depends on the injected assumption.
 
 Litex also supports the named-theorem route used by many formal systems:
 
@@ -66,6 +69,14 @@ $mortal(Socrates)
 This is useful for standard-library facts, long results, or parameter-sensitive
 theorems. The distinctive Litex style is that routine local reasoning can stay
 as direct factual lines.
+
+When `verified_by` says a line was accepted by citing a `forall`, check where
+that `forall` came from. If it came from `know`, the output explains a
+conditional proof route relative to an explicit assumption; it does not certify
+that the assumed `forall` was proved by Litex.
+
+Similarly, `result: "success"` on the `KnowStmt` line means the assumption was
+stored, not proved.
 
 ## 2. Structured Algebra
 
