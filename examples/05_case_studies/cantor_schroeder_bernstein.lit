@@ -52,8 +52,9 @@ claim:
         exist! y T st {$csb_g_inv_value(S, T, g, x, y)}
 
     have fn g_inv as set:
-        forall x S:
-            exist! y T st {$csb_g_inv_value(S, T, g, x, y)}
+        prove:
+            forall x S:
+                exist! y T st {$csb_g_inv_value(S, T, g, x, y)}
 
     have fn h(x S) T by cases:
         case $csb_left_part(S, T, f, g, x): f(x)

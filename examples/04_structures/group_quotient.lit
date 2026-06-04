@@ -63,8 +63,9 @@ claim:
 
 template<s nonempty_set>:
     have fn group_quotient as set:
-        forall g &Group<s>, h power_set(s):
-            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+        prove:
+            forall g &Group<s>, h power_set(s):
+                exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 
 prop is_quotient_product_coset(s nonempty_set, g &Group<s>, h power_set(s), c1 power_set(s), c2 power_set(s), c3 power_set(s)):
     forall x, y s:
@@ -443,19 +444,21 @@ claim:
             =>:
                 exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
     have fn quotient_mul as set:
-        forall c1, c2 q:
-            exist! out q st {$is_quotient_product_coset(s, g, h, c1, c2, out)}
+        prove:
+            forall c1, c2 q:
+                exist! out q st {$is_quotient_product_coset(s, g, h, c1, c2, out)}
     $is_quotient_multiplication(s, g, h, q, quotient_mul)
     witness exist! quotient_mul2 fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul2)} from quotient_mul:
         $is_quotient_multiplication(s, g, h, q, quotient_mul)
 
 template<s nonempty_set, q power_set(power_set(s))>:
     have fn quotient_op as set:
-        forall g &Group<s>, h power_set(s):
-            $is_normal_subgroup(s, g, h)
-            $is_group_quotient_set(s, g, h, q)
-            =>:
-                exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+        prove:
+            forall g &Group<s>, h power_set(s):
+                $is_normal_subgroup(s, g, h)
+                $is_group_quotient_set(s, g, h, q)
+                =>:
+                    exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
 
 struct QuotientGroup<s nonempty_set, q power_set(power_set(s))>:
     base &Group<s>

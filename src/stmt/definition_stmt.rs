@@ -107,6 +107,7 @@ pub struct HaveFnEqualStmt {
 pub struct HaveFnByForallExistUniqueStmt {
     pub fn_name: String,
     pub forall: ForallFact,
+    pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
@@ -471,10 +472,16 @@ impl fmt::Display for HaveFnEqualStmt {
 }
 
 impl HaveFnByForallExistUniqueStmt {
-    pub fn new(fn_name: String, forall: ForallFact, line_file: LineFile) -> Self {
+    pub fn new(
+        fn_name: String,
+        forall: ForallFact,
+        prove_process: Vec<Stmt>,
+        line_file: LineFile,
+    ) -> Self {
         HaveFnByForallExistUniqueStmt {
             fn_name,
             forall,
+            prove_process,
             line_file,
         }
     }
@@ -484,15 +491,25 @@ impl fmt::Display for HaveFnByForallExistUniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {} {}{}\n{}",
+            "{} {} {} {} {}{}\n{}{}\n{}",
             HAVE,
             FN_LOWER_CASE,
             self.fn_name,
             AS,
             SET,
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 1)
-        )
+            add_four_spaces_at_beginning(PROVE.to_string(), 1),
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 2)
+        )?;
+        if !self.prove_process.is_empty() {
+            write!(
+                f,
+                "\n{}",
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.prove_process, 1)
+            )?;
+        }
+        Ok(())
     }
 }
 

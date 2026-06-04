@@ -72,10 +72,11 @@ know:
             B $in l
 
 have fn line_of as set:
-    forall A, B point:
-        A != B
-        =>:
-            exist! l line st {$line_through(A, B, l)}
+    prove:
+        forall A, B point:
+            A != B
+            =>:
+                exist! l line st {$line_through(A, B, l)}
 
 know:
     forall A, B point:
@@ -109,10 +110,11 @@ know:
             C $in alpha
 
 have fn plane_of as set:
-    forall A, B, C point:
-        $noncollinear(A, B, C)
-        =>:
-            exist! alpha plane st {$plane_through(A, B, C, alpha)}
+    prove:
+        forall A, B, C point:
+            $noncollinear(A, B, C)
+            =>:
+                exist! alpha plane st {$plane_through(A, B, C, alpha)}
 
 know:
     forall A, B, C point:
@@ -281,10 +283,11 @@ know:
             $line_on_plane(l, alpha)
 
 have fn plane_of_point_and_line as set:
-    forall A point, l line:
-        not A $in l
-        =>:
-            exist! alpha plane st {$plane_through_point_and_line(A, l, alpha)}
+    prove:
+        forall A point, l line:
+            not A $in l
+            =>:
+                exist! alpha plane st {$plane_through_point_and_line(A, l, alpha)}
 
 # P1: Playfair's axiom.
 know:

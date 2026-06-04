@@ -291,13 +291,91 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
+                let prove_process = self.inst_template_proof_process(
+                    &s.prove_process,
+                    param_to_arg_map,
+                    line_file,
+                )?;
                 Ok(HaveFnByForallExistUniqueStmt::new(
                     instance_name.to_string(),
                     forall,
+                    prove_process,
                     line_file.clone(),
                 )
                 .into())
             }
+        }
+    }
+
+    fn inst_template_proof_process(
+        &self,
+        proof_process: &[Stmt],
+        param_to_arg_map: &HashMap<String, Obj>,
+        line_file: &LineFile,
+    ) -> Result<Vec<Stmt>, RuntimeError> {
+        let mut result = Vec::with_capacity(proof_process.len());
+        for proof_stmt in proof_process.iter() {
+            result.push(self.inst_template_proof_stmt(proof_stmt, param_to_arg_map, line_file)?);
+        }
+        Ok(result)
+    }
+
+    fn inst_template_proof_stmt(
+        &self,
+        stmt: &Stmt,
+        param_to_arg_map: &HashMap<String, Obj>,
+        line_file: &LineFile,
+    ) -> Result<Stmt, RuntimeError> {
+        match stmt {
+            Stmt::Fact(fact) => Ok(self
+                .inst_fact(
+                    fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file.clone()),
+                )?
+                .into()),
+            Stmt::KnowStmt(s) => {
+                let mut facts = Vec::with_capacity(s.facts.len());
+                for fact in s.facts.iter() {
+                    facts.push(self.inst_fact(
+                        fact,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file.clone()),
+                    )?);
+                }
+                Ok(KnowStmt::new(facts, line_file.clone()).into())
+            }
+            Stmt::ClaimStmt(s) => {
+                let fact = self.inst_fact(
+                    &s.fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file.clone()),
+                )?;
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(ClaimStmt::new(fact, proof, line_file.clone()).into())
+            }
+            Stmt::ProveStmt(s) => {
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(ProveStmt::new(proof, line_file.clone()).into())
+            }
+            Stmt::ByThmStmt(s) => {
+                let mut args = Vec::with_capacity(s.args.len());
+                for arg in s.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                }
+                Ok(ByThmStmt::new(s.name.clone(), args, line_file.clone()).into())
+            }
+            _ => Err(RuntimeError::from(InstantiateRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "template proof body does not support statement `{}` yet",
+                    stmt.stmt_type_name()
+                )),
+            ))),
         }
     }
 

@@ -162,6 +162,28 @@ rules.
 such as a set, a structure, or a carrier satisfying some condition, when that
 parameter cannot be modeled as the input of one ordinary set-theoretic function.
 
+A useful way to read a template is: first pretend that the angle-bracket
+parameters have already been introduced and satisfy the header conditions.
+Then run the statements inside the template body as ordinary definition
+statements in that temporary context. If those statements check, Litex stores
+the result as a family. When you later write an instance such as `\name<R>`,
+Litex substitutes the concrete argument for the parameter and gives you the
+corresponding defined object or function.
+
+For example:
+
+```litex
+template<s set>:
+    have carrier_copy set = s
+
+\carrier_copy<R> = R
+\carrier_copy<Z> = Z
+```
+
+The reading is: first fix an arbitrary set `s`; in that temporary context,
+`carrier_copy` is definable as `s`; because this works for every `s set`, the
+family can later be called as `\carrier_copy<R>`, `\carrier_copy<Z>`, and so on.
+
 The simplest reason is the one above: a Litex function input must range over a
 particular domain set. But `set` is not itself a particular domain set. It is a
 surface parameter kind meaning "introduce a parameter and check that it is a
