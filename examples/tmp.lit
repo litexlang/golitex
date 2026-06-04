@@ -1,22 +1,5 @@
-prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
-    forall! x, y, z s => {op(x, op(y, z)) = op(op(x, y), z)}
-    forall! x s => {op(e, x) = x, op(x, e) = x}
-    forall! x s => {op(x, inv(x)) = e, op(inv(x), x) = e}
+template<S set, n N_pos>:
+    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
 
-struct Group<s nonempty_set>:
-    inv fn(x s) s
-    op fn(x, y s) s
-    e s
-    <=>:
-        $GroupProperty(s, inv, op, e)
-
-macro G "&Group<s>{g}"
-
-prop is_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
-    @G.e $in h
-    forall! a, b s: a $in h, b $in h => {@G.op(a, b) $in h}
-    forall! a s: a $in h => {@G.inv(a) $in h}
-
-prop is_normal_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
-    $is_subgroup(s, g, h)
-    forall! x, a s: a $in h => {@G.op(@G.op(x, a), @G.inv(x)) $in h}
+have A \tensor3<R, 3>
+A(1, 2, 3) $in R

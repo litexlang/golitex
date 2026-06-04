@@ -2050,6 +2050,54 @@ template<s set>:
 }
 
 #[test]
+fn set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+    let source_code = r#"
+have T set = fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
+have A T
+A(1, 2, 3) $in R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+    let source_code = r#"
+template<S set, n N_pos>:
+    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+
+have A \tensor3<R, 3>
+A(1, 2, 3) $in R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn weak_order_does_not_recursively_prove_equality() {
     let source_code = r#"
 have a, b R

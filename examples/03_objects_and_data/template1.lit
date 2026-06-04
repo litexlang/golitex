@@ -7,3 +7,9 @@ template<s set: s = s>:
     have fn const_zero(x s) R = 0
 
 \const_zero<R>(0) = \const_zero<R>(0)
+
+template<S set, n N_pos>:
+    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+
+have A \tensor3<R, 3>
+A(1, 2, 3) $in R

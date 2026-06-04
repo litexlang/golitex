@@ -351,9 +351,19 @@ often makes the proof easier to audit.
 
 ## Is `know` a proof?
 
-No. `know` is not a proof-producing command. It adds a fact to the current
-context after checking that the statement is meaningful enough to store. Later
-checked facts may depend on it.
+No. `know` is explicit assumption injection, not a proof-producing command. It
+adds a fact to the current context after checking that the statement is
+meaningful enough to store. Later checked facts may depend on it.
+
+The name can be misleading if read informally. In documentation and audits,
+read `know P` as "assume P from this point onward." If a later `verified_by`
+trace cites a fact that came from `know`, the trace explains why the later line
+follows from the injected assumption; it does not show that the injected
+assumption was proved by Litex.
+
+Likewise, `result: "success"` on a `KnowStmt` only means the assumption was
+accepted into the context. It is not a certificate that the injected fact was
+proved.
 
 This is useful for three narrow purposes:
 
@@ -523,9 +533,9 @@ set interfaces, and algebraic proof flows.
 
 ## Soundness And Limitations
 
-A Litex success is relative to the trusted background. `know` is an
-assumption-facing tool, similar in role to Lean's `by sorry`: it adds facts to
-the context without proving them. `abstract_prop` declares an uninterpreted
+A Litex success is relative to the trusted background. `know` is explicit
+assumption injection, similar in role to Lean's `by sorry`: it adds facts to the
+context without proving them. `abstract_prop` declares an uninterpreted
 predicate name and gives it no mathematical content by itself. In final
 artifacts, each use should be replaced by a checked claim/theorem, justified as
 trusted background, or recorded as remaining proof debt.

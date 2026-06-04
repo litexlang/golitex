@@ -354,6 +354,48 @@ impl Runtime {
         result
     }
 
+    pub fn get_all_obj_representatives_equal_to_given(&self, given: &Obj) -> Vec<Obj> {
+        let given_key = given.to_string();
+        let mut result = Vec::new();
+        for env in self.iter_environments_from_top() {
+            Self::extend_obj_representatives_equal_to_given_in_environment(
+                &mut result,
+                env,
+                &given_key,
+            );
+        }
+
+        if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                Self::extend_obj_representatives_equal_to_given_in_environment(
+                    &mut result,
+                    env.as_ref(),
+                    local_name,
+                );
+            }
+        }
+
+        result.retain(|obj| obj.to_string() != given_key);
+        result
+    }
+
+    fn extend_obj_representatives_equal_to_given_in_environment(
+        result: &mut Vec<Obj>,
+        environment: &Environment,
+        given: &str,
+    ) {
+        if let Some((_, equiv_class_members_rc)) = environment.known_equality.get(given) {
+            for obj in equiv_class_members_rc.iter() {
+                if !result
+                    .iter()
+                    .any(|known_obj: &Obj| known_obj.to_string() == obj.to_string())
+                {
+                    result.push(obj.clone());
+                }
+            }
+        }
+    }
+
     pub fn get_all_objs_equal_to_given_in_environment(
         environment: &Environment,
         given: &str,
