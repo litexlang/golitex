@@ -11,6 +11,7 @@ pub struct Runtime {
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
     pub detail_output: bool,
+    pub reject_user_know: bool,
 }
 
 impl Runtime {
@@ -25,6 +26,7 @@ impl Runtime {
             environment_stack: vec![new_environment],
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: false,
+            reject_user_know: false,
         }
     }
 
@@ -55,6 +57,7 @@ impl Runtime {
             environment_stack: vec![builtin_env.clone()],
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: parent_runtime.detail_output,
+            reject_user_know: false,
         }
     }
 }

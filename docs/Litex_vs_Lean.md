@@ -8,8 +8,8 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Le
 
 Related docs:
 
-- [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations)
-- [Research Positioning](https://litexlang.com/doc/Research_Positioning)
+- [Manual](https://litexlang.com/doc/Manual)
+- [FAQ](https://litexlang.com/doc/FAQ)
 
 _You can check out any time you like. But you can never leave._
 
@@ -44,11 +44,9 @@ This is why Litex can be described by the slogan **Litex: The Formal Language Wh
 
 Litex also lets a development start from an abstract interface. A user can name
 domains, relations, and axioms first, then reason from that structure before
-choosing a concrete model. The current complete example is the
-[Hilbert Axioms of Euclidean Geometry](https://litexlang.com/doc/Tutorial/Example_Hilbert_Axioms_of_Euclidean_Geometry)
-tutorial, where points, lines, planes, incidence, betweenness, and congruence
-are introduced as abstract mathematical data rather than reduced to coordinates
-at the start.
+choosing a concrete model. This is useful for geometry, quotient constructions,
+axiomatic algebraic structures, and other developments where the right
+interface should be visible before the concrete representation is chosen.
 
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions, and at present its ecosystem advantage is substantial. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
@@ -73,8 +71,7 @@ This page is not a ranking. It compares expression style, proof interaction, and
 The Lean snippets are meant to be readable counterparts, not claims of shortest
 possible Lean code. The Litex snippets are meant to show the current interface,
 not to hide the fact that builtin rules, infer rules, and any `know` facts are
-part of the trust boundary explained in
-[Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations).
+part of the trust boundary explained in the [FAQ](https://litexlang.com/doc/FAQ).
 
 ---
 

@@ -10,6 +10,8 @@ For a first pass, read the public folders in order:
 4. [`03_objects_and_data/`](03_objects_and_data/) - objects, facts, statements, functions, anonymous functions, structs, tuples, matrices, macros, and templates.
 5. [`04_structures/`](04_structures/) - user-defined mathematical structures such as groups, sets, functions, matrices, monotonicity, and integrability sketches.
 6. [`05_case_studies/`](05_case_studies/) - larger examples and proof developments, including Euclid's algorithm, infinite primes, countability, Cantor-Schroeder-Bernstein, and Hilbert-style geometry.
+7. [`06_std/`](06_std/) - runnable examples that exercise standard-library modules.
+8. [`07_dataset_gallery/`](07_dataset_gallery/) - Markdown gallery pages with representative checkable examples selected from local dataset and textbook translation workspaces.
 
 The [`_internal/`](_internal/) folder is still tested, but it is not the main
 reader path. It contains regression checks, scratch files, std-import examples,
@@ -37,7 +39,8 @@ subgroup. The representative-independence lemmas are proved in the file.
 
 ## Testing
 
-The repository test runner recursively checks `examples/**/*.lit`.
+The repository test runner recursively checks `examples/**/*.lit` and the
+`litex` fenced blocks in `examples/07_dataset_gallery/**/*.md`.
 
 ```bash
 cargo test run_examples -- --nocapture
