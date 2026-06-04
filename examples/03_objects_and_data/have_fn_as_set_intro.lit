@@ -6,8 +6,9 @@
 #         exist! y B st {$Graph(x, y)}
 #
 #     have fn f as set:
-#         forall x A:
-#             exist! y B st {$Graph(x, y)}
+#         prove:
+#             forall x A:
+#                 exist! y B st {$Graph(x, y)}
 #
 # After that, `f(x)` is the unique `y` satisfying `$Graph(x, y)`.
 #
@@ -28,8 +29,9 @@ know:
             y = 2 * x
 
 have fn double as set:
-    forall x R:
-        exist! y R st {$double_value(x, y)}
+    prove:
+        forall x R:
+            exist! y R st {$double_value(x, y)}
 
 # `double` is a total function from R to R.
 double $in fn(x R) R
@@ -53,10 +55,11 @@ know:
             x * y = 1
 
 have fn reciprocal as set:
-    forall x R:
-        x != 0
-        =>:
-            exist! y R st {$reciprocal_value(x, y)}
+    prove:
+        forall x R:
+            x != 0
+            =>:
+                exist! y R st {$reciprocal_value(x, y)}
 
 # Because the source `forall` has the domain fact `x != 0`, `reciprocal`
 # lives in the restricted function set below.

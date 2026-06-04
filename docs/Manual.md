@@ -1168,6 +1168,34 @@ Use **`template`** when you want to define a whole family of objects or function
 
 The word is inspired by C++ templates. In C++, a template is used to define a function or data structure uniformly over many possible types. Litex uses the same idea for mathematics: a template defines a family of mathematical objects, functions, or structures uniformly over many possible parameters.
 
+The best mental model is: first pretend that the parameters in angle brackets
+already exist and satisfy the header conditions. Then run the definition
+statements below the template as if those parameters were real local objects.
+If the statements are meaningful in that imagined context, Litex records the
+whole block as a reusable family. Later, an instance such as `\always_one<R>`
+substitutes a concrete parameter for the angle-bracket parameter.
+
+Here is a deliberately small example:
+
+```litex
+template<s set>:
+    have carrier_copy set = s
+
+\carrier_copy<R> = R
+\carrier_copy<Z> = Z
+```
+
+Read it in three passes:
+
+1. First pretend that `s` is one particular set. With that `s` available, the
+   body can define `carrier_copy` to be that set.
+2. Since the same body checks for an arbitrary `s set`, Litex records a whole
+   family: for every set parameter `s`, the corresponding `carrier_copy` can be
+   defined.
+3. When you use the family, write the concrete parameter in angle brackets.
+   Thus `\carrier_copy<R>` is the instance with `s = R`, and
+   `\carrier_copy<Z>` is the instance with `s = Z`.
+
 Why not just use an ordinary Litex function? Because Litex functions are set-theoretic functions. A function input must range over one object domain, such as `R`, `Z`, or a previously introduced set. But `set` in a header is not a single set containing all sets; it is a parameter kind that says the new parameter must satisfy `$is_set(s)`. The collection of all sets is not itself treated as one Litex set object. So if you want to say "for every set `s`, define a function on `s`", the parameter `s` belongs in the *header of the definition itself*, not as an ordinary function input.
 
 This also explains why the body of a template contains ordinary statements such as `have`. A template does not bypass mathematical existence checks. It opens a parameterized context, assumes the header parameters and header facts, and then checks the declarations inside that context. If the template declares a function, object, or other data by `have`, Litex still has to verify that the declaration is meaningful under the template assumptions.
@@ -1231,7 +1259,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn ... as set: forall ... exist!`)
+### Function from unique existence (`have fn ... as set: prove: forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1247,10 +1275,11 @@ know forall x A:
         exist! y B st {$F(x, y)}
 
 have fn f as set:
-    forall x A:
-        $p(x)
-        =>:
-            exist! y B st {$F(x, y)}
+    prove:
+        forall x A:
+            $p(x)
+            =>:
+                exist! y B st {$F(x, y)}
 
 forall x A:
     $p(x)
@@ -1260,7 +1289,7 @@ forall x A:
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-> Hint: the `forall` after `by` must already be known. Its conclusion must be exactly one `exist!` fact with one output parameter.
+> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The older direct form `have fn f as set: forall ...` is still accepted for compatibility.
 
 > Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
@@ -1274,8 +1303,9 @@ independence lemmas needed for well-definedness.
 ```litex
 template<s set>:
     have fn group_quotient as set:
-        forall g &Group<s>, h power_set(s):
-            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+        prove:
+            forall g &Group<s>, h power_set(s):
+                exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 ```
 
 This quotient construction is the main mathematician-facing example inside the
@@ -2000,7 +2030,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
-| `have fn ... as set: forall ... exist!` | Define a function from unique existence |
+| `have fn ... as set: prove: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |

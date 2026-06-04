@@ -179,6 +179,74 @@ ordinary factual lines drive verification by their mathematical shape.
 
 >  This example uses two assumption-facing tools. `abstract_prop` declares an uninterpreted predicate name, and `know` assumes a fact about it, similar in role to Lean's `by sorry`. They are useful for axioms and proof skeletons, but final artifacts should replace, justify, or explicitly record them as proof debt.
 
+## A Quick Gallery
+
+The examples above are deliberately tiny. The snippets below give a fast visual
+sense of the larger Litex surface. They are excerpts, not full runnable files;
+the linked pages contain runnable examples and fuller context.
+
+The infinite-primes case study ends with the usual Euclid move: take a prime
+divisor of `1 * 2 * ... * a + 1`, split on whether it is already below `a`,
+derive the modular contradiction, and return the larger prime as a witness.
+
+<!-- litex:skip-test -->
+```litex
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    by cases k > a:
+        case k <= a:
+            product(1, a, 'N_pos(x){x}) % k = 0
+            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = 1
+            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+        case k > a:
+            do_nothing
+    witness exist k N_pos st {k > a, $prime(k)} from k
+```
+
+Mathematical structures can be defined directly, with operations and axioms
+kept close to the ordinary textbook shape:
+
+<!-- litex:skip-test -->
+```litex
+prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s nonempty_set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+```
+
+Templates let users make reusable mathematical interfaces. A user can define a
+three-dimensional analogue of a matrix as an indexed function space, then
+instantiate it for real-valued `3 x 3 x 3` arrays:
+
+<!-- litex:skip-test -->
+```litex
+template<S set, n N_pos>:
+    have tensor3 set =
+        fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+
+have A \tensor3<R, 3>
+A $in fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
+A(1, 2, 3) $in R
+```
+
+For a broader tour, see the [objects and data examples](https://litexlang.com/doc/Examples/03_objects_and_data),
+the [structures examples](https://litexlang.com/doc/Examples/04_structures),
+the [infinite-primes case study](https://litexlang.com/doc/Examples/05_case_studies/there_exists_infinite_number_of_prime_numbers),
+and the [dataset gallery](https://litexlang.com/doc/Examples/07_dataset_gallery).
+
 ## Goals of Litex
 
 Litex is experimental, but it is aiming at three simple things:

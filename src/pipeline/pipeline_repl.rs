@@ -19,21 +19,21 @@ pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
 pub fn run_repl_with_detail_output_and_strict(
     version: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
 ) {
-    return run_repl_loop_internal(version, detail_output, reject_user_know);
+    return run_repl_loop_internal(version, detail_output, strict_mode);
 }
 
 pub fn run_latex_repl(version: &str) {
     return run_latex_repl_loop_internal(version);
 }
 
-fn run_repl_loop_internal(version_banner: &str, detail_output: bool, reject_user_know: bool) {
+fn run_repl_loop_internal(version_banner: &str, detail_output: bool, strict_mode: bool) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
-    let result = if reject_user_know {
+    let result = if strict_mode {
         run_repl_loop_with_readers_and_strict(
             version_banner,
             detail_output,
@@ -88,14 +88,14 @@ fn run_repl_loop_with_readers(
 fn run_repl_loop_with_readers_and_strict(
     version_banner: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
         detail_output,
-        reject_user_know,
+        strict_mode,
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
@@ -120,7 +120,7 @@ fn run_latex_repl_loop_with_readers(
 fn run_repl_loop_with_readers_and_mode(
     version_banner: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
@@ -141,7 +141,7 @@ fn run_repl_loop_with_readers_and_mode(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("repl");
     runtime.detail_output = detail_output;
-    runtime.reject_user_know = reject_user_know;
+    runtime.strict_mode = strict_mode;
 
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();

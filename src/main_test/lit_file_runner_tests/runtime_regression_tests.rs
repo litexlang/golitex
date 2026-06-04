@@ -2180,6 +2180,126 @@ prove:
 }
 
 #[test]
+fn have_fn_as_set_accepts_prove_block_target() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+know forall x A:
+    exist! y B st {$F(x, y)}
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_accepts_prove_block_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set prove target should succeed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_prove_body_can_establish_target() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y)}
+    know exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_prove_body_can_establish_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set proof body should establish the target forall:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+know forall x A:
+    exist! y B st {$F(x, y)}
+
+have fn f as set:
+    forall x A:
+        exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "have_fn_as_set_still_accepts_direct_forall_compatibility_form",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "legacy direct forall form should remain accepted:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_prove_block_requires_forall_target() {
+    let source_code = r#"
+have fn f as set:
+    prove:
+        1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime
+        .new_file_path_new_env_new_name_scope("have_fn_as_set_prove_block_requires_forall_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "non-forall prove target should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("`prove:` must contain a single `forall` fact"),
+        "non-forall prove target should report the expected shape:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn hidden_file_path_output_omits_source_fields() {
     let source_code = "x = 1";
     let path = "/private/tmp/litex-hidden-source-test.lit";
@@ -2352,10 +2472,18 @@ fn runner_accepts_know_as_normal_execution() {
 }
 
 #[test]
+fn runner_accepts_let_as_normal_execution() {
+    let (ok, output) = run_runner_for_code("let x R", "-runner-test", true);
+
+    assert!(ok, "runner should not reject let statements:\n{}", output);
+    assert!(output.contains("\"result\": \"success\""));
+}
+
+#[test]
 fn strict_mode_rejects_user_know() {
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
 
     let (stmt_results, runtime_error) = run_source_code("know 1 = 0", &mut runtime);
     let (run_succeeded, run_output) =
@@ -2374,6 +2502,28 @@ fn strict_mode_rejects_user_know() {
 }
 
 #[test]
+fn strict_mode_rejects_user_let() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_let");
+    runtime.strict_mode = true;
+
+    let (stmt_results, runtime_error) = run_source_code("let x R", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "strict mode should reject user let statements:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("strict mode rejects user let statements"),
+        "strict mode should report the let boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn strict_runner_rejects_user_know() {
     let (ok, output) = run_runner_for_code_strict("know 1 = 0", "-runner-test", true);
 
@@ -2384,6 +2534,19 @@ fn strict_runner_rejects_user_know() {
     );
     assert!(output.contains("\"result\": \"error\""));
     assert!(output.contains("strict mode rejects user know statements"));
+}
+
+#[test]
+fn strict_runner_rejects_user_let() {
+    let (ok, output) = run_runner_for_code_strict("let x R", "-runner-test", true);
+
+    assert!(
+        !ok,
+        "strict runner should reject let statements:\n{}",
+        output
+    );
+    assert!(output.contains("\"result\": \"error\""));
+    assert!(output.contains("strict mode rejects user let statements"));
 }
 
 #[test]
@@ -2403,7 +2566,7 @@ fn strict_mode_allows_imported_module_know() {
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2417,17 +2580,39 @@ fn strict_mode_allows_imported_module_know() {
 }
 
 #[test]
+fn strict_mode_allows_imported_module_let() {
+    let module_dir =
+        std::env::temp_dir().join(format!("litex-strict-import-let-{}", std::process::id()));
+    fs::create_dir_all(&module_dir).expect("create strict import let test module");
+    fs::write(module_dir.join("main.lit"), "let imported_value R\n")
+        .expect("write strict import let test module");
+    let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_let");
+    runtime.strict_mode = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_dir_all(&module_dir);
+    assert!(
+        run_succeeded,
+        "strict mode should allow let inside imported modules:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn strict_mode_rejects_run_file_know() {
-    let run_file_path = std::env::temp_dir().join(format!(
-        "litex-strict-run-file-{}.lit",
-        std::process::id()
-    ));
+    let run_file_path =
+        std::env::temp_dir().join(format!("litex-strict-run-file-{}.lit", std::process::id()));
     fs::write(&run_file_path, "know 1 = 0\n").expect("write strict run_file test file");
     let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2441,6 +2626,35 @@ fn strict_mode_rejects_run_file_know() {
     assert!(
         run_output.contains("strict mode rejects user know statements"),
         "strict run_file failure should report the know boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_mode_rejects_run_file_let() {
+    let run_file_path = std::env::temp_dir().join(format!(
+        "litex-strict-run-file-let-{}.lit",
+        std::process::id()
+    ));
+    fs::write(&run_file_path, "let x R\n").expect("write strict run_file let test file");
+    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_let");
+    runtime.strict_mode = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_file(&run_file_path);
+    assert!(
+        !run_succeeded,
+        "strict mode should reject let inside run_file:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("strict mode rejects user let statements"),
+        "strict run_file failure should report the let boundary:\n{}",
         run_output
     );
 }

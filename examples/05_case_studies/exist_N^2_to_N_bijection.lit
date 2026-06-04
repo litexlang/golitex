@@ -40,8 +40,9 @@ claim:
     exist! y N st {2 * y = n * (n + 1)}
 
 have fn tri as set:
-    forall n N:
-        exist! y N st {2 * y = n * (n + 1)}
+    prove:
+        forall n N:
+            exist! y N st {2 * y = n * (n + 1)}
 
 claim:
     prove:
