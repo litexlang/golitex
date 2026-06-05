@@ -14,7 +14,7 @@ Litex = Lisp + LaTeX. The author of Litex is inspired by the simplicity and powe
 
 ## How is Litex invented?
 
-By iteratively implement and refine the Litex language. The design process and implementation process happen side by side. The author took 6000 git commits (mostly before AI becomes sort of usable to help him to do kernel development) to finally know what he is implementing and designing. It's hard to imagine a better way to do something like this. When everything comes together, it's a beautiful thing.
+By iteratively implementing and refining the Litex language. The design process and implementation process happen side by side. The author took 6000 git commits (mostly before AI becomes sort of usable to help him to do kernel development) to finally know what he is implementing and designing. It's hard to imagine a better way to do something like this. When everything comes together, it's a beautiful thing.
 
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 

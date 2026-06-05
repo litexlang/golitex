@@ -1,17 +1,9 @@
-# Temporary runnable file for real-power builtin checks.
+# Temporary runnable file for the Chapter 6 geometric-sequence slice.
 
-forall x, y R_pos, q R:
-    q > 0
-    x > y
+run_file "../scripts/analysis-one/chapters_in_litex/chap6.lit"
+
+forall x R:
+    0 < x
+    x < 1
     =>:
-        x^q > y^q
-
-forall x R_pos, q R:
-    x^q > 0
-    x^q != 0
-    x^q * x^(-q) = x^(q + (-q))
-    q + (-q) = 0
-    x^(q + (-q)) = x^0
-    x^0 = 1
-    x^q * x^(-q) = 1
-    x^(-q) = 1 / x^q
+        $converges_to('(n N_pos) R {x^n}, 0)
