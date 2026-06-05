@@ -10,13 +10,15 @@ use super::helper::{print_slowest_run_labels, run_with_large_stack};
 // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
 //
 // This test is intentionally non-failing when the sibling repo doesn't exist, so CI won't care.
-// It is meant for local iteration while authoring snippets under ../MATH-500-litex/tmp/.
+// It is meant for local iteration while authoring snippets under
+// ../external_repos/MATH-500-litex/tmp/.
 #[test]
 fn run_math500_tmp() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let local_tmp_path = manifest_dir.join("tmp").join("math500_work.lit");
     let sibling_tmp_path = match manifest_dir.parent() {
         Some(parent) => parent
+            .join("external_repos")
             .join("MATH-500-litex")
             .join("tmp")
             .join("math500_work.lit"),

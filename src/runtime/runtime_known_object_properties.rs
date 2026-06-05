@@ -91,6 +91,80 @@ impl Runtime {
         None
     }
 
+    pub(crate) fn unfold_known_fn_application_once(
+        &mut self,
+        application: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = application else {
+            return Ok(None);
+        };
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+        let key = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(i) => i.to_string(),
+            FnObjHead::IdentifierWithMod(i) => i.to_string(),
+            _ => return Ok(None),
+        };
+        let Some((fn_set_body, equal_to_expr, _)) =
+            self.get_known_fn_body_and_equal_to_for_key(key.as_str())
+        else {
+            return Ok(None);
+        };
+
+        let param_defs = &fn_set_body.params_def_with_set;
+        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        if n_params == 0 {
+            return Ok(None);
+        }
+        let Some((args, extra_layers)) =
+            split_fn_body_at_complete_layer_for_unfolding(&fn_obj.body, n_params)
+        else {
+            return Ok(None);
+        };
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+
+        let param_membership_facts =
+            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
+                self,
+                param_defs,
+                &args,
+                ParamObjType::FnSet,
+            )?;
+        for param_membership_fact in param_membership_facts.iter() {
+            let result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                param_membership_fact,
+                verify_state,
+            )?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+        for dom_fact in fn_set_body.dom_facts.iter() {
+            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &param_to_arg_map,
+                ParamObjType::FnSet,
+                None,
+            )?;
+            let result = self.verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+                &instantiated_dom_fact,
+                verify_state,
+            )?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+
+        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
+        Ok(apply_extra_curried_layers_for_unfolding(
+            reduced,
+            extra_layers,
+        ))
+    }
+
     fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
         let key = obj.to_string();
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
@@ -455,6 +529,71 @@ impl Runtime {
         let mut module_names = vec![];
         collect_module_names_from_obj(obj, &mut module_names);
         module_names
+    }
+}
+
+fn split_fn_body_at_complete_layer_for_unfolding(
+    body: &[Vec<Box<Obj>>],
+    n_params: usize,
+) -> Option<(Vec<Obj>, Vec<Vec<Box<Obj>>>)> {
+    let mut args = Vec::new();
+    let mut extra_layers = Vec::new();
+    let mut consumed = 0;
+    let mut outer_application_done = false;
+
+    for layer in body.iter() {
+        if outer_application_done {
+            extra_layers.push(layer.clone());
+            continue;
+        }
+
+        let next_consumed = consumed + layer.len();
+        if next_consumed > n_params {
+            return None;
+        }
+
+        for arg in layer.iter() {
+            args.push((**arg).clone());
+        }
+        consumed = next_consumed;
+
+        if consumed == n_params {
+            outer_application_done = true;
+        }
+    }
+
+    if consumed != n_params {
+        return None;
+    }
+
+    Some((args, extra_layers))
+}
+
+fn apply_extra_curried_layers_for_unfolding(
+    obj: Obj,
+    extra_layers: Vec<Vec<Box<Obj>>>,
+) -> Option<Obj> {
+    if extra_layers.is_empty() {
+        return Some(obj);
+    }
+
+    match obj {
+        Obj::AnonymousFn(anonymous_fn) => Some(
+            FnObj::new(
+                FnObjHead::AnonymousFnLiteral(Box::new(anonymous_fn)),
+                extra_layers,
+            )
+            .into(),
+        ),
+        Obj::Atom(atom) => {
+            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(Obj::Atom(atom))?;
+            Some(FnObj::new(head, extra_layers).into())
+        }
+        Obj::FnObj(mut fn_obj) => {
+            fn_obj.body.extend(extra_layers);
+            Some(fn_obj.into())
+        }
+        _ => None,
     }
 }
 

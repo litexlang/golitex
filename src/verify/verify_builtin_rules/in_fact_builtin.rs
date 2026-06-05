@@ -103,6 +103,11 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.maybe_verify_in_fact_in_unfolded_user_defined_set(in_fact, verify_state)?
+        {
+            return Ok(result);
+        }
         match (&in_fact.element, &in_fact.set) {
             (_, Obj::StructObj(struct_obj)) => {
                 return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
@@ -648,6 +653,47 @@ impl Runtime {
             step_results,
         )
         .into())
+    }
+
+    // Membership through a set-valued definition: if `S(a) = {x T: P(x)}`,
+    // then `y $in S(a)` is checked by unfolding one layer and proving
+    // `y $in T` plus `P(y)`. Example: `(3, 4) $in circle(5)`.
+    fn maybe_verify_in_fact_in_unfolded_user_defined_set(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(unfolded_set) =
+            self.unfold_known_fn_application_once(&in_fact.set, verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Obj::SetBuilder(set_builder) = unfolded_set else {
+            return Ok(None);
+        };
+
+        let unfolded_fact = InFact::new(
+            in_fact.element.clone(),
+            set_builder.clone().into(),
+            in_fact.line_file.clone(),
+        );
+        let unfolded_result = self.verify_in_fact_in_set_builder_by_defining_facts(
+            &unfolded_fact,
+            &set_builder,
+            verify_state,
+        )?;
+        if !unfolded_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "membership in a set-valued user-defined function: unfold one function application to a set builder".to_string(),
+                vec![unfolded_result],
+            )
+            .into(),
+        ))
     }
 
     fn verify_in_fact_by_struct_obj(

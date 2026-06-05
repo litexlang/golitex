@@ -758,6 +758,64 @@ forall a, b seq(R):
 }
 
 #[test]
+fn set_valued_have_fn_application_unfolds_for_membership() {
+    let source_code = r#"
+have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
+
+(3, 4) $in circle(5)
+(2, 2) $in line(1, -1, 0)
+
+forall a, b R:
+    a != 0 or b != 0
+    =>:
+        (0, 0) $in line(a, b, 0)
+
+forall p cart(R, R):
+    p $in circle(5)
+    =>:
+        p[1]^2 + p[2]^2 = 5^2
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_valued_have_fn_application_unfolds_for_membership",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "set-valued have fn applications should unfold for membership:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn set_valued_have_fn_application_keeps_side_conditions() {
+    let source_code = r#"
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
+
+(0, 0) $in line(0, 0, 0)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_valued_have_fn_application_keeps_side_conditions",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "set-valued have fn unfolding should not bypass argument side conditions:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn unary_numeric_objects_respect_argument_equality() {
     let source_code = r#"
 forall x, y R:

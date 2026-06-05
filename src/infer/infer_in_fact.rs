@@ -702,6 +702,15 @@ impl Runtime {
                 if !alias_infer.is_empty() {
                     return Ok(alias_infer);
                 }
+                // If the set side is a one-layer user-defined set builder, unfold it
+                // for inference too. Example: `(3,4) $in circle(5)` infers
+                // `(3,4) $in cart(R,R)` and the instantiated circle equation.
+                if let Some(Obj::SetBuilder(set_builder)) =
+                    self.unfold_known_fn_application_once(set_obj, &VerifyState::new(0, false))?
+                {
+                    return self
+                        .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
+                }
                 if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
                     self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
                 } else {
