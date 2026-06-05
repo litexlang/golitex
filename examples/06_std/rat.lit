@@ -9,5 +9,8 @@ Rat::den(3 / 2) != 0
 by thm Rat::num_div_den(3 / 2)
 3 / 2 = Rat::num(3 / 2) / Rat::den(3 / 2)
 
+by thm Rat::exists_rat_between(1, 2)
+exist q Q st {1 < q < 2}
+
 by thm Rat::num_den_coprime(3 / 2)
 $Nat::Coprime(Int::natAbs(Rat::num(3 / 2)), Rat::den(3 / 2))

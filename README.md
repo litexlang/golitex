@@ -62,6 +62,10 @@ mathematical reasoning itself.
 
 ## The First Mental Model
 
+_Mathematics is a game played according to certain simple rules with meaningless marks on papers._
+
+_– David Hilbert_
+
 Think of a Litex file as a small mathematical world that grows one checked fact
 at a time. You introduce the objects in the world, give yourself vocabulary,
 prove or explicitly assume general rules, and then ask Litex whether a new fact
@@ -137,6 +141,10 @@ argument outside its domain, or `1 / 0`.
 
 ## How is Litex Different
 
+_A mathematician, like a painter or poet, is a maker of patterns. If his patterns are more permanent than theirs, it is because they are made with ideas._
+
+_– G. H. Hardy_
+
 Litex supports two complementary ways to verify a fact.
 
 The explicit route is `by thm`: give a theorem a name, remember that name, and
@@ -170,7 +178,7 @@ example : mortal Socrates := by
   exact all_humans_are_mortal Socrates
 ```
 
-The Litex-native route is pattern matching against the verified context. Instead
+*The Litex-native route is pattern matching against the verified context.* Instead
 of naming and citing the theorem, you can leave the universal fact in context
 and write the conclusion directly:
 
@@ -279,6 +287,10 @@ by contra not $surjective_fn(R, R, square):
 Visit online textbook for more examples: https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction .
 
 ## Goals of Litex
+
+_We are not trying to meet some abstract production quota of definitions, theorems and proofs. The measure of success of our success is whether what we do enables people to understand and think more clearly and effectively about math._
+
+_- William Thurston_
 
 Litex is experimental, but it is aiming at three simple things:
 

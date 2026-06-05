@@ -16,6 +16,24 @@ pi = pi
 by thm Real::exists_rat_between(1, 2)
 exist q Q st {1 < q < 2}
 
+by thm Real::exists_real_between(1, 2)
+exist x R st {1 < x < 2}
+
+by thm Real::exists_nat_inv_lt(1 / 10)
+exist n N_pos st {1 / n < 1 / 10}
+
+by thm Real::exists_nat_ge(3 / 2)
+exist n N_pos st {3 / 2 <= n}
+
+by thm Real::exists_nat_mul_gt(3, 1 / 2)
+exist n N_pos st {n * (1 / 2) > 3}
+
+by thm Real::exists_positive_rat_le(3 / 2)
+exist r Q_pos st {r <= 3 / 2}
+
+by thm Real::positive_rational_power_strict_mono(2, 1, 1 / 2)
+2^(1 / 2) > 1^(1 / 2)
+
 by thm Real::exists_rat_seq_converging_to_real(sqrt(2))
 exist a seq(Q) st {$Real::rat_seq_converges(a, sqrt(2)), $Real::rat_seq_cauchy(a)}
 
@@ -75,6 +93,9 @@ Int::gcd(4, 6) = Nat::gcd(Int::natAbs(4), Int::natAbs(6))
 
 Rat::den(3 / 2) != 0
 Rat::num(3 / 2) $in Z
+
+by thm Rat::exists_rat_between(1, 2)
+exist rat_mid Q st {1 < rat_mid < 2}
 
 by thm Rat::num_den_coprime(3 / 2)
 $Nat::Coprime(Int::natAbs(Rat::num(3 / 2)), Rat::den(3 / 2))

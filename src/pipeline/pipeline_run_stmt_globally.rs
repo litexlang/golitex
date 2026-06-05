@@ -1212,6 +1212,55 @@ thm imported_thm:
     }
 
     #[test]
+    fn imported_module_proof_can_case_split_on_local_exist_witness() {
+        let path = write_temp_module(
+            "local-exist-case",
+            r#"
+know:
+    forall n N:
+        exist r N st {r = n}
+
+thm local_exist_case:
+    prove:
+        forall n N:
+            exist s N st {s = n}
+    have by exist r N st {r = n}: r
+    by cases:
+        prove:
+            exist s N st {s = n}
+        case r < n + 1:
+            witness exist s N st {s = n} from n:
+                n = n
+        case r >= n + 1:
+            witness exist s N st {s = n} from n:
+                n = n
+"#,
+        );
+        let source_code = format!(
+            "import \"{}\" as Demo\nby thm Demo::local_exist_case(2)\nexist s N st {{s = 2}}",
+            path.to_string_lossy()
+        );
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "imported_module_proof_can_case_split_on_local_exist_witness",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
+            run_succeeded,
+            "imported module proof should keep local exist witnesses scoped:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn imported_strategy_can_be_enabled_by_qualified_name() {
         let path = write_temp_module(
             "by-strategy",

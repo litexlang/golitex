@@ -49,6 +49,28 @@ forall x, y R, m N_pos:
     =>:
         x <= y
 
+forall x, y R_pos, q R:
+    q > 0
+    x > y
+    =>:
+        x^q > y^q
+
+forall x, y R_pos, q Q:
+    q > 0
+    x > y
+    =>:
+        x^q > y^q
+
+forall x R_pos, q R:
+    x^q > 0
+    x^q != 0
+    x^q * x^(-q) = x^(q + (-q))
+    q + (-q) = 0
+    x^(q + (-q)) = x^0
+    x^0 = 1
+    x^q * x^(-q) = 1
+    x^(-q) = 1 / x^q
+
 know:
     forall x, y R, m N_pos:
         x >= 0

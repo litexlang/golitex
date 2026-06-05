@@ -4,6 +4,19 @@
 # represented as `logb` when useful.
 # Trigonometric functions live in `Trig`; keep this module focused on real
 # numbers and real-analysis fragments that do not depend on trigonometry.
+#
+# Std interpretation note: Litex treats `R` and `Q` as builtin mathematical
+# surfaces. The kernel does not define `R` by constructing Cauchy sequences of
+# rationals; many equivalent constructions of `R` are possible. `std/Real`
+# records the standard relationship interface expected of real numbers.
+# `Q`-in-`R` density belongs here because the ambient order is the real line;
+# purely rational ordered-field facts belong in `std/Rat`. Broader analysis
+# facts such as function limits, continuity, series, and integration should live
+# in dedicated analysis packages instead of this numeric-background module.
+# The default interpretation is the usual real line, which can be obtained as
+# the completion of `Q`. The trusted facts below expose that interpretation
+# through rational density, rational Cauchy approximations, sequential
+# completeness, and least-upper-bound completeness.
 
 # Mathlib `Real.sqrt` is not aliased here because `sqrt` is a Litex builtin.
 # Use the builtin `sqrt(x)` directly with its verifier-visible domain facts.
@@ -106,10 +119,11 @@ prop is_greatest_lower_bound(E set, s R):
 prop has_greatest_lower_bound(E set):
     exist s R st {$is_greatest_lower_bound(E, s)}
 
-# Trusted real-analysis backbone. These facts are the current stdlib interface
-# for density, completeness, logarithms, and basic sqrt behavior. Single-use
-# textbook facts should stay in the source file that needs them unless they
-# become repeated proof patterns.
+# Trusted real-analysis backbone. These facts are accepted std background for
+# builtin `R` under the standard real-number interpretation described above.
+# They are not chapter-level theorems that every source file should reconstruct
+# from scratch. Single-use textbook facts should still stay in the source file
+# that needs them unless they become repeated proof patterns.
 know:
     forall x R:
         0 <= x
@@ -207,7 +221,17 @@ know:
             logb(a, x * y) = logb(a, x) + logb(a, y)
             logb(a, x / y) = logb(a, x) - logb(a, y)
 
-# Mathlib: `exists_rat_btwn`; equivalently the cast from `Q` to `R` has dense range.
+    # Strict monotonicity of positive rational powers on positive reals.  This
+    # is part of the builtin real-power interface used by exponent arguments.
+    forall x, y R_pos, q Q:
+        q > 0
+        x > y
+        =>:
+            x^q > y^q
+
+# Trusted real-background theorem: in the standard completion of `Q`, rationals
+# are dense in `R`.  Mathlib: `exists_rat_btwn`; equivalently the cast from `Q`
+# to `R` has dense range.
 thm exists_rat_between, exists_rat_btwn:
     prove:
         forall a, b R:
@@ -216,8 +240,115 @@ thm exists_rat_between, exists_rat_btwn:
                 exist q Q st {a < q < b}
     exist q Q st {a < q < b}
 
-# Sequence form of rational density: every real has a rational Cauchy
-# sequence converging to it.
+# The real line is dense in itself. This is an ordered-field fact, proved by
+# the midpoint `(a + b) / 2`; no completeness or rational approximation is used.
+thm exists_real_between:
+    prove:
+        forall a, b R:
+            a < b
+            =>:
+                exist x R st {a < x < b}
+    (a + b) / 2 $in R
+    a + a < a + b
+    2 * a = a + a
+    2 * a < a + b
+    a = 2 * a / 2
+    2 * a / 2 < (a + b) / 2
+    a < (a + b) / 2
+    a + b < b + b
+    b + b = 2 * b
+    a + b < 2 * b
+    (a + b) / 2 < 2 * b / 2
+    2 * b / 2 = b
+    (a + b) / 2 < b
+    witness exist x R st {a < x < b} from (a + b) / 2:
+        a < (a + b) / 2 < b
+
+# Archimedean approximation interface for the standard real line.
+thm exists_nat_inv_lt:
+    prove:
+        forall epsilon R_pos:
+            exist n N_pos st {1 / n < epsilon}
+    by thm archimedean_property(epsilon)
+    exist n N_pos st {1 / n < epsilon}
+
+thm exists_nat_ge:
+    prove:
+        forall x R_pos:
+            exist n N_pos st {x <= n}
+    1 / x $in R_pos
+    by thm archimedean_property(1 / x)
+    have by exist n N_pos st {1 / n < 1 / x}: n
+    1 / n < 1 / x
+    x > 0
+    n > 0
+    n * x > 0
+    (1 / n) * (n * x) < (1 / x) * (n * x)
+    (1 / n) * (n * x) = x
+    (1 / x) * (n * x) = n
+    x < n
+    x <= n
+    witness exist n0 N_pos st {x <= n0} from n:
+        x <= n
+
+thm exists_nat_mul_gt:
+    prove:
+        forall x, epsilon R_pos:
+            exist n N_pos st {n * epsilon > x}
+    x / epsilon $in R_pos
+    x / epsilon + 1 $in R_pos
+    by thm exists_nat_ge(x / epsilon + 1)
+    have by exist n N_pos st {x / epsilon + 1 <= n}: n
+    x / epsilon + 1 <= n
+    epsilon > 0
+    (x / epsilon + 1) * epsilon <= n * epsilon
+    (x / epsilon + 1) * epsilon = x + epsilon
+    x + epsilon > x
+    x + epsilon <= n * epsilon
+    x < x + epsilon <= n * epsilon
+    x < n * epsilon
+    n * epsilon > x
+    witness exist n0 N_pos st {n0 * epsilon > x} from n:
+        n * epsilon > x
+
+thm exists_positive_rat_le:
+    prove:
+        forall x R_pos:
+            exist q Q_pos st {q <= x}
+    by thm exists_rat_between(0, x)
+    have by exist q Q st {0 < q < x}: q
+    q $in Q_pos
+    q < x
+    q <= x
+    witness exist q0 Q_pos st {q0 <= x} from q:
+        q <= x
+
+# Strict monotonicity of the positive-real power map for positive rational
+# exponents.
+thm positive_rational_power_strict_mono, pos_rat_pow_strict_mono:
+    prove:
+        forall x, y R_pos, q Q:
+            q > 0
+            x > y
+            =>:
+                x^q > y^q
+    x^q > y^q
+
+thm pow_neg_eq_inv, rpow_neg_eq_inv:
+    prove:
+        forall x R_pos, q R:
+            x^(-q) = 1 / x^q
+    x^q > 0
+    x^q != 0
+    x^q * x^(-q) = x^(q + (-q))
+    q + (-q) = 0
+    x^(q + (-q)) = x^0
+    x^0 = 1
+    x^q * x^(-q) = 1
+    x^(-q) = 1 / x^q
+
+# Trusted real-background theorem: every real is represented by a rational
+# Cauchy approximation sequence in the standard completion-of-`Q` model.
 thm exists_rat_seq_converging_to_real:
     prove:
         forall x R:
@@ -233,7 +364,7 @@ thm exists_seq_converging_to_real, exists_cauchy_seq_converging_to_real:
             exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
     exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
 
-# Sequential completeness: every real Cauchy sequence has a real limit.
+# Trusted real-background theorem: every real Cauchy sequence has a real limit.
 thm cauchy_seq_converges, seq_completeness:
     prove:
         forall a seq(R):
@@ -242,8 +373,9 @@ thm cauchy_seq_converges, seq_completeness:
                 $convergent_seq(a)
     $convergent_seq(a)
 
-# Completeness of R in least-upper-bound form.  This is the standard analysis
-# interface used by Tao-style supremum arguments.
+# Trusted real-background theorem: completeness of `R` in least-upper-bound
+# form.  This is the standard analysis interface used by Tao-style supremum
+# arguments.
 thm exists_least_upper_bound, supremum_existence:
     prove:
         forall E set:

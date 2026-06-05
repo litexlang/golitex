@@ -8,6 +8,14 @@ This page collects common questions about Litex's design, performance model,
 and intended proof style. It is written as a living note: answers should stay
 concrete, modest, and close to the current verifier behavior.
 
+## Why is Litex called Litex?
+
+Litex = Lisp + LaTeX. The author of Litex is inspired by the simplicity and power of Lisp and the practicality of LaTeX.
+
+## How is Litex invented?
+
+By iteratively implement and refine the Litex language. The design process and implementation process happen side by side. The author took 6000 git commits (mostly before AI becomes sort of usable to help him to do kernel development) to finally know what he is implementing and designing. It's hard to imagine a better way to do something like this. When everything comes together, it's a beautiful thing.
+
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 
 It can become slow if all ten thousand universal facts are active automatic
@@ -79,6 +87,49 @@ canonical type that determines all later notation. The same object may be known
 to belong to several sets. Litex uses the currently verified membership,
 function-space, and set-property facts to decide whether expressions are
 well-defined and whether later facts can be proved.
+
+## Why does Litex emphasize relationships instead of construction ancestry?
+
+Many familiar mathematical objects can be constructed in more than one way.
+Integers can be built from pairs of natural numbers, rationals from pairs of
+integers, and reals from Cauchy sequences, Dedekind cuts, decimal expansions,
+or other equivalent constructions. Litex does not make ordinary users inherit
+all of that construction history every time they write `Z`, `Q`, or `R`.
+
+Instead, Litex is relationship-first. The kernel and standard library expose
+common objects and the relationships that make them useful: membership,
+arithmetic, order, density, floor bounds, completeness, function spaces, set
+operations, and so on. For many day-to-day proofs, the exact construction of
+`R` from `Q` is not the point; what matters is that `Q` embeds into `R`,
+rationals are dense in reals, Cauchy real sequences converge, and bounded
+nonempty real sets have least upper bounds.
+
+This is a deliberate design trade-off. Litex's builtin `R` is a mathematical
+surface with verifier-visible properties, not a proof term saying "this object
+was constructed by this exact chain of quotients and completions." The standard
+library may record facts such as rational density or real completeness with
+`know` because, for Litex's default std interpretation, those are trusted
+background facts about the standard numeric objects. For example, `std/Rat`
+records the reduced numerator/denominator interface for builtin `Q`, while
+`std/Real` records the usual real-line relationships. In `std/Real`, the
+intended model is the usual real numbers, which can be obtained as the
+completion of `Q`; the std file exposes that model through relationship facts
+rather than forcing every development to replay the construction.
+
+The practical rule is:
+
+- use builtin objects such as `Z`, `Q`, and `R` directly when the proof only
+  needs their ordinary relationships;
+- put broad semantic background, such as density of `Q` in `R` or completeness
+  of `R`, in the relevant std package and make the trust boundary visible;
+- keep chapter-specific or domain-specific theorems local until they are worth
+  extracting into a reusable package;
+- formalize a construction explicitly only when the construction itself is the
+  mathematical subject.
+
+So Litex is not anti-foundational. It simply chooses a lighter user-facing
+route for ordinary mathematics: expose the relationships people actually use,
+then make any trusted background facts explicit enough to audit.
 
 ## What are the boundaries of Litex's type system?
 
