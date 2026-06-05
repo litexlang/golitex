@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: The Formal Way to Write Math as It Looks
+# Litex: The Language Where Mathematics Verifies Itself
 
 *by Jiachen Shen and The Litex Team, version 0.9.96-beta*
 
@@ -26,7 +26,7 @@ _Truth is ever to be found in simplicity, and not in the multiplicity and confus
 
 _– Isaac Newton_
 
-Litex is an open-source language for writing checked mathematical proof code.
+Litex is an open-source formal mathematical language for writing checked mathematical proof code.
 The basic loop is small:
 
 1. Write the next mathematical fact.

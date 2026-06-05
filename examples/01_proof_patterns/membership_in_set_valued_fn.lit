@@ -1,4 +1,4 @@
-# Temporary runnable file for set-valued have fn membership unfolding.
+# Set-valued have fn applications unfold one layer for membership.
 
 have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
