@@ -23,6 +23,9 @@ prop ModEq(n Z_nz, a, b Z):
     a % n = b % n
 
 # Integer-part functions.
+#
+# These are trusted std relationship interfaces for builtin `Z`/`R`, not a
+# claim that the kernel constructs them from Euclidean division in this file.
 have floor fn(x R) Z
 have ceil fn(x R) Z
 

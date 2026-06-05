@@ -59,6 +59,12 @@ impl Runtime {
         }
         match obj {
             Obj::Number(number) => number.clone().into(),
+            Obj::Atom(AtomObj::IdentifierWithMod(identifier))
+                if self.is_current_parse_module(&identifier.mod_name) =>
+            {
+                let local_obj: Obj = Identifier::new(identifier.name.clone()).into();
+                self.resolve_obj(&local_obj)
+            }
             Obj::Add(add) => {
                 let result: Obj =
                     Add::new(self.resolve_obj(&add.left), self.resolve_obj(&add.right)).into();

@@ -1,17 +1,17 @@
-# Temporary runnable file for set-valued have fn membership unfolding.
+# Temporary runnable file for real-power builtin checks.
 
-have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
-have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
-
-(3, 4) $in circle(5)
-(2, 2) $in line(1, -1, 0)
-
-forall a, b R:
-    a != 0 or b != 0
+forall x, y R_pos, q R:
+    q > 0
+    x > y
     =>:
-        (0, 0) $in line(a, b, 0)
+        x^q > y^q
 
-forall p cart(R, R):
-    p $in circle(5)
-    =>:
-        p[1]^2 + p[2]^2 = 5^2
+forall x R_pos, q R:
+    x^q > 0
+    x^q != 0
+    x^q * x^(-q) = x^(q + (-q))
+    q + (-q) = 0
+    x^(q + (-q)) = x^0
+    x^0 = 1
+    x^q * x^(-q) = 1
+    x^(-q) = 1 / x^q

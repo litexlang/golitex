@@ -414,6 +414,63 @@ impl Runtime {
         )))
     }
 
+    // Positive-real powers are strictly increasing in the base for a fixed positive real exponent.
+    // Example: from `0 < a`, `0 < b`, `a < b`, `0 < q`, and `q $in R` or `q $in Q`,
+    // prove `a^q < b^q`.
+    fn try_pow_lt_same_positive_real_exponent_positive_base(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !Self::objs_same_by_display(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+
+        let zero = Self::literal_zero_obj();
+        let exponent = left_pow.exponent.as_ref();
+        let left_base = left_pow.base.as_ref();
+        let right_base = right_pow.base.as_ref();
+
+        let exponent_in_r: AtomicFact =
+            InFact::new(exponent.clone(), StandardSet::R.into(), lf.clone()).into();
+        let mut exponent_result = self.verify_order_subgoal(exponent_in_r)?;
+        if !exponent_result.is_true() {
+            let exponent_in_q: AtomicFact =
+                InFact::new(exponent.clone(), StandardSet::Q.into(), lf.clone()).into();
+            exponent_result = self.verify_order_subgoal(exponent_in_q)?;
+        }
+        if !exponent_result.is_true() {
+            return Ok(None);
+        }
+
+        let subgoals: [AtomicFact; 4] = [
+            LessFact::new(zero.clone(), exponent.clone(), lf.clone()).into(),
+            LessFact::new(zero.clone(), left_base.clone(), lf.clone()).into(),
+            LessFact::new(zero, right_base.clone(), lf.clone()).into(),
+            LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into(),
+        ];
+
+        let mut step_results = Vec::with_capacity(subgoals.len() + 1);
+        step_results.push(exponent_result);
+        for subgoal in subgoals {
+            let result = self.verify_order_subgoal(subgoal)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            step_results.push(result);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^q < b^q from 0 < a, 0 < b, a < b, 0 < q, and q in R or Q".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
     // a^n < b^n from a < b when n is a positive odd integer.
     // Example: from `a < b`, prove `a^3 < b^3`.
     fn try_pow_lt_same_positive_odd_integer_exponent(
@@ -1193,6 +1250,14 @@ impl Runtime {
             if let Some(r) =
                 self.try_pow_lt_even_exponent_from_abs_lt(left_pow, right_pow, lf, atomic_fact)?
             {
+                return Ok(Some(r));
+            }
+            if let Some(r) = self.try_pow_lt_same_positive_real_exponent_positive_base(
+                left_pow,
+                right_pow,
+                lf,
+                atomic_fact,
+            )? {
                 return Ok(Some(r));
             }
         }

@@ -99,9 +99,6 @@ know:
         =>:
             0 < n
 
-    forall n N, q N_pos:
-        exist m, r N st {$EuclideanDivision(n, q, m, r)}
-
     forall n N:
         (-1)^n $in Z
 
@@ -246,13 +243,54 @@ thm not_prime_one:
             not $Prime(1)
     not $Prime(1)
 
-# Textbook/API bridge: Euclidean division is currently available as a named
-# Nat theorem backed by std proof debt. Tao-style constructive proofs should
-# eventually replace the broad `know` fact above.
+thm euclidean_division_fixed_divisor:
+    prove:
+        forall q N_pos, n N:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    by induc n from 0:
+        prove:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+
+        prove from n = 0:
+            witness exist m, r N st {$EuclideanDivision(0, q, m, r)} from 0, 0:
+                0 <= 0
+                0 < q
+                0 = 0 * q + 0
+                $EuclideanDivision(0, q, 0, 0)
+
+        prove induc:
+            have by exist m, r N st {$EuclideanDivision(n, q, m, r)}: m, r
+            by cases:
+                prove:
+                    exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)}
+                case r + 1 < q:
+                    witness exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)} from m, r + 1:
+                        0 <= r + 1
+                        r + 1 < q
+                        n + 1 = (m * q + r) + 1
+                        (m * q + r) + 1 = m * q + (r + 1)
+                        n + 1 = m * q + (r + 1)
+                        $EuclideanDivision(n + 1, q, m, r + 1)
+                case r + 1 >= q:
+                    r + 1 <= q
+                    r + 1 = q
+                    witness exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)} from m + 1, 0:
+                        0 <= 0
+                        0 < q
+                        n + 1 = (m * q + r) + 1
+                        (m * q + r) + 1 = m * q + (r + 1)
+                        m * q + (r + 1) = m * q + q
+                        m * q + q = (m + 1) * q + 0
+                        n + 1 = (m + 1) * q + 0
+                        $EuclideanDivision(n + 1, q, m + 1, 0)
+
+# Textbook/API bridge: Euclidean division is exposed as a named Nat theorem
+# after the elementary induction proof above.
 thm euclidean_division:
     prove:
         forall n N, q N_pos:
             exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    by thm euclidean_division_fixed_divisor(q, n)
     exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
 # Mathlib: Nat.dvd_refl

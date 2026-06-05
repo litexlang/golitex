@@ -3,6 +3,12 @@
 # Litex already has the rational set `Q`. This file adds the namespace-shaped
 # numerator/denominator surface exposed as `num`, `den`, `num_div_den`, and
 # `den_nz`.
+#
+# This package does not mean the Litex kernel constructs `Q` as equivalence
+# classes of integer pairs.  It records the trusted standard relationship
+# interface for builtin `Q`: every rational has a nonzero positive denominator,
+# is equal to numerator divided by denominator, and is represented in reduced
+# form.
 
 import Nat
 import Int
@@ -62,12 +68,43 @@ thm positive_rational_as_positive_natural_ratio, pos_nat_div:
                 exist p N_pos, d N_pos st {q = p / d}
     exist p N_pos, d N_pos st {q = p / d}
 
+# Rationals are dense in themselves as an ordered field.  This is separate from
+# `Real::exists_rat_between`, whose ambient order is the real line.
+thm exists_rat_between:
+    prove:
+        forall x, y Q:
+            x < y
+            =>:
+                exist z Q st {x < z < y}
+    (x + y) / 2 $in Q
+    x + x < x + y
+    2 * x = x + x
+    2 * x < x + y
+    x = 2 * x / 2
+    2 * x / 2 < (x + y) / 2
+    x < (x + y) / 2
+    x + y < y + y
+    y + y = 2 * y
+    x + y < 2 * y
+    (x + y) / 2 < 2 * y / 2
+    2 * y / 2 = y
+    (x + y) / 2 < y
+    witness exist z Q st {x < z < y} from (x + y) / 2:
+        x < (x + y) / 2 < y
+
 # Mathlib: Rat.num_den_coprime
 thm numerator_denominator_coprime, num_den_coprime:
     prove:
         forall q Q:
             $Nat::Coprime(Int::natAbs(num(q)), den(q))
     $Nat::Coprime(Int::natAbs(num(q)), den(q))
+
+# Standard numerator/denominator representatives are reduced.
+thm rational_numerator_denominator_reduced, reduced_num_den:
+    prove:
+        forall q Q:
+            $reduced(q)
+    $reduced(q)
 
 # Mathlib: Rat.ext-style reasoning by reduced numerator and denominator.
 thm rational_extensionality_by_num_den, ext:
