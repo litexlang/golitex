@@ -3,7 +3,6 @@ import Nat
 import C
 import Real
 import Trig
-import Finset
 import ZMod
 import Int
 
@@ -53,23 +52,15 @@ have z &C::C = (3, 4)
 C::normSq(z) = 25
 C::norm(z) = 5
 
-Finset::card({1, 2, 3}) = 3
+count({1, 2, 3}) = 3
 
 claim:
     prove:
         forall n N_pos:
-            Finset::card(Nat::divisors(2 * n)) = 28
+            count(Nat::divisors(2 * n)) = 28
             =>:
-                Finset::card(Nat::divisors(2 * n)) = 28
-    Finset::card(Nat::divisors(2 * n)) = 28
-
-$Finset::range_value(5, Finset::range_nat(5))
-1 < 5
-1 $in Finset::range_nat(5)
-
-$Finset::Icc_value(2, 5, Finset::Icc(2, 5))
-2 <= 3 <= 5
-3 $in Finset::Icc(2, 5)
+                count(Nat::divisors(2 * n)) = 28
+    count(Nat::divisors(2 * n)) = 28
 
 by thm ZMod::value_ZMod(5)
 $ZMod::value(5, ZMod::ZMod(5))

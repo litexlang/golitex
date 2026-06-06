@@ -631,17 +631,17 @@ mod tests {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) = run_source_code("import Set", &mut runtime);
+        let (_, runtime_error) = run_source_code("import ZMod", &mut runtime);
 
         assert!(runtime_error.is_none());
         let module_manager = runtime.module_manager.borrow();
-        let imported = module_manager.imported_modules.get("Set").unwrap();
+        let imported = module_manager.imported_modules.get("ZMod").unwrap();
         assert!(imported.is_std);
         assert_eq!(
             Path::new(imported.absolute_path.as_str())
                 .file_name()
                 .and_then(|name| name.to_str()),
-            Some("Set")
+            Some("ZMod")
         );
     }
 

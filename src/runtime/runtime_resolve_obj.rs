@@ -351,6 +351,11 @@ impl Runtime {
                 _ => obj.clone(),
             },
             Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
+            Obj::FnRangeOn(fn_range_on) => FnRangeOn::new(
+                self.resolve_obj(&fn_range_on.function),
+                self.resolve_obj(&fn_range_on.set),
+            )
+            .into(),
             Obj::TupleDim(dim) => match &*dim.arg {
                 Obj::Tuple(tuple) => Number::new(tuple.args.len().to_string()).into(),
                 _ => obj.clone(),

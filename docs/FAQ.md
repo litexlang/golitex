@@ -16,6 +16,10 @@ Litex = Lisp + LaTeX. The author of Litex is inspired by the simplicity and powe
 
 By iteratively implementing and refining the Litex language. The design process and implementation process happen side by side. The author took 6000 git commits (mostly before AI becomes sort of usable to help him to do kernel development) to finally know what he is implementing and designing. It's hard to imagine a better way to do something like this. When everything comes together, it's a beautiful thing.
 
+## Is Litex a programming language?
+
+No. Litex is a domain language for and just for mathematics reasoning. It is not a programming language. By sacrificing the programming language features, Litex can focus on the mathematics reasoning features. This is very different from Lean, Coq, and Isabelle. That's why it can be designed as close to ordinary mathematics as possible.
+
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 
 It can become slow if all ten thousand universal facts are active automatic

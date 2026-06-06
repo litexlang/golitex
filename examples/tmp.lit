@@ -1,9 +1,0 @@
-# Temporary runnable file for the Chapter 6 geometric-sequence slice.
-
-run_file "../scripts/analysis-one/chapters_in_litex/chap6.lit"
-
-forall x R:
-    0 < x
-    x < 1
-    =>:
-        $converges_to('(n N_pos) R {x^n}, 0)

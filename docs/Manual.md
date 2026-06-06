@@ -242,7 +242,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets—see comments in `examples/03_objects_and_data/litex_object_examples.lit`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `examples/03_objects_and_data/README.md`.
 
 #### Power set
 
@@ -276,6 +276,8 @@ Later parameter domains may depend on earlier parameters. The return set is not 
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
+The preview object `fn_range_on(f, S)` means the set of values reached by a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` restricts to `fn(x S) T`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+
 ```litex
 have g set = fn(x R) R
 ```
@@ -302,6 +304,15 @@ prove:
     f(1) $in fn_range(f)
     fn_range(f) $subset R
     fn_range(f) $in power_set(R)
+```
+
+```litex
+prove:
+    have a seq(R)
+
+    a(1) $in fn_range_on(a, 1...3)
+    fn_range_on(a, 1...3) $subset R
+    $is_finite_set(fn_range_on(a, 1...3))
 ```
 
 #### Cartesian product and dimension
@@ -1116,7 +1127,7 @@ w > 0
 
 ### Naming preimages (`have by preimage`)
 
-When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application.
+When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be a restricted range membership `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
 
 ```litex
 prove:
@@ -1143,6 +1154,17 @@ prove:
     b $in R
     a < b
     g(0, 1) = g(a, b)
+```
+
+```litex
+prove:
+    have a seq(R)
+
+    a(2) $in fn_range_on(a, 1...3)
+    have by preimage k from a(2) $in fn_range_on(a, 1...3)
+
+    k $in 1...3
+    a(2) = a(k)
 ```
 
 ---
@@ -1294,7 +1316,8 @@ forall x A:
 
 > Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
-Classic structure example: `examples/04_structures/group_quotient.lit` combines
+Classic structure example: the `group_quotient` section of
+`examples/04_structures/README.md` combines
 `struct`, `template`, and `have fn ... as set` to define the quotient set of a
 group by taking the set of left cosets. It also adds the quotient
 multiplication interface for a normal subgroup and proves the representative
@@ -1913,7 +1936,7 @@ exist m S st {forall! x S: $P(m, x) => {x = m}}
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet quantify over prop names as first-class relation objects.
 
-See `examples/01_proof_patterns/by_zorn_lemma.lit`.
+See the `by_zorn_lemma` section of `examples/01_proof_patterns/README.md`.
 
 ---
 
@@ -1933,7 +1956,7 @@ exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
 
-See `examples/01_proof_patterns/by_axiom_of_choice.lit`.
+See the `by_axiom_of_choice` section of `examples/01_proof_patterns/README.md`.
 
 ---
 
@@ -1943,7 +1966,8 @@ Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_pr
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See `examples/01_proof_patterns/by_symmetric_reflexive_antisymmetric_prop.lit`.
+See the `by_symmetric_reflexive_antisymmetric_prop` section of
+`examples/01_proof_patterns/README.md`.
 
 ```litex
 abstract_prop p(x, y)
