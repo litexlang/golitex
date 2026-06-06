@@ -71,6 +71,7 @@ impl Runtime {
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
+            Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
@@ -1427,6 +1428,32 @@ impl Runtime {
             )));
         }
         Ok(())
+    }
+
+    fn verify_fn_range_on_well_defined(
+        &mut self,
+        x: &FnRangeOn,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        let target_fn_set = self.fn_range_on_target_fn_set(x, default_line_file())?;
+        let restrict_fact = RestrictFact::new(
+            x.function.as_ref().clone(),
+            target_fn_set.into(),
+            default_line_file(),
+        );
+        let restrict_result =
+            self.verify_restrict_fact_using_its_definition(&restrict_fact, verify_state)?;
+        match restrict_result {
+            Some(result) if result.is_true() => Ok(()),
+            _ => Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on cannot verify that {} is defined on {}",
+                    x.function, x.set
+                )),
+            ))),
+        }
     }
 
     fn verify_sum_obj_well_defined(

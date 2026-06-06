@@ -166,6 +166,13 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
+            (Obj::FnObj(fn_obj), Obj::FnRangeOn(fn_range_on)) => self
+                .verify_in_fact_fn_application_in_fn_range_on(
+                    in_fact,
+                    fn_obj,
+                    fn_range_on,
+                    verify_state,
+                ),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
@@ -353,6 +360,13 @@ impl Runtime {
                 ),
             (Obj::FnRange(fn_range), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_fn_range_in_power_set(in_fact, fn_range, power_set, verify_state),
+            (Obj::FnRangeOn(fn_range_on), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_fn_range_on_in_power_set(
+                    in_fact,
+                    fn_range_on,
+                    power_set,
+                    verify_state,
+                ),
             (_, Obj::SetBuilder(set_builder)) => self
                 .verify_in_fact_in_set_builder_by_defining_facts(
                     in_fact,
@@ -552,6 +566,60 @@ impl Runtime {
         )
     }
 
+    // Restricted function range introduction: if `x $in S` and `f(x)` is well-defined,
+    // then `f(x) $in fn_range_on(f, S)`.
+    // Example: `have a seq(R)` proves `a(1) $in fn_range_on(a, 1...3)`.
+    fn verify_in_fact_fn_application_in_fn_range_on(
+        &mut self,
+        in_fact: &InFact,
+        fn_obj: &FnObj,
+        fn_range_on: &FnRangeOn,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let head_obj: Obj = fn_obj.head.as_ref().clone().into();
+        if head_obj.to_string() != fn_range_on.function.to_string() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let arg = fn_obj.body[0][0].as_ref().clone();
+        let arg_in_domain: AtomicFact = InFact::new(
+            arg,
+            fn_range_on.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let arg_in_domain_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&arg_in_domain, verify_state)?;
+        if !arg_in_domain_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range_on membership: a well-defined function application with argument in the restricted domain is in the restricted function range"
+                    .to_string(),
+                vec![arg_in_domain_result],
+            )
+            .into(),
+        )
+    }
+
     // The range of `f : ... -> T` is a subset of `T`; hence it is in `power_set(U)` when `T subset U`.
     // Example: `have f fn(x S) T` proves `fn_range(f) $in power_set(T)`.
     fn verify_in_fact_fn_range_in_power_set(
@@ -580,6 +648,42 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn_range power_set membership: function range is contained in the codomain"
+                    .to_string(),
+                vec![subset_result],
+            )
+            .into(),
+        )
+    }
+
+    // The restricted range of `f : ... -> T` is a subset of `T`;
+    // hence it is in `power_set(U)` when `T subset U`.
+    // Example: `have a seq(R)` proves `fn_range_on(a, 1...3) $in power_set(R)`.
+    fn verify_in_fact_fn_range_on_in_power_set(
+        &mut self,
+        in_fact: &InFact,
+        fn_range_on: &FnRangeOn,
+        power_set: &PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let subset_fact: AtomicFact = SubsetFact::new(
+            body.ret_set.as_ref().clone(),
+            power_set.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range_on power_set membership: restricted function range is contained in the codomain"
                     .to_string(),
                 vec![subset_result],
             )

@@ -2,7 +2,6 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    // TODO: THIS IS A MESS
     pub fn exec_have_obj_equal_stmt(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,

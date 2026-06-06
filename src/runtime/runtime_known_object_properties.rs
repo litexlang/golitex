@@ -75,6 +75,53 @@ impl Runtime {
         }
     }
 
+    pub fn get_fn_range_on_function_body(&self, function: &Obj) -> Option<FnSetBody> {
+        match function {
+            Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
+            _ => self.get_object_in_fn_set_or_restrict(function),
+        }
+    }
+
+    pub fn fn_range_on_target_fn_set(
+        &self,
+        fn_range_on: &FnRangeOn,
+        _line_file: LineFile,
+    ) -> Result<FnSet, RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on expects a function with a known function set, got {}",
+                    fn_range_on.function
+                )),
+            )));
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on expects a unary function, got {}",
+                    fn_range_on.function
+                )),
+            )));
+        }
+        let param = self.generate_random_unused_name();
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![param],
+                fn_range_on.set.as_ref().clone(),
+            )],
+            vec![],
+            body.ret_set.as_ref().clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_cause(
+                    format!("failed to build restriction target for {}", fn_range_on),
+                    e,
+                ),
+            ))
+        })
+    }
+
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
     /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
     pub fn get_known_fn_body_and_equal_to_for_key(
@@ -684,6 +731,10 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::Count(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
+        Obj::FnRangeOn(x) => {
+            collect_module_names_from_obj(&x.function, module_names);
+            collect_module_names_from_obj(&x.set, module_names);
+        }
         Obj::TupleDim(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::CartDim(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::OneSideInfinityIntervalObj(x) => {

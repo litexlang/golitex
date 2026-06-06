@@ -1,8 +1,0 @@
-abstract_prop p(a, b, c)
-let a, b, c, d, e, f R:
-    $p(a, b, c)
-    a = d
-    b = e
-    c = f
-
-$p(d, e, f)

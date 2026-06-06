@@ -117,6 +117,20 @@ prove:
     b $in R
     a < b
     g(0, 1) = g(a, b)
+
+prove:
+    have a seq(R)
+
+    a(1) $in fn_range_on(a, 1...3)
+    a(2) $in fn_range_on(a, 1...3)
+    fn_range_on(a, 1...3) $subset R
+    fn_range_on(a, 1...3) $in power_set(R)
+    $is_finite_set(fn_range_on(a, 1...3))
+    count(fn_range_on(a, 1...3)) $in N
+
+    have by preimage k from a(2) $in fn_range_on(a, 1...3)
+    k $in 1...3
+    a(2) = a(k)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -128,6 +142,32 @@ prove:
     assert!(
         run_succeeded,
         "fn_range intro/subset/preimage failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn fn_range_on_rejects_non_unary_function() {
+    let source_code = r#"
+prove:
+    have g fn(x R, y R) R
+    fn_range_on(g, R) $subset R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("fn_range_on_rejects_non_unary_function");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "fn_range_on with non-unary function should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("fn_range_on expects a unary function"),
+        "fn_range_on non-unary error should be explicit:\n{}",
         run_output
     );
 }

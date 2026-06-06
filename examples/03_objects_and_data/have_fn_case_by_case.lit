@@ -1,3 +1,0 @@
-have fn self_max(x, y R) R by cases:
-    case x > y: x
-    case x <= y: y

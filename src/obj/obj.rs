@@ -37,6 +37,7 @@ pub enum Obj {
     Tuple(Tuple),
     Count(Count),
     FnRange(FnRange),
+    FnRangeOn(FnRangeOn),
     Sum(Sum),
     Product(Product),
     Range(Range),
@@ -126,6 +127,7 @@ pub enum ObjKind {
     DefAlgoFreeParam = 60,
     DefStructFieldFreeParam = 61,
     FnRange = 62,
+    FnRangeOn = 63,
 }
 
 impl ObjKind {
@@ -447,6 +449,12 @@ pub struct Count {
 #[derive(Clone)]
 pub struct FnRange {
     pub function: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct FnRangeOn {
+    pub function: Box<Obj>,
+    pub set: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -852,6 +860,15 @@ impl FnRange {
     }
 }
 
+impl FnRangeOn {
+    pub fn new(function: Obj, set: Obj) -> Self {
+        FnRangeOn {
+            function: Box::new(function),
+            set: Box::new(set),
+        }
+    }
+}
+
 impl Range {
     pub fn new(start: Obj, end: Obj) -> Self {
         Range {
@@ -1053,6 +1070,7 @@ impl Obj {
             Obj::Tuple(_) => ObjKind::Tuple,
             Obj::Count(_) => ObjKind::Count,
             Obj::FnRange(_) => ObjKind::FnRange,
+            Obj::FnRangeOn(_) => ObjKind::FnRangeOn,
             Obj::Sum(_) => ObjKind::Sum,
             Obj::Product(_) => ObjKind::Product,
             Obj::Range(_) => ObjKind::Range,
@@ -1114,6 +1132,7 @@ impl Obj {
             Obj::TupleDim(_) => TUPLE_DIM.to_string(),
             Obj::Count(_) => COUNT.to_string(),
             Obj::FnRange(_) => FN_RANGE.to_string(),
+            Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
             Obj::Sum(_) => SUM.to_string(),
             Obj::Product(_) => PRODUCT.to_string(),
             Obj::Range(_) => RANGE.to_string(),
@@ -1253,6 +1272,7 @@ impl Obj {
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::FnRange(x) => write!(f, "{}", x)?,
+            Obj::FnRangeOn(x) => write!(f, "{}", x)?,
             Obj::Sum(x) => write!(f, "{}", x)?,
             Obj::Product(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
@@ -1481,6 +1501,11 @@ impl Obj {
             Obj::FnRange(x) => {
                 FnRange::new(Obj::replace_bound_identifier(*x.function, from, to)).into()
             }
+            Obj::FnRangeOn(x) => FnRangeOn::new(
+                Obj::replace_bound_identifier(*x.function, from, to),
+                Obj::replace_bound_identifier(*x.set, from, to),
+            )
+            .into(),
             Obj::Sum(x) => Sum::new(
                 Obj::replace_bound_identifier(*x.start, from, to),
                 Obj::replace_bound_identifier(*x.end, from, to),
@@ -1997,6 +2022,17 @@ impl fmt::Display for FnRange {
             "{}{}",
             FN_RANGE,
             braced_vec_to_string(&vec![self.function.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for FnRangeOn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            FN_RANGE_ON,
+            braced_vec_to_string(&vec![self.function.as_ref(), self.set.as_ref()])
         )
     }
 }
@@ -2527,6 +2563,12 @@ impl From<Count> for Obj {
 impl From<FnRange> for Obj {
     fn from(r: FnRange) -> Self {
         Obj::FnRange(r)
+    }
+}
+
+impl From<FnRangeOn> for Obj {
+    fn from(r: FnRangeOn) -> Self {
+        Obj::FnRangeOn(r)
     }
 }
 

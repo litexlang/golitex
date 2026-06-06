@@ -1,5 +1,0 @@
-have a 1...3
-
-by closed_range as cases: a $in 1...3
-
-a = 1 or a = 2 or a = 3

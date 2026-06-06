@@ -464,6 +464,31 @@ impl Runtime {
                 ))
                 .into(),
             ),
+            // The image of a finite domain under a function is finite.
+            // Example: from `$is_finite_set(1...3)`, prove `$is_finite_set(fn_range_on(a, 1...3))`.
+            Obj::FnRangeOn(fn_range_on) => {
+                let domain_finite: AtomicFact = IsFiniteSetFact::new(
+                    fn_range_on.set.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let domain_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &domain_finite,
+                    _verify_state,
+                )?;
+                if domain_result.is_true() {
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_finite_set_fact.clone().into(),
+                            "fn_range_on_is_finite_set_when_domain_is_finite_set".to_string(),
+                            vec![domain_result],
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
             // The union of two finite sets is finite.
             // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
             // `$is_finite_set(union(A, B))`.

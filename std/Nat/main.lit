@@ -52,6 +52,84 @@ prop Coprime(a, b N):
 have choose_fn fn(n, k N) N
 have sqrt_nat fn(n N) N
 
+# Well-ordering interface for natural-number subsets.
+# The primitive background is Litex's builtin `min_of_N_set`, restricted to
+# non-empty subsets of `N`; the std theorem names below are the public API.
+prop LeastElementOfNSubset(S power_set(N), m N):
+    m $in S
+    forall x S:
+        m <= x
+
+thm min_of_N_set_is_least:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                $LeastElementOfNSubset(S, min_of_N_set(S))
+    min_of_N_set(S) $in S
+    forall x S:
+        min_of_N_set(S) <= x
+    $LeastElementOfNSubset(S, min_of_N_set(S))
+
+thm least_of_N_subset_unique:
+    prove:
+        forall S power_set(N), m, n N:
+            $LeastElementOfNSubset(S, m)
+            $LeastElementOfNSubset(S, n)
+            =>:
+                m = n
+    m $in S
+    n $in S
+    forall x S:
+        m <= x
+    m <= n
+    forall x S:
+        n <= x
+    n <= m
+    m = n
+
+thm exists_least_of_nonempty_N_subset:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                exist m N st {$LeastElementOfNSubset(S, m)}
+    by thm min_of_N_set_is_least(S)
+    witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
+        $LeastElementOfNSubset(S, min_of_N_set(S))
+
+thm exists_unique_least_of_nonempty_N_subset, well_ordering_principle:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                exist! m N st {$LeastElementOfNSubset(S, m)}
+    by thm min_of_N_set_is_least(S)
+    witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
+        $LeastElementOfNSubset(S, min_of_N_set(S))
+    claim:
+        prove:
+            forall m, n N:
+                $LeastElementOfNSubset(S, m)
+                $LeastElementOfNSubset(S, n)
+                =>:
+                    m = n
+        by thm least_of_N_subset_unique(S, m, n)
+        m = n
+    exist! m N st {$LeastElementOfNSubset(S, m)}
+
+have fn least_of_N_subset(S power_set(N): $is_nonempty_set(S)) N = min_of_N_set(S)
+
+thm least_of_N_subset_is_least:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                $LeastElementOfNSubset(S, least_of_N_subset(S))
+    by thm min_of_N_set_is_least(S)
+    least_of_N_subset(S) = min_of_N_set(S)
+    $LeastElementOfNSubset(S, least_of_N_subset(S))
+
 # Mathlib: Nat.divisors, exposed as a finite set of natural divisors.
 prop divisors_value(n N, s power_set(N)):
     forall d N:

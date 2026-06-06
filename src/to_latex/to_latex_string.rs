@@ -580,6 +580,17 @@ impl FnRange {
     }
 }
 
+impl FnRangeOn {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {} \right)",
+            FN_RANGE_ON,
+            self.function.to_latex_string(),
+            self.set.to_latex_string()
+        )
+    }
+}
+
 impl Sum {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2078,6 +2089,7 @@ impl Obj {
             Obj::Tuple(x) => x.to_latex_string(),
             Obj::Count(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
+            Obj::FnRangeOn(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),

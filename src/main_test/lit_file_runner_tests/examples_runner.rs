@@ -28,7 +28,7 @@ fn print_run_examples_timing_summary(
     println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
     if examples_ran {
         println!(
-            "  phase 1 (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+            "  phase 1 (selected examples/**/*.lit + public examples markdown ```litex``` + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
             examples_sum_ms, examples_phase_wall_ms
         );
     }
@@ -127,6 +127,23 @@ fn run_examples_impl(include_std_examples: bool) {
     let dataset_gallery_md_paths = collect_markdown_files_under_dir_sorted(&dataset_gallery_md_dir);
     let dataset_gallery_snippets =
         litex_snippets_from_markdown_files(&manifest_dir, &dataset_gallery_md_paths);
+    let public_example_md_dirs = [
+        "00_first_steps",
+        "01_proof_patterns",
+        "02_builtin_math",
+        "03_objects_and_data",
+        "04_structures",
+        "05_case_studies",
+        "06_std",
+    ];
+    let mut public_example_md_paths = Vec::new();
+    for subdir in public_example_md_dirs {
+        let md_dir = manifest_dir.join("examples").join(subdir);
+        public_example_md_paths.extend(collect_markdown_files_under_dir_sorted(&md_dir));
+    }
+    public_example_md_paths.sort();
+    let public_example_snippets =
+        litex_snippets_from_markdown_files(&manifest_dir, &public_example_md_paths);
 
     #[derive(Clone)]
     struct Phase1Item {
@@ -168,6 +185,13 @@ fn run_examples_impl(include_std_examples: bool) {
             path_for_runtime: md_path_str.clone(),
         });
     }
+    for (label, block, md_path_str) in public_example_snippets.iter() {
+        phase1_items.push(Phase1Item {
+            report_label: label.clone(),
+            source: block.clone(),
+            path_for_runtime: md_path_str.clone(),
+        });
+    }
     for (label, block, md_path_str) in dataset_gallery_snippets.iter() {
         phase1_items.push(Phase1Item {
             report_label: label.clone(),
@@ -187,7 +211,7 @@ fn run_examples_impl(include_std_examples: bool) {
 
     if phase1_items.is_empty() {
         println!(
-            "--- phase 1: no selected examples/**/*.lit, examples/07_dataset_gallery/**/*.md ```litex```, or docs/Manual ```litex``` snippets ---"
+            "--- phase 1: no selected examples/**/*.lit, public examples markdown ```litex```, examples/07_dataset_gallery/**/*.md ```litex```, or docs/Manual ```litex``` snippets ---"
         );
     } else {
         examples_ran = true;
@@ -236,7 +260,7 @@ fn run_examples_impl(include_std_examples: bool) {
 
     if every_file_run_ok && examples_ran {
         println!(
-            "--- phase 1: {} run(s) (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual ```litex```), all OK ---",
+            "--- phase 1: {} run(s) (selected examples/**/*.lit + public examples markdown ```litex``` + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual ```litex```), all OK ---",
             file_label_and_duration_ms_list.len()
         );
         print_slowest_run_labels("phase 1 runs", file_label_and_duration_ms_list.as_slice());

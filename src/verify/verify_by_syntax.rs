@@ -186,6 +186,10 @@ impl Runtime {
                 Obj::FnRange(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::FnRangeOn(a) => match right {
+                Obj::FnRangeOn(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Sum(a) => match right {
                 Obj::Sum(b) => a.to_string() == b.to_string(),
                 _ => false,
