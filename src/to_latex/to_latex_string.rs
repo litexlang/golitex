@@ -2154,6 +2154,8 @@ impl Stmt {
             Stmt::DefLetStmt(x) => x.to_latex_string(),
             Stmt::DefPropStmt(x) => x.to_latex_string(),
             Stmt::DefAbstractPropStmt(x) => x.to_latex_string(),
+            Stmt::AliasPropStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::AliasThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::HaveObjInNonemptySetStmt(x) => x.to_latex_string(),
             Stmt::HaveObjEqualStmt(x) => x.to_latex_string(),
             Stmt::HaveObjByExistFactsStmt(x) => x.to_latex_string(),

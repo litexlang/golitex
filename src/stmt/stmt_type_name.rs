@@ -243,6 +243,18 @@ impl DefPropStmt {
     }
 }
 
+impl AliasPropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "AliasPropStmt".to_string()
+    }
+}
+
+impl AliasThmStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "AliasThmStmt".to_string()
+    }
+}
+
 impl DefLetStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefLetStmt".to_string()
