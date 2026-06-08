@@ -2,6 +2,12 @@
 
 This folder is both a runnable test suite and a reading gallery.
 
+The examples are meant to be a learning path, not just a theorem showcase.
+They start from small checked facts and grow toward structures, case studies,
+and textbook snippets. This is the same dependency philosophy used elsewhere
+in Litex: build enough background to write the next mathematical line, rather
+than starting by importing a huge theorem dictionary.
+
 For a first pass, read the public folders in order:
 
 1. [`00_first_steps/`](00_first_steps/) - small facts, equality chains, arithmetic, and linear equations.

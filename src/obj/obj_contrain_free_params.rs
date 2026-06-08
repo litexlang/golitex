@@ -72,10 +72,16 @@ impl Obj {
                     || x.end.contains_forall_free_param_obj()
                     || x.func.contains_forall_free_param_obj()
             }
+            Obj::SumOfFiniteSet(x) => {
+                x.set.contains_forall_free_param_obj() || x.func.contains_forall_free_param_obj()
+            }
             Obj::Product(x) => {
                 x.start.contains_forall_free_param_obj()
                     || x.end.contains_forall_free_param_obj()
                     || x.func.contains_forall_free_param_obj()
+            }
+            Obj::ProductOfFiniteSet(x) => {
+                x.set.contains_forall_free_param_obj() || x.func.contains_forall_free_param_obj()
             }
             Obj::Range(x) => contains_forall_free_param_obj_in_pair(&x.start, &x.end),
             Obj::ClosedRange(x) => contains_forall_free_param_obj_in_pair(&x.start, &x.end),

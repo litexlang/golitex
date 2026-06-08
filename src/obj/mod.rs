@@ -26,7 +26,8 @@ pub use obj::{
     IntervalObjStruct, ListSet, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
     MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, Number, Obj,
     ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
-    OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product, Proj, Range, SeqSet, SetBuilder,
-    SetDiff, SetMinus, Sqrt, StructObj, Sub, Sum, Tuple, TupleDim, Union,
+    OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Range,
+    SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt, StructObj, Sub, Sum, SumOfFiniteSet, Tuple,
+    TupleDim, Union,
 };
 pub use standard_set::StandardSet;

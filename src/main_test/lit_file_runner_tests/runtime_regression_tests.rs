@@ -930,6 +930,73 @@ product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 }
 
 #[test]
+fn sum_of_finite_set_core_rules() {
+    let source_code = r#"
+sum_of_finite_set({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+sum_of_finite_set({}, 'Z(x){x}) = 0
+sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
+sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
+
+prove:
+    have X finite_set
+    have c Z
+    sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
+
+prove:
+    have X power_set(Z)
+    know $is_finite_set(X)
+    sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("sum_of_finite_set_core_rules");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "sum_of_finite_set core rules should verify:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn product_of_finite_set_core_rules() {
+    let source_code = r#"
+product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+product_of_finite_set({}, 'Z(x){x}) = 1
+product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
+product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
+product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
+
+prove:
+    have X finite_set
+    have c R
+    product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
+
+prove:
+    have X power_set(Z)
+    know $is_finite_set(X)
+    product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("product_of_finite_set_core_rules");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "product_of_finite_set core rules should verify:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn dependent_fn_param_set_uses_previous_arg() {
     let source_code = r#"
 have f fn(n N_pos, x closed_range(1, n)) R

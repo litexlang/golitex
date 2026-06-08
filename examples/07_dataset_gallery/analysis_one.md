@@ -2,6 +2,12 @@
 
 Small checked Analysis I slices using Litex-native natural numbers, sets, functions, rationals, Cauchy-style closeness, and limits.
 
+These snippets are evidence for textbook-first formalization. The point is not
+to import a finished analysis library and cite synonyms of Tao's theorems; it
+is to show that small parts of the book can be written as the derivation itself,
+using only basic background and local checked facts. Broader unfinished pieces
+remain in the Analysis I workspace as explicit blockers.
+
 Each example below is an independent checked Litex snippet. The metadata record keeps the dataset translation fields next to the runnable code.
 
 ## 1. `chap2_addition_cancellation`

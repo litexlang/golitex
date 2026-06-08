@@ -141,6 +141,20 @@ impl Runtime {
                     verify_state,
                     "product",
                 ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::NPos,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::NPos,
+                    verify_state,
+                ),
             (Obj::Add(add), Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_add_in_n_from_summands_in_n(in_fact, add, verify_state)
             }
@@ -156,6 +170,20 @@ impl Runtime {
                     verify_state,
                     StandardSet::N,
                     "N: a^k from a in N and k in N",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::N,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::N,
+                    verify_state,
                 ),
             (Obj::Count(count), Obj::StandardSet(StandardSet::N))
             | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
@@ -316,12 +344,40 @@ impl Runtime {
                     verify_state,
                     "product: well-defined on an integer range, in R",
                 ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::R,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::R,
+                    verify_state,
+                ),
             (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
                 .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
                     in_fact,
                     sum.func.as_ref(),
                     verify_state,
                     "sum",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::Z,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::Z,
+                    verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
                 .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
@@ -336,6 +392,20 @@ impl Runtime {
                     sum.func.as_ref(),
                     verify_state,
                     "sum",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::Q,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::Q,
+                    verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
                 .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
@@ -1171,6 +1241,101 @@ impl Runtime {
                 .get_object_in_fn_set_or_restrict(func)
                 .map(|fn_set_body| (*fn_set_body.ret_set).clone()),
         }
+    }
+
+    // Finite-set sum: the return set of the summand controls the numeric set of the sum.
+    // Example: `sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the domain must be nonempty.
+    fn verify_in_fact_sum_of_finite_set_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        sum: &SumOfFiniteSet,
+        target_set: StandardSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(sum.func.as_ref()) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Obj::StandardSet(ret_standard_set) = ret_set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if matches!(&target_set, StandardSet::NPos) {
+            if !matches!(&ret_standard_set, StandardSet::NPos) {
+                return Ok((StmtUnknown::new()).into());
+            }
+            let nonempty_fact: AtomicFact =
+                IsNonemptySetFact::new((*sum.set).clone(), in_fact.line_file.clone()).into();
+            let nonempty_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &nonempty_fact,
+                verify_state,
+            )?;
+            if !nonempty_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "sum_of_finite_set: positive summand over a nonempty finite set",
+            ));
+        }
+        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!(
+            "sum_of_finite_set: summand return set {} is contained in {}",
+            ret_standard_set, target_set
+        );
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
+    }
+
+    // Finite-set product: the return set of the factor controls the numeric set of the product.
+    // Example: `product_of_finite_set({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the empty product is `1`.
+    fn verify_in_fact_product_of_finite_set_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        product: &ProductOfFiniteSet,
+        target_set: StandardSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(product.func.as_ref()) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Obj::StandardSet(ret_standard_set) = ret_set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if matches!(&target_set, StandardSet::NPos) {
+            if !matches!(&ret_standard_set, StandardSet::NPos) {
+                return Ok((StmtUnknown::new()).into());
+            }
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "product_of_finite_set: positive factors give a positive finite product",
+            ));
+        }
+        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!(
+            "product_of_finite_set: factor return set {} is contained in {}",
+            ret_standard_set, target_set
+        );
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
     }
 
     // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return

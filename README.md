@@ -52,6 +52,16 @@ context**. A Litex file introduces objects, states facts about them, checks
 which facts follow, stores the accepted ones, and makes them available to the
 lines that come after.
 
+Litex is especially interested in **textbook-first formalization**. The proof
+script should be the derivation, not only a pointer into a mathematical
+dictionary. In many mature proof-assistant workflows, a textbook theorem can be
+closed by importing a large library and citing an already-proved equivalent or
+stronger theorem. That is powerful, but it can turn formalizing a book into
+library lookup: the code mainly says where the theorem already lives. Litex
+explores a different route: start from basic objects, write the next fact in
+the order the book teaches it, check it, and let later facts reuse the context
+that was actually built.
+
 Litex is not intended to replace any other proof assistant. It explores a
 different path in formal mathematics: whether a readable, fact-oriented
 interface can make it easier for AI systems and humans to translate
@@ -252,17 +262,24 @@ struct Group<s nonempty_set>:
         $GroupProperty(s, inv, op, e)
 ```
 
-Templates let users make reusable mathematical interfaces. A user can define a
-three-dimensional analogue of a matrix as an indexed function space, then
-instantiate it for real-valued `3 x 3 x 3` arrays:
+Templates let users make reusable mathematical interfaces for parameterized
+families of sets. Ordinary tuple products can be written with `cart(A, B, C)`;
+the example below uses the same Cartesian idea in a constrained function-space
+presentation. For any three sets `A`, `B`, and `C`, it names the set of
+three-indexed functions whose first component lies in `A`, second in `B`, and
+third in `C`, then recovers those component membership facts from the
+definition. The point is not that this one object is special, but that templates
+are useful for "for any sets of this shape" interfaces, which appear throughout
+mathematics.
 
-<!-- litex:skip-test -->
 ```litex
-template<S set, n N_pos>:
-    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+template<A, B, C set>:
+    have cart3 set = {f fn(i N_pos: i <= 3) union(A, union(B, C)): f(1) $in A and f(2) $in B and f(3) $in C}
 
-have A \tensor3<R, 3>
-A(1, 2, 3) $in R
+forall g \cart3<R, Q, Z>:
+    g(1) $in R
+    g(2) $in Q
+    g(3) $in Z
 ```
 
 `by contra`, `by cases`, `by for`, `by induc`, `by extension`, `by zorn_lemma` are builtin statements that prove by contradiction, cases, for, induction, extension and Zorn's lemma respectively. Here `by contra` proves that the square function is not surjective by finding a counterexample.
@@ -300,6 +317,15 @@ Litex is experimental, but it is aiming at three simple things:
 be a usable, readable medium for learning, communication, and research, close
 enough to everyday math that students, mathematicians, AI agents, and curious
 readers can benefit from rigor without losing sight of the ideas.
+
+This educational goal matters for dependencies. A student learning calculus
+does not first memorize a huge theorem dictionary and then cite a synonym of
+the theorem in the book. They build definitions, lemmas, and proof habits in
+order. Litex's builtins provide the basic mathematical ground so that this
+kind of step-by-step development can start early, while larger imports and
+`know` assumptions should remain visible background, not a way to erase the
+book's proof. The code should be where the mathematical work happens, not only
+a bibliographic reference into a theorem database.
 
 This route comes with a clear audit obligation. A Litex result should be read
 relative to its trusted background: builtin rules, inference rules,

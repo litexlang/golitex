@@ -445,9 +445,17 @@ impl Runtime {
                     || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
             }
+            Obj::SumOfFiniteSet(x) => {
+                Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+            }
             Obj::Product(x) => {
                 Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+            }
+            Obj::ProductOfFiniteSet(x) => {
+                Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
             }
             Obj::ListSet(x) => Self::obj_list_depends_on_given_exist_param(&x.list, names),

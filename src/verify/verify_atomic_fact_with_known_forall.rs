@@ -771,9 +771,19 @@ impl Runtime {
                 left.func.as_ref(),
                 given_arg,
             ),
+            Obj::SumOfFiniteSet(ref left) => self.match_arg_when_left_is_sum_of_finite_set(
+                left.set.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
             Obj::Product(ref left) => self.match_arg_when_left_is_product(
                 left.start.as_ref(),
                 left.end.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
+            Obj::ProductOfFiniteSet(ref left) => self.match_arg_when_left_is_product_of_finite_set(
+                left.set.as_ref(),
                 left.func.as_ref(),
                 given_arg,
             ),
@@ -2383,6 +2393,23 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_sum_of_finite_set(
+        &mut self,
+        left_set: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::SumOfFiniteSet(ref g) => self.match_arg_binary_then_merge(
+                left_set,
+                left_func,
+                g.set.as_ref(),
+                g.func.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_product(
         &mut self,
         left_start: &Obj,
@@ -2397,6 +2424,23 @@ impl Runtime {
                 left_func,
                 g.start.as_ref(),
                 g.end.as_ref(),
+                g.func.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_product_of_finite_set(
+        &mut self,
+        left_set: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::ProductOfFiniteSet(ref g) => self.match_arg_binary_then_merge(
+                left_set,
+                left_func,
+                g.set.as_ref(),
                 g.func.as_ref(),
             ),
             _ => Ok(None),
