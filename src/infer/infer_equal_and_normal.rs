@@ -218,6 +218,8 @@ impl Runtime {
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_anonymous_fn(equal_fact)?);
+        infer_result
+            .new_infer_result_inside(self.infer_equal_fact_by_positive_real_power(equal_fact)?);
 
         Ok(infer_result)
     }
@@ -409,6 +411,70 @@ impl Runtime {
         self.top_level_env()
             .known_obj_values
             .insert(target.to_string(), value);
+    }
+
+    // From `a^x = y`, infer `y $in R_pos` when `0 < a` and `x $in R`.
+    // This is safe because a positive real base raised to a real exponent is positive.
+    // Example: `a R_pos`, `x R`, `a^x = y` infers `y $in R_pos`.
+    fn infer_equal_fact_by_positive_real_power(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        self.infer_positive_real_power_membership_to_equal_side(
+            &equal_fact.left,
+            &equal_fact.right,
+            equal_fact,
+            &mut infer_result,
+        )?;
+        self.infer_positive_real_power_membership_to_equal_side(
+            &equal_fact.right,
+            &equal_fact.left,
+            equal_fact,
+            &mut infer_result,
+        )?;
+        Ok(infer_result)
+    }
+
+    fn infer_positive_real_power_membership_to_equal_side(
+        &mut self,
+        maybe_power: &Obj,
+        target: &Obj,
+        equal_fact: &EqualFact,
+        infer_result: &mut InferResult,
+    ) -> Result<(), RuntimeError> {
+        if maybe_power.to_string() == target.to_string() {
+            return Ok(());
+        }
+        let Obj::Pow(_) = maybe_power else {
+            return Ok(());
+        };
+
+        let power_in_r_pos: AtomicFact = InFact::new(
+            maybe_power.clone(),
+            StandardSet::RPos.into(),
+            equal_fact.line_file.clone(),
+        )
+        .into();
+        let power_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &power_in_r_pos,
+            &VerifyState::new(0, true),
+        )?;
+        if !power_result.is_true() {
+            return Ok(());
+        }
+
+        let target_in_r_pos: AtomicFact = InFact::new(
+            target.clone(),
+            StandardSet::RPos.into(),
+            equal_fact.line_file.clone(),
+        )
+        .into();
+        infer_result.new_fact(&target_in_r_pos.clone().into());
+        let nested_infer =
+            self.store_atomic_fact_without_well_defined_verified_and_infer(target_in_r_pos)?;
+        infer_result.new_infer_result_inside(nested_infer);
+        Ok(())
     }
 
     // Predicate `P(args)`: check args against `P`'s param types, then store each instantiated `iff` body.

@@ -2974,6 +2974,65 @@ $q(1)
 }
 
 #[test]
+fn positive_real_power_closure_enables_log_inverse() {
+    let source_code = r#"
+forall a R_pos, x R:
+    a^x $in R_pos
+
+forall a R_pos, x, y R:
+    a^x = y
+    =>:
+        y $in R_pos
+
+forall a R_pos, x, y R:
+    a != 1
+    a^x = y
+    =>:
+        x = log(a, y)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("positive_real_power_closure_enables_log_inverse");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "positive_real_power_closure_enables_log_inverse failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("R_pos: a^x from 0 < a and x in R"));
+    assert!(run_output.contains("equality: log(a, b) = c from a^c = b"));
+}
+
+#[test]
+fn forall_iff_output_reports_direction_checks() {
+    let source_code = r#"
+forall a, b R_pos, c R:
+    a != 1
+    =>:
+        log(a, b) = c
+    <=>:
+        a^c = b
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_iff_output_reports_direction_checks");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "forall_iff_output_reports_direction_checks failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("forall iff: then=>iff and iff=>then verified"));
+    assert!(!run_output.contains("\"type\": \"cite forall iff fact\""));
+}
+
+#[test]
 fn definition_namespaces_allow_same_spelling_across_kinds() {
     let source_code = r#"
 have fn SharedName(x R) R = 1

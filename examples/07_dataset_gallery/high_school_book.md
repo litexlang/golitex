@@ -1,6 +1,6 @@
 # High School Book
 
-High-school textbook snippets covering equality, trigonometry, coordinate geometry, derivatives, and extrema records.
+High-school textbook snippets covering equality, inequalities, trigonometry, coordinate geometry, derivatives, and extrema records.
 
 Each example below is an independent checked Litex snippet. The metadata record keeps the dataset translation fields next to the runnable code.
 
@@ -521,4 +521,50 @@ forall y R:
     -pi / 2 < y < pi / 2
     =>:
         Trig::arctan(Trig::tan(y)) = y
+```
+
+## 21. `required-1/am_gm_two_variables`
+
+```yaml
+id: "required-1/am_gm_two_variables"
+source: "High School Book"
+topic: "inequality"
+difficulty: "required"
+natural_language_idea: "Prove the two-variable AM-GM inequality locally: use (x-y)^2 >= 0 to get xy <= ((x+y)/2)^2, then argue by contradiction that sqrt(xy) cannot be larger than (x+y)/2."
+litex_code: "see litex block below"
+proof_attempt: "see litex block below"
+status: "checkable"
+blocker: ""
+notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+```
+
+```litex
+have fn arithmetic_mean(x, y R) R = (x + y) / 2
+have fn geometric_mean(x, y R: x >= 0, y >= 0) R = sqrt(x * y)
+
+claim:
+    prove:
+        forall x, y R:
+            x >= 0
+            y >= 0
+            =>:
+                geometric_mean(x, y) <= arithmetic_mean(x, y)
+    x * y >= 0
+    sqrt(x * y)^2 = x * y
+    (x + y)^2 - 4 * x * y = (x - y)^2
+    0 <= (x - y)^2
+    0 <= (x + y)^2 - 4 * x * y
+    4 * x * y <= (x + y)^2
+    x * y <= (x + y)^2 / 4
+    ((x + y) / 2)^2 = (x + y)^2 / 4
+    x * y <= ((x + y) / 2)^2
+    0 <= sqrt(x * y)
+    0 <= (x + y) / 2
+    by contra sqrt(x * y) <= (x + y) / 2:
+        sqrt(x * y) > (x + y) / 2
+        sqrt(x * y)^2 > ((x + y) / 2)^2
+        impossible x * y <= ((x + y) / 2)^2
+    geometric_mean(x, y) = sqrt(x * y)
+    arithmetic_mean(x, y) = (x + y) / 2
+    geometric_mean(x, y) <= arithmetic_mean(x, y)
 ```

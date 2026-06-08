@@ -1154,6 +1154,20 @@ forall x Q, n N_pos:
 
 forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
+
+forall a R_pos, x R:
+    a^x $in R_pos
+
+forall a R_pos, x, y R:
+    a^x = y
+    =>:
+        y $in R_pos
+
+forall a R_pos, x, y R:
+    a != 1
+    a^x = y
+    =>:
+        x = log(a, y)
 ```
 
 ## 34. `set_algebra_builtin_rules`

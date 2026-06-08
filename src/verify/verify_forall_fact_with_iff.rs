@@ -16,21 +16,22 @@ impl Runtime {
         let (forall_then_implies_iff, forall_iff_implies_then) =
             forall_iff.to_two_forall_facts()?;
         let verification_steps = [&forall_then_implies_iff, &forall_iff_implies_then];
+        let mut step_results = Vec::new();
         for forall_step in verification_steps {
             let result = self.verify_forall_fact(forall_step, verify_state)?;
             if result.is_unknown() {
                 return Ok(result);
             }
+            step_results.push(result);
         }
 
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
-            forall_iff.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::fact_with_note(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 forall_iff.clone().into(),
-                Some("forall iff: then=>iff and iff=>then verified".to_string()),
-            )]),
-            Vec::new(),
-        ))
-        .into())
+                "forall iff: then=>iff and iff=>then verified".to_string(),
+                step_results,
+            ))
+            .into(),
+        )
     }
 }

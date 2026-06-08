@@ -26,8 +26,8 @@ Pages:
 3. [`gsm8k.md`](gsm8k.md) - 20 arithmetic word-problem derivations.
 4. [`math23k.md`](math23k.md) - 20 Chinese arithmetic word-problem derivations.
 5. [`metamathqa.md`](metamathqa.md) - 20 generated arithmetic/algebra QA derivations.
-6. [`high_school_book.md`](high_school_book.md) - 20 high-school textbook snippets, including the 14
-   existing verifier-evidence items plus 6 additional runnable gallery items.
+6. [`high_school_book.md`](high_school_book.md) - 21 high-school textbook snippets, including the 14
+   existing verifier-evidence items plus 7 additional runnable gallery items.
 7. [`analysis_one.md`](analysis_one.md) - 20 Tao Analysis I micro-examples from the currently
    checked parts of chapters 2, 3, 4, 5, and 9.
 8. [`number_theory_for_beginners.md`](number_theory_for_beginners.md) - 20 Weil number-theory snippets from the
