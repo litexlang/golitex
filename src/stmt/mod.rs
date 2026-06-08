@@ -1,3 +1,4 @@
+mod alias_stmt;
 pub mod by_stmt;
 pub mod claim_stmt;
 pub mod define_algorithm_stmt;
@@ -11,6 +12,8 @@ pub mod witness_stmt;
 
 mod stmt;
 mod stmt_type_name;
+pub use alias_stmt::AliasPropStmt;
+pub use alias_stmt::AliasThmStmt;
 pub use stmt::ByClosedRangeAsCasesStmt;
 pub use stmt::ByEnumerateRangeStmt;
 pub use stmt::ByThmStmt;

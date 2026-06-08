@@ -1465,10 +1465,10 @@ A(1, 2, 3) $in R
 
 ```litex
 template<x R>:
-    let alias R:
-        alias = x
+    let local_alias R:
+        local_alias = x
 
-\alias<2> = 2
+\local_alias<2> = 2
 ```
 
 ## 26. `tuple_and_cart`

@@ -3119,6 +3119,82 @@ fn duplicate_definition_names_fail_in_their_namespace() {
 }
 
 #[test]
+fn alias_prop_copies_existing_prop_definition() {
+    let source_code = r#"
+prop is_one(x R):
+    x = 1
+alias prop one_prop <=> is_one
+$one_prop(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_prop_copies_existing_prop_definition");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "alias prop should copy and store the target prop definition:\n{}",
+        run_output
+    );
+    assert!(runtime.get_prop_definition_by_name("one_prop").is_some());
+}
+
+#[test]
+fn alias_thm_copies_existing_theorem_definition() {
+    let source_code = r#"
+thm one_eq_one:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+alias thm same_one <=> one_eq_one
+1 = 1
+by thm same_one(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_thm_copies_existing_theorem_definition");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "alias thm should copy and store the target theorem definition:\n{}",
+        run_output
+    );
+    assert!(runtime.get_thm_definition_by_name("same_one").is_some());
+}
+
+#[test]
+fn alias_prop_rejects_abstract_prop_target() {
+    let source_code = r#"
+abstract_prop abstract_target(x)
+alias prop concrete_alias <=> abstract_target
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_prop_rejects_abstract_prop_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "alias prop should reject abstract_prop targets:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("alias prop only supports concrete prop definitions"),
+        "alias prop abstract target error should explain the restriction:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn thm_definition_does_not_store_forall_fact_for_known_forall_use() {
     let source_code = r#"
 abstract_prop target_thm_prop(x)

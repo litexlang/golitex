@@ -99,6 +99,7 @@ pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
 pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
+pub const ALIAS: &str = "alias";
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
@@ -271,6 +272,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SUPERSET,
         SUCCESS_COLON,
         UNKNOWN_COLON,
+        ALIAS,
         LET,
         PROP,
         ABSTRACT_PROP,

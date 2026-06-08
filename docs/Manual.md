@@ -1156,6 +1156,37 @@ $p(1)
 
 ---
 
+### Alias names (`alias prop` / `alias thm`)
+
+Use **`alias prop new_name <=> old_name`** to copy an existing concrete `prop`
+definition under a new name. The alias has the same parameters and definition
+body as the target prop. `abstract_prop` targets are intentionally not accepted
+by this form, because they do not carry a checked definition body.
+
+Use **`alias thm new_name <=> old_name`** to copy an existing theorem definition
+under a new theorem name. The new name can then be used with `by thm`.
+
+```litex
+prop is_one(x R):
+    x = 1
+
+alias prop one_prop <=> is_one
+$one_prop(1)
+
+thm eq_one_reuses_hyp:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+
+alias thm same_eq_one <=> eq_one_reuses_hyp
+1 = 1
+by thm same_eq_one(1)
+```
+
+---
+
 ### Abstract predicate symbol (`abstract_prop`)
 
 Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. It only declares the name; it does not give the predicate any mathematical property by itself.
@@ -2192,6 +2223,7 @@ The sections above explain the common use cases. This table is a quick map of th
 |-----------|----------|
 | fact line | Verify a mathematical fact from the current context |
 | `prop` | Define a named mathematical property |
+| `alias prop` | Copy a concrete prop definition under a new name |
 | `abstract_prop` | Declare a predicate symbol without defining it |
 | `have x S` | Introduce an object with a type or set |
 | `have x S = expr` | Introduce a named value |
@@ -2205,6 +2237,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
+| `alias thm` | Copy a theorem definition under a new name |
 | `know` | Add facts or axioms to the current context |
 | `prove` | Open a nested proof block |
 | `import` / `run_file` | Use code from another file |
@@ -2451,6 +2484,7 @@ register a proof pattern.
 |-----------|----------------|---------|
 | `Stmt::Fact(fact)` | verify and store a fact | `1 + 1 = 2` |
 | `Stmt::DefPropStmt` | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
+| `Stmt::AliasPropStmt` | copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
 | `Stmt::DefAbstractPropStmt` | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
 | `Stmt::HaveObjInNonemptySetStmt` | introduce object parameters by type/set | `have x R` |
 | `Stmt::HaveObjEqualStmt` | introduce object parameters equal to expressions | `have x R = 1` |
@@ -2474,6 +2508,7 @@ register a proof pattern.
 | `Stmt::KnowStmt` | inject explicit assumptions | `know x = 1` |
 | `Stmt::ProveStmt` | open a nested proof block | `prove:`<br>`1 = 1` |
 | `Stmt::DefThmStmt` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| `Stmt::AliasThmStmt` | copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
 | `Stmt::ByThmStmt` | call a named theorem with arguments | `by thm self_eq(1)` |
 | `Stmt::DefStrategyStmt` | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | `Stmt::UseStrategyStmt` | enable a strategy | `use strategy positive_nonzero` |

@@ -6,6 +6,8 @@ pub enum Stmt {
     Fact(Fact),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
+    AliasPropStmt(AliasPropStmt),
+    AliasThmStmt(AliasThmStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
@@ -372,6 +374,8 @@ impl fmt::Display for Stmt {
             Stmt::DefLetStmt(x) => write!(f, "{}", x),
             Stmt::DefPropStmt(x) => write!(f, "{}", x),
             Stmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
+            Stmt::AliasPropStmt(x) => write!(f, "{}", x),
+            Stmt::AliasThmStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
@@ -429,6 +433,8 @@ impl Stmt {
             Stmt::DefLetStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::AliasPropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::AliasThmStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
@@ -484,6 +490,8 @@ impl Stmt {
             Stmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::AliasPropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::AliasThmStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
@@ -555,6 +563,18 @@ impl From<DefPropStmt> for Stmt {
 impl From<DefAbstractPropStmt> for Stmt {
     fn from(v: DefAbstractPropStmt) -> Self {
         Stmt::DefAbstractPropStmt(v)
+    }
+}
+
+impl From<AliasPropStmt> for Stmt {
+    fn from(v: AliasPropStmt) -> Self {
+        Stmt::AliasPropStmt(v)
+    }
+}
+
+impl From<AliasThmStmt> for Stmt {
+    fn from(v: AliasThmStmt) -> Self {
+        Stmt::AliasThmStmt(v)
     }
 }
 

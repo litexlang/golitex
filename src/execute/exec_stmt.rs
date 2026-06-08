@@ -6,6 +6,8 @@ impl Runtime {
             Stmt::DefLetStmt(d) => self.exec_let_stmt(d),
             Stmt::DefPropStmt(d) => self.exec_def_prop_stmt(d),
             Stmt::DefAbstractPropStmt(d) => self.exec_def_abstract_prop_stmt(d),
+            Stmt::AliasPropStmt(d) => self.exec_alias_prop_stmt(d),
+            Stmt::AliasThmStmt(d) => self.exec_alias_thm_stmt(d),
             Stmt::HaveObjInNonemptySetStmt(d) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
