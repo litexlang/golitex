@@ -990,7 +990,7 @@ example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
 **What differs.** Litex infers membership consequences from `A $subset B`. Lean applies the subset hypothesis as a function.
 
 ```litex
-scratch:
+sketch:
     let A, B set:
         A $subset B
     forall x A:

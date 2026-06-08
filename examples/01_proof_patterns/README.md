@@ -55,7 +55,7 @@ exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 - Purpose: Shows case splits over proposition and order alternatives.
 
 ```litex
-scratch:
+sketch:
     by cases:
         prove:
             1 + 1 = 2
@@ -65,7 +65,7 @@ scratch:
             1 + 1 = 2
             impossible 1 + 1 = 2
 
-scratch:
+sketch:
     abstract_prop p(x)
 
     know:
@@ -140,12 +140,12 @@ by contra:
 - Purpose: Shows finite closed-range enumeration.
 
 ```litex
-scratch:
+sketch:
     have x closed_range(0, 10)
 
     by closed_range as cases: x $in 0...10
 
-scratch:
+sketch:
     have a Z
     have x closed_range(a, a + 10)
 
@@ -179,21 +179,21 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2
 - Purpose: Shows finite range and closed-range enumeration syntax.
 
 ```litex
-scratch:
+sketch:
     let a range(7, 8)
 
     by enumerate range: a $in range(7, 8)
 
     a = 7
 
-scratch:
+sketch:
     let x range(1, 3)
 
     by enumerate range: x $in range(1, 3)
 
     x = 1 or x = 2
 
-scratch:
+sketch:
     let y closed_range(1, 3)
 
     by enumerate closed_range: y $in 1...3
@@ -301,7 +301,7 @@ by for:
             0 <= x[1] + x[2]
     do_nothing
 
-scratch:
+sketch:
     prop Prime(x N_pos):
         2 <= x
         forall y range(2, x):
@@ -434,7 +434,7 @@ claim:
 - Purpose: Shows reflexive, symmetric, and antisymmetric proposition helpers.
 
 ```litex
-scratch:
+sketch:
     prop same_obj(x set, y set):
         x = y
 
@@ -596,7 +596,7 @@ claim 1 = 1:
 - Purpose: Shows existential and unique-existence facts.
 
 ```litex
-scratch:
+sketch:
     abstract_prop p(a, b)
     abstract_prop q(a, b)
 
@@ -624,7 +624,7 @@ scratch:
             =>:
                 a1 = a2
 
-scratch:
+sketch:
     abstract_prop p(x, y)
 
     know:
@@ -635,7 +635,7 @@ scratch:
     exist! c R st {$p(c, 1)}
     not exist y R st {$p(y, 2)}
 
-scratch:
+sketch:
     abstract_prop p(x, y)
     abstract_prop q(x, y)
 
@@ -650,7 +650,7 @@ scratch:
     exist! c R st {$p(1, c)}
     not exist b R st {$q(1, b)}
 
-scratch:
+sketch:
     know exist a R st {a > 0, a < 1}
 
     exist b R st {b > 0, b < 1}
@@ -733,7 +733,7 @@ claim:
         case n = 1:
             do_nothing
 
-scratch:
+sketch:
     abstract_prop p(a, b, c, d)
     abstract_prop q(a, b)
 
@@ -832,7 +832,7 @@ abstract_prop r()
 """
 If P ∨ Q and ¬ Q, then P.
 """
-scratch:
+sketch:
     know:
         $p() or $q()
         not $p()
@@ -954,7 +954,7 @@ forall:
 - Purpose: Shows matching free parameters in universal facts.
 
 ```litex
-scratch:
+sketch:
     abstract_prop p(a, b)
     abstract_prop q(a, b)
 
@@ -962,7 +962,7 @@ scratch:
         $p(a, {x R: $p(x, b)})
         $q(1, {x R: $q(a + b, x)})
 
-    prove:
+    sketch:
         $p(1, {x R: $p(x, 2)})
         # $p(1, {x R: $p(x, x)}) 是unknown，因为x作为set builder的参数不能匹配b
         $q(1, {x R: $q(1 + 2, x)})
@@ -1075,7 +1075,7 @@ exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
 - Purpose: Shows disjunction introduction and use.
 
 ```litex
-scratch:
+sketch:
     abstract_prop p(a, b)
     abstract_prop q(a, b)
 
@@ -1083,19 +1083,19 @@ scratch:
 
     $p(1, 2) or $q(1, 2)
 
-scratch:
+sketch:
     let x Z:
         x >= 1
 
     x = 1 or x = 2 or x = 3 or x = 4 or x > 4
 
-scratch:
+sketch:
     let a, x Z:
         x >= a
 
     x = a or x = a + 1 or x = a + 2 or x > a + 2
 
-scratch:
+sketch:
     abstract_prop p(a, b, c)
     abstract_prop q(a, b, c)
 
@@ -1108,7 +1108,7 @@ scratch:
 
     $p(a, b, c) or $q(a, b, c)
 
-scratch:
+sketch:
     abstract_prop p(a, b)
     abstract_prop q(a, b)
 
@@ -1506,7 +1506,7 @@ claim:
 - Purpose: Shows atomic fact verification through prop definitions and forall facts.
 
 ```litex
-scratch:
+sketch:
     abstract_prop q(x, y, z)
 
     prop p(x, y R):
@@ -1522,7 +1522,7 @@ scratch:
 
     $q(a, b, 2)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     have b R, c R
@@ -1544,10 +1544,10 @@ scratch:
 - Purpose: Shows arithmetic instantiation of universal facts.
 
 ```litex
-scratch:
+sketch:
     abs(-1) = 1
 
-scratch:
+sketch:
     abstract_prop q(a)
 
     know forall a R:
@@ -1555,7 +1555,7 @@ scratch:
 
     $q(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1563,7 +1563,7 @@ scratch:
         
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1571,7 +1571,7 @@ scratch:
         
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1579,7 +1579,7 @@ scratch:
 
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1587,7 +1587,7 @@ scratch:
 
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1595,7 +1595,7 @@ scratch:
 
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:
@@ -1603,7 +1603,7 @@ scratch:
 
     $p(1)
 
-scratch:
+sketch:
     abstract_prop p(a)
 
     know forall a R:

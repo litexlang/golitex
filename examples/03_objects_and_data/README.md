@@ -12,14 +12,14 @@ The `Category` and `System surface` fields say what part of Litex the example is
 - Purpose: Shows algorithm-backed function definitions.
 
 ```litex
-scratch:
+sketch:
     have fn f(x R) R = 1
 
     algo f(x):
         1
 
 
-scratch:
+sketch:
     have f fn(x, y R) R
 
     know:
@@ -39,7 +39,7 @@ scratch:
 
     f(10, 20) = 30
 
-scratch:
+sketch:
     have fib fn(x R) R
 
     know:
@@ -66,7 +66,7 @@ scratch:
     eval fib(3)
     fib(3) = 2
 
-scratch:
+sketch:
     have factorial fn(x R) R
 
     know:
@@ -300,14 +300,14 @@ $fn_eq_in('R(x){x}, 'R(y){y}, R)
 - Purpose: Shows function range objects and restricted range facts.
 
 ```litex
-scratch:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
     fn_range(f) $subset R
     fn_range(f) $in power_set(R)
 
-scratch:
+sketch:
     have f fn(x R: x > 0) R
     f(1) $in fn_range(f)
     have z R = f(1)
@@ -321,7 +321,7 @@ scratch:
     x > 0
     z = f(x)
 
-scratch:
+sketch:
     have fn shift(x R) R = x + 1
 
     shift(2) $in fn_range(shift)
@@ -331,7 +331,7 @@ scratch:
     x $in R
     shift(2) = shift(x)
 
-scratch:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -340,7 +340,7 @@ scratch:
     x > 0
     f(1) = f(x)
 
-scratch:
+sketch:
     have g fn(x R, y R: x < y) R
 
     g(0, 1) $in fn_range(g)
@@ -353,7 +353,7 @@ scratch:
     a < b
     g(0, 1) = g(a, b)
 
-scratch:
+sketch:
     have a seq(R)
 
     a(1) $in fn_range_on(a, 1...3)
@@ -375,13 +375,13 @@ scratch:
 - Purpose: Shows function definitions by algorithm, cases, and induction.
 
 ```litex
-scratch:
+sketch:
     have fn as algo f(x R) R = x
 
     eval f(3)
     f(3) = 3
 
-scratch:
+sketch:
     have fn as algo self_max(x, y R) R by cases:
         case x > y: x
         case x <= y: y
@@ -392,7 +392,7 @@ scratch:
     eval self_max(2, 7)
     self_max(2, 7) = 7
 
-scratch:
+sketch:
     have fn as algo h(x Z: x >= 1) R by induc x from 1:
         case x = 1: 211
         case x = 2: 375
@@ -593,12 +593,12 @@ claim:
 # (see `src/fact/fact.rs` and `src/fact/atomic_fact.rs`). Independent blocks for copy-paste.
 
 # --- Fact::AtomicFact — EqualFact, NotEqualFact ---
-scratch:
+sketch:
     1 = 1
     2 != 3
 
 # --- AtomicFact — order (Less / Greater / LessEqual / GreaterEqual) and negated forms ---
-scratch:
+sketch:
     0 < 1
     2 > 1
     1 <= 1
@@ -606,27 +606,27 @@ scratch:
     not 1 < 0
 
 # --- Fact::ChainFact — chained binary relations (one `ChainFact`, not nested `AndFact`) ---
-scratch:
+sketch:
     0 < 1 < 2
 
 # --- Fact::AndFact — conjunction of atomics ---
-scratch:
+sketch:
     1 = 1 and 2 < 3
 
 # --- Fact::OrFact — disjunction ---
-scratch:
+sketch:
     1 = 2 or 1 = 1
 
 # --- Fact::ExistFact ---
 # exist fact is usually proved by witness exist ... from ...
-scratch:
+sketch:
     witness exist x R st { x = 1 } from 1:
         1 = 1
 
     exist y R st { y = 1 }
 
 # --- Fact::ForallFact — no domain guard (empty `dom_facts`) ---
-scratch:
+sketch:
     forall s set:
         s = s
 
@@ -643,7 +643,7 @@ claim:
     by thm a_lt_c(0, 100, t)
 
 # --- Fact::ForallFactWithIff — required `=>:` left side, then `<=>:` ---
-scratch:
+sketch:
     forall x, y R:
         =>:
             x > y
@@ -651,28 +651,28 @@ scratch:
             y < x
 
 # --- AtomicFact — $is_set / $is_nonempty_set / $is_finite_set / $in ---
-scratch:
+sketch:
     $is_set({1, 2})
     $is_nonempty_set({1})
     $is_finite_set({1, 2})
     1 $in {1, 2}
     0.5 $in Q
 
-scratch:
+sketch:
     not $is_nonempty_set({})
 
 # --- AtomicFact — $is_cart ---
-scratch:
+sketch:
     have c set = cart(R, Q)
     $is_cart(c)
 
 # --- AtomicFact — $is_tuple ---
-scratch:
+sketch:
     have u set = (1, 2)
     $is_tuple(u)
 
 # --- AtomicFact — $subset / $superset ---
-scratch:
+sketch:
     let a, b set:
         a $subset b
     forall x a:
@@ -680,7 +680,7 @@ scratch:
     b $superset a
 
 # --- AtomicFact — NotSubsetFact / NotSupersetFact ---
-scratch:
+sketch:
     let a, b set:
         not a $subset b
     not b $superset a
@@ -691,12 +691,12 @@ have f fn(x R, y Q) R
 $restricts_to(f, fn(a Q, b Q) R)
 
 # --- AtomicFact — NormalAtomicFact / NotNormalAtomicFact (`$name(args)`) ---
-scratch:
+sketch:
     abstract_prop ok(x)
     know $ok(0)
     $ok(0)
 
-scratch:
+sketch:
     abstract_prop bad(x)
     know not $bad(1)
     not $bad(1)
@@ -717,12 +717,12 @@ scratch:
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
 # --- Obj::Number ---
-scratch:
+sketch:
     1 = 1
     1.5 = 1.5
 
 # --- Obj::Add, Sub, Mul, Div, Mod, Pow (and unary `-` as Mul by -1) ---
-scratch:
+sketch:
     1 + 2 = 3
     3 - 1 = 2
     2 * 3 = 6
@@ -732,11 +732,11 @@ scratch:
     -1 + 2 = 1
 
 # --- Obj::Tuple, parenthesized Obj ---
-scratch:
+sketch:
     (1, 2) = (1, 2)
 
 # --- Obj::StandardSet ---
-scratch:
+sketch:
     0 $in N
     0 $in Z
     0 $in Q
@@ -753,49 +753,49 @@ scratch:
     not 0 $in Q_nz
 
 # --- Obj::ListSet ---
-scratch:
+sketch:
     1 $in {1, 2, 3}
     $is_finite_set({1, 2})
 
 # --- Obj::SetBuilder (here as the rhs of `have`; membership proof needs extra `know` / forall) ---
-scratch:
+sketch:
     have s set = { z N : z > 5 }
 
 # --- Obj::Union, Intersect, SetMinus (keyword forms); Obj::SetDiff (rhs of `have`) ---
-scratch:
+sketch:
     2 $in union({1, 2}, {2, 3})
     2 $in intersect({1, 2}, {2, 3})
 
-scratch:
+sketch:
     have t set = set_minus({1, 2}, {1})
 
-scratch:
+sketch:
     have u set = set_diff({1, 2}, {3})
 
 # --- Obj::Range, ClosedRange (keyword forms; membership often via `know` / set equality) ---
-scratch:
+sketch:
     have r set = range(0, 10)
     have w set = closed_range(0, 1)
 
 # --- Obj::Proj (keyword) ---
-scratch:
+sketch:
     let c set:
         c = cart(R, Q)
     proj(c, 1) = R
 
 # --- Obj::Cart, CartDim ---
-scratch:
+sketch:
     let d set:
         d = cart(R, Q)
     $is_cart(d)
     cart_dim(d) = 2
 
-scratch:
+sketch:
     have f fn(x R) R
     have g set = fn(x R) R
 
 # --- Obj::TupleDim, Obj::ObjAtIndex ---
-scratch:
+sketch:
     let e set:
         e = (2, 3)
     $is_tuple(e)
@@ -804,7 +804,7 @@ scratch:
     e[2] = 3
 
 # --- Obj::PowerSet, Obj::Count ---
-scratch:
+sketch:
     {1, 2} $in power_set({1, 2, 3})
     count({1, 2, 3}) = 3
 
@@ -812,7 +812,7 @@ scratch:
 # Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).
 
 # --- Axiom of choice proof step ---
-scratch:
+sketch:
     have S set
 
     by axiom_of_choice: set S:
@@ -822,7 +822,7 @@ scratch:
     exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
 # --- Obj::Identifier, Obj::FnObj (e.g. `f(0)` after `have fn f(x R) R = ...`) ---
-scratch:
+sketch:
     have fn f(x R) R = x + 1
 
     have fn pair_value(x Z) cart(Z, Z) = (x, x + 1)
@@ -830,7 +830,7 @@ scratch:
     pair_value(0)[2] $in Z
 
 # --- Parameterized struct references use angle brackets; fields are accessed through a struct view. ---
-scratch:
+sketch:
     struct rec<a set>:
         fld a
         fld2 a
@@ -850,53 +850,53 @@ scratch:
 # `import` / `run_file`: syntax shown in comments only (not run here).
 
 # --- Stmt::Fact — assert a closed formula ---
-scratch:
+sketch:
     1 + 1 = 2
 
 # --- Stmt::DefLetStmt — local names with defining properties ---
-scratch:
+sketch:
     let a R:
         a = 1
     a = 1
 
 # --- Stmt::DefPropStmt — define a named predicate with its if and only if properties ---
-scratch:
+sketch:
     prop p(x R):
         x = x
 
 # --- Stmt::DefAbstractPropStmt — declare a predicate symbol and arity only ---
-scratch:
+sketch:
     abstract_prop q(a)
 
 # --- Stmt::HaveObjInNonemptySetStmt — introduce typed parameters (membership in given sets / types) ---
-scratch:
+sketch:
     have x R, y Z
 
 # --- Stmt::HaveObjEqualStmt — introduce parameters and fix them to given values ---
-scratch:
+sketch:
     have a R = 1
     a = 1
 
 # --- Stmt::HaveByExistStmt — name witnesses for an already known existential ---
-scratch:
+sketch:
     know exist u R st {u > 0, u < 1}
     have by exist v R st {v > 0, v < 1}: w
     w > 0
 
 # --- Stmt::HaveFnEqualStmt — define a function by a single defining equation on its domain ---
-scratch:
+sketch:
     have fn f(x R) R = x + 1
     do_nothing
 
 # --- Stmt::HaveFnEqualCaseByCaseStmt — piecewise definition by cases on the domain ---
-scratch:
+sketch:
     have fn g(z R) R by cases:
         case z = 2: 3
         case z != 2: 4
     do_nothing
 
 # --- Stmt::HaveFnByInducStmt — recursive function given by a decreasing measure ---
-scratch:
+sketch:
     have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
         case b = 0: a
         case b > 0: h(a, b - 1) + 1
@@ -904,7 +904,7 @@ scratch:
 # --- Stmt::DefStructStmt — removed in this branch (record-like `struct`); see git history to restore. ---
 
 # --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
-scratch:
+sketch:
     have fn m(x N_pos) R by cases:
         case x = 1: 1
         case x != 1: 0
@@ -918,7 +918,7 @@ scratch:
 
 # --- Stmt::ClaimStmt — stated goal with a sub-proof and lemmas ---
 # (A claim may state a `forall` goal; here both goals are short tautologies so the file runs.)
-scratch:
+sketch:
     claim:
         prove:
             1 + 1 = 2
@@ -930,13 +930,13 @@ scratch:
         2 = 2
 
 # --- Stmt::KnowStmt — assume lemmas / axioms in scope ---
-scratch:
+sketch:
     know:
         1 = 1
 
-# --- Stmt::ScratchStmt — checked scratch work with local facts ---
-scratch:
-    scratch:
+# --- Stmt::SketchStmt — checked sketch work with local facts ---
+sketch:
+    sketch:
         2 = 2
 
 # --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
@@ -944,11 +944,11 @@ scratch:
 # run_file "./runfile2.lit"
 
 # --- Stmt::DoNothingStmt — trivial proof step ---
-scratch:
+sketch:
     do_nothing
 
 # --- Stmt::EvalStmt — compute a closed expression ---
-scratch:
+sketch:
     have g fn(x Z) Z
 
     know:
@@ -971,14 +971,14 @@ scratch:
     g(3) = 3
 
 # --- Stmt::WitnessExistFact — exhibit witnesses for an existential claim ---
-scratch:
+sketch:
     witness exist x, y R st {x > y} from 1, 0:
         1 > 0
 
     exist a, b R st {a > b}
 
 # --- Stmt::WitnessNonemptySet — exhibit an element to show a set is nonempty ---
-scratch:
+sketch:
     have s set
 
     witness $is_nonempty_set(s) from 1:
@@ -987,7 +987,7 @@ scratch:
     $is_nonempty_set(s)
 
 # --- Stmt::ByCasesStmt — proof by cases on a finite disjunction ---
-scratch:
+sketch:
     have fn k(z R) R by cases:
         case z = 2: 3
         case z != 2: 4
@@ -1007,7 +1007,7 @@ scratch:
             k(x) > 2
 
 # --- Stmt::ByContraStmt — proof of negation from a contradiction ---
-scratch:
+sketch:
     abstract_prop p0(x, y)
     abstract_prop q0(x, y)
 
@@ -1025,7 +1025,7 @@ scratch:
         impossible $q0(1, 2)
 
 # --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall.
-scratch:
+sketch:
     let a R:
         a $in {1, 2}
 
@@ -1037,7 +1037,7 @@ scratch:
                 a2 < 4
 
 # --- Stmt::ByEnumerateRangeStmt — expand integer range / closed_range membership into equality cases.
-scratch:
+sketch:
     let a1 range(7, 8)
 
     by enumerate range: a1 $in range(7, 8)
@@ -1045,7 +1045,7 @@ scratch:
     a1 = 7
 
 # --- Stmt::ByInducStmt — induction on a discrete parameter ---
-scratch:
+sketch:
     abstract_prop r0(a)
 
     know:
@@ -1072,7 +1072,7 @@ scratch:
             $r0(m)
 
 # --- Stmt::ByForStmt — finite or bounded iteration as proof skeleton ---
-scratch:
+sketch:
     by for:
         prove:
             forall i range(0, 10):
@@ -1080,7 +1080,7 @@ scratch:
         do_nothing
 
 # --- Stmt::ByExtensionStmt — set equality by mutual inclusion ---
-scratch:
+sketch:
     by extension:
         prove:
             {1, 2} = {2, 1}
@@ -1096,13 +1096,13 @@ scratch:
     {1, 2} = {2, 1}
 
 # --- Stmt::ByFnAsSetStmt — use the graph characterization of a function in a function space ---
-scratch:
+sketch:
     have fn f(x R) R = 1
 
     by fn as set: f
 
 # --- Stmt::DefStructStmt — define a structure shape for future struct features ---
-scratch:
+sketch:
     abstract_prop bs(b, c, d)
 
     struct sq<a set>:
@@ -1113,14 +1113,14 @@ scratch:
             $bs(b1, c1, d1)
 
 # --- Stmt::ByTupleAsSetStmt — tuple / product-space reasoning on an object ---
-scratch:
+sketch:
     let u set:
         u = (2, 3)
 
     by tuple as set: u
 
 # --- Stmt::ByFnSetAsSetStmt — membership of a function in a function set (graph axioms) ---
-scratch:
+sketch:
     let s set
 
     know:
@@ -1163,7 +1163,7 @@ macro HAVE_FN "have fn"
 
 @HAVE_FN f(x @SELF_R) @SELF_R = x
 
-scratch:
+sketch:
     macro SELF_Q "Q"
     @HAVE_FN g(x @SELF_Q) @SELF_Q = x
 
@@ -1183,7 +1183,7 @@ forall x R:
 
 ```litex
 
-scratch:
+sketch:
     matrix(R, 2, 2) = matrix(R, 2, 2)
 
     have a matrix(R, 2, 2) = [[1, 2], [3, 4]]
@@ -1233,7 +1233,7 @@ eval (1 / 3) *. [[3, 6], [9, 12]]
 - Purpose: Shows restricted parameter and object types.
 
 ```litex
-scratch:
+sketch:
     have f fn(x R, y Q) R 
 
     $restricts_to(f, fn(a Q, b Q) R)
@@ -1246,18 +1246,18 @@ scratch:
 
     $restricts_to(g, fn(p Q, q Q) R)
 
-scratch:
+sketch:
     have f set
     know:
         $restricts_to(f, fn(x R, y Q) R)
 
     f(1, 2) = f(1, 2)
 
-scratch:
+sketch:
     forall f fn(x R, y Q) R:
         f(1, 2) = f(1, 2)
 
-scratch:
+sketch:
     abstract_prop p(x)
 
     know:
@@ -1267,7 +1267,7 @@ scratch:
     have f fn(x R, y Q) R
     $p(f)
 
-scratch:
+sketch:
     $restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
     $restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
     $restricts_to('(x R: x > 0) R {x}, fn(x N_pos) R)
@@ -1308,7 +1308,7 @@ signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
 - Purpose: Shows struct definitions, fields, and dependent struct views.
 
 ```litex
-scratch:
+sketch:
     struct Point:
         x R
         y R
@@ -1330,7 +1330,7 @@ scratch:
     forall a, b &Point:
         point_add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = point_add(b, a)
 
-scratch:
+sketch:
     prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
         forall x s:
             op(x, inv(x)) = e
@@ -1351,7 +1351,7 @@ scratch:
     $GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
     ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
     
-scratch:
+sketch:
     struct StandardTwoSimplex:
         x R
         y R
@@ -1382,7 +1382,7 @@ scratch:
 
     have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)
 
-scratch:
+sketch:
     struct StandardTwoSimplex:
         x R
         y R
@@ -1405,7 +1405,7 @@ scratch:
 
     have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
 
-scratch:
+sketch:
     struct StandardTwoSimplex:
         x R
         y R

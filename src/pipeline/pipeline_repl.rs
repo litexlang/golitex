@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn repl_accepts_multiline_block_after_blank_line() {
-        let input = b"prove:\n    1 = 1\n    2 = 2\n\n";
+        let input = b"sketch:\n    1 = 1\n    2 = 2\n\n";
         let mut stdin_reader = Cursor::new(input.as_slice());
         let mut stdout_writer = Vec::new();
 

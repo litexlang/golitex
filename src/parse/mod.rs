@@ -13,7 +13,7 @@ mod parse_helpers;
 mod parse_know_stmt;
 mod parse_obj;
 mod parse_param_def;
-mod parse_scratch_stmt;
+mod parse_sketch_stmt;
 mod parse_stmt;
 mod parse_strategy_stmt;
 mod parse_thm_stmt;

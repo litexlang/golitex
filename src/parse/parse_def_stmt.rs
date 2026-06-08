@@ -1257,21 +1257,29 @@ impl Runtime {
     ) -> Result<TemplateDefEnum, RuntimeError> {
         let stmt = self.parse_stmt(tb)?;
         match stmt {
-            Stmt::HaveObjInNonemptySetStmt(stmt) => {
+            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
             }
-            Stmt::HaveObjEqualStmt(stmt) => Ok(TemplateDefEnum::HaveObjEqualStmt(stmt)),
-            Stmt::HaveObjByExistFactsStmt(stmt) => {
+            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveObjEqualStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
             }
-            Stmt::DefLetStmt(stmt) => Ok(TemplateDefEnum::DefLetStmt(stmt)),
-            Stmt::HaveByExistStmt(stmt) => Ok(TemplateDefEnum::HaveByExistStmt(stmt)),
-            Stmt::HaveFnEqualStmt(stmt) => Ok(TemplateDefEnum::HaveFnEqualStmt(stmt)),
-            Stmt::HaveFnEqualCaseByCaseStmt(stmt) => {
+            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(stmt)) => Ok(TemplateDefEnum::DefLetStmt(stmt)),
+            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveByExistStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt))
             }
-            Stmt::HaveFnByInducStmt(stmt) => Ok(TemplateDefEnum::HaveFnByInducStmt(stmt)),
-            Stmt::HaveFnByForallExistUniqueStmt(stmt) => {
+            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveFnByInducStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
             }
             _ => Err(RuntimeError::from(ParseRuntimeError(

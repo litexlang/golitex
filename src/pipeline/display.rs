@@ -374,11 +374,13 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
 fn citation_type_for_stmt(stmt: &Stmt) -> String {
     match stmt {
         Stmt::Fact(fact) => format!("cite {}", citation_fact_type_label(fact)),
-        Stmt::DefPropStmt(_) => "cite prop def".to_string(),
-        Stmt::DefAbstractPropStmt(_) => "cite abstract prop def".to_string(),
-        Stmt::DefLetStmt(_) => "cite let def".to_string(),
-        Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
-        Stmt::DefStructStmt(_) => "cite struct def".to_string(),
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt(_)) => "cite prop def".to_string(),
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(_)) => {
+            "cite abstract prop def".to_string()
+        }
+        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite let def".to_string(),
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(_)) => "cite algo def".to_string(),
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(_)) => "cite struct def".to_string(),
         _ => format!("cite {} stmt", stmt_type_label_for_citation(stmt)),
     }
 }
@@ -673,7 +675,9 @@ fn exec_stmt_error_message_text_for_json(
     }
 
     match statement {
-        Some(Stmt::RunFileStmt(_)) if message.starts_with("Failed to read file:") => {
+        Some(Stmt::Command(CommandStmt::RunFileStmt(_)))
+            if message.starts_with("Failed to read file:") =>
+        {
             "Failed to read file: external_file".to_string()
         }
         _ => message,
@@ -694,7 +698,7 @@ fn push_source_ref_field_lines(
 
 fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
     if should_hide_file_paths(runtime) {
-        if let Stmt::RunFileStmt(_) = stmt {
+        if let Stmt::Command(CommandStmt::RunFileStmt(_)) = stmt {
             return "run_file".to_string();
         }
     }

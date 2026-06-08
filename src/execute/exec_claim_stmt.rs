@@ -69,7 +69,7 @@ impl Runtime {
                         if result.is_unknown() {
                             return Err(
                                 UnknownRuntimeError(RuntimeErrorStruct::new(
-                                    Some(Stmt::Fact(then_fact.clone().to_fact())),
+                                    Some(then_fact.clone().to_fact().into()),
                                     format!(
                                         "claim failed: cannot prove goal `{}`; then-clause {}/{} `{}` is unknown\n{}",
                                         stmt.fact,

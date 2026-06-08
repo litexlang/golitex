@@ -893,19 +893,19 @@ claim $increasing({x R: x > 0}, g):
 - Purpose: Shows small set-theory structure predicates.
 
 ```litex
-scratch:
+sketch:
     let a, b set:
         a $subset b
     forall x a:
         x $in b
     b $superset a
 
-scratch:
+sketch:
     let a, b set:
         not a $subset b
     not b $superset a
 
-scratch:
+sketch:
     let A, B set:
         forall x A:
             $in(x, B)
@@ -916,13 +916,13 @@ scratch:
     A $subset B
     B $superset A
 
-scratch:
+sketch:
     not $is_nonempty_set({})
 
-scratch:
+sketch:
     not 4 $in {1, 2, 3}
 
-scratch:
+sketch:
     have x Z = 4
     x != 1
     x != 2

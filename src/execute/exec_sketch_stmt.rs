@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_scratch_stmt(&mut self, stmt: &ScratchStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_sketch_stmt(&mut self, stmt: &SketchStmt) -> Result<StmtResult, RuntimeError> {
         let inside_results = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in &stmt.proof {

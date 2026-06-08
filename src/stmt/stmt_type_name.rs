@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
-impl ScratchStmt {
+impl SketchStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ScratchStmt".to_string()
+        "SketchStmt".to_string()
     }
 }
 

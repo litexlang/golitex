@@ -105,6 +105,7 @@ pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
+pub const SKETCH: &str = "sketch";
 pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
@@ -278,6 +279,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROP,
         ABSTRACT_PROP,
         CLAIM,
+        SKETCH,
         SCRATCH,
         PROVE,
         THM,

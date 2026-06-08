@@ -26,8 +26,19 @@ impl Runtime {
             USE => self.parse_use_strategy_stmt(tb),
             STOP if tb.token_at_index(1)? == IMPORT => self.parse_stop_import_stmt(tb),
             STOP => self.parse_stop_strategy_stmt(tb),
-            SCRATCH => self.parse_scratch_stmt(tb, SCRATCH),
-            PROVE => self.parse_scratch_stmt(tb, PROVE),
+            SKETCH => self.parse_sketch_stmt(tb),
+            SCRATCH => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "top-level `scratch:` has been replaced by `sketch:`".to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
+            PROVE => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "top-level `prove:` is not supported; use `sketch:` for a local checked block, or use `prove:` inside claim/thm/by/strategy statements".to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
             IMPORT => self.parse_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
