@@ -291,28 +291,28 @@ know forall s set:
     {} $in power_set(s)
 
 prop increasing(s power_set(R), f set):
-    $restrict_fn_in(f, fn(x s)R)
+    $restricts_to(f, fn(x s)R)
     forall x, y s:
         x < y
         =>:
             f(x) < f(y)
 
 prop decreasing(s power_set(R), f set):
-    $restrict_fn_in(f, fn(x s)R)
+    $restricts_to(f, fn(x s)R)
     forall x, y s:
         x < y
         =>:
             f(x) > f(y)
 
 prop nondecreasing(s power_set(R), f set):
-    $restrict_fn_in(f, fn(x s)R)
+    $restricts_to(f, fn(x s)R)
     forall x, y s:
         x < y
         =>:
             f(x) <= f(y)
 
 prop nonincreasing(s power_set(R), f set):
-    $restrict_fn_in(f, fn(x s)R)
+    $restricts_to(f, fn(x s)R)
     forall x, y s:
         x < y
         =>:

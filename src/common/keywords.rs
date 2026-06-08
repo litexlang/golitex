@@ -105,6 +105,7 @@ pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
+pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
 pub const STOP: &str = "stop";
@@ -158,7 +159,7 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
-pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
+pub const RESTRICTS_TO: &str = "restricts_to";
 pub const STRATEGY: &str = "strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
@@ -277,6 +278,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROP,
         ABSTRACT_PROP,
         CLAIM,
+        SCRATCH,
         PROVE,
         THM,
         STOP,
@@ -322,7 +324,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         TEMPLATE,
-        RESTRICT_FN_IN,
+        RESTRICTS_TO,
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,
@@ -386,7 +388,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUBSET
         || atom_name == SUPERSET
         || atom_name == IN
-        || atom_name == RESTRICT_FN_IN
+        || atom_name == RESTRICTS_TO
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
 }

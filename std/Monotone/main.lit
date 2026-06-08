@@ -29,7 +29,7 @@ prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
 
 know:
-    # blocked_by_stdlib: prove from the real least-upper-bound interface by
+    # proof_debt: prove from the real least-upper-bound interface by
     # taking the supremum of the sequence range.
     forall a seq(R):
         $increasing_seq(a)
@@ -37,7 +37,7 @@ know:
         =>:
             $Real::convergent_seq(a)
 
-    # blocked_by_stdlib: dual bounded monotone convergence theorem, using the
+    # proof_debt: dual bounded monotone convergence theorem, using the
     # infimum of the sequence range.
     forall a seq(R):
         $decreasing_seq(a)

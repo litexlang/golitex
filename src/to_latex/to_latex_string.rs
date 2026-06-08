@@ -1627,7 +1627,7 @@ impl NotRestrictFact {
         format!(
             r"\neg \left( {} \mathrel{{\$}} \mathrm{{{}}}\, {} \right)",
             self.obj.to_latex_string(),
-            RESTRICT_FN_IN,
+            RESTRICTS_TO,
             self.obj_cannot_restrict_to_fn_set.to_latex_string()
         )
     }
@@ -1739,7 +1739,7 @@ impl Proj {
     }
 }
 
-impl ProveStmt {
+impl ScratchStmt {
     pub fn to_latex_string(&self) -> String {
         if self.proof.is_empty() {
             return r"\text{\texttt{(empty proof)}}".to_string();
@@ -1772,7 +1772,7 @@ impl RestrictFact {
         format!(
             r"{} \mathrel{{\$}} \mathrm{{{}}}\, {}",
             self.obj.to_latex_string(),
-            RESTRICT_FN_IN,
+            RESTRICTS_TO,
             self.obj_can_restrict_to_fn_set.to_latex_string()
         )
     }
@@ -2168,7 +2168,7 @@ impl Stmt {
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::ClaimStmt(x) => x.to_latex_string(),
             Stmt::KnowStmt(x) => x.to_latex_string(),
-            Stmt::ProveStmt(x) => x.to_latex_string(),
+            Stmt::ScratchStmt(x) => x.to_latex_string(),
             Stmt::ImportStmt(x) => x.to_latex_string(),
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
             Stmt::ClearStmt(x) => x.to_latex_string(),

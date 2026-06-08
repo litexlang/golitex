@@ -1,4 +1,4 @@
-// restrict_fn_in proof pipeline:
+// `$restricts_to` proof pipeline:
 // step1: forall on RHS params, verify f(x, ...) is well-defined.
 // step2: get known fn-set info of f from env.
 // step2_1: if known return-set equals RHS return-set, accept immediately.
@@ -6,7 +6,7 @@
 
 // Example:
 // have f fn(x R, y Q: x < y) Z
-// restrict_fn_in(f, fn(a Q, b Q: x < y, x < 0) Z)
+// $restricts_to(f, fn(a Q, b Q: x < y, x < 0) Z)
 // 1. prove forall a Q, b Q: x < y: f(a, b) is well-defined.
 // 2. prove restriction keeps outputs in Z.
 // 2.1 if known return_set of f is already Z, return success directly.
@@ -16,9 +16,9 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 struct RestrictProofFlow {
-    // The whole restrict_fn_in(...) fact to be proved.
+    // The whole `$restricts_to(...)` fact to be proved.
     restrict_fact: RestrictFact,
-    // The RHS function set in restrict_fn_in, e.g. fn(a Q, b Q: x < y, x < 0) Z.
+    // The RHS function set in `$restricts_to`, e.g. fn(a Q, b Q: x < y, x < 0) Z.
     rhs_fn_set: FnSet,
     // Known function-set body of f from env, e.g. fn(x R, y Q: x < y) Z.
     known_fn_body: FnSetBody,
@@ -33,7 +33,7 @@ struct RestrictProofFlow {
 impl Runtime {
     // Restricts an anonymous function by verifying the target function domain is a valid subdomain
     // for the anonymous function and that outputs stay in the requested return set.
-    // Example: `$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)`.
+    // Example: `$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)`.
     pub fn verify_restrict_fact_using_its_definition(
         &mut self,
         restrict_fact: &RestrictFact,
@@ -221,7 +221,7 @@ impl Runtime {
             return Some(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     flow.restrict_fact.clone().into(),
-                    "restrict_fn_in: well-defined on narrowed domain; known fn_set already has same return_set"
+                    "restricts_to: well-defined on narrowed domain; known fn_set already has same return_set"
                         .to_string(),
                     Vec::new(),
                 ))
@@ -257,8 +257,7 @@ impl Runtime {
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 flow.restrict_fact.clone().into(),
-                "restrict_fn_in: forall on narrowed domain; outputs in stated return set"
-                    .to_string(),
+                "restricts_to: forall on narrowed domain; outputs in stated return set".to_string(),
                 Vec::new(),
             ))
             .into(),

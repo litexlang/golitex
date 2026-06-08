@@ -307,7 +307,7 @@ have h fn(n N_pos, x closed_range(1, n)) R
 ```
 
 ```litex
-prove:
+scratch:
     struct Point:
         x R
         y R
@@ -318,7 +318,7 @@ prove:
 ```
 
 ```litex
-prove:
+scratch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -327,7 +327,7 @@ prove:
 ```
 
 ```litex
-prove:
+scratch:
     have a seq(R)
 
     a(1) $in fn_range_on(a, 1...3)
@@ -508,7 +508,7 @@ Litex supports matrices in three related ways: a constructor **type** `matrix(S,
 **Type and literal.** You can bind a matrix object to a literal and read entries with two indices (like applying a function of two arguments):
 
 ```litex
-prove:
+scratch:
     matrix(R, 2, 2) = matrix(R, 2, 2)
 
     have a matrix(R, 2, 2) = [[1, 2], [3, 4]]
@@ -578,7 +578,7 @@ For example, `1 / x = 2` is not checked as an equality until Litex can prove tha
 When you define a function, Litex checks the body in the local context created by the function signature. A domain condition in the signature is therefore often a well-definedness proof for the body.
 
 ```litex
-prove:
+scratch:
     have fn reciprocal(x R: x != 0) R = 1 / x
     reciprocal(2) = 1 / 2
 ```
@@ -588,7 +588,7 @@ The condition `x != 0` is used while checking the definition, because `1 / x` ne
 The domain fact can also be used through a small builtin consequence. In the next example, the denominator is `x - 1`; the condition `x != 1` is enough for Litex to prove `x - 1 != 0`.
 
 ```litex
-prove:
+scratch:
     have fn shifted_inverse(x R: x != 1) R = 1 / (x - 1)
     shifted_inverse(2) = 1
 ```
@@ -596,7 +596,7 @@ prove:
 Square roots have the same shape: the function body is allowed because the signature supplies the nonnegative-domain fact.
 
 ```litex
-prove:
+scratch:
     have fn root(x R: 0 <= x) R = sqrt(x)
     root(4) = 2
 ```
@@ -1074,7 +1074,7 @@ This predicate says whether a function can be viewed as having a smaller or more
 
 | Predicate | Negated form | Meaning |
 |-----------|--------------|---------|
-| `f $restrict_fn_in T` | `not f $restrict_fn_in T` | `f` can be restricted to the function space `T`. |
+| `f $restricts_to T` | `not f $restricts_to T` | `f` can be restricted to the function space `T`. |
 
 ---
 
@@ -1287,7 +1287,7 @@ w > 0
 When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be a restricted range membership `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
 
 ```litex
-prove:
+scratch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -1301,7 +1301,7 @@ prove:
 For a multi-argument function, provide one preimage name per function parameter:
 
 ```litex
-prove:
+scratch:
     have g fn(x R, y R: x < y) R
 
     g(0, 1) $in fn_range(g)
@@ -1314,7 +1314,7 @@ prove:
 ```
 
 ```litex
-prove:
+scratch:
     have a seq(R)
 
     a(2) $in fn_range_on(a, 1...3)
@@ -1668,10 +1668,10 @@ know:
 
 **`prove:`** opens a lemma or sub-proof: a nested list of statements closed before the parent continues.
 
-It does not affect the outside environment at all. You can think of it as a scratch space for checking a piece of reasoning: facts introduced or proved inside the `prove` block disappear when the block ends.
+It does not affect the outside environment at all. You can think of it as a scratch space for checking a piece of reasoning: facts introduced or proved inside the `scratch` block disappear when the block ends.
 
 ```litex
-prove:
+scratch:
     2 = 2
 ```
 
@@ -2239,7 +2239,8 @@ The sections above explain the common use cases. This table is a quick map of th
 | `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
 | `alias thm` | Copy a theorem definition under a new name |
 | `know` | Add facts or axioms to the current context |
-| `prove` | Open a nested proof block |
+| `scratch` | Open a checked scratch block whose facts stay local |
+| `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms; also accepted as a legacy scratch alias |
 | `import` / `run_file` | Use code from another file |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
@@ -2437,7 +2438,7 @@ conjunctive, disjunctive, or negated universal facts.
 | `AtomicFact::IsTupleFact` | tuple shape predicate | `$is_tuple(t)` |
 | `AtomicFact::SubsetFact` | subset relation | `A $subset B` |
 | `AtomicFact::SupersetFact` | superset relation | `A $superset B` |
-| `AtomicFact::RestrictFact` | function restriction predicate | `f $restrict_fn_in fn(x R) R` |
+| `AtomicFact::RestrictFact` | function restriction predicate | `f $restricts_to fn(x R) R` |
 | `AtomicFact::FnEqualInFact` | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
 | `AtomicFact::FnEqualFact` | global function equality | `$fn_eq(f, g)` |
 | `AtomicFact::NotNormalAtomicFact` | negated user predicate | `not $prime(n)` |
@@ -2454,7 +2455,7 @@ conjunctive, disjunctive, or negated universal facts.
 | `AtomicFact::NotIsTupleFact` | negated tuple predicate | `not $is_tuple(t)` |
 | `AtomicFact::NotSubsetFact` | negated subset relation | `not A $subset B` |
 | `AtomicFact::NotSupersetFact` | negated superset relation | `not A $superset B` |
-| `AtomicFact::NotRestrictFact` | negated restriction predicate | `not f $restrict_fn_in fn(x R) R` |
+| `AtomicFact::NotRestrictFact` | negated restriction predicate | `not f $restricts_to fn(x R) R` |
 
 #### Fact sub-shapes used inside larger facts
 
@@ -2506,7 +2507,7 @@ register a proof pattern.
 |-----------|----------------|---------|
 | `Stmt::ClaimStmt` | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
 | `Stmt::KnowStmt` | inject explicit assumptions | `know x = 1` |
-| `Stmt::ProveStmt` | open a nested proof block | `prove:`<br>`1 = 1` |
+| `Stmt::ScratchStmt` | open a checked scratch block whose facts stay local | `scratch:`<br>`1 = 1` |
 | `Stmt::DefThmStmt` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
 | `Stmt::AliasThmStmt` | copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
 | `Stmt::ByThmStmt` | call a named theorem with arguments | `by thm self_eq(1)` |
@@ -2942,7 +2943,7 @@ For integers, Litex has a builtin exhaustive split from a lower bound. If
 successor split followed by a strict tail:
 
 ```litex
-prove:
+scratch:
     let a, x Z:
         x >= a
 
@@ -3382,7 +3383,7 @@ forall a R, m, n N:
 If a positive literal power is zero, Litex can reduce the goal to the base being zero.
 
 ```litex
-prove:
+scratch:
     forall a R:
         a = 0
         =>:
@@ -3392,7 +3393,7 @@ prove:
 A difference against literal zero can close when the two sides are known equal.
 
 ```litex
-prove:
+scratch:
     have x R = 5
     x - x = 0
 ```
@@ -3527,7 +3528,7 @@ forall x1, x2, y1, y2, m Z:
 Taking `% m` twice with the same `m` is redundant.
 
 ```litex
-prove:
+scratch:
     (5 % 7) % 7 = 5 % 7
 ```
 
@@ -3552,7 +3553,7 @@ Concrete numeric inequalities are evaluated directly.
 When both sides are explicit fractions with nonzero denominators, Litex may compare by clearing denominators.
 
 ```litex
-prove:
+scratch:
     1 / 2 < 3 / 4
 ```
 
@@ -3772,7 +3773,7 @@ forall a, b R:
 ```
 
 ```litex
-prove:
+scratch:
     have k R = 2
     have a R = 1
     have b R = 3
@@ -3800,7 +3801,7 @@ forall a, b R:
 ```
 
 ```litex
-prove:
+scratch:
     have a R = 2
     have b R = 4
     have c R = 3
@@ -3942,7 +3943,7 @@ forall a, b Z:
 Negated membership in a standard set can close for concrete numeric values.
 
 ```litex
-prove:
+scratch:
     not (-1) $in N
 ```
 
@@ -3951,7 +3952,7 @@ prove:
 If `max(a,b)` or `min(a,b)` is asserted inside a standard one-sided number cone, Litex may close the goal when both operands are already known to lie in that same cone.
 
 ```litex
-prove:
+scratch:
     max(2, 3) $in R_pos
 ```
 
@@ -3960,14 +3961,14 @@ prove:
 A finite `sum` or `product` over an integer range is treated as a real once the indexed expression is well-defined.
 
 ```litex
-prove:
+scratch:
     sum(1, 3, '(x Z) Z {x}) $in R
 ```
 
 If a function application is well-defined and its known return set is `R`, the application can be verified as real.
 
 ```litex
-prove:
+scratch:
     sqrt(2) $in R
 ```
 
@@ -4000,27 +4001,27 @@ $is_nonempty_set({1})
 ```
 
 ```litex
-prove:
+scratch:
     $is_nonempty_set(closed_range(0, 2))
 ```
 
 ```litex
-prove:
+scratch:
     $is_nonempty_set(cc(0, 0))
 ```
 
 ```litex
-prove:
+scratch:
     $is_nonempty_set(oo(0, 2))
 ```
 
 ```litex
-prove:
+scratch:
     $is_nonempty_set(cinf(0))
 ```
 
 ```litex
-prove:
+scratch:
     $is_nonempty_set(cart(R_pos, R_pos))
 ```
 
@@ -4033,7 +4034,7 @@ $is_nonempty_set(power_set(Z))
 An empty enumeration proves negated non-emptiness.
 
 ```litex
-prove:
+scratch:
     not $is_nonempty_set({})
 ```
 
@@ -4475,7 +4476,7 @@ A finite sequence literal may be applied as the finite function it denotes. For 
 From `A $subset B`, Litex infers the universal membership consequence: every element of `A` is also in `B`.
 
 ```litex
-prove:
+scratch:
     let A, B set:
         A $subset B
     forall x A:
@@ -4485,7 +4486,7 @@ prove:
 From `A $superset B`, Litex infers the universal membership consequence in the other direction: every element of `B` is also in `A`.
 
 ```litex
-prove:
+scratch:
     let A, B set:
         A $superset B
     forall x B:
@@ -4534,11 +4535,11 @@ There is no matching automatic rule when `0` is on the left.
 
 ### Function Restriction
 
-For `$restrict_fn_in`, inference narrows the recorded function-space information to the more specific function type you gave. It does not need to restate the whole function definition.
+For `$restricts_to`, inference narrows the recorded function-space information to the more specific function type you gave. It does not need to restate the whole function definition.
 
 ```text
 known:
-    $restrict_fn_in(f, smaller_fn_set)
+    $restricts_to(f, smaller_fn_set)
 
 remembered:
     f can be used with the smaller function set
@@ -4548,7 +4549,7 @@ remembered:
 
 ### Facts With No Extra Inference
 
-Some builtin atoms are left as they are for this pass. Examples include negated comparisons, `$is_set`, `not $restrict_fn_in`, and similar facts.
+Some builtin atoms are left as they are for this pass. Examples include negated comparisons, `$is_set`, `not f $restricts_to T`, and similar facts.
 
 They can still be used in proofs. Builtin inference simply does not unfold them further here.
 

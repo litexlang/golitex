@@ -463,11 +463,7 @@ fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
 
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
-    let stmt_display_string = stmt_text_for_json(runtime, &x.stmt);
-    let stmt_text = match &x.stmt {
-        Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
-        _ => stmt_display_string,
-    };
+    let stmt_text = stmt_text_for_json(runtime, &x.stmt);
 
     let infer_items: Vec<JsonValue> =
         json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
@@ -707,10 +703,6 @@ fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
 
 fn stmt_json_field_lines(runtime: &Runtime, indent_inner: &str, stmt: &Stmt) -> Vec<String> {
     let stmt_display_string = stmt_text_for_json(runtime, stmt);
-    let wrapped_stmt_display_string = match stmt {
-        Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
-        _ => stmt_display_string,
-    };
     let mut lines: Vec<String> = Vec::new();
     lines.push(format!(
         "{}\"{}\": {}",
@@ -722,7 +714,7 @@ fn stmt_json_field_lines(runtime: &Runtime, indent_inner: &str, stmt: &Stmt) -> 
         "{}\"{}\": {}",
         indent_inner,
         JSON_KEY_STMT,
-        json_string_literal(&wrapped_stmt_display_string)
+        json_string_literal(&stmt_display_string)
     ));
     lines
 }

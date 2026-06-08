@@ -80,7 +80,7 @@ impl Runtime {
         }
     }
 
-    /// Record `$restrict_fn_in(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
+    /// Record `$restricts_to(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
     pub(crate) fn register_known_fn_restrict_to_for_element(
         &mut self,
         element: &Obj,
@@ -110,7 +110,7 @@ impl Runtime {
         }
     }
 
-    /// `$restrict_fn_in(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
+    /// `$restricts_to(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
     /// If the RHS is a set, treat it as a unary real-valued restriction on that domain.
     pub fn infer_restrict_fact(&mut self, rf: &RestrictFact) -> Result<InferResult, RuntimeError> {
         let restrict_body = match &rf.obj_can_restrict_to_fn_set {

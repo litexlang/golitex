@@ -26,7 +26,7 @@ impl Runtime {
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt),
             Stmt::Fact(fact) => self.exec_fact(fact),
             Stmt::ClaimStmt(s) => self.exec_claim_stmt(s),
-            Stmt::ProveStmt(s) => self.exec_prove_stmt(s),
+            Stmt::ScratchStmt(s) => self.exec_scratch_stmt(s),
             Stmt::ImportStmt(s) => self.exec_import_stmt(s),
             Stmt::DoNothingStmt(s) => self.exec_do_nothing_stmt(s),
             Stmt::ClearStmt(s) => self.exec_clear_stmt(s),

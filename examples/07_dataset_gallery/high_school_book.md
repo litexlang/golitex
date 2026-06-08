@@ -85,8 +85,16 @@ notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --noc
 ```litex
 import Trig
 
-have fn f_prime_1(x R) R = 8 * x - 12
-have fn f_prime_2(x R) R = 2 * Trig::cos(2 * x)
+abstract_prop derivative_function_on_R(domain, f, df)
+
+have fn quadratic_source(x R) R = 4 * x^2 - 12 * x + 5
+have fn quadratic_source_prime(x R) R = 8 * x - 12
+have fn sine_double_angle(x R) R = Trig::sin(2 * x)
+have fn sine_double_angle_prime(x R) R = 2 * Trig::cos(2 * x)
+
+know:
+    $derivative_function_on_R(R, quadratic_source, quadratic_source_prime)
+    $derivative_function_on_R(R, sine_double_angle, sine_double_angle_prime)
 ```
 
 ## 5. `optional-2/0105`
@@ -105,10 +113,14 @@ notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --noc
 ```
 
 ```litex
-have x_of_max R = 3
-have max_value R = 8
-have x_of_min R = 7
-have min_value R = -8
+abstract_prop has_local_maximum_at(f, x0, value)
+abstract_prop has_local_minimum_at(f, x0, value)
+
+have extrema_exercise_function fn(x R) R
+
+know:
+    $has_local_maximum_at(extrema_exercise_function, 3, 8)
+    $has_local_minimum_at(extrema_exercise_function, 7, -8)
 ```
 
 ## 6. `required-1/0085`

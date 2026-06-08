@@ -39,28 +39,16 @@ For each translated item, follow this loop:
    - `blocked`: the failure reason is understood and recorded with a minimal
      reproduction.
 
-Classify blockers explicitly. Useful blocker labels include:
+Classify blockers explicitly with only these labels:
 
-1. `blocked_by_language`: Litex cannot naturally express the object,
-   binding structure, or proposition yet.
+1. `proof_debt`: the current proof is not complete. Use this for missing
+   definitions, lemmas, theorem organization, automation, syntax, diagnostics,
+   formulation work, or any case where the honest statement is that we do not
+   yet know how to finish the proof in Litex.
 
-2. `blocked_by_stdlib`: the proof needs missing definitions, lemmas, or
-   theorem organization.
-
-3. `blocked_by_infer_rule`: the mathematical step is simple but needs a new
-   infer rule or builtin rule.
-
-4. `blocked_by_kernel`: the verifier, runtime, well-definedness logic, or
-   core proof model is missing required behavior.
-
-5. `blocked_by_syntax`: the parser or syntax makes the intended expression
-   awkward or impossible.
-
-6. `blocked_by_diagnostics`: the verifier output is too indirect, confusing,
-   or misleading to support a tight feedback loop.
-
-7. `blocked_by_formulation`: the source statement needs a more natural Litex
-   formulation rather than a mechanical translation.
+2. `kernel_problem`: the issue appears to be in Litex's verifier, runtime,
+   well-definedness logic, core proof model, or another kernel-level behavior
+   rather than in the current proof attempt.
 
 Prefer early work on low-dependency, high-feedback corpora such as MATH500,
 high-school math, and small miniF2F slices. Use Mathematics in Lean as a
