@@ -1985,7 +1985,7 @@ mod module_qualification_parse_tests {
             &mut rt,
             "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    e s",
         );
-        let Stmt::DefStructStmt(stmt) = stmt else {
+        let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(stmt)) = stmt else {
             panic!("expected struct definition");
         };
         let Some((param_def, _)) = &stmt.param_def_with_dom else {
@@ -2020,7 +2020,7 @@ mod module_qualification_parse_tests {
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
-        let Stmt::DefAbstractPropStmt(stmt) = stmt else {
+        let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(stmt)) = stmt else {
             panic!("expected abstract prop definition");
         };
         assert_eq!(stmt.name, "some_prop");
@@ -2123,19 +2123,19 @@ mod module_qualification_parse_tests {
         rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "Nat", "T");
 
         let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
-        let Stmt::UseStrategyStmt(strategy_stmt) = strategy_stmt else {
+        let Stmt::Command(CommandStmt::UseStrategyStmt(strategy_stmt)) = strategy_stmt else {
             panic!("expected use strategy stmt");
         };
         assert_with_mod(&strategy_stmt.name, "Nat", "S");
 
         let stop_stmt = parse_one_stmt_line_with_runtime(&mut rt, "stop strategy S");
-        let Stmt::StopStrategyStmt(stop_stmt) = stop_stmt else {
+        let Stmt::Command(CommandStmt::StopStrategyStmt(stop_stmt)) = stop_stmt else {
             panic!("expected stop strategy stmt");
         };
         assert_with_mod(&stop_stmt.name, "Nat", "S");
@@ -2159,7 +2159,7 @@ mod module_qualification_parse_tests {
         rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "Other", "T");
@@ -2211,7 +2211,7 @@ mod module_qualification_parse_tests {
         assert_eq!(name, "some_prop");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_without_mod(&thm_stmt.name, "T");

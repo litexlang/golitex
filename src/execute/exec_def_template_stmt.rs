@@ -335,7 +335,7 @@ impl Runtime {
                     Some(line_file.clone()),
                 )?
                 .into()),
-            Stmt::KnowStmt(s) => {
+            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(s)) => {
                 let mut facts = Vec::with_capacity(s.facts.len());
                 for fact in s.facts.iter() {
                     facts.push(self.inst_fact(
@@ -347,7 +347,7 @@ impl Runtime {
                 }
                 Ok(KnowStmt::new(facts, line_file.clone()).into())
             }
-            Stmt::ClaimStmt(s) => {
+            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 let fact = self.inst_fact(
                     &s.fact,
                     param_to_arg_map,
@@ -358,12 +358,12 @@ impl Runtime {
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(ClaimStmt::new(fact, proof, line_file.clone()).into())
             }
-            Stmt::ScratchStmt(s) => {
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
-                Ok(ScratchStmt::new(proof, line_file.clone()).into())
+                Ok(SketchStmt::new(proof, line_file.clone()).into())
             }
-            Stmt::ByThmStmt(s) => {
+            Stmt::By(ByStmt::ByThmStmt(s)) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);

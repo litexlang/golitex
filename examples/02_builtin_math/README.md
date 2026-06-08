@@ -317,7 +317,7 @@ claim:
     0 <= (2/3)* a = (2 * a)/3 <= (3 * b)/3 = b
     d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
 
-scratch:
+sketch:
     forall x N:
         x != 0
         =>:
@@ -382,7 +382,7 @@ forall a, b R:
         a^3 < b^3
         b^5 > a^5
 
-scratch:
+sketch:
     forall t R_pos:
         t^2 < 4^2
         =>:
@@ -621,22 +621,22 @@ know:
     0 <= x
 x $in cinf(0)
 
-scratch:
+sketch:
     $is_nonempty_set(cc(0, 0))
 
-scratch:
+sketch:
     $is_nonempty_set(oo(0, 1))
 
-scratch:
+sketch:
     $is_nonempty_set(info(1))
 
-scratch:
+sketch:
     $is_nonempty_set(infc(1))
 
-scratch:
+sketch:
     $is_nonempty_set(oinf(0))
 
-scratch:
+sketch:
     $is_nonempty_set(cinf(0))
 ```
 
@@ -753,7 +753,7 @@ forall a, b R_pos, c R:
 ```litex
 # Mod: congruence under a common modulus (+, -, *) plus nested mod absorption (see builtin verify rules).
 
-scratch:
+sketch:
     have X Z
     have Y Z
     have m Z_nz
@@ -761,13 +761,13 @@ scratch:
     (X - Y) % m = ((X % m) - (Y % m)) % m
     (X * Y) % m = ((X % m) * (Y % m)) % m
 
-scratch:
+sketch:
     have b Z
     have c Z
     have d Z_nz
     (b * c) % d = ((b % d) * (c % d)) % d
 
-scratch:
+sketch:
     have a Z
     have b Z
     have c Z
@@ -785,7 +785,7 @@ forall x Z:
 forall x Z:
     x % 1 = 0
 
-scratch:
+sketch:
     prop mod_eq(a Z, b Z, n Z):
         exist k Z st {a - b = n * k}
 
@@ -1100,7 +1100,7 @@ sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
 sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
 
 # Constant summand: length * c when c does not use the index.
-scratch:
+sketch:
     have c Z
     sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
 
@@ -1111,12 +1111,12 @@ sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
 sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
 
-scratch:
+sketch:
     have X finite_set
     have c Z
     sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
 
-scratch:
+sketch:
     have X power_set(Z)
     know $is_finite_set(X)
     sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
@@ -1129,12 +1129,12 @@ product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
 product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
 
-scratch:
+sketch:
     have X finite_set
     have c R
     product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
 
-scratch:
+sketch:
     have X power_set(Z)
     know $is_finite_set(X)
     product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
@@ -1149,7 +1149,7 @@ product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
 # Partition: sum(a..d,f) as edge-to-edge sub-sums (same f); product analogue with *.
 sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
 
-scratch:
+sketch:
     sum(1, 3, 'Z(x){x}) = sum(1, 2, 'Z(x){x}) + 'Z(x){x}(3)
     product(1, 3, 'Z(x){x}) = product(1, 2, 'Z(x){x}) * 'Z(x){x}(3)
 
@@ -1157,7 +1157,7 @@ scratch:
 
 eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
 
-scratch:
+sketch:
     by induc a from 1:
         prove:
             product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})

@@ -93,63 +93,83 @@ forall a set:
 }
 
 #[test]
-fn scratch_stmt_is_checked_and_local() {
+fn sketch_stmt_is_checked_and_local() {
     let source_code = r#"
-scratch:
+sketch:
     know:
         2 = 3
 2 = 3
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("scratch_stmt_is_checked_and_local");
+    runtime.new_file_path_new_env_new_name_scope("sketch_stmt_is_checked_and_local");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         !run_succeeded,
-        "facts from scratch should not leak into the outer environment:\n{}",
+        "facts from sketch should not leak into the outer environment:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"ScratchStmt\""),
-        "scratch should be reported as ScratchStmt:\n{}",
+        run_output.contains("\"type\": \"SketchStmt\""),
+        "sketch should be reported as SketchStmt:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("scratch:\\n"),
-        "scratch output should use the canonical `scratch:` spelling:\n{}",
+        run_output.contains("sketch:\\n"),
+        "sketch output should use the canonical `sketch:` spelling:\n{}",
         run_output
     );
 }
 
 #[test]
-fn legacy_top_level_prove_parses_as_scratch_stmt() {
+fn top_level_scratch_is_rejected_with_sketch_hint() {
+    let source_code = r#"
+scratch:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("top_level_scratch_is_rejected_with_sketch_hint");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "top-level scratch should be rejected:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("top-level `scratch:` has been replaced by `sketch:`"),
+        "top-level scratch should explain the replacement:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn top_level_prove_is_rejected_with_sketch_hint() {
     let source_code = r#"
 prove:
     1 = 1
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("legacy_top_level_prove_parses_as_scratch_stmt");
+    runtime.new_file_path_new_env_new_name_scope("top_level_prove_is_rejected_with_sketch_hint");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
-        run_succeeded,
-        "legacy top-level prove alias should still run:\n{}",
+        !run_succeeded,
+        "top-level prove should be rejected:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"ScratchStmt\""),
-        "legacy top-level prove should parse to ScratchStmt:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("scratch:\\n") && !run_output.contains("prove:\\n"),
-        "legacy top-level prove output should canonicalize to scratch:\n{}",
+        run_output.contains("top-level `prove:` is not supported; use `sketch:`"),
+        "top-level prove should explain the supported spelling:\n{}",
         run_output
     );
 }

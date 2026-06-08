@@ -18,10 +18,10 @@ pub fn run_stmt_at_global_env(
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
-        Stmt::RunFileStmt(run_file_stmt) => {
+        Stmt::Command(CommandStmt::RunFileStmt(run_file_stmt)) => {
             return run_file(run_file_stmt, runtime);
         }
-        Stmt::ImportStmt(import_stmt) => {
+        Stmt::Command(CommandStmt::ImportStmt(import_stmt)) => {
             return run_import_stmt(import_stmt, runtime);
         }
         _ => {

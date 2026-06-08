@@ -1739,7 +1739,7 @@ impl Proj {
     }
 }
 
-impl ScratchStmt {
+impl SketchStmt {
     pub fn to_latex_string(&self) -> String {
         if self.proof.is_empty() {
             return r"\text{\texttt{(empty proof)}}".to_string();
@@ -2151,57 +2151,71 @@ impl Stmt {
     pub fn to_latex_string(&self) -> String {
         match self {
             Stmt::Fact(x) => x.to_latex_string(),
-            Stmt::DefLetStmt(x) => x.to_latex_string(),
-            Stmt::DefPropStmt(x) => x.to_latex_string(),
-            Stmt::DefAbstractPropStmt(x) => x.to_latex_string(),
-            Stmt::AliasPropStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::AliasThmStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::HaveObjInNonemptySetStmt(x) => x.to_latex_string(),
-            Stmt::HaveObjEqualStmt(x) => x.to_latex_string(),
-            Stmt::HaveObjByExistFactsStmt(x) => x.to_latex_string(),
-            Stmt::HaveByExistStmt(x) => x.to_latex_string(),
-            Stmt::HaveByPreimageStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),
-            Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
-            Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),
-            Stmt::HaveFnByForallExistUniqueStmt(x) => x.to_latex_string(),
-            Stmt::DefAlgoStmt(x) => x.to_latex_string(),
-            Stmt::ClaimStmt(x) => x.to_latex_string(),
-            Stmt::KnowStmt(x) => x.to_latex_string(),
-            Stmt::ScratchStmt(x) => x.to_latex_string(),
-            Stmt::ImportStmt(x) => x.to_latex_string(),
-            Stmt::DoNothingStmt(x) => x.to_latex_string(),
-            Stmt::ClearStmt(x) => x.to_latex_string(),
-            Stmt::StopImportStmt(x) => x.to_latex_string(),
-            Stmt::RunFileStmt(x) => x.to_latex_string(),
-            Stmt::EvalStmt(x) => x.to_latex_string(),
-            Stmt::EvalByStmt(x) => x.to_latex_string(),
-            Stmt::WitnessExistFact(x) => x.to_latex_string(),
-            Stmt::WitnessNonemptySet(x) => x.to_latex_string(),
-            Stmt::ByCasesStmt(x) => x.to_latex_string(),
-            Stmt::ByContraStmt(x) => x.to_latex_string(),
-            Stmt::ByEnumerateFiniteSetStmt(x) => x.to_latex_string(),
-            Stmt::ByInducStmt(x) => x.to_latex_string(),
-            Stmt::ByForStmt(x) => x.to_latex_string(),
-            Stmt::ByExtensionStmt(x) => x.to_latex_string(),
-            Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByEnumerateRangeStmt(x) => x.to_latex_string(),
-            Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
-            Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
-            Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
-            Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
-            Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
-            Stmt::ByZornLemmaStmt(x) => x.to_latex_string(),
-            Stmt::ByAxiomOfChoiceStmt(x) => x.to_latex_string(),
-            Stmt::ByThmStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::UseStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::StopStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefTemplateStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(x)) => x.to_latex_string(),
+            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(x)) => x.to_latex_string(),
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt(x)) => x.to_latex_string(),
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasPropStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasThmStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(x)) => x.to_latex_string(),
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::StopImportStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::RunFileStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::EvalByStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Command(CommandStmt::StopStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Witness(WitnessStmt::WitnessExistFact(x)) => x.to_latex_string(),
+            Stmt::Witness(WitnessStmt::WitnessNonemptySet(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByCasesStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByContraStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByInducStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByForStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByExtensionStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByFnAsSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByTupleAsSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByFnSetAsSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByEnumerateRangeStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByTransitivePropStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::BySymmetricPropStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByReflexivePropStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByAntisymmetricPropStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByZornLemmaStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
         }
     }
 }

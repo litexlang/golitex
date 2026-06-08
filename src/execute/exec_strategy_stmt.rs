@@ -69,7 +69,7 @@ impl Runtime {
                 if result.is_unknown() {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new(
-                            Some(Stmt::Fact(then_fact.clone().to_fact())),
+                            Some(then_fact.clone().to_fact().into()),
                             format!(
                                 "strategy `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
                                 strategy_names,

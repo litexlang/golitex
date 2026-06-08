@@ -25,7 +25,7 @@ statement, fact, proof pattern, builtin rule, standard-library interface, or
 case study.
 
 The [`_internal/`](_internal/) folder is still tested, but it is not the main
-reader path. It contains regression checks, scratch files, std-import examples,
+reader path. It contains regression checks, sketch files, std-import examples,
 fixtures for `run_file`, and snapshots from parser/data work.
 
 ## Recommended Reading Path

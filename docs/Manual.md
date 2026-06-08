@@ -307,7 +307,7 @@ have h fn(n N_pos, x closed_range(1, n)) R
 ```
 
 ```litex
-scratch:
+sketch:
     struct Point:
         x R
         y R
@@ -318,7 +318,7 @@ scratch:
 ```
 
 ```litex
-scratch:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -327,7 +327,7 @@ scratch:
 ```
 
 ```litex
-scratch:
+sketch:
     have a seq(R)
 
     a(1) $in fn_range_on(a, 1...3)
@@ -508,7 +508,7 @@ Litex supports matrices in three related ways: a constructor **type** `matrix(S,
 **Type and literal.** You can bind a matrix object to a literal and read entries with two indices (like applying a function of two arguments):
 
 ```litex
-scratch:
+sketch:
     matrix(R, 2, 2) = matrix(R, 2, 2)
 
     have a matrix(R, 2, 2) = [[1, 2], [3, 4]]
@@ -578,7 +578,7 @@ For example, `1 / x = 2` is not checked as an equality until Litex can prove tha
 When you define a function, Litex checks the body in the local context created by the function signature. A domain condition in the signature is therefore often a well-definedness proof for the body.
 
 ```litex
-scratch:
+sketch:
     have fn reciprocal(x R: x != 0) R = 1 / x
     reciprocal(2) = 1 / 2
 ```
@@ -588,7 +588,7 @@ The condition `x != 0` is used while checking the definition, because `1 / x` ne
 The domain fact can also be used through a small builtin consequence. In the next example, the denominator is `x - 1`; the condition `x != 1` is enough for Litex to prove `x - 1 != 0`.
 
 ```litex
-scratch:
+sketch:
     have fn shifted_inverse(x R: x != 1) R = 1 / (x - 1)
     shifted_inverse(2) = 1
 ```
@@ -596,7 +596,7 @@ scratch:
 Square roots have the same shape: the function body is allowed because the signature supplies the nonnegative-domain fact.
 
 ```litex
-scratch:
+sketch:
     have fn root(x R: 0 <= x) R = sqrt(x)
     root(4) = 2
 ```
@@ -1287,7 +1287,7 @@ w > 0
 When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be a restricted range membership `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
 
 ```litex
-scratch:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -1301,7 +1301,7 @@ scratch:
 For a multi-argument function, provide one preimage name per function parameter:
 
 ```litex
-scratch:
+sketch:
     have g fn(x R, y R: x < y) R
 
     g(0, 1) $in fn_range(g)
@@ -1314,7 +1314,7 @@ scratch:
 ```
 
 ```litex
-scratch:
+sketch:
     have a seq(R)
 
     a(2) $in fn_range_on(a, 1...3)
@@ -1664,14 +1664,14 @@ know:
 
 ---
 
-### Nested proof (`prove`)
+### Checked sketch block (`sketch`)
 
-**`prove:`** opens a lemma or sub-proof: a nested list of statements closed before the parent continues.
+**`sketch:`** opens a checked local block: a nested list of statements closed before the outer environment continues.
 
-It does not affect the outside environment at all. You can think of it as a scratch space for checking a piece of reasoning: facts introduced or proved inside the `scratch` block disappear when the block ends.
+It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`.
 
 ```litex
-scratch:
+sketch:
     2 = 2
 ```
 
@@ -2239,8 +2239,8 @@ The sections above explain the common use cases. This table is a quick map of th
 | `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
 | `alias thm` | Copy a theorem definition under a new name |
 | `know` | Add facts or axioms to the current context |
-| `scratch` | Open a checked scratch block whose facts stay local |
-| `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms; also accepted as a legacy scratch alias |
+| `sketch` | Open a checked sketch block whose facts stay local |
+| `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
 | `import` / `run_file` | Use code from another file |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
@@ -2483,69 +2483,69 @@ register a proof pattern.
 
 | AST shape | Abstract shape | Example |
 |-----------|----------------|---------|
-| `Stmt::Fact(fact)` | verify and store a fact | `1 + 1 = 2` |
-| `Stmt::DefPropStmt` | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
-| `Stmt::AliasPropStmt` | copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
-| `Stmt::DefAbstractPropStmt` | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
-| `Stmt::HaveObjInNonemptySetStmt` | introduce object parameters by type/set | `have x R` |
-| `Stmt::HaveObjEqualStmt` | introduce object parameters equal to expressions | `have x R = 1` |
-| `Stmt::HaveObjByExistFactsStmt` | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
-| `Stmt::HaveByExistStmt` | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
-| `Stmt::HaveByPreimageStmt` | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
-| `Stmt::HaveFnEqualStmt` | define a function by one expression | `have fn f(x R) R = x + 1` |
-| `Stmt::HaveFnEqualCaseByCaseStmt` | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
-| `Stmt::HaveFnByInducStmt` | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
-| `Stmt::HaveFnByForallExistUniqueStmt` | define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
-| `Stmt::DefTemplateStmt` | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
-| `Stmt::DefLetStmt` | introduce local names and assumed facts | `let x R:`<br>`x = 1` |
-| `Stmt::DefAlgoStmt` | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
-| `Stmt::DefStructStmt` | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
+| `Stmt::Fact(Fact)` | verify and store a fact | `1 + 1 = 2` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt)` | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasPropStmt)` | copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt)` | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt)` | introduce object parameters by type/set | `have x R` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt)` | introduce object parameters equal to expressions | `have x R = 1` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt)` | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt)` | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt)` | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt)` | define a function by one expression | `have fn f(x R) R = x + 1` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt)` | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt)` | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
+| `Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt)` | define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt)` | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
+| `Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt)` | introduce local names and assumed facts | `let x R:`<br>`x = 1` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt)` | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt)` | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
 #### Proof, theorem, strategy, and tooling statements
 
 | AST shape | Abstract shape | Example |
 |-----------|----------------|---------|
-| `Stmt::ClaimStmt` | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
-| `Stmt::KnowStmt` | inject explicit assumptions | `know x = 1` |
-| `Stmt::ScratchStmt` | open a checked scratch block whose facts stay local | `scratch:`<br>`1 = 1` |
-| `Stmt::DefThmStmt` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
-| `Stmt::AliasThmStmt` | copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
-| `Stmt::ByThmStmt` | call a named theorem with arguments | `by thm self_eq(1)` |
-| `Stmt::DefStrategyStmt` | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
-| `Stmt::UseStrategyStmt` | enable a strategy | `use strategy positive_nonzero` |
-| `Stmt::StopStrategyStmt` | disable a strategy | `stop strategy positive_nonzero` |
-| `Stmt::ImportStmt(ImportStmt::ImportGlobalModule)` | import a standard-library module | `import Nat` |
-| `Stmt::ImportStmt(ImportStmt::ImportRelativePath)` | import a quoted file path, optionally as a module name | `import "local.lit" as L` |
-| `Stmt::StopImportStmt` | stop automatic use of an imported module | `stop import Nat` |
-| `Stmt::RunFileStmt` | run a file in the current environment | `run_file "./scratch.lit"` |
-| `Stmt::DoNothingStmt` | explicit no-op | `do_nothing`, `...` |
-| `Stmt::ClearStmt` | clear the current user environment | `clear` |
-| `Stmt::EvalStmt` | evaluate an object expression | `eval 1 + 2` |
-| `Stmt::EvalByStmt` | evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
-| `Stmt::WitnessExistFact` | prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
-| `Stmt::WitnessNonemptySet` | prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
+| `Stmt::ProofBlock(ProofBlockStmt::ClaimStmt)` | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
+| `Stmt::UnsafeStmt(UnsafeStmt::KnowStmt)` | inject explicit assumptions | `know x = 1` |
+| `Stmt::ProofBlock(ProofBlockStmt::SketchStmt)` | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt)` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasThmStmt)` | copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
+| `Stmt::By(ByStmt::ByThmStmt)` | call a named theorem with arguments | `by thm self_eq(1)` |
+| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt)` | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
+| `Stmt::Command(CommandStmt::UseStrategyStmt)` | enable a strategy | `use strategy positive_nonzero` |
+| `Stmt::Command(CommandStmt::StopStrategyStmt)` | disable a strategy | `stop strategy positive_nonzero` |
+| `Stmt::Command(CommandStmt::ImportStmt(ImportStmt::ImportGlobalModule))` | import a standard-library module | `import Nat` |
+| `Stmt::Command(CommandStmt::ImportStmt(ImportStmt::ImportRelativePath))` | import a quoted file path, optionally as a module name | `import "local.lit" as L` |
+| `Stmt::Command(CommandStmt::StopImportStmt)` | stop automatic use of an imported module | `stop import Nat` |
+| `Stmt::Command(CommandStmt::RunFileStmt)` | run a file in the current environment | `run_file "./sketch.lit"` |
+| `Stmt::Command(CommandStmt::DoNothingStmt)` | explicit no-op | `do_nothing`, `...` |
+| `Stmt::Command(CommandStmt::ClearStmt)` | clear the current user environment | `clear` |
+| `Stmt::Command(CommandStmt::EvalStmt)` | evaluate an object expression | `eval 1 + 2` |
+| `Stmt::Command(CommandStmt::EvalByStmt)` | evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
+| `Stmt::Witness(WitnessStmt::WitnessExistFact)` | prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
+| `Stmt::Witness(WitnessStmt::WitnessNonemptySet)` | prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
 
 #### `by ...` proof-control statements
 
 | AST shape | Abstract shape | Example |
 |-----------|----------------|---------|
-| `Stmt::ByCasesStmt` | prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
-| `Stmt::ByContraStmt` | prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
-| `Stmt::ByEnumerateFiniteSetStmt` | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
-| `Stmt::ByEnumerateRangeStmt` | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
-| `Stmt::ByClosedRangeAsCasesStmt` | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
-| `Stmt::ByInducStmt` | ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
-| `Stmt::ByForStmt` | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
-| `Stmt::ByExtensionStmt` | prove set equality by extensionality | `by extension A = B:` |
-| `Stmt::ByFnAsSetStmt` | expose graph facts for a known function | `by fn as set: f` |
-| `Stmt::ByTupleAsSetStmt` | expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
-| `Stmt::ByFnSetAsSetStmt` | expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
-| `Stmt::ByReflexivePropStmt` | register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
-| `Stmt::BySymmetricPropStmt` | register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
-| `Stmt::ByTransitivePropStmt` | register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
-| `Stmt::ByAntisymmetricPropStmt` | register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
-| `Stmt::ByZornLemmaStmt` | trusted preview Zorn step | `by zorn_lemma: set P, prop le:` |
-| `Stmt::ByAxiomOfChoiceStmt` | trusted preview choice step | `by axiom_of_choice: set F:` |
+| `Stmt::By(ByStmt::ByCasesStmt)` | prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
+| `Stmt::By(ByStmt::ByContraStmt)` | prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
+| `Stmt::By(ByStmt::ByEnumerateFiniteSetStmt)` | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
+| `Stmt::By(ByStmt::ByEnumerateRangeStmt)` | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
+| `Stmt::By(ByStmt::ByClosedRangeAsCasesStmt)` | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
+| `Stmt::By(ByStmt::ByInducStmt)` | ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
+| `Stmt::By(ByStmt::ByForStmt)` | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
+| `Stmt::By(ByStmt::ByExtensionStmt)` | prove set equality by extensionality | `by extension A = B:` |
+| `Stmt::By(ByStmt::ByFnAsSetStmt)` | expose graph facts for a known function | `by fn as set: f` |
+| `Stmt::By(ByStmt::ByTupleAsSetStmt)` | expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
+| `Stmt::By(ByStmt::ByFnSetAsSetStmt)` | expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
+| `Stmt::By(ByStmt::ByReflexivePropStmt)` | register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
+| `Stmt::By(ByStmt::BySymmetricPropStmt)` | register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
+| `Stmt::By(ByStmt::ByTransitivePropStmt)` | register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
+| `Stmt::By(ByStmt::ByAntisymmetricPropStmt)` | register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
+| `Stmt::By(ByStmt::ByZornLemmaStmt)` | trusted preview Zorn step | `by zorn_lemma: set P, prop le:` |
+| `Stmt::By(ByStmt::ByAxiomOfChoiceStmt)` | trusted preview choice step | `by axiom_of_choice: set F:` |
 
 ---
 
@@ -2943,7 +2943,7 @@ For integers, Litex has a builtin exhaustive split from a lower bound. If
 successor split followed by a strict tail:
 
 ```litex
-scratch:
+sketch:
     let a, x Z:
         x >= a
 
@@ -3383,7 +3383,7 @@ forall a R, m, n N:
 If a positive literal power is zero, Litex can reduce the goal to the base being zero.
 
 ```litex
-scratch:
+sketch:
     forall a R:
         a = 0
         =>:
@@ -3393,7 +3393,7 @@ scratch:
 A difference against literal zero can close when the two sides are known equal.
 
 ```litex
-scratch:
+sketch:
     have x R = 5
     x - x = 0
 ```
@@ -3528,7 +3528,7 @@ forall x1, x2, y1, y2, m Z:
 Taking `% m` twice with the same `m` is redundant.
 
 ```litex
-scratch:
+sketch:
     (5 % 7) % 7 = 5 % 7
 ```
 
@@ -3553,7 +3553,7 @@ Concrete numeric inequalities are evaluated directly.
 When both sides are explicit fractions with nonzero denominators, Litex may compare by clearing denominators.
 
 ```litex
-scratch:
+sketch:
     1 / 2 < 3 / 4
 ```
 
@@ -3773,7 +3773,7 @@ forall a, b R:
 ```
 
 ```litex
-scratch:
+sketch:
     have k R = 2
     have a R = 1
     have b R = 3
@@ -3801,7 +3801,7 @@ forall a, b R:
 ```
 
 ```litex
-scratch:
+sketch:
     have a R = 2
     have b R = 4
     have c R = 3
@@ -3943,7 +3943,7 @@ forall a, b Z:
 Negated membership in a standard set can close for concrete numeric values.
 
 ```litex
-scratch:
+sketch:
     not (-1) $in N
 ```
 
@@ -3952,7 +3952,7 @@ scratch:
 If `max(a,b)` or `min(a,b)` is asserted inside a standard one-sided number cone, Litex may close the goal when both operands are already known to lie in that same cone.
 
 ```litex
-scratch:
+sketch:
     max(2, 3) $in R_pos
 ```
 
@@ -3961,14 +3961,14 @@ scratch:
 A finite `sum` or `product` over an integer range is treated as a real once the indexed expression is well-defined.
 
 ```litex
-scratch:
+sketch:
     sum(1, 3, '(x Z) Z {x}) $in R
 ```
 
 If a function application is well-defined and its known return set is `R`, the application can be verified as real.
 
 ```litex
-scratch:
+sketch:
     sqrt(2) $in R
 ```
 
@@ -4001,27 +4001,27 @@ $is_nonempty_set({1})
 ```
 
 ```litex
-scratch:
+sketch:
     $is_nonempty_set(closed_range(0, 2))
 ```
 
 ```litex
-scratch:
+sketch:
     $is_nonempty_set(cc(0, 0))
 ```
 
 ```litex
-scratch:
+sketch:
     $is_nonempty_set(oo(0, 2))
 ```
 
 ```litex
-scratch:
+sketch:
     $is_nonempty_set(cinf(0))
 ```
 
 ```litex
-scratch:
+sketch:
     $is_nonempty_set(cart(R_pos, R_pos))
 ```
 
@@ -4034,7 +4034,7 @@ $is_nonempty_set(power_set(Z))
 An empty enumeration proves negated non-emptiness.
 
 ```litex
-scratch:
+sketch:
     not $is_nonempty_set({})
 ```
 
@@ -4476,7 +4476,7 @@ A finite sequence literal may be applied as the finite function it denotes. For 
 From `A $subset B`, Litex infers the universal membership consequence: every element of `A` is also in `B`.
 
 ```litex
-scratch:
+sketch:
     let A, B set:
         A $subset B
     forall x A:
@@ -4486,7 +4486,7 @@ scratch:
 From `A $superset B`, Litex infers the universal membership consequence in the other direction: every element of `B` is also in `A`.
 
 ```litex
-scratch:
+sketch:
     let A, B set:
         A $superset B
     forall x B:
