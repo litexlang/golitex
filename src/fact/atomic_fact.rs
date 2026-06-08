@@ -969,8 +969,8 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
             AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
             AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
-            AtomicFact::RestrictFact(_) => RESTRICT_FN_IN.to_string(),
-            AtomicFact::NotRestrictFact(_) => RESTRICT_FN_IN.to_string(),
+            AtomicFact::RestrictFact(_) => RESTRICTS_TO.to_string(),
+            AtomicFact::NotRestrictFact(_) => RESTRICTS_TO.to_string(),
             AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
             AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
         }
@@ -1342,11 +1342,11 @@ impl AtomicFact {
                     Ok(NotSupersetFact::new(a0, a1, line_file).into())
                 }
             }
-            RESTRICT_FN_IN => {
+            RESTRICTS_TO => {
                 if args.len() != 2 {
                     let msg = format!(
                         "{} requires 2 arguments, but got {}",
-                        RESTRICT_FN_IN,
+                        RESTRICTS_TO,
                         args.len()
                     );
                     return Err(NewFactRuntimeError(
@@ -1768,7 +1768,7 @@ impl fmt::Display for RestrictFact {
         write!(
             f,
             "{} {}{} {}",
-            self.obj, FACT_PREFIX, RESTRICT_FN_IN, self.obj_can_restrict_to_fn_set
+            self.obj, FACT_PREFIX, RESTRICTS_TO, self.obj_can_restrict_to_fn_set
         )
     }
 }
@@ -1778,7 +1778,7 @@ impl fmt::Display for NotRestrictFact {
         write!(
             f,
             "{} {} {}{} {}",
-            NOT, self.obj, FACT_PREFIX, RESTRICT_FN_IN, self.obj_cannot_restrict_to_fn_set
+            NOT, self.obj, FACT_PREFIX, RESTRICTS_TO, self.obj_cannot_restrict_to_fn_set
         )
     }
 }

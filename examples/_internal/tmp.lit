@@ -1,7 +1,8 @@
 abstract_prop is_riemann_sum(f, a, b, r)
+abstract_prop interval_integral_additive(a, b, c, f, s1, s2)
 
 prop integrable(a, b R, f set):
-    $restrict_fn_in(f, fn(x R: (x - a) * (x - b) <= 0)R)
+    $restricts_to(f, fn(x R: (x - a) * (x - b) <= 0)R)
     exist r R st {$is_riemann_sum(f, a, b, r)}
 
 template<a, b R, f set: $integrable(a, b, f)>:
@@ -10,4 +11,171 @@ template<a, b R, f set: $integrable(a, b, f)>:
 forall a, b R, f set:
     $integrable(a, b, f)
     =>:
-        \integral<f, a, b> = integral<f, a, b>
+        \integral<a, b, f> = \integral<a, b, f>
+
+strategy sum_of_integrable_fn_integrable:
+    prove:
+        forall a, b R, f, g fn(x R) R:
+            $integrable(a, b, f)
+            $integrable(a, b, g)
+            =>:
+                $integrable(a, b, '(x R) R {f(x) + g(x)})
+    know $integrable(a, b, '(x R) R {f(x) + g(x)})
+
+strategy minus_of_integrable_fn_integrable:
+    prove:
+        forall a, b R, f, g fn(x R) R:
+            $integrable(a, b, f)
+            $integrable(a, b, g)
+            =>:
+                $integrable(a, b, '(x R) R {f(x) - g(x)})
+    know $integrable(a, b, '(x R) R {f(x) - g(x)})
+
+strategy scalar_mul_of_integrable_fn_integrable:
+    prove:
+        forall a, b, c R, f fn(x R) R:
+            $integrable(a, b, f)
+            =>:
+                $integrable(a, b, '(x R) R {c * f(x)})
+    know $integrable(a, b, '(x R) R {c * f(x)})
+
+strategy constant_fn_integrable:
+    prove:
+        forall a, b, c R:
+            a <= b
+            =>:
+                $integrable(a, b, '(x R) R {c})
+    know $integrable(a, b, '(x R) R {c})
+
+strategy identity_fn_integrable:
+    prove:
+        forall a, b R:
+            a <= b
+            =>:
+                $integrable(a, b, '(x R) R {x})
+    know $integrable(a, b, '(x R) R {x})
+
+strategy square_fn_integrable:
+    prove:
+        forall a, b R:
+            a <= b
+            =>:
+                $integrable(a, b, '(x R) R {x^2})
+    know $integrable(a, b, '(x R) R {x^2})
+
+strategy affine_two_x_plus_one_integrable:
+    prove:
+        forall a, b R:
+            a <= b
+            =>:
+                $integrable(a, b, '(x R) R {2 * x + 1})
+    know $integrable(a, b, '(x R) R {2 * x + 1})
+
+strategy interval_integral_additive_strategy:
+    prove:
+        forall a, b, c R, f set, s1, s2 R:
+            a <= b
+            b <= c
+            $integrable(a, c, f)
+            =>:
+                $interval_integral_additive(a, b, c, f, s1, s2)
+    know $interval_integral_additive(a, b, c, f, s1, s2)
+
+know:
+    forall a, b R, f, g fn(x R) R, sf, sg R:
+        $integrable(a, b, f)
+        $integrable(a, b, g)
+        \integral<a, b, f> = sf
+        \integral<a, b, g> = sg
+        =>:
+            $integrable(a, b, '(x R) R {f(x) + g(x)})
+            \integral<a, b, '(x R) R {f(x) + g(x)}> = sf + sg
+
+    forall a, b R, f, g fn(x R) R, sf, sg R:
+        $integrable(a, b, f)
+        $integrable(a, b, g)
+        \integral<a, b, f> = sf
+        \integral<a, b, g> = sg
+        =>:
+            $integrable(a, b, '(x R) R {f(x) - g(x)})
+            \integral<a, b, '(x R) R {f(x) - g(x)}> = sf - sg
+
+    forall a, b R, f fn(x R) R, sf, c R:
+        $integrable(a, b, f)
+        \integral<a, b, f> = sf
+        =>:
+            $integrable(a, b, '(x R) R {c * f(x)})
+            \integral<a, b, '(x R) R {c * f(x)}> = c * sf
+
+    forall a, b, c R:
+        a <= b
+        $integrable(a, b, '(x R) R {c})
+        =>:
+            \integral<a, b, '(x R) R {c}> = c * (b - a)
+
+    forall a, b R:
+        a <= b
+        $integrable(a, b, '(x R) R {x})
+        =>:
+            \integral<a, b, '(x R) R {x}> = b^2 / 2 - a^2 / 2
+
+    forall a, b R:
+        a <= b
+        $integrable(a, b, '(x R) R {x^2})
+        =>:
+            \integral<a, b, '(x R) R {x^2}> = b^3 / 3 - a^3 / 3
+
+    forall a, b R:
+        a <= b
+        $integrable(a, b, '(x R) R {2 * x + 1})
+        =>:
+            \integral<a, b, '(x R) R {2 * x + 1}> = b^2 + b - (a^2 + a)
+
+claim:
+    prove:
+        forall a, b R, f, g fn(x R) R:
+            $integrable(a, b, f)
+            $integrable(a, b, g)
+            =>:
+                $integrable(a, b, '(x R) R {f(x) + g(x)})
+    use strategy sum_of_integrable_fn_integrable
+    know $integrable(a, b, '(x R) R {f(x) + g(x)})
+    stop strategy sum_of_integrable_fn_integrable
+
+know:
+    $integrable(0, 2, '(x R) R {3})
+    $integrable(0, 2, '(x R) R {x})
+    $integrable(0, 3, '(x R) R {x^2})
+    $integrable(0, 3, '(x R) R {2 * x + 1})
+
+claim:
+    prove:
+        \integral<0, 2, '(x R) R {3}> = 6
+    $integrable(0, 2, '(x R) R {3})
+    \integral<0, 2, '(x R) R {3}> = 3 * (2 - 0)
+    3 * (2 - 0) = 6
+    \integral<0, 2, '(x R) R {3}> = 6
+
+claim:
+    prove:
+        \integral<0, 2, '(x R) R {x}> = 2
+    $integrable(0, 2, '(x R) R {x})
+    \integral<0, 2, '(x R) R {x}> = 2^2 / 2 - 0^2 / 2
+    2^2 / 2 - 0^2 / 2 = 2
+    \integral<0, 2, '(x R) R {x}> = 2
+
+claim:
+    prove:
+        \integral<0, 3, '(x R) R {x^2}> = 9
+    $integrable(0, 3, '(x R) R {x^2})
+    \integral<0, 3, '(x R) R {x^2}> = 3^3 / 3 - 0^3 / 3
+    3^3 / 3 - 0^3 / 3 = 9
+    \integral<0, 3, '(x R) R {x^2}> = 9
+
+claim:
+    prove:
+        \integral<0, 3, '(x R) R {2 * x + 1}> = 12
+    $integrable(0, 3, '(x R) R {2 * x + 1})
+    \integral<0, 3, '(x R) R {2 * x + 1}> = 3^2 + 3 - (0^2 + 0)
+    3^2 + 3 - (0^2 + 0) = 12
+    \integral<0, 3, '(x R) R {2 * x + 1}> = 12

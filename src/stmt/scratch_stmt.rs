@@ -2,22 +2,24 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ProveStmt {
+pub struct ScratchStmt {
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
-impl ProveStmt {
+impl ScratchStmt {
     pub fn new(proof: Vec<Stmt>, line_file: LineFile) -> Self {
-        ProveStmt { proof, line_file }
+        ScratchStmt { proof, line_file }
     }
 }
 
-impl fmt::Display for ProveStmt {
+impl fmt::Display for ScratchStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}",
+            "{}{}\n{}",
+            SCRATCH,
+            COLON,
             vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
         )
     }

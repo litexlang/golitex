@@ -5,7 +5,7 @@ pub struct KnownFnInfo {
     pub fn_set: Option<(FnSetBody, LineFile)>,
     /// Defining expression: `have fn … = rhs` or `name = '…{…}` anonymous body.
     pub equal_to: Option<(Obj, LineFile)>,
-    /// Narrower `$restrict_fn_in` target signatures.
+    /// Narrower `$restricts_to` target signatures.
     pub restrict_to: Option<Vec<(FnSetBody, LineFile)>>,
 }
 

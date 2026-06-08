@@ -93,6 +93,90 @@ forall a set:
 }
 
 #[test]
+fn scratch_stmt_is_checked_and_local() {
+    let source_code = r#"
+scratch:
+    know:
+        2 = 3
+2 = 3
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("scratch_stmt_is_checked_and_local");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "facts from scratch should not leak into the outer environment:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"ScratchStmt\""),
+        "scratch should be reported as ScratchStmt:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("scratch:\\n"),
+        "scratch output should use the canonical `scratch:` spelling:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn legacy_top_level_prove_parses_as_scratch_stmt() {
+    let source_code = r#"
+prove:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("legacy_top_level_prove_parses_as_scratch_stmt");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "legacy top-level prove alias should still run:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"ScratchStmt\""),
+        "legacy top-level prove should parse to ScratchStmt:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("scratch:\\n") && !run_output.contains("prove:\\n"),
+        "legacy top-level prove output should canonicalize to scratch:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn internal_claim_prove_block_remains_supported() {
+    let source_code = r#"
+claim:
+    prove:
+        1 = 1
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("internal_claim_prove_block_remains_supported");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "internal claim prove block should still run:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn fn_range_intro_subset_and_preimage_work() {
     let source_code = r#"
 prove:
@@ -646,10 +730,10 @@ fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
 
 fn anonymous_fn_restrict_positive_cases_impl() {
     let positive_source_code = r#"
-$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
-$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
-$restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
-$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
+$restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
+$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
+$restricts_to('(x R: x > 0) R {x}, fn(x N_pos) R)
+$restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
 "#;
 
     let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -671,7 +755,7 @@ $restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
 
 fn anonymous_fn_restrict_negative_case_impl() {
     let negative_source_code = r#"
-$restrict_fn_in('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+$restricts_to('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
 "#;
 
     let mut negative_runtime = Runtime::new_with_builtin_code();

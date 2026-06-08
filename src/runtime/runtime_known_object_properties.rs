@@ -17,7 +17,7 @@ impl Runtime {
         false
     }
 
-    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restrict_fn_in` targets.
+    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restricts_to` targets.
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
@@ -29,7 +29,7 @@ impl Runtime {
     }
 
     /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
-    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for well-defined/calls.
+    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restricts_to`) for well-defined/calls.
     pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {

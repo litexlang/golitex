@@ -543,7 +543,7 @@ preimage. `have by preimage` turns that move into an explicit proof step.
 For example:
 
 ```litex
-prove:
+scratch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)

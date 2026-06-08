@@ -125,7 +125,7 @@ forall x cart(R, R):
 - Purpose: Exercises rational-expression normalization and simplification.
 
 ```litex
-prove:
+scratch:
     have a, b, c, d R
     know:
         b != 0
@@ -140,12 +140,12 @@ prove:
 
     1 / 3 = 3 / 9
 
-prove:
+scratch:
     have a R = 1
 
     a + 2 = 3
 
-prove:
+scratch:
     have a R, b R = 1, 2
     (a + (a + (a * b + (a + b)))) * (a + 3 * b) = 49
 ```

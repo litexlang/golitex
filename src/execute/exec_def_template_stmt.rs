@@ -358,10 +358,10 @@ impl Runtime {
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(ClaimStmt::new(fact, proof, line_file.clone()).into())
             }
-            Stmt::ProveStmt(s) => {
+            Stmt::ScratchStmt(s) => {
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
-                Ok(ProveStmt::new(proof, line_file.clone()).into())
+                Ok(ScratchStmt::new(proof, line_file.clone()).into())
             }
             Stmt::ByThmStmt(s) => {
                 let mut args = Vec::with_capacity(s.args.len());

@@ -117,7 +117,7 @@ notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --noc
 # The denominator is sqrt(q), so the real-valued domain requires q > 0,
 # where q = x^2 - 5*x + 6 = (x - 2) * (x - 3).
 
-prove:
+scratch:
     have ans set = union(info(2), oinf(3))
 
 claim:
@@ -229,7 +229,7 @@ claim:
             x $in oinf(3)
             x $in union(info(2), oinf(3))
 
-prove:
+scratch:
     union(info(2), oinf(3)) = union(info(2), oinf(3))
 ```
 
@@ -280,7 +280,7 @@ claim:
     19*x = 9
     x = 9 / 19
 
-prove:
+scratch:
     2 * (9 / 19) = 18 / 19 > 0
     2 * (9 / 19) >= 0
     3 * (9 / 19) - 1 = 8 / 19 > 0

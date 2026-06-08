@@ -22,7 +22,7 @@ mod exec_have_obj_equal_stmt;
 mod exec_have_obj_in_nonempty_set_or_param_type_stmt;
 mod exec_know_stmt;
 mod exec_let_stmt;
-mod exec_prove_stmt;
+mod exec_scratch_stmt;
 mod exec_stmt;
 mod exec_store_definitions;
 mod exec_strategy_stmt;

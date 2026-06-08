@@ -22,7 +22,7 @@ pub enum Stmt {
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
     KnowStmt(KnowStmt),
-    ProveStmt(ProveStmt),
+    ScratchStmt(ScratchStmt),
     ImportStmt(ImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
@@ -389,7 +389,7 @@ impl fmt::Display for Stmt {
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
             Stmt::KnowStmt(x) => write!(f, "{}", x),
-            Stmt::ProveStmt(x) => write!(f, "{}", x),
+            Stmt::ScratchStmt(x) => write!(f, "{}", x),
             Stmt::ImportStmt(x) => write!(f, "{}", x),
             Stmt::DoNothingStmt(x) => write!(f, "{}", x),
             Stmt::ClearStmt(x) => write!(f, "{}", x),
@@ -448,7 +448,7 @@ impl Stmt {
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             Stmt::KnowStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ProveStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ScratchStmt(stmt) => stmt.line_file.clone(),
             Stmt::ImportStmt(stmt) => stmt.line_file(),
             Stmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClearStmt(stmt) => stmt.line_file.clone(),
@@ -505,7 +505,7 @@ impl Stmt {
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             Stmt::KnowStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ProveStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ScratchStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ImportStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
@@ -656,9 +656,9 @@ impl From<KnowStmt> for Stmt {
     }
 }
 
-impl From<ProveStmt> for Stmt {
-    fn from(v: ProveStmt) -> Self {
-        Stmt::ProveStmt(v)
+impl From<ScratchStmt> for Stmt {
+    fn from(v: ScratchStmt) -> Self {
+        Stmt::ScratchStmt(v)
     }
 }
 

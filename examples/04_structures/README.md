@@ -15,7 +15,7 @@ The `Category` and `System surface` fields say what part of Litex the example is
 abstract_prop has_integral(s, f, value)
 
 prop integrable(s set, f set):
-    $restrict_fn_in(f, s)
+    $restricts_to(f, s)
     exist a R st {$has_integral(s, f, a)}
 
 template<s power_set(R), f set: $integrable(s, f)>:
@@ -893,19 +893,19 @@ claim $increasing({x R: x > 0}, g):
 - Purpose: Shows small set-theory structure predicates.
 
 ```litex
-prove:
+scratch:
     let a, b set:
         a $subset b
     forall x a:
         x $in b
     b $superset a
 
-prove:
+scratch:
     let a, b set:
         not a $subset b
     not b $superset a
 
-prove:
+scratch:
     let A, B set:
         forall x A:
             $in(x, B)
@@ -916,13 +916,13 @@ prove:
     A $subset B
     B $superset A
 
-prove:
+scratch:
     not $is_nonempty_set({})
 
-prove:
+scratch:
     not 4 $in {1, 2, 3}
 
-prove:
+scratch:
     have x Z = 4
     x != 1
     x != 2
@@ -940,7 +940,7 @@ prove:
 abstract_prop exist_riemann_sum(f, s)
 
 prop integrable(f set, s set):
-    $restrict_fn_in(f, s)
+    $restricts_to(f, s)
     $exist_riemann_sum(f, s)
 
 have s nonempty_set
