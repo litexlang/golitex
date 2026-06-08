@@ -39,7 +39,9 @@ pub enum Obj {
     FnRange(FnRange),
     FnRangeOn(FnRangeOn),
     Sum(Sum),
+    SumOfFiniteSet(SumOfFiniteSet),
     Product(Product),
+    ProductOfFiniteSet(ProductOfFiniteSet),
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
@@ -96,38 +98,40 @@ pub enum ObjKind {
     Tuple = 29,
     Count = 30,
     Sum = 31,
-    Product = 32,
-    Range = 33,
-    ClosedRange = 34,
-    FiniteSeqSet = 35,
-    SeqSet = 36,
-    FiniteSeqListObj = 37,
-    ObjAtIndex = 38,
-    StandardSet = 39,
-    MatrixSet = 40,
-    MatrixListObj = 41,
-    MatrixAdd = 42,
-    MatrixSub = 43,
-    MatrixMul = 44,
-    MatrixScalarMul = 45,
-    MatrixPow = 46,
-    StructObj = 47,
-    ObjAsStructInstanceWithFieldAccess = 48,
-    InstantiatedTemplateObj = 49,
-    OneSideInfinityIntervalObj = 50,
-    IntervalObj = 51,
-    Identifier = 52,
-    IdentifierWithMod = 53,
-    ForallFreeParam = 54,
-    DefHeaderFreeParam = 55,
-    ExistFreeParam = 56,
-    SetBuilderFreeParam = 57,
-    FnSetFreeParam = 58,
-    ByInducFreeParam = 59,
-    DefAlgoFreeParam = 60,
-    DefStructFieldFreeParam = 61,
-    FnRange = 62,
-    FnRangeOn = 63,
+    SumOfFiniteSet = 32,
+    Product = 33,
+    ProductOfFiniteSet = 34,
+    Range = 35,
+    ClosedRange = 36,
+    FiniteSeqSet = 37,
+    SeqSet = 38,
+    FiniteSeqListObj = 39,
+    ObjAtIndex = 40,
+    StandardSet = 41,
+    MatrixSet = 42,
+    MatrixListObj = 43,
+    MatrixAdd = 44,
+    MatrixSub = 45,
+    MatrixMul = 46,
+    MatrixScalarMul = 47,
+    MatrixPow = 48,
+    StructObj = 49,
+    ObjAsStructInstanceWithFieldAccess = 50,
+    InstantiatedTemplateObj = 51,
+    OneSideInfinityIntervalObj = 52,
+    IntervalObj = 53,
+    Identifier = 54,
+    IdentifierWithMod = 55,
+    ForallFreeParam = 56,
+    DefHeaderFreeParam = 57,
+    ExistFreeParam = 58,
+    SetBuilderFreeParam = 59,
+    FnSetFreeParam = 60,
+    ByInducFreeParam = 61,
+    DefAlgoFreeParam = 62,
+    DefStructFieldFreeParam = 63,
+    FnRange = 64,
+    FnRangeOn = 65,
 }
 
 impl ObjKind {
@@ -351,9 +355,21 @@ pub struct Sum {
 }
 
 #[derive(Clone)]
+pub struct SumOfFiniteSet {
+    pub set: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Product {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct ProductOfFiniteSet {
+    pub set: Box<Obj>,
     pub func: Box<Obj>,
 }
 
@@ -986,11 +1002,29 @@ impl Sum {
     }
 }
 
+impl SumOfFiniteSet {
+    pub fn new(set: Obj, func: Obj) -> Self {
+        SumOfFiniteSet {
+            set: Box::new(set),
+            func: Box::new(func),
+        }
+    }
+}
+
 impl Product {
     pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
         Product {
             start: Box::new(start),
             end: Box::new(end),
+            func: Box::new(func),
+        }
+    }
+}
+
+impl ProductOfFiniteSet {
+    pub fn new(set: Obj, func: Obj) -> Self {
+        ProductOfFiniteSet {
+            set: Box::new(set),
             func: Box::new(func),
         }
     }
@@ -1072,7 +1106,9 @@ impl Obj {
             Obj::FnRange(_) => ObjKind::FnRange,
             Obj::FnRangeOn(_) => ObjKind::FnRangeOn,
             Obj::Sum(_) => ObjKind::Sum,
+            Obj::SumOfFiniteSet(_) => ObjKind::SumOfFiniteSet,
             Obj::Product(_) => ObjKind::Product,
+            Obj::ProductOfFiniteSet(_) => ObjKind::ProductOfFiniteSet,
             Obj::Range(_) => ObjKind::Range,
             Obj::ClosedRange(_) => ObjKind::ClosedRange,
             Obj::FiniteSeqSet(_) => ObjKind::FiniteSeqSet,
@@ -1134,7 +1170,9 @@ impl Obj {
             Obj::FnRange(_) => FN_RANGE.to_string(),
             Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
             Obj::Sum(_) => SUM.to_string(),
+            Obj::SumOfFiniteSet(_) => SUM_OF_FINITE_SET.to_string(),
             Obj::Product(_) => PRODUCT.to_string(),
+            Obj::ProductOfFiniteSet(_) => PRODUCT_OF_FINITE_SET.to_string(),
             Obj::Range(_) => RANGE.to_string(),
             Obj::ClosedRange(_) => CLOSED_RANGE.to_string(),
             Obj::MatrixAdd(_) => MATRIX_ADD.to_string(),
@@ -1274,7 +1312,9 @@ impl Obj {
             Obj::FnRange(x) => write!(f, "{}", x)?,
             Obj::FnRangeOn(x) => write!(f, "{}", x)?,
             Obj::Sum(x) => write!(f, "{}", x)?,
+            Obj::SumOfFiniteSet(x) => write!(f, "{}", x)?,
             Obj::Product(x) => write!(f, "{}", x)?,
+            Obj::ProductOfFiniteSet(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
@@ -1512,9 +1552,19 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.func, from, to),
             )
             .into(),
+            Obj::SumOfFiniteSet(x) => SumOfFiniteSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
             Obj::Product(x) => Product::new(
                 Obj::replace_bound_identifier(*x.start, from, to),
                 Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
+            Obj::ProductOfFiniteSet(x) => ProductOfFiniteSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
                 Obj::replace_bound_identifier(*x.func, from, to),
             )
             .into(),
@@ -2052,6 +2102,17 @@ impl fmt::Display for Sum {
     }
 }
 
+impl fmt::Display for SumOfFiniteSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            SUM_OF_FINITE_SET,
+            braced_vec_to_string(&vec![self.set.as_ref(), self.func.as_ref()])
+        )
+    }
+}
+
 impl fmt::Display for Product {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -2063,6 +2124,17 @@ impl fmt::Display for Product {
                 self.end.as_ref(),
                 self.func.as_ref(),
             ])
+        )
+    }
+}
+
+impl fmt::Display for ProductOfFiniteSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            PRODUCT_OF_FINITE_SET,
+            braced_vec_to_string(&vec![self.set.as_ref(), self.func.as_ref()])
         )
     }
 }
@@ -2578,9 +2650,21 @@ impl From<Sum> for Obj {
     }
 }
 
+impl From<SumOfFiniteSet> for Obj {
+    fn from(s: SumOfFiniteSet) -> Self {
+        Obj::SumOfFiniteSet(s)
+    }
+}
+
 impl From<Product> for Obj {
     fn from(p: Product) -> Self {
         Obj::Product(p)
+    }
+}
+
+impl From<ProductOfFiniteSet> for Obj {
+    fn from(p: ProductOfFiniteSet) -> Self {
+        Obj::ProductOfFiniteSet(p)
     }
 }
 

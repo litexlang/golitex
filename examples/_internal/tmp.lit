@@ -1,0 +1,13 @@
+abstract_prop is_riemann_sum(f, a, b, r)
+
+prop integrable(f set, a, b R):
+    $restrict_fn_in(f, fn(x R: (x - a) * (x - b) <= 0)R)
+    exist r R st {$is_riemann_sum(f, a, b, r)}
+
+template<a, b R, f set: $integrable(f, a, b)>:
+    have by exist r R st {$is_riemann_sum(f, a, b, r)}: integral
+
+forall a, b R, f set:
+    $integrable(f, a, b)
+    =>:
+        \integral<f, a, b> = integral<f, a, b>

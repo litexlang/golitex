@@ -603,6 +603,28 @@ impl Sum {
     }
 }
 
+impl SumOfFiniteSet {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {} \right)",
+            SUM_OF_FINITE_SET,
+            self.set.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
+impl ProductOfFiniteSet {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {} \right)",
+            PRODUCT_OF_FINITE_SET,
+            self.set.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
 impl Product {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2091,7 +2113,9 @@ impl Obj {
             Obj::FnRange(x) => x.to_latex_string(),
             Obj::FnRangeOn(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
+            Obj::SumOfFiniteSet(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
+            Obj::ProductOfFiniteSet(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),

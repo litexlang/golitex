@@ -40,6 +40,28 @@ This is not just a syntactic convenience. Litex tries to keep the main cognitive
 
 This is a large reduction in friction for ordinary proofs. Even the largest library cannot package every future argument in exactly the final shape a user needs; eventually the user still has to write the mathematics. Litex's bet is that the remembered material should stay close to that mathematics. Remembering library and tactic names is useful in a system like Lean, but it is not the mathematical content the proof is trying to expose.
 
+### Library Lookup vs Textbook Derivation
+
+Large libraries are one of Lean's greatest strengths. Mathlib lets users reuse
+deep, carefully engineered mathematics instead of reproving it. For research
+formalization and large developments, that is often exactly the right tool.
+
+For textbook formalization, however, there is a different educational goal. If
+formalizing a theorem from a book mainly means importing a large library,
+searching for an equivalent theorem, and citing it, the proof script is closer
+to a dictionary lookup than to the book's derivation. It verifies a result, but
+it may not show how the chapter built the result from previous definitions and
+lemmas. In that situation, much of the user's work is library navigation:
+knowing which package to import, which theorem name matches the book's
+statement, and how to adapt the library theorem to the local goal.
+
+Litex is designed around the opposite default for textbook work: start from the
+basic mathematical objects, introduce the vocabulary in the order the book
+does, write the next fact, and let the checked context grow. Imports should
+provide background vocabulary or explicit trusted interfaces, not erase the
+book's main proof. This is especially important for students, because the code
+should let them learn the mathematics while formalizing it.
+
 This is why Litex can be described by the slogan **Litex: The Formal Language Where Code Verifies Itself**. The phrase means that the user writes mathematical facts as code, and the checker tries to justify those facts from context, builtin rules, known facts, and known `forall` facts; it is not a claim of fully automatic proof search.
 
 Litex also lets a development start from an abstract interface. A user can name
@@ -844,6 +866,12 @@ claim:
 Ordinary mathematics uses many small background relationships: equality, order, membership, set predicates, function application, tuple projection, finite enumeration, arithmetic normalization, and so on. Each relationship is usually simple. The total number of interactions is large.
 
 Litex builds many of these elementary relationships into the language layer. This makes short mathematical scripts less dependent on a separate standard library for basic steps. It can matter especially in areas where the needed background mathematics is not yet easy to express or package naturally in a type-theoretic library.
+
+This is also why Litex can make a textbook development feel less like library
+navigation. The basic mathematical ground is already available to the checker,
+so a beginner can often write the next line of the proof instead of first
+learning which large package, namespace, theorem name, coercion, or tactic
+encodes that move.
 
 Lean's strength is different. Mathlib is a broad, mature, community-built mathematical library. For large formalization projects, advanced abstractions, and deep theorem reuse, that ecosystem is a major advantage.
 

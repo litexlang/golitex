@@ -594,6 +594,28 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => {
+                if self
+                    .arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.func, &r.func)])
+                {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => {
+                if self
+                    .arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.func, &r.func)])
+                {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Product(l), Obj::Product(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.start, &r.start),

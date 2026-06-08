@@ -758,6 +758,44 @@ impl Runtime {
                     equality_line_file,
                 )
             }
+            (Obj::SumOfFiniteSet(ls), Obj::SumOfFiniteSet(rs)) => {
+                if !self
+                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+                        ls.set.as_ref(),
+                        rs.set.as_ref(),
+                        verify_state,
+                        equality_line_file.clone(),
+                    )?
+                    .is_true()
+                {
+                    return Ok(false);
+                }
+                self.verify_function_args_are_equal_for_iterated_operator(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
+            (Obj::ProductOfFiniteSet(ls), Obj::ProductOfFiniteSet(rs)) => {
+                if !self
+                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+                        ls.set.as_ref(),
+                        rs.set.as_ref(),
+                        verify_state,
+                        equality_line_file.clone(),
+                    )?
+                    .is_true()
+                {
+                    return Ok(false);
+                }
+                self.verify_function_args_are_equal_for_iterated_operator(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
             (Obj::Product(ls), Obj::Product(rs)) => {
                 if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &ls.start,

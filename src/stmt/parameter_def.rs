@@ -822,6 +822,34 @@ fn collect_cited_param_indices_from_obj(
                 out,
             );
         }
+        Obj::SumOfFiniteSet(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.func,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
+        Obj::ProductOfFiniteSet(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.func,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
         Obj::Product(x) => {
             collect_cited_param_indices_from_obj(
                 &x.start,

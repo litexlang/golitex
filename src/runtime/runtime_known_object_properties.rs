@@ -719,9 +719,17 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(&x.end, module_names);
             collect_module_names_from_obj(&x.func, module_names);
         }
+        Obj::SumOfFiniteSet(x) => {
+            collect_module_names_from_obj(&x.set, module_names);
+            collect_module_names_from_obj(&x.func, module_names);
+        }
         Obj::Product(x) => {
             collect_module_names_from_obj(&x.start, module_names);
             collect_module_names_from_obj(&x.end, module_names);
+            collect_module_names_from_obj(&x.func, module_names);
+        }
+        Obj::ProductOfFiniteSet(x) => {
+            collect_module_names_from_obj(&x.set, module_names);
             collect_module_names_from_obj(&x.func, module_names);
         }
         Obj::Abs(x) => collect_module_names_from_obj(&x.arg, module_names),

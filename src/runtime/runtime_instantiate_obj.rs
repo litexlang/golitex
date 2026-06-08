@@ -72,7 +72,13 @@ impl Runtime {
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
+            Obj::SumOfFiniteSet(inner) => {
+                self.inst_sum_of_finite_set(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
+            Obj::ProductOfFiniteSet(inner) => {
+                self.inst_product_of_finite_set(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
@@ -803,6 +809,19 @@ impl Runtime {
         .into())
     }
 
+    pub fn inst_sum_of_finite_set(
+        &self,
+        sum: &SumOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(SumOfFiniteSet::new(
+            self.inst_obj(&sum.set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
     pub fn inst_product(
         &self,
         product: &Product,
@@ -812,6 +831,19 @@ impl Runtime {
         Ok(Product::new(
             self.inst_obj(&product.start, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&product.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_product_of_finite_set(
+        &self,
+        product: &ProductOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(ProductOfFiniteSet::new(
+            self.inst_obj(&product.set, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
         )
         .into())

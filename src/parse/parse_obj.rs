@@ -1326,6 +1326,36 @@ impl Runtime {
             })?;
             return Ok(Sum::new(start, end, func).into());
         }
+        if tok == SUM_OF_FINITE_SET {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "sum_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "sum_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "sum_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(SumOfFiniteSet::new(set, func).into());
+        }
         if tok == PRODUCT {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1363,6 +1393,36 @@ impl Runtime {
                 ))
             })?;
             return Ok(Product::new(start, end, func).into());
+        }
+        if tok == PRODUCT_OF_FINITE_SET {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "product_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "product_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "product_of_finite_set expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(ProductOfFiniteSet::new(set, func).into());
         }
         if tok == CART {
             tb.skip()?;

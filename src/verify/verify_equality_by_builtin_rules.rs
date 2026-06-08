@@ -103,9 +103,17 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.func.as_ref(), id)
         }
+        Obj::SumOfFiniteSet(s) => {
+            obj_expr_mentions_bare_id(s.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.func.as_ref(), id)
+        }
         Obj::Product(p) => {
             obj_expr_mentions_bare_id(p.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.func.as_ref(), id)
+        }
+        Obj::ProductOfFiniteSet(p) => {
+            obj_expr_mentions_bare_id(p.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.func.as_ref(), id)
         }
         Obj::FiniteSeqListObj(f) => f

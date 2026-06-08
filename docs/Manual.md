@@ -37,6 +37,13 @@ This is the sense behind the slogan **Litex: The Formal Language Where Code Veri
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
+This also supports a textbook style of development. A Litex file can read like
+a small course: introduce the objects, define the vocabulary, prove local
+lemmas, and then use those lemmas in later theorems. The intended workflow is
+not to replace the chapter's main proof by a search through a large imported
+library. Imports are useful background, but the proof script should usually
+show the derivation the reader is meant to learn.
+
 This is an intentional convenience trade-off. The trusted base is larger because
 the checker directly understands many relation-level interactions between
 ordinary mathematical objects. The design goal is not kernel minimality at this
@@ -125,10 +132,13 @@ When learning Litex, it is enough to keep the following mental model in mind. Tr
 - **Objects** are the mathematical things a proof talks about: numbers, sets, tuples, functions, products, sequences, matrices, and names introduced earlier.
 - **Facts** are judgments about objects: `x = 2`, `x $in N`, `0 <= x`, `$is_set(A)`, or a user-defined predicate such as `$prime(n)`.
 - **Statements** are the user-facing forms that introduce objects, define concepts, organize local proofs, and assert facts.
+- **Well-definedness** is the gate before proof: every object inside a fact must make mathematical sense in the current context.
 - **Verification** proves the current goal from the context, definitions, evaluation, normalization, and builtin verification rules.
 - **Execution** is what a statement does to the current context. A statement may define a name, open a proof block, verify a fact, store accepted facts, or run inference. Inference is one part of execution for factual statements: after a fact is accepted, Litex may add standard consequences or side information to the context.
 
 The key distinction is that an expression such as `x + 1` is only an object. It becomes a fact only when a relation or predicate makes a claim about it, such as `x + 1 = 3`.
+
+Another key distinction is that some Litex code is proving that an object is allowed to exist in the current mathematical context. A line involving `1 / x`, `sqrt(x)`, `f(a)`, or `&Point{p}.x` may fail before any theorem is considered, because the checker first needs the domain fact that makes the object well-defined.
 
 Many uncommon forms can be skipped at first. Read them when a proof needs them; the common core above is enough for most early examples.
 
@@ -141,9 +151,10 @@ This manual is both a tutorial and a reference. You do not need to read every se
 **Read first**
 
 1. [Objects](https://litexlang.com/doc/Manual#objects): the mathematical terms and data-like structures Litex can talk about.
-2. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
-3. [Statements](https://litexlang.com/doc/Manual#statements): the common statement forms used to introduce definitions, context, and proof blocks.
-4. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end loop from writing a fact to storing checked information.
+2. [Well-Defined Objects](https://litexlang.com/doc/Manual#well-defined-objects): the domain obligations that must be proved before an object can appear in a checked fact.
+3. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
+4. [Statements](https://litexlang.com/doc/Manual#statements): the common statement forms used to introduce definitions, context, and proof blocks.
+5. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end loop from writing a fact to storing checked information.
 
 **Read early**
 
@@ -152,9 +163,10 @@ This manual is both a tutorial and a reference. You do not need to read every se
 
 **Use as reference**
 
-1. The long builtin-rule catalogue is for lookup. You do not need to memorize every rule.
-2. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted. Read the overview early, and use the detailed rule list when you want to understand why later facts became available.
-3. Less common object and statement forms, such as advanced set operations, families, induction, finite enumeration, and preview features, can wait until your proof needs them.
+1. [Abstract Syntax Tree Reference](https://litexlang.com/doc/Manual#abstract-syntax-tree-reference) gives a compact implementation-facing map of statement, fact, and object shapes.
+2. The long builtin-rule catalogue is for lookup. You do not need to memorize every rule.
+3. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted. Read the overview early, and use the detailed rule list when you want to understand why later facts became available.
+4. Less common object and statement forms, such as advanced set operations, families, induction, finite enumeration, and preview features, can wait until your proof needs them.
 
 ---
 
@@ -415,6 +427,22 @@ Summation and products over a bounded integer index with one expression body (in
 sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
 ```
 
+`sum_of_finite_set(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, and closed integer ranges bridge to the existing `sum(start, end, f)` object.
+
+```litex
+sum_of_finite_set({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+sum_of_finite_set({}, 'Z(x){x}) = 0
+sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+```
+
+`product_of_finite_set(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
+
+```litex
+product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+product_of_finite_set({}, 'Z(x){x}) = 1
+product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+```
+
 #### Integer intervals as sets
 
 Half-open `range(m, n)` and closed `closed_range(m, n)` as set-valued expressions (membership goals may need surrounding proofs).
@@ -522,6 +550,96 @@ eval m ** m
 
 eval 2 *. m
 ```
+
+---
+
+## Well-Defined Objects
+
+_The beginning of wisdom is the definition of terms._
+
+_-- Socrates_
+
+Before Litex tries to prove a fact, it first checks that every object inside the fact is well-defined. This is not a side issue. In mathematics, an expression such as `1 / x`, `sqrt(x)`, or `f(a)` is not just a value waiting to be computed; it carries a domain obligation. The proof may be mostly about showing that the expression is allowed to be used at all.
+
+This is one of the main differences between mathematical proof code and ordinary programming code. In a program, an expression can often be written first and fail at runtime. In Litex, the object must already make mathematical sense in the current context. If it does not, the checker reports `error` before asking whether the surrounding fact is true or false.
+
+For example, `1 / x = 2` is not checked as an equality until Litex can prove that `x != 0` and that the terms are in the relevant number domains. The nonzero proof is not decoration; it is part of making the object `1 / x` well-defined.
+
+### User-Defined Functions
+
+When you define a function, Litex checks the body in the local context created by the function signature. A domain condition in the signature is therefore often a well-definedness proof for the body.
+
+```litex
+prove:
+    have fn reciprocal(x R: x != 0) R = 1 / x
+    reciprocal(2) = 1 / 2
+```
+
+The condition `x != 0` is used while checking the definition, because `1 / x` needs a nonzero divisor. Later, `reciprocal(2)` is well-defined because Litex can verify that `2 $in R` and `2 != 0`.
+
+The domain fact can also be used through a small builtin consequence. In the next example, the denominator is `x - 1`; the condition `x != 1` is enough for Litex to prove `x - 1 != 0`.
+
+```litex
+prove:
+    have fn shifted_inverse(x R: x != 1) R = 1 / (x - 1)
+    shifted_inverse(2) = 1
+```
+
+Square roots have the same shape: the function body is allowed because the signature supplies the nonnegative-domain fact.
+
+```litex
+prove:
+    have fn root(x R: 0 <= x) R = sqrt(x)
+    root(4) = 2
+```
+
+If a later call does not satisfy the function domain, the problem is well-definedness, not a failed theorem proof. For example, the following shape would be rejected because `reciprocal(0)` cannot be formed from the function type above:
+
+```text
+reciprocal(0)
+```
+
+### Builtin Object Criteria
+
+The table below lists the main builtin object well-definedness criteria. Every row also recursively requires all sub-objects to be well-defined.
+
+| Object form | Well-definedness obligation |
+|-------------|-----------------------------|
+| Name such as `x` or `Nat::zero` | The name must already be introduced in the current environment or imported module. Struct names count as defined names for struct objects. |
+| Numeric literal, standard number set | Numerals and standard sets such as `R`, `Q`, `Z`, `N`, `N_pos`, `R_pos`, `R_nz`, and related signed variants are builtin well-defined objects. |
+| `a + b`, `a - b`, `a * b`, `abs(a)`, `max(a, b)`, `min(a, b)` | The arguments must be real-number objects; for binary operators both sides must be in `R`. |
+| `a / b` | Both arguments must be in `R`, and Litex must prove `b != 0`. |
+| `a % b` | Both arguments must be in `Z`, and Litex must prove `b != 0`. |
+| `a^b` | Litex accepts the standard real/integer power domains: nonnegative real base with positive real exponent; positive real base with real exponent; zero base with positive real exponent; nonzero base with integer exponent; or real base with natural exponent. The last case includes the current natural-exponent convention `0^0 = 1`. |
+| `sqrt(a)` | `a $in R` and `0 <= a`. |
+| `log(base, a)` | `base $in R`, `a $in R`, `base > 0`, `a > 0`, and `base != 1`. |
+| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)`, `cup(F)`, `cap(F)`, `power_set(A)` | The arguments must be well-defined. Set-ness and membership facts may still be separate proof obligations in the facts that use these objects. |
+| Displayed set `{a, b, ...}` | Each element must be well-defined, and Litex must be able to prove the displayed elements are pairwise distinct. |
+| Set builder `{x S: ...}` | The parameter set `S` must be well-defined. The body facts are checked for well-definedness in a local context where `x $in S` is available. |
+| Function space `fn(x S: domain facts) T` | Parameter sets must be well-defined. Domain facts are checked in the local parameter context, and the return set `T` must be well-defined. Later parameter sets may depend on earlier parameters. |
+| Anonymous function `'(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
+| Function application `f(a)` | The function head must have a known function-space fact or be an anonymous function. The arguments must be well-defined and must satisfy the parameter sets and domain facts. Curried applications repeat this check at each layer. |
+| Finite sequence literal `[a, b, ...]` | Each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. |
+| Cartesian product `cart(A, B, ...)` and tuple `(a, b, ...)` | Each component must be well-defined. |
+| `cart_dim(C)` | `C` must be well-defined and Litex must prove `$is_cart(C)`. |
+| `proj(C, i)` | `C` must be a Cartesian product, `i` must resolve to a positive integer, and Litex must prove `i <= cart_dim(C)`. |
+| `tuple_dim(t)` | `t` must be well-defined and Litex must prove `$is_tuple(t)`. |
+| Indexing `t[i]` | The target must be a tuple, `i` must resolve to a positive integer, and Litex must prove `i <= tuple_dim(t)`. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
+| `count(S)` | Litex must prove `$is_finite_set(S)`. |
+| `fn_range(f)` | `f` must be well-defined and must have a known function set. |
+| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` restricts to a unary function on `S`. |
+| `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
+| `sum_of_finite_set(S, f)` and `product_of_finite_set(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, `f` must restrict to a unary function on `S`. |
+| `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
+| Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
+| `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
+| `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
+| Matrix operators `A ++ B`, `A -- B`, `A ** B`, `c *. A`, `A ^^ n` | The scalar in `c *. A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
+| Struct object `&Name<args>` | The struct must be defined. Its arguments must satisfy the struct parameter types and domain facts. Instantiated field types and struct filter facts must be well-defined. |
+| Field access `&Name<args>{p}.field` | The struct object must be well-defined, the field must exist, `p` must be well-defined, and Litex must prove `p $in &Name<args>`. |
+| Template instance such as `\T<R>` | The template instance must materialize from a defined template, and the template arguments must satisfy the template's parameter obligations. |
+
+This table explains the first gate only. After an object is well-defined, a factual statement still has to be proved by builtin rules, known facts, known `forall` facts, theorem calls, or the surrounding proof structure.
 
 ---
 
@@ -1486,10 +1604,10 @@ A final artifact should not leave broad `know` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `know` statements are rejected instead of being
-stored. Facts loaded from imported modules are still trusted inputs, so strict
-mode is an audit boundary for the current run, not a claim that all dependencies
-are assumption-free.
+If the run uses `-strict`, user `know` and `let` statements are rejected instead
+of being stored. Facts loaded from imported modules are still trusted inputs, so
+strict mode is an audit boundary for the current run, not a claim that all
+dependencies are assumption-free.
 
 ```litex
 # three primitive terms:
@@ -1525,6 +1643,13 @@ prove:
 Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
 
 Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
+
+For textbook-style developments, treat imports as visible background, not as a
+replacement for the chapter's mathematics. A good Litex translation should
+prefer local definitions, local claims, and explicit proof-debt notes when the
+book is building a concept. Extract repeated interfaces into std later; do not
+hide the main derivation by importing a large package and citing a synonym
+theorem.
 
 **`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
@@ -2095,6 +2220,288 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `know` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+
+---
+
+## Abstract Syntax Tree Reference
+
+This section is a compact map from Litex surface language to the current AST
+families used by the implementation. It is intentionally more abstract than the
+tutorial sections above. Many Litex surface forms are close to ordinary
+mathematical writing, but after parsing they land in one of these object, fact,
+or statement shapes.
+
+The examples below are surface examples that parse to, or contain, the named
+AST shape. Some examples are fragments and need surrounding declarations or
+known facts to verify.
+
+### Reference notation
+
+`Obj` means an object expression. `Atomic` means an atomic fact. `Fact` means a
+top-level fact. `Stmt*` means an indented list of statements. `ParamType` is one
+of `set`, `nonempty_set`, `finite_set`, or an object used as a set/type. A typed
+parameter list such as `x, y R` is a `ParamDefWithType`; a function parameter
+list such as `x R, y S` is a `ParamDefWithSet`.
+
+| AST support shape | Abstract shape | Example |
+|-------------------|----------------|---------|
+| `ParamType::Set` | object is a set | `have A set` |
+| `ParamType::NonemptySet` | object is a nonempty set | `have A nonempty_set` |
+| `ParamType::FiniteSet` | object is a finite set | `have A finite_set` |
+| `ParamType::Obj(obj)` | object belongs to the set denoted by `obj` | `have x R` |
+| `ParamDefWithType` | typed binder groups | `x, y R, n N` |
+| `ParamDefWithSet` | function-domain binder groups | `x R, y closed_range(1, 3)` |
+| `FnSetClause` | function parameters, domain facts, return set | `fn(x R: x >= 0) R` |
+
+### Object AST
+
+Objects are terms: names, numbers, set expressions, function expressions,
+tuples, matrices, intervals, and similar mathematical values. A fact is created
+only after a predicate or relation talks about one or more objects.
+
+#### Atomic names and bound objects
+
+`Obj::Atom` stores a name-like object. Some variants look identical on the
+surface but are tagged differently because their binding scope is different.
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Obj::Atom(AtomObj::Identifier)` | ordinary previously introduced name | `x` |
+| `Obj::Atom(AtomObj::IdentifierWithMod)` | module-qualified name | `Nat::zero` |
+| `Obj::Atom(AtomObj::Forall)` | parameter bound by `forall` | `x` in `forall x R:` |
+| `Obj::Atom(AtomObj::Def)` | parameter bound in a definition header | `x` in `prop p(x R):` |
+| `Obj::Atom(AtomObj::Exist)` | witness name inside an existential body | `x` in `exist x R st {x = 1}` |
+| `Obj::Atom(AtomObj::SetBuilder)` | element bound in a set comprehension | `x` in `{x R: x >= 0}` |
+| `Obj::Atom(AtomObj::FnSet)` | function parameter inside a function type/body | `x` in `fn(x R) R` |
+| `Obj::Atom(AtomObj::Induc)` | induction parameter inside an induction proof | `n` in `by induc n from 0:` |
+| `Obj::Atom(AtomObj::DefAlgo)` | algorithm parameter inside an `algo` body | `x` in `algo f(x):` |
+| `Obj::Atom(AtomObj::DefStructField)` | struct field name inside a struct equivalence block | `x` in a `struct Point` field condition |
+
+#### Numeric and operator objects
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Obj::Number` | normalized numeric literal | `2`, `3.5` |
+| `Obj::Add(left, right)` | addition | `x + y` |
+| `Obj::Sub(left, right)` | subtraction | `x - y` |
+| `Obj::Mul(left, right)` | multiplication | `x * y` |
+| `Obj::Div(left, right)` | division | `x / y` |
+| `Obj::Mod(left, right)` | integer remainder | `n % 2` |
+| `Obj::Pow(base, exponent)` | power | `x^2` |
+| `Obj::Abs(arg)` | absolute value | `abs(x)` |
+| `Obj::Sqrt(arg)` | square root | `sqrt(x)` |
+| `Obj::Log(base, arg)` | logarithm with explicit base | `log(2, x)` |
+| `Obj::Max(left, right)` | binary maximum | `max(x, y)` |
+| `Obj::Min(left, right)` | binary minimum | `min(x, y)` |
+
+#### Set, function, and tuple objects
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Obj::StandardSet(StandardSet::...)` | builtin number set: `NPos`, `N`, `Q`, `Z`, `R`, `QPos`, `RPos`, `QNeg`, `ZNeg`, `RNeg`, `QNz`, `ZNz`, `RNz` | `N_pos`, `N`, `Z`, `Q`, `R`, `Q_pos`, `R_pos`, `Q_neg`, `Z_neg`, `R_neg`, `Q_nz`, `Z_nz`, `R_nz` |
+| `Obj::Union(left, right)` | binary union | `union(A, B)` |
+| `Obj::Intersect(left, right)` | binary intersection | `intersect(A, B)` |
+| `Obj::SetMinus(left, right)` | set subtraction | `set_minus(A, B)` |
+| `Obj::SetDiff(left, right)` | set difference alias form | `set_diff(A, B)` |
+| `Obj::Cup(family)` | union over a family | `cup(F)` |
+| `Obj::Cap(family)` | intersection over a family | `cap(F)` |
+| `Obj::PowerSet(set)` | power set | `power_set(A)` |
+| `Obj::ListSet(list)` | finite displayed set | `{1, 2, 3}` |
+| `Obj::SetBuilder(param, set, facts)` | set comprehension | `{x R: x >= 0}` |
+| `Obj::FnSet(body)` | function space | `fn(x R: x >= 0) R` |
+| `Obj::AnonymousFn(body, equal_to)` | anonymous function value | `'(x R) R {x + 1}` |
+| `Obj::FnObj(head, arg_groups)` | function application, possibly curried | `f(2)`, `f(x)(y)` |
+| `Obj::Cart(args)` | Cartesian product | `cart(A, B)` |
+| `Obj::CartDim(set)` | Cartesian-product dimension | `cart_dim(cart(A, B))` |
+| `Obj::Proj(set, dim)` | projection function from a product | `proj(cart(A, B), 1)` |
+| `Obj::Tuple(args)` | tuple value | `(1, 2)` |
+| `Obj::TupleDim(tuple)` | tuple length | `tuple_dim((1, 2))` |
+| `Obj::Count(set)` | finite cardinality/count object | `count({1, 2})` |
+| `Obj::FnRange(function)` | function image/range | `fn_range(f)` |
+| `Obj::FnRangeOn(function, set)` | function image restricted to a set | `fn_range_on(f, A)` |
+| `Obj::SumOfFiniteSet(set, func)` | finite-set sum | `sum_of_finite_set({1, 2}, f)` |
+| `Obj::Sum(start, end, func)` | finite sum | `sum(1, n, f)` |
+| `Obj::Product(start, end, func)` | finite product | `product(1, n, f)` |
+| `Obj::ProductOfFiniteSet(set, func)` | finite-set product | `product_of_finite_set({1, 2}, f)` |
+| `Obj::Range(start, end)` | half-open integer range | `range(0, 3)` |
+| `Obj::ClosedRange(start, end)` | closed integer range | `closed_range(0, 3)`, `0...3` |
+
+#### Sequence, matrix, interval, struct, and template objects
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Obj::FiniteSeqSet(set, n)` | length-`n` finite sequence set | `finite_seq(R, 3)` |
+| `Obj::SeqSet(set)` | infinite sequence set | `seq(R)` |
+| `Obj::FiniteSeqListObj(objs)` | displayed finite sequence value | `[1, 2, 3]` |
+| `Obj::ObjAtIndex(obj, index)` | index access | `a[1]` |
+| `Obj::MatrixSet(set, rows, cols)` | matrix type | `matrix(R, 2, 2)` |
+| `Obj::MatrixListObj(rows)` | displayed matrix value | `[[1, 0], [0, 1]]` |
+| `Obj::MatrixAdd(left, right)` | matrix addition | `A ++ B` |
+| `Obj::MatrixSub(left, right)` | matrix subtraction | `A -- B` |
+| `Obj::MatrixMul(left, right)` | matrix multiplication | `A ** B` |
+| `Obj::MatrixScalarMul(scalar, matrix)` | scalar-matrix multiplication | `2 *. A` |
+| `Obj::MatrixPow(base, exponent)` | matrix power | `A ^^ 2` |
+| `Obj::IntervalObj(IntervalObj::LeftOpenRightOpen)` | open real interval | `oo(0, 1)` |
+| `Obj::IntervalObj(IntervalObj::LeftOpenRightClosed)` | left-open, right-closed real interval | `oc(0, 1)` |
+| `Obj::IntervalObj(IntervalObj::LeftClosedRightOpen)` | left-closed, right-open real interval | `co(0, 1)` |
+| `Obj::IntervalObj(IntervalObj::LeftClosedRightClosed)` | closed real interval | `cc(0, 1)` |
+| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftOpen)` | open lower-bounded ray | `oinf(0)` |
+| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftClosed)` | closed lower-bounded ray | `cinf(0)` |
+| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightOpen)` | open upper-bounded ray | `info(0)` |
+| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightClosed)` | closed upper-bounded ray | `infc(0)` |
+| `Obj::StructObj(name, params)` | struct view object | `&Point`, `&Group<S>` |
+| `Obj::ObjAsStructInstanceWithFieldAccess(struct, obj, field)` | explicit field access through a struct view | `&Point{p}.x` |
+| `Obj::InstantiatedTemplateObj(name, args)` | instantiated template object | `\T<R>` |
+
+Function heads are also structured. A `FnObj` head may be an ordinary name, a
+module-qualified name, a bound parameter, an anonymous function literal, a
+finite-sequence literal, an indexed object, a struct-field access object, or an
+instantiated template object.
+
+### Fact AST
+
+Facts are propositions. They may be atomic, existential, universal, chained,
+conjunctive, disjunctive, or negated universal facts.
+
+#### Top-level fact variants
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Fact::AtomicFact(atomic)` | one predicate/relation applied to objects | `x = y`, `x $in A`, `$p(x)` |
+| `Fact::AndFact(facts)` | conjunction of atomic facts | `x = 1 and y = 2` |
+| `Fact::ChainFact(objs, props)` | adjacent binary relation chain | `0 <= x <= 1`, `A $subset B $subset C` |
+| `Fact::OrFact(branches)` | disjunction of atomic/and/chain branches | `x = 0 or x != 0` |
+| `Fact::ExistFact(ExistFactEnum::ExistFact)` | existence | `exist x R st {x = 1}` |
+| `Fact::ExistFact(ExistFactEnum::ExistUniqueFact)` | unique existence | `exist! x R st {x = 0}` |
+| `Fact::ExistFact(ExistFactEnum::NotExistFact)` | non-existence | `not exist x R st {x != x}` |
+| `Fact::ForallFact(params, dom, then)` | universal implication, with optional assumptions | `forall x R: x = x` |
+| `Fact::ForallFactWithIff(forall, iff)` | universal equivalence | `forall x, y R:`<br>`=>:`<br>`x > y`<br>`<=>:`<br>`y < x` |
+| `Fact::NotForall(forall)` | negated universal statement | `not forall x R:`<br>`x > 0` |
+
+#### Atomic fact variants
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `AtomicFact::NormalAtomicFact` | user-defined or abstract predicate | `$prime(n)` |
+| `AtomicFact::EqualFact` | equality | `x = y` |
+| `AtomicFact::LessFact` | strict less-than | `x < y` |
+| `AtomicFact::GreaterFact` | strict greater-than | `x > y` |
+| `AtomicFact::LessEqualFact` | less-than or equal | `x <= y` |
+| `AtomicFact::GreaterEqualFact` | greater-than or equal | `x >= y` |
+| `AtomicFact::IsSetFact` | set predicate | `$is_set(A)` |
+| `AtomicFact::IsNonemptySetFact` | nonempty-set predicate | `$is_nonempty_set(A)` |
+| `AtomicFact::IsFiniteSetFact` | finite-set predicate | `$is_finite_set(A)` |
+| `AtomicFact::InFact` | membership | `x $in A` |
+| `AtomicFact::IsCartFact` | Cartesian-product shape predicate | `$is_cart(C)` |
+| `AtomicFact::IsTupleFact` | tuple shape predicate | `$is_tuple(t)` |
+| `AtomicFact::SubsetFact` | subset relation | `A $subset B` |
+| `AtomicFact::SupersetFact` | superset relation | `A $superset B` |
+| `AtomicFact::RestrictFact` | function restriction predicate | `f $restrict_fn_in fn(x R) R` |
+| `AtomicFact::FnEqualInFact` | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
+| `AtomicFact::FnEqualFact` | global function equality | `$fn_eq(f, g)` |
+| `AtomicFact::NotNormalAtomicFact` | negated user predicate | `not $prime(n)` |
+| `AtomicFact::NotEqualFact` | disequality | `x != y` |
+| `AtomicFact::NotLessFact` | negated less-than | `not x < y` |
+| `AtomicFact::NotGreaterFact` | negated greater-than | `not x > y` |
+| `AtomicFact::NotLessEqualFact` | negated less-than or equal | `not x <= y` |
+| `AtomicFact::NotGreaterEqualFact` | negated greater-than or equal | `not x >= y` |
+| `AtomicFact::NotIsSetFact` | negated set predicate | `not $is_set(A)` |
+| `AtomicFact::NotIsNonemptySetFact` | negated nonempty-set predicate | `not $is_nonempty_set(A)` |
+| `AtomicFact::NotIsFiniteSetFact` | negated finite-set predicate | `not $is_finite_set(A)` |
+| `AtomicFact::NotInFact` | negated membership | `not x $in A` |
+| `AtomicFact::NotIsCartFact` | negated Cartesian-product predicate | `not $is_cart(C)` |
+| `AtomicFact::NotIsTupleFact` | negated tuple predicate | `not $is_tuple(t)` |
+| `AtomicFact::NotSubsetFact` | negated subset relation | `not A $subset B` |
+| `AtomicFact::NotSupersetFact` | negated superset relation | `not A $superset B` |
+| `AtomicFact::NotRestrictFact` | negated restriction predicate | `not f $restrict_fn_in fn(x R) R` |
+
+#### Fact sub-shapes used inside larger facts
+
+Some AST types are not separate top-level facts, but they constrain what may
+appear inside `or`, `exist`, `forall`, and proof-control statements.
+
+| AST shape | Allowed members | Example |
+|-----------|-----------------|---------|
+| `AndChainAtomicFact` | atomic, `and`, or chain | `x = 1`, `x = 1 and y = 2`, `0 <= x <= 1` |
+| `OrAndChainAtomicFact` | atomic, `and`, chain, or `or` | `x = 0 or x != 0` |
+| `ExistOrAndChainAtomicFact` | atomic, `and`, chain, `or`, or `exist` | `exist y R st {y = x}` inside a `forall` conclusion |
+| `ExistBodyFact::AtomicFact` | atomic fact inside `st { ... }` | `exist x R st {x = 1}` |
+| `ExistBodyFact::AndFact` | conjunction inside `st { ... }` | `exist x, y R st {x = 1 and y = 2}` |
+| `ExistBodyFact::ChainFact` | chain inside `st { ... }` | `exist x R st {0 <= x <= 1}` |
+| `ExistBodyFact::OrFact` | disjunction inside `st { ... }` | `exist x R st {x = 0 or x = 1}` |
+| `ExistBodyFact::InlineForall` | compact universal fact inside `st { ... }` | `exist f fn(x R) R st {forall! x R => {f(x) = x}}` |
+
+### Statement AST
+
+Statements are executable units. A statement may verify a fact, define a name,
+open a local proof, inject assumptions, import code, evaluate an expression, or
+register a proof pattern.
+
+#### Definition and context statements
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Stmt::Fact(fact)` | verify and store a fact | `1 + 1 = 2` |
+| `Stmt::DefPropStmt` | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
+| `Stmt::DefAbstractPropStmt` | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
+| `Stmt::HaveObjInNonemptySetStmt` | introduce object parameters by type/set | `have x R` |
+| `Stmt::HaveObjEqualStmt` | introduce object parameters equal to expressions | `have x R = 1` |
+| `Stmt::HaveObjByExistFactsStmt` | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
+| `Stmt::HaveByExistStmt` | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
+| `Stmt::HaveByPreimageStmt` | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
+| `Stmt::HaveFnEqualStmt` | define a function by one expression | `have fn f(x R) R = x + 1` |
+| `Stmt::HaveFnEqualCaseByCaseStmt` | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
+| `Stmt::HaveFnByInducStmt` | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
+| `Stmt::HaveFnByForallExistUniqueStmt` | define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| `Stmt::DefTemplateStmt` | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
+| `Stmt::DefLetStmt` | introduce local names and assumed facts | `let x R:`<br>`x = 1` |
+| `Stmt::DefAlgoStmt` | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
+| `Stmt::DefStructStmt` | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
+
+#### Proof, theorem, strategy, and tooling statements
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Stmt::ClaimStmt` | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
+| `Stmt::KnowStmt` | inject explicit assumptions | `know x = 1` |
+| `Stmt::ProveStmt` | open a nested proof block | `prove:`<br>`1 = 1` |
+| `Stmt::DefThmStmt` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| `Stmt::ByThmStmt` | call a named theorem with arguments | `by thm self_eq(1)` |
+| `Stmt::DefStrategyStmt` | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
+| `Stmt::UseStrategyStmt` | enable a strategy | `use strategy positive_nonzero` |
+| `Stmt::StopStrategyStmt` | disable a strategy | `stop strategy positive_nonzero` |
+| `Stmt::ImportStmt(ImportStmt::ImportGlobalModule)` | import a standard-library module | `import Nat` |
+| `Stmt::ImportStmt(ImportStmt::ImportRelativePath)` | import a quoted file path, optionally as a module name | `import "local.lit" as L` |
+| `Stmt::StopImportStmt` | stop automatic use of an imported module | `stop import Nat` |
+| `Stmt::RunFileStmt` | run a file in the current environment | `run_file "./scratch.lit"` |
+| `Stmt::DoNothingStmt` | explicit no-op | `do_nothing`, `...` |
+| `Stmt::ClearStmt` | clear the current user environment | `clear` |
+| `Stmt::EvalStmt` | evaluate an object expression | `eval 1 + 2` |
+| `Stmt::EvalByStmt` | evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
+| `Stmt::WitnessExistFact` | prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
+| `Stmt::WitnessNonemptySet` | prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
+
+#### `by ...` proof-control statements
+
+| AST shape | Abstract shape | Example |
+|-----------|----------------|---------|
+| `Stmt::ByCasesStmt` | prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
+| `Stmt::ByContraStmt` | prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
+| `Stmt::ByEnumerateFiniteSetStmt` | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
+| `Stmt::ByEnumerateRangeStmt` | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
+| `Stmt::ByClosedRangeAsCasesStmt` | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
+| `Stmt::ByInducStmt` | ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
+| `Stmt::ByForStmt` | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
+| `Stmt::ByExtensionStmt` | prove set equality by extensionality | `by extension A = B:` |
+| `Stmt::ByFnAsSetStmt` | expose graph facts for a known function | `by fn as set: f` |
+| `Stmt::ByTupleAsSetStmt` | expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
+| `Stmt::ByFnSetAsSetStmt` | expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
+| `Stmt::ByReflexivePropStmt` | register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
+| `Stmt::BySymmetricPropStmt` | register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
+| `Stmt::ByTransitivePropStmt` | register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
+| `Stmt::ByAntisymmetricPropStmt` | register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
+| `Stmt::ByZornLemmaStmt` | trusted preview Zorn step | `by zorn_lemma: set P, prop le:` |
+| `Stmt::ByAxiomOfChoiceStmt` | trusted preview choice step | `by axiom_of_choice: set F:` |
 
 ---
 

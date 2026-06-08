@@ -135,6 +135,33 @@ So Litex is not anti-foundational. It simply chooses a lighter user-facing
 route for ordinary mathematics: expose the relationships people actually use,
 then make any trusted background facts explicit enough to audit.
 
+## Why not just import a big library and cite the theorem?
+
+For many mature proof-assistant projects, importing a large library and citing
+the strongest available theorem is the most efficient path. That is a real
+advantage of systems with large libraries.
+
+Litex is aimed at a different workflow, especially for textbooks and education.
+If the goal is to formalize a calculus or analysis book, the proof script
+should ideally show the derivation the book is teaching: definitions, local
+lemmas, intermediate facts, and the way later results use earlier ones. If the
+main work becomes "find a theorem in a mathematical dictionary and cite it",
+the final result may verify, but the code no longer records the learning path.
+It records where the result already exists.
+
+Litex therefore tries to make the basic mathematical ground cheap enough that
+users can write the book's proof directly. Builtin objects and small background
+interfaces let the file get started without a huge import. Larger packages
+still matter, but they should provide visible background or reusable interfaces,
+not erase the central proof of the current chapter.
+
+This is not a claim that imports are bad. It is a claim about where the
+mathematical labor should live. For textbook-first formalization, the proof
+script should be the derivation, not only a pointer into a theorem database.
+In systems such as Lean or Isabelle, the large-library route is often excellent
+formal engineering. Litex is exploring whether a lighter base can make the
+book's own proof cheap enough to write and check directly.
+
 ## What are the boundaries of Litex's type system?
 
 Litex deliberately does not try to be a full dependent type theory in the Lean,
@@ -509,6 +536,11 @@ do not silently participate in every later search.
 The point is not only speed. It is auditability. If a proof depends on a large
 external result, the proof is often clearer when that dependency appears as an
 explicit citation instead of an invisible background match.
+
+This is also a textbook-design issue. When a file is following a book, imports
+should not silently turn the chapter into theorem lookup. `stop import` gives
+the author a way to keep a module available for explicit citation while making
+the active proof context reflect the local derivation.
 
 ## What is `strategy` for?
 

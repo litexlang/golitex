@@ -5,6 +5,12 @@ translation workspaces under `scripts/`. Each dataset or book has one Markdown
 gallery page, and every `litex` fenced block in those pages is part of the
 normal `cargo test run_examples` suite.
 
+For textbook pages, the goal is not to hide the source proof behind a large
+library citation. The selected snippets should show how Litex can follow the
+mathematical development itself: state the idea, write the next checkable fact,
+and keep unfinished infrastructure visible as blockers in the source
+workspace.
+
 Each item starts with a translation record block containing `id`, `source`,
 `topic`, `difficulty`, `natural_language_idea`, `litex_code`, `proof_attempt`,
 `status`, `blocker`, and `notes`.  Gallery items are selected from finished or
