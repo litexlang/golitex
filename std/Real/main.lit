@@ -229,6 +229,15 @@ know:
         =>:
             x^q > y^q
 
+# Positive real bases raised to real exponents stay positive. The verifier also
+# has this as builtin background so logarithm domains can be recovered from
+# facts such as `a^x = y`; the theorem gives users an explicit std name.
+thm positive_base_real_power_pos, rpow_pos_of_pos:
+    prove:
+        forall a R_pos, x R:
+            a^x $in R_pos
+    a^x $in R_pos
+
 # Trusted real-background theorem: in the standard completion of `Q`, rationals
 # are dense in `R`.  Mathlib: `exists_rat_btwn`; equivalently the cast from `Q`
 # to `R` has dense range.

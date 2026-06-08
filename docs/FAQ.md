@@ -20,6 +20,43 @@ By iteratively implementing and refining the Litex language. The design process 
 
 No. Litex is a domain language for and just for mathematics reasoning. It is not a programming language. By sacrificing the programming language features, Litex can focus on the mathematics reasoning features. This is very different from Lean, Coq, and Isabelle. That's why it can be designed as close to ordinary mathematics as possible.
 
+## Why does Litex have this particular menu of objects and statements?
+
+Litex's grammar is intentionally finite and opinionated. The goal is not to
+let every possible proof-engine concept become a new surface form. The goal is
+to keep a small set of object and statement forms that make ordinary
+mathematical writing comfortable while remaining checkable.
+
+There are two main reasons a form becomes first-class.
+
+First, some forms are basic mathematical or logical infrastructure. Equality,
+membership, number literals, arithmetic, function application, `forall`,
+`exist`, conjunction, cases, witnesses, definitions, and proof blocks are
+trusted background, logical organization, or computational material that the
+verifier needs to understand directly. If these were only encoded through a
+more remote abstraction, nearly every proof would spend its budget on
+bookkeeping before reaching the mathematical idea.
+
+Second, some forms are user-interface choices. They are included because
+mathematicians already write them, often with a close LaTeX analogue: set
+displays, tuples, Cartesian products, intervals, sums, anonymous functions,
+chained equalities or inequalities, `have`, `claim`, `witness`, `by cases`,
+and similar proof moves. These forms are not all foundationally primitive in
+the same sense. They are there because they make Litex code feel familiar and
+reduce the distance between a paper proof and a checked script.
+
+So `obj` and `stmt` in Litex are a design boundary. Objects are the
+mathematical expressions facts can talk about. Statements are the actions that
+introduce objects, define vocabulary, assert facts, and organize proofs. A new
+object or statement form has to earn its place: either the checker needs it as
+direct mathematical background, or it makes the user-facing mathematical
+surface substantially clearer.
+
+This is one of Litex's unusual design choices. It optimizes for user comfort
+and mathematical familiarity with as few first-class forms as possible, rather
+than starting from a maximally general programming language or proof-term
+calculus.
+
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 
 It can become slow if all ten thousand universal facts are active automatic

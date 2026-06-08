@@ -218,6 +218,12 @@ impl Runtime {
                     StandardSet::NPos,
                     "N_pos: a^k from a in N_pos and k in N",
                 ),
+            (Obj::Pow(pow), Obj::StandardSet(StandardSet::RPos)) => self
+                .verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
+                    in_fact,
+                    pow,
+                    verify_state,
+                ),
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
@@ -1703,6 +1709,42 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
+                vec![base_result, exponent_result],
+            )
+            .into(),
+        )
+    }
+
+    // Positive real bases raised to real exponents are positive reals.
+    // Example: `forall a R_pos, x R: a^x $in R_pos`.
+    fn verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
+        &mut self,
+        in_fact: &InFact,
+        pow: &Pow,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let lf = in_fact.line_file.clone();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let base_positive: AtomicFact =
+            LessFact::new(zero, pow.base.as_ref().clone(), lf.clone()).into();
+        let exponent_in_r: AtomicFact =
+            InFact::new(pow.exponent.as_ref().clone(), StandardSet::R.into(), lf).into();
+
+        let base_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&base_positive, verify_state)?;
+        if !base_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let exponent_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&exponent_in_r, verify_state)?;
+        if !exponent_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "R_pos: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
             )
             .into(),

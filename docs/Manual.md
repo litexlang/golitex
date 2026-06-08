@@ -136,6 +136,14 @@ When learning Litex, it is enough to keep the following mental model in mind. Tr
 - **Verification** proves the current goal from the context, definitions, evaluation, normalization, and builtin verification rules.
 - **Execution** is what a statement does to the current context. A statement may define a name, open a proof block, verify a fact, store accepted facts, or run inference. Inference is one part of execution for factual statements: after a fact is accepted, Litex may add standard consequences or side information to the context.
 
+Litex keeps the object and statement menus finite on purpose. Some forms are
+there because the checker needs them as basic logical, computational, or
+mathematical background. Others are there because they correspond to familiar
+mathematical notation, often close to a LaTeX feature, and make proof scripts
+feel like the paper mathematics users already know. For the design rationale,
+see the
+[FAQ question on Litex's object and statement menu](https://litexlang.com/doc/FAQ#why-does-litex-have-this-particular-menu-of-objects-and-statements).
+
 The key distinction is that an expression such as `x + 1` is only an object. It becomes a fact only when a relation or predicate makes a claim about it, such as `x + 1 = 3`.
 
 Another key distinction is that some Litex code is proving that an object is allowed to exist in the current mathematical context. A line involving `1 / x`, `sqrt(x)`, `f(a)`, or `&Point{p}.x` may fail before any theorem is considered, because the checker first needs the domain fact that makes the object well-defined.
@@ -3321,6 +3329,14 @@ forall x R_pos:
     0^x = 0
 ```
 
+Positive real bases raised to real exponents stay positive. This also lets
+Litex recover logarithm domain facts from equalities such as `a^x = y`.
+
+```litex
+forall a R_pos, x R:
+    a^x $in R_pos
+```
+
 Natural-number exponents can use the usual exponent-addition law.
 
 ```litex
@@ -4162,6 +4178,22 @@ reason:
 This may not always appear as a separate displayed `infer_facts` line. Sometimes it is stored as side information used later by resolution.
 
 For a compound-expression example, see the polynomial-identity calculation in [Proof Process](https://litexlang.com/doc/Manual#proof-process).
+
+#### Positive Real Powers
+
+If an equality identifies another object with a positive real base raised to a
+real exponent, inference records that the other object is positive. This is
+especially useful before logarithms, because `log(a, y)` needs `y > 0`.
+
+```text
+known:
+    a $in R_pos
+    x $in R
+    a^x = y
+
+inferred:
+    y $in R_pos
+```
 
 #### Simple Linear Equations
 
