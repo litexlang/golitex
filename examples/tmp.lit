@@ -1,9 +1,27 @@
-claim:
-    prove:
-        forall S set:
-            forall A S:
-                $is_nonempty_set(A)
-            =>:
-                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+forall n N:
+    n $in N
 
-    by axiom_of_choice: set S
+"""
+{
+  "result": "success",
+  "type": "ForallFact",
+  "line": 1,
+  "stmt": "forall n N:\n    ~1n $in N",
+  "verified_by": {
+    "type": "forall local check",
+    "summary": "then facts verified in local forall context",
+    "steps": [
+      {
+        "type": "cite atomic fact",
+        "cite_source": {
+          "line": null
+        },
+        "cited_stmt": "~1n $in N",
+        "verify_what": "~1n $in N"
+      }
+    ]
+  }
+}
+
+问题：1. 这里 cite_source  的 line 为什么是 null 2. 这里的 cited_stmt 应该放到 cite_source 作为其中的一部分才对啊 3. 这里的 type 和 summary 怪怪的，又觉得冗余，又觉得好像有点“奇怪”。怎么表达“证明forall”是个问题。而且好像应该 verify_what 应该放在前面，而不是最后（然后这里result里面，写事实的field名叫 stmt，然后这里step里又变成 verify_what 了，就很奇怪。） 4. 本质上，forall的证明非常易懂：开个局部环境，声明参数，假设requirement里的东西是对的，然后证明then facts。这个过程如果打印好了，那用户也理解的更快了，打印的不好，那用户也不太能理解。
+"""

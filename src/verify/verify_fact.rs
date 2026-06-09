@@ -23,10 +23,10 @@ impl Runtime {
         if result.is_unknown() {
             let fact_owned = fact.clone();
             let line_file = fact_owned.line_file();
-            let unknown_detail = if let StmtResult::StmtUnknown(u) = &result {
-                u.detail_for_display()
+            let unknown_output = if let StmtResult::StmtUnknown(u) = &result {
+                RuntimeErrorOutput::goal_unknown(fact_owned.clone(), u)
             } else {
-                String::new()
+                RuntimeErrorOutput::new()
             };
             return Err(RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new(
@@ -34,12 +34,13 @@ impl Runtime {
                     "verification failed".to_string(),
                     line_file.clone(),
                     Some(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
+                        RuntimeErrorStruct::new_with_output(
                             Some(fact_owned.into_stmt()),
-                            unknown_detail,
+                            "unknown result".to_string(),
                             line_file,
                             None,
                             vec![],
+                            unknown_output,
                         ),
                     ))),
                     vec![],

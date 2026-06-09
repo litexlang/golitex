@@ -37,25 +37,26 @@ impl Runtime {
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
                 let result = rt.exec_stmt(proof_stmt)?;
-                if result.is_unknown() {
-                    return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
-                            Some(proof_stmt.clone()),
-                            format!(
-                                "thm `{}` failed: proof step {}/{} is unknown: `{}`\n{}",
-                                thm_names,
-                                proof_index + 1,
-                                proof_len,
-                                proof_stmt,
-                                result.body_string()
+                match result {
+                    StmtResult::StmtUnknown(unknown) => {
+                        return Err(RuntimeError::from(UnknownRuntimeError(
+                            RuntimeErrorStruct::new_with_output(
+                                Some(proof_stmt.clone()),
+                                format!("thm `{}` failed: proof step is unknown", thm_names),
+                                proof_stmt.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::proof_step_unknown(
+                                    proof_stmt.clone(),
+                                    proof_index + 1,
+                                    proof_len,
+                                    &unknown,
+                                ),
                             ),
-                            proof_stmt.line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
+                        )));
+                    }
+                    _ => inside_results.push(result),
                 }
-                inside_results.push(result);
             }
 
             let then_count = stmt.forall_fact.then_facts.len();
@@ -64,31 +65,38 @@ impl Runtime {
                     then_fact,
                     &VerifyState::new(0, false),
                 )?;
-                if result.is_unknown() {
-                    return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
-                            Some(then_fact.clone().to_fact().into()),
-                            format!(
-                                "thm `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
-                                thm_names,
-                                then_index + 1,
-                                then_count,
-                                then_fact,
-                                result.body_string()
+                match result {
+                    StmtResult::StmtUnknown(unknown) => {
+                        return Err(RuntimeError::from(UnknownRuntimeError(
+                            RuntimeErrorStruct::new_with_output(
+                                Some(then_fact.clone().to_fact().into()),
+                                format!("thm `{}` failed: cannot prove then-clause", thm_names),
+                                then_fact.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::then_clause_unknown(
+                                    then_fact.clone().to_fact(),
+                                    then_index + 1,
+                                    then_count,
+                                    &unknown,
+                                ),
                             ),
-                            then_fact.line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
+                        )));
+                    }
+                    _ => inside_results.push(result),
                 }
-                inside_results.push(result);
             }
 
-            Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
-                    .into(),
+            Ok(NonFactualStmtSuccess::new_with_accepted_by(
+                stmt.clone().into(),
+                InferResult::new(),
+                inside_results,
+                AcceptedByResult::proof_block(
+                    Some(Fact::ForallFact(stmt.forall_fact.clone())),
+                    proof_len + then_count,
+                ),
             )
+            .into())
         })?;
 
         self.store_def_thm(stmt)

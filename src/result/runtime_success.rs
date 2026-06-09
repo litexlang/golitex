@@ -1,10 +1,50 @@
 use crate::prelude::*;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
     pub inside_results: Vec<StmtResult>,
+    pub accepted_by: AcceptedByResult,
+}
+
+#[derive(Debug)]
+pub struct AcceptedByResult {
+    pub kind: Box<AcceptedByKind>,
+}
+
+#[derive(Debug)]
+pub enum AcceptedByKind {
+    Assumption,
+    Definition,
+    ExistElimination,
+    ProofBlock {
+        proved: Option<Fact>,
+        steps_count: usize,
+    },
+    CaseSplit {
+        goals: Vec<Fact>,
+        coverage: Option<CaseSplitCoverage>,
+        cases: Vec<CaseSplitAcceptedBy>,
+    },
+    TheoremCall,
+    Witness,
+    NoOp,
+    Evaluation,
+    Command,
+    VerifiedFact,
+}
+
+pub struct CaseSplitAcceptedBy {
+    pub case_fact: AndChainAtomicFact,
+    pub impossible_fact: Option<AtomicFact>,
+    pub inside_results: Vec<StmtResult>,
+}
+
+pub struct CaseSplitCoverage {
+    pub fact: Fact,
+    pub result: Box<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -57,10 +97,6 @@ pub struct FactualStmtSuccess {
 }
 
 impl FactualStmtSuccess {
-    pub fn verification_display_line(&self) -> String {
-        self.verified_by.display_line()
-    }
-
     pub fn new_with_verified_by_builtin_rules(
         stmt: Fact,
         infers: InferResult,
@@ -128,12 +164,6 @@ impl FactualStmtSuccess {
         )
     }
 
-    pub fn line_file_for_verified_by_known_fact_in_json(&self) -> LineFile {
-        self.verified_by
-            .first_cited_fact_line_file()
-            .unwrap_or_else(|| self.stmt.line_file())
-    }
-
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {
         self.verified_by.tree_is_builtin_rules_only()
     }
@@ -184,47 +214,6 @@ impl VerifiedByResult {
             }
         }
     }
-
-    pub fn first_builtin_rule_label(&self) -> Option<&str> {
-        match self {
-            VerifiedByResult::BuiltinRule(r) => {
-                if r.msg.is_empty() {
-                    None
-                } else {
-                    Some(r.msg.as_str())
-                }
-            }
-            VerifiedByResult::VerifiedBys(w) => {
-                for b in w.cite_what.iter() {
-                    if let VerifiedBysEnum::ByBuiltinRule(r) = b {
-                        return Some(r.msg.as_str());
-                    }
-                }
-                for b in w.cite_what.iter() {
-                    if let Some(l) = b.first_builtin_rule_label() {
-                        return Some(l);
-                    }
-                }
-                None
-            }
-            VerifiedByResult::Fact(_) => None,
-        }
-    }
-
-    fn first_cited_fact_line_file(&self) -> Option<LineFile> {
-        match self {
-            VerifiedByResult::BuiltinRule(_) => None,
-            VerifiedByResult::Fact(r) => Some(r.cite_what.line_file()),
-            VerifiedByResult::VerifiedBys(w) => {
-                for b in &w.cite_what {
-                    if let Some(lf) = b.first_cited_fact_line_file() {
-                        return Some(lf);
-                    }
-                }
-                None
-            }
-        }
-    }
 }
 
 impl VerifiedBysEnum {
@@ -265,68 +254,131 @@ impl VerifiedBysEnum {
             VerifiedBysEnum::ByFact(_) => false,
         }
     }
+}
 
-    fn first_builtin_rule_label(&self) -> Option<&str> {
-        match self {
-            VerifiedBysEnum::ByBuiltinRule(r) => Some(r.msg.as_str()),
-            VerifiedBysEnum::ByFact(_) => None,
+impl AcceptedByResult {
+    pub fn new(kind: AcceptedByKind) -> Self {
+        AcceptedByResult {
+            kind: Box::new(kind),
         }
     }
 
-    fn first_cited_fact_line_file(&self) -> Option<LineFile> {
-        match self {
-            VerifiedBysEnum::ByBuiltinRule(_) => None,
-            VerifiedBysEnum::ByFact(r) => Some(r.cite_what.line_file()),
-        }
-    }
-
-    fn display_line(&self) -> String {
-        match self {
-            VerifiedBysEnum::ByBuiltinRule(r) => r.msg.clone(),
-            VerifiedBysEnum::ByFact(r) => {
-                if let Some(d) = &r.detail {
-                    if !d.is_empty() {
-                        return d.clone();
-                    }
-                }
-                r.cite_what.to_string()
+    pub fn from_stmt(stmt: &Stmt, steps_count: usize) -> Self {
+        match stmt {
+            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(_)) => Self::new(AcceptedByKind::Assumption),
+            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => Self::new(AcceptedByKind::Definition),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(_))
+            | Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)) => {
+                Self::new(AcceptedByKind::ExistElimination)
             }
+            Stmt::DefObjStmt(_) => Self::new(AcceptedByKind::Definition),
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(_))
+            | Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(_))
+            | Stmt::ProofBlock(_) => Self::proof_block(None, steps_count),
+            Stmt::DefInterfaceStmt(_) => Self::new(AcceptedByKind::Definition),
+            Stmt::By(ByStmt::ByCasesStmt(_)) => Self::case_split(vec![], vec![]),
+            Stmt::By(ByStmt::ByThmStmt(_)) => Self::new(AcceptedByKind::TheoremCall),
+            Stmt::By(_) => Self::proof_block(None, steps_count),
+            Stmt::Witness(_) => Self::new(AcceptedByKind::Witness),
+            Stmt::Command(CommandStmt::DoNothingStmt(_)) => Self::new(AcceptedByKind::NoOp),
+            Stmt::Command(CommandStmt::EvalStmt(_)) | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
+                Self::new(AcceptedByKind::Evaluation)
+            }
+            Stmt::Command(_) => Self::new(AcceptedByKind::Command),
+            Stmt::Fact(_) => Self::new(AcceptedByKind::VerifiedFact),
+        }
+    }
+
+    pub fn proof_block(proved: Option<Fact>, steps_count: usize) -> Self {
+        Self::new(AcceptedByKind::ProofBlock {
+            proved,
+            steps_count,
+        })
+    }
+
+    pub fn case_split(goals: Vec<Fact>, cases: Vec<CaseSplitAcceptedBy>) -> Self {
+        Self::case_split_with_coverage(goals, None, cases)
+    }
+
+    pub fn case_split_with_coverage(
+        goals: Vec<Fact>,
+        coverage: Option<CaseSplitCoverage>,
+        cases: Vec<CaseSplitAcceptedBy>,
+    ) -> Self {
+        Self::new(AcceptedByKind::CaseSplit {
+            goals,
+            coverage,
+            cases,
+        })
+    }
+
+    pub fn exist_elimination() -> Self {
+        Self::new(AcceptedByKind::ExistElimination)
+    }
+}
+
+impl CaseSplitAcceptedBy {
+    pub fn new(
+        case_fact: AndChainAtomicFact,
+        impossible_fact: Option<AtomicFact>,
+        inside_results: Vec<StmtResult>,
+    ) -> Self {
+        CaseSplitAcceptedBy {
+            case_fact,
+            impossible_fact,
+            inside_results,
         }
     }
 }
 
-impl VerifiedByResult {
-    pub fn display_line(&self) -> String {
-        match self {
-            VerifiedByResult::BuiltinRule(r) => r.msg.clone(),
-            VerifiedByResult::Fact(r) => {
-                if let Some(d) = &r.detail {
-                    if !d.is_empty() {
-                        return d.clone();
-                    }
-                }
-                r.cite_what.to_string()
-            }
-            VerifiedByResult::VerifiedBys(w) => {
-                if w.cite_what.is_empty() {
-                    return String::new();
-                }
-                w.cite_what
-                    .iter()
-                    .map(|b| b.display_line())
-                    .collect::<Vec<_>>()
-                    .join("; ")
-            }
+impl CaseSplitCoverage {
+    pub fn new(fact: Fact, result: StmtResult) -> Self {
+        CaseSplitCoverage {
+            fact,
+            result: Box::new(result),
         }
+    }
+}
+
+impl fmt::Debug for CaseSplitCoverage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CaseSplitCoverage")
+            .field("fact", &self.fact.to_string())
+            .field("result", &self.result)
+            .finish()
+    }
+}
+
+impl fmt::Debug for CaseSplitAcceptedBy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CaseSplitAcceptedBy")
+            .field("case_fact", &self.case_fact.to_string())
+            .field(
+                "impossible_fact",
+                &self.impossible_fact.as_ref().map(|fact| fact.to_string()),
+            )
+            .field("inside_results", &self.inside_results)
+            .finish()
     }
 }
 
 impl NonFactualStmtSuccess {
     pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
+        let accepted_by = AcceptedByResult::from_stmt(&stmt, inside_results.len());
+        Self::new_with_accepted_by(stmt, infers, inside_results, accepted_by)
+    }
+
+    pub fn new_with_accepted_by(
+        stmt: Stmt,
+        infers: InferResult,
+        inside_results: Vec<StmtResult>,
+        accepted_by: AcceptedByResult,
+    ) -> Self {
         NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            accepted_by,
         }
     }
 
@@ -350,7 +402,7 @@ fn merge_verified_by_with_steps(
     VerifiedByResult::wrap_bys(items)
 }
 
-pub(crate) fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
+fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
     match result {
         StmtResult::FactualStmtSuccess(f) => {
             VerifiedBysEnum::from_verified_by_result(f.stmt, f.verified_by)

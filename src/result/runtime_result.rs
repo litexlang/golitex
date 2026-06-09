@@ -25,9 +25,6 @@ impl From<StmtUnknown> for StmtResult {
     }
 }
 
-const VERIFIED_BY: &str = "verified by";
-const INFER_COLON: &str = "infer:";
-
 impl StmtResult {
     pub fn with_infers(mut self, infer_result: InferResult) -> Self {
         match &mut self {
@@ -36,44 +33,6 @@ impl StmtResult {
             StmtResult::StmtUnknown(_) => {}
         }
         self
-    }
-}
-
-impl StmtResult {
-    fn infer_block_string(infer_result: &InferResult) -> String {
-        if infer_result.is_empty() {
-            return String::new();
-        }
-        format!(
-            "\n\n{}\n{}",
-            INFER_COLON,
-            infer_result.join_infer_lines("\n")
-        )
-    }
-
-    /// Returns the result body string without any line/file prefix (for tests or when location is not needed).
-    pub fn body_string(&self) -> String {
-        match self {
-            StmtResult::NonFactualStmtSuccess(x) => {
-                format!(
-                    "{}\n{}{}",
-                    SUCCESS_COLON,
-                    x.stmt,
-                    Self::infer_block_string(&x.infers)
-                )
-            }
-            StmtResult::FactualStmtSuccess(x) => {
-                format!(
-                    "{}\n{}\n{}\n{}{}",
-                    SUCCESS_COLON,
-                    x.stmt,
-                    VERIFIED_BY,
-                    x.verification_display_line(),
-                    Self::infer_block_string(&x.infers)
-                )
-            }
-            StmtResult::StmtUnknown(x) => x.to_string(),
-        }
     }
 }
 

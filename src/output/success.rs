@@ -1,0 +1,347 @@
+use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
+use crate::prelude::{
+    AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, Fact,
+    FactualStmtSuccess, InferResult, NonFactualStmtSuccess, Runtime, StmtResult,
+};
+
+use super::evidence::{
+    factual_success_verified_by_value, stmt_result_to_composite_step_verified_by,
+};
+use super::fields::{
+    user_visible_stmt_or_msg_text, JSON_KEY_ACCEPTED_BY, JSON_KEY_INFER_FACTS,
+    JSON_KEY_INSIDE_RESULTS, JSON_KEY_RESULT, JSON_KEY_STEPS, JSON_KEY_SUCCESS,
+    JSON_KEY_VERIFIED_BY,
+};
+use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
+use super::source::stmt_text_for_json;
+
+/// `infer_facts` for JSON: all inferred lines except the one that only repeats the same text as
+/// this entry's `stmt` field (that fact is already shown under `stmt` and stored in the fact store).
+fn json_infer_fact_items_excluding_self_stmt(
+    infers: &InferResult,
+    stmt_text_as_in_json: &str,
+) -> Vec<JsonValue> {
+    let exclude = user_visible_stmt_or_msg_text(stmt_text_as_in_json);
+    infers
+        .infer_lines_unique_in_order()
+        .iter()
+        .filter(|s| user_visible_stmt_or_msg_text(s) != exclude)
+        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
+        .collect()
+}
+
+pub fn display_stmt_exec_result_json(
+    runtime: &Runtime,
+    r: &StmtResult,
+    strip_free_param_tags: bool,
+) -> String {
+    let value = json_value_for_output(runtime, stmt_exec_result_json_value(runtime, r));
+    let raw = render_json_value(&value, 0);
+    finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
+}
+
+fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
+    match r {
+        StmtResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(runtime, x),
+        StmtResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(runtime, x),
+        StmtResult::StmtUnknown(_) => unreachable!(),
+    }
+}
+
+fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
+    let stmt_line_file = x.stmt.line_file();
+    let stmt_text = stmt_text_for_json(runtime, &x.stmt);
+
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
+
+    let inside_items: Vec<JsonValue> = x
+        .inside_results
+        .iter()
+        .map(|r| stmt_exec_result_json_value(runtime, r))
+        .collect();
+
+    let mut fields = vec![
+        (
+            JSON_KEY_RESULT.to_string(),
+            JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
+        ),
+        (
+            "type".to_string(),
+            JsonValue::JsonString(x.stmt.stmt_type_name().to_string()),
+        ),
+        (
+            "line".to_string(),
+            line_file_line_json_value(&stmt_line_file),
+        ),
+        ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
+        (
+            JSON_KEY_INFER_FACTS.to_string(),
+            JsonValue::Array(infer_items),
+        ),
+    ];
+
+    fields.push((
+        JSON_KEY_ACCEPTED_BY.to_string(),
+        accepted_by_value(runtime, x),
+    ));
+
+    fields.push((
+        JSON_KEY_INSIDE_RESULTS.to_string(),
+        JsonValue::Array(inside_items),
+    ));
+
+    JsonValue::Object(fields)
+}
+
+fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+    if x.is_verified_by_builtin_rules_only() {
+        factual_builtin_rules_to_json(runtime, x)
+    } else {
+        factual_citation_to_json(runtime, x)
+    }
+}
+
+fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+    let fact_line_file = x.stmt.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
+    let verified_by = factual_success_verified_by_value(runtime, x);
+
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
+
+    JsonValue::Object(vec![
+        (
+            JSON_KEY_RESULT.to_string(),
+            JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
+        ),
+        (
+            "type".to_string(),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
+        ),
+        (
+            "line".to_string(),
+            line_file_line_json_value(&fact_line_file),
+        ),
+        (
+            "stmt".to_string(),
+            JsonValue::JsonString(stmt_user_visible.clone()),
+        ),
+        (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
+        (
+            JSON_KEY_INFER_FACTS.to_string(),
+            JsonValue::Array(infer_items),
+        ),
+        ("inside_results".to_string(), JsonValue::Array(vec![])),
+    ])
+}
+
+fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+    let stmt_line_file = x.stmt.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
+    let verified_by = factual_success_verified_by_value(runtime, x);
+
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
+
+    JsonValue::Object(vec![
+        (
+            JSON_KEY_RESULT.to_string(),
+            JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
+        ),
+        (
+            "type".to_string(),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
+        ),
+        (
+            "line".to_string(),
+            line_file_line_json_value(&stmt_line_file),
+        ),
+        (
+            "stmt".to_string(),
+            JsonValue::JsonString(stmt_user_visible.clone()),
+        ),
+        (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
+        (
+            JSON_KEY_INFER_FACTS.to_string(),
+            JsonValue::Array(infer_items),
+        ),
+        ("inside_results".to_string(), JsonValue::Array(vec![])),
+    ])
+}
+
+fn accepted_by_value(runtime: &Runtime, success: &NonFactualStmtSuccess) -> JsonValue {
+    let mut fields = vec![(
+        "type".to_string(),
+        JsonValue::JsonString(accepted_by_type(&success.accepted_by).to_string()),
+    )];
+
+    if let Some(summary) = accepted_by_summary(&success.accepted_by) {
+        fields.push((
+            "summary".to_string(),
+            JsonValue::JsonString(summary.to_string()),
+        ));
+    }
+
+    match success.accepted_by.kind.as_ref() {
+        AcceptedByKind::ProofBlock {
+            proved,
+            steps_count,
+        } => {
+            if let Some(proved) = proved {
+                fields.push((
+                    "proved".to_string(),
+                    JsonValue::JsonString(user_visible_stmt_or_msg_text(&proved.to_string())),
+                ));
+            }
+            fields.push(("steps_count".to_string(), JsonValue::Number(*steps_count)));
+            fields.push((
+                JSON_KEY_STEPS.to_string(),
+                JsonValue::Array(accepted_by_step_items(runtime, &success.inside_results)),
+            ));
+        }
+        AcceptedByKind::CaseSplit {
+            goals,
+            coverage,
+            cases,
+        } => {
+            let goal_items = goals
+                .iter()
+                .map(|goal| JsonValue::JsonString(user_visible_stmt_or_msg_text(&goal.to_string())))
+                .collect::<Vec<_>>();
+            let case_items = cases
+                .iter()
+                .map(|case| accepted_by_case_json_value(runtime, case, goals))
+                .collect::<Vec<_>>();
+            fields.push(("case_count".to_string(), JsonValue::Number(cases.len())));
+            if let Some(coverage) = coverage {
+                fields.push((
+                    "covers_by".to_string(),
+                    accepted_by_case_split_coverage_json_value(runtime, coverage),
+                ));
+            }
+            fields.push(("goals".to_string(), JsonValue::Array(goal_items)));
+            fields.push(("cases".to_string(), JsonValue::Array(case_items)));
+            fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
+        }
+        _ => {
+            fields.push((
+                JSON_KEY_STEPS.to_string(),
+                JsonValue::Array(accepted_by_step_items(runtime, &success.inside_results)),
+            ));
+        }
+    }
+
+    JsonValue::Object(fields)
+}
+
+fn accepted_by_step_items(runtime: &Runtime, inside_results: &[StmtResult]) -> Vec<JsonValue> {
+    inside_results
+        .iter()
+        .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+        .collect::<Vec<_>>()
+}
+
+fn accepted_by_case_split_coverage_json_value(
+    runtime: &Runtime,
+    coverage: &CaseSplitCoverage,
+) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "fact".to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&coverage.fact.to_string())),
+        ),
+        (
+            JSON_KEY_VERIFIED_BY.to_string(),
+            stmt_result_to_composite_step_verified_by(runtime, coverage.result.as_ref()),
+        ),
+    ])
+}
+
+fn accepted_by_case_json_value(
+    runtime: &Runtime,
+    case: &CaseSplitAcceptedBy,
+    goals: &[Fact],
+) -> JsonValue {
+    let proves_items = goals
+        .iter()
+        .map(|goal| JsonValue::JsonString(user_visible_stmt_or_msg_text(&goal.to_string())))
+        .collect::<Vec<_>>();
+    let mut fields = vec![
+        (
+            "case".to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&case.case_fact.to_string())),
+        ),
+        ("proves".to_string(), JsonValue::Array(proves_items)),
+        (
+            "steps_count".to_string(),
+            JsonValue::Number(case.inside_results.len()),
+        ),
+    ];
+
+    if let Some(impossible_fact) = &case.impossible_fact {
+        fields.push((
+            "impossible".to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&impossible_fact.to_string())),
+        ));
+        fields.push((
+            "impossible_by".to_string(),
+            JsonValue::Array(vec![
+                JsonValue::JsonString(user_visible_stmt_or_msg_text(&impossible_fact.to_string())),
+                JsonValue::JsonString(user_visible_stmt_or_msg_text(
+                    &impossible_fact.make_reversed().to_string(),
+                )),
+            ]),
+        ));
+    }
+
+    if runtime.detail_output {
+        let inside_items = case
+            .inside_results
+            .iter()
+            .map(|r| stmt_exec_result_json_value(runtime, r))
+            .collect::<Vec<_>>();
+        fields.push((
+            JSON_KEY_INSIDE_RESULTS.to_string(),
+            JsonValue::Array(inside_items),
+        ));
+    }
+
+    JsonValue::Object(fields)
+}
+
+fn accepted_by_type(accepted_by: &AcceptedByResult) -> &'static str {
+    match accepted_by.kind.as_ref() {
+        AcceptedByKind::Assumption => "assumption",
+        AcceptedByKind::Definition => "definition",
+        AcceptedByKind::ExistElimination => "exist elimination",
+        AcceptedByKind::ProofBlock { .. } => "proof block",
+        AcceptedByKind::CaseSplit { .. } => "case split",
+        AcceptedByKind::TheoremCall => "theorem call",
+        AcceptedByKind::Witness => "witness",
+        AcceptedByKind::NoOp => "no op",
+        AcceptedByKind::Evaluation => "evaluation",
+        AcceptedByKind::Command => "command",
+        AcceptedByKind::VerifiedFact => "verified fact",
+    }
+}
+
+fn accepted_by_summary(accepted_by: &AcceptedByResult) -> Option<&'static str> {
+    match accepted_by.kind.as_ref() {
+        AcceptedByKind::Assumption => Some("facts accepted as explicit assumptions"),
+        AcceptedByKind::Definition => Some("definition or interface registered"),
+        AcceptedByKind::ExistElimination => {
+            Some("exist fact verified and witness facts registered")
+        }
+        AcceptedByKind::ProofBlock { .. } => Some("proof steps executed and target facts verified"),
+        AcceptedByKind::CaseSplit { .. } => {
+            Some("cases cover all situations and target facts were released")
+        }
+        AcceptedByKind::TheoremCall => Some("named theorem instantiated"),
+        AcceptedByKind::Witness => Some("witness obligations verified"),
+        AcceptedByKind::NoOp => Some("statement intentionally does nothing"),
+        AcceptedByKind::Evaluation => Some("expression evaluated"),
+        AcceptedByKind::Command => Some("command completed"),
+        AcceptedByKind::VerifiedFact => None,
+    }
+}
