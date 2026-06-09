@@ -2,13 +2,13 @@
 
 Examples for Litex objects, data constructors, function objects, structures, macros, templates, and statement forms.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+
+For the syntax sections, the bold line names the Litex form and the following
+code shows a small, complete use of that form.
 
 ## 1. `algo`
 
 - Category: `obj`
-- System surface: `algo function object`
 - Purpose: Shows algorithm-backed function definitions.
 
 ```litex
@@ -17,203 +17,53 @@ sketch:
 
     algo f(x):
         1
-
-
-sketch:
-    have f fn(x, y R) R
-
-    know:
-        forall x, y R:
-            f(x, y) = f(x - 1, y) + 1
-
-        forall x, y R:
-            x = 0
-            =>:
-                f(x, y) = y
-
-    algo f(x, y):
-        case x = 0: y
-        f(x - 1, y) + 1
-
-    eval f(10, 20)
-
-    f(10, 20) = 30
-
-sketch:
-    have fib fn(x R) R
-
-    know:
-        forall x R:
-            x = 0
-            =>:
-                fib(x) = 0
-
-        forall x R:
-            x = 1
-            =>:
-                fib(x) = 1
-
-        forall x R:
-            x > 1
-            =>:
-                fib(x) = fib(x - 1) + fib(x - 2)
-        
-    algo fib(x):
-        case x = 0: 0
-        case x = 1: 1
-        fib(x - 1) + fib(x - 2)
-        
-    eval fib(3)
-    fib(3) = 2
-
-sketch:
-    have factorial fn(x R) R
-
-    know:
-        forall x R:
-            x = 0
-            =>:
-                factorial(x) = 1
-
-        forall x R:
-            x > 0
-            =>:
-                factorial(x) = factorial(x - 1) * x
-
-    algo factorial(x):
-        case x = 0: 1
-        factorial(x - 1) * x
-
-    eval factorial(3)
-    factorial(3) = 6
 ```
+
+
+
 
 ## 2. `algo_eval`
 
 - Category: `obj`
-- System surface: `algo evaluation`
 - Purpose: Shows evaluating algorithm-style functions.
 
 ```litex
-let f set
-know f $in fn(x R, y R) R
+sketch:
+    have fn f(x R) R = x + 1
 
-know:
-    forall x, y R:
-        x < 0
-        =>:
-            f(x, y) = f(x + 1, y)
+    algo f(x):
+        x + 1
 
-    forall x, y R:
-        x = 0
-        =>:
-            f(x, y) = y
-
-    forall x, y R:
-        x > 0
-        =>:
-            f(x, y) = f(x - 1, y)
-
-algo f(x, y):
-    case x < 0: f(x + 1, y)
-    case x = 0: y
-    case x > 0: f(x - 1, y)
+    eval f(2)
+    f(2) = 3
 ```
 
 ## 3. `anonymous_function`
 
 - Category: `obj`
-- System surface: `anonymous function`
 - Purpose: Shows anonymous function objects and equality.
 
 ```litex
-'(x, y: x < y) R {x + y} = '(x, y: x < y) R {x + y}
-'R(x){x} = 'R(x){x}
-'R(x){x} = '(x R) R {x}
-'R(x){x} = 'R(y){y}
-
-'R(x){x + 2*x}(3) = 9
-
-'R(x, y){x+y}(3, 4) = 7
-
-forall y R:
-    'R(x){x + 2*x}(y) = y + 2*y
-    'R(x){x}(y) + 'R(x){2*x}(y) = y + 2*y
-    'R(x){x + 2*x}(y) = 'R(x){x}(y) + 'R(x){2*x}(y)
-
-forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){g(x) + f(x)}
-
-forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){'R(y){f(y)}(x) + 'R(y){g(y)}(x)}
-
-have f fn(x R) R = 'R(x){x}
-
-f(1) = 'R(x){x}(1) = 1
-
-abstract_prop p(fn_value)
-
-know forall u, v fn(x R) R:
-    $p(u)
-    $p(v)
-    =>:
-        $p('R(x){u(x) + v(x)})
-
-claim:
-    prove:
-        forall a, b, c fn(x R) R:
-            $p(a)
-            $p(b)
-            $p(c)
-            =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
+'R(x){x + 1}(2) = 3
+$fn_eq('R(x){x}, 'R(y){y})
 ```
 
 ## 4. `anonyumous_fn_forall_match`
 
 - Category: `fact`
-- System surface: `anonymous function forall matching`
 - Purpose: Shows matching universal facts over anonymous functions.
 
 ```litex
-# This example demonstrates enhanced known-forall matching inside anonymous
-# function bodies.
-#
-# The known forall says: if p holds for two real-valued functions f and g,
-# then p holds for their pointwise sum function.
-
 abstract_prop p(x)
-
-know forall f, g fn(x R) R:
-    $p(f)
-    $p(g)
-    =>:
-        $p('R(x){f(x) + g(x)})
-
-# The verifier still uses known forall facts one layer at a time.
-# So the proof first establishes the inner sum function:
-#     'R(x){b(x) + c(x)}
-# from p(b) and p(c).
-#
-# Then, for the final goal, the new matcher can treat the target body
-#     a(x) + (b(x) + c(x))
-# as matching
-#     f(x) + g(x)
-# with:
-#     f := a
-#     g := 'R(x){b(x) + c(x)}
-#
-# The important new step is the match:
-#     g(x)  ~  b(x) + c(x)
-# inside the surrounding anonymous function 'R(x){...}.  Since g is applied
-# to the full anonymous-function parameter list x, Litex may infer the whole
-# function g as 'R(x){b(x) + c(x)}.  This does not apply to pointwise shapes
-# such as g(0), which do not determine the whole function.
 
 claim:
     prove:
         forall a, b, c fn(x R) R:
+            forall f, g fn(x R) R:
+                $p(f)
+                $p(g)
+                =>:
+                    $p('R(x){f(x) + g(x)})
             $p(a)
             $p(b)
             $p(c)
@@ -225,7 +75,6 @@ claim:
 ## 5. `complex_number`
 
 - Category: `obj`
-- System surface: `complex literals`
 - Purpose: Shows complex-number object syntax.
 
 ```litex
@@ -237,7 +86,6 @@ struct C:
 ## 6. `finite_seq`
 
 - Category: `obj`
-- System surface: `finite sequence`
 - Purpose: Shows finite sequence objects.
 
 ```litex
@@ -257,7 +105,6 @@ finite_seq(R, 3) = fn(x N_pos: x <= 3) R
 ## 7. `fn_eq`
 
 - Category: `fact`
-- System surface: `function equality`
 - Purpose: Shows equality of functions by pointwise facts.
 
 ```litex
@@ -276,7 +123,6 @@ forall x R:
 ## 8. `fn_eq_in`
 
 - Category: `fact`
-- System surface: `function equality in context`
 - Purpose: Shows function equality under set membership constraints.
 
 ```litex
@@ -296,7 +142,6 @@ $fn_eq_in('R(x){x}, 'R(y){y}, R)
 ## 9. `fn_range`
 
 - Category: `obj`
-- System surface: `function range`
 - Purpose: Shows function range objects and restricted range facts.
 
 ```litex
@@ -306,7 +151,9 @@ sketch:
     f(1) $in fn_range(f)
     fn_range(f) $subset R
     fn_range(f) $in power_set(R)
+```
 
+```litex
 sketch:
     have f fn(x R: x > 0) R
     f(1) $in fn_range(f)
@@ -320,7 +167,9 @@ sketch:
     x $in R
     x > 0
     z = f(x)
+```
 
+```litex
 sketch:
     have fn shift(x R) R = x + 1
 
@@ -330,7 +179,9 @@ sketch:
     have by preimage x from shift(2) $in fn_range(shift)
     x $in R
     shift(2) = shift(x)
+```
 
+```litex
 sketch:
     have f fn(x R: x > 0) R
 
@@ -339,7 +190,9 @@ sketch:
     x $in R
     x > 0
     f(1) = f(x)
+```
 
+```litex
 sketch:
     have g fn(x R, y R: x < y) R
 
@@ -352,7 +205,9 @@ sketch:
     b $in R
     a < b
     g(0, 1) = g(a, b)
+```
 
+```litex
 sketch:
     have a seq(R)
 
@@ -371,7 +226,6 @@ sketch:
 ## 10. `have_fn_as_algo`
 
 - Category: `stmt`
-- System surface: `have fn as algo`
 - Purpose: Shows function definitions by algorithm, cases, and induction.
 
 ```litex
@@ -380,7 +234,9 @@ sketch:
 
     eval f(3)
     f(3) = 3
+```
 
+```litex
 sketch:
     have fn as algo self_max(x, y R) R by cases:
         case x > y: x
@@ -391,7 +247,9 @@ sketch:
 
     eval self_max(2, 7)
     self_max(2, 7) = 7
+```
 
+```litex
 sketch:
     have fn as algo h(x Z: x >= 1) R by induc x from 1:
         case x = 1: 211
@@ -407,88 +265,25 @@ sketch:
 ## 11. `have_fn_as_set_intro`
 
 - Category: `stmt`
-- System surface: `have fn as set`
 - Purpose: Shows building functions from unique-existence graph facts.
 
 ```litex
-# `have fn ... as set` turns a unique-existence theorem into a callable function.
-#
-# Shape:
-#
-#     know forall x A:
-#         exist! y B st {$Graph(x, y)}
-#
-#     have fn f as set:
-#         prove:
-#             forall x A:
-#                 exist! y B st {$Graph(x, y)}
-#
-# After that, `f(x)` is the unique `y` satisfying `$Graph(x, y)`.
-#
-# If the `forall` has domain facts before `=>:`, those facts become restrictions in the
-# generated function set. For example, `forall x R: x != 0 => exist! y R ...` creates
-# a function in `fn(x R: x != 0) R`, not a total function in `fn(x R) R`.
+have A set = R
+have B set = R
 
-abstract_prop double_value(x, y)
-
-# In a real development, this `know` can be replaced by a proof.
-know:
-    forall x R:
-        exist! y R st {$double_value(x, y)}
-
-    forall x, y R:
-        $double_value(x, y)
-        =>:
-            y = 2 * x
-
-have fn double as set:
+have fn f as set:
     prove:
-        forall x R:
-            exist! y R st {$double_value(x, y)}
+        forall x A:
+            exist! y B st {y = x}
+    witness exist! y B st {y = x} from x
 
-# `double` is a total function from R to R.
-double $in fn(x R) R
-
-# The function value satisfies the graph predicate.
-$double_value(3, double(3))
-double(3) = 2 * 3 = 6
-
-# The same pattern can include domain assumptions before the `=>:`.
-abstract_prop reciprocal_value(x, y)
-
-know:
-    forall x R:
-        x != 0
-        =>:
-            exist! y R st {$reciprocal_value(x, y)}
-
-    forall x, y R:
-        $reciprocal_value(x, y)
-        =>:
-            x * y = 1
-
-have fn reciprocal as set:
-    prove:
-        forall x R:
-            x != 0
-            =>:
-                exist! y R st {$reciprocal_value(x, y)}
-
-# Because the source `forall` has the domain fact `x != 0`, `reciprocal`
-# lives in the restricted function set below.
-reciprocal $in fn(x R: x != 0) R
-
-$reciprocal_value(2, reciprocal(2))
-2 * reciprocal(2) = 1
-
-# The return object can be used anywhere an ordinary function application can be used.
-reciprocal(2) * 2 = 2 * reciprocal(2) = 1
+forall x A:
+    f(x) = x
 ```
 
 ## 12. `have_fn_by_induc`
 
 - Category: `stmt`
-- System surface: `have fn by induc`
 - Purpose: Shows recursive function construction by induction.
 
 ```litex
@@ -531,7 +326,6 @@ algo h(x):
 ## 13. `have_fn_case_by_case`
 
 - Category: `stmt`
-- System surface: `have fn by cases`
 - Purpose: Shows case-defined functions.
 
 ```litex
@@ -543,97 +337,97 @@ have fn self_max(x, y R) R by cases:
 ## 14. `litex_code_style_guide`
 
 - Category: `stmt`
-- System surface: `code style`
 - Purpose: Shows preferred Litex proof formatting patterns.
 
 ```litex
-# write <= and < instead of >= and >
-
-# 用 thm 给一个 forall fact 取名，特别是 then-fact 本身的参数少于 forall 参数时。
-
-"""
-比如下面这个不好，因为未来想用这个事实证明后续事实的时候，then-fact 里没有 b：
-
-know forall a, b, c R:
-    a < b
-    b < c
+forall a, b Q:
+    a - b = 4
+    a * b = 1
     =>:
-        a < c
-
-要写成 named theorem，然后在使用处显式传入所有 forall 参数：
-
-thm a_less_than_c:
-    prove:
-        forall a, b, c R:
-            a < b
-            b < c
-            =>:
-                a < c
-    a < b < c
-
-claim:
-    prove:
-        forall a, b, c R:
-            a < b
-            b < c
-            =>:
-                a < c
-    by thm a_less_than_c(a, b, c)
-"""
+        (a + b)^2 = (a - b)^2 + 4 * (a * b) = 20
 ```
 
 ## 15. `litex_fact_examples`
 
 - Category: `fact`
-- System surface: `fact forms`
 - Purpose: Shows common fact syntax and verification examples.
 
-```litex
-# Fact layer: each surface form maps to a `Fact` variant; atomic pieces map to `AtomicFact`
-# (see `src/fact/fact.rs` and `src/fact/atomic_fact.rs`). Independent blocks for copy-paste.
 
-# --- Fact::AtomicFact — EqualFact, NotEqualFact ---
+**These are the main shapes a fact can have.**
+
+**Equal and not-equal facts**
+
+
+```litex
 sketch:
     1 = 1
     2 != 3
+```
 
-# --- AtomicFact — order (Less / Greater / LessEqual / GreaterEqual) and negated forms ---
+**Order facts and their negations**
+
+
+```litex
 sketch:
     0 < 1
     2 > 1
     1 <= 1
     2 >= 1
     not 1 < 0
+```
 
-# --- Fact::ChainFact — chained binary relations (one `ChainFact`, not nested `AndFact`) ---
+**Chained inequalities**
+
+
+```litex
 sketch:
     0 < 1 < 2
+```
 
-# --- Fact::AndFact — conjunction of atomics ---
+**Conjunctions**
+
+
+```litex
 sketch:
     1 = 1 and 2 < 3
+```
 
-# --- Fact::OrFact — disjunction ---
+**disjunctions — disjunction**
+
+
+```litex
 sketch:
     1 = 2 or 1 = 1
+```
 
-# --- Fact::ExistFact ---
-# exist fact is usually proved by witness exist ... from ...
+**existential facts**
+
+**exist fact is usually proved by witness exist ... from ...**
+
+
+```litex
 sketch:
     witness exist x R st { x = 1 } from 1:
         1 = 1
 
     exist y R st { y = 1 }
+```
 
-# --- Fact::ForallFact — no domain guard (empty `dom_facts`) ---
+**forall facts without hypotheses**
+
+
+```litex
 sketch:
     forall s set:
         s = s
 
     forall x Z:
         x $in R
+```
 
-# --- Fact::ForallFact — with `=>:` (non-empty `dom_facts` + `then_facts`) ---
+**forall facts with hypotheses and conclusions**
+
+```litex
 claim:
     prove:
         forall t R:
@@ -641,87 +435,101 @@ claim:
             =>:
                 0 < t
     by thm a_lt_c(0, 100, t)
+```
 
-# --- Fact::ForallFactWithIff — required `=>:` left side, then `<=>:` ---
+**forall facts with iff — required `=>:` left side, then `<=>:`**
+
+
+```litex
 sketch:
     forall x, y R:
         =>:
             x > y
         <=>:
             y < x
+```
 
-# --- AtomicFact — $is_set / $is_nonempty_set / $is_finite_set / $in ---
+**atomic facts — $is_set / $is_nonempty_set / $is_finite_set / $in**
+
+
+```litex
 sketch:
     $is_set({1, 2})
     $is_nonempty_set({1})
     $is_finite_set({1, 2})
     1 $in {1, 2}
     0.5 $in Q
+```
 
+
+```litex
 sketch:
     not $is_nonempty_set({})
+```
 
-# --- AtomicFact — $is_cart ---
+**atomic facts — $is_cart**
+
+
+```litex
 sketch:
     have c set = cart(R, Q)
     $is_cart(c)
+```
 
-# --- AtomicFact — $is_tuple ---
+**atomic facts — $is_tuple**
+
+
+```litex
 sketch:
     have u set = (1, 2)
     $is_tuple(u)
+```
 
-# --- AtomicFact — $subset / $superset ---
-sketch:
-    let a, b set:
-        a $subset b
-    forall x a:
-        x $in b
-    b $superset a
+**atomic facts — $subset / $superset**
 
-# --- AtomicFact — NotSubsetFact / NotSupersetFact ---
-sketch:
-    let a, b set:
-        not a $subset b
-    not b $superset a
 
-# --- Stmt::Fact — RestrictFact (top-level fact line, not inside `prove:`) ---
+
+**atomic facts — negative subset facts**
+
+
+
+**restriction facts**
+
+```litex
 have f fn(x R, y Q) R
 
 $restricts_to(f, fn(a Q, b Q) R)
-
-# --- AtomicFact — NormalAtomicFact / NotNormalAtomicFact (`$name(args)`) ---
-sketch:
-    abstract_prop ok(x)
-    know $ok(0)
-    $ok(0)
-
-sketch:
-    abstract_prop bad(x)
-    know not $bad(1)
-    not $bad(1)
 ```
+
+**named predicate facts**
+
+
+
+
 
 ## 16. `litex_object_examples`
 
 - Category: `obj`
-- System surface: `object forms`
 - Purpose: Shows core object constructors and membership facts.
 
-```litex
-# Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
-# IdentifierWithMod uses `::` between name parts (`MOD_SIGN`).
-# Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
-# Union/Intersect/SetMinus/SetDiff, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
-# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, FnObj (via `have fn`).
-# Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
-# --- Obj::Number ---
+**These examples show how ordinary mathematical data is written and checked.**
+
+**Module names use `::`, as in `Nat::gcd`.**
+
+**numbers**
+
+
+```litex
 sketch:
     1 = 1
     1.5 = 1.5
+```
 
-# --- Obj::Add, Sub, Mul, Div, Mod, Pow (and unary `-` as Mul by -1) ---
+**arithmetic objects, including unary minus**
+
+
+```litex
 sketch:
     1 + 2 = 3
     3 - 1 = 2
@@ -730,12 +538,20 @@ sketch:
     5 % 2 = 1
     2 ^ 3 = 8
     -1 + 2 = 1
+```
 
-# --- Obj::Tuple, parenthesized Obj ---
+**tuples and parenthesized expressions**
+
+
+```litex
 sketch:
     (1, 2) = (1, 2)
+```
 
-# --- Obj::StandardSet ---
+**standard sets**
+
+
+```litex
 sketch:
     0 $in N
     0 $in Z
@@ -751,85 +567,118 @@ sketch:
     not 2 / 6 $in Z
     not (-1) / 6 $in Z
     not 0 $in Q_nz
+```
 
-# --- Obj::ListSet ---
+**displayed finite sets**
+
+
+```litex
 sketch:
     1 $in {1, 2, 3}
     $is_finite_set({1, 2})
+```
 
-# --- Obj::SetBuilder (here as the rhs of `have`; membership proof needs extra `know` / forall) ---
+**set builders as named objects**
+
+
+```litex
 sketch:
     have s set = { z N : z > 5 }
+```
 
-# --- Obj::Union, Intersect, SetMinus (keyword forms); Obj::SetDiff (rhs of `have`) ---
+**unions, intersections, and set difference**
+
+
+```litex
 sketch:
     2 $in union({1, 2}, {2, 3})
     2 $in intersect({1, 2}, {2, 3})
+```
 
+
+```litex
 sketch:
     have t set = set_minus({1, 2}, {1})
+```
 
+
+```litex
 sketch:
     have u set = set_diff({1, 2}, {3})
+```
 
-# --- Obj::Range, ClosedRange (keyword forms; membership often via `know` / set equality) ---
+**ranges and closed ranges**
+
+
+```litex
 sketch:
     have r set = range(0, 10)
     have w set = closed_range(0, 1)
+```
 
-# --- Obj::Proj (keyword) ---
-sketch:
-    let c set:
-        c = cart(R, Q)
-    proj(c, 1) = R
+**projections (keyword)**
 
-# --- Obj::Cart, CartDim ---
-sketch:
-    let d set:
-        d = cart(R, Q)
-    $is_cart(d)
-    cart_dim(d) = 2
 
+
+**Cartesian products and dimensions**
+
+
+
+
+```litex
 sketch:
     have f fn(x R) R
     have g set = fn(x R) R
+```
 
-# --- Obj::TupleDim, Obj::ObjAtIndex ---
-sketch:
-    let e set:
-        e = (2, 3)
-    $is_tuple(e)
-    tuple_dim(e) = 2
-    e[1] = 2
-    e[2] = 3
+**tuple dimensions and indexing**
 
-# --- Obj::PowerSet, Obj::Count ---
+```litex
+
+(1, 2)[1] = 1
+(1, 2)[2] = 2
+
+have a set = (1, 2)
+a[1] = 1
+a[2] = 2
+
+```
+
+
+
+**power sets and counting**
+
+
+```litex
 sketch:
     {1, 2} $in power_set({1, 2, 3})
     count({1, 2, 3}) = 3
+```
 
-# --- Obj::Cup, Obj::Cap ---
-# Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).
+**unions and intersections over families**
 
-# --- Axiom of choice proof step ---
-sketch:
-    have S set
+**Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).**
 
-    by axiom_of_choice: set S:
-        know forall A S:
-            $is_nonempty_set(A)
+**Axiom of choice proof step**
 
-    exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
-# --- Obj::Identifier, Obj::FnObj (e.g. `f(0)` after `have fn f(x R) R = ...`) ---
+
+**function applications (e.g. `f(0)` after `have fn f(x R) R = ...`)**
+
+
+```litex
 sketch:
     have fn f(x R) R = x + 1
 
     have fn pair_value(x Z) cart(Z, Z) = (x, x + 1)
     pair_value(0)[1] $in Z
     pair_value(0)[2] $in Z
+```
 
-# --- Parameterized struct references use angle brackets; fields are accessed through a struct view. ---
+**Parameterized struct references use angle brackets; fields are accessed through a struct view.**
+
+
+```litex
 sketch:
     struct rec<a set>:
         fld a
@@ -842,68 +691,99 @@ sketch:
 ## 17. `litex_statement_examples`
 
 - Category: `stmt`
-- System surface: `statement forms`
 - Purpose: Shows common statement forms in one reference file.
 
-```litex
-# Each block illustrates the usual mathematical reading of that statement form. Independent blocks for easy copy-paste.
-# `import` / `run_file`: syntax shown in comments only (not run here).
 
-# --- Stmt::Fact — assert a closed formula ---
+**These examples show common statement forms.**
+
+**`import` and `run_file` syntax is shown in comments only here.**
+
+**assert a closed fact**
+
+
+```litex
 sketch:
     1 + 1 = 2
+```
 
-# --- Stmt::DefLetStmt — local names with defining properties ---
-sketch:
-    let a R:
-        a = 1
-    a = 1
+**let statements — local names with defining properties**
 
-# --- Stmt::DefPropStmt — define a named predicate with its if and only if properties ---
+
+
+**property definitions — define a named predicate with its if and only if properties**
+
+
+```litex
 sketch:
     prop p(x R):
         x = x
+```
 
-# --- Stmt::DefAbstractPropStmt — declare a predicate symbol and arity only ---
+**abstract predicate declarations — declare a predicate symbol and arity only**
+
+
+```litex
 sketch:
     abstract_prop q(a)
+```
 
-# --- Stmt::HaveObjInNonemptySetStmt — introduce typed parameters (membership in given sets / types) ---
+**typed object introductions — introduce typed parameters (membership in given sets / types)**
+
+
+```litex
 sketch:
     have x R, y Z
+```
 
-# --- Stmt::HaveObjEqualStmt — introduce parameters and fix them to given values ---
+**object definitions — introduce parameters and fix them to given values**
+
+
+```litex
 sketch:
     have a R = 1
     a = 1
+```
 
-# --- Stmt::HaveByExistStmt — name witnesses for an already known existential ---
-sketch:
-    know exist u R st {u > 0, u < 1}
-    have by exist v R st {v > 0, v < 1}: w
-    w > 0
+**naming existential witnesses — name witnesses for an already known existential**
 
-# --- Stmt::HaveFnEqualStmt — define a function by a single defining equation on its domain ---
+
+
+**function definitions — define a function by a single defining equation on its domain**
+
+
+```litex
 sketch:
     have fn f(x R) R = x + 1
     do_nothing
+```
 
-# --- Stmt::HaveFnEqualCaseByCaseStmt — piecewise definition by cases on the domain ---
+**piecewise function definitions — piecewise definition by cases on the domain**
+
+
+```litex
 sketch:
     have fn g(z R) R by cases:
         case z = 2: 3
         case z != 2: 4
     do_nothing
+```
 
-# --- Stmt::HaveFnByInducStmt — recursive function given by a decreasing measure ---
+**recursive function definitions — recursive function given by a decreasing measure**
+
+
+```litex
 sketch:
     have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
         case b = 0: a
         case b > 0: h(a, b - 1) + 1
+```
 
-# --- Stmt::DefStructStmt — removed in this branch (record-like `struct`); see git history to restore. ---
+**struct declarations — removed in this branch (record-like `struct`); see git history to restore.**
 
-# --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
+**algorithm presentations — computational presentation of a function (evaluation)**
+
+
+```litex
 sketch:
     have fn m(x N_pos) R by cases:
         case x = 1: 1
@@ -915,9 +795,14 @@ sketch:
 
     eval m(1)
     m(1) = 1
+```
 
-# --- Stmt::ClaimStmt — stated goal with a sub-proof and lemmas ---
-# (A claim may state a `forall` goal; here both goals are short tautologies so the file runs.)
+**claim blocks — stated goal with a sub-proof and lemmas**
+
+**(A claim may state a `forall` goal; here both goals are short tautologies so the file runs.)**
+
+
+```litex
 sketch:
     claim:
         prove:
@@ -928,65 +813,57 @@ sketch:
         prove:
             2 = 2
         2 = 2
+```
 
-# --- Stmt::KnowStmt — assume lemmas / axioms in scope ---
+**assumption blocks — assume lemmas / axioms in scope**
+
+
+
+**sketch blocks — checked sketch work with local facts**
+
+
+```litex
 sketch:
-    know:
-        1 = 1
+    2 = 2
+```
 
-# --- Stmt::SketchStmt — checked sketch work with local facts ---
-sketch:
-    sketch:
-        2 = 2
+**imports and run_file — module or file inclusion (syntax only here)**
 
-# --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
-# import Nat
-# run_file "./runfile2.lit"
+**import Nat**
 
-# --- Stmt::DoNothingStmt — trivial proof step ---
+**run_file "./runfile2.lit"**
+
+**do_nothing — trivial proof step**
+
+
+```litex
 sketch:
     do_nothing
+```
 
-# --- Stmt::EvalStmt — compute a closed expression ---
-sketch:
-    have g fn(x Z) Z
+**evaluation — compute a closed expression**
 
-    know:
-        forall x Z:
-            x > 0
-            =>:
-                g(x) = g(x-1) + 1
-        g(0) = 0
-        forall x Z:
-            x < 0
-            =>:
-                g(x) = g(x+1) - 1
 
-    algo g(x):
-        case x > 0: g(x-1) + 1
-        case x = 0: 0
-        case x < 0: g(x+1) - 1
 
-    eval g(3)
-    g(3) = 3
+**existential witnesses — exhibit witnesses for an existential claim**
 
-# --- Stmt::WitnessExistFact — exhibit witnesses for an existential claim ---
+
+```litex
 sketch:
     witness exist x, y R st {x > y} from 1, 0:
         1 > 0
 
     exist a, b R st {a > b}
+```
 
-# --- Stmt::WitnessNonemptySet — exhibit an element to show a set is nonempty ---
-sketch:
-    have s set
+**nonempty-set witnesses — exhibit an element to show a set is nonempty**
 
-    witness $is_nonempty_set(s) from 1:
-        know 1 $in s
 
-    $is_nonempty_set(s)
 
-# --- Stmt::ByCasesStmt — proof by cases on a finite disjunction ---
+**proof by cases — proof by cases on a finite disjunction**
+
+
+```litex
 sketch:
     have fn k(z R) R by cases:
         case z = 2: 3
@@ -1005,81 +882,40 @@ sketch:
         case x != 2:
             k(x) = 4
             k(x) > 2
+```
 
-# --- Stmt::ByContraStmt — proof of negation from a contradiction ---
-sketch:
-    abstract_prop p0(x, y)
-    abstract_prop q0(x, y)
+**proof by contradiction — proof of negation from a contradiction**
 
-    know forall a, b R:
-        $p0(a, b)
-        =>:
-            $q0(a, b)
 
-    know not $q0(1, 2)
 
-    by contra:
-        prove:
-            not $p0(1, 2)
-        $p0(1, 2)
-        impossible $q0(1, 2)
+**ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall.**
 
-# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall.
-sketch:
-    let a R:
-        a $in {1, 2}
 
-    a = 1 or a = 2
 
-    by enumerate finite_set:
-        prove:
-            forall a2 {1, 2, 3}:
-                a2 < 4
+**ByEnumerateRangeStmt — expand integer range / closed_range membership into equality cases.**
 
-# --- Stmt::ByEnumerateRangeStmt — expand integer range / closed_range membership into equality cases.
-sketch:
-    let a1 range(7, 8)
 
-    by enumerate range: a1 $in range(7, 8)
 
-    a1 = 7
+**induction — induction on a discrete parameter**
 
-# --- Stmt::ByInducStmt — induction on a discrete parameter ---
-sketch:
-    abstract_prop r0(a)
 
-    know:
-        $r0(0)
-        forall n Z:
-            n >= 0
-            $r0(n)
-            =>:
-                $r0(n + 1)
 
-    by induc n from 0:
-        prove:
-            $r0(n)
+**bounded iteration — finite or bounded iteration as proof skeleton**
 
-        prove from n = 0:
-            $r0(0)
 
-        prove induc:
-            $r0(n + 1)
-
-    forall m Z:
-        m >= 0
-        =>:
-            $r0(m)
-
-# --- Stmt::ByForStmt — finite or bounded iteration as proof skeleton ---
+```litex
 sketch:
     by for:
         prove:
             forall i range(0, 10):
                 i < 10
         do_nothing
+```
 
-# --- Stmt::ByExtensionStmt — set equality by mutual inclusion ---
+**extensional equality — set equality by mutual inclusion**
+
+
+```litex
 sketch:
     by extension:
         prove:
@@ -1094,14 +930,22 @@ sketch:
                     y $in {1, 2}
 
     {1, 2} = {2, 1}
+```
 
-# --- Stmt::ByFnAsSetStmt — use the graph characterization of a function in a function space ---
+**function-as-set reasoning — use the graph characterization of a function in a function space**
+
+
+```litex
 sketch:
     have fn f(x R) R = 1
 
     by fn as set: f
+```
 
-# --- Stmt::DefStructStmt — define a structure shape for future struct features ---
+**struct declarations — define a structure shape for future struct features**
+
+
+```litex
 sketch:
     abstract_prop bs(b, c, d)
 
@@ -1111,49 +955,19 @@ sketch:
         d1 fn(x, y a) a
         <=>:
             $bs(b1, c1, d1)
-
-# --- Stmt::ByTupleAsSetStmt — tuple / product-space reasoning on an object ---
-sketch:
-    let u set:
-        u = (2, 3)
-
-    by tuple as set: u
-
-# --- Stmt::ByFnSetAsSetStmt — membership of a function in a function set (graph axioms) ---
-sketch:
-    let s set
-
-    know:
-        forall u s:
-            u $in cart(R, Q, Z)
-            tuple_dim(u) = 3
-
-        forall u s:
-            exist x R, y Q, z Z st {x > y, x > 2, u = (x, y, z)}
-
-        forall x R, y Q:
-            x > y
-            x > 2
-            =>:
-                exist u s, z Z st {u = (x, y, z)}
-
-        forall u, v s:
-            u $in cart(R, Q, Z)
-            v $in cart(R, Q, Z)
-            u[1] = v[1]
-            u[2] = v[2]
-            =>:
-                u = v
-
-    by fn set as set: s $in fn(x R, y Q: x > y, x > 2) Z
-
-    s(100, 99) = s(100, 99)
 ```
+
+**tuple-as-set reasoning — tuple / product-space reasoning on an object**
+
+
+
+**function-set reasoning — membership of a function in a function set (graph axioms)**
+
+
 
 ## 18. `macro`
 
 - Category: `stmt`
-- System surface: `macro`
 - Purpose: Shows macro definitions and expansion.
 
 ```litex
@@ -1162,14 +976,20 @@ macro SELF_R "R"
 macro HAVE_FN "have fn"
 
 @HAVE_FN f(x @SELF_R) @SELF_R = x
+```
 
+```litex
 sketch:
+    macro SELF_R "R"
+    macro HAVE_FN "have fn"
     macro SELF_Q "Q"
     @HAVE_FN g(x @SELF_Q) @SELF_Q = x
 
     @HAVE_FN h(x @SELF_R) @SELF_R = x
 
 macro STRANGE "f("
+
+have fn f(x R) R = x
 
 forall x R:
     @STRANGE x) = f( x)
@@ -1178,11 +998,9 @@ forall x R:
 ## 19. `matrix`
 
 - Category: `obj`
-- System surface: `matrix`
 - Purpose: Shows matrix-like function objects and indexing.
 
 ```litex
-
 sketch:
     matrix(R, 2, 2) = matrix(R, 2, 2)
 
@@ -1229,7 +1047,6 @@ eval (1 / 3) *. [[3, 6], [9, 12]]
 ## 20. `restrict`
 
 - Category: `obj`
-- System surface: `restricted object`
 - Purpose: Shows restricted parameter and object types.
 
 ```litex
@@ -1245,28 +1062,17 @@ sketch:
     $restricts_to(g, fn(x, y R: x < y, x < 0) R)
 
     $restricts_to(g, fn(p Q, q Q) R)
+```
 
-sketch:
-    have f set
-    know:
-        $restricts_to(f, fn(x R, y Q) R)
 
-    f(1, 2) = f(1, 2)
-
+```litex
 sketch:
     forall f fn(x R, y Q) R:
         f(1, 2) = f(1, 2)
+```
 
-sketch:
-    abstract_prop p(x)
 
-    know:
-        forall f fn(x R, y Q) R:
-            $p(f)
-
-    have f fn(x R, y Q) R
-    $p(f)
-
+```litex
 sketch:
     $restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
     $restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
@@ -1277,22 +1083,15 @@ sketch:
 ## 21. `set_builder`
 
 - Category: `obj`
-- System surface: `set builder`
 - Purpose: Shows set-builder object syntax.
 
 ```litex
-let a {x R: x > 0}
-
-a $in R
-a > 0
-
 1 $in {x R: x > 0}
 ```
 
 ## 22. `signed_area`
 
 - Category: `obj`
-- System surface: `tuple and determinant-style expression`
 - Purpose: Shows a small geometric data expression.
 
 ```litex
@@ -1304,7 +1103,6 @@ signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
 ## 23. `struct`
 
 - Category: `obj`
-- System surface: `struct`
 - Purpose: Shows struct definitions, fields, and dependent struct views.
 
 ```litex
@@ -1329,7 +1127,9 @@ sketch:
 
     forall a, b &Point:
         point_add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = point_add(b, a)
+```
 
+```litex
 sketch:
     prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
         forall x s:
@@ -1350,7 +1150,9 @@ sketch:
 
     $GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
     ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
-    
+```
+
+```litex
 sketch:
     struct StandardTwoSimplex:
         x R
@@ -1381,7 +1183,9 @@ sketch:
         ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2) $in &StandardTwoSimplex
 
     have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)
+```
 
+```litex
 sketch:
     struct StandardTwoSimplex:
         x R
@@ -1404,7 +1208,9 @@ sketch:
         ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
 
     have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
+```
 
+```litex
 sketch:
     struct StandardTwoSimplex:
         x R
@@ -1436,7 +1242,6 @@ sketch:
 ## 24. `template1`
 
 - Category: `stmt`
-- System surface: `template`
 - Purpose: Shows template declarations and use.
 
 ```litex
@@ -1460,45 +1265,22 @@ A(1, 2, 3) $in R
 ## 25. `template_let`
 
 - Category: `stmt`
-- System surface: `template with let`
 - Purpose: Shows local definitions inside templates.
 
 ```litex
-template<x R>:
-    let local_alias R:
-        local_alias = x
+template<s set, z s>:
+    have fn const_on_s(x s) s = z
 
-\local_alias<2> = 2
+\const_on_s<R, 0> $in fn(x R) R
 ```
 
 ## 26. `tuple_and_cart`
 
 - Category: `obj`
-- System surface: `tuple and cart`
 - Purpose: Shows tuple objects and Cartesian products.
 
 ```litex
-let a set:
-    a = (2, 3)
-
-$is_tuple(a)
-tuple_dim(a) = 2
-a[1] = 2
-a[2] = 3
-
-let b set:
-    b = cart(R, Q)
-
-$is_cart(b)
-cart_dim(b) = 2
-proj(b, 1) = R
-proj(b, 2) = Q
-
-forall a2 set:
-    $is_cart(a2)
-    =>:
-        cart_dim(a2) = cart_dim(a2)
-
-forall x cart(R, R):
-    x[1] $in R
+(1, 2) = (1, 2)
+cart_dim(cart(R, Q)) = 2
+proj(cart(R, Q), 1) = R
 ```

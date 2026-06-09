@@ -1,8 +1,8 @@
 # Weil Number Theory for Beginners
 
-Number-theory snippets using the public std/Nat interface for divisibility, gcd, coprimality, primes, modular arithmetic, and related witnesses.
+Number-theory examples using the public std/Nat interface for divisibility, gcd, coprimality, primes, modular arithmetic, and related witnesses.
 
-Each example below is an independent checked Litex snippet. The metadata record keeps the dataset translation fields next to the runnable code.
+Each item gives the mathematical idea first, then the Litex code that checks it.
 
 ## 1. `choose_and_sqrt_interfaces`
 
@@ -16,7 +16,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -42,7 +42,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -64,7 +64,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -86,7 +86,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -110,7 +110,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -133,7 +133,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -156,7 +156,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -184,7 +184,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -206,7 +206,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -229,7 +229,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -251,7 +251,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -273,7 +273,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -295,7 +295,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -318,7 +318,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -341,7 +341,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -363,7 +363,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -385,7 +385,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -408,7 +408,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -430,7 +430,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex
@@ -454,7 +454,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection using the public std/Nat interface; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example using the public std/Nat interface."
 ```
 
 ```litex

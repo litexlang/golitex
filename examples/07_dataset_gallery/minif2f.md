@@ -2,7 +2,7 @@
 
 Finished theorem-proving examples with contest algebra, inequalities, number theory, induction, and olympiad-style reasoning.
 
-Each example below is an independent checked Litex snippet. The metadata record keeps the dataset translation fields next to the runnable code.
+Each item gives the mathematical idea first, then the Litex code that checks it.
 
 ## 1. `aime_1994_p3`
 
@@ -16,7 +16,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -194,7 +194,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -246,7 +246,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -359,7 +359,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -440,7 +440,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -508,7 +508,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -545,7 +545,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -578,7 +578,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -606,7 +606,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -633,7 +633,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -761,7 +761,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -860,7 +860,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -887,7 +887,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -981,7 +981,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1028,7 +1028,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1119,7 +1119,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1178,7 +1178,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1245,7 +1245,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1294,7 +1294,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1352,7 +1352,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex

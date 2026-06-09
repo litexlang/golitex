@@ -2,7 +2,7 @@
 
 Jiachen Shen and The Litex Team, 2026-05-07. Email: litexlang@outlook.com
 
-Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean
+Try the examples in browser: https://litexlang.com/doc/Litex_vs_Lean
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean.md
 
@@ -88,11 +88,11 @@ claims, reductions, computations, and local lemmas. Litex is aimed at checking
 that trail as it is produced, so wrong turns can fail early and remaining
 assumptions can be made explicit instead of hidden in fluent prose.
 
-This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
+This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. When a Litex example appears after the note, it gives the same idea in a self-contained form.
 
-The Lean snippets are meant to be readable counterparts, not claims of shortest
-possible Lean code. The Litex snippets are meant to show the current interface,
-not to hide the fact that builtin rules, infer rules, and any `know` facts are
+The Lean examples are meant to be readable counterparts, not claims of shortest
+possible Lean code. The Litex examples are meant to show the current interface,
+not to hide the fact that builtin rules, infer rules, and explicit assumptions are
 part of the trust boundary explained in the [FAQ](https://litexlang.com/doc/FAQ).
 
 ---
@@ -497,7 +497,7 @@ forall x, y R:
 
 ## Statements: How A Proof Script Moves
 
-Litex statements are proof-script actions: `have`, `know`, `claim`, `witness`, `by cases`, `by contra`, `by enumerate`, `by induc`, and so on.
+Litex statements are proof-script actions: `have`, `claim`, `witness`, `by cases`, `by contra`, `by enumerate`, `by induc`, and so on.
 
 Lean also has structured proof commands and tactics. The difference is that Litex statements are meant to look like common mathematical proof moves, while Lean tactics operate a very general proof state.
 
@@ -539,14 +539,20 @@ witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 21
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p0(x, y)
 abstract_prop q0(x, y)
-know forall a, b R:
-    &#36;p0(a, b)
-    =>:
-        &#36;q0(a, b)
-know not &#36;q0(1, 2)
-by contra not &#36;p0(1, 2):
-    &#36;p0(1, 2)
-    impossible &#36;q0(1, 2)</code></pre>
+claim:
+    prove:
+        forall:
+            forall a, b R:
+                &#36;p0(a, b)
+                =>:
+                    &#36;q0(a, b)
+            not &#36;q0(1, 2)
+            =>:
+                not &#36;p0(1, 2)
+    by contra:
+        prove:
+            not &#36;p0(1, 2)
+        impossible &#36;q0(1, 2)</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
@@ -562,21 +568,6 @@ example (p q : ℝ → ℝ → Prop)
 
 **What differs.** Litex writes the contradiction as a proof move. Lean expresses it as a function from an assumption to contradiction.
 
-```litex
-abstract_prop p0(x, y)
-abstract_prop q0(x, y)
-
-know forall a, b R:
-    $p0(a, b)
-    =>:
-        $q0(a, b)
-
-know not $q0(1, 2)
-
-by contra not $p0(1, 2):
-    $p0(1, 2)
-    impossible $q0(1, 2)
-```
 
 ### Set Equality By Counterexample
 
@@ -765,9 +756,11 @@ forall a, b, a2, b2 set:
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
-know forall x R:
-    &#36;p(x)
-&#36;p(2)</code></pre>
+forall:
+    forall x R:
+        &#36;p(x)
+    =>:
+        &#36;p(2)</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>example (p : ℝ → Prop) (h : ∀ x : ℝ, p x) : p 2 := by
@@ -778,18 +771,10 @@ know forall x R:
 
 **What differs.** Litex matches the goal against known `forall` facts. Lean applies the universal hypothesis explicitly.
 
-```litex
-abstract_prop p(x)
-
-know forall x R:
-    $p(x)
-
-$p(2)
-```
 
 ### Known `forall` Matching Inside Anonymous Functions
 
-This example is a sharper version of known-`forall` reuse. The known fact says
+This example is a sharper version of `forall` reuse. The local fact says
 that a predicate `p` is closed under pointwise addition of real-valued
 functions. Litex first proves the inner sum function, then matches the final
 anonymous-function body against the same known fact again.
@@ -803,15 +788,14 @@ anonymous-function body against the same known fact again.
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
 
-know forall f, g fn(x R) R:
-    &#36;p(f)
-    &#36;p(g)
-    =&gt;:
-        &#36;p('R(x){f(x) + g(x)})
-
 claim:
     prove:
         forall a, b, c fn(x R) R:
+            forall f, g fn(x R) R:
+                &#36;p(f)
+                &#36;p(g)
+                =&gt;:
+                    &#36;p('R(x){f(x) + g(x)})
             &#36;p(a)
             &#36;p(b)
             &#36;p(c)
@@ -839,25 +823,6 @@ the full anonymous-function parameter list `x`, Litex may infer
 normally supplies the intermediate function and applies the universal
 hypothesis explicitly.
 
-```litex
-abstract_prop p(x)
-
-know forall f, g fn(x R) R:
-    $p(f)
-    $p(g)
-    =>:
-        $p('R(x){f(x) + g(x)})
-
-claim:
-    prove:
-        forall a, b, c fn(x R) R:
-            $p(a)
-            $p(b)
-            $p(c)
-            =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
-```
 
 ---
 
@@ -974,10 +939,9 @@ example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>prove:
-    let A, B set:
-        A &#36;subset B
-    forall x A:
+<pre style="margin: 0; white-space: pre-wrap"><code>forall A, B set, x A:
+    A &#36;subset B
+    =>:
         x &#36;in B</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
@@ -989,13 +953,6 @@ example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
 
 **What differs.** Litex infers membership consequences from `A $subset B`. Lean applies the subset hypothesis as a function.
 
-```litex
-sketch:
-    let A, B set:
-        A $subset B
-    forall x A:
-        x $in B
-```
 
 ### Unequal Cardinalities Rule Out Equality
 
@@ -1064,18 +1021,23 @@ Both systems can express the classic proof that there are infinitely many primes
         2 &lt;= b &lt; a
         =>:
             a % b != 0
-know:
-    forall a, k N_pos:
-        k &lt;= a
-        =>:
-            product(1, a, 'N_pos(x){x}) % k = 0
-    forall a N_pos:
-        2 &lt;= a
-        =>:
-            exist k N_pos st {&#36;prime(k), a % k = 0}
-    forall a N_pos:
-        a &lt;= product(1, a, 'N_pos(x){x})
-claim forall! a N_pos: 2 &lt;= a => exist k N_pos st {k > a, &#36;prime(k)}:
+
+claim:
+    prove:
+        forall a N_pos:
+            forall n, k N_pos:
+                k &lt;= n
+                =>:
+                    product(1, n, 'N_pos(x){x}) % k = 0
+            forall n N_pos:
+                2 &lt;= n
+                =>:
+                    exist k N_pos st {&#36;prime(k), n % k = 0}
+            forall n N_pos:
+                n &lt;= product(1, n, 'N_pos(x){x})
+            2 &lt;= a
+            =>:
+                exist k N_pos st {k > a, &#36;prime(k)}
     2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1
     have by exist k N_pos st {&#36;prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
     by cases k > a:
@@ -1108,48 +1070,14 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
   </tr>
 </table>
 
-**What differs.** Litex separates background lemmas from the `claim` spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
+**What differs.** Litex puts the background lemmas in the premise of the `claim` and keeps the final argument as a direct proof spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
 
 What Litex is trying to show is different. The user states the facts and witnesses they want, while the checker matches those targets against builtin rules and known information. Chains expose order/transitivity goals, `have by exist ...` exposes an existential pattern, `by cases` exposes branches, and `witness` exposes the object that should close an existential goal.
 
-> The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines.
+> The `prop` block defines the vocabulary. The premise of the `claim` lists the background mathematics. The main proof is the part after that premise.
 
 > The Lean example above is adapted from *Mathematics in Lean*, which is an excellent introduction to Lean and formalized mathematics. It takes 6 pages to teach the reader how to prove this simple example. The point here is not that the Lean version is bad; it is carefully teaching the reader how two language philosophies can be used to express the same proof.
 
-```litex
-prop prime(a N_pos):
-    2 <= a
-    forall b N_pos:
-        2 <= b < a
-        =>:
-            a % b != 0
-
-know:
-    forall a, k N_pos:
-        k <= a
-        =>:
-            product(1, a, 'N_pos(x){x}) % k = 0
-
-    forall a N_pos:
-        2 <= a
-        =>:
-            exist k N_pos st {$prime(k), a % k = 0}
-
-    forall a N_pos:
-        a <= product(1, a, 'N_pos(x){x})
-
-claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
-    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases k > a:
-        case k <= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
-        case k > a:
-            do_nothing
-    witness exist k N_pos st {k > a, $prime(k)} from k
-```
 
 ---
 

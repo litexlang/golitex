@@ -22,6 +22,13 @@ impl ByZornLemmaStmt {
 
 impl fmt::Display for ByZornLemmaStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.proof.is_empty() {
+            return write!(
+                f,
+                "{} {}{} {} {}, {} {}",
+                BY, ZORN_LEMMA, COLON, SET, self.set, PROP, self.prop_name
+            );
+        }
         write!(
             f,
             "{} {}{} {} {}, {} {}{}",

@@ -2,7 +2,7 @@
 
 Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
 
-Try all snippets in browser: https://litexlang.com/doc/Manual
+Try the examples in browser: https://litexlang.com/doc/Manual
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
 
@@ -171,7 +171,7 @@ This manual is both a tutorial and a reference. You do not need to read every se
 
 **Use as reference**
 
-1. [Abstract Syntax Tree Reference](https://litexlang.com/doc/Manual#abstract-syntax-tree-reference) gives a compact implementation-facing map of statement, fact, and object shapes.
+1. [Syntax Reference](https://litexlang.com/doc/Manual#syntax-reference) gives a compact map of statement, fact, and object forms.
 2. The long builtin-rule catalogue is for lookup. You do not need to memorize every rule.
 3. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted. Read the overview early, and use the detailed rule list when you want to understand why later facts became available.
 4. Less common object and statement forms, such as advanced set operations, families, induction, finite enumeration, and preview features, can wait until your proof needs them.
@@ -340,10 +340,8 @@ sketch:
 `A cross B cross ...`; `cart_dim` gives the number of factors when the value is recognized as a product.
 
 ```litex
-let d set:
-    d = cart(R, Q)
-$is_cart(d)
-cart_dim(d) = 2
+$is_cart(cart(R, Q))
+cart_dim(cart(R, Q)) = 2
 ```
 
 #### Projection from a product
@@ -363,11 +361,9 @@ Ordered tuples `(a1, ..., an)` and their length.
 ```
 
 ```litex
-let e set:
-    e = (2, 3)
-$is_tuple(e)
-tuple_dim(e) = 2
-e[1] = 2
+$is_tuple((2, 3))
+tuple_dim((2, 3)) = 2
+(2, 3)[1] = 2
 ```
 
 #### Struct objects and explicit field access
@@ -481,16 +477,18 @@ Some indexed objects use **sequence** types or matrix index domains (repeated in
 
 #### Choice functions
 
-Use `by axiom_of_choice: set S:` to assert the existence of a function that picks one element from each member of a family of nonempty sets. Litex no longer has a special `choose(s)` object constructor.
+Use `by axiom_of_choice: set S:` to assert the existence of a function that picks one element from each member of a family of nonempty sets. If the needed obligations are already available, omit the final proof-body colon: `by axiom_of_choice: set S`. Litex no longer has a special `choose(s)` object constructor.
 
 ```litex
-have S set
+claim:
+    prove:
+        forall S set:
+            forall A S:
+                $is_nonempty_set(A)
+            =>:
+                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
-by axiom_of_choice: set S:
-    know forall A S:
-        $is_nonempty_set(A)
-
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+    by axiom_of_choice: set S
 ```
 
 #### Standard number sets
@@ -903,8 +901,7 @@ The body after `st` is the list of facts the witness must satisfy.
 Example:
 
 ```litex
-know exist u R st { u = 1 }
-
+witness exist u R st { u = 1 } from 1
 have by exist v R st { v = 1 }: h
 h = 1
 ```
@@ -914,8 +911,9 @@ Warning: an `exist` witness is local to the existential fact. A known `forall` m
 For example, this known fact says that every real number can be copied as some witness:
 
 ```text
-know forall x R:
-    exist y R st {y = x}
+known fact:
+    forall x R:
+        exist y R st {y = x}
 ```
 
 It does **not** imply the following:
@@ -1197,20 +1195,21 @@ ready. It is dangerous because a reader may see `$p(x)` and assume the predicate
 already has meaning. It does not. The meaning must come from a later checked
 definition or theorem, or from an explicit trusted assumption.
 
-If you want an abstract predicate to have a property before proving it,
-introduce that property with `know`; that makes the property trusted input for
-the current development.
+If you want to experiment with an abstract predicate before proving its
+properties, put those properties in the assumption part of a local `forall`.
+That keeps the example honest: the conclusion is conditional on the stated
+assumptions.
 
 ```litex
 abstract_prop p(x)
 
-know forall x R:
+forall x R:
     $p(x)
-
-$p(1)
+    =>:
+        $p(x)
 ```
 
-> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate, and audit every `know` fact that gives it mathematical behavior.
+> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `know` to give it mathematical behavior, treat that line as an explicit trusted assumption.
 
 ---
 
@@ -1275,7 +1274,9 @@ a = 1
 When an existential fact is already known, **`have by exist`** gives names to its witnesses. After that, you can use the witness properties directly.
 
 ```litex
-know exist u R st {u > 0, u < 1}
+witness exist u R st {u > 0, u < 1} from 1 / 2:
+    1 / 2 > 0
+    1 / 2 < 1
 have by exist v R st {v > 0, v < 1}: w
 w > 0
 ```
@@ -1444,27 +1445,17 @@ forall z R:
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
 ```litex
-abstract_prop p(x)
-abstract_prop F(x, y)
-have A set
-have B set
-
-know forall x A:
-    $p(x)
-    =>:
-        exist! y B st {$F(x, y)}
+have A set = R
+have B set = R
 
 have fn f as set:
     prove:
         forall x A:
-            $p(x)
-            =>:
-                exist! y B st {$F(x, y)}
+            exist! y B st {y = x}
+    witness exist! y B st {y = x} from x
 
 forall x A:
-    $p(x)
-    =>:
-        $F(x, f(x))
+    f(x) = x
 ```
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
@@ -1514,9 +1505,9 @@ have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
 
 ---
 
-### Object definition without  (`let`)
+### Local assumption block (`let`)
 
-Use **`let`** to introduce names together with assumptions or definitions about them. The names are local to the surrounding proof or block.
+Use **`let`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
 
 ```litex
 let a R:
@@ -1529,7 +1520,7 @@ let b, c R:
 b < c
 ```
 
-> Hint: `let` and `know` both introduce new facts without verification. Litex allows this and warns you because these statements are useful when you intentionally add axioms or temporary assumptions, but abusing them can make the system unsound. In most cases, do not use them; use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `let` and `know` both introduce new facts without verification. Litex allows this and warns you because these statements are useful when you intentionally add axioms or temporary assumptions, but abusing them can make the system unsound. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -1553,23 +1544,15 @@ m(1) = 1
 ```
 
 ```litex
-have g fn(x Z) Z
-
-know:
-    forall x Z:
-        x > 0
-        =>:
-            g(x) = g(x-1) + 1
-    g(0) = 0
-    forall x Z:
-        x < 0
-        =>:
-            g(x) = g(x+1) - 1
+have fn g(x Z) Z by cases:
+    case x > 0: x
+    case x = 0: 0
+    case x < 0: x
 
 algo g(x):
-    case x > 0: g(x-1) + 1
+    case x > 0: x
     case x = 0: 0
-    case x < 0: g(x+1) - 1
+    case x < 0: x
 
 eval g(3)
 g(3) = 3
@@ -1633,9 +1616,8 @@ says a fact was `verified_by` citing a `know`ed fact or `forall`, that is a
 conditional proof route relative to the injected assumption. It does not mean
 Litex has proved the injected assumption itself.
 
-If the runner prints `result: "success"` for a `KnowStmt`, that means the
-assumption was accepted and stored. It is not a proof result for the injected
-fact.
+If Litex reports success on a `know` line, that means the assumption was
+accepted and stored. It is not a proof result for the injected fact.
 
 > Hint: `know` is an axiom-like statement. Litex allows it because it is useful for modeling and incremental proof development, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
 
@@ -1713,17 +1695,15 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh (often used so a second `let` with the same name is allowed in a new block). Builtin facts remain available. Imported modules remain registered, but they are stopped for automatic verification until the same module is imported again.
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered, but they are stopped for automatic verification until the same module is imported again.
 
 ```litex
-let a R:
-    a = 1
+have a R = 1
 a = 1
 
 clear
 
-let a R:
-    a = 2
+have a R = 2
 a = 2
 ```
 
@@ -1826,26 +1806,16 @@ an atomic fact whose two opposite forms are both known in the temporary proof
 context.
 
 ```litex
-abstract_prop p0(x, y)
-abstract_prop q0(x, y)
-
-know forall a, b R:
-    $p0(a, b)
-    =>:
-        $q0(a, b)
-
-know not $q0(1, 2)
-
 by contra:
     prove:
-        not $p0(1, 2)
-    $p0(1, 2)
-    impossible $q0(1, 2)
+        not 1 = 2
+    1 = 2
+    impossible 1 = 2
 
 # inline example
-by contra not $p0(1, 2):
-    $p0(1, 2)
-    impossible $q0(1, 2)
+by contra not 1 = 2:
+    1 = 2
+    impossible 1 = 2
 
 by contra:
     prove:
@@ -1861,10 +1831,8 @@ by contra:
 Finite “for all members of this enumerated set” reasoning—useful for small domains and Cartesian products of finite sets.
 
 ```litex
-let a R:
-    a $in {1, 2}
-
-a = 1 or a = 2
+forall a {1, 2}:
+    a = 1 or a = 2
 
 by enumerate finite_set:
     prove:
@@ -1879,19 +1847,17 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
 For a known integer interval membership, **`by enumerate range`** and **`by enumerate closed_range`** expand the member into equality cases. `range(lo, hi)` is half-open, so it enumerates `lo, lo + 1, ..., hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
 
 ```litex
-let a range(7, 8)
-
-by enumerate range: a $in range(7, 8)
-
-a = 7
+forall a range(7, 8):
+    a = 7
 ```
 
 ```litex
-let x closed_range(1, 3)
+sketch:
+    have x closed_range(1, 3)
 
-by enumerate closed_range: x $in 1...3
+    by enumerate closed_range: x $in 1...3
 
-x = 1 or x = 2 or x = 3
+    x = 1 or x = 2 or x = 3
 ```
 
 ---
@@ -1903,28 +1869,27 @@ x = 1 or x = 2 or x = 3
 ```litex
 abstract_prop r0(a)
 
-know:
-    $r0(0)
-    forall n Z:
-        n >= 0
-        $r0(n)
-        =>:
-            $r0(n + 1)
-
-by induc n from 0:
+claim:
     prove:
-        $r0(n)
+        forall n Z:
+            $r0(0)
+            forall m Z:
+                m >= 0
+                $r0(m)
+                =>:
+                    $r0(m + 1)
+            n >= 0
+            =>:
+                $r0(n)
+    by induc n from 0:
+        prove:
+            $r0(n)
 
-    prove from n = 0:
-        $r0(0)
+        prove from n = 0:
+            $r0(0)
 
-    prove induc:
-        $r0(n + 1)
-
-forall m Z:
-    m >= 0
-    =>:
-        $r0(m)
+        prove induc:
+            $r0(n + 1)
 ```
 
 Inside `prove from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and checks the base goal. Inside `prove induc:`, Litex declares `n $in Z`, assumes `n >= base` and `P(n)`, and checks `P(n + 1)`.
@@ -1934,32 +1899,31 @@ Inside `prove from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and
 ```litex
 abstract_prop r1(a)
 
-know:
-    $r1(0)
-    forall n Z:
-        n >= 0
-        forall y Z:
-            y >= 0
-            y <= n
-            =>:
-                $r1(y)
-        =>:
-            $r1(n + 1)
-
-by strong_induc n from 0:
+claim:
     prove:
-        $r1(n)
+        forall n Z:
+            $r1(0)
+            forall m Z:
+                m >= 0
+                forall y Z:
+                    y >= 0
+                    y <= m
+                    =>:
+                        $r1(y)
+                =>:
+                    $r1(m + 1)
+            n >= 0
+            =>:
+                $r1(n)
+    by strong_induc n from 0:
+        prove:
+            $r1(n)
 
-    prove from n = 0:
-        $r1(0)
+        prove from n = 0:
+            $r1(0)
 
-    prove strong_induc:
-        $r1(n + 1)
-
-forall m Z:
-    m >= 0
-    =>:
-        $r1(m)
+        prove strong_induc:
+            $r1(n + 1)
 ```
 
 Inside `prove strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
@@ -2066,7 +2030,8 @@ Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abs
 After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
 
 ```litex
-abstract_prop p(x, y)
+prop p(x set, y set):
+    x = y
 
 by transitive_prop:
     prove:
@@ -2075,14 +2040,15 @@ by transitive_prop:
             $p(y, z)
             =>:
                 $p(x, z)
-    know $p(x, z)
+    x = y
+    y = z
+    x = z
 
-have a, b, c set
-
-claim:
-    prove:
+forall a, b, c set:
+    $p(a, b)
+    $p(b, c)
+    =>:
         $p(a, c)
-    know a $p b $p c
 ```
 
 For a longer same-predicate chain, Litex stores all non-adjacent consequences, such as `$p(a, c)`, `$p(b, d)`, and `$p(a, d)` from `a $p b $p c $p d`.
@@ -2091,7 +2057,7 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ### Zorn lemma preview (`by zorn_lemma`)
 
-Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
+Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section; if no local proof statements are needed, use **`by zorn_lemma: set S, prop P`** without the final proof-body colon. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
 
 <!-- litex:skip-test -->
 ```litex
@@ -2106,16 +2072,18 @@ See the `by_zorn_lemma` section of `examples/01_proof_patterns/README.md`.
 
 ### Axiom of choice preview (`by axiom_of_choice`)
 
-Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
+Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section; if no local proof statements are needed, use **`by axiom_of_choice: set S`** without the final proof-body colon. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
 
 ```litex
-have S set
+claim:
+    prove:
+        forall S set:
+            forall A S:
+                $is_nonempty_set(A)
+            =>:
+                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
-by axiom_of_choice: set S:
-    know forall A S:
-        $is_nonempty_set(A)
-
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+    by axiom_of_choice: set S
 ```
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
@@ -2134,7 +2102,8 @@ See the `by_symmetric_reflexive_antisymmetric_prop` section of
 `examples/01_proof_patterns/README.md`.
 
 ```litex
-abstract_prop p(x, y)
+prop p(x set, y set):
+    x = y
 
 by symmetric_prop:
     prove:
@@ -2142,14 +2111,13 @@ by symmetric_prop:
             $p(x, y)
             =>:
                 $p(y, x)
-    know $p(y, x)
+    x = y
+    y = x
 
-have a, b set
-
-claim:
-    prove:
+forall a, b set:
+    $p(b, a)
+    =>:
         $p(a, b)
-    know $p(b, a)
 ```
 
 ---
@@ -2161,7 +2129,8 @@ Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `
 After the proof succeeds, Litex records that predicate as antisymmetric in the current environment. Later, if an equality goal `a = b` is still unproved after the usual equality rules, Litex can close it from the two verified facts `$p(a, b)` and `$p(b, a)`.
 
 ```litex
-abstract_prop p(x, y)
+prop p(x set, y set):
+    x = y
 
 by antisymmetric_prop:
     prove:
@@ -2170,12 +2139,15 @@ by antisymmetric_prop:
             $p(y, x)
             =>:
                 x = y
-    know x = y
+    x = y
 
 have a, b set
-know $p(a, b)
-know $p(b, a)
-a = b
+
+forall a, b set:
+    $p(a, b)
+    $p(b, a)
+    =>:
+        a = b
 ```
 
 ---
@@ -2265,287 +2237,281 @@ The sections above explain the common use cases. This table is a quick map of th
 
 ---
 
-## Abstract Syntax Tree Reference
+## Syntax Reference
 
-This section is a compact map from Litex surface language to the current AST
-families used by the implementation. It is intentionally more abstract than the
-tutorial sections above. Many Litex surface forms are close to ordinary
-mathematical writing, but after parsing they land in one of these object, fact,
-or statement shapes.
+This section is a compact map of the Litex forms used in the examples above.
+It is organized by what the syntax means, not by implementation details.
 
-The examples below are surface examples that parse to, or contain, the named
-AST shape. Some examples are fragments and need surrounding declarations or
-known facts to verify.
+Some examples are fragments and need surrounding declarations or known facts in
+a complete proof.
 
-### Reference notation
+### Reading the examples
 
-`Obj` means an object expression. `Atomic` means an atomic fact. `Fact` means a
-top-level fact. `Stmt*` means an indented list of statements. `ParamType` is one
-of `set`, `nonempty_set`, `finite_set`, or an object used as a set/type. A typed
-parameter list such as `x, y R` is a `ParamDefWithType`; a function parameter
-list such as `x R, y S` is a `ParamDefWithSet`.
+`A set`, `A nonempty_set`, and `A finite_set` introduce sets with different
+amounts of information. A line such as `have x R` introduces an object `x` in
+the set `R`. A parameter list such as `x, y R, n N` says that `x` and `y` range
+over `R`, while `n` ranges over `N`.
 
-| AST support shape | Abstract shape | Example |
-|-------------------|----------------|---------|
-| `ParamType::Set` | object is a set | `have A set` |
-| `ParamType::NonemptySet` | object is a nonempty set | `have A nonempty_set` |
-| `ParamType::FiniteSet` | object is a finite set | `have A finite_set` |
-| `ParamType::Obj(obj)` | object belongs to the set denoted by `obj` | `have x R` |
-| `ParamDefWithType` | typed binder groups | `x, y R, n N` |
-| `ParamDefWithSet` | function-domain binder groups | `x R, y closed_range(1, 3)` |
-| `FnSetClause` | function parameters, domain facts, return set | `fn(x R: x >= 0) R` |
+| Meaning | Example |
+|---------|---------|
+| object is a set | `have A set` |
+| object is a nonempty set | `have A nonempty_set` |
+| object is a finite set | `have A finite_set` |
+| object belongs to the set denoted by `obj` | `have x R` |
+| typed binder groups | `x, y R, n N` |
+| function-domain binder groups | `x R, y closed_range(1, 3)` |
+| function parameters, domain facts, return set | `fn(x R: x >= 0) R` |
 
-### Object AST
+### Objects
 
 Objects are terms: names, numbers, set expressions, function expressions,
 tuples, matrices, intervals, and similar mathematical values. A fact is created
 only after a predicate or relation talks about one or more objects.
 
-#### Atomic names and bound objects
+#### Names and bound objects
 
-`Obj::Atom` stores a name-like object. Some variants look identical on the
-surface but are tagged differently because their binding scope is different.
+The same written name can appear in different places: as an object you already
+introduced, as a parameter in a `forall`, as a witness in an `exist`, or as the
+bound variable in a set builder.
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Obj::Atom(AtomObj::Identifier)` | ordinary previously introduced name | `x` |
-| `Obj::Atom(AtomObj::IdentifierWithMod)` | module-qualified name | `Nat::zero` |
-| `Obj::Atom(AtomObj::Forall)` | parameter bound by `forall` | `x` in `forall x R:` |
-| `Obj::Atom(AtomObj::Def)` | parameter bound in a definition header | `x` in `prop p(x R):` |
-| `Obj::Atom(AtomObj::Exist)` | witness name inside an existential body | `x` in `exist x R st {x = 1}` |
-| `Obj::Atom(AtomObj::SetBuilder)` | element bound in a set comprehension | `x` in `{x R: x >= 0}` |
-| `Obj::Atom(AtomObj::FnSet)` | function parameter inside a function type/body | `x` in `fn(x R) R` |
-| `Obj::Atom(AtomObj::Induc)` | induction parameter inside an induction proof | `n` in `by induc n from 0:` |
-| `Obj::Atom(AtomObj::DefAlgo)` | algorithm parameter inside an `algo` body | `x` in `algo f(x):` |
-| `Obj::Atom(AtomObj::DefStructField)` | struct field name inside a struct equivalence block | `x` in a `struct Point` field condition |
+| Meaning | Example |
+|---------|---------|
+| ordinary previously introduced name | `x` |
+| module-qualified name | `Nat::zero` |
+| parameter bound by `forall` | `x` in `forall x R:` |
+| parameter bound in a definition header | `x` in `prop p(x R):` |
+| witness name inside an existential body | `x` in `exist x R st {x = 1}` |
+| element bound in a set comprehension | `x` in `{x R: x >= 0}` |
+| function parameter inside a function type/body | `x` in `fn(x R) R` |
+| induction parameter inside an induction proof | `n` in `by induc n from 0:` |
+| algorithm parameter inside an `algo` body | `x` in `algo f(x):` |
+| struct field name inside a struct equivalence block | `x` in a `struct Point` field condition |
 
 #### Numeric and operator objects
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Obj::Number` | normalized numeric literal | `2`, `3.5` |
-| `Obj::Add(left, right)` | addition | `x + y` |
-| `Obj::Sub(left, right)` | subtraction | `x - y` |
-| `Obj::Mul(left, right)` | multiplication | `x * y` |
-| `Obj::Div(left, right)` | division | `x / y` |
-| `Obj::Mod(left, right)` | integer remainder | `n % 2` |
-| `Obj::Pow(base, exponent)` | power | `x^2` |
-| `Obj::Abs(arg)` | absolute value | `abs(x)` |
-| `Obj::Sqrt(arg)` | square root | `sqrt(x)` |
-| `Obj::Log(base, arg)` | logarithm with explicit base | `log(2, x)` |
-| `Obj::Max(left, right)` | binary maximum | `max(x, y)` |
-| `Obj::Min(left, right)` | binary minimum | `min(x, y)` |
+| Meaning | Example |
+|---------|---------|
+| normalized numeric literal | `2`, `3.5` |
+| addition | `x + y` |
+| subtraction | `x - y` |
+| multiplication | `x * y` |
+| division | `x / y` |
+| integer remainder | `n % 2` |
+| power | `x^2` |
+| absolute value | `abs(x)` |
+| square root | `sqrt(x)` |
+| logarithm with explicit base | `log(2, x)` |
+| binary maximum | `max(x, y)` |
+| binary minimum | `min(x, y)` |
 
 #### Set, function, and tuple objects
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Obj::StandardSet(StandardSet::...)` | builtin number set: `NPos`, `N`, `Q`, `Z`, `R`, `QPos`, `RPos`, `QNeg`, `ZNeg`, `RNeg`, `QNz`, `ZNz`, `RNz` | `N_pos`, `N`, `Z`, `Q`, `R`, `Q_pos`, `R_pos`, `Q_neg`, `Z_neg`, `R_neg`, `Q_nz`, `Z_nz`, `R_nz` |
-| `Obj::Union(left, right)` | binary union | `union(A, B)` |
-| `Obj::Intersect(left, right)` | binary intersection | `intersect(A, B)` |
-| `Obj::SetMinus(left, right)` | set subtraction | `set_minus(A, B)` |
-| `Obj::SetDiff(left, right)` | set difference alias form | `set_diff(A, B)` |
-| `Obj::Cup(family)` | union over a family | `cup(F)` |
-| `Obj::Cap(family)` | intersection over a family | `cap(F)` |
-| `Obj::PowerSet(set)` | power set | `power_set(A)` |
-| `Obj::ListSet(list)` | finite displayed set | `{1, 2, 3}` |
-| `Obj::SetBuilder(param, set, facts)` | set comprehension | `{x R: x >= 0}` |
-| `Obj::FnSet(body)` | function space | `fn(x R: x >= 0) R` |
-| `Obj::AnonymousFn(body, equal_to)` | anonymous function value | `'(x R) R {x + 1}` |
-| `Obj::FnObj(head, arg_groups)` | function application, possibly curried | `f(2)`, `f(x)(y)` |
-| `Obj::Cart(args)` | Cartesian product | `cart(A, B)` |
-| `Obj::CartDim(set)` | Cartesian-product dimension | `cart_dim(cart(A, B))` |
-| `Obj::Proj(set, dim)` | projection function from a product | `proj(cart(A, B), 1)` |
-| `Obj::Tuple(args)` | tuple value | `(1, 2)` |
-| `Obj::TupleDim(tuple)` | tuple length | `tuple_dim((1, 2))` |
-| `Obj::Count(set)` | finite cardinality/count object | `count({1, 2})` |
-| `Obj::FnRange(function)` | function image/range | `fn_range(f)` |
-| `Obj::FnRangeOn(function, set)` | function image restricted to a set | `fn_range_on(f, A)` |
-| `Obj::SumOfFiniteSet(set, func)` | finite-set sum | `sum_of_finite_set({1, 2}, f)` |
-| `Obj::Sum(start, end, func)` | finite sum | `sum(1, n, f)` |
-| `Obj::Product(start, end, func)` | finite product | `product(1, n, f)` |
-| `Obj::ProductOfFiniteSet(set, func)` | finite-set product | `product_of_finite_set({1, 2}, f)` |
-| `Obj::Range(start, end)` | half-open integer range | `range(0, 3)` |
-| `Obj::ClosedRange(start, end)` | closed integer range | `closed_range(0, 3)`, `0...3` |
+| Meaning | Example |
+|---------|---------|
+| builtin number set: `NPos`, `N`, `Q`, `Z`, `R`, `QPos`, `RPos`, `QNeg`, `ZNeg`, `RNeg`, `QNz`, `ZNz`, `RNz` | `N_pos`, `N`, `Z`, `Q`, `R`, `Q_pos`, `R_pos`, `Q_neg`, `Z_neg`, `R_neg`, `Q_nz`, `Z_nz`, `R_nz` |
+| binary union | `union(A, B)` |
+| binary intersection | `intersect(A, B)` |
+| set subtraction | `set_minus(A, B)` |
+| set difference alias form | `set_diff(A, B)` |
+| union over a family | `cup(F)` |
+| intersection over a family | `cap(F)` |
+| power set | `power_set(A)` |
+| finite displayed set | `{1, 2, 3}` |
+| set comprehension | `{x R: x >= 0}` |
+| function space | `fn(x R: x >= 0) R` |
+| anonymous function value | `'(x R) R {x + 1}` |
+| function application, possibly curried | `f(2)`, `f(x)(y)` |
+| Cartesian product | `cart(A, B)` |
+| Cartesian-product dimension | `cart_dim(cart(A, B))` |
+| projection function from a product | `proj(cart(A, B), 1)` |
+| tuple value | `(1, 2)` |
+| tuple length | `tuple_dim((1, 2))` |
+| finite cardinality/count object | `count({1, 2})` |
+| function image/range | `fn_range(f)` |
+| function image restricted to a set | `fn_range_on(f, A)` |
+| finite-set sum | `sum_of_finite_set({1, 2}, f)` |
+| finite sum | `sum(1, n, f)` |
+| finite product | `product(1, n, f)` |
+| finite-set product | `product_of_finite_set({1, 2}, f)` |
+| half-open integer range | `range(0, 3)` |
+| closed integer range | `closed_range(0, 3)`, `0...3` |
 
 #### Sequence, matrix, interval, struct, and template objects
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Obj::FiniteSeqSet(set, n)` | length-`n` finite sequence set | `finite_seq(R, 3)` |
-| `Obj::SeqSet(set)` | infinite sequence set | `seq(R)` |
-| `Obj::FiniteSeqListObj(objs)` | displayed finite sequence value | `[1, 2, 3]` |
-| `Obj::ObjAtIndex(obj, index)` | index access | `a[1]` |
-| `Obj::MatrixSet(set, rows, cols)` | matrix type | `matrix(R, 2, 2)` |
-| `Obj::MatrixListObj(rows)` | displayed matrix value | `[[1, 0], [0, 1]]` |
-| `Obj::MatrixAdd(left, right)` | matrix addition | `A ++ B` |
-| `Obj::MatrixSub(left, right)` | matrix subtraction | `A -- B` |
-| `Obj::MatrixMul(left, right)` | matrix multiplication | `A ** B` |
-| `Obj::MatrixScalarMul(scalar, matrix)` | scalar-matrix multiplication | `2 *. A` |
-| `Obj::MatrixPow(base, exponent)` | matrix power | `A ^^ 2` |
-| `Obj::IntervalObj(IntervalObj::LeftOpenRightOpen)` | open real interval | `oo(0, 1)` |
-| `Obj::IntervalObj(IntervalObj::LeftOpenRightClosed)` | left-open, right-closed real interval | `oc(0, 1)` |
-| `Obj::IntervalObj(IntervalObj::LeftClosedRightOpen)` | left-closed, right-open real interval | `co(0, 1)` |
-| `Obj::IntervalObj(IntervalObj::LeftClosedRightClosed)` | closed real interval | `cc(0, 1)` |
-| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftOpen)` | open lower-bounded ray | `oinf(0)` |
-| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftClosed)` | closed lower-bounded ray | `cinf(0)` |
-| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightOpen)` | open upper-bounded ray | `info(0)` |
-| `Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightClosed)` | closed upper-bounded ray | `infc(0)` |
-| `Obj::StructObj(name, params)` | struct view object | `&Point`, `&Group<S>` |
-| `Obj::ObjAsStructInstanceWithFieldAccess(struct, obj, field)` | explicit field access through a struct view | `&Point{p}.x` |
-| `Obj::InstantiatedTemplateObj(name, args)` | instantiated template object | `\T<R>` |
+| Meaning | Example |
+|---------|---------|
+| length-`n` finite sequence set | `finite_seq(R, 3)` |
+| infinite sequence set | `seq(R)` |
+| displayed finite sequence value | `[1, 2, 3]` |
+| index access | `a[1]` |
+| matrix type | `matrix(R, 2, 2)` |
+| displayed matrix value | `[[1, 0], [0, 1]]` |
+| matrix addition | `A ++ B` |
+| matrix subtraction | `A -- B` |
+| matrix multiplication | `A ** B` |
+| scalar-matrix multiplication | `2 *. A` |
+| matrix power | `A ^^ 2` |
+| open real interval | `oo(0, 1)` |
+| left-open, right-closed real interval | `oc(0, 1)` |
+| left-closed, right-open real interval | `co(0, 1)` |
+| closed real interval | `cc(0, 1)` |
+| open lower-bounded ray | `oinf(0)` |
+| closed lower-bounded ray | `cinf(0)` |
+| open upper-bounded ray | `info(0)` |
+| closed upper-bounded ray | `infc(0)` |
+| struct view object | `&Point`, `&Group<S>` |
+| explicit field access through a struct view | `&Point{p}.x` |
+| instantiated template object | `\T<R>` |
 
-Function heads are also structured. A `FnObj` head may be an ordinary name, a
-module-qualified name, a bound parameter, an anonymous function literal, a
-finite-sequence literal, an indexed object, a struct-field access object, or an
-instantiated template object.
+Function calls can use ordinary names, module names, anonymous functions,
+indexed objects, struct-field access, or instantiated templates.
 
-### Fact AST
+### Facts
 
 Facts are propositions. They may be atomic, existential, universal, chained,
 conjunctive, disjunctive, or negated universal facts.
 
-#### Top-level fact variants
+#### Common fact forms
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Fact::AtomicFact(atomic)` | one predicate/relation applied to objects | `x = y`, `x $in A`, `$p(x)` |
-| `Fact::AndFact(facts)` | conjunction of atomic facts | `x = 1 and y = 2` |
-| `Fact::ChainFact(objs, props)` | adjacent binary relation chain | `0 <= x <= 1`, `A $subset B $subset C` |
-| `Fact::OrFact(branches)` | disjunction of atomic/and/chain branches | `x = 0 or x != 0` |
-| `Fact::ExistFact(ExistFactEnum::ExistFact)` | existence | `exist x R st {x = 1}` |
-| `Fact::ExistFact(ExistFactEnum::ExistUniqueFact)` | unique existence | `exist! x R st {x = 0}` |
-| `Fact::ExistFact(ExistFactEnum::NotExistFact)` | non-existence | `not exist x R st {x != x}` |
-| `Fact::ForallFact(params, dom, then)` | universal implication, with optional assumptions | `forall x R: x = x` |
-| `Fact::ForallFactWithIff(forall, iff)` | universal equivalence | `forall x, y R:`<br>`=>:`<br>`x > y`<br>`<=>:`<br>`y < x` |
-| `Fact::NotForall(forall)` | negated universal statement | `not forall x R:`<br>`x > 0` |
+| Meaning | Example |
+|---------|---------|
+| one predicate/relation applied to objects | `x = y`, `x $in A`, `$p(x)` |
+| conjunction of atomic facts | `x = 1 and y = 2` |
+| adjacent binary relation chain | `0 <= x <= 1`, `A $subset B $subset C` |
+| disjunction of atomic/and/chain branches | `x = 0 or x != 0` |
+| existence | `exist x R st {x = 1}` |
+| unique existence | `exist! x R st {x = 0}` |
+| non-existence | `not exist x R st {x != x}` |
+| universal implication, with optional assumptions | `forall x R: x = x` |
+| universal equivalence | `forall x, y R:`<br>`=>:`<br>`x > y`<br>`<=>:`<br>`y < x` |
+| negated universal statement | `not forall x R:`<br>`x > 0` |
 
-#### Atomic fact variants
+#### Atomic facts
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `AtomicFact::NormalAtomicFact` | user-defined or abstract predicate | `$prime(n)` |
-| `AtomicFact::EqualFact` | equality | `x = y` |
-| `AtomicFact::LessFact` | strict less-than | `x < y` |
-| `AtomicFact::GreaterFact` | strict greater-than | `x > y` |
-| `AtomicFact::LessEqualFact` | less-than or equal | `x <= y` |
-| `AtomicFact::GreaterEqualFact` | greater-than or equal | `x >= y` |
-| `AtomicFact::IsSetFact` | set predicate | `$is_set(A)` |
-| `AtomicFact::IsNonemptySetFact` | nonempty-set predicate | `$is_nonempty_set(A)` |
-| `AtomicFact::IsFiniteSetFact` | finite-set predicate | `$is_finite_set(A)` |
-| `AtomicFact::InFact` | membership | `x $in A` |
-| `AtomicFact::IsCartFact` | Cartesian-product shape predicate | `$is_cart(C)` |
-| `AtomicFact::IsTupleFact` | tuple shape predicate | `$is_tuple(t)` |
-| `AtomicFact::SubsetFact` | subset relation | `A $subset B` |
-| `AtomicFact::SupersetFact` | superset relation | `A $superset B` |
-| `AtomicFact::RestrictFact` | function restriction predicate | `f $restricts_to fn(x R) R` |
-| `AtomicFact::FnEqualInFact` | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
-| `AtomicFact::FnEqualFact` | global function equality | `$fn_eq(f, g)` |
-| `AtomicFact::NotNormalAtomicFact` | negated user predicate | `not $prime(n)` |
-| `AtomicFact::NotEqualFact` | disequality | `x != y` |
-| `AtomicFact::NotLessFact` | negated less-than | `not x < y` |
-| `AtomicFact::NotGreaterFact` | negated greater-than | `not x > y` |
-| `AtomicFact::NotLessEqualFact` | negated less-than or equal | `not x <= y` |
-| `AtomicFact::NotGreaterEqualFact` | negated greater-than or equal | `not x >= y` |
-| `AtomicFact::NotIsSetFact` | negated set predicate | `not $is_set(A)` |
-| `AtomicFact::NotIsNonemptySetFact` | negated nonempty-set predicate | `not $is_nonempty_set(A)` |
-| `AtomicFact::NotIsFiniteSetFact` | negated finite-set predicate | `not $is_finite_set(A)` |
-| `AtomicFact::NotInFact` | negated membership | `not x $in A` |
-| `AtomicFact::NotIsCartFact` | negated Cartesian-product predicate | `not $is_cart(C)` |
-| `AtomicFact::NotIsTupleFact` | negated tuple predicate | `not $is_tuple(t)` |
-| `AtomicFact::NotSubsetFact` | negated subset relation | `not A $subset B` |
-| `AtomicFact::NotSupersetFact` | negated superset relation | `not A $superset B` |
-| `AtomicFact::NotRestrictFact` | negated restriction predicate | `not f $restricts_to fn(x R) R` |
+| Meaning | Example |
+|---------|---------|
+| user-defined or abstract predicate | `$prime(n)` |
+| equality | `x = y` |
+| strict less-than | `x < y` |
+| strict greater-than | `x > y` |
+| less-than or equal | `x <= y` |
+| greater-than or equal | `x >= y` |
+| set predicate | `$is_set(A)` |
+| nonempty-set predicate | `$is_nonempty_set(A)` |
+| finite-set predicate | `$is_finite_set(A)` |
+| membership | `x $in A` |
+| Cartesian-product shape predicate | `$is_cart(C)` |
+| tuple shape predicate | `$is_tuple(t)` |
+| subset relation | `A $subset B` |
+| superset relation | `A $superset B` |
+| function restriction predicate | `f $restricts_to fn(x R) R` |
+| pointwise equality on a set | `$fn_eq_in(f, g, A)` |
+| global function equality | `$fn_eq(f, g)` |
+| negated user predicate | `not $prime(n)` |
+| disequality | `x != y` |
+| negated less-than | `not x < y` |
+| negated greater-than | `not x > y` |
+| negated less-than or equal | `not x <= y` |
+| negated greater-than or equal | `not x >= y` |
+| negated set predicate | `not $is_set(A)` |
+| negated nonempty-set predicate | `not $is_nonempty_set(A)` |
+| negated finite-set predicate | `not $is_finite_set(A)` |
+| negated membership | `not x $in A` |
+| negated Cartesian-product predicate | `not $is_cart(C)` |
+| negated tuple predicate | `not $is_tuple(t)` |
+| negated subset relation | `not A $subset B` |
+| negated superset relation | `not A $superset B` |
+| negated restriction predicate | `not f $restricts_to fn(x R) R` |
 
-#### Fact sub-shapes used inside larger facts
+#### Facts inside larger facts
 
-Some AST types are not separate top-level facts, but they constrain what may
-appear inside `or`, `exist`, `forall`, and proof-control statements.
+Some facts appear only as part of a larger statement, such as an `or`, `exist`,
+`forall`, or proof block.
 
-| AST shape | Allowed members | Example |
-|-----------|-----------------|---------|
-| `AndChainAtomicFact` | atomic, `and`, or chain | `x = 1`, `x = 1 and y = 2`, `0 <= x <= 1` |
-| `OrAndChainAtomicFact` | atomic, `and`, chain, or `or` | `x = 0 or x != 0` |
-| `ExistOrAndChainAtomicFact` | atomic, `and`, chain, `or`, or `exist` | `exist y R st {y = x}` inside a `forall` conclusion |
-| `ExistBodyFact::AtomicFact` | atomic fact inside `st { ... }` | `exist x R st {x = 1}` |
-| `ExistBodyFact::AndFact` | conjunction inside `st { ... }` | `exist x, y R st {x = 1 and y = 2}` |
-| `ExistBodyFact::ChainFact` | chain inside `st { ... }` | `exist x R st {0 <= x <= 1}` |
-| `ExistBodyFact::OrFact` | disjunction inside `st { ... }` | `exist x R st {x = 0 or x = 1}` |
-| `ExistBodyFact::InlineForall` | compact universal fact inside `st { ... }` | `exist f fn(x R) R st {forall! x R => {f(x) = x}}` |
+| Allowed forms | Example |
+|---------|---------|
+| atomic, `and`, or chain | `x = 1`, `x = 1 and y = 2`, `0 <= x <= 1` |
+| atomic, `and`, chain, or `or` | `x = 0 or x != 0` |
+| atomic, `and`, chain, `or`, or `exist` | `exist y R st {y = x}` inside a `forall` conclusion |
+| atomic fact inside `st { ... }` | `exist x R st {x = 1}` |
+| conjunction inside `st { ... }` | `exist x, y R st {x = 1 and y = 2}` |
+| chain inside `st { ... }` | `exist x R st {0 <= x <= 1}` |
+| disjunction inside `st { ... }` | `exist x R st {x = 0 or x = 1}` |
+| compact universal fact inside `st { ... }` | `exist f fn(x R) R st {forall! x R => {f(x) = x}}` |
 
-### Statement AST
+### Statements
 
-Statements are executable units. A statement may verify a fact, define a name,
-open a local proof, inject assumptions, import code, evaluate an expression, or
-register a proof pattern.
+Statements are the lines that build a Litex file. A statement may verify a
+fact, define a name, open a local proof, add an explicit assumption, import
+code, evaluate an expression, or register a reusable proof pattern.
 
 #### Definition and context statements
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Stmt::Fact(Fact)` | verify and store a fact | `1 + 1 = 2` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt)` | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasPropStmt)` | copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt)` | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt)` | introduce object parameters by type/set | `have x R` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt)` | introduce object parameters equal to expressions | `have x R = 1` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt)` | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt)` | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt)` | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt)` | define a function by one expression | `have fn f(x R) R = x + 1` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt)` | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt)` | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
-| `Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt)` | define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt)` | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
-| `Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt)` | introduce local names and assumed facts | `let x R:`<br>`x = 1` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt)` | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt)` | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
+| Meaning | Example |
+|---------|---------|
+| verify and store a fact | `1 + 1 = 2` |
+| define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
+| copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
+| declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
+| introduce object parameters by type/set | `have x R` |
+| introduce object parameters equal to expressions | `have x R = 1` |
+| introduce witnesses with body facts | `have x R:`<br>`x = 1` |
+| name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
+| name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
+| define a function by one expression | `have fn f(x R) R = x + 1` |
+| define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
+| define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
+| define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
+| introduce local names and assumed facts | `let x R:`<br>`x = 1` |
+| define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
+| define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
-#### Proof, theorem, strategy, and tooling statements
+#### Proof, theorem, strategy, and utility statements
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Stmt::ProofBlock(ProofBlockStmt::ClaimStmt)` | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
-| `Stmt::UnsafeStmt(UnsafeStmt::KnowStmt)` | inject explicit assumptions | `know x = 1` |
-| `Stmt::ProofBlock(ProofBlockStmt::SketchStmt)` | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt)` | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasThmStmt)` | copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
-| `Stmt::By(ByStmt::ByThmStmt)` | call a named theorem with arguments | `by thm self_eq(1)` |
-| `Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt)` | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
-| `Stmt::Command(CommandStmt::UseStrategyStmt)` | enable a strategy | `use strategy positive_nonzero` |
-| `Stmt::Command(CommandStmt::StopStrategyStmt)` | disable a strategy | `stop strategy positive_nonzero` |
-| `Stmt::Command(CommandStmt::ImportStmt(ImportStmt::ImportGlobalModule))` | import a standard-library module | `import Nat` |
-| `Stmt::Command(CommandStmt::ImportStmt(ImportStmt::ImportRelativePath))` | import a quoted file path, optionally as a module name | `import "local.lit" as L` |
-| `Stmt::Command(CommandStmt::StopImportStmt)` | stop automatic use of an imported module | `stop import Nat` |
-| `Stmt::Command(CommandStmt::RunFileStmt)` | run a file in the current environment | `run_file "./sketch.lit"` |
-| `Stmt::Command(CommandStmt::DoNothingStmt)` | explicit no-op | `do_nothing`, `...` |
-| `Stmt::Command(CommandStmt::ClearStmt)` | clear the current user environment | `clear` |
-| `Stmt::Command(CommandStmt::EvalStmt)` | evaluate an object expression | `eval 1 + 2` |
-| `Stmt::Command(CommandStmt::EvalByStmt)` | evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
-| `Stmt::Witness(WitnessStmt::WitnessExistFact)` | prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
-| `Stmt::Witness(WitnessStmt::WitnessNonemptySet)` | prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
+| Meaning | Example |
+|---------|---------|
+| prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
+| inject explicit assumptions | `know x = 1` |
+| open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
+| define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
+| call a named theorem with arguments | `by thm self_eq(1)` |
+| define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
+| enable a strategy | `use strategy positive_nonzero` |
+| disable a strategy | `stop strategy positive_nonzero` |
+| import a standard-library module | `import Nat` |
+| import a quoted file path, optionally as a module name | `import "local.lit" as L` |
+| stop automatic use of an imported module | `stop import Nat` |
+| run a file in the current environment | `run_file "./sketch.lit"` |
+| explicit no-op | `do_nothing`, `...` |
+| clear the current user environment | `clear` |
+| evaluate an object expression | `eval 1 + 2` |
+| evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
+| prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
+| prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
 
 #### `by ...` proof-control statements
 
-| AST shape | Abstract shape | Example |
-|-----------|----------------|---------|
-| `Stmt::By(ByStmt::ByCasesStmt)` | prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
-| `Stmt::By(ByStmt::ByContraStmt)` | prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
-| `Stmt::By(ByStmt::ByEnumerateFiniteSetStmt)` | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
-| `Stmt::By(ByStmt::ByEnumerateRangeStmt)` | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
-| `Stmt::By(ByStmt::ByClosedRangeAsCasesStmt)` | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
-| `Stmt::By(ByStmt::ByInducStmt)` | ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
-| `Stmt::By(ByStmt::ByForStmt)` | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
-| `Stmt::By(ByStmt::ByExtensionStmt)` | prove set equality by extensionality | `by extension A = B:` |
-| `Stmt::By(ByStmt::ByFnAsSetStmt)` | expose graph facts for a known function | `by fn as set: f` |
-| `Stmt::By(ByStmt::ByTupleAsSetStmt)` | expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
-| `Stmt::By(ByStmt::ByFnSetAsSetStmt)` | expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
-| `Stmt::By(ByStmt::ByReflexivePropStmt)` | register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
-| `Stmt::By(ByStmt::BySymmetricPropStmt)` | register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
-| `Stmt::By(ByStmt::ByTransitivePropStmt)` | register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
-| `Stmt::By(ByStmt::ByAntisymmetricPropStmt)` | register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
-| `Stmt::By(ByStmt::ByZornLemmaStmt)` | trusted preview Zorn step | `by zorn_lemma: set P, prop le:` |
-| `Stmt::By(ByStmt::ByAxiomOfChoiceStmt)` | trusted preview choice step | `by axiom_of_choice: set F:` |
+| Meaning | Example |
+|---------|---------|
+| prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
+| prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
+| prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
+| expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
+| expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
+| ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
+| bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
+| prove set equality by extensionality | `by extension A = B:` |
+| expose graph facts for a known function | `by fn as set: f` |
+| expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
+| expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
+| register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
+| register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
+| register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
+| register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
+| trusted preview Zorn step | `by zorn_lemma: set P, prop le` |
+| trusted preview choice step | `by axiom_of_choice: set F` |
 
 ---
 
@@ -2585,19 +2551,15 @@ The exact details depend on the shape of the fact, but this loop is the main men
 
 ### Full Verifier Flow
 
-The complete execution path has three layers: source parsing and global
-statement dispatch, executor or fact-verification/storage execution, and shared
-context update. Definitions, proof blocks, `know`, generated obligations,
-`error`, `unknown`, `true`, `verified_by`, and inferred facts all fit into
-this one-run model.
+The complete execution path is simple to read from the outside: Litex reads a
+line, checks or records what that line contributes, and then updates the
+mathematical context for later lines.
 
-Non-factual executor statements can define objects and concepts, import
-modules, evaluate expressions, or open local proof/control blocks. Some of
-those statements call the fact verifier for proof-required obligations; others
-store well-defined context facts or explicit `know` assumption injections
-without using a proof route. After a declaration, verified fact, or injected
-context assumption is stored, Litex updates lookup indexes and runs builtin
-inference so later statements can reuse the expanded context.
+Some lines define objects and concepts, import modules, evaluate expressions,
+or open local proof blocks. Some lines ask the fact verifier to prove a target;
+others deliberately add trusted assumptions. After a declaration, verified
+fact, or trusted assumption is stored, Litex records routine consequences so
+later statements can reuse the expanded context.
 
 #### A builtin rule proves it
 
@@ -2628,8 +2590,10 @@ Other builtin rules handle ordinary mathematical background such as order, membe
 Some facts are true because the current context already contains the same fact.
 
 ```litex
-abstract_prop ok(x)
-know $ok(0)
+prop ok(x R):
+    x = x
+
+$ok(0)
 $ok(0)
 ```
 
@@ -2644,13 +2608,15 @@ The explicit route gives the fact a name and cites it:
 
 ```litex
 have human nonempty_set, Socrates human
-abstract_prop mortal(x)
+
+prop mortal(x human):
+    x = x
 
 thm all_humans_are_mortal:
     prove:
         forall x human:
             $mortal(x)
-    know $mortal(x)
+    x = x
 
 by thm all_humans_are_mortal(Socrates)
 $mortal(Socrates)
@@ -2669,10 +2635,15 @@ writes the desired conclusion directly:
 
 ```litex
 have human nonempty_set, Socrates human
-abstract_prop mortal(x)
 
-know forall x human:
-    $mortal(x)
+prop mortal(x human):
+    x = x
+
+claim:
+    prove:
+        forall x human:
+            $mortal(x)
+    x = x
 
 $mortal(Socrates)
 ```
@@ -2779,15 +2750,14 @@ The following example shows why this matters. The known `forall` fact says that 
 ```litex
 abstract_prop p(x)
 
-know forall f, g fn(x R) R:
-    $p(f)
-    $p(g)
-    =>:
-        $p('R(x){f(x) + g(x)})
-
 claim:
     prove:
         forall a, b, c fn(x R) R:
+            forall f, g fn(x R) R:
+                $p(f)
+                $p(g)
+                =>:
+                    $p('R(x){f(x) + g(x)})
             $p(a)
             $p(b)
             $p(c)
@@ -2796,11 +2766,12 @@ claim:
     $p('R(x){b(x) + c(x)})
 ```
 
-In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the known-forall conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `'R(x){b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
+In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the assumed universal conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `'R(x){b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
 
 ```text
-know forall x R:
-    $p(x)
+known fact:
+    forall x R:
+        $p(x)
 
 goal:
     $p(2)
@@ -2810,8 +2781,9 @@ match:
 ```
 
 ```text
-know forall x R:
-    $p(x + 1)
+known fact:
+    forall x R:
+        $p(x + 1)
 
 goal:
     $p(2 + 1)
@@ -2821,8 +2793,9 @@ match:
 ```
 
 ```text
-know forall x, y R:
-    $p((x, y))
+known fact:
+    forall x, y R:
+        $p((x, y))
 
 goal:
     $p((2, 3))
@@ -2834,8 +2807,9 @@ match:
 The substitutions are merged as matching goes deeper. If the same universal parameter appears twice, both appearances must match the same object:
 
 ```text
-know forall x R:
-    $p(x, x)
+known fact:
+    forall x R:
+        $p(x, x)
 
 goal:
     $p(2, 2)
@@ -2845,8 +2819,9 @@ match:
 ```
 
 ```text
-know forall x R:
-    $p(x, x)
+known fact:
+    forall x R:
+        $p(x, x)
 
 goal:
     $p(2, 3)
@@ -2861,8 +2836,9 @@ reason:
 Litex also simplifies many common matching steps for you. If the `forall` conclusion has a parameter plus, minus, times, or divided by a number, and the goal gives a single object instead of the same written shape, Litex can move that number to the other side of the match.
 
 ```text
-know forall x R:
-    $p(x + 1)
+known fact:
+    forall x R:
+        $p(x + 1)
 
 goal:
     $p(y)
@@ -2872,8 +2848,9 @@ match:
 ```
 
 ```text
-know forall x R:
-    $p(x * 2)
+known fact:
+    forall x R:
+        $p(x * 2)
 
 goal:
     $p(y)
@@ -2943,11 +2920,10 @@ For integers, Litex has a builtin exhaustive split from a lower bound. If
 successor split followed by a strict tail:
 
 ```litex
-sketch:
-    let a, x Z:
-        x >= a
-
-    x = a or x = a + 1 or x = a + 2 or x > a + 2
+forall a, x Z:
+    x >= a
+    =>:
+        x = a or x = a + 1 or x = a + 2 or x > a + 2
 ```
 
 This rule is integer-only. The analogous real-number statement would not be
@@ -2966,8 +2942,9 @@ reason:
 ```
 
 ```text
-know forall x R:
-    x < 0 or 0 <= x
+known fact:
+    forall x R:
+        x < 0 or 0 <= x
 
 goal:
     a < 0 or 0 <= a
@@ -3016,8 +2993,9 @@ reason:
 Known `forall` facts can also prove existential facts when their conclusion is an existential fact:
 
 ```text
-know forall A Set:
-    exist x A st { x $in A }
+known fact:
+    forall A Set:
+        exist x A st { x $in A }
 
 goal:
     exist x N st { x $in N }
@@ -3107,47 +3085,26 @@ When Litex verifies a file, read the output message. It tells you how each fact 
 For example, a successful fact result may show:
 
 ```litex
-let a, x R:
+forall a, x R:
     a = 0 or a > 0
     x = a
-
-x = 0 or x > 0
+    =>:
+        x = 0 or x > 0
 ```
 
 ```text
-
 {
   "result": "success",
-  "type": "DefLetStmt",
-  "line": 1,
-  "stmt": "let a, x R:\n    a = 0 or a > 0\n    x = a",
-  "infer_facts": [
-    "a $in R",
-    "x $in R",
-    "a = 0 or a > 0",
-    "x = a"
-  ]
-}
-
-{
-  "result": "success",
-  "type": "OrFact",
-  "line": 5,
   "stmt": "x = 0 or x > 0",
-  "verified_by": [
-    {
-      "type": "cite or fact",
-      "cite_source": {
-        "line": 2
-      },
-      "cited_stmt": "a = 0 or a > 0",
-      "verify_what": "x = 0 or x > 0"
-    }
-  ]
+  "verified_by": {
+    "type": "cite or fact",
+    "cited_stmt": "a = 0 or a > 0",
+    "verify_what": "x = 0 or x > 0"
+  }
 }
 ```
 
-This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. These messages are useful for learning Litex's proof process: they show whether a fact closed by builtin rules, by a known fact, by a known `forall`, or by another recorded verification route.
+This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object; composite routes such as `forall`, chains, or conjunctions put their sub-checks under `steps`. For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary, then open `inside_results` when you need the detailed nested checks. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
 
 ---
 
@@ -3169,7 +3126,7 @@ For the full flow around goals, storage, and inference, see [Proof Process](http
 
 This page is not something to memorize. It is a map of common builtin patterns, and you can read it casually when you want to know what Litex can close automatically.
 
-Most examples are real `litex` snippets. They are meant to show the shape of facts Litex can verify automatically. The checker may use several smaller rules internally, but the user-facing experience is that the fact just closes.
+Most examples are real `litex` code. They are meant to show the shape of facts Litex can verify automatically. The checker may use several smaller rules internally, but the user-facing experience is that the fact just closes.
 
 There are many entries here because basic mathematical concepts have many simple pairwise relationships. Each relationship is usually easy, but the total number of combinations is large. One of Litex's main design choices is to build in many of these simple-but-numerous relationships. The result is that user code can stay closer to everyday mathematical writing without giving up runtime speed.
 
@@ -3598,12 +3555,12 @@ forall a, b R:
 ```
 
 ```litex
-let a, b, c R:
+forall a, b, c R:
     0 <= a
     0 <= b
     0 <= c
-
-0 <= a + b + c
+    =>:
+        0 <= a + b + c
 ```
 
 ```litex
@@ -3688,14 +3645,13 @@ forall a, b R, m N_pos:
 So Litex can check the reversible form directly.
 
 ```litex
-know:
-    forall a, b R, m N_pos:
-        0 <= a
-        0 <= b
-        =>:
-            a^m <= b^m
-        <=>:
-            a <= b
+forall a, b R, m N_pos:
+    0 <= a
+    0 <= b
+    =>:
+        a^m <= b^m
+    <=>:
+        a <= b
 ```
 
 If at least one component is nonzero, a sum of two squares is nonzero.
@@ -4476,24 +4432,22 @@ A finite sequence literal may be applied as the finite function it denotes. For 
 From `A $subset B`, Litex infers the universal membership consequence: every element of `A` is also in `B`.
 
 ```litex
-sketch:
-    let A, B set:
-        A $subset B
-    forall x A:
-        x $in B
+{1} $subset {1, 2}
+
+forall x {1}:
+    x $in {1, 2}
 ```
 
 From `A $superset B`, Litex infers the universal membership consequence in the other direction: every element of `B` is also in `A`.
 
 ```litex
-sketch:
-    let A, B set:
-        A $superset B
-    forall x B:
-        x $in A
+{1, 2} $superset {1}
+
+forall x {1}:
+    x $in {1, 2}
 ```
 
-Inside a `forall ... =>:` block, the conclusion cannot be another raw `forall`. In examples like these, use `let` to store the subset or superset fact, then write the inferred universal membership fact separately.
+When the conclusion you want is itself universal, write the subset or superset fact first, then write the universal membership consequence as its own line.
 
 ---
 

@@ -78,8 +78,8 @@ _– David Hilbert_
 
 Think of a Litex file as a small mathematical world that grows one checked fact
 at a time. You introduce the objects in the world, give yourself vocabulary,
-prove or explicitly assume general rules, and then ask Litex whether a new fact
-follows.
+state the local assumptions of the problem, and then ask Litex whether a new
+fact follows.
 
 A classical syllogism shows the shape:
 
@@ -87,28 +87,27 @@ A classical syllogism shows the shape:
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
-# Assumption injection: trusted input for this example, not a checked proof.
-know forall x human:
-    $mortal(x)
-
-$mortal(Socrates)
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
 ```
 
-This says: Socrates is human; every human is mortal; therefore Socrates is
-mortal.
+This says: Socrates is human; if every human is mortal, then Socrates is
+mortal. The general rule is kept inside the `forall` premise instead of being
+injected into the global context.
 
 The four moves are the basic Litex loop:
 
 1. `have human nonempty_set, Socrates human` builds a tiny world.
 2. `abstract_prop mortal(x)` adds a new word that can be used in facts.
-3. `know forall x human: ...` stores the general rule.
+3. The inner `forall x human: ...` states the local rule for this proof.
 4. `$mortal(Socrates)` asks Litex to verify the particular conclusion.
 
-The example is intentionally small, but it uses two assumption-facing tools:
-`abstract_prop` declares the vocabulary word `mortal`, and `know` injects the
-general rule as an explicit assumption. Litex checks that the conclusion follows
-from that injected assumption and the rest of the context; it does not prove the
-assumed rule from nothing.
+The example is intentionally small, but it still keeps the assumption visible:
+Litex checks that the conclusion follows from the local premise and the rest of
+the context; it does not prove the premise from nothing.
 
 When Litex accepts that final line, the verifier output can explain the route
 it found. The exact JSON may include line numbers and more trace fields, but
@@ -117,7 +116,6 @@ the important shape is:
 ```text
 {
   "result": "success",
-  "type": "AtomicFact",
   "stmt": "$mortal(Socrates)",
   "verified_by": {
     "type": "cite forall fact",
@@ -131,23 +129,19 @@ the route was arithmetic, a known fact, a matching `forall`, or an inferred
 consequence. That makes Litex a feedback loop: write the next fact, run the
 checker, read what happened, and add the next piece of context.
 
-When a route cites a fact that came from `know`, read the success as conditional
-on that assumption. `verified_by` explains how the current line was justified
-relative to the stored context; it does not mean every cited assumption was
-itself proved by Litex.
-
-The same caution applies when the runner reports `result: "success"` for a
-`KnowStmt`: that success means the assumption was accepted into the context. It
-does not mean Litex proved the assumption.
+For factual statements, the proof route is reported under `verified_by`. More
+structured facts can include a `steps` array inside that object. For
+non-factual statements such as definitions, `claim`, `thm`, and `by cases`,
+the top-level summary is reported under `accepted_by`.
 
 Every factual statement has exactly one of three outcomes: **true**,
 **unknown**, or **error**. `true` means Litex found a proof path relative to the
 current context, such as a builtin rule, a checked fact, or an explicitly
-injected `know` assumption. `unknown` means the statement is meaningful, but
-Litex did not find enough verified or assumed information to prove it. `error`
-means the line cannot be checked as a valid fact, often because the syntax is
-wrong or some object is not well-defined, such as an undeclared name, a function
-argument outside its domain, or `1 / 0`.
+stated local assumption. `unknown` means the statement is meaningful, but Litex
+did not find enough verified or assumed information to prove it. `error` means
+the line cannot be checked as a valid fact, often because the syntax is wrong or
+some object is not well-defined, such as an undeclared name, a function argument
+outside its domain, or `1 / 0`.
 
 ## How is Litex Different
 
@@ -162,21 +156,20 @@ cite it with the required arguments. This is closer to the named-theorem style
 used by Lean and other formal proof systems.
 
 ```litex
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
-
-thm all_humans_are_mortal:
+thm add_one_after_two:
     prove:
-        forall x human:
-            $mortal(x)
-    know $mortal(x)
+        forall x R:
+            x = 2
+            =>:
+                x + 1 = 3
+    x + 1 = 2 + 1 = 3
 
-by thm all_humans_are_mortal(Socrates)
-$mortal(Socrates)
+by thm add_one_after_two(2)
+2 + 1 = 3
 ```
 
-The Lean shape is similar: keep the universal fact under a name, then apply
-that name to the object you need.
+The Lean shape is similar: keep a universal fact under a name, then apply that
+name to the object you need.
 
 ```lean
 variable (Human : Type)
@@ -196,10 +189,11 @@ and write the conclusion directly:
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
-know forall x human:
-    $mortal(x)
-
-$mortal(Socrates)
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
 ```
 
 Here Litex matches `$mortal(Socrates)` against the known `forall`, checks that
@@ -208,15 +202,9 @@ verifies the conclusion. This is the core difference in proof style: Litex can
 use named theorem calls when names make the proof clearer, but it also lets
 ordinary factual lines drive verification by their mathematical shape.
 
-> This example uses two assumption-facing tools. `abstract_prop` declares an
-> uninterpreted predicate name, and `know` is explicit assumption injection,
-> similar in role to Lean's `by sorry`. They are useful for axioms and proof
-> skeletons, but final artifacts should replace, justify, or explicitly record
-> them as proof debt.
-
 ## A Quick Gallery
 
-The examples above are deliberately tiny. The snippets below give a fast visual
+The examples above are deliberately tiny. The samples below give a fast visual
 sense of the larger Litex surface. They are excerpts, not full runnable files;
 the linked pages contain runnable examples and fuller context.
 

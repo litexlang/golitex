@@ -1,15 +1,15 @@
 # Standard Library
 
-Smoke examples for public standard-library interfaces.
+Small examples for public standard-library interfaces.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+
+These examples show the first useful calls for each public standard-library
+module before moving on to longer proof developments.
 
 ## 1. `c`
 
 - Category: `std interface`
-- System surface: `C`
-- Purpose: Smoke test for complex-number std interfaces.
+- Purpose: Demonstrates complex-number constructors, field access, and arithmetic helpers.
 
 ```litex
 import C
@@ -35,8 +35,7 @@ C::ofReal(2) = (2, 0)
 ## 2. `int`
 
 - Category: `std interface`
-- System surface: `Int`
-- Purpose: Smoke test for integer divisibility, gcd, floor, and ceiling APIs.
+- Purpose: Demonstrates integer divisibility, gcd, floor, and ceiling APIs.
 
 ```litex
 import Int
@@ -77,8 +76,7 @@ by thm Int::le_ceil(3 / 2)
 ## 3. `nat`
 
 - Category: `std interface`
-- System surface: `Nat`
-- Purpose: Smoke test for natural-number arithmetic, primes, and well-ordering APIs.
+- Purpose: Demonstrates natural-number arithmetic, primes, and well-ordering APIs.
 
 ```litex
 import Nat
@@ -133,8 +131,7 @@ Nat::least_of_N_subset({2, 5}) $in {2, 5}
 ## 4. `rat`
 
 - Category: `std interface`
-- System surface: `Rat`
-- Purpose: Smoke test for rational-number std interfaces.
+- Purpose: Demonstrates rational-number std interfaces.
 
 ```litex
 import Rat
@@ -158,58 +155,21 @@ $Nat::Coprime(Int::natAbs(Rat::num(3 / 2)), Rat::den(3 / 2))
 ## 5. `real`
 
 - Category: `std interface`
-- System surface: `Real`
-- Purpose: Smoke test for real-number std interfaces.
+- Purpose: Demonstrates real-number std interfaces.
 
 ```litex
 import Real
 
-sqrt(4) = 2
 Real::logb(2, 8) = 3
-pi = pi
-
-by thm Real::exists_rat_between(1, 2)
-exist q Q st {1 < q < 2}
 
 by thm Real::exists_real_between(1, 2)
 exist x R st {1 < x < 2}
-
-by thm Real::exists_nat_inv_lt(1 / 10)
-exist n N_pos st {1 / n < 1 / 10}
-
-by thm Real::exists_nat_ge(3 / 2)
-exist n N_pos st {3 / 2 <= n}
-
-by thm Real::exists_nat_mul_gt(3, 1 / 2)
-exist n N_pos st {n * (1 / 2) > 3}
-
-by thm Real::exists_positive_rat_le(3 / 2)
-exist r Q_pos st {r <= 3 / 2}
-
-by thm Real::positive_rational_power_strict_mono(2, 1, 1 / 2)
-2^(1 / 2) > 1^(1 / 2)
-
-by thm Real::exists_rat_seq_converging_to_real(sqrt(2))
-exist a seq(Q) st {$Real::rat_seq_converges(a, sqrt(2)), $Real::rat_seq_cauchy(a)}
-
-by thm Real::exists_seq_converging_to_real(sqrt(2))
-exist b seq(R) st {$Real::seq_converges(b, sqrt(2)), $Real::cauchy(b)}
-
-have E set
-
-know:
-    $Real::nonempty_subset(E)
-    $Real::has_upper_bound(E)
-
-by thm Real::exists_least_upper_bound(E)
-$Real::has_least_upper_bound(E)
 ```
 
 ## 6. `trig`
 
 - Category: `std interface`
-- System surface: `Trig`
-- Purpose: Smoke test for trigonometric std interfaces.
+- Purpose: Demonstrates trigonometric std interfaces.
 
 ```litex
 import Trig
@@ -224,8 +184,7 @@ Trig::cos(2 * pi / 3) != 0
 ## 7. `zmod`
 
 - Category: `std interface`
-- System surface: `Zmod`
-- Purpose: Smoke test for modular arithmetic std interfaces.
+- Purpose: Demonstrates modular arithmetic std interfaces.
 
 ```litex
 import ZMod

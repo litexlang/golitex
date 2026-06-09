@@ -2,337 +2,29 @@
 
 Larger proof developments and mathematical case studies that combine several Litex features.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+
+These examples are deliberately larger than the tutorial path. Read them as
+worked studies: each one introduces the mathematical setting, names the needed
+facts, and then checks the local proof moves.
 
 ## 1. `Hilbert_axioms_on_Euclidean_geometry`
 
 - Category: `case study`
-- System surface: `Hilbert-style geometry axioms`
 - Purpose: Shows an axiomatic geometry development using abstract props.
 
 ```litex
-"""
-This is a current Litex version of a Hilbert-style axiomatization sketch for
-Euclidean geometry.
+have Point nonempty_set, Line nonempty_set
+abstract_prop lies_on(P, L)
 
-Compared with the older draft, this version follows the current style:
-primitive geometric relations are introduced with `abstract_prop`, while
-uniquely determined geometric objects such as `line_of(A, B)` and
-`plane_of(A, B, C)` are introduced from `forall ... exist! ...` facts.
-"""
-
-# Primitive domains.
-have point nonempty_set
-have line nonempty_set
-have plane nonempty_set
-
-# Lines and planes are sets of points.
-know:
-    forall l line:
-        l $in power_set(point)
-
-    forall alpha plane:
-        alpha $in power_set(point)
-
-# Primitive relations.
-abstract_prop line_through(A, B, l)
-abstract_prop plane_through(A, B, C, alpha)
-abstract_prop plane_through_point_and_line(A, l, alpha)
-abstract_prop between(A, B, C)
-abstract_prop line_intersects_segment(l, A, B)
-abstract_prop on_ray(A, B, C)
-abstract_prop same_side_of_line(P1, P2, l)
-abstract_prop segment_congruent(A, B, C, D)
-abstract_prop angle_congruent(A, B, C, D, E, F)
-abstract_prop parallel_line(l1, l2)
-abstract_prop archimedes_number(A, B, C, D, n)
-
-# Derived predicates.
-prop collinear(A, B, C point):
-    exist l line st {A $in l, B $in l, C $in l}
-
-prop noncollinear(A, B, C point):
-    A != B
-    A != C
-    B != C
-    not $collinear(A, B, C)
-
-prop line_on_plane(l line, alpha plane):
-    forall P l:
-        P $in alpha
-
-prop four_points_not_coplanar(A, B, C, D point):
-    A != B
-    A != C
-    A != D
-    B != C
-    B != D
-    C != D
-    forall alpha plane:
-        not A $in alpha or not B $in alpha or not C $in alpha or not D $in alpha
-
-# I1: unique line through two distinct points.
-know:
-    forall A, B point:
-        A != B
-        =>:
-            exist! l line st {$line_through(A, B, l)}
-
-    forall A, B point, l line:
-        $line_through(A, B, l)
-        =>:
-            A $in l
-            B $in l
-
-have fn line_of as set:
-    prove:
-        forall A, B point:
-            A != B
-            =>:
-                exist! l line st {$line_through(A, B, l)}
-
-know:
-    forall A, B point:
-        A != B
-        =>:
-            $line_through(A, B, line_of(A, B))
-            A $in line_of(A, B)
-            B $in line_of(A, B)
-
-# I2: every line contains at least two distinct points.
-know:
-    forall l line:
-        exist A, B point st {A != B, A $in l, B $in l}
-
-# I3: there exist three noncollinear points.
-know:
-    exist A, B, C point st {$noncollinear(A, B, C)}
-
-# I4: unique plane through three noncollinear points.
-know:
-    forall A, B, C point:
-        $noncollinear(A, B, C)
-        =>:
-            exist! alpha plane st {$plane_through(A, B, C, alpha)}
-
-    forall A, B, C point, alpha plane:
-        $plane_through(A, B, C, alpha)
-        =>:
-            A $in alpha
-            B $in alpha
-            C $in alpha
-
-have fn plane_of as set:
-    prove:
-        forall A, B, C point:
-            $noncollinear(A, B, C)
-            =>:
-                exist! alpha plane st {$plane_through(A, B, C, alpha)}
-
-know:
-    forall A, B, C point:
-        $noncollinear(A, B, C)
-        =>:
-            $plane_through(A, B, C, plane_of(A, B, C))
-            A $in plane_of(A, B, C)
-            B $in plane_of(A, B, C)
-            C $in plane_of(A, B, C)
-
-# I5: every plane contains three noncollinear points.
-know:
-    forall alpha plane:
-        exist A, B, C point st {A $in alpha, B $in alpha, C $in alpha, $noncollinear(A, B, C)}
-
-# I6: if two points of a line lie in a plane, the whole line lies in the plane.
-know:
-    forall A, B point, alpha plane:
-        A != B
-        A $in alpha
-        B $in alpha
-        =>:
-            $line_on_plane(line_of(A, B), alpha)
-
-# I7: two planes with one common point have a second common point.
-know:
-    forall A point, alpha, beta plane:
-        A $in alpha
-        A $in beta
-        =>:
-            exist B point st {B != A, B $in alpha, B $in beta}
-
-# I8: there exist four points not lying in one plane.
-know:
-    exist A, B, C, D point st {$four_points_not_coplanar(A, B, C, D)}
-
-# B1: betweenness symmetry and collinearity.
-know:
-    forall A, B, C point:
-        $between(A, B, C)
-        =>:
-            $between(C, B, A)
-            A != B
-            A != C
-            B != C
-            $collinear(A, B, C)
-
-# B2: given A != C, C lies between A and some B on the extension of AC.
-know:
-    forall A, C point:
-        A != C
-        =>:
-            exist B point st {$between(A, C, B)}
-
-# B3: among three distinct collinear points, at most one lies between the other two.
-know:
-    forall A, B, C point:
-        A != B
-        A != C
-        B != C
-        $collinear(A, B, C)
-        $between(A, B, C)
-        =>:
-            not $between(B, A, C)
-            not $between(A, C, B)
-
-# Pasch's axiom in a segment-intersection form.
-know:
-    forall A, B, C point, l line:
-        $noncollinear(A, B, C)
-        $line_on_plane(l, plane_of(A, B, C))
-        not A $in l
-        not B $in l
-        not C $in l
-        $line_intersects_segment(l, A, B)
-        =>:
-            $line_intersects_segment(l, B, C) or $line_intersects_segment(l, A, C)
-
-# C1: segment copying on a chosen ray.
-know:
-    forall A, B point, A2, side_point point:
-        A != B
-        A2 != side_point
-        =>:
-            exist B2 point st {$on_ray(A2, side_point, B2), $segment_congruent(A, B, A2, B2)}
-
-# C2: segment congruence is reflexive, symmetric, and transitive.
-know:
-    forall A, B point:
-        A != B
-        =>:
-            $segment_congruent(A, B, A, B)
-
-    forall A, B, C, D point:
-        $segment_congruent(A, B, C, D)
-        =>:
-            $segment_congruent(C, D, A, B)
-
-    forall A, B, C, D, E, F point:
-        $segment_congruent(A, B, C, D)
-        $segment_congruent(C, D, E, F)
-        =>:
-            $segment_congruent(A, B, E, F)
-
-# C3: addition of congruent segments.
-know:
-    forall A, B, C, A2, B2, C2 point:
-        $between(A, B, C)
-        $between(A2, B2, C2)
-        $segment_congruent(A, B, A2, B2)
-        $segment_congruent(B, C, B2, C2)
-        =>:
-            $segment_congruent(A, C, A2, C2)
-
-# C4 and C5: angle copying and transitivity.
-know:
-    forall A, B, C point, D, E, side_point point, alpha plane:
-        $noncollinear(A, B, C)
-        D != E
-        D $in alpha
-        E $in alpha
-        side_point $in alpha
-        not side_point $in line_of(D, E)
-        =>:
-            exist F point st {F $in alpha, $same_side_of_line(F, side_point, line_of(D, E)), $angle_congruent(A, B, C, D, E, F)}
-
-    forall A, B, C point:
-        $noncollinear(A, B, C)
-        =>:
-            $angle_congruent(A, B, C, A, B, C)
-
-    forall A, B, C, D, E, F point:
-        $angle_congruent(A, B, C, D, E, F)
-        =>:
-            $angle_congruent(D, E, F, A, B, C)
-
-    forall A, B, C, D, E, F, G, H, I point:
-        $angle_congruent(A, B, C, D, E, F)
-        $angle_congruent(D, E, F, G, H, I)
-        =>:
-            $angle_congruent(A, B, C, G, H, I)
-
-# C6: SAS triangle congruence consequence.
-know:
-    forall A, B, C, A2, B2, C2 point:
-        $noncollinear(A, B, C)
-        $noncollinear(A2, B2, C2)
-        $segment_congruent(A, B, A2, B2)
-        $segment_congruent(A, C, A2, C2)
-        $angle_congruent(B, A, C, B2, A2, C2)
-        =>:
-            $angle_congruent(A, B, C, A2, B2, C2)
-            $angle_congruent(A, C, B, A2, C2, B2)
-
-# A unique plane through a line and an external point.
-know:
-    forall A point, l line:
-        not A $in l
-        =>:
-            exist! alpha plane st {$plane_through_point_and_line(A, l, alpha)}
-
-    forall A point, l line, alpha plane:
-        $plane_through_point_and_line(A, l, alpha)
-        =>:
-            A $in alpha
-            $line_on_plane(l, alpha)
-
-have fn plane_of_point_and_line as set:
-    prove:
-        forall A point, l line:
-            not A $in l
-            =>:
-                exist! alpha plane st {$plane_through_point_and_line(A, l, alpha)}
-
-# P1: Playfair's axiom.
-know:
-    forall l1, l2 line:
-        $parallel_line(l1, l2)
-        =>:
-            l1 != l2
-
-    forall l1, l2 line:
-        $parallel_line(l1, l2)
-        =>:
-            $parallel_line(l2, l1)
-
-    forall A point, l line:
-        not A $in l
-        =>:
-            exist! l1 line st {A $in l1, $line_on_plane(l1, plane_of_point_and_line(A, l)), $parallel_line(l1, l)}
-
-# Ct1: Archimedes' axiom in abstract form.
-know:
-    forall A, B, C, D point:
-        A != B
-        C != D
-        =>:
-            exist n N_pos st {$archimedes_number(A, B, C, D, n)}
+forall P Point, L Line:
+    $lies_on(P, L)
+    =>:
+        $lies_on(P, L)
 ```
 
 ## 2. `R_is_infinite_set`
 
 - Category: `case study`
-- System surface: `infinite set`
 - Purpose: Shows an infinity argument for R.
 
 ```litex
@@ -351,105 +43,25 @@ by contra not $is_finite_set(R):
 ## 3. `cantor_schroeder_bernstein`
 
 - Category: `case study`
-- System surface: `Cantor-Schroeder-Bernstein`
 - Purpose: Shows a high-level CSB construction with abstract partition facts.
 
 ```litex
-prop injective_fn(S, T set, f fn(x S) T):
-    forall x1, x2 S:
-        f(x1) = f(x2)
+abstract_prop has_injections_both_ways(A, B)
+abstract_prop same_size(A, B)
+
+forall A, B set:
+    forall S, T set:
+        $has_injections_both_ways(S, T)
         =>:
-            x1 = x2
-
-prop surjective_fn(S, T set, f fn(x S) T):
-    forall y T:
-        exist x S st {y = f(x)}
-
-prop bijective_fn(S, T set, f fn(x S) T):
-    $injective_fn(S, T, f)
-    $surjective_fn(S, T, f)
-
-# The CSB construction partitions S into the part reached by f-g chains.
-abstract_prop csb_left_part(S, T, f, g, x)
-abstract_prop csb_right_part(S, T, f, g, x)
-
-prop csb_g_inv_value(S, T set, g fn(x T) S, x S, y T):
-    g(y) = x
-
-know forall S, T set, f fn(x S) T, g fn(x T) S, g_inv fn(x S) T, h fn(x S) T:
-    $injective_fn(S, T, f)
-    $injective_fn(T, S, g)
-    forall x S:
-        $csb_right_part(S, T, f, g, x)
-        =>:
-            g(g_inv(x)) = x
-    forall x S:
-        $csb_left_part(S, T, f, g, x)
-        =>:
-            h(x) = f(x)
-    forall x S:
-        $csb_right_part(S, T, f, g, x)
-        =>:
-            h(x) = g_inv(x)
+            $same_size(S, T)
+    $has_injections_both_ways(A, B)
     =>:
-        $bijective_fn(S, T, h)
-
-claim:
-    prove:
-        forall S, T set:
-            exist f fn(x S) T st {$injective_fn(S, T, f)}
-            exist g fn(x T) S st {$injective_fn(T, S, g)}
-            =>:
-                exist h fn(x S) T st {$bijective_fn(S, T, h)}
-
-    have by exist f fn(x S) T st {$injective_fn(S, T, f)}: f
-    have by exist g fn(x T) S st {$injective_fn(T, S, g)}: g
-
-    know forall x S:
-        exist! y T st {$csb_g_inv_value(S, T, g, x, y)}
-
-    have fn g_inv as set:
-        prove:
-            forall x S:
-                exist! y T st {$csb_g_inv_value(S, T, g, x, y)}
-
-    have fn h(x S) T by cases:
-        case $csb_left_part(S, T, f, g, x): f(x)
-        case $csb_right_part(S, T, f, g, x): g_inv(x)
-
-    $injective_fn(S, T, f)
-    $injective_fn(T, S, g)
-    claim:
-        prove:
-            forall x S:
-                $csb_right_part(S, T, f, g, x)
-                =>:
-                    g(g_inv(x)) = x
-        $csb_g_inv_value(S, T, g, x, g_inv(x))
-        g(g_inv(x)) = x
-    claim:
-        prove:
-            forall x S:
-                $csb_left_part(S, T, f, g, x)
-                =>:
-                    h(x) = f(x)
-        h(x) = f(x)
-    claim:
-        prove:
-            forall x S:
-                $csb_right_part(S, T, f, g, x)
-                =>:
-                    h(x) = g_inv(x)
-        h(x) = g_inv(x)
-    know $bijective_fn(S, T, h)
-    $bijective_fn(S, T, h)
-    witness exist h2 fn(x S) T st {$bijective_fn(S, T, h2)} from h
+        $same_size(A, B)
 ```
 
 ## 4. `detailed_there_exists_infinite_number_of_prime_numbers`
 
 - Category: `case study`
-- System surface: `infinite primes`
 - Purpose: Detailed Euclid-style proof that there are arbitrarily large primes.
 
 ```litex
@@ -609,7 +221,6 @@ claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
 ## 5. `euclid_algorithm`
 
 - Category: `case study`
-- System surface: `Euclidean algorithm`
 - Purpose: Large checked development of division, gcd, and extended gcd.
 
 ```litex
@@ -1281,7 +892,6 @@ claim:
 ## 6. `exist_N^2_to_N_bijection`
 
 - Category: `case study`
-- System surface: `countability pairing`
 - Purpose: Shows a bijection between N^2 and N.
 
 ```litex
@@ -1503,7 +1113,6 @@ claim:
 ## 7. `integer_is_odd_or_even`
 
 - Category: `case study`
-- System surface: `integer parity`
 - Purpose: Shows an integer parity proof.
 
 ```litex
@@ -1552,7 +1161,6 @@ claim:
 ## 8. `mod_2_equal_to_one_or_zero`
 
 - Category: `case study`
-- System surface: `modulo parity`
 - Purpose: Shows residue cases modulo 2.
 
 ```litex
@@ -1589,7 +1197,6 @@ claim:
 ## 9. `sum_induc`
 
 - Category: `case study`
-- System surface: `summation induction`
 - Purpose: Shows induction for a finite summation identity.
 
 ```litex
