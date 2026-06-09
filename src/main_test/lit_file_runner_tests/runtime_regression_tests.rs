@@ -735,6 +735,16 @@ claim:
         "have_by_exist_body_well_defined_can_use_forall_domain_fact failed:\n{}",
         run_output
     );
+    assert!(
+        run_output.contains("\"type\": \"HaveByExistStmt\""),
+        "have by exist should report the canonical statement type:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("HaveExistObjStmt"),
+        "have by exist should not report the legacy statement type:\n{}",
+        run_output
+    );
 }
 
 #[test]

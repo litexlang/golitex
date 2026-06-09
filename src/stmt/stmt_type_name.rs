@@ -281,7 +281,7 @@ impl HaveObjByExistFactsStmt {
 
 impl HaveByExistStmt {
     pub fn stmt_type_name(&self) -> String {
-        "HaveExistObjStmt".to_string()
+        "HaveByExistStmt".to_string()
     }
 }
 
