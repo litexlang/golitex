@@ -496,8 +496,8 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         ),
     ];
 
-    // For `HaveExistObjStmt`, surface explicit exist-proof source(s) at top level.
-    if x.stmt.stmt_type_name() == "HaveExistObjStmt" {
+    // For `HaveByExistStmt`, surface explicit exist-proof source(s) at top level.
+    if x.stmt.stmt_type_name() == "HaveByExistStmt" {
         let verified_by_items: Vec<JsonValue> = x
             .inside_results
             .iter()
