@@ -20,7 +20,9 @@ pub use crate::error::NameAlreadyUsedRuntimeError;
 pub use crate::error::NewFactRuntimeError;
 pub use crate::error::ParseRuntimeError;
 pub use crate::error::RuntimeError;
+pub use crate::error::RuntimeErrorOutput;
 pub use crate::error::RuntimeErrorStruct;
+pub use crate::error::RuntimeErrorUnknownResult;
 pub use crate::error::StoreFactRuntimeError;
 pub use crate::error::UnknownRuntimeError;
 pub use crate::error::VerifyRuntimeError;
@@ -171,6 +173,10 @@ pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation
 pub use crate::rational_expression::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
+pub use crate::result::AcceptedByKind;
+pub use crate::result::AcceptedByResult;
+pub use crate::result::CaseSplitAcceptedBy;
+pub use crate::result::CaseSplitCoverage;
 pub use crate::result::FactualStmtSuccess;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtResult;

@@ -74,10 +74,17 @@ impl Runtime {
             ));
         }
 
-        self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
+        let coverage = self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
 
+        let mut accepted_cases = Vec::new();
         for case_index in 0..stmt.cases.len() {
-            self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            let inside_results =
+                self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            accepted_cases.push(CaseSplitAcceptedBy::new(
+                stmt.cases[case_index].clone(),
+                stmt.impossible_facts[case_index].clone(),
+                inside_results,
+            ));
         }
 
         let mut infer_result = InferResult::new();
@@ -97,18 +104,27 @@ impl Runtime {
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
 
-        // Omit per-case stmt results from JSON/output; failures still attach inside_results on errors.
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+        Ok((NonFactualStmtSuccess::new_with_accepted_by(
+            stmt.clone().into(),
+            infer_result,
+            vec![],
+            AcceptedByResult::case_split_with_coverage(
+                stmt.then_facts.clone(),
+                Some(coverage),
+                accepted_cases,
+            ),
+        ))
+        .into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<CaseSplitCoverage, RuntimeError> {
         let all_cases_or_fact: Fact =
             OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         let vs = VerifyState::new(0, false);
-        if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
+        let result = if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             self.run_in_local_env(|rt| {
                 rt.forall_assume_params_and_dom_in_current_env(ff, &vs)?;
                 rt.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
@@ -120,7 +136,7 @@ impl Runtime {
                     Some(verify_error),
                     vec![],
                 )
-            })?;
+            })?
         } else {
             self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
                 .map_err(|verify_error| {
@@ -130,9 +146,9 @@ impl Runtime {
                         Some(verify_error),
                         vec![],
                     )
-                })?;
-        }
-        Ok(())
+                })?
+        };
+        Ok(CaseSplitCoverage::new(all_cases_or_fact, result))
     }
 
     fn exec_by_cases_stmt_prove_then_facts_under_case(
@@ -328,13 +344,14 @@ impl Runtime {
             }
 
             inside_results.push(
-                (NonFactualStmtSuccess::new(
+                (NonFactualStmtSuccess::new_with_accepted_by(
                     stmt.clone().into(),
                     InferResult::new(),
                     vec![
                         verify_impossible_fact_result,
                         verify_reversed_impossible_fact_result,
                     ],
+                    AcceptedByResult::proof_block(None, 2),
                 ))
                 .into(),
             );

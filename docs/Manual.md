@@ -3104,7 +3104,7 @@ forall a, x R:
 }
 ```
 
-This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object; composite routes such as `forall`, chains, or conjunctions put their sub-checks under `steps`. For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary, then open `inside_results` when you need the detailed nested checks. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
+This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object; composite routes such as `forall`, chains, or conjunctions put their sub-checks under `steps`. For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
 
 ---
 

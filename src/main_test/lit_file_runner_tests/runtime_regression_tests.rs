@@ -199,7 +199,7 @@ claim:
 #[test]
 fn fn_range_intro_subset_and_preimage_work() {
     let source_code = r#"
-prove:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -211,7 +211,7 @@ prove:
     x > 0
     f(1) = f(x)
 
-prove:
+sketch:
     have g fn(x R, y R: x < y) R
 
     g(0, 1) $in fn_range(g)
@@ -222,7 +222,7 @@ prove:
     a < b
     g(0, 1) = g(a, b)
 
-prove:
+sketch:
     have a seq(R)
 
     a(1) $in fn_range_on(a, 1...3)
@@ -253,7 +253,7 @@ prove:
 #[test]
 fn fn_range_on_rejects_non_unary_function() {
     let source_code = r#"
-prove:
+sketch:
     have g fn(x R, y R) R
     fn_range_on(g, R) $subset R
 "#;
@@ -279,7 +279,7 @@ prove:
 #[test]
 fn have_by_preimage_rejects_non_range_source() {
     let source_code = r#"
-prove:
+sketch:
     have f fn(x R) R
     have by preimage x from f(1) $in R
 "#;
@@ -305,7 +305,7 @@ prove:
 #[test]
 fn have_by_preimage_checks_witness_count() {
     let source_code = r#"
-prove:
+sketch:
     have f fn(x R) R
     f(1) $in fn_range(f)
     have by preimage x, y from f(1) $in fn_range(f)
@@ -1130,12 +1130,12 @@ sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
 sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
 
-prove:
+sketch:
     have X finite_set
     have c Z
     sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
 
-prove:
+sketch:
     have X power_set(Z)
     know $is_finite_set(X)
     sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
@@ -1164,12 +1164,12 @@ product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
 product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
 
-prove:
+sketch:
     have X finite_set
     have c R
     product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
 
-prove:
+sketch:
     have X power_set(Z)
     know $is_finite_set(X)
     product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
@@ -1548,7 +1548,7 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
         "eval_recursive_algo_memoizes_overlapping_calls_large_stack",
         || {
             let source_code = r#"
-prove:
+sketch:
     have fib fn(x R) R
 
     know:
@@ -1616,7 +1616,10 @@ have fn half_power(x R: x >= 0) R = x^(1/2)
 
 #[test]
 fn zero_to_zero_power_uses_natural_exponent_convention() {
-    let source_code = r#"
+    run_with_large_stack(
+        "zero_to_zero_power_uses_natural_exponent_convention",
+        || {
+            let source_code = r#"
 0^0 = 1
 eval 0^0
 
@@ -1639,23 +1642,26 @@ forall a N_pos, n N:
     a^n $in N_pos
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "zero_to_zero_power_uses_natural_exponent_convention",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "zero_to_zero_power_uses_natural_exponent_convention",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"EvalStmt\"") && run_output.contains("\"0 ^ 0 = 1\""),
-        "eval 0^0 should produce 1:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"EvalStmt\"")
+                    && run_output.contains("\"0 ^ 0 = 1\""),
+                "eval 0^0 should produce 1:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2107,7 +2113,8 @@ right $in info(a)
 
 #[test]
 fn common_power_equalities_and_order_are_builtin() {
-    let source_code = r#"
+    run_with_large_stack("common_power_equalities_and_order_are_builtin", || {
+        let source_code = r#"
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
@@ -2133,17 +2140,19 @@ forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "common_power_equalities_and_order_are_builtin failed:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "common_power_equalities_and_order_are_builtin failed:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -2558,7 +2567,7 @@ forall a1, b1, a2, b2 R:
 #[test]
 fn exist_unique_still_accepts_tuple_uniqueness_forall() {
     let source_code = r#"
-prove:
+sketch:
     abstract_prop p(a, b)
     know:
         exist a, b R st {$p(a, b)}
@@ -2723,7 +2732,7 @@ fn hidden_file_path_output_omits_source_fields() {
 
 #[test]
 fn normal_output_omits_empty_arrays_and_empty_strings() {
-    let source_code = "1 = 1\n1 = 2";
+    let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("normal_output_omits_empty_fields");
@@ -2739,7 +2748,7 @@ fn normal_output_omits_empty_arrays_and_empty_strings() {
 
 #[test]
 fn detail_output_keeps_empty_arrays_and_empty_strings() {
-    let source_code = "1 = 1\n1 = 2";
+    let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("detail_output_keeps_empty_fields");
@@ -3202,6 +3211,277 @@ forall x R:
     assert!(
         run_output.contains("\"steps\": ["),
         "composite forall proof should keep proof steps:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn output_contract_covers_composite_facts_and_control_statements() {
+    let source_code = r#"
+1 = 1 and 2 = 2
+1 = 1 = 1
+
+claim:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+thm one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm one_eq_one()
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "output_contract_covers_composite_facts_and_control_statements",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "output contract fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"and fact\""),
+        "and facts should summarize their composite proof:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"chain fact\""),
+        "chain facts should summarize their composite proof:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"accepted_by\": {\n    \"type\": \"proof block\""),
+        "claim/thm should expose accepted_by proof block summaries:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"theorem call\""),
+        "by thm should expose accepted_by theorem call:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"case split\""),
+        "by cases should expose accepted_by case split:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"cases\": ["),
+        "by cases should summarize accepted cases:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"goals\": ["),
+        "by cases should list released goals:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"case_count\": 2"),
+        "by cases should count accepted cases:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"covers_by\": {"),
+        "by cases should expose coverage evidence:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"proves\": ["),
+        "by cases should summarize what each case proves:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"impossible_by\": ["),
+        "by cases impossible branches should expose the contradiction pair:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"1 != 1\""),
+        "by cases impossible_by should include the reversed contradiction fact:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"unknown_result\""),
+        "successful output should not use failure-only unknown_result:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_cases_normal_output_lists_multiple_proved_goals_per_case() {
+    let source_code = r#"
+by cases:
+    prove:
+        1 = 1
+        2 = 2
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "by cases multi-goal fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"proves\": [\n          \"1 = 1\",\n          \"2 = 2\"\n        ]"),
+        "by cases should list all goals proved by each case:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(
+            "\"impossible_by\": [\n          \"1 = 1\",\n          \"1 != 1\"\n        ]"
+        ),
+        "by cases should expose the exact impossible contradiction pair:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_cases_detail_output_expands_case_inside_results() {
+    let source_code = r#"
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("by_cases_detail_output_expands_cases");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "by cases detail fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"case split\""));
+    assert!(run_output.contains("\"case\": \"1 = 1\""));
+    assert!(run_output.contains("\"case\": \"1 != 1\""));
+    assert!(
+        run_output.contains("\"inside_results\": ["),
+        "detail output should expand per-case inside_results:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn unknown_fact_failure_has_structured_output_fields() {
+    let source_code = "1 = 2";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("unknown_fact_failure_structured_output");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "unknown fact fixture should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"failed_goal\": \"1 = 2\""),
+        "unknown fact should expose failed_goal:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"unknown_result\": {\n      \"type\": \"unknown\""),
+        "unknown fact should expose structured unknown_result:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn proof_block_failure_has_structured_then_clause_fields() {
+    let source_code = r#"
+claim:
+    prove:
+        forall:
+            2 = 3
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("proof_block_failure_structured_then_clause");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(!run_succeeded, "claim fixture should fail:\n{}", run_output);
+    assert!(
+        run_output.contains("\"failed_goal\": \"2 = 3\""),
+        "claim failure should expose failed_goal:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"then_clause_index\": 1"),
+        "claim failure should expose then_clause_index:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"unknown_result\": {"),
+        "claim failure should expose structured unknown_result:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_cases_failure_reports_case_split_failure_context() {
+    let source_code = r#"
+by cases 1 = 1:
+    case 1 = 2:
+        do_nothing
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("by_cases_failure_context");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "non-covering case split should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("by cases: cannot verify that all cases cover all situations"),
+        "by cases failure should keep the case split failure message:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"ByCasesStmt\""),
+        "by cases failure should identify the failing statement:\n{}",
         run_output
     );
 }
@@ -4110,7 +4390,7 @@ fn std_citation_source_survives_cached_reload_after_clear() {
 }
 
 fn run_file_from_path_impl() {
-    let path: String = "./examples/01_proof_patterns/strong_induc.lit".to_string();
+    let path: String = "./examples/_internal/regression/do_nothing.lit".to_string();
     let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
     assert!(
         file_path.is_absolute(),

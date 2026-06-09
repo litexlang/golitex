@@ -21,12 +21,12 @@ impl Runtime {
                         false,
                         ParamObjType::Forall,
                     )
-                        .map_err(|define_params_error| {
-                            exec_stmt_error_with_stmt_and_cause(
-                                stmt.clone().into(),
-                                define_params_error,
-                            )
-                        })?;
+                    .map_err(|define_params_error| {
+                        exec_stmt_error_with_stmt_and_cause(
+                            stmt.clone().into(),
+                            define_params_error,
+                        )
+                    })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
                         rt.verify_well_defined_and_store_and_infer(
@@ -39,25 +39,27 @@ impl Runtime {
                     let proof_len = stmt.proof.len();
                     for (proof_index, proof_stmt) in stmt.proof.iter().enumerate() {
                         let result = rt.exec_stmt(proof_stmt)?;
-                        if result.is_unknown() {
-                            return Err(
-                                UnknownRuntimeError(RuntimeErrorStruct::new(
-                                    Some(proof_stmt.clone()),
-                                    format!(
-                                        "claim failed: proof step {}/{} is unknown: `{}`\n{}",
-                                        proof_index + 1,
-                                        proof_len,
-                                        proof_stmt,
-                                        result.body_string()
+                        match result {
+                            StmtResult::StmtUnknown(unknown) => {
+                                return Err(UnknownRuntimeError(
+                                    RuntimeErrorStruct::new_with_output(
+                                        Some(proof_stmt.clone()),
+                                        "claim failed: proof step is unknown".to_string(),
+                                        proof_stmt.line_file(),
+                                        None,
+                                        vec![],
+                                        RuntimeErrorOutput::proof_step_unknown(
+                                            proof_stmt.clone(),
+                                            proof_index + 1,
+                                            proof_len,
+                                            &unknown,
+                                        ),
                                     ),
-                                    proof_stmt.line_file(),
-                                    None,
-                                    vec![],
-                                ))
-                                .into(),
-                            );
+                                )
+                                .into());
+                            }
+                            _ => inside_results.push(result),
                         }
-                        inside_results.push(result);
                     }
 
                     let then_count = forall_fact.then_facts.len();
@@ -66,35 +68,39 @@ impl Runtime {
                             then_fact,
                             &VerifyState::new(0, false),
                         )?;
-                        if result.is_unknown() {
-                            return Err(
-                                UnknownRuntimeError(RuntimeErrorStruct::new(
-                                    Some(then_fact.clone().to_fact().into()),
-                                    format!(
-                                        "claim failed: cannot prove goal `{}`; then-clause {}/{} `{}` is unknown\n{}",
-                                        stmt.fact,
-                                        then_index + 1,
-                                        then_count,
-                                        then_fact,
-                                        result.body_string()
+                        match result {
+                            StmtResult::StmtUnknown(unknown) => {
+                                return Err(UnknownRuntimeError(
+                                    RuntimeErrorStruct::new_with_output(
+                                        Some(then_fact.clone().to_fact().into()),
+                                        "claim failed: cannot prove then-clause".to_string(),
+                                        then_fact.line_file(),
+                                        None,
+                                        vec![],
+                                        RuntimeErrorOutput::then_clause_unknown(
+                                            then_fact.clone().to_fact(),
+                                            then_index + 1,
+                                            then_count,
+                                            &unknown,
+                                        ),
                                     ),
-                                    then_fact.line_file(),
-                                    None,
-                                    vec![],
-                                ))
-                                .into(),
-                            );
+                                )
+                                .into());
+                            }
+                            _ => inside_results.push(result),
                         }
-
-                        inside_results.push(result);
                     }
 
-                    Ok(NonFactualStmtSuccess::new(
-                            stmt.clone().into(),
-                            InferResult::new(),
-                            inside_results,
-                        )
-                        .into())
+                    Ok(NonFactualStmtSuccess::new_with_accepted_by(
+                        stmt.clone().into(),
+                        InferResult::new(),
+                        inside_results,
+                        AcceptedByResult::proof_block(
+                            Some(stmt.fact.clone()),
+                            proof_len + then_count,
+                        ),
+                    )
+                    .into())
                 });
 
                 let non_err_after_body: StmtResult = match body_exec_result {
@@ -104,11 +110,7 @@ impl Runtime {
                 if non_err_after_body.is_unknown() {
                     return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
                         Some(stmt.clone().into()),
-                        format!(
-                            "claim failed: cannot prove `{}`\n{}",
-                            stmt.fact,
-                            non_err_after_body.body_string()
-                        ),
+                        format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file.clone(),
                         None,
                         vec![],
@@ -143,10 +145,11 @@ impl Runtime {
 
                     rt.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
 
-                    Ok(NonFactualStmtSuccess::new(
+                    Ok(NonFactualStmtSuccess::new_with_accepted_by(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
+                        AcceptedByResult::proof_block(Some(stmt.fact.clone()), stmt.proof.len()),
                     )
                     .into())
                 });

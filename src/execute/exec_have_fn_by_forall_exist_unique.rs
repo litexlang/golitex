@@ -67,50 +67,60 @@ impl Runtime {
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
                 let result = rt.exec_stmt(proof_stmt)?;
-                if result.is_unknown() {
-                    return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
-                            Some(proof_stmt.clone()),
-                            format!(
-                                "have fn `{}` as set failed: proof step {}/{} is unknown: `{}`\n{}",
-                                stmt.fn_name,
-                                proof_index + 1,
-                                proof_len,
-                                proof_stmt,
-                                result.body_string()
+                match result {
+                    StmtResult::StmtUnknown(unknown) => {
+                        return Err(RuntimeError::from(UnknownRuntimeError(
+                            RuntimeErrorStruct::new_with_output(
+                                Some(proof_stmt.clone()),
+                                format!(
+                                    "have fn `{}` as set failed: proof step is unknown",
+                                    stmt.fn_name
+                                ),
+                                proof_stmt.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::proof_step_unknown(
+                                    proof_stmt.clone(),
+                                    proof_index + 1,
+                                    proof_len,
+                                    &unknown,
+                                ),
                             ),
-                            proof_stmt.line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
+                        )));
+                    }
+                    _ => inside_results.push(result),
                 }
-                inside_results.push(result);
             }
 
             let then_count = stmt.forall.then_facts.len();
             for (then_index, then_fact) in stmt.forall.then_facts.iter().enumerate() {
-                let result =
-                    rt.verify_exist_or_and_chain_atomic_fact(then_fact, &VerifyState::new(0, false))?;
-                if result.is_unknown() {
-                    return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
-                            Some(then_fact.clone().to_fact().into()),
-                            format!(
-                                "have fn `{}` as set failed: cannot prove then-clause {}/{} `{}`\n{}",
-                                stmt.fn_name,
-                                then_index + 1,
-                                then_count,
-                                then_fact,
-                                result.body_string()
+                let result = rt.verify_exist_or_and_chain_atomic_fact(
+                    then_fact,
+                    &VerifyState::new(0, false),
+                )?;
+                match result {
+                    StmtResult::StmtUnknown(unknown) => {
+                        return Err(RuntimeError::from(UnknownRuntimeError(
+                            RuntimeErrorStruct::new_with_output(
+                                Some(then_fact.clone().to_fact().into()),
+                                format!(
+                                    "have fn `{}` as set failed: cannot prove then-clause",
+                                    stmt.fn_name
+                                ),
+                                then_fact.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::then_clause_unknown(
+                                    then_fact.clone().to_fact(),
+                                    then_index + 1,
+                                    then_count,
+                                    &unknown,
+                                ),
                             ),
-                            then_fact.line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
+                        )));
+                    }
+                    _ => inside_results.push(result),
                 }
-                inside_results.push(result);
             }
 
             Ok(inside_results)

@@ -108,6 +108,12 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
-        Ok((NonFactualStmtSuccess::new(stmt, infer_result, vec![result])).into())
+        Ok((NonFactualStmtSuccess::new_with_accepted_by(
+            stmt,
+            infer_result,
+            vec![result],
+            AcceptedByResult::exist_elimination(),
+        ))
+        .into())
     }
 }
