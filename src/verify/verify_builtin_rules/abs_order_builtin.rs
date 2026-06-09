@@ -185,7 +185,7 @@ impl Runtime {
         {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: x <= abs(x) and -x <= abs(x)".to_string(),
@@ -225,7 +225,7 @@ impl Runtime {
         } else {
             "abs: abs(x) <= b from x <= b and -x <= b"
         };
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 rule.to_string(),
@@ -262,7 +262,7 @@ impl Runtime {
                         if strict { "<" } else { "<=" },
                         rule_suffix
                     );
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
@@ -285,7 +285,7 @@ impl Runtime {
                             if strict { "<" } else { "<=" },
                             rule_suffix
                         );
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 rule,
@@ -305,7 +305,7 @@ impl Runtime {
                 if strict { "<" } else { "<=" },
                 rule_suffix
             );
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     rule,
@@ -323,7 +323,7 @@ impl Runtime {
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
@@ -347,7 +347,7 @@ impl Runtime {
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
@@ -372,7 +372,7 @@ impl Runtime {
                         if strict { "<" } else { "<=" },
                         rule_suffix
                     );
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
@@ -397,7 +397,7 @@ impl Runtime {
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
@@ -431,7 +431,7 @@ impl Runtime {
                 let args = fact.args_ref();
                 let key = (args[0].to_string(), args[1].to_string());
                 if let Some(known_fact) = known_facts_map.get(&key) {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_known_fact(
                             fact.clone().into(),
                             VerifiedByResult::cited_fact(
@@ -470,7 +470,7 @@ impl Runtime {
         if !ok {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: triangle inequality".to_string(),
@@ -498,7 +498,7 @@ impl Runtime {
         if !obj_is_abs_of_add_pair(&f.right, x, y) && !obj_is_abs_of_sub_pair(&f.right, x, y) {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: weak reverse triangle inequality".to_string(),

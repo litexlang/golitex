@@ -35,24 +35,24 @@ pub(super) fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) 
 }
 
 fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
-    match result {
-        StmtResult::NonFactualStmtSuccess(success) => {
-            success
-                .infers
-                .inferred_facts()
-                .iter()
-                .any(|fact| fact.to_string() == target)
-                || success
-                    .inside_results
-                    .iter()
-                    .any(|inside| stmt_result_inferred_fact(inside, target))
-        }
-        StmtResult::FactualStmtSuccess(success) => success
+    if let Some(success) = result.non_factual_success() {
+        success
             .infers
             .inferred_facts()
             .iter()
-            .any(|fact| fact.to_string() == target),
-        StmtResult::StmtUnknown(_) => false,
+            .any(|fact| fact.to_string() == target)
+            || success
+                .inside_results
+                .iter()
+                .any(|inside| stmt_result_inferred_fact(inside, target))
+    } else if let Some(success) = result.factual_success() {
+        success
+            .infers
+            .inferred_facts()
+            .iter()
+            .any(|fact| fact.to_string() == target)
+    } else {
+        false
     }
 }
 

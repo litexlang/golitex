@@ -964,7 +964,7 @@ impl Runtime {
 }
 
 fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
@@ -977,7 +977,7 @@ fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,
 ) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             not_in_fact.clone().into(),
             reason.to_string(),
@@ -987,7 +987,7 @@ fn not_in_fact_verified_by_builtin_rules_result(
 }
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             "arithmetic expression is in R".to_string(),
@@ -1007,21 +1007,21 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
             if number_is_in_r_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNeg => {
             if number_is_in_r_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNz => {
             if number_is_in_r_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Q => number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q"),
@@ -1029,56 +1029,56 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
             if number_is_in_q_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNeg => {
             if number_is_in_q_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNz => {
             if number_is_in_q_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Z => {
             if number_is_in_z(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNeg => {
             if number_is_in_z_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNz => {
             if number_is_in_z_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::N => {
             if number_is_in_n(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in N")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::NPos => {
             if number_is_in_n_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in N_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
     }
@@ -1090,82 +1090,82 @@ fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     standard_set: &StandardSet,
 ) -> StmtResult {
     match standard_set {
-        StandardSet::R | StandardSet::Q => StmtResult::StmtUnknown(StmtUnknown::new()),
+        StandardSet::R | StandardSet::Q => StmtResult::Unknown(StmtUnknown::new()),
         StandardSet::RPos => {
             if !number_is_in_r_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNeg => {
             if !number_is_in_r_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNz => {
             if !number_is_in_r_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QPos => {
             if !number_is_in_q_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNeg => {
             if !number_is_in_q_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNz => {
             if !number_is_in_q_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Z => {
             if !number_is_in_z(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNeg => {
             if !number_is_in_z_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNz => {
             if !number_is_in_z_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::N => {
             if !number_is_in_n(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::NPos => {
             if !number_is_in_n_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
     }
@@ -2529,17 +2529,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         let mut infer_result = InferResult::new();
-        match verify_subset_result {
-            StmtResult::FactualStmtSuccess(factual_success) => {
-                infer_result.new_infer_result_inside(factual_success.infers.clone());
-            }
-            StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-            }
-            StmtResult::StmtUnknown(_) => {
-                return Ok((StmtUnknown::new()).into());
-            }
-        }
+        infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -2575,17 +2565,7 @@ impl Runtime {
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
-            match verify_one_element_result {
-                StmtResult::FactualStmtSuccess(factual_success) => {
-                    infer_result.new_infer_result_inside(factual_success.infers.clone());
-                }
-                StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-                }
-                StmtResult::StmtUnknown(_) => {
-                    return Ok((StmtUnknown::new()).into());
-                }
-            }
+            infer_result.new_infer_result_inside(verify_one_element_result.infer_result());
         }
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);

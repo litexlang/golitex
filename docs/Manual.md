@@ -3098,13 +3098,21 @@ forall a, x R:
   "stmt": "x = 0 or x > 0",
   "verified_by": {
     "type": "cite or fact",
-    "cited_stmt": "a = 0 or a > 0",
-    "verify_what": "x = 0 or x > 0"
+    "cite_source": {
+      "line": 2
+    },
+    "cited_stmt": "a = 0 or a > 0"
   }
 }
 ```
 
-This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object; composite routes such as `forall`, chains, or conjunctions put their sub-checks under `steps`. For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
+This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`.
+
+For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. A `forall` fact uses a dedicated `verified_by` shape: `type` is `forall proof`, `params` lists the locally declared parameters, `requirements` lists local hypotheses when there are any, and `proves` lists each then-fact together with its `by` reason. If a then-fact is available from the local forall context, its reason is shown as `type: "local assumption"` with source such as `parameter declaration` or `forall requirement`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`.
+
+When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Composite facts report their failed subgoal under `failed_part`. This keeps the failure shape aligned with the fact shape instead of hiding every failure behind a single generic `unknown`.
+
+For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
 
 ---
 

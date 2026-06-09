@@ -4,26 +4,28 @@ const VERIFIED_BY: &str = "verified by";
 const INFER_COLON: &str = "infer:";
 
 pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
-    match result {
-        StmtResult::NonFactualStmtSuccess(x) => {
-            format!(
-                "{}\n{}{}",
-                SUCCESS_COLON,
-                x.stmt,
-                infer_block_string(&x.infers)
-            )
-        }
-        StmtResult::FactualStmtSuccess(x) => {
-            format!(
-                "{}\n{}\n{}\n{}{}",
-                SUCCESS_COLON,
-                x.stmt,
-                VERIFIED_BY,
-                verified_by_display_line(&x.verified_by),
-                infer_block_string(&x.infers)
-            )
-        }
-        StmtResult::StmtUnknown(x) => x.to_string(),
+    if let Some(x) = result.non_factual_success() {
+        format!(
+            "{}\n{}{}",
+            SUCCESS_COLON,
+            x.stmt,
+            infer_block_string(&x.infers)
+        )
+    } else if let Some(x) = result.factual_success() {
+        format!(
+            "{}\n{}\n{}\n{}{}",
+            SUCCESS_COLON,
+            x.stmt,
+            VERIFIED_BY,
+            verified_by_display_line(&x.verified_by),
+            infer_block_string(&x.infers)
+        )
+    } else if let Some(x) = result.as_unknown() {
+        x.to_string()
+    } else if let Some(x) = result.as_fact_unknown() {
+        x.to_string()
+    } else {
+        unreachable!()
     }
 }
 
@@ -73,5 +75,6 @@ fn verified_by_display_line(verified_by: &VerifiedByResult) -> String {
                 .collect::<Vec<_>>()
                 .join("; ")
         }
+        VerifiedByResult::ForallProof(_) => "forall proof".to_string(),
     }
 }

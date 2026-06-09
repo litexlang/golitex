@@ -39,60 +39,58 @@ impl Runtime {
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
                 let result = rt.exec_stmt(proof_stmt)?;
-                match result {
-                    StmtResult::StmtUnknown(unknown) => {
-                        return Err(RuntimeError::from(UnknownRuntimeError(
-                            RuntimeErrorStruct::new_with_output(
-                                Some(proof_stmt.clone()),
-                                format!(
-                                    "strategy `{}` failed: proof step is unknown",
-                                    strategy_names
-                                ),
-                                proof_stmt.line_file(),
-                                None,
-                                vec![],
-                                RuntimeErrorOutput::proof_step_unknown(
-                                    proof_stmt.clone(),
-                                    proof_index + 1,
-                                    proof_len,
-                                    &unknown,
-                                ),
+                if result.is_unknown() {
+                    return Err(RuntimeError::from(UnknownRuntimeError(
+                        RuntimeErrorStruct::new_with_output(
+                            Some(proof_stmt.clone()),
+                            format!(
+                                "strategy `{}` failed: proof step is unknown",
+                                strategy_names
                             ),
-                        )));
-                    }
-                    _ => inside_results.push(result),
+                            proof_stmt.line_file(),
+                            None,
+                            vec![],
+                            RuntimeErrorOutput::proof_step_unknown(
+                                proof_stmt.clone(),
+                                proof_index + 1,
+                                proof_len,
+                                &result,
+                            ),
+                        ),
+                    )));
                 }
+                inside_results.push(result);
             }
 
             let then_count = stmt.forall_fact.then_facts.len();
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
-                let result = rt.verify_exist_or_and_chain_atomic_fact(
+                let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &VerifyState::new(0, false),
                 )?;
-                match result {
-                    StmtResult::StmtUnknown(unknown) => {
-                        return Err(RuntimeError::from(UnknownRuntimeError(
-                            RuntimeErrorStruct::new_with_output(
-                                Some(then_fact.clone().to_fact().into()),
-                                format!(
-                                    "strategy `{}` failed: cannot prove then-clause",
-                                    strategy_names
-                                ),
-                                then_fact.line_file(),
-                                None,
-                                vec![],
-                                RuntimeErrorOutput::then_clause_unknown(
-                                    then_fact.clone().to_fact(),
-                                    then_index + 1,
-                                    then_count,
-                                    &unknown,
-                                ),
+                if result.is_unknown() {
+                    let then_goal = then_fact.clone().to_fact();
+                    result = result.wrap_unknown_for_fact(then_goal.clone());
+                    return Err(RuntimeError::from(UnknownRuntimeError(
+                        RuntimeErrorStruct::new_with_output(
+                            Some(then_goal.clone().into()),
+                            format!(
+                                "strategy `{}` failed: cannot prove then-clause",
+                                strategy_names
                             ),
-                        )));
-                    }
-                    _ => inside_results.push(result),
+                            then_fact.line_file(),
+                            None,
+                            vec![],
+                            RuntimeErrorOutput::then_clause_unknown(
+                                then_goal,
+                                then_index + 1,
+                                then_count,
+                                &result,
+                            ),
+                        ),
+                    )));
                 }
+                inside_results.push(result);
             }
 
             Ok(NonFactualStmtSuccess::new_with_accepted_by(

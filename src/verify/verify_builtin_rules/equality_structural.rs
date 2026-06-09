@@ -187,7 +187,7 @@ impl Runtime {
             }
         }
 
-        StmtResult::StmtUnknown(StmtUnknown::new())
+        StmtResult::Unknown(StmtUnknown::new())
     }
 
     pub fn verify_objs_are_equal_in_equality_builtin(
@@ -232,7 +232,7 @@ impl Runtime {
                 "equality builtin: same shape with equal arguments",
             ));
         }
-        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtResult::Unknown(StmtUnknown::new()))
     }
 
     fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {
@@ -784,7 +784,7 @@ impl Runtime {
         }
 
         Ok((
-            StmtResult::StmtUnknown(StmtUnknown::new()),
+            StmtResult::Unknown(StmtUnknown::new()),
             left_resolved,
             right_resolved,
         ))

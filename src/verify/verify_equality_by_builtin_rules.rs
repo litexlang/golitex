@@ -175,7 +175,7 @@ pub(crate) fn factual_equal_success_by_builtin_reason(
     line_file: LineFile,
     reason: &str,
 ) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             EqualFact::new(left.clone(), right.clone(), line_file).into(),
             reason.to_string(),

@@ -4,8 +4,8 @@ mod fields;
 mod normalize;
 mod source;
 mod success;
-mod text;
+mod unknown;
 
 pub use error::display_runtime_error_json;
 pub use success::display_stmt_exec_result_json;
-pub(crate) use text::stmt_result_body_string;
+pub(crate) use unknown::unknown_result_json_value;

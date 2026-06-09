@@ -1,7 +1,8 @@
 use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::{
     AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, Fact,
-    FactualStmtSuccess, InferResult, NonFactualStmtSuccess, Runtime, StmtResult,
+    FactualStmtSuccess, InferResult, NonFactualStmtSuccess, ObjectIntroductionItem, Runtime,
+    StmtResult,
 };
 
 use super::evidence::{
@@ -41,10 +42,12 @@ pub fn display_stmt_exec_result_json(
 }
 
 fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
-    match r {
-        StmtResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(runtime, x),
-        StmtResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(runtime, x),
-        StmtResult::StmtUnknown(_) => unreachable!(),
+    if let Some(x) = r.factual_success() {
+        factual_stmt_success_to_json(runtime, x)
+    } else if let Some(x) = r.non_factual_success() {
+        non_factual_stmt_success_to_json(runtime, x)
+    } else {
+        unreachable!()
     }
 }
 
@@ -224,11 +227,19 @@ fn accepted_by_value(runtime: &Runtime, success: &NonFactualStmtSuccess) -> Json
             fields.push(("cases".to_string(), JsonValue::Array(case_items)));
             fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
         }
+        AcceptedByKind::ObjectIntroduction | AcceptedByKind::ExistElimination => {
+            fields.push((
+                "checks".to_string(),
+                JsonValue::Array(accepted_by_check_items(runtime, &success.inside_results)),
+            ));
+            push_introduces_field_if_present(&mut fields, &success.accepted_by.introduces);
+        }
         _ => {
             fields.push((
                 JSON_KEY_STEPS.to_string(),
                 JsonValue::Array(accepted_by_step_items(runtime, &success.inside_results)),
             ));
+            push_introduces_field_if_present(&mut fields, &success.accepted_by.introduces);
         }
     }
 
@@ -239,6 +250,74 @@ fn accepted_by_step_items(runtime: &Runtime, inside_results: &[StmtResult]) -> V
     inside_results
         .iter()
         .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+        .collect::<Vec<_>>()
+}
+
+fn accepted_by_check_items(runtime: &Runtime, inside_results: &[StmtResult]) -> Vec<JsonValue> {
+    inside_results
+        .iter()
+        .map(|r| accepted_by_check_item(runtime, r))
+        .collect::<Vec<_>>()
+}
+
+fn accepted_by_check_item(runtime: &Runtime, r: &StmtResult) -> JsonValue {
+    if let Some(f) = r.factual_success() {
+        JsonValue::Object(vec![
+            (
+                "stmt".to_string(),
+                JsonValue::JsonString(user_visible_stmt_or_msg_text(&f.stmt.to_string())),
+            ),
+            (
+                JSON_KEY_VERIFIED_BY.to_string(),
+                factual_success_verified_by_value(runtime, f),
+            ),
+        ])
+    } else if let Some(n) = r.non_factual_success() {
+        JsonValue::Object(vec![
+            (
+                "stmt".to_string(),
+                JsonValue::JsonString(stmt_text_for_json(runtime, &n.stmt)),
+            ),
+            (
+                JSON_KEY_ACCEPTED_BY.to_string(),
+                accepted_by_value(runtime, n),
+            ),
+        ])
+    } else {
+        JsonValue::Object(vec![(
+            "type".to_string(),
+            JsonValue::JsonString("unknown".to_string()),
+        )])
+    }
+}
+
+fn push_introduces_field_if_present(
+    fields: &mut Vec<(String, JsonValue)>,
+    introduces: &[ObjectIntroductionItem],
+) {
+    if introduces.is_empty() {
+        return;
+    }
+    fields.push((
+        "introduces".to_string(),
+        JsonValue::Array(object_introduction_items_json_value(introduces)),
+    ));
+}
+
+fn object_introduction_items_json_value(introduces: &[ObjectIntroductionItem]) -> Vec<JsonValue> {
+    introduces
+        .iter()
+        .map(|item| {
+            let facts = item
+                .facts
+                .iter()
+                .map(|fact| JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())))
+                .collect::<Vec<_>>();
+            JsonValue::Object(vec![
+                ("name".to_string(), JsonValue::JsonString(item.name.clone())),
+                ("facts".to_string(), JsonValue::Array(facts)),
+            ])
+        })
         .collect::<Vec<_>>()
 }
 
@@ -314,6 +393,7 @@ fn accepted_by_type(accepted_by: &AcceptedByResult) -> &'static str {
     match accepted_by.kind.as_ref() {
         AcceptedByKind::Assumption => "assumption",
         AcceptedByKind::Definition => "definition",
+        AcceptedByKind::ObjectIntroduction => "object introduction",
         AcceptedByKind::ExistElimination => "exist elimination",
         AcceptedByKind::ProofBlock { .. } => "proof block",
         AcceptedByKind::CaseSplit { .. } => "case split",
@@ -330,6 +410,7 @@ fn accepted_by_summary(accepted_by: &AcceptedByResult) -> Option<&'static str> {
     match accepted_by.kind.as_ref() {
         AcceptedByKind::Assumption => Some("facts accepted as explicit assumptions"),
         AcceptedByKind::Definition => Some("definition or interface registered"),
+        AcceptedByKind::ObjectIntroduction => Some("object and supporting facts introduced"),
         AcceptedByKind::ExistElimination => {
             Some("exist fact verified and witness facts registered")
         }

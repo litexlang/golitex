@@ -10,6 +10,22 @@ impl Runtime {
             .map_err(|define_params_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
             })?;
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+        let checks = self
+            .object_introduction_nonempty_checks_for_param_def(&stmt.param_def)
+            .map_err(|check_error| {
+                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), check_error)
+            })?;
+        let introduces = self.object_introduction_items_for_defined_params(
+            &stmt.param_def,
+            stmt.line_file.clone(),
+            ParamObjType::Identifier,
+        );
+        Ok((NonFactualStmtSuccess::new_with_accepted_by(
+            stmt.clone().into(),
+            infer_result,
+            checks,
+            AcceptedByResult::object_introduction(introduces),
+        ))
+        .into())
     }
 }

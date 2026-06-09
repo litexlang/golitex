@@ -3199,7 +3199,7 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"verified_by\": {\n    \"type\": \"forall local check\""),
+        run_output.contains("\"verified_by\": {\n    \"type\": \"forall proof\""),
         "forall fact should render verified_by as an object:\n{}",
         run_output
     );
@@ -3209,10 +3209,113 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"steps\": ["),
-        "composite forall proof should keep proof steps:\n{}",
+        run_output.contains("\"proves\": ["),
+        "forall proof should keep one proof entry per then fact:\n{}",
         run_output
     );
+}
+
+#[test]
+fn object_introduction_output_exposes_checks_and_introduced_facts() {
+    run_with_large_stack(
+        "object_introduction_output_exposes_checks_and_introduced_facts_large_stack",
+        || {
+            let source_code = r#"
+have a R
+have b R = a
+have S set
+know exist x R st {x = x}
+have by exist x R st {x = x}: c
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "object_introduction_output_exposes_checks_and_introduced_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "object introduction output fixture failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"object introduction\""),
+                "ordinary object introductions should use object introduction accepted_by:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"checks\": ["),
+                "object introductions should expose required checks:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"stmt\": \"$is_nonempty_set(R)\""),
+                "have a R should show the nonempty check for R:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"stmt\": \"a $in R\""),
+                "have b R = a should show the type-check proof for a:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"introduces\": ["),
+                "object introductions should expose introduced objects:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"name\": \"a\""));
+            assert!(run_output.contains("\"name\": \"b\""));
+            assert!(run_output.contains("\"name\": \"S\""));
+            assert!(run_output.contains("\"a $in R\""));
+            assert!(run_output.contains("\"b $in R\""));
+            assert!(run_output.contains("\"b = a\""));
+            assert!(run_output.contains("\"$is_set(S)\""));
+            assert!(
+                run_output.contains("\"type\": \"exist elimination\""),
+                "existential object introductions should keep exist elimination accepted_by:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"name\": \"c\""));
+            assert!(run_output.contains("\"c $in R\""));
+            assert!(run_output.contains("\"c = c\""));
+            assert!(!run_output.contains("\"reason\""));
+            assert!(!run_output.contains("\"equal_to\""));
+        },
+    );
+}
+
+#[test]
+fn forall_parameter_assumption_output_is_local_assumption() {
+    let source_code = r#"
+forall n N:
+    n $in N
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_parameter_assumption_output");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "forall parameter assumption fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall proof\""));
+    assert!(run_output.contains("\"params\": ["));
+    assert!(run_output.contains("\"name\": \"n\""));
+    assert!(run_output.contains("\"type\": \"N\""));
+    assert!(run_output.contains("\"proves\": ["));
+    assert!(run_output.contains("\"stmt\": \"n $in N\""));
+    assert!(run_output.contains("\"type\": \"local assumption\""));
+    assert!(run_output.contains("\"source\": \"parameter declaration\""));
+    assert!(!run_output.contains("\"cite_source\""));
+    assert!(!run_output.contains("\"verify_what\""));
+    assert!(!run_output.contains("forall local check"));
 }
 
 #[test]
@@ -3415,10 +3518,97 @@ fn unknown_fact_failure_has_structured_output_fields() {
         run_output
     );
     assert!(
-        run_output.contains("\"unknown_result\": {\n      \"type\": \"unknown\""),
-        "unknown fact should expose structured unknown_result:\n{}",
+        run_output.contains("\"unknown_result\": {\n      \"type\": \"atomic fact unknown\""),
+        "unknown atomic fact should expose fact-specific unknown_result:\n{}",
         run_output
     );
+    assert!(
+        run_output.contains("\"goal\": \"1 = 2\""),
+        "unknown atomic fact should expose its goal:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn and_fact_unknown_reports_failed_part() {
+    let source_code = "1 = 1 and 1 = 2";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("and_fact_unknown_reports_failed_part");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "and fact fixture should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"and fact unknown\""),
+        "and fact unknown should be fact-specific:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"failed_part\": {"),
+        "and fact unknown should expose the failed part:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"index\": 2"));
+    assert!(run_output.contains("\"stmt\": \"1 = 2\""));
+    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+}
+
+#[test]
+fn forall_fact_unknown_reports_failed_prove() {
+    let source_code = r#"
+forall x R:
+    x = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_fact_unknown_reports_failed_prove");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "forall unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall unknown\""));
+    assert!(run_output.contains("\"params\": ["));
+    assert!(run_output.contains("\"name\": \"x\""));
+    assert!(run_output.contains("\"failed_prove\": {"));
+    assert!(run_output.contains("\"stmt\": \"~1x = 0\""));
+    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+}
+
+#[test]
+fn forall_iff_unknown_reports_failed_direction() {
+    let source_code = r#"
+forall x R:
+    =>:
+        x = 0
+    <=>:
+        x = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_iff_unknown_reports_failed_direction");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "forall iff unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall iff unknown\""));
+    assert!(run_output.contains("\"failed_direction\": \"then to iff\""));
+    assert!(run_output.contains("\"type\": \"forall unknown\""));
 }
 
 #[test]
