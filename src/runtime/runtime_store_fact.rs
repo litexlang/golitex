@@ -7,6 +7,19 @@ impl Runtime {
         fact: Fact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
+        self.verify_well_defined_and_store_and_infer_with_reason(
+            fact,
+            verify_state,
+            InferReason::VerifiedStatement,
+        )
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        verify_state: &VerifyState,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
         if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
@@ -17,28 +30,51 @@ impl Runtime {
             ))
             .into());
         }
-        self.store_and_infer_fact_without_well_defined_verified(fact)
+        self.store_and_infer_fact_without_well_defined_verified_with_reason(fact, reason)
     }
 
     pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        let verify_state = match fact {
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            fact,
+            InferReason::VerifiedStatement,
+        )
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        let verify_state = match &fact {
             Fact::ForallFact(_) => VerifyState::new(0, false),
             Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
             _ => VerifyState::new_with_final_round(false),
         };
-        self.verify_well_defined_and_store_and_infer(fact, &verify_state)
+        self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
     }
 
-    fn store_and_infer_fact_without_well_defined_verified(
+    fn store_and_infer_fact_without_well_defined_verified_with_reason(
         &mut self,
         fact: Fact,
+        reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
 
-        infer_result.new_fact(&fact);
+        match &reason {
+            InferReason::VerifiedStatement => infer_result.add_verified_statement(&fact),
+            InferReason::ProvedClaim => infer_result.add_proved_claim(&fact),
+            InferReason::UnsafeAssumption => infer_result.add_unsafe_assumption(&fact),
+            InferReason::LetBinding => infer_result.add_let_binding(&fact),
+            InferReason::ObjectIntroduction => infer_result.add_object_introduction(&fact),
+            InferReason::ExistElimination => infer_result.add_exist_elimination(&fact),
+            InferReason::TheoremInstantiation => infer_result.add_theorem_instantiation(&fact),
+            InferReason::Evaluation => infer_result.add_evaluation(&fact),
+            InferReason::ParameterDeclaration => infer_result.add_parameter_declaration(&fact),
+            _ => infer_result.add_fact_with_reason(reason.clone(), &fact),
+        }
 
         let ret = match fact {
             Fact::AtomicFact(_)

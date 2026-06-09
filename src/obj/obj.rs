@@ -1170,9 +1170,9 @@ impl Obj {
             Obj::FnRange(_) => FN_RANGE.to_string(),
             Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
             Obj::Sum(_) => SUM.to_string(),
-            Obj::SumOfFiniteSet(_) => SUM_OF_FINITE_SET.to_string(),
+            Obj::SumOfFiniteSet(_) => FINITE_SET_SUM.to_string(),
             Obj::Product(_) => PRODUCT.to_string(),
-            Obj::ProductOfFiniteSet(_) => PRODUCT_OF_FINITE_SET.to_string(),
+            Obj::ProductOfFiniteSet(_) => FINITE_SET_PRODUCT.to_string(),
             Obj::Range(_) => RANGE.to_string(),
             Obj::ClosedRange(_) => CLOSED_RANGE.to_string(),
             Obj::MatrixAdd(_) => MATRIX_ADD.to_string(),
@@ -2107,7 +2107,7 @@ impl fmt::Display for SumOfFiniteSet {
         write!(
             f,
             "{}{}",
-            SUM_OF_FINITE_SET,
+            FINITE_SET_SUM,
             braced_vec_to_string(&vec![self.set.as_ref(), self.func.as_ref()])
         )
     }
@@ -2133,7 +2133,7 @@ impl fmt::Display for ProductOfFiniteSet {
         write!(
             f,
             "{}{}",
-            PRODUCT_OF_FINITE_SET,
+            FINITE_SET_PRODUCT,
             braced_vec_to_string(&vec![self.set.as_ref(), self.func.as_ref()])
         )
     }

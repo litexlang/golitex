@@ -428,7 +428,7 @@ impl Runtime {
         forall_unique: Fact,
     ) -> Result<InferResult, RuntimeError> {
         // `store_fact...` on forall facts already feeds the stored fact back through `infer`,
-        // so avoid pre-recording the same fact here or JSON `infer_facts` will show duplicates.
+        // so avoid pre-recording the same fact here or JSON `effects` will show duplicates.
         let mut infer_result = InferResult::new();
         let infer_shape = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_shape)

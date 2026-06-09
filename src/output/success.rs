@@ -1,35 +1,20 @@
 use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::{
     AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, Fact,
-    FactualStmtSuccess, InferResult, NonFactualStmtSuccess, ObjectIntroductionItem, Runtime,
-    StmtResult,
+    FactualStmtSuccess, NonFactualStmtSuccess, ObjectIntroductionItem, Runtime, Stmt, StmtResult,
+    UnsafeStmt,
 };
 
+use super::effects::effects_json_values;
 use super::evidence::{
     factual_success_verified_by_value, stmt_result_to_composite_step_verified_by,
 };
 use super::fields::{
-    user_visible_stmt_or_msg_text, JSON_KEY_ACCEPTED_BY, JSON_KEY_INFER_FACTS,
-    JSON_KEY_INSIDE_RESULTS, JSON_KEY_RESULT, JSON_KEY_STEPS, JSON_KEY_SUCCESS,
-    JSON_KEY_VERIFIED_BY,
+    user_visible_stmt_or_msg_text, JSON_KEY_ACCEPTED_BY, JSON_KEY_EFFECTS, JSON_KEY_INSIDE_RESULTS,
+    JSON_KEY_RESULT, JSON_KEY_STEPS, JSON_KEY_SUCCESS, JSON_KEY_VERIFIED_BY,
 };
 use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
 use super::source::stmt_text_for_json;
-
-/// `infer_facts` for JSON: all inferred lines except the one that only repeats the same text as
-/// this entry's `stmt` field (that fact is already shown under `stmt` and stored in the fact store).
-fn json_infer_fact_items_excluding_self_stmt(
-    infers: &InferResult,
-    stmt_text_as_in_json: &str,
-) -> Vec<JsonValue> {
-    let exclude = user_visible_stmt_or_msg_text(stmt_text_as_in_json);
-    infers
-        .infer_lines_unique_in_order()
-        .iter()
-        .filter(|s| user_visible_stmt_or_msg_text(s) != exclude)
-        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
-        .collect()
-}
 
 pub fn display_stmt_exec_result_json(
     runtime: &Runtime,
@@ -54,9 +39,7 @@ fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_text = stmt_text_for_json(runtime, &x.stmt);
-
-    let infer_items: Vec<JsonValue> =
-        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
+    let effect_items = effects_json_values(&x.infers);
 
     let inside_items: Vec<JsonValue> = x
         .inside_results
@@ -78,11 +61,15 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
             line_file_line_json_value(&stmt_line_file),
         ),
         ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
-        (
-            JSON_KEY_INFER_FACTS.to_string(),
-            JsonValue::Array(infer_items),
-        ),
+        (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
     ];
+
+    if statement_trust_is_unsafe(&x.stmt) {
+        fields.push((
+            "trust".to_string(),
+            JsonValue::JsonString("unsafe".to_string()),
+        ));
+    }
 
     fields.push((
         JSON_KEY_ACCEPTED_BY.to_string(),
@@ -109,9 +96,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
-
-    let infer_items: Vec<JsonValue> =
-        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
+    let effect_items = effects_json_values(&x.infers);
 
     JsonValue::Object(vec![
         (
@@ -131,10 +116,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
-        (
-            JSON_KEY_INFER_FACTS.to_string(),
-            JsonValue::Array(infer_items),
-        ),
+        (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
         ("inside_results".to_string(), JsonValue::Array(vec![])),
     ])
 }
@@ -143,9 +125,7 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
-
-    let infer_items: Vec<JsonValue> =
-        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
+    let effect_items = effects_json_values(&x.infers);
 
     JsonValue::Object(vec![
         (
@@ -165,12 +145,13 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
-        (
-            JSON_KEY_INFER_FACTS.to_string(),
-            JsonValue::Array(infer_items),
-        ),
+        (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
         ("inside_results".to_string(), JsonValue::Array(vec![])),
     ])
+}
+
+fn statement_trust_is_unsafe(stmt: &Stmt) -> bool {
+    matches!(stmt, Stmt::UnsafeStmt(_))
 }
 
 fn accepted_by_value(runtime: &Runtime, success: &NonFactualStmtSuccess) -> JsonValue {
@@ -179,7 +160,7 @@ fn accepted_by_value(runtime: &Runtime, success: &NonFactualStmtSuccess) -> Json
         JsonValue::JsonString(accepted_by_type(&success.accepted_by).to_string()),
     )];
 
-    if let Some(summary) = accepted_by_summary(&success.accepted_by) {
+    if let Some(summary) = accepted_by_summary(success) {
         fields.push((
             "summary".to_string(),
             JsonValue::JsonString(summary.to_string()),
@@ -406,8 +387,18 @@ fn accepted_by_type(accepted_by: &AcceptedByResult) -> &'static str {
     }
 }
 
-fn accepted_by_summary(accepted_by: &AcceptedByResult) -> Option<&'static str> {
-    match accepted_by.kind.as_ref() {
+fn accepted_by_summary(success: &NonFactualStmtSuccess) -> Option<&'static str> {
+    match &success.stmt {
+        Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(_)) => {
+            return Some("facts accepted without proof");
+        }
+        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
+            return Some("binding accepted without proof obligation");
+        }
+        _ => {}
+    }
+
+    match success.accepted_by.kind.as_ref() {
         AcceptedByKind::Assumption => Some("facts accepted as explicit assumptions"),
         AcceptedByKind::Definition => Some("definition or interface registered"),
         AcceptedByKind::ObjectIntroduction => Some("object and supporting facts introduced"),

@@ -78,7 +78,10 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
-pub use crate::infer::InferResult;
+pub use crate::infer::{
+    AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason, InferEffect, InferReason,
+    InferResult, InferRuleReason, OutputWarning,
+};
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -424,7 +427,7 @@ pub use crate::common::keywords::POW;
 pub use crate::common::keywords::POWER_SET;
 pub use crate::common::keywords::PREIMAGE;
 pub use crate::common::keywords::PRODUCT;
-pub use crate::common::keywords::PRODUCT_OF_FINITE_SET;
+pub use crate::common::keywords::FINITE_SET_PRODUCT;
 pub use crate::common::keywords::PROJ;
 pub use crate::common::keywords::PROP;
 pub use crate::common::keywords::PROVE;
@@ -461,7 +464,7 @@ pub use crate::common::keywords::SUB;
 pub use crate::common::keywords::SUBSET;
 pub use crate::common::keywords::SUCCESS_COLON;
 pub use crate::common::keywords::SUM;
-pub use crate::common::keywords::SUM_OF_FINITE_SET;
+pub use crate::common::keywords::FINITE_SET_SUM;
 pub use crate::common::keywords::SUPERSET;
 pub use crate::common::keywords::SURJECTIVE;
 pub use crate::common::keywords::SYMMETRIC_PROP;

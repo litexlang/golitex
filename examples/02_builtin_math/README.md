@@ -1067,47 +1067,47 @@ sketch:
     sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
 
 # Finite-set sum: sum the function value over each element of a finite set.
-sum_of_finite_set({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-sum_of_finite_set({}, 'Z(x){x}) = 0
-sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
-sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+finite_set_sum({}, 'Z(x){x}) = 0
+finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2}, 'Z(x){x}) $in Z
+finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
 ```
 
 ```litex
 sketch:
     have X finite_set
     have c Z
-    sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
 ```
 
 ```litex
 forall X power_set(Z):
     $is_finite_set(X)
     =>:
-        sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
+        finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
 
 # Finite-set product: multiply the function value over each element of a finite set.
-product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-product_of_finite_set({}, 'Z(x){x}) = 1
-product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
-product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
-product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
+finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+finite_set_product({}, 'Z(x){x}) = 1
+finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({1, 2}, 'Z(x){x}) $in Z
+finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_product({}, 'N_pos(x){x}) $in N_pos
 ```
 
 ```litex
 sketch:
     have X finite_set
     have c R
-    product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
 ```
 
 ```litex
 forall X power_set(Z):
     $is_finite_set(X)
     =>:
-        product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
+        finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
 
 # Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
 sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})

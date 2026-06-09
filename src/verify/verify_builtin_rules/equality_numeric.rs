@@ -2977,8 +2977,8 @@ impl Runtime {
     }
 
     // A finite-set sum over the empty set is zero.
-    // Example: `sum_of_finite_set({}, 'Z(x){x}) = 0`.
-    pub(crate) fn try_verify_sum_of_finite_set_empty(
+    // Example: `finite_set_sum({}, 'Z(x){x}) = 0`.
+    pub(crate) fn try_verify_finite_set_sum_empty(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3024,8 +3024,8 @@ impl Runtime {
 
     // A finite-set sum over a displayed finite set expands to the left-associated sum
     // of the summand at each listed element. Example:
-    // `sum_of_finite_set({1, 2}, 'Z(x){x}) = 1 + 2`.
-    pub(crate) fn try_verify_sum_of_finite_set_list_expansion(
+    // `finite_set_sum({1, 2}, 'Z(x){x}) = 1 + 2`.
+    pub(crate) fn try_verify_finite_set_sum_list_expansion(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3074,8 +3074,8 @@ impl Runtime {
     }
 
     // A finite-set sum over an integer closed range agrees with the existing range sum.
-    // Example: `sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})`.
-    pub(crate) fn try_verify_sum_of_finite_set_closed_range_bridge(
+    // Example: `finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})`.
+    pub(crate) fn try_verify_finite_set_sum_closed_range_bridge(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3136,8 +3136,8 @@ impl Runtime {
     }
 
     // A constant finite-set summand is the set cardinality times the constant.
-    // Example: `sum_of_finite_set(X, '(x X) R {c}) = count(X) * c`.
-    pub(crate) fn try_verify_sum_of_finite_set_constant_summand(
+    // Example: `finite_set_sum(X, '(x X) R {c}) = count(X) * c`.
+    pub(crate) fn try_verify_finite_set_sum_constant_summand(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3204,8 +3204,8 @@ impl Runtime {
 
     // Finite-set sums are equal when their summands are pointwise equal on the same finite set.
     // Example: from `forall x X: f(x) = g(x)`, prove
-    // `sum_of_finite_set(X, f) = sum_of_finite_set(X, g)`.
-    pub(crate) fn try_verify_sum_of_finite_set_pointwise_equality(
+    // `finite_set_sum(X, f) = finite_set_sum(X, g)`.
+    pub(crate) fn try_verify_finite_set_sum_pointwise_equality(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3260,8 +3260,8 @@ impl Runtime {
     }
 
     // A finite-set product over the empty set is one.
-    // Example: `product_of_finite_set({}, 'Z(x){x}) = 1`.
-    pub(crate) fn try_verify_product_of_finite_set_empty(
+    // Example: `finite_set_product({}, 'Z(x){x}) = 1`.
+    pub(crate) fn try_verify_finite_set_product_empty(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3307,8 +3307,8 @@ impl Runtime {
 
     // A finite-set product over a displayed finite set expands to the left-associated product
     // of the factor at each listed element. Example:
-    // `product_of_finite_set({1, 2}, 'Z(x){x}) = 1 * 2`.
-    pub(crate) fn try_verify_product_of_finite_set_list_expansion(
+    // `finite_set_product({1, 2}, 'Z(x){x}) = 1 * 2`.
+    pub(crate) fn try_verify_finite_set_product_list_expansion(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3357,8 +3357,8 @@ impl Runtime {
     }
 
     // A finite-set product over an integer closed range agrees with the existing range product.
-    // Example: `product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})`.
-    pub(crate) fn try_verify_product_of_finite_set_closed_range_bridge(
+    // Example: `finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})`.
+    pub(crate) fn try_verify_finite_set_product_closed_range_bridge(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3419,8 +3419,8 @@ impl Runtime {
     }
 
     // A constant finite-set factor is the constant raised to the set cardinality.
-    // Example: `product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)`.
-    pub(crate) fn try_verify_product_of_finite_set_constant_factor(
+    // Example: `finite_set_product(X, '(x X) R {c}) = c ^ count(X)`.
+    pub(crate) fn try_verify_finite_set_product_constant_factor(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -3478,8 +3478,8 @@ impl Runtime {
 
     // Finite-set products are equal when their factors are pointwise equal on the same finite set.
     // Example: from `forall x X: f(x) = g(x)`, prove
-    // `product_of_finite_set(X, f) = product_of_finite_set(X, g)`.
-    pub(crate) fn try_verify_product_of_finite_set_pointwise_equality(
+    // `finite_set_product(X, f) = finite_set_product(X, g)`.
+    pub(crate) fn try_verify_finite_set_product_pointwise_equality(
         &mut self,
         left: &Obj,
         right: &Obj,

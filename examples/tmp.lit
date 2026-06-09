@@ -51,7 +51,7 @@ pub struct InferResult {
 }
 
 这个 好像还不太好。我觉得可以按 不同的 infer 的方式 来区分一下。比如有些 infer 是 推理出来的，有限是by definition 出来的。我觉得单纯string 格式的 infer_facts 好像不好，还是最好写成 struct {
-    "reason": "比如说这里是by definition 出来的“，就是infer by definition。不过还可以更详细的，比如 a $in {x R: $P(x)} 就可以说是 既有
+    "reason": "比如说这里是by definition 出来的“，就是infer by definition。不过还可以更详细的，比如 a $in {x R: $P(x)} 。这个 reason 可以设计成 string 了，不过每种情况最好还是要独立一个函数来处理，因为这实在是太flexible了
     "facts": []
 }
 

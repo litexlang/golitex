@@ -182,7 +182,12 @@ impl Runtime {
             "prop with meaning `{}` (param constraints and definition clauses)",
             predicate_name
         );
-        infer_result.new_fact(&normal_atomic_fact.clone().into());
+        let fact_by_definition: Fact = normal_atomic_fact.clone().into();
+        infer_result.add_fact_by_definition(
+            Some(fact_by_definition.clone()),
+            Some(predicate_name),
+            &fact_by_definition,
+        );
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
