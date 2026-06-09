@@ -1,10 +1,7 @@
 use crate::common::json_value::{
     json_one_level_indent, json_string_literal, render_json_value, JsonValue,
 };
-use crate::prelude::{
-    CommandStmt, LineFile, Runtime, RuntimeError, RuntimeErrorOutput, RuntimeErrorUnknownResult,
-    Stmt,
-};
+use crate::prelude::{CommandStmt, LineFile, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
 
 use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_ERROR_TYPE, JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP,
@@ -16,6 +13,7 @@ use super::normalize::{
 };
 use super::source::{source_ref_json_fields, stmt_json_field_lines, stmt_json_value};
 use super::success::display_stmt_exec_result_json;
+use super::unknown_result_json_value;
 
 pub fn display_runtime_error_json(
     runtime: &Runtime,
@@ -215,25 +213,6 @@ fn push_runtime_error_output_field_lines(
             unknown_result_json_value(runtime, unknown_result),
         );
     }
-}
-
-fn unknown_result_json_value(
-    runtime: &Runtime,
-    unknown_result: &RuntimeErrorUnknownResult,
-) -> JsonValue {
-    let mut fields = vec![(
-        "type".to_string(),
-        JsonValue::JsonString("unknown".to_string()),
-    )];
-    if runtime.detail_output || !unknown_result.detail_lines.is_empty() {
-        let detail_items = unknown_result
-            .detail_lines
-            .iter()
-            .map(|line| JsonValue::JsonString(user_visible_stmt_or_msg_text(line)))
-            .collect::<Vec<_>>();
-        fields.push(("detail".to_string(), JsonValue::Array(detail_items)));
-    }
-    JsonValue::Object(fields)
 }
 
 fn error_own_statement(error: &RuntimeError) -> Option<&Stmt> {

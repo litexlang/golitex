@@ -221,7 +221,7 @@ impl Runtime {
             step_results.push(result);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n <= b^n from 0 <= a, a <= b, and positive integer n".to_string(),
@@ -295,7 +295,7 @@ impl Runtime {
             let left_result = self.verify_order_subgoal(left_nonnegative)?;
             let right_result = self.verify_order_subgoal(right_nonnegative)?;
             if power_le_result.is_true() && left_result.is_true() && right_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N_pos".to_string(),
@@ -332,7 +332,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n <= b^n from a <= b and positive odd integer n".to_string(),
@@ -369,7 +369,7 @@ impl Runtime {
             return Ok(None);
         }
         step_results.push(abs_result);
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^k <= b^k from abs(a) <= abs(b) and even k in N_pos".to_string(),
@@ -405,7 +405,7 @@ impl Runtime {
             return Ok(None);
         }
         step_results.push(abs_result);
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^k < b^k from abs(a) < abs(b) and even k in N_pos".to_string(),
@@ -462,7 +462,7 @@ impl Runtime {
             step_results.push(result);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^q < b^q from 0 < a, 0 < b, a < b, 0 < q, and q in R or Q".to_string(),
@@ -496,7 +496,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n < b^n from a < b and positive odd integer n".to_string(),
@@ -543,7 +543,7 @@ impl Runtime {
             step_results.push(result);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n < b^n from 0 <= a, 0 <= b, a < b, and positive integer n".to_string(),
@@ -569,7 +569,7 @@ impl Runtime {
         let r0 = self.verify_order_subgoal(g0)?;
         let r1 = self.verify_order_subgoal(g_ord)?;
         if r0.is_true() && r1.is_true() {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     msg_nonneg.to_string(),
@@ -582,7 +582,7 @@ impl Runtime {
         let r2 = self.verify_order_subgoal(g_x_nonpos)?;
         let r3 = self.verify_order_subgoal(g_rev)?;
         if r2.is_true() && r3.is_true() {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     msg_nonpos.to_string(),
@@ -610,7 +610,7 @@ impl Runtime {
         let r0 = self.verify_order_subgoal(g_pos)?;
         let r1 = self.verify_order_subgoal(g_ord)?;
         if r0.is_true() && r1.is_true() {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     msg_pos.to_string(),
@@ -623,7 +623,7 @@ impl Runtime {
         let r2 = self.verify_order_subgoal(g_x_neg)?;
         let r3 = self.verify_order_subgoal(g_rev)?;
         if r2.is_true() && r3.is_true() {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     msg_neg.to_string(),
@@ -664,7 +664,7 @@ impl Runtime {
                     }
                     rec.push(r);
                 }
-                Ok(Some(StmtResult::FactualStmtSuccess(
+                Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=".to_string(),
@@ -695,7 +695,7 @@ impl Runtime {
                 let r_neg = self.verify_order_subgoal(g_neg)?;
                 let r_pos = self.verify_order_subgoal(g_pos)?;
                 if r_neg.is_true() && r_pos.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a * b <= 0 from a <= 0 and 0 <= b".to_string(),
@@ -734,7 +734,7 @@ impl Runtime {
             let r0 = self.verify_order_subgoal(subgoals[0].clone())?;
             let r1 = self.verify_order_subgoal(subgoals[1].clone())?;
             if r0.is_true() && r1.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "0 <= a * b from a,b having the same weak sign".to_string(),
@@ -766,7 +766,7 @@ impl Runtime {
                 let r_neg = self.verify_order_subgoal(g_neg)?;
                 let r_pos = self.verify_order_subgoal(g_pos)?;
                 if r_neg.is_true() && r_pos.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a * b < 0 from opposite strict signs".to_string(),
@@ -812,7 +812,7 @@ impl Runtime {
             let r0 = self.verify_order_subgoal(g0)?;
             let r1 = self.verify_order_subgoal(g1)?;
             if r0.is_true() && r1.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "0 < a * b from same strict signs".to_string(),
@@ -874,7 +874,7 @@ impl Runtime {
                     LessEqualFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal)?;
                 if result.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "u + a <= u + b from a <= b".to_string(),
@@ -895,7 +895,7 @@ impl Runtime {
             let order_result = self.verify_order_subgoal(order_subgoal)?;
             let nonnegative_result = self.verify_order_subgoal(nonnegative_subtractor)?;
             if order_result.is_true() && nonnegative_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c <= b from a <= b and 0 <= c".to_string(),
@@ -911,7 +911,7 @@ impl Runtime {
                 LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
             if shifted_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c <= b from a <= b + c".to_string(),
@@ -934,7 +934,7 @@ impl Runtime {
                 let g0 = LessEqualFact::new(z.clone(), b, lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0)?;
                 if r0.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a <= a + b from 0 <= b".to_string(),
@@ -951,7 +951,7 @@ impl Runtime {
             let r1 = self.verify_order_subgoal(g_a_left)?;
             let r2 = self.verify_order_subgoal(g0_right)?;
             if r1.is_true() && r2.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a <= b + c from a <= b and 0 <= c".to_string(),
@@ -966,7 +966,7 @@ impl Runtime {
             let r3 = self.verify_order_subgoal(g_a_right)?;
             let r4 = self.verify_order_subgoal(g0_left)?;
             if r3.is_true() && r4.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a <= b + c from a <= b and 0 <= c".to_string(),
@@ -984,7 +984,7 @@ impl Runtime {
                 LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
             if shifted_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a <= b - c from a + c <= b".to_string(),
@@ -1001,7 +1001,7 @@ impl Runtime {
                             .into();
                     let result = self.verify_order_subgoal(subgoal)?;
                     if result.is_true() {
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "a <= x - n from a + n <= x".to_string(),
@@ -1017,7 +1017,7 @@ impl Runtime {
             if sub.left.as_ref().to_string() == f.right.to_string()
                 && Self::obj_is_nonnegative_integer_number(sub.right.as_ref())
             {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - n <= a for n >= 0".to_string(),
@@ -1065,7 +1065,7 @@ impl Runtime {
                 if !r1.is_true() {
                     return Ok(None);
                 }
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a <= b * a from 0 <= a and 1 <= b".to_string(),
@@ -1135,7 +1135,7 @@ impl Runtime {
             if !r2.is_true() {
                 return Ok(None);
             }
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "a + c <= b + d from a <= b and c <= d".to_string(),
@@ -1167,7 +1167,7 @@ impl Runtime {
             if !r2.is_true() {
                 return Ok(None);
             }
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "a - d <= b - c from a <= b and c <= d".to_string(),
@@ -1189,7 +1189,7 @@ impl Runtime {
                 let r_pos = self.verify_order_subgoal(g_pos)?;
                 let r_ab = self.verify_order_subgoal(g_ab)?;
                 if r_pos.is_true() && r_ab.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a / c <= b / c from 0 < c and a <= b".to_string(),
@@ -1207,7 +1207,7 @@ impl Runtime {
                 let r_neg = self.verify_order_subgoal(g_neg)?;
                 let r_ab2 = self.verify_order_subgoal(g_ab_flip)?;
                 if r_neg.is_true() && r_ab2.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "b / c <= a / c from c < 0 and a <= b".to_string(),
@@ -1270,7 +1270,7 @@ impl Runtime {
                     LessFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal)?;
                 if result.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "u + a < u + b from a < b".to_string(),
@@ -1299,7 +1299,7 @@ impl Runtime {
             let r1 = self.verify_order_subgoal(g1s)?;
             let r2 = self.verify_order_subgoal(g2s)?;
             if r1.is_true() && r2.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - d < b - c from a < b and c <= d".to_string(),
@@ -1325,7 +1325,7 @@ impl Runtime {
             let r3 = self.verify_order_subgoal(g1w)?;
             let r4 = self.verify_order_subgoal(g2w)?;
             if r3.is_true() && r4.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - d < b - c from a <= b and c < d".to_string(),
@@ -1349,7 +1349,7 @@ impl Runtime {
                     let r_pos = self.verify_order_subgoal(positive_arg)?;
                     let r_sub = self.verify_order_subgoal(nonnegative_sub)?;
                     if r_pos.is_true() && r_sub.is_true() {
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "abs(x - n) < abs(x) for positive x and nonnegative x - n"
@@ -1372,7 +1372,7 @@ impl Runtime {
             let strict_order_result = self.verify_order_subgoal(strict_order_subgoal)?;
             let nonnegative_result = self.verify_order_subgoal(nonnegative_subtractor)?;
             if strict_order_result.is_true() && nonnegative_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c < b from a < b and 0 <= c".to_string(),
@@ -1390,7 +1390,7 @@ impl Runtime {
             let weak_order_result = self.verify_order_subgoal(weak_order_subgoal)?;
             let positive_result = self.verify_order_subgoal(positive_subtractor)?;
             if weak_order_result.is_true() && positive_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c < b from a <= b and 0 < c".to_string(),
@@ -1406,7 +1406,7 @@ impl Runtime {
                 LessFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
             if shifted_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c < b from a < b + c".to_string(),
@@ -1429,7 +1429,7 @@ impl Runtime {
                 let g0 = LessFact::new(z.clone(), b, lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0)?;
                 if r0.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a < a + b from 0 < b".to_string(),
@@ -1446,7 +1446,7 @@ impl Runtime {
             let r1 = self.verify_order_subgoal(g_a_left)?;
             let r2 = self.verify_order_subgoal(g0_right)?;
             if r1.is_true() && r2.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a < b + c from a < b and 0 <= c".to_string(),
@@ -1461,7 +1461,7 @@ impl Runtime {
             let r3 = self.verify_order_subgoal(g_a_right)?;
             let r4 = self.verify_order_subgoal(g0_left)?;
             if r3.is_true() && r4.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a < b + c from a < c and 0 <= b".to_string(),
@@ -1479,7 +1479,7 @@ impl Runtime {
                 LessFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal)?;
             if shifted_result.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a < b - c from a + c < b".to_string(),
@@ -1493,7 +1493,7 @@ impl Runtime {
             if sub.left.as_ref().to_string() == f.right.to_string()
                 && Self::obj_is_positive_integer_number(sub.right.as_ref())
             {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - n < a for n > 0".to_string(),
@@ -1518,7 +1518,7 @@ impl Runtime {
                 if !r_denom_gt_one.is_true() {
                     return Ok(None);
                 }
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a / b < a from 0 < a and 1 < b".to_string(),
@@ -1566,7 +1566,7 @@ impl Runtime {
                 if !r1.is_true() {
                     return Ok(None);
                 }
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a < b * a from 0 < a and 1 < b".to_string(),
@@ -1621,7 +1621,7 @@ impl Runtime {
             let r1 = self.verify_order_subgoal(g1s)?;
             let r2 = self.verify_order_subgoal(g2s)?;
             if r1.is_true() && r2.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a < b and c < d".to_string(),
@@ -1644,7 +1644,7 @@ impl Runtime {
             let r3 = self.verify_order_subgoal(g1m)?;
             let r4 = self.verify_order_subgoal(g2m)?;
             if r3.is_true() && r4.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a < b and c <= d".to_string(),
@@ -1667,7 +1667,7 @@ impl Runtime {
             let r5 = self.verify_order_subgoal(g1w)?;
             let r6 = self.verify_order_subgoal(g2w)?;
             if r5.is_true() && r6.is_true() {
-                return Ok(Some(StmtResult::FactualStmtSuccess(
+                return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a <= b and c < d".to_string(),
@@ -1690,7 +1690,7 @@ impl Runtime {
                 let r_pos = self.verify_order_subgoal(g_pos)?;
                 let r_ab = self.verify_order_subgoal(g_ab)?;
                 if r_pos.is_true() && r_ab.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "a / c < b / c from 0 < c and a < b".to_string(),
@@ -1708,7 +1708,7 @@ impl Runtime {
                 let r_neg = self.verify_order_subgoal(g_neg)?;
                 let r_ab2 = self.verify_order_subgoal(g_ab_flip)?;
                 if r_neg.is_true() && r_ab2.is_true() {
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "b / c < a / c from c < 0 and a < b".to_string(),

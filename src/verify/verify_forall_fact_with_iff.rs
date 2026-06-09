@@ -15,12 +15,21 @@ impl Runtime {
 
         let (forall_then_implies_iff, forall_iff_implies_then) =
             forall_iff.to_two_forall_facts()?;
-        let verification_steps = [&forall_then_implies_iff, &forall_iff_implies_then];
+        let verification_steps = [
+            (&forall_then_implies_iff, "then to iff"),
+            (&forall_iff_implies_then, "iff to then"),
+        ];
         let mut step_results = Vec::new();
-        for forall_step in verification_steps {
+        for (forall_step, direction) in verification_steps {
             let result = self.verify_forall_fact(forall_step, verify_state)?;
             if result.is_unknown() {
-                return Ok(result);
+                let result = result.wrap_unknown_for_fact(forall_step.clone().into());
+                return Ok(FactUnknown::forall_iff_with_failed_direction(
+                    forall_iff.clone(),
+                    direction.to_string(),
+                    result.as_fact_unknown().cloned(),
+                )
+                .into());
             }
             step_results.push(result);
         }

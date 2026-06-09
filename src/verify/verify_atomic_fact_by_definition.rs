@@ -175,15 +175,7 @@ impl Runtime {
             if iff_clause_verify_result.is_unknown() {
                 return Ok(None);
             }
-            match &iff_clause_verify_result {
-                StmtResult::FactualStmtSuccess(factual_success) => {
-                    infer_result.new_infer_result_inside(factual_success.infers.clone());
-                }
-                StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-                }
-                StmtResult::StmtUnknown(_) => return Ok(None),
-            }
+            infer_result.new_infer_result_inside(iff_clause_verify_result.infer_result());
         }
 
         let verified_by_text = format!(

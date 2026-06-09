@@ -334,7 +334,7 @@ impl Runtime {
             }
         }
 
-        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtResult::Unknown(StmtUnknown::new()))
     }
 
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(

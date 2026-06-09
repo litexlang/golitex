@@ -22,6 +22,7 @@ mod exec_have_obj_equal_stmt;
 mod exec_have_obj_in_nonempty_set_or_param_type_stmt;
 mod exec_know_stmt;
 mod exec_let_stmt;
+mod exec_object_introduction_helper;
 mod exec_sketch_stmt;
 mod exec_stmt;
 mod exec_store_definitions;

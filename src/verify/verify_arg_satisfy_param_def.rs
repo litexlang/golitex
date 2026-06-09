@@ -44,15 +44,7 @@ impl Runtime {
             if verify_result.is_unknown() {
                 return Ok(verify_result);
             }
-            match verify_result {
-                StmtResult::NonFactualStmtSuccess(x) => {
-                    infer_result.new_infer_result_inside(x.infers);
-                }
-                StmtResult::FactualStmtSuccess(x) => {
-                    infer_result.new_infer_result_inside(x.infers);
-                }
-                StmtResult::StmtUnknown(_) => unreachable!(),
-            }
+            infer_result.new_infer_result_inside(verify_result.infer_result());
         }
         Ok(NonFactualStmtSuccess::new(
             DoNothingStmt::new(default_line_file()).into(),

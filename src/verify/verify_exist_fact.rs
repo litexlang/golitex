@@ -50,7 +50,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok(StmtUnknown::new().into())
     }
 
     pub(crate) fn build_exist_unique_uniqueness_forall_fact(
@@ -404,9 +404,5 @@ impl Runtime {
 }
 
 fn stmt_result_infers(result: &StmtResult) -> InferResult {
-    match result {
-        StmtResult::FactualStmtSuccess(x) => x.infers.clone(),
-        StmtResult::NonFactualStmtSuccess(x) => x.infers.clone(),
-        StmtResult::StmtUnknown(_) => InferResult::new(),
-    }
+    result.infer_result()
 }

@@ -492,7 +492,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok(StmtUnknown::new().into())
     }
 
     /// Integer lower-bound split into finitely many successor equalities plus a strict tail.

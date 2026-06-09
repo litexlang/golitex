@@ -64,7 +64,126 @@ fn verified_by_result_json_value(
         VerifiedByResult::VerifiedBys(w) => {
             verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
         }
+        VerifiedByResult::ForallProof(w) => forall_proof_verified_by_value(runtime, w),
     }
+}
+
+fn forall_proof_verified_by_value(runtime: &Runtime, proof: &ForallProofResult) -> JsonValue {
+    let params = forall_param_items(&proof.forall_fact.params_def_with_type);
+    let requirements = proof
+        .forall_fact
+        .dom_facts
+        .iter()
+        .map(|fact| {
+            forall_local_fact_item(
+                &user_visible_stmt_or_msg_text(&fact.to_string()),
+                "forall requirement",
+            )
+        })
+        .collect::<Vec<_>>();
+    let proves = proof
+        .proves
+        .iter()
+        .map(|proved| forall_proved_fact_value(runtime, proof, proved))
+        .collect::<Vec<_>>();
+
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("forall proof".to_string()),
+        ),
+        ("params".to_string(), JsonValue::Array(params)),
+        ("requirements".to_string(), JsonValue::Array(requirements)),
+        ("proves".to_string(), JsonValue::Array(proves)),
+    ])
+}
+
+fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {
+    let mut items = Vec::new();
+    for (name, param_type) in param_defs.collect_param_names_with_types() {
+        items.push(JsonValue::Object(vec![
+            ("name".to_string(), JsonValue::JsonString(name)),
+            (
+                "type".to_string(),
+                JsonValue::JsonString(user_visible_stmt_or_msg_text(&param_type.to_string())),
+            ),
+        ]));
+    }
+    items
+}
+
+fn forall_proved_fact_value(
+    runtime: &Runtime,
+    proof: &ForallProofResult,
+    proved: &ForallProvedFactResult,
+) -> JsonValue {
+    let stmt_text = user_visible_stmt_or_msg_text(&proved.stmt.to_string());
+    let by_value = match forall_local_assumption_source(proof, &proved.stmt) {
+        Some(source) => forall_local_assumption_value(source),
+        None => stmt_result_to_composite_step_verified_by(runtime, proved.result.as_ref()),
+    };
+    JsonValue::Object(vec![
+        ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
+        ("by".to_string(), by_value),
+    ])
+}
+
+fn forall_local_fact_item(stmt_text: &str, source: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "stmt".to_string(),
+            JsonValue::JsonString(stmt_text.to_string()),
+        ),
+        ("by".to_string(), forall_local_assumption_value(source)),
+    ])
+}
+
+fn forall_local_assumption_value(source: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("local assumption".to_string()),
+        ),
+        (
+            "source".to_string(),
+            JsonValue::JsonString(source.to_string()),
+        ),
+    ])
+}
+
+fn forall_local_assumption_source(
+    proof: &ForallProofResult,
+    stmt: &ExistOrAndChainAtomicFact,
+) -> Option<&'static str> {
+    let target = stmt.clone().to_fact().to_string();
+    for fact in forall_param_type_assumption_facts(&proof.forall_fact.params_def_with_type) {
+        if fact.to_string() == target {
+            return Some("parameter declaration");
+        }
+    }
+    for fact in proof.forall_fact.dom_facts.iter() {
+        if fact.to_string() == target {
+            return Some("forall requirement");
+        }
+    }
+    None
+}
+
+fn forall_param_type_assumption_facts(param_defs: &ParamDefWithType) -> Vec<Fact> {
+    let mut facts = Vec::new();
+    for (name, param_type) in param_defs.collect_param_names_with_types() {
+        let param_obj = param_binding_element_obj_for_store(name, ParamObjType::Forall);
+        let fact = match param_type {
+            ParamType::Obj(obj) => InFact::new(param_obj, obj, default_line_file()).into(),
+            ParamType::Set(_) => IsSetFact::new(param_obj, default_line_file()).into(),
+            ParamType::NonemptySet(_) => {
+                IsNonemptySetFact::new(param_obj, default_line_file()).into()
+            }
+            ParamType::FiniteSet(_) => IsFiniteSetFact::new(param_obj, default_line_file()).into(),
+        };
+        facts.push(fact);
+    }
+    facts
 }
 
 fn verified_by_steps_object(
@@ -156,9 +275,10 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
     runtime: &Runtime,
     r: &StmtResult,
 ) -> JsonValue {
-    match r {
-        StmtResult::FactualStmtSuccess(f) => factual_success_verified_by_value(runtime, f),
-        StmtResult::NonFactualStmtSuccess(n) => JsonValue::Object(vec![
+    if let Some(f) = r.factual_success() {
+        factual_success_verified_by_value(runtime, f)
+    } else if let Some(n) = r.non_factual_success() {
+        JsonValue::Object(vec![
             (
                 "type".to_string(),
                 JsonValue::JsonString("accepted statement".to_string()),
@@ -167,11 +287,12 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
                 "stmt_type".to_string(),
                 JsonValue::JsonString(n.stmt.stmt_type_name().to_string()),
             ),
-        ]),
-        StmtResult::StmtUnknown(_) => JsonValue::Object(vec![(
+        ])
+    } else {
+        JsonValue::Object(vec![(
             "type".to_string(),
             JsonValue::JsonString("unknown".to_string()),
-        )]),
+        )])
     }
 }
 

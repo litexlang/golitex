@@ -140,14 +140,6 @@ impl Runtime {
     }
 
     fn merge_stmt_result_infers(infer_result: &mut InferResult, stmt_result: &StmtResult) {
-        match stmt_result {
-            StmtResult::NonFactualStmtSuccess(success) => {
-                infer_result.new_infer_result_inside(success.infers.clone());
-            }
-            StmtResult::FactualStmtSuccess(success) => {
-                infer_result.new_infer_result_inside(success.infers.clone());
-            }
-            StmtResult::StmtUnknown(_) => {}
-        }
+        infer_result.new_infer_result_inside(stmt_result.infer_result());
     }
 }

@@ -12,12 +12,14 @@ pub struct NonFactualStmtSuccess {
 #[derive(Debug)]
 pub struct AcceptedByResult {
     pub kind: Box<AcceptedByKind>,
+    pub introduces: Vec<ObjectIntroductionItem>,
 }
 
 #[derive(Debug)]
 pub enum AcceptedByKind {
     Assumption,
     Definition,
+    ObjectIntroduction,
     ExistElimination,
     ProofBlock {
         proved: Option<Fact>,
@@ -34,6 +36,12 @@ pub enum AcceptedByKind {
     Evaluation,
     Command,
     VerifiedFact,
+}
+
+#[derive(Clone, Debug)]
+pub struct ObjectIntroductionItem {
+    pub name: String,
+    pub facts: Vec<Fact>,
 }
 
 pub struct CaseSplitAcceptedBy {
@@ -63,6 +71,16 @@ pub struct VerifiedBysResult {
     pub cite_what: Vec<VerifiedBysEnum>,
 }
 
+pub struct ForallProofResult {
+    pub forall_fact: ForallFact,
+    pub proves: Vec<ForallProvedFactResult>,
+}
+
+pub struct ForallProvedFactResult {
+    pub stmt: ExistOrAndChainAtomicFact,
+    pub result: Box<StmtResult>,
+}
+
 #[derive(Debug)]
 pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
     pub msg: String,
@@ -87,6 +105,7 @@ pub enum VerifiedByResult {
     BuiltinRule(VerifiedByBuiltinRuleResult),
     Fact(VerifiedByFactResult),
     VerifiedBys(VerifiedBysResult),
+    ForallProof(ForallProofResult),
 }
 
 #[derive(Debug)]
@@ -205,6 +224,19 @@ impl VerifiedByResult {
         })
     }
 
+    pub fn forall_proof(forall_fact: ForallFact, then_results: Vec<StmtResult>) -> Self {
+        let mut proves = Vec::new();
+        for (stmt, result) in forall_fact
+            .then_facts
+            .iter()
+            .cloned()
+            .zip(then_results.into_iter())
+        {
+            proves.push(ForallProvedFactResult::new(stmt, result));
+        }
+        Self::ForallProof(ForallProofResult::new(forall_fact, proves))
+    }
+
     pub fn tree_is_builtin_rules_only(&self) -> bool {
         match self {
             VerifiedByResult::BuiltinRule(r) => !r.msg.is_empty(),
@@ -212,6 +244,7 @@ impl VerifiedByResult {
             VerifiedByResult::VerifiedBys(w) => {
                 !w.cite_what.is_empty() && w.cite_what.iter().all(|b| b.is_builtin_rule())
             }
+            VerifiedByResult::ForallProof(_) => false,
         }
     }
 }
@@ -245,6 +278,12 @@ impl VerifiedBysEnum {
                 vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
             }
             VerifiedByResult::VerifiedBys(w) => w.cite_what,
+            VerifiedByResult::ForallProof(_) => {
+                vec![Self::fact_with_note(
+                    verify_what,
+                    Some("forall proof".to_string()),
+                )]
+            }
         }
     }
 
@@ -260,6 +299,7 @@ impl AcceptedByResult {
     pub fn new(kind: AcceptedByKind) -> Self {
         AcceptedByResult {
             kind: Box::new(kind),
+            introduces: Vec::new(),
         }
     }
 
@@ -315,6 +355,24 @@ impl AcceptedByResult {
     pub fn exist_elimination() -> Self {
         Self::new(AcceptedByKind::ExistElimination)
     }
+
+    pub fn object_introduction(introduces: Vec<ObjectIntroductionItem>) -> Self {
+        let mut result = Self::new(AcceptedByKind::ObjectIntroduction);
+        result.introduces = introduces;
+        result
+    }
+
+    pub fn exist_elimination_with_introduces(introduces: Vec<ObjectIntroductionItem>) -> Self {
+        let mut result = Self::exist_elimination();
+        result.introduces = introduces;
+        result
+    }
+}
+
+impl ObjectIntroductionItem {
+    pub fn new(name: String, facts: Vec<Fact>) -> Self {
+        ObjectIntroductionItem { name, facts }
+    }
 }
 
 impl CaseSplitAcceptedBy {
@@ -337,6 +395,42 @@ impl CaseSplitCoverage {
             fact,
             result: Box::new(result),
         }
+    }
+}
+
+impl ForallProofResult {
+    pub fn new(forall_fact: ForallFact, proves: Vec<ForallProvedFactResult>) -> Self {
+        ForallProofResult {
+            forall_fact,
+            proves,
+        }
+    }
+}
+
+impl ForallProvedFactResult {
+    pub fn new(stmt: ExistOrAndChainAtomicFact, result: StmtResult) -> Self {
+        ForallProvedFactResult {
+            stmt,
+            result: Box::new(result),
+        }
+    }
+}
+
+impl fmt::Debug for ForallProofResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ForallProofResult")
+            .field("forall_fact", &self.forall_fact.to_string())
+            .field("proves", &self.proves)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ForallProvedFactResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ForallProvedFactResult")
+            .field("stmt", &self.stmt.to_string())
+            .field("result", &self.result)
+            .finish()
     }
 }
 
@@ -404,17 +498,22 @@ fn merge_verified_by_with_steps(
 
 fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
     match result {
-        StmtResult::FactualStmtSuccess(f) => {
-            VerifiedBysEnum::from_verified_by_result(f.stmt, f.verified_by)
+        StmtResult::Fact(fact_result) => {
+            if let Some(f) = (*fact_result).into_success() {
+                VerifiedBysEnum::from_verified_by_result(f.stmt, f.verified_by)
+            } else {
+                Vec::new()
+            }
         }
-        StmtResult::NonFactualStmtSuccess(n) => {
-            let items = n
-                .inside_results
+        other => {
+            let inside_results = other
+                .into_non_factual_success()
+                .map(|n| n.inside_results)
+                .unwrap_or_default();
+            inside_results
                 .into_iter()
                 .flat_map(verified_by_items_from_stmt_result)
-                .collect::<Vec<_>>();
-            items
+                .collect::<Vec<_>>()
         }
-        StmtResult::StmtUnknown(_) => Vec::new(),
     }
 }

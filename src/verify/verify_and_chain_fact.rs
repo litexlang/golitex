@@ -39,7 +39,7 @@ impl Runtime {
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let mut child_results: Vec<StmtResult> = Vec::with_capacity(and_fact.facts.len());
-        for fact in &and_fact.facts {
+        for fact in and_fact.facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
                 return Ok(result);
@@ -245,13 +245,13 @@ impl Runtime {
             )))
         })?;
         let mut child_results: Vec<StmtResult> = Vec::with_capacity(facts.len());
-        for fact in &facts {
+        for fact in facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
-                return Ok((StmtUnknown::new_with_detail(format!(
+                return Ok(StmtUnknown::new_with_detail(format!(
                     "unverified chain step: {}",
                     fact
-                )))
+                ))
                 .into());
             }
 

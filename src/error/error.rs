@@ -29,8 +29,8 @@ pub struct RuntimeErrorStruct {
 
 #[derive(Debug)]
 pub struct RuntimeErrorOutput {
-    pub failed_step: Option<Stmt>,
-    pub failed_goal: Option<Fact>,
+    pub failed_step: Option<Box<Stmt>>,
+    pub failed_goal: Option<Box<Fact>>,
     pub proof_step_index: Option<usize>,
     pub proof_step_count: Option<usize>,
     pub then_clause_index: Option<usize>,
@@ -39,8 +39,9 @@ pub struct RuntimeErrorOutput {
 }
 
 #[derive(Debug)]
-pub struct RuntimeErrorUnknownResult {
-    pub detail_lines: Vec<String>,
+pub enum RuntimeErrorUnknownResult {
+    Generic(StmtUnknown),
+    Fact(Box<FactUnknown>),
 }
 
 #[derive(Debug)]
@@ -196,13 +197,13 @@ impl RuntimeErrorOutput {
         failed_step: Stmt,
         proof_step_index: usize,
         proof_step_count: usize,
-        unknown: &StmtUnknown,
+        result: &StmtResult,
     ) -> Self {
         let mut output = Self::new();
-        output.failed_step = Some(failed_step);
+        output.failed_step = Some(Box::new(failed_step));
         output.proof_step_index = Some(proof_step_index);
         output.proof_step_count = Some(proof_step_count);
-        output.unknown_result = Some(RuntimeErrorUnknownResult::from_stmt_unknown(unknown));
+        output.unknown_result = RuntimeErrorUnknownResult::from_stmt_result(result);
         output
     }
 
@@ -210,28 +211,34 @@ impl RuntimeErrorOutput {
         failed_goal: Fact,
         then_clause_index: usize,
         then_clause_count: usize,
-        unknown: &StmtUnknown,
+        result: &StmtResult,
     ) -> Self {
         let mut output = Self::new();
-        output.failed_goal = Some(failed_goal);
+        output.failed_goal = Some(Box::new(failed_goal));
         output.then_clause_index = Some(then_clause_index);
         output.then_clause_count = Some(then_clause_count);
-        output.unknown_result = Some(RuntimeErrorUnknownResult::from_stmt_unknown(unknown));
+        output.unknown_result = RuntimeErrorUnknownResult::from_stmt_result(result);
         output
     }
 
-    pub fn goal_unknown(failed_goal: Fact, unknown: &StmtUnknown) -> Self {
+    pub fn goal_unknown(failed_goal: Fact, result: &StmtResult) -> Self {
         let mut output = Self::new();
-        output.failed_goal = Some(failed_goal);
-        output.unknown_result = Some(RuntimeErrorUnknownResult::from_stmt_unknown(unknown));
+        output.failed_goal = Some(Box::new(failed_goal));
+        output.unknown_result = RuntimeErrorUnknownResult::from_stmt_result(result);
         output
     }
 }
 
 impl RuntimeErrorUnknownResult {
-    pub fn from_stmt_unknown(unknown: &StmtUnknown) -> Self {
-        let detail_lines = unknown.detail.clone().unwrap_or_default();
-        RuntimeErrorUnknownResult { detail_lines }
+    pub fn from_stmt_result(result: &StmtResult) -> Option<Self> {
+        if let Some(unknown) = result.as_fact_unknown() {
+            return Some(RuntimeErrorUnknownResult::Fact(Box::new(unknown.clone())));
+        }
+        result.as_unknown().map(|unknown| {
+            RuntimeErrorUnknownResult::Generic(StmtUnknown {
+                detail: unknown.detail.clone(),
+            })
+        })
     }
 }
 

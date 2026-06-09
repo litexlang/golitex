@@ -20,14 +20,12 @@ impl Runtime {
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }?;
 
+        let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
+
         if result.is_unknown() {
             let fact_owned = fact.clone();
             let line_file = fact_owned.line_file();
-            let unknown_output = if let StmtResult::StmtUnknown(u) = &result {
-                RuntimeErrorOutput::goal_unknown(fact_owned.clone(), u)
-            } else {
-                RuntimeErrorOutput::new()
-            };
+            let unknown_output = RuntimeErrorOutput::goal_unknown(fact_owned.clone(), &result);
             return Err(RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new(
                     Some(fact_owned.clone().into_stmt()),
@@ -48,6 +46,63 @@ impl Runtime {
             )));
         } else {
             Ok(result)
+        }
+    }
+
+    fn structured_unknown_result_for_failed_fact(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+        result: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        if !result.is_unknown() || result.as_fact_unknown().is_some() {
+            return Ok(result);
+        }
+
+        match fact {
+            Fact::AndFact(and_fact) => {
+                let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+                for (fact_index, child_fact) in and_fact.facts.iter().enumerate() {
+                    let child_result =
+                        self.verify_atomic_fact(child_fact, &verify_state_for_children)?;
+                    if child_result.is_unknown() {
+                        let child_result =
+                            child_result.wrap_unknown_for_fact(child_fact.clone().into());
+                        return Ok(FactUnknown::and_with_failed_part(
+                            and_fact.clone(),
+                            fact_index + 1,
+                            and_fact.facts.len(),
+                            child_fact.clone().into(),
+                            child_result.as_fact_unknown().cloned(),
+                        )
+                        .into());
+                    }
+                }
+                Ok(result.wrap_unknown_for_fact(fact.clone()))
+            }
+            Fact::ChainFact(chain_fact) => {
+                let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+                let facts = chain_fact.facts()?;
+                for (fact_index, child_fact) in facts.iter().enumerate() {
+                    let child_result =
+                        self.verify_atomic_fact(child_fact, &verify_state_for_children)?;
+                    if child_result.is_unknown() {
+                        let child_result =
+                            child_result.wrap_unknown_for_fact(child_fact.clone().into());
+                        return Ok(FactUnknown::chain_with_failed_part(
+                            chain_fact.clone(),
+                            fact_index + 1,
+                            facts.len(),
+                            child_fact.clone().into(),
+                            child_result.as_fact_unknown().cloned(),
+                            vec![format!("unverified chain step: {}", child_fact)],
+                        )
+                        .into());
+                    }
+                }
+                Ok(result.wrap_unknown_for_fact(fact.clone()))
+            }
+            _ => Ok(result.wrap_unknown_for_fact(fact.clone())),
         }
     }
 }
