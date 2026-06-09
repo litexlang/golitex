@@ -73,11 +73,11 @@ impl Runtime {
             Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
             Obj::SumOfFiniteSet(inner) => {
-                self.inst_sum_of_finite_set(inner, param_to_arg_map, param_obj_type)
+                self.inst_finite_set_sum(inner, param_to_arg_map, param_obj_type)
             }
             Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
             Obj::ProductOfFiniteSet(inner) => {
-                self.inst_product_of_finite_set(inner, param_to_arg_map, param_obj_type)
+                self.inst_finite_set_product(inner, param_to_arg_map, param_obj_type)
             }
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
             Obj::ClosedRange(inner) => {
@@ -809,7 +809,7 @@ impl Runtime {
         .into())
     }
 
-    pub fn inst_sum_of_finite_set(
+    pub fn inst_finite_set_sum(
         &self,
         sum: &SumOfFiniteSet,
         param_to_arg_map: &HashMap<String, Obj>,
@@ -836,7 +836,7 @@ impl Runtime {
         .into())
     }
 
-    pub fn inst_product_of_finite_set(
+    pub fn inst_finite_set_product(
         &self,
         product: &ProductOfFiniteSet,
         param_to_arg_map: &HashMap<String, Obj>,

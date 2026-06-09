@@ -133,7 +133,7 @@ impl FactualStmtSuccess {
         builtin_rule_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let infers = InferResult::from_fact(&stmt);
+        let infers = InferResult::new();
         let verified_by = merge_verified_by_with_steps(
             stmt.clone(),
             VerifiedByResult::builtin_rule(builtin_rule_label, stmt.clone()),

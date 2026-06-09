@@ -489,13 +489,19 @@ impl Runtime {
             None => return Ok(InferResult::new()),
         };
         let mut infer_result = InferResult::new();
+        let source_fact: Fact = normal_atomic_fact.clone().into();
+        let by_definition_reason = InferReason::ByDefinition(ByDefinitionReason::new(
+            Some(source_fact.clone()),
+            Some(predicate_name.clone()),
+        ));
 
         let param_type_infer = self
-            .store_args_satisfy_param_type_when_not_defining_new_identifiers(
+            .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
                 ParamObjType::DefHeader,
+                by_definition_reason.clone(),
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -537,20 +543,27 @@ impl Runtime {
                     )))
                 })?;
             let fact_to_store = instantiated_iff_fact;
-            infer_result.new_fact(&fact_to_store);
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
-                .map_err(|previous_error| {
-                    RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "failed to store instantiated iff fact while inferring `{}`",
-                            normal_atomic_fact
-                        ),
-                        normal_atomic_fact.line_file.clone(),
-                        Some(previous_error),
-                        vec![],
-                    )))
-                })?;
+            infer_result.add_fact_by_definition(
+                Some(source_fact.clone()),
+                Some(predicate_name.clone()),
+                &fact_to_store,
+            );
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                fact_to_store,
+                by_definition_reason.clone(),
+            )
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to store instantiated iff fact while inferring `{}`",
+                        normal_atomic_fact
+                    ),
+                    normal_atomic_fact.line_file.clone(),
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
         }
 
         Ok(infer_result)

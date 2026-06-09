@@ -771,7 +771,7 @@ impl Runtime {
                 left.func.as_ref(),
                 given_arg,
             ),
-            Obj::SumOfFiniteSet(ref left) => self.match_arg_when_left_is_sum_of_finite_set(
+            Obj::SumOfFiniteSet(ref left) => self.match_arg_when_left_is_finite_set_sum(
                 left.set.as_ref(),
                 left.func.as_ref(),
                 given_arg,
@@ -782,7 +782,7 @@ impl Runtime {
                 left.func.as_ref(),
                 given_arg,
             ),
-            Obj::ProductOfFiniteSet(ref left) => self.match_arg_when_left_is_product_of_finite_set(
+            Obj::ProductOfFiniteSet(ref left) => self.match_arg_when_left_is_finite_set_product(
                 left.set.as_ref(),
                 left.func.as_ref(),
                 given_arg,
@@ -2393,7 +2393,7 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_sum_of_finite_set(
+    fn match_arg_when_left_is_finite_set_sum(
         &mut self,
         left_set: &Obj,
         left_func: &Obj,
@@ -2430,7 +2430,7 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_product_of_finite_set(
+    fn match_arg_when_left_is_finite_set_product(
         &mut self,
         left_set: &Obj,
         left_func: &Obj,

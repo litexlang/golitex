@@ -113,8 +113,9 @@ impl Runtime {
                 }
 
                 let infer_result_after_store = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         stmt.fact.clone(),
+                        InferReason::ProvedClaim,
                     )?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
@@ -153,8 +154,9 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 let infer_result_after_store = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         stmt.fact.clone(),
+                        InferReason::ProvedClaim,
                     )?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))

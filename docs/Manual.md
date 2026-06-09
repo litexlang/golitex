@@ -431,20 +431,20 @@ Summation and products over a bounded integer index with one expression body (in
 sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
 ```
 
-`sum_of_finite_set(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, and closed integer ranges bridge to the existing `sum(start, end, f)` object.
+`finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, and closed integer ranges bridge to the existing `sum(start, end, f)` object.
 
 ```litex
-sum_of_finite_set({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-sum_of_finite_set({}, 'Z(x){x}) = 0
-sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+finite_set_sum({}, 'Z(x){x}) = 0
+finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
 ```
 
-`product_of_finite_set(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
+`finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
 
 ```litex
-product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-product_of_finite_set({}, 'Z(x){x}) = 1
-product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+finite_set_product({}, 'Z(x){x}) = 1
+finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
 ```
 
 #### Integer intervals as sets
@@ -635,7 +635,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
 | `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` restricts to a unary function on `S`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
-| `sum_of_finite_set(S, f)` and `product_of_finite_set(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, `f` must restrict to a unary function on `S`. |
+| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, `f` must restrict to a unary function on `S`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
 | Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
@@ -2329,10 +2329,10 @@ bound variable in a set builder.
 | finite cardinality/count object | `count({1, 2})` |
 | function image/range | `fn_range(f)` |
 | function image restricted to a set | `fn_range_on(f, A)` |
-| finite-set sum | `sum_of_finite_set({1, 2}, f)` |
+| finite-set sum | `finite_set_sum({1, 2}, f)` |
 | finite sum | `sum(1, n, f)` |
 | finite product | `product(1, n, f)` |
-| finite-set product | `product_of_finite_set({1, 2}, f)` |
+| finite-set product | `finite_set_product({1, 2}, f)` |
 | half-open integer range | `range(0, 3)` |
 | closed integer range | `closed_range(0, 3)`, `0...3` |
 

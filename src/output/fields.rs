@@ -1,6 +1,6 @@
 pub(crate) const JSON_KEY_RESULT: &str = "result";
 pub(crate) const JSON_KEY_SUCCESS: &str = "success";
-pub(crate) const JSON_KEY_INFER_FACTS: &str = "infer_facts";
+pub(crate) const JSON_KEY_EFFECTS: &str = "effects";
 pub(crate) const JSON_KEY_VERIFIED_BY: &str = "verified_by";
 pub(crate) const JSON_KEY_ACCEPTED_BY: &str = "accepted_by";
 pub(crate) const JSON_KEY_STEPS: &str = "steps";

@@ -8,4 +8,7 @@ mod infer_numeric_order_sign;
 mod infer_result;
 mod infer_set_relations;
 
-pub use infer_result::InferResult;
+pub use infer_result::{
+    AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason, InferEffect, InferReason,
+    InferResult, InferRuleReason, OutputWarning,
+};

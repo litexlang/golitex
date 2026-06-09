@@ -117,6 +117,7 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+            infer_result.add_theorem_instantiation(&instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
                 self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
                     &instantiated_then,

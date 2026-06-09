@@ -1122,68 +1122,68 @@ product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 }
 
 #[test]
-fn sum_of_finite_set_core_rules() {
+fn finite_set_sum_core_rules() {
     let source_code = r#"
-sum_of_finite_set({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-sum_of_finite_set({}, 'Z(x){x}) = 0
-sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
-sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+finite_set_sum({}, 'Z(x){x}) = 0
+finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2}, 'Z(x){x}) $in Z
+finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
 
 sketch:
     have X finite_set
     have c Z
-    sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
 
 sketch:
     have X power_set(Z)
     know $is_finite_set(X)
-    sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
+    finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("sum_of_finite_set_core_rules");
+    runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "sum_of_finite_set core rules should verify:\n{}",
+        "finite_set_sum core rules should verify:\n{}",
         run_output
     );
 }
 
 #[test]
-fn product_of_finite_set_core_rules() {
+fn finite_set_product_core_rules() {
     let source_code = r#"
-product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-product_of_finite_set({}, 'Z(x){x}) = 1
-product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
-product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
-product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
+finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+finite_set_product({}, 'Z(x){x}) = 1
+finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({1, 2}, 'Z(x){x}) $in Z
+finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_product({}, 'N_pos(x){x}) $in N_pos
 
 sketch:
     have X finite_set
     have c R
-    product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
 
 sketch:
     have X power_set(Z)
     know $is_finite_set(X)
-    product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
+    finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("product_of_finite_set_core_rules");
+    runtime.new_file_path_new_env_new_name_scope("finite_set_product_core_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "product_of_finite_set core rules should verify:\n{}",
+        "finite_set_product core rules should verify:\n{}",
         run_output
     );
 }
@@ -2741,7 +2741,7 @@ fn normal_output_omits_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"infer_facts\": []"));
+    assert!(!run_output.contains("\"effects\": []"));
     assert!(!run_output.contains("\"inside_results\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
@@ -2758,7 +2758,7 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(run_output.contains("\"infer_facts\": []"));
+    assert!(run_output.contains("\"effects\": []"));
     assert!(run_output.contains("\"inside_results\": []"));
     assert!(run_output.contains("\"message\": \"\""));
 }
@@ -3216,6 +3216,45 @@ forall x R:
 }
 
 #[test]
+fn output_effects_explain_context_changes() {
+    let source_code = r#"
+1 = 1
+claim:
+    prove:
+        2 = 2
+    2 = 2
+know:
+    3 = 3
+let a R:
+    a = a
+prop q(x R):
+    x = 1
+$q(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("output_effects_explain_context_changes");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "output_effects_explain_context_changes failed:\n{}",
+        run_output
+    );
+    assert!(!run_output.contains("\"infer_facts\""));
+    assert!(run_output.contains("\"effects\": ["));
+    assert!(run_output.contains("\"reason\": \"verified statement\""));
+    assert!(run_output.contains("\"reason\": \"proved claim\""));
+    assert!(run_output.contains("\"reason\": \"unsafe assumption\""));
+    assert!(run_output.contains("\"reason\": \"let binding\""));
+    assert!(run_output.contains("\"trust\": \"unsafe\""));
+    assert!(run_output.contains("\"reason\": \"by definition\""));
+    assert!(run_output.contains("\"definition\": \"q\""));
+}
+
+#[test]
 fn object_introduction_output_exposes_checks_and_introduced_facts() {
     run_with_large_stack(
         "object_introduction_output_exposes_checks_and_introduced_facts_large_stack",
@@ -3281,7 +3320,8 @@ have by exist x R st {x = x}: c
             assert!(run_output.contains("\"name\": \"c\""));
             assert!(run_output.contains("\"c $in R\""));
             assert!(run_output.contains("\"c = c\""));
-            assert!(!run_output.contains("\"reason\""));
+            assert!(run_output.contains("\"reason\": \"object introduction\""));
+            assert!(run_output.contains("\"reason\": \"exist elimination\""));
             assert!(!run_output.contains("\"equal_to\""));
         },
     );

@@ -76,9 +76,9 @@ pub const INFC: &str = "infc";
 pub const OINF: &str = "oinf";
 pub const CINF: &str = "cinf";
 pub const SUM: &str = "sum";
-pub const SUM_OF_FINITE_SET: &str = "sum_of_finite_set";
+pub const FINITE_SET_SUM: &str = "finite_set_sum";
 pub const PRODUCT: &str = "product";
-pub const PRODUCT_OF_FINITE_SET: &str = "product_of_finite_set";
+pub const FINITE_SET_PRODUCT: &str = "finite_set_product";
 pub const EXIST: &str = "exist";
 /// User-facing spelling for unique existence (`exist` + `!` as two tokens in the source).
 pub const EXIST_BANG: &str = "exist!";
@@ -242,9 +242,9 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FN_RANGE,
         FN_RANGE_ON,
         SUM,
-        SUM_OF_FINITE_SET,
+        FINITE_SET_SUM,
         PRODUCT,
-        PRODUCT_OF_FINITE_SET,
+        FINITE_SET_PRODUCT,
         FINITE_SEQ,
         SEQ,
         MATRIX,

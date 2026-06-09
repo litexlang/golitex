@@ -607,7 +607,7 @@ impl SumOfFiniteSet {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\operatorname{{{}}}\left( {}, {} \right)",
-            SUM_OF_FINITE_SET,
+            FINITE_SET_SUM,
             self.set.to_latex_string(),
             self.func.to_latex_string()
         )
@@ -618,7 +618,7 @@ impl ProductOfFiniteSet {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\operatorname{{{}}}\left( {}, {} \right)",
-            PRODUCT_OF_FINITE_SET,
+            FINITE_SET_PRODUCT,
             self.set.to_latex_string(),
             self.func.to_latex_string()
         )

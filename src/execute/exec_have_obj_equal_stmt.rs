@@ -74,7 +74,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
 
-        let param_infer_result = self
+        let mut param_infer_result = self
             .define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 true,
@@ -88,6 +88,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        param_infer_result.relabel_all_added_facts(InferReason::ObjectIntroduction);
         infer_result.new_infer_result_inside(param_infer_result);
 
         let mut introduced_equal_facts: Vec<Fact> = Vec::new();
@@ -103,7 +104,9 @@ impl Runtime {
                 have_obj_equal_stmt.line_file.clone(),
             )
             .into();
-            introduced_equal_facts.push(equal_to_fact.clone().into());
+            let equal_to_fact_for_effect: Fact = equal_to_fact.clone().into();
+            introduced_equal_facts.push(equal_to_fact_for_effect.clone());
+            infer_result.add_object_introduction(&equal_to_fact_for_effect);
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
