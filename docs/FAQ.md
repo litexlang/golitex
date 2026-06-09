@@ -32,6 +32,8 @@ No. Litex is a domain language for and just for mathematics reasoning. It is not
 
 The features of Litex come from the author's experience in writing mathematics. The author has been writing mathematics for a long time, and he has some understanding of the mathematics reasoning process. The author has also been writing code for a long time, and he has some understanding of the code reasoning process. He thinks formal language should be used by everyone, just like math is used by everyone.
 
+Most of the features of Litex come from the author's experience in writing mathematics and code. The core verification process `match and substitute` is inspired by how people verify a fact: When he sees a fact not yet proven, he will try to match the fact with a known fact, and if the match is successful, he will substitute the arguments of the known fact into the fact to be proven. If it's ok to substitute, then the fact is proven.
+
 `template` of Litex is inspired by the `template` of C++.
 
 `struct` of Litex is inspired by the `struct` of C.
@@ -39,6 +41,12 @@ The features of Litex come from the author's experience in writing mathematics. 
 `claim`, `thm` of Litex is inspired by what `theorem` means in math books.
 
 `strategy` and builtin rules of Litex is inspired by how people verify the well-definedness of a recursively defined object.
+
+Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired by the discovery that when we talk about sets, we almost always are saying that `something is a set`. So the word `set` never appear independently in the language. It always shows up together with `<some_object> is a set`.
+
+Anonymous function syntax like`'(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
+
+The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
 
 ## Why does Litex have this particular menu of objects and statements?
 
