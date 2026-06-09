@@ -2,13 +2,14 @@
 
 Examples for builtin arithmetic, order, intervals, finite sets, powers, absolute value, logs, sums, products, and modular arithmetic.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+
+The examples keep the checked expression close to ordinary algebra. When a
+section has several code blocks, the early ones show the basic rule and the
+later ones show how the rule appears inside a proof.
 
 ## 1. `abs`
 
 - Category: `builtin rule`
-- System surface: `absolute value`
 - Purpose: Shows builtin absolute-value inequalities and equalities.
 
 ```litex
@@ -99,7 +100,6 @@ forall a, b R, k N_pos:
 ## 2. `basic_operator`
 
 - Category: `builtin rule`
-- System surface: `basic operators`
 - Purpose: Shows arithmetic operator typing and simplification.
 
 ```litex
@@ -119,7 +119,6 @@ forall a, b R, k N_pos:
 ## 3. `builtin_rules`
 
 - Category: `builtin rule`
-- System surface: `order and arithmetic rules`
 - Purpose: Shows common builtin arithmetic/order inference rules.
 
 ```litex
@@ -183,7 +182,6 @@ forall a R:
 ## 4. `builtin_sqrt`
 
 - Category: `builtin rule`
-- System surface: `sqrt`
 - Purpose: Shows square-root typing and identities.
 
 ```litex
@@ -243,7 +241,6 @@ forall a, b R:
 ## 5. `closed_range`
 
 - Category: `obj`
-- System surface: `closed_range`
 - Purpose: Shows closed integer range objects.
 
 ```litex
@@ -257,7 +254,6 @@ a = 1 or a = 2 or a = 3
 ## 6. `closed_range_and_range`
 
 - Category: `obj`
-- System surface: `range and closed_range`
 - Purpose: Shows interaction between half-open and closed ranges.
 
 ```litex
@@ -292,18 +288,9 @@ count(range(1, 5)) = 4
 ## 7. `comparison`
 
 - Category: `builtin rule`
-- System surface: `comparison`
 - Purpose: Shows comparison facts and chained inequalities.
 
 ```litex
-know:
-    forall a, b, c R:
-        0 < c
-        =>:
-            a * c <= b
-        <=>:
-            a <= b / c
-
 claim:
     prove:
         forall a, b, c, d R:
@@ -316,7 +303,9 @@ claim:
     a = (2*a)/2 <= (3*b)/2 = 1.5 * b
     0 <= (2/3)* a = (2 * a)/3 <= (3 * b)/3 = b
     d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
+```
 
+```litex
 sketch:
     forall x N:
         x != 0
@@ -381,7 +370,9 @@ forall a, b R:
     =>:
         a^3 < b^3
         b^5 > a^5
+```
 
+```litex
 sketch:
     forall t R_pos:
         t^2 < 4^2
@@ -415,43 +406,17 @@ claim:
 ## 8. `comparison3`
 
 - Category: `builtin rule`
-- System surface: `comparison`
 - Purpose: Shows additional comparison simplification cases.
 
 ```litex
-know:
-    forall a R:
-        0 <= a
-        =>:
-            -a <= 0
-
-    forall a R:
-        a <= 0
-        =>:
-            0 <= -a
-
-know:
-    forall a, b R:
-        a <= b
-        =>:
-            0 <= b - a
-
-know:
-    forall a, b, c, d R:
-        0 <= a < c
-        0 <= b < d
-        =>:
-            a * b < c * d
-
-    forall a, b, c, d R:
-        0 <= a < c
-        0 <= b < d
-        =>:
-            a * b < c * d
-
 claim:
     prove:
         forall x, y, epsilon R:
+            forall a, b, c, d R:
+                0 <= a < c
+                0 <= b < d
+                =>:
+                    a * b < c * d
             0 < epsilon
             epsilon <= 1
             abs(x) < epsilon
@@ -466,11 +431,9 @@ claim:
 ## 9. `comparison4`
 
 - Category: `builtin rule`
-- System surface: `comparison`
 - Purpose: Shows comparison over mixed arithmetic forms.
 
 ```litex
-
 claim:
     prove:
         forall a, b R:
@@ -488,11 +451,10 @@ claim:
 ## 10. `comparison5`
 
 - Category: `builtin rule`
-- System surface: `comparison`
 - Purpose: Shows comparison facts that need local side conditions.
 
 ```litex
-let a, b, c, d, e, f, g R:
+forall a, b, c, d, e, f, g, h, i, j, k, l, m, n, o R:
     0 <= a
     0 <= b
     0 <= c
@@ -500,20 +462,15 @@ let a, b, c, d, e, f, g R:
     0 <= e
     0 <= f
     0 <= g
-
-0 <= a + b + c + d + e + f + g
-
-let h, i, j, k, l, m, n, o R
-
-0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
-
-0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3
+    =>:
+        0 <= a + b + c + d + e + f + g
+        0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
+        0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3
 ```
 
 ## 11. `divide`
 
 - Category: `builtin rule`
-- System surface: `division`
 - Purpose: Shows division and reciprocal simplification.
 
 ```litex
@@ -542,7 +499,6 @@ forall u, v, w R:
 ## 12. `finite_set`
 
 - Category: `obj`
-- System surface: `finite set`
 - Purpose: Shows finite-set literals, membership, and count facts.
 
 ```litex
@@ -578,7 +534,6 @@ claim:
 ## 13. `interval`
 
 - Category: `obj`
-- System surface: `interval`
 - Purpose: Shows interval objects and interval membership.
 
 ```litex
@@ -616,26 +571,38 @@ have h cinf(0)
 h $in R
 0 <= h
 
-have x R
-know:
+forall x R:
     0 <= x
-x $in cinf(0)
+    =>:
+        x $in cinf(0)
+```
 
+```litex
 sketch:
     $is_nonempty_set(cc(0, 0))
+```
 
+```litex
 sketch:
     $is_nonempty_set(oo(0, 1))
+```
 
+```litex
 sketch:
     $is_nonempty_set(info(1))
+```
 
+```litex
 sketch:
     $is_nonempty_set(infc(1))
+```
 
+```litex
 sketch:
     $is_nonempty_set(oinf(0))
+```
 
+```litex
 sketch:
     $is_nonempty_set(cinf(0))
 ```
@@ -643,7 +610,6 @@ sketch:
 ## 14. `log`
 
 - Category: `builtin rule`
-- System surface: `log`
 - Purpose: Shows logarithm facts and monotonicity-style builtin support.
 
 ```litex
@@ -747,12 +713,11 @@ forall a, b R_pos, c R:
 ## 15. `modulo`
 
 - Category: `builtin rule`
-- System surface: `modulo`
 - Purpose: Shows modular arithmetic and congruence-style reasoning.
 
-```litex
-# Mod: congruence under a common modulus (+, -, *) plus nested mod absorption (see builtin verify rules).
+Mod: congruence under a common modulus (+, -, *) plus nested mod absorption (see builtin verify rules).
 
+```litex
 sketch:
     have X Z
     have Y Z
@@ -760,13 +725,17 @@ sketch:
     (X + Y) % m = ((X % m) + (Y % m)) % m
     (X - Y) % m = ((X % m) - (Y % m)) % m
     (X * Y) % m = ((X % m) * (Y % m)) % m
+```
 
+```litex
 sketch:
     have b Z
     have c Z
     have d Z_nz
     (b * c) % d = ((b % d) * (c % d)) % d
+```
 
+```litex
 sketch:
     have a Z
     have b Z
@@ -784,7 +753,9 @@ forall x Z:
 
 forall x Z:
     x % 1 = 0
+```
 
+```litex
 sketch:
     prop mod_eq(a Z, b Z, n Z):
         exist k Z st {a - b = n * k}
@@ -904,7 +875,6 @@ sketch:
 ## 16. `power`
 
 - Category: `builtin rule`
-- System surface: `power`
 - Purpose: Shows exponent typing, identities, and inequalities.
 
 ```litex
@@ -981,34 +951,24 @@ forall x R_pos, q R:
     x^q * x^(-q) = 1
     x^(-q) = 1 / x^q
 
-know:
-    forall x, y R, m N_pos:
-        x >= 0
-        y >= 0
-        =>:
-            x^m <= y^m
-        <=>:
-            x <= y
 ```
 
 ## 17. `speical_properties`
 
 - Category: `builtin rule`
-- System surface: `special numeric properties`
 - Purpose: Shows special builtin numeric facts.
 
 ```litex
-# Order chains using <=, =, < (or >=, =, >) get transitive closure when stored.
-let a, b, c R, d R:
+# Order chains using <=, =, < (or >=, =, >) give transitive closure inside the same proof.
+forall a, b, c, d R:
     a < b = c <= d
-
-a < d
+    =>:
+        a < d
 ```
 
 ## 18. `standard_set`
 
 - Category: `obj`
-- System surface: `standard numeric sets`
 - Purpose: Shows membership and subset facts for N, Z, Q, and R.
 
 ```litex
@@ -1078,7 +1038,6 @@ forall a R:
 ## 19. `sum_and_product`
 
 - Category: `builtin rule`
-- System surface: `sum and product`
 - Purpose: Shows finite sums/products and induction with product facts.
 
 ```litex
@@ -1100,6 +1059,9 @@ sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
 sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
 
 # Constant summand: length * c when c does not use the index.
+```
+
+```litex
 sketch:
     have c Z
     sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
@@ -1110,16 +1072,20 @@ sum_of_finite_set({}, 'Z(x){x}) = 0
 sum_of_finite_set(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
 sum_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 sum_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
+```
 
+```litex
 sketch:
     have X finite_set
     have c Z
     sum_of_finite_set(X, '(x X) Z {c}) = count(X) * c
+```
 
-sketch:
-    have X power_set(Z)
-    know $is_finite_set(X)
-    sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
+```litex
+forall X power_set(Z):
+    $is_finite_set(X)
+    =>:
+        sum_of_finite_set(X, '(x X) Z {x + 0}) = sum_of_finite_set(X, '(x X) Z {x})
 
 # Finite-set product: multiply the function value over each element of a finite set.
 product_of_finite_set({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
@@ -1128,16 +1094,20 @@ product_of_finite_set(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
 product_of_finite_set({1, 2}, 'Z(x){x}) $in Z
 product_of_finite_set({1, 2}, 'N_pos(x){x}) $in N_pos
 product_of_finite_set({}, 'N_pos(x){x}) $in N_pos
+```
 
+```litex
 sketch:
     have X finite_set
     have c R
     product_of_finite_set(X, '(x X) R {c}) = c ^ count(X)
+```
 
-sketch:
-    have X power_set(Z)
-    know $is_finite_set(X)
-    product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
+```litex
+forall X power_set(Z):
+    $is_finite_set(X)
+    =>:
+        product_of_finite_set(X, '(x X) Z {x + 0}) = product_of_finite_set(X, '(x X) Z {x})
 
 # Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
 sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})
@@ -1148,7 +1118,9 @@ product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
 
 # Partition: sum(a..d,f) as edge-to-edge sub-sums (same f); product analogue with *.
 sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
+```
 
+```litex
 sketch:
     sum(1, 3, 'Z(x){x}) = sum(1, 2, 'Z(x){x}) + 'Z(x){x}(3)
     product(1, 3, 'Z(x){x}) = product(1, 2, 'Z(x){x}) * 'Z(x){x}(3)
@@ -1156,7 +1128,9 @@ sketch:
     sum(1, 10, 'Z(x){x}) = sum(1, 3, 'Z(x){x}) + sum(4, 8, 'Z(x){x}) + sum(9, 10, 'Z(x){x})
 
 eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
+```
 
+```litex
 sketch:
     by induc a from 1:
         prove:

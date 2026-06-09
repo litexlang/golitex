@@ -2,7 +2,7 @@
 
 Finished competition-style problems across algebra, intermediate algebra, prealgebra, number theory, precalculus, geometry, and counting/probability.
 
-Each example below is an independent checked Litex snippet. The metadata record keeps the dataset translation fields next to the runnable code.
+Each item gives the mathematical idea first, then the Litex code that checks it.
 
 ## 1. `test/algebra/1078`
 
@@ -16,7 +16,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -72,7 +72,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -110,15 +110,12 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
 # The denominator is sqrt(q), so the real-valued domain requires q > 0,
 # where q = x^2 - 5*x + 6 = (x - 2) * (x - 3).
-
-sketch:
-    have ans set = union(info(2), oinf(3))
 
 claim:
     prove:
@@ -228,9 +225,6 @@ claim:
         case x > 3:
             x $in oinf(3)
             x $in union(info(2), oinf(3))
-
-sketch:
-    union(info(2), oinf(3)) = union(info(2), oinf(3))
 ```
 
 ## 4. `test/algebra/2257`
@@ -245,7 +239,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -310,7 +304,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -344,7 +338,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -387,7 +381,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -423,7 +417,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -473,7 +467,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -558,7 +552,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -681,7 +675,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -699,7 +693,7 @@ have C_i &C = (0, 1)
 # The three pair sums y are roots of the cubic resolvent
 # y^3 - e2*y^2 + (e1*e3 - 4*e4)*y + (4*e2*e4 - e1^2*e4 - e3^2),
 # hence here y^3 - 8*y - 8.
-# This snippet certifies the three resulting real resolvent roots explicitly.
+# This example certifies the three resulting real resolvent roots explicitly.
 
 have s R = sqrt(5)
 have y_a R = -2
@@ -772,7 +766,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -901,7 +895,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -934,7 +928,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -970,7 +964,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1000,7 +994,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1036,7 +1030,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1075,7 +1069,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1114,7 +1108,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1154,7 +1148,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex
@@ -1235,7 +1229,7 @@ litex_code: "see litex block below"
 proof_attempt: "see litex block below"
 status: "checkable"
 blocker: ""
-notes: "Dataset-gallery selection; verify with `cargo test run_examples -- --nocapture`."
+notes: "Representative checked example for this gallery."
 ```
 
 ```litex

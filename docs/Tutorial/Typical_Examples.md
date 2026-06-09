@@ -8,31 +8,29 @@ growing a checked mathematical object.
 ## 1. Matching And Substitution
 
 The smallest useful pattern is a syllogism. We introduce a set of humans, an
-object `Socrates` in that set, an abstract predicate `mortal`, and a general
-fact saying that every human is mortal.
+object `Socrates` in that set, an abstract predicate `mortal`, and then prove
+the conclusion from a local premise saying that every human is mortal.
 
 ```litex
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
-# Assumption injection: trusted input for this example, not a checked proof.
-know forall x human:
-    $mortal(x)
-
-$mortal(Socrates)
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
 ```
 
-The final line is not a command about a proof state. It is the mathematical fact
-we want. Litex sees that the known `forall` fact has the same predicate shape,
-checks that `Socrates $in human`, and substitutes `Socrates` for `x`.
+The conclusion is not a command about a proof state. It is the mathematical fact
+we want. Litex sees that the local `forall` premise has the same predicate
+shape, checks that `Socrates $in human`, and substitutes `Socrates` for `x`.
 
 The accepted fact can also carry an explanation like this:
 
 ```json
 {
   "result": "success",
-  "type": "AtomicFact",
-  "line": 7,
   "stmt": "$mortal(Socrates)",
   "verified_by": {
     "type": "cite forall fact",
@@ -44,26 +42,23 @@ The accepted fact can also carry an explanation like this:
 }
 ```
 
-Here `abstract_prop mortal(x)` only declares the predicate vocabulary. The
-`know` line is assumption injection: it stores the general rule as trusted input
-for this example, without proving that rule. Once `$mortal(Socrates)` is
-accepted, it becomes part of the verified context for later facts, but its proof
-still depends on the injected assumption.
+Here `abstract_prop mortal(x)` only declares the predicate vocabulary. The rule
+"every human is mortal" is a premise of the displayed `forall`, so the example
+shows a conditional result rather than silently adding an axiom to the file.
 
 Litex also supports the named-theorem route used by many formal systems:
 
 ```litex
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
-
-thm all_humans_are_mortal:
+thm add_one_after_two:
     prove:
-        forall x human:
-            $mortal(x)
-    know $mortal(x)
+        forall x R:
+            x = 2
+            =>:
+                x + 1 = 3
+    x + 1 = 2 + 1 = 3
 
-by thm all_humans_are_mortal(Socrates)
-$mortal(Socrates)
+by thm add_one_after_two(2)
+2 + 1 = 3
 ```
 
 This is useful for standard-library facts, long results, or parameter-sensitive
@@ -71,12 +66,8 @@ theorems. The distinctive Litex style is that routine local reasoning can stay
 as direct factual lines.
 
 When `verified_by` says a line was accepted by citing a `forall`, check where
-that `forall` came from. If it came from `know`, the output explains a
-conditional proof route relative to an explicit assumption; it does not certify
-that the assumed `forall` was proved by Litex.
-
-Similarly, `result: "success"` on the `KnowStmt` line means the assumption was
-stored, not proved.
+that `forall` came from. In the syllogism above, it came from the local premise
+of the displayed statement, so the result is conditional on that premise.
 
 ## 2. Structured Algebra
 
@@ -208,53 +199,24 @@ relations are visible. A group object gives access to `@G.inv`, `@G.op`, and
 group structure, and the subset.
 
 
-## 3. A Proof Shape: Infinitely Many Primes
+## 3. A Proof Shape: Local Assumptions
 
-The next example shows a proof block rather than only definitions. The `know`
-block records background number-theory facts used by the final argument: a
-product is divisible by every factor below the bound, every number at least `2`
-has a prime divisor, and the finite product is at least the endpoint.
+The next example shows a small proof block. The side conditions are written in
+the premise of the `forall`, so the proof is conditional on exactly the facts
+displayed above the `=>:`.
 
 ```litex
-prop prime(a N_pos):
-    2 <= a
-    forall b N_pos:
-        2 <= b < a
-        =>:
-            a % b != 0
-
-# Background facts for this final proof block.
-know:
-    forall a, k N_pos:
-        k <= a
-        =>:
-            product(1, a, 'N_pos(x){x}) % k = 0
-
-    forall a N_pos:
-        2 <= a
-        =>:
-            exist k N_pos st {$prime(k), a % k = 0}
-
-    forall a N_pos:
-        a <= product(1, a, 'N_pos(x){x})
-
-claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
-    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases k > a:
-        case k <= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
-        case k > a:
-            do_nothing
-    witness exist k N_pos st {k > a, $prime(k)} from k
+claim:
+    prove:
+        forall x R:
+            x + 3 = 10
+            =>:
+                x = 7
+    x = (x + 3) - 3 = 10 - 3 = 7
 ```
 
-The proof follows the classical Euclid move. For a bound `a`, take a prime
-divisor `k` of `1 * 2 * ... * a + 1`. If `k <= a`, then the product is divisible
-by `k`, so the product plus `1` has remainder `1` modulo `k`, contradicting the
-choice of `k`. Therefore `k > a`, and it is the witness for a larger prime.
+The proof follows the classroom algebra move: subtract the same number from
+both sides, simplify, and store the result as a checked fact.
 
 ## 4. Matrix And Scientific Objects
 

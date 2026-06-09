@@ -2,7 +2,7 @@
 
 Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
 
-Try all snippets in browser: https://litexlang.com/doc/Setup
+Try the examples in browser: https://litexlang.com/doc/Setup
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
 
@@ -330,7 +330,6 @@ Example success output looks like this. The exact output may differ by version:
 ```json
 {
   "result": "success",
-  "type": "AtomicFact",
   "line": 1,
   "stmt": "1 + 1 = 2",
   "verified_by": {
@@ -339,6 +338,10 @@ Example success output looks like this. The exact output may differ by version:
   }
 }
 ```
+
+For factual statements, `verified_by` is the proof route. Composite proofs can
+put sub-checks in `verified_by.steps`. Successful non-factual statements, such
+as definitions or proof blocks, use `accepted_by` for the top-level summary.
 
 If an error occurs, Litex prints an error JSON object. The important fields are usually:
 
@@ -357,13 +360,11 @@ Example error output looks like this. The exact output may differ by version:
   "result": "error",
   "line": 1,
   "message": "verification failed",
-  "type": "AtomicFact",
   "stmt": "1 = 0",
   "previous_error": {
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "type": "AtomicFact",
     "stmt": "1 = 0",
     "previous_error": null
   }

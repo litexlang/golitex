@@ -1,6 +1,6 @@
 # How Are Facts Verified?
 
-Try all snippets in browser: https://litexlang.com/doc/Tutorial/How_Are_Facts_Verified
+Try the examples in browser: https://litexlang.com/doc/Tutorial/How_Are_Facts_Verified
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/How_Are_Facts_Verified.md
 
@@ -40,16 +40,17 @@ forall a, b R:
 
 3. Use known atomic facts.
 
-Whenever Litex verifies an atomic fact, the fact is stored in the environment
-for future use. For example, if `$p(1)` is known on one line, a later `$p(1)`
-can be verified by reusing that known fact.
+Whenever Litex verifies an atomic fact, the fact is stored for later use. The
+same reuse happens inside a `forall`: facts before `=>:` are available when
+checking the conclusions after `=>:`.
 
 ```litex
 abstract_prop p(a)
 
-know $p(1)
-
-$p(1)
+forall:
+    $p(1)
+    =>:
+        $p(1)
 ```
 
 4. Use the definition of the predicate.
@@ -63,20 +64,21 @@ $p(1, 2)
 
 5. Use `forall` facts.
 
-If Litex has already verified `forall a R: $p(a)`, then a later `$p(1)` can be
-verified by instantiating the universal fact with `a = 1`.
+If a `forall` fact is in the local context, then `$p(1)` can be verified by
+instantiating that universal fact with `a = 1`.
 
 ```litex
 abstract_prop p(a)
 abstract_prop q(a, b)
 have f fn(a R) R
 
-know forall a R:
-    $p(a)
+forall:
+    forall a R:
+        $p(a)
 
-know forall a, b R:
-    $q(f(a + b), b)
-
-$p(1)
-$q(f(1 + 2), 2)
+    forall a, b R:
+        $q(f(a + b), b)
+    =>:
+        $p(1)
+        $q(f(1 + 2), 2)
 ```

@@ -10,7 +10,15 @@ concrete, modest, and close to the current verifier behavior.
 
 ## Why is Litex called Litex?
 
-Litex = Lisp + LaTeX. The author of Litex is inspired by the simplicity and power of Lisp and the practicality of LaTeX.
+Litex = Lisp + LaTeX. 
+
+Litex is inspired by Lisp not only in the idea “data
+as code,” but also in its taste for a small uniform
+core, symbolic manipulation, tree-shaped programs,
+interactive feedback, and language-building through
+small composable forms.
+
+Litex is inspired by LaTeX's practical design for writing mathematics.
 
 ## How is Litex invented?
 
@@ -19,6 +27,18 @@ By iteratively implementing and refining the Litex language. The design process 
 ## Is Litex a programming language?
 
 No. Litex is a domain language for and just for mathematics reasoning. It is not a programming language. By sacrificing the programming language features, Litex can focus on the mathematics reasoning features. This is very different from Lean, Coq, and Isabelle. That's why it can be designed as close to ordinary mathematics as possible.
+
+## Where does features of Litex come from?
+
+The features of Litex come from the author's experience in writing mathematics. The author has been writing mathematics for a long time, and he has some understanding of the mathematics reasoning process. The author has also been writing code for a long time, and he has some understanding of the code reasoning process. He thinks formal language should be used by everyone, just like math is used by everyone.
+
+`template` of Litex is inspired by the `template` of C++.
+
+`struct` of Litex is inspired by the `struct` of C.
+
+`claim`, `thm` of Litex is inspired by what `theorem` means in math books.
+
+`strategy` and builtin rules of Litex is inspired by how people verify the well-definedness of a recursively defined object.
 
 ## Why does Litex have this particular menu of objects and statements?
 
@@ -480,9 +500,8 @@ trace cites a fact that came from `know`, the trace explains why the later line
 follows from the injected assumption; it does not show that the injected
 assumption was proved by Litex.
 
-Likewise, `result: "success"` on a `KnowStmt` only means the assumption was
-accepted into the context. It is not a certificate that the injected fact was
-proved.
+Likewise, success on a `know` line only means the assumption was accepted into
+the context. It is not a certificate that the injected fact was proved.
 
 This is useful for three narrow purposes:
 
@@ -521,12 +540,14 @@ Litex form of that ordinary mathematical move.
 For example:
 
 ```litex
-know exist u R st {u > 0, u < 1}
+witness exist u R st {u > 0, u < 1} from 1 / 2:
+    1 / 2 > 0
+    1 / 2 < 1
 have by exist v R st {v > 0, v < 1}: w
 w > 0
 ```
 
-The first line records an existential fact. The `have by exist` line introduces
+The first block proves an existential fact. The `have by exist` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
@@ -694,7 +715,7 @@ The Manual carries the durable version of this learning path.
 ## Tutorial Examples
 
 Small examples are still valuable, but they should live as runnable `.lit` files
-or short Manual snippets rather than a separate prose page that can drift from
+or short Manual examples rather than a separate prose page that can drift from
 the language reference.
 
 ## Hilbert Axioms Of Euclidean Geometry

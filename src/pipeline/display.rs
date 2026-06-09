@@ -10,6 +10,8 @@ const JSON_KEY_RESULT: &str = "result";
 const JSON_KEY_SUCCESS: &str = "success";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
 const JSON_KEY_VERIFIED_BY: &str = "verified_by";
+const JSON_KEY_ACCEPTED_BY: &str = "accepted_by";
+const JSON_KEY_STEPS: &str = "steps";
 
 const JSON_KEY_ERROR_TYPE: &str = "error_type";
 const JSON_KEY_MESSAGE: &str = "message";
@@ -271,19 +273,21 @@ fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> Jso
             JsonValue::JsonString(user_visible_stmt_or_msg_text(&vw.to_string())),
         ));
     }
+    fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
 }
 
 /// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or citation).
 fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let current_line_file = x.stmt.line_file();
-    verified_by_result_json_value(runtime, &x.verified_by, &current_line_file)
+    verified_by_result_json_value(runtime, &x.verified_by, &current_line_file, Some(&x.stmt))
 }
 
 fn verified_by_result_json_value(
     runtime: &Runtime,
     verified_by: &VerifiedByResult,
     current_line_file: &LineFile,
+    verify_goal: Option<&Fact>,
 ) -> JsonValue {
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => verified_by_builtin_rule_value(&r.msg, None),
@@ -309,12 +313,61 @@ fn verified_by_result_json_value(
                 None,
             )
         }
-        VerifiedByResult::VerifiedBys(w) => JsonValue::Array(
-            w.cite_what
-                .iter()
-                .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file))
-                .collect(),
-        ),
+        VerifiedByResult::VerifiedBys(w) => {
+            verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
+        }
+    }
+}
+
+fn verified_by_steps_object(
+    runtime: &Runtime,
+    items: &[VerifiedBysEnum],
+    current_line_file: &LineFile,
+    verify_goal: Option<&Fact>,
+) -> JsonValue {
+    let steps = items
+        .iter()
+        .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file))
+        .collect::<Vec<_>>();
+    let mut fields = vec![(
+        "type".to_string(),
+        JsonValue::JsonString(verified_by_steps_type(verify_goal).to_string()),
+    )];
+    if let Some(summary) = verified_by_steps_summary(verify_goal) {
+        fields.push((
+            "summary".to_string(),
+            JsonValue::JsonString(summary.to_string()),
+        ));
+    }
+    fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(steps)));
+    JsonValue::Object(fields)
+}
+
+fn verified_by_steps_type(verify_goal: Option<&Fact>) -> &'static str {
+    match verify_goal {
+        Some(Fact::ForallFact(_)) => "forall local check",
+        Some(Fact::ForallFactWithIff(_)) => "forall iff local check",
+        Some(Fact::AndFact(_)) => "and fact",
+        Some(Fact::ChainFact(_)) => "chain fact",
+        Some(Fact::OrFact(_)) => "or fact",
+        Some(Fact::ExistFact(_)) => "exist fact",
+        Some(Fact::NotForall(_)) => "not forall fact",
+        Some(Fact::AtomicFact(_)) | None => "verification steps",
+    }
+}
+
+fn verified_by_steps_summary(verify_goal: Option<&Fact>) -> Option<&'static str> {
+    match verify_goal {
+        Some(Fact::ForallFact(_)) => Some("then facts verified in local forall context"),
+        Some(Fact::ForallFactWithIff(_)) => {
+            Some("both directions verified in local forall contexts")
+        }
+        Some(Fact::AndFact(_)) => Some("each conjunct verified in order"),
+        Some(Fact::ChainFact(_)) => Some("each chain step verified in order"),
+        Some(Fact::OrFact(_)) => Some("one or more disjunctive proof routes verified"),
+        Some(Fact::ExistFact(_)) => Some("existential proof obligations verified"),
+        Some(Fact::NotForall(_)) => Some("negated universal proof obligations verified"),
+        Some(Fact::AtomicFact(_)) | None => None,
     }
 }
 
@@ -357,7 +410,7 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
         StmtResult::NonFactualStmtSuccess(n) => JsonValue::Object(vec![
             (
                 "type".to_string(),
-                JsonValue::JsonString("non_factual".to_string()),
+                JsonValue::JsonString("accepted statement".to_string()),
             ),
             (
                 "stmt_type".to_string(),
@@ -452,6 +505,7 @@ fn verified_by_citation_object(
             JsonValue::JsonString(user_visible_stmt_or_msg_text(&vw.to_string())),
         ));
     }
+    fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
 }
 
@@ -496,18 +550,10 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         ),
     ];
 
-    // For `HaveByExistStmt`, surface explicit exist-proof source(s) at top level.
-    if x.stmt.stmt_type_name() == "HaveByExistStmt" {
-        let verified_by_items: Vec<JsonValue> = x
-            .inside_results
-            .iter()
-            .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
-            .collect();
-        fields.push((
-            JSON_KEY_VERIFIED_BY.to_string(),
-            JsonValue::Array(verified_by_items),
-        ));
-    }
+    fields.push((
+        JSON_KEY_ACCEPTED_BY.to_string(),
+        accepted_by_value(runtime, x),
+    ));
 
     fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
@@ -515,6 +561,87 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
     ));
 
     JsonValue::Object(fields)
+}
+
+fn accepted_by_value(runtime: &Runtime, success: &NonFactualStmtSuccess) -> JsonValue {
+    let mut fields = vec![(
+        "type".to_string(),
+        JsonValue::JsonString(accepted_by_type(&success.stmt).to_string()),
+    )];
+    if let Some(summary) = accepted_by_summary(&success.stmt) {
+        fields.push((
+            "summary".to_string(),
+            JsonValue::JsonString(summary.to_string()),
+        ));
+    }
+    let steps = success
+        .inside_results
+        .iter()
+        .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+        .collect::<Vec<_>>();
+    fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(steps)));
+    JsonValue::Object(fields)
+}
+
+fn accepted_by_type(stmt: &Stmt) -> &'static str {
+    match stmt {
+        Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(_)) => "assumption",
+        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "definition",
+        Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(_))
+        | Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)) => "exist elimination",
+        Stmt::DefObjStmt(_) => "definition",
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(_))
+        | Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(_))
+        | Stmt::ProofBlock(_) => "proof block",
+        Stmt::DefInterfaceStmt(_) => "definition",
+        Stmt::By(ByStmt::ByCasesStmt(_)) => "case split",
+        Stmt::By(ByStmt::ByThmStmt(_)) => "theorem call",
+        Stmt::By(_) => "proof block",
+        Stmt::Witness(_) => "witness",
+        Stmt::Command(CommandStmt::DoNothingStmt(_)) => "no op",
+        Stmt::Command(CommandStmt::EvalStmt(_)) | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
+            "evaluation"
+        }
+        Stmt::Command(_) => "command",
+        Stmt::Fact(_) => "verified fact",
+    }
+}
+
+fn accepted_by_summary(stmt: &Stmt) -> Option<&'static str> {
+    match stmt {
+        Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(_)) => Some("facts accepted as explicit assumptions"),
+        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => Some("objects and local facts registered"),
+        Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(_))
+        | Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)) => {
+            Some("exist fact verified and witness facts registered")
+        }
+        Stmt::DefObjStmt(_) => Some("object or function information registered"),
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(_)) => {
+            Some("theorem proof checked and theorem registered")
+        }
+        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(_)) => {
+            Some("strategy proof checked and strategy registered")
+        }
+        Stmt::DefInterfaceStmt(_) => Some("interface definition registered"),
+        Stmt::By(ByStmt::ByCasesStmt(_)) => {
+            Some("cases cover all situations and target facts were released")
+        }
+        Stmt::By(ByStmt::ByThmStmt(_)) => Some("named theorem instantiated"),
+        Stmt::By(_) => Some("proof statement completed and target facts were released"),
+        Stmt::Witness(_) => Some("witness obligations verified"),
+        Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(_)) => {
+            Some("proof steps executed and target fact verified")
+        }
+        Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_)) => Some("sketch block executed"),
+        Stmt::Command(CommandStmt::DoNothingStmt(_)) => {
+            Some("statement intentionally does nothing")
+        }
+        Stmt::Command(CommandStmt::EvalStmt(_)) | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
+            Some("expression evaluated")
+        }
+        Stmt::Command(_) => Some("command completed"),
+        Stmt::Fact(_) => None,
+    }
 }
 
 fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {

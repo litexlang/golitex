@@ -1,10 +1,10 @@
 # Litex Examples
 
-This folder is both a runnable test suite and a reading gallery.
+This folder is a reading gallery for Litex examples.
 
 The examples are meant to be a learning path, not just a theorem showcase.
 They start from small checked facts and grow toward structures, case studies,
-and textbook snippets. This is the same dependency philosophy used elsewhere
+and textbook examples. This is the same dependency philosophy used elsewhere
 in Litex: build enough background to write the next mathematical line, rather
 than starting by importing a huge theorem dictionary.
 
@@ -19,14 +19,13 @@ For a first pass, read the public folders in order:
 7. [`06_std/`](06_std/) - runnable examples that exercise standard-library modules.
 8. [`07_dataset_gallery/`](07_dataset_gallery/) - Markdown gallery pages with representative checkable examples selected from local dataset and textbook translation workspaces.
 
-The public folders are now Markdown galleries. Each checked example is a
-`litex` fenced block with a short note saying whether it exercises an object,
-statement, fact, proof pattern, builtin rule, standard-library interface, or
-case study.
+The public folders are Markdown galleries. Each checked example has a short
+note saying whether it is an object example, statement example, fact, proof
+pattern, builtin rule, standard-library interface, or case study.
 
-The [`_internal/`](_internal/) folder is still tested, but it is not the main
-reader path. It contains regression checks, sketch files, std-import examples,
-fixtures for `run_file`, and snapshots from parser/data work.
+The [`_internal/`](_internal/) folder is not the main reader path. It contains
+regression checks, sketch files, std-import examples, fixtures for `run_file`,
+and snapshots from parser/data work.
 
 ## Recommended Reading Path
 
@@ -45,19 +44,3 @@ For a first serious algebra example, `04_structures/README.md` contains
 `struct`, `template`, `forall ... exist!`, and `have fn ... as set` to build a
 left-coset quotient set and the quotient multiplication interface for a normal
 subgroup. The representative-independence lemmas are proved in that example.
-
-## Testing
-
-The repository test runner recursively checks `examples/**/*.lit`, the public
-examples Markdown galleries, and the `litex` fenced blocks in
-`examples/07_dataset_gallery/**/*.md`.
-
-```bash
-cargo test run_examples -- --nocapture
-```
-
-Std-import examples under `_internal/std_imports/` are optional and run with:
-
-```bash
-cargo test run_examples_include_std -- --nocapture
-```

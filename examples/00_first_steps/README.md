@@ -1,14 +1,14 @@
 # First Steps
 
-Small examples for the first feedback loop: arithmetic facts, equality chains, direct calculations, and simple equations.
+Small examples for the first Litex loop: write a mathematical fact, check it,
+and reuse it on the next line.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+The purpose line says what the example is for. Start with the code, then use the
+short note to see where the same move belongs in a larger proof.
 
 ## 1. `calculation`
 
 - Category: `fact`
-- System surface: `calculation chains`
 - Purpose: Shows direct arithmetic and equality-chain verification.
 
 ```litex
@@ -18,8 +18,7 @@ The `Category` and `System surface` fields say what part of Litex the example is
 2 ^ 2 = 4
 1 % 2 = 1
 
-have a R = 1 / 4
-(4 * a + 10) * 10 = 110
+
 
 abs(-1) = 1
 
@@ -29,20 +28,14 @@ abs(-1) = 1
 
 3/(6/5) = 5/2
 
-forall a R:
-    a = (1.5)/(33/(-8))
-    =>:
-        10 * a = -40 / 11
-
-eval 1 + 1 / 3
-eval (1 / 3 + 1 / 6) * 2
 ```
 
 ## 2. `equal_by_resolve`
 
 - Category: `fact`
-- System surface: `known equality resolution`
 - Purpose: Shows how known equalities are resolved through local facts.
+
+<!-- 问题：这里我其实想要突出的是，如果一个符号等于了一个什么值，比如3， 1/3, (2+3)*4 这样的全部由数字构成的表达式，那么这个符号的值就被保存下来了，之后做=的证明的时候，这个东西出现在式子里，litex内核会做一次特殊处理：把等式里所有的存过值的符号都替换成值，然后做=的证明。 -->
 
 ```litex
 forall x R:
@@ -51,31 +44,26 @@ forall x R:
         x + 1 = 3
         x^2 = 4
 
-(1, 2)[1] = 1
-(1, 2)[2] = 2
-
-have a set = (1, 2)
-a[1] = 1
-a[2] = 2
+have a2 R = 1 / 4
+(4 * a2 + 10) * 10 = 110
 ```
 
 ## 3. `equality`
 
 - Category: `fact`
-- System surface: `equality facts`
-- Purpose: Shows simple equality reuse from known background facts.
+- Purpose: Shows equality reuse when the needed facts are local assumptions.
 
 ```litex
-have a, b R
-know a = b
-know b + 2 = 3
-a + 2 = b + 2
+forall a, b R:
+    a = b
+    b + 2 = 3
+    =>:
+        a + 2 = b + 2
 ```
 
 ## 4. `example_in_readme`
 
 - Category: `stmt`
-- System surface: `forall statement`
 - Purpose: Minimal first example used by the top-level README.
 
 ```litex
@@ -89,7 +77,6 @@ forall x R:
 ## 5. `linear_equation`
 
 - Category: `fact`
-- System surface: `linear equation simplification`
 - Purpose: Solves small linear equalities by explicit algebraic steps.
 
 ```litex
@@ -121,30 +108,31 @@ forall x cart(R, R):
 ## 6. `rational_expression_simplification`
 
 - Category: `builtin rule`
-- System surface: `rational expression simplification`
 - Purpose: Exercises rational-expression normalization and simplification.
 
 ```litex
-sketch:
-    have a, b, c, d R
-    know:
-        b != 0
-        d != 0
-        b * d != 0
+forall a, b, c, d R:
+    b != 0
+    d != 0
+    b * d != 0
+    =>:
+        (a + b)^ 2 = a * a + 1.5 * a * b + 2 * b ^2 - b ^ 2 + 0.5*b * a
+        (a + b) * (c + d) = a * c + d * b + 2 * b * c + a*d*1 - c * b
 
-    (a + b)^ 2 = a * a + 1.5 * a * b + 2 * b ^2 - b ^ 2 + 0.5*b * a
-    (a + b) * (c + d) = a * c + d * b + 2 * b * c + a*d*1 - c * b
+        a / b + c / d = (a * d + c * b) / (b * d)
+        a / (b * d) + c / (b * d) = (a + c) / (b * d)
 
-    a / b + c / d = (a * d + c * b) / (b * d)
-    a / (b * d) + c / (b * d) = (a + c) / (b * d)
+        1 / 3 = 3 / 9
+```
 
-    1 / 3 = 3 / 9
-
+```litex
 sketch:
     have a R = 1
 
     a + 2 = 3
+```
 
+```litex
 sketch:
     have a R, b R = 1, 2
     (a + (a + (a * b + (a + b)))) * (a + 3 * b) = 49

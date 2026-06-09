@@ -1,14 +1,14 @@
 # Proof Patterns
 
-Reusable proof shapes and verifier tactics. These snippets are intentionally small and focus on one statement form or proof move at a time.
+Small proof moves that come up again and again: conjunctions, cases,
+contradiction, witnesses, induction, theorem reuse, and named facts.
 
-Each Litex block below is checked independently by `cargo test run_examples -- --nocapture`.
-The `Category` and `System surface` fields say what part of Litex the example is meant to exercise.
+The purpose line says when the move is useful. The code blocks keep the setting
+small so the proof pattern is easy to recognize.
 
 ## 1. `and_fact`
 
 - Category: `fact`
-- System surface: `and fact`
 - Purpose: Shows conjunction introduction and reuse.
 
 ```litex
@@ -18,40 +18,40 @@ The `Category` and `System surface` fields say what part of Litex the example is
 ## 2. `atomic_fact`
 
 - Category: `fact`
-- System surface: `atomic proposition`
 - Purpose: Shows abstract atomic proposition matching.
 
 ```litex
 abstract_prop p(a, b, c)
-let a, b, c, d, e, f R:
+forall a, b, c, d, e, f R:
     $p(a, b, c)
     a = d
     b = e
     c = f
-
-$p(d, e, f)
+    =>:
+        $p(d, e, f)
 ```
 
 ## 3. `by_axiom_of_choice`
 
 - Category: `proof pattern`
-- System surface: `by axiom_of_choice`
 - Purpose: Shows the choice-function proof form over a set of nonempty sets.
 
 ```litex
-have S set
+claim:
+    prove:
+        forall S set:
+            forall A S:
+                $is_nonempty_set(A)
+            =>:
+                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 
-by axiom_of_choice: set S:
-    know forall A S:
-        $is_nonempty_set(A)
-
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+    by axiom_of_choice: set S:
+        ...
 ```
 
 ## 4. `by_cases`
 
 - Category: `proof pattern`
-- System surface: `by cases`
 - Purpose: Shows case splits over proposition and order alternatives.
 
 ```litex
@@ -64,24 +64,27 @@ sketch:
         case 1 + 1 != 2:
             1 + 1 = 2
             impossible 1 + 1 = 2
+```
 
-sketch:
-    abstract_prop p(x)
+```litex
+abstract_prop p(x)
 
-    know:
+claim:
+    prove:
         forall x R:
-            x > 0
+            forall y R:
+                y > 0
+                =>:
+                    $p(y)
+            forall y R:
+                y <= 0
+                =>:
+                    $p(y)
             =>:
                 $p(x)
-        forall x R:
-            x <= 0
-            =>:
-                $p(x)
-
     by cases:
         prove:
-            forall x R:
-                $p(x)
+            $p(x)
 
         case x > 0:
             $p(x)
@@ -98,25 +101,25 @@ by cases 1 = 1:
 ## 5. `by_contra`
 
 - Category: `proof pattern`
-- System surface: `by contra`
 - Purpose: Shows contradiction-based proof.
 
 ```litex
 abstract_prop p(a)
 
-have b R, c R
-
-know forall a R:
-    $p(a + b)
-    =>:
-        $p(a)
-
-know not $p(c)
-
-by contra:
+claim:
     prove:
-        not $p(c + b)
-    impossible $p(c)
+        forall b, c R:
+            forall a R:
+                $p(a + b)
+                =>:
+                    $p(a)
+            not $p(c)
+            =>:
+                not $p(c + b)
+    by contra:
+        prove:
+            not $p(c + b)
+        impossible $p(c)
 
 by contra 1 = 1:
     impossible 1 != 1
@@ -136,7 +139,6 @@ by contra:
 ## 6. `by_enumerate_closed_range`
 
 - Category: `proof pattern`
-- System surface: `by enumerate closed_range`
 - Purpose: Shows finite closed-range enumeration.
 
 ```litex
@@ -144,7 +146,9 @@ sketch:
     have x closed_range(0, 10)
 
     by closed_range as cases: x $in 0...10
+```
 
+```litex
 sketch:
     have a Z
     have x closed_range(a, a + 10)
@@ -155,7 +159,6 @@ sketch:
 ## 7. `by_enumerate_finite_set`
 
 - Category: `proof pattern`
-- System surface: `by enumerate finite_set`
 - Purpose: Shows finite-set enumeration.
 
 ```litex
@@ -175,36 +178,35 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2
 ## 8. `by_enumerate_range`
 
 - Category: `proof pattern`
-- System surface: `by enumerate range`
 - Purpose: Shows finite range and closed-range enumeration syntax.
 
 ```litex
-sketch:
-    let a range(7, 8)
-
+claim:
+    prove:
+        forall a range(7, 8):
+            a = 7
     by enumerate range: a $in range(7, 8)
+```
 
-    a = 7
-
-sketch:
-    let x range(1, 3)
-
+```litex
+claim:
+    prove:
+        forall x range(1, 3):
+            x = 1 or x = 2
     by enumerate range: x $in range(1, 3)
+```
 
-    x = 1 or x = 2
-
-sketch:
-    let y closed_range(1, 3)
-
+```litex
+claim:
+    prove:
+        forall y closed_range(1, 3):
+            y = 1 or y = 2 or y = 3
     by enumerate closed_range: y $in 1...3
-
-    y = 1 or y = 2 or y = 3
 ```
 
 ## 9. `by_extension`
 
 - Category: `proof pattern`
-- System surface: `by extension`
 - Purpose: Shows set/function extensional equality.
 
 ```litex
@@ -228,7 +230,6 @@ by extension {1} = {1}
 ## 10. `by_fn`
 
 - Category: `proof pattern`
-- System surface: `by fn`
 - Purpose: Shows construction of a function object.
 
 ```litex
@@ -237,46 +238,9 @@ have f fn(x R)R
 by fn as set: f
 ```
 
-## 11. `by_fn_set`
+## 11. `by_for`
 
 - Category: `proof pattern`
-- System surface: `by fn set as set`
-- Purpose: Shows turning a function-space condition into a set object.
-
-```litex
-let f set
-
-know:
-    forall x1 f:
-        x1 $in cart(R, Q, Z)
-        tuple_dim(x1) = 3
-
-    forall x1 f:
-        exist x2 R, x3 Q, z Z st {x2 > x3, x2 > 2, x1 = (x2, x3, z)}
-
-    forall x2 R, x3 Q:
-        x2 > x3
-        x2 > 2
-        =>:
-            exist x1 f, z Z st {x1 = (x2, x3, z)}
-
-    forall x1, x2 f:
-        x1 $in cart(R, Q, Z)
-        x2 $in cart(R, Q, Z)
-        x1[1] = x2[1]
-        x1[2] = x2[2]
-        =>:
-            x1 = x2
-
-by fn set as set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
-
-f(100,99) = f(100,99)
-```
-
-## 12. `by_for`
-
-- Category: `proof pattern`
-- System surface: `by for`
 - Purpose: Shows bounded universal proof automation.
 
 ```litex
@@ -300,7 +264,9 @@ by for:
         forall x cart({1, 2}, {3, 4}):
             0 <= x[1] + x[2]
     do_nothing
+```
 
+```litex
 sketch:
     prop Prime(x N_pos):
         2 <= x
@@ -336,43 +302,37 @@ sketch:
 ## 13. `by_induc`
 
 - Category: `proof pattern`
-- System surface: `by induc`
 - Purpose: Shows ordinary induction.
 
 ```litex
-# Minimal structured `by induc` example.
-# `prove induc:` proves the step under the default induction hypotheses.
-
 abstract_prop p(a)
 
-know:
-    $p(0)
-    forall n Z:
-        n >= 0
-        $p(n)
-        =>:
-            $p(n + 1)
-
-by induc n from 0:
+claim:
     prove:
-        $p(n)
+        forall n Z:
+            $p(0)
+            forall m Z:
+                m >= 0
+                $p(m)
+                =>:
+                    $p(m + 1)
+            n >= 0
+            =>:
+                $p(n)
+    by induc n from 0:
+        prove:
+            $p(n)
 
-    prove from n = 0:
-        $p(0)
+        prove from n = 0:
+            $p(0)
 
-    prove induc:
-        $p(n + 1)
-
-forall n Z:
-    n >= 0
-    =>:
-        $p(n)
+        prove induc:
+            $p(n + 1)
 ```
 
 ## 14. `by_induc_example1`
 
 - Category: `proof pattern`
-- System surface: `by induc`
 - Purpose: Shows a small induction proof.
 
 ```litex
@@ -396,7 +356,6 @@ claim:
 ## 15. `by_induc_example2`
 
 - Category: `proof pattern`
-- System surface: `by induc`
 - Purpose: Shows a larger induction proof with arithmetic state.
 
 ```litex
@@ -430,7 +389,6 @@ claim:
 ## 16. `by_symmetric_reflexive_antisymmetric_prop`
 
 - Category: `proof pattern`
-- System surface: `relation-property proof patterns`
 - Purpose: Shows reflexive, symmetric, and antisymmetric proposition helpers.
 
 ```litex
@@ -438,8 +396,10 @@ sketch:
     prop same_obj(x set, y set):
         x = y
 
-    abstract_prop r(x, y)
-    abstract_prop p(x, y)
+    prop r(x set, y set):
+        x = y
+    prop p(x set, y set):
+        x = y
 
     by reflexive_prop:
         prove:
@@ -451,7 +411,7 @@ sketch:
         prove:
             forall x set:
                 $r(x, x)
-        know $r(x, x)
+        x = x
 
     by symmetric_prop:
         prove:
@@ -459,7 +419,8 @@ sketch:
                 $p(x, y)
                 =>:
                     $p(y, x)
-        know $p(y, x)
+        x = y
+        y = x
 
     by antisymmetric_prop:
         prove:
@@ -468,7 +429,7 @@ sketch:
                 $p(y, x)
                 =>:
                     x = y
-        know x = y
+        x = y
 
     claim:
         prove:
@@ -499,12 +460,11 @@ sketch:
 ## 17. `by_transitive_prop`
 
 - Category: `proof pattern`
-- System surface: `by transitive_prop`
 - Purpose: Shows transitive proposition chaining.
 
 ```litex
-
-abstract_prop p(x, y)
+prop p(x set, y set):
+    x = y
 
 by transitive_prop:
     prove:
@@ -513,63 +473,29 @@ by transitive_prop:
             $p(y, z)
             =>:
                 $p(x, z)
-    know $p(x, z)
+    x = y
+    y = z
+    x = z
 
-have a, b, c set
-
-know a $p b $p c
-
-a $p b $p c
+forall a, b, c set:
+    $p(a, b)
+    $p(b, c)
+    =>:
+        $p(a, c)
 ```
 
 ## 18. `by_tuple`
 
 - Category: `obj`
-- System surface: `tuple object`
 - Purpose: Shows tuple construction as a set object.
 
 ```litex
 by tuple as set: (1, 2)
 ```
 
-## 19. `by_zorn_lemma`
-
-- Category: `proof pattern`
-- System surface: `by zorn_lemma`
-- Purpose: Shows the Zorn-lemma proof interface.
-
-```litex
-have s set
-abstract_prop leq(x, y)
-
-by zorn_lemma: set s, prop leq:
-    know $is_nonempty_set(s)
-    know:
-        forall x s:
-            $leq(x, x)
-        forall x, y, z s:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y s:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall C power_set(s):
-            forall x, y C:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u s st {forall! x C: {$leq(x, u)}}
-
-exist m s st {forall! x s: $leq(m, x) => {x = m}}
-```
-
-## 20. `claim`
+## 19. `claim`
 
 - Category: `stmt`
-- System surface: `claim`
 - Purpose: Shows local claim statements and reuse.
 
 ```litex
@@ -592,93 +518,92 @@ claim 1 = 1:
 ## 21. `exist`
 
 - Category: `fact`
-- System surface: `exist and exist!`
 - Purpose: Shows existential and unique-existence facts.
 
 ```litex
-sketch:
-    abstract_prop p(a, b)
-    abstract_prop q(a, b)
+abstract_prop p(a, b)
+abstract_prop q(a, b)
 
-    know:
-        exist! a, b, c R st {$p(a, b), $q(b, c)}
-        forall a1, b1, c1 R, a2, b2, c2 R:
-            $p(a1, b1)
-            $q(b1, c1)
-            $p(a2, b2)
-            $q(b2, c2)
-            =>:
-                (a1, b1, c1) = (a2, b2, c2)
-
-    # exist can be proved by exist!
-    exist a, b, c R st {$p(a, b), $q(b, c)}
+forall:
     exist! a, b, c R st {$p(a, b), $q(b, c)}
+    forall a1, b1, c1 R, a2, b2, c2 R:
+        $p(a1, b1)
+        $q(b1, c1)
+        $p(a2, b2)
+        $q(b2, c2)
+        =>:
+            (a1, b1, c1) = (a2, b2, c2)
+    =>:
+        # exist can be proved by exist!
+        exist a, b, c R st {$p(a, b), $q(b, c)}
+        exist! a, b, c R st {$p(a, b), $q(b, c)}
 
-    abstract_prop t(a)
+abstract_prop t(a)
 
-    know:
-        exist a R st {$t(a)}
-        forall a1, a2 R:
-            $t(a1)
-            $t(a2)
-            =>:
-                a1 = a2
+forall:
+    exist a R st {$t(a)}
+    forall a1, a2 R:
+        $t(a1)
+        $t(a2)
+        =>:
+            a1 = a2
+    =>:
+        exist! a R st {$t(a)}
+```
 
-sketch:
-    abstract_prop p(x, y)
+```litex
+abstract_prop p(x, y)
 
-    know:
-        exist! a R st {$p(a, 1)}
-        not exist x R st {$p(x, 2)}
+forall:
+    exist! a R st {$p(a, 1)}
+    not exist x R st {$p(x, 2)}
+    =>:
+        exist b R st {$p(b, 1)}
+        exist! c R st {$p(c, 1)}
+        not exist y R st {$p(y, 2)}
+```
 
-    exist b R st {$p(b, 1)}
-    exist! c R st {$p(c, 1)}
-    not exist y R st {$p(y, 2)}
+```litex
+abstract_prop p(x, y)
+abstract_prop q(x, y)
 
-sketch:
-    abstract_prop p(x, y)
-    abstract_prop q(x, y)
+forall:
+    forall a R:
+        exist! b R st {$p(a, b)}
 
-    know:
-        forall a R:
-            exist! b R st {$p(a, b)}
+    forall a R:
+        not exist b R st {$q(a, b)}
+    =>:
+        exist b R st {$p(1, b)}
+        exist! c R st {$p(1, c)}
+        not exist b R st {$q(1, b)}
+```
 
-        forall a R:
-            not exist b R st {$q(a, b)}
-
-    exist b R st {$p(1, b)}
-    exist! c R st {$p(1, c)}
-    not exist b R st {$q(1, b)}
-
-sketch:
-    know exist a R st {a > 0, a < 1}
-
-    exist b R st {b > 0, b < 1}
-
-    have by exist c R st {c > 0, c < 1}: number_larger_than_0_and_smaller_than_1
-    number_larger_than_0_and_smaller_than_1 > 0
-    number_larger_than_0_and_smaller_than_1 < 1
+```litex
+forall:
+    exist a R st {a > 0, a < 1}
+    =>:
+        exist b R st {b > 0, b < 1}
 ```
 
 ## 22. `exist_fact_that_contains_forall`
 
 - Category: `fact`
-- System surface: `exist fact with forall body`
 - Purpose: Shows extracting an existential whose witness carries a universal fact.
 
 ```litex
 abstract_prop p(x)
 abstract_prop q(x, y)
 
-know exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
-
-exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
+forall:
+    exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
+    =>:
+        exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
 ```
 
 ## 23. `forall_in_forall`
 
 - Category: `stmt`
-- System surface: `nested forall`
 - Purpose: Shows nested universal facts and local instantiation.
 
 ```litex
@@ -695,15 +620,13 @@ forall a R:
 Let n be a natural number which is a factor of every natural number m. Show that n = 1.
 """
 
-know:
-    forall m, n N:
-        0 < m < n
-        =>:
-            m % n = m
-
 claim:
     prove:
         forall n N:
+            forall m, k N:
+                0 < m < k
+                =>:
+                    m % k = m
             n > 0
             forall m N:
                 m % n = 0
@@ -732,94 +655,43 @@ claim:
             impossible 0 > 0
         case n = 1:
             do_nothing
-
-sketch:
-    abstract_prop p(a, b, c, d)
-    abstract_prop q(a, b)
-
-    know:
-        forall a, b R:
-            forall c, d R:
-                $p(a, b, c, d)
-            =>:
-                $q(a, b)
-
-        forall c, d R:
-            $p(1, 2, c, d)
-    $q(1, 2)
 ```
-
-## 24. `have_obj_by_exist_facts`
-
-- Category: `stmt`
-- System surface: `have by exist`
-- Purpose: Shows naming witnesses from existential facts.
 
 ```litex
-know exist x R st {x > 0}
+abstract_prop p(a, b, c, d)
+abstract_prop q(a, b)
 
-have x R:
-    x > 0
+forall:
+    forall a, b R:
+        forall c, d R:
+            $p(a, b, c, d)
+        =>:
+            $q(a, b)
 
-x > 0
-
-know exist a, b R st {a > b, b > 0}
-
-have a, b R:
-    a > b
-    b > 0
-
-a > b
-b > 0
-
-template<s set: s = s>:
-    have positive_choice R:
-        positive_choice > 0
-
-\positive_choice<R> > 0
+    forall c, d R:
+        $p(1, 2, c, d)
+    =>:
+        $q(1, 2)
 ```
 
-## 25. `inline_forall`
+## 24. `inline_forall`
 
 - Category: `stmt`
-- System surface: `forall!`
 - Purpose: Shows inline universal facts inside proposition bodies.
 
 ```litex
-know forall! a R: a > 0 => { a + 1 > 1 }
-
 forall! a R: a > 0 => { a + 1 > 1 }
 
-know forall! a R: forall! b R: b > 0 => { a > b } => { a > 0 }
-
-forall! a R: forall! b R: b > 0 => { a > b } => { a > 0 }
-
-know forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
+forall! a R: forall! b R: b > 0 => { a + b > a } => { a + 1 > a }
 
 forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
 
-know forall! a R: { a > 0, a + 1 > 1 }
-
-forall! a R: { a > 0, a + 1 > 1 }
-
-abstract_prop p(x)
-abstract_prop q(x, y)
-
-know forall x R:
-    forall y R:
-        $p(y)
-        =>:
-            $q(x, y)
-    =>:
-        $p(x)
-
-forall! x R: forall! y R: $p(y) => {$q(x, y)} => {$p(x)}
+forall! a R: a > 0 => { a > -1, a + 1 > 0 }
 ```
 
 ## 26. `logic`
 
 - Category: `proof pattern`
-- System surface: `propositional logic`
 - Purpose: Shows propositional reasoning, implication, cases, and negation.
 
 ```litex
@@ -832,20 +704,13 @@ abstract_prop r()
 """
 If P ∨ Q and ¬ Q, then P.
 """
-sketch:
-    know:
-        $p() or $q()
-        not $p()
+```
 
-    by cases:
-        prove:
-            $q()
-        case $p():
-            impossible not $p()
-        case $q():
-            do_nothing
+```litex
+abstract_prop p()
+abstract_prop q()
+abstract_prop r()
 
-# You can also formalize this in this way: Use forall without parameters.
 claim:
     prove:
         forall:
@@ -950,19 +815,17 @@ forall:
 ## 27. `match_obj_with_free_param_in_forall`
 
 - Category: `fact`
-- System surface: `forall matching`
 - Purpose: Shows matching free parameters in universal facts.
 
 ```litex
-sketch:
-    abstract_prop p(a, b)
-    abstract_prop q(a, b)
+abstract_prop p(a, b)
+abstract_prop q(a, b)
 
-    know forall a, b R:
+forall:
+    forall a, b R:
         $p(a, {x R: $p(x, b)})
         $q(1, {x R: $q(a + b, x)})
-
-    sketch:
+    =>:
         $p(1, {x R: $p(x, 2)})
         # $p(1, {x R: $p(x, x)}) 是unknown，因为x作为set builder的参数不能匹配b
         $q(1, {x R: $q(1 + 2, x)})
@@ -971,7 +834,6 @@ sketch:
 ## 28. `max_min_bounds`
 
 - Category: `builtin rule`
-- System surface: `max/min bounds`
 - Purpose: Shows builtin max/min order consequences.
 
 ```litex
@@ -993,7 +855,6 @@ forall a, b, c R:
 ## 29. `membership_in_set_valued_fn`
 
 - Category: `fact`
-- System surface: `set-valued function membership`
 - Purpose: Shows membership unfolding for set-valued functions.
 
 ```litex
@@ -1019,115 +880,107 @@ forall p cart(R, R):
 ## 30. `not_exist`
 
 - Category: `fact`
-- System surface: `not exist`
 - Purpose: Shows reasoning from negated existential facts.
 
 ```litex
 abstract_prop p(x, y)
 
-know not exist x R st {$p(x, 1)}
-
 forall x R:
-    not $p(x, 1)
+    not exist y R st {$p(y, 1)}
+    =>:
+        not $p(x, 1)
 
 abstract_prop q(x, y)
 
-know not exist x R st {$q(x, 1), $q(x, 2)}
-
 forall x R:
-    not $q(x, 1) or not $q(x, 2)
+    not exist y R st {$q(y, 1), $q(y, 2)}
+    =>:
+        not $q(x, 1) or not $q(x, 2)
 ```
 
 ## 31. `not_forall`
 
 - Category: `fact`
-- System surface: `not forall`
 - Purpose: Shows extracting counterexamples from negated universal facts.
 
 ```litex
-know not forall x R:
-    x > 0
-
-not forall x R:
-    x > 0
-
 abstract_prop p(x)
 abstract_prop p2(x)
 abstract_prop q(x)
 abstract_prop q2(x)
 
-know not forall x R:
-    $p(x)
-    $p2(x)
+forall:
+    not forall x R:
+        $p(x)
+        $p2(x)
+        =>:
+            $q(x)
+            $q2(x)
     =>:
-        $q(x)
-        $q2(x)
-
-
-
-exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
+        exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
 ```
 
 ## 32. `or_fact`
 
 - Category: `fact`
-- System surface: `or fact`
 - Purpose: Shows disjunction introduction and use.
 
 ```litex
-sketch:
-    abstract_prop p(a, b)
-    abstract_prop q(a, b)
+abstract_prop p(a, b)
+abstract_prop q(a, b)
 
-    know $p(1, 2) or $q(1, 2)
-
+forall:
     $p(1, 2) or $q(1, 2)
+    =>:
+        $p(1, 2) or $q(1, 2)
+```
 
-sketch:
-    let x Z:
-        x >= 1
+```litex
+forall x Z:
+    x >= 1
+    =>:
+        x = 1 or x = 2 or x = 3 or x = 4 or x > 4
+```
 
-    x = 1 or x = 2 or x = 3 or x = 4 or x > 4
+```litex
+forall a, x Z:
+    x >= a
+    =>:
+        x = a or x = a + 1 or x = a + 2 or x > a + 2
+```
 
-sketch:
-    let a, x Z:
-        x >= a
+```litex
+abstract_prop p(a, b, c)
+abstract_prop q(a, b, c)
 
-    x = a or x = a + 1 or x = a + 2 or x > a + 2
+forall a, b, c R:
+    $p(1, 2, 3) or $q(1, 2, 3)
+    a = 1
+    b = 2
+    c = 3
+    =>:
+        $p(a, b, c) or $q(a, b, c)
+```
 
-sketch:
-    abstract_prop p(a, b, c)
-    abstract_prop q(a, b, c)
+```litex
+abstract_prop p(a, b)
+abstract_prop q(a, b)
 
-    know $p(1, 2, 3) or $q(1, 2, 3)
-
-    let a, b, c R:
-        a = 1
-        b = 2
-        c = 3
-
-    $p(a, b, c) or $q(a, b, c)
-
-sketch:
-    abstract_prop p(a, b)
-    abstract_prop q(a, b)
-
-    know:
-        forall a, b R:
-            $p(a, b) or $q(a, b)
-
-    $p(1, 2) or $q(1, 2)
+forall:
+    forall a, b R:
+        $p(a, b) or $q(a, b)
+    =>:
+        $p(1, 2) or $q(1, 2)
 ```
 
 ## 33. `power_builtin_rules`
 
 - Category: `builtin rule`
-- System surface: `power rules`
 - Purpose: Shows builtin exponent algebra and order rules.
 
 ```litex
 # Power builtin rules cover common exponent algebra and order patterns.
-# Example shape: use the equality/order directly instead of a local `know`.
+# Example shape: use the equality or order relation directly.
 
 0^0 = 1
 
@@ -1173,7 +1026,6 @@ forall a R_pos, x, y R:
 ## 34. `set_algebra_builtin_rules`
 
 - Category: `builtin rule`
-- System surface: `set algebra rules`
 - Purpose: Shows builtin subset/union/intersection algebra.
 
 ```litex
@@ -1203,13 +1055,15 @@ set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
 ## 35. `strategy`
 
 - Category: `proof pattern`
-- System surface: `strategy`
 - Purpose: Shows reusable proof strategies over abstract propositions.
 
 ```litex
-abstract_prop p(x)
-abstract_prop q(x)
-abstract_prop r(x)
+prop p(x R):
+    x = 1
+prop q(x R):
+    x = x
+prop r(x R):
+    x = 1
 
 strategy prove_p:
     prove:
@@ -1217,12 +1071,7 @@ strategy prove_p:
             x = 1
             =>:
                 $p(x)
-
-    know:
-        forall y R:
-            y = 1
-            =>:
-                $p(y)
+    x = 1
 
 # A verified strategy is enabled immediately after definition.
 $p(1)
@@ -1233,12 +1082,7 @@ strategy prove_q:
             x = x
             =>:
                 $q(x)
-
-    know:
-        forall y R:
-            y = y
-            =>:
-                $q(y)
+    x = x
 
 # A stopped strategy still leaves its proved forall available to ordinary proofs.
 strategy prove_r:
@@ -1247,12 +1091,7 @@ strategy prove_r:
             x = 1
             =>:
                 $r(x)
-
-    know:
-        forall y R:
-            y = 1
-            =>:
-                $r(y)
+    x = 1
 
 stop strategy prove_r
 claim:
@@ -1283,63 +1122,57 @@ $q(3)
 ## 36. `strong_induc`
 
 - Category: `proof pattern`
-- System surface: `by strong_induc`
 - Purpose: Shows strong induction over integers.
 
 ```litex
-# Strong induction: `know` gives base + the strong step; the checker matches the generated obligation.
-# Same conclusion as `by induc` when both are available: forall n >= 0, P(n).
-
 abstract_prop p(a)
 
-know:
-    $p(0)
-    forall n Z:
-        n >= 0
-        forall y Z:
-            y >= 0
-            y <= n
-            =>:
-                $p(y)
-        =>:
-            $p(n + 1)
-
-by strong_induc n from 0:
+claim:
     prove:
-        $p(n)
+        forall n Z:
+            $p(0)
+            forall m Z:
+                m >= 0
+                forall y Z:
+                    y >= 0
+                    y <= m
+                    =>:
+                        $p(y)
+                =>:
+                    $p(m + 1)
+            n >= 0
+            =>:
+                $p(n)
+    by strong_induc n from 0:
+        prove:
+            $p(n)
 
-    prove from n = 0:
-        $p(0)
+        prove from n = 0:
+            $p(0)
 
-    prove strong_induc:
-        $p(n + 1)
-
-forall n Z:
-    n >= 0
-    =>:
-        $p(n)
+        prove strong_induc:
+            $p(n + 1)
 ```
 
 ## 37. `syllogism`
 
 - Category: `proof pattern`
-- System surface: `syllogism`
 - Purpose: Shows a minimal universal-instantiation argument.
 
 ```litex
 have human nonempty_set, Socrates human
 abstract_prop mortal(x)
 
-know forall x human:
-    $mortal(x)
-
-$mortal(Socrates)
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
 ```
 
 ## 38. `thm`
 
 - Category: `stmt`
-- System surface: `thm and by thm`
 - Purpose: Shows theorem declaration, aliases, and theorem application.
 
 ```litex
@@ -1455,8 +1288,10 @@ by thm thm_nat_refl(1)
 
 # A proved theorem is named-only. Use an explicit theorem call when you want
 # to release its instantiated then-facts into the current context.
-abstract_prop thm_match_p(x)
-abstract_prop thm_match_q(x)
+prop thm_match_p(x R):
+    x = 1
+prop thm_match_q(x R):
+    x = 1
 
 thm thm_named_only:
     prove:
@@ -1464,9 +1299,9 @@ thm thm_named_only:
             $thm_match_p(x)
             =>:
                 $thm_match_q(x)
-    know $thm_match_q(x)
+    x = 1
 
-know $thm_match_p(1)
+$thm_match_p(1)
 by thm thm_named_only(1)
 $thm_match_q(1)
 ```
@@ -1474,7 +1309,6 @@ $thm_match_q(1)
 ## 39. `use_builtin_code_to_verify`
 
 - Category: `builtin rule`
-- System surface: `builtin code verification`
 - Purpose: Shows facts verified from builtin background code.
 
 ```litex
@@ -1502,139 +1336,147 @@ claim:
 ## 40. `use_forall_and_prop_def_to_verify_atomic_fact`
 
 - Category: `fact`
-- System surface: `prop definition plus forall facts`
 - Purpose: Shows atomic fact verification through prop definitions and forall facts.
 
 ```litex
-sketch:
-    abstract_prop q(x, y, z)
+abstract_prop q(x, y, z)
 
-    prop p(x, y R):
-        x > y
-        forall t R:
-            $q(x, y, t)
+prop p(x, y R):
+    x > y
+    forall t R:
+        $q(x, y, t)
 
-    have a, b R
+forall a, b R:
+    $p(a, b)
+    =>:
+        a > b
+        $q(a, b, 2)
+```
 
-    know $p(a, b)
+```litex
+abstract_prop p(a)
 
-    a > b
-
-    $q(a, b, 2)
-
-sketch:
-    abstract_prop p(a)
-
-    have b R, c R
-
-    know forall a R:
+forall b, c R:
+    forall a R:
         $p(a + b)
         =>:
             $p(a)
-
-    know $p(c + b)
-
-    $p(c)
+    $p(c + b)
+    =>:
+        $p(c)
 ```
 
 ## 41. `use_forall_arithmetic_to_prove`
 
 - Category: `fact`
-- System surface: `forall arithmetic matching`
 - Purpose: Shows arithmetic instantiation of universal facts.
 
 ```litex
 sketch:
     abs(-1) = 1
+```
 
-sketch:
-    abstract_prop q(a)
+```litex
+abstract_prop q(a)
 
-    know forall a R:
+forall:
+    forall a R:
         $q(-a)
+    =>:
+        $q(1)
+```
 
-    $q(1)
+```litex
+abstract_prop p(a)
 
-sketch:
-    abstract_prop p(a)
-
-    know forall a R:
+forall:
+    forall a R:
         $p(2 * a)
-        
-    $p(1)
+    =>:
+        $p(1)
+```
 
-sketch:
-    abstract_prop p(a)
+```litex
+abstract_prop p(a)
 
-    know forall a R:
+forall:
+    forall a R:
         $p(a * 2)
-        
-    $p(1)
+    =>:
+        $p(1)
+```
 
-sketch:
-    abstract_prop p(a)
+```litex
+abstract_prop p(a)
 
-    know forall a R:
+forall:
+    forall a R:
         $p(a / 2)
+    =>:
+        $p(1)
+```
 
-    $p(1)
+```litex
+abstract_prop p(a)
 
-sketch:
-    abstract_prop p(a)
-
-    know forall a R:
+forall:
+    forall a R:
         $p(2 + a)
+    =>:
+        $p(1)
+```
 
-    $p(1)
+```litex
+abstract_prop p(a)
 
-sketch:
-    abstract_prop p(a)
-
-    know forall a R:
+forall:
+    forall a R:
         $p(2 - a)
+    =>:
+        $p(1)
+```
 
-    $p(1)
+```litex
+abstract_prop p(a)
 
-sketch:
-    abstract_prop p(a)
-
-    know forall a R:
+forall:
+    forall a R:
         $p(a + 2)
+    =>:
+        $p(1)
+```
 
-    $p(1)
+```litex
+abstract_prop p(a)
 
-sketch:
-    abstract_prop p(a)
-
-    know forall a R:
+forall:
+    forall a R:
         $p(a - 2)
-
-    $p(1)
+    =>:
+        $p(1)
 ```
 
 ## 42. `verify_by_resolving_atomic_fact_arg`
 
 - Category: `fact`
-- System surface: `atomic argument resolution`
 - Purpose: Shows resolving an atomic proposition argument before matching.
 
 ```litex
 abstract_prop p(a)
 
-know forall a R:
-    $p(a)
+forall:
+    forall a R:
+        $p(a)
+        =>:
+            $p(a + 1)
+    $p(1)
     =>:
-        $p(a + 1)
-
-know $p(1)
-
-$p(2)
+        $p(2)
 ```
 
 ## 43. `witness_exist`
 
 - Category: `proof pattern`
-- System surface: `witness exist`
 - Purpose: Shows explicit witnesses for existential facts.
 
 ```litex
@@ -1647,14 +1489,15 @@ exist x, y R st {x > y}
 ## 44. `witness_nonempty`
 
 - Category: `proof pattern`
-- System surface: `witness nonempty`
 - Purpose: Shows explicit witnesses for nonempty sets.
 
 ```litex
-have s set
-
-witness $is_nonempty_set(s) from 1:
-    know 1 $in s
-
-$is_nonempty_set(s)
+claim:
+    prove:
+        forall s set:
+            1 $in s
+            =>:
+                $is_nonempty_set(s)
+    witness $is_nonempty_set(s) from 1:
+        1 $in s
 ```

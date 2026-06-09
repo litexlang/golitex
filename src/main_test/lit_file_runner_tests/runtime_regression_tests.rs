@@ -395,6 +395,29 @@ forall x R:
 }
 
 #[test]
+fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
+    let source_code = r#"
+by for forall! n range(0, 3): n < 3
+
+by enumerate finite_set forall! x {1, 2}: x $in {1, 2}
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "inline by-for/by-enumerate empty proof syntax failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn by_zorn_lemma_stores_maximal_element_exist_fact() {
     let source_code = r#"
 have s set
@@ -432,6 +455,32 @@ exist m s st {forall! x s: $leq(m, x) => {x = m}}
     assert!(
         run_succeeded,
         "by_zorn_lemma_stores_maximal_element_exist_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_zorn_lemma_without_trailing_colon_reaches_obligation_check() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma: set s, prop leq
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_without_trailing_colon_reaches_obligation_check",
+    );
+
+    assert!(
+        !run_succeeded,
+        "missing zorn obligations should still fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("nonempty obligation"),
+        "no-trailing-colon zorn syntax should reach obligation checking:\n{}",
         run_output
     );
 }
@@ -580,6 +629,30 @@ exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
     assert!(
         run_succeeded,
         "by_axiom_of_choice_stores_choice_function_exist_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
+    let source_code = r#"
+have S set
+know forall A S:
+    $is_nonempty_set(A)
+
+by axiom_of_choice: set S
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon",
+    );
+
+    assert!(
+        run_succeeded,
+        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon failed:\n{}",
         run_output
     );
 }
@@ -738,6 +811,11 @@ claim:
     assert!(
         run_output.contains("\"type\": \"HaveByExistStmt\""),
         "have by exist should report the canonical statement type:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"exist elimination\""),
+        "have by exist should explain acceptance through accepted_by:\n{}",
         run_output
     );
     assert!(
@@ -3085,6 +3163,47 @@ $q(1)
     assert!(run_output.contains("\"type\": \"cite forall fact\""));
     assert!(run_output.contains("\"type\": \"cite atomic fact\""));
     assert!(run_output.contains("\"type\": \"cite prop def\""));
+}
+
+#[test]
+fn factual_verified_by_uses_stable_object_shape() {
+    let source_code = r#"
+1 = 1
+forall x R:
+    x = x
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("factual_verified_by_stable_shape");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "factual_verified_by_stable_shape failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"verified_by\": {\n    \"type\": \"builtin rule\""),
+        "builtin fact should render verified_by as an object:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"verified_by\": {\n    \"type\": \"forall local check\""),
+        "forall fact should render verified_by as an object:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"verified_by\": ["),
+        "verified_by should not render as a top-level array:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"steps\": ["),
+        "composite forall proof should keep proof steps:\n{}",
+        run_output
+    );
 }
 
 #[test]
