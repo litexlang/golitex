@@ -163,6 +163,7 @@ This manual is both a tutorial and a reference. You do not need to read every se
 3. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
 4. [Statements](https://litexlang.com/doc/Manual#statements): the common statement forms used to introduce definitions, context, and proof blocks.
 5. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end loop from writing a fact to storing checked information.
+6. [Architecture](https://litexlang.com/doc/Architecture): the implementation pipeline from source text to parsing, execution, verification, inference, and output.
 
 **Read early**
 
@@ -1612,7 +1613,7 @@ building a large proof skeleton, or marking a precise proof-debt item. It is
 also dangerous, because every later proof may depend on the unproved fact.
 
 Read every `know` line as: "assume this fact from here onward." If later output
-says a fact was `verified_by` citing a `know`ed fact or `forall`, that is a
+shows a `verification` trace citing a `know`ed fact or `forall`, that is a
 conditional proof route relative to the injected assumption. It does not mean
 Litex has proved the injected assumption itself.
 
@@ -3095,20 +3096,20 @@ forall a, x R:
 ```text
 {
   "result": "success",
-  "stmt": "x = 0 or x > 0",
-  "verified_by": {
+  "statement": "x = 0 or x > 0",
+  "verification": {
     "type": "cite or fact",
     "cite_source": {
       "line": 2
     },
-    "cited_stmt": "a = 0 or a > 0"
+    "cited_statement": "a = 0 or a > 0"
   }
 }
 ```
 
 This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`.
 
-For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. Builtin rule evidence uses `rule` for the user-facing mathematical explanation and may include `rule_id` for the internal/debug label. Known `forall` use records the cited `forall`, the parameter `instantiation`, and the instantiated `requirements` checked before the conclusion is accepted. A `forall` fact uses a dedicated `verified_by` shape: `params` lists the locally declared parameter names, `requirements` lists the local parameter-type facts and hypotheses, and `proves` lists each then-fact together with its `by` reason. If a then-fact is available from the local forall context, its reason is shown as `type: "local assumption"` with source such as `parameter declaration` or `forall requirement`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`; normal output lists each step's fact and nested `verified_by` evidence, while detail output also includes structural labels and step indexes.
+For most factual statements, `verification` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. Builtin rule evidence uses `rule` for the user-facing mathematical explanation and may include `rule_id` for the internal/debug label. Known `forall` use records the cited `forall`, the parameter `instantiation`, and the instantiated `requirements` checked before the conclusion is accepted. A successfully proved `forall` fact uses top-level `parameters`, `assumptions`, and `conclusions_with_verification` fields instead of a separate `verification` summary. Each entry in `conclusions_with_verification` has a `statement` and a `verification` object. If a then-fact is available from the local forall context, its verification is shown as `type: "local assumption"` with source such as `parameter declaration` or `forall premise`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`; normal output lists each step's fact and nested `verification` evidence, while detail output also includes structural labels and step indexes.
 
 When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Conjunctions report their failed subgoal under `failed_part`; chains report the failed segment under `failed_chain_step`. Normal output keeps these failure nodes focused on the failed statement and omits positional metadata such as child indexes; detail output keeps that metadata and the full nested unknown tree for debugging.
 

@@ -31,22 +31,22 @@ The accepted fact can also carry an explanation like this:
 ```json
 {
   "result": "success",
-  "stmt": "$mortal(Socrates)",
-  "verified_by": {
+  "statement": "$mortal(Socrates)",
+  "verification": {
     "type": "cite forall fact",
     "cite_source": {
       "line": 4
     },
-    "cited_stmt": "forall x human:\n    $mortal(x)",
+    "cited_statement": "forall x human:\n    $mortal(x)",
     "instantiation": {
       "x": "Socrates"
     },
     "requirements": [
       {
-        "stmt": "Socrates $in human",
-        "verified_by": {
+        "statement": "Socrates $in human",
+        "verification": {
           "type": "cite atomic fact",
-          "cited_stmt": "Socrates $in human"
+          "cited_statement": "Socrates $in human"
         }
       }
     ]
@@ -77,7 +77,7 @@ This is useful for standard-library facts, long results, or parameter-sensitive
 theorems. The distinctive Litex style is that routine local reasoning can stay
 as direct factual lines.
 
-When `verified_by` says a line was accepted by citing a `forall`, check where
+When `verification` says a line was accepted by citing a `forall`, check where
 that `forall` came from. In the syllogism above, it came from the local premise
 of the displayed statement, so the result is conditional on that premise.
 

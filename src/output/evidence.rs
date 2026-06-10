@@ -1,10 +1,18 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::*;
 
-use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STEPS, JSON_KEY_VERIFIED_BY};
-use super::source::source_ref_json_value;
+use super::fields::{
+    user_visible_stmt_or_msg_text, JSON_KEY_CONCLUSIONS_WITH_VERIFICATION, JSON_KEY_STEPS,
+    JSON_KEY_STMT, JSON_KEY_VERIFICATION,
+};
+use super::source::{source_ref_json_value, stmt_text_for_json};
 
-fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> JsonValue {
+fn verified_by_builtin_rule_value(
+    runtime: &Runtime,
+    rule: &str,
+    verify_what: Option<&Fact>,
+    subgoals: &[StmtResult],
+) -> JsonValue {
     let public_rule = builtin_rule_public_text(rule);
     let mut fields = vec![
         (
@@ -19,11 +27,15 @@ fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> Jso
             JsonValue::JsonString(user_visible_stmt_or_msg_text(&vw.to_string())),
         ));
     }
+    fields.push((
+        "subgoals".to_string(),
+        JsonValue::Array(subgoal_values(runtime, subgoals)),
+    ));
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
 }
 
-/// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or citation).
+/// Public `verification` field for one [`FactualStmtSuccess`] (builtin rule or citation).
 pub(crate) fn factual_success_verified_by_value(
     runtime: &Runtime,
     x: &FactualStmtSuccess,
@@ -49,7 +61,9 @@ fn verified_by_result_json_value(
     verify_goal: Option<&Fact>,
 ) -> JsonValue {
     match verified_by {
-        VerifiedByResult::BuiltinRule(r) => verified_by_builtin_rule_value(&r.msg, None),
+        VerifiedByResult::BuiltinRule(r) => {
+            verified_by_builtin_rule_value(runtime, &r.msg, None, &r.subgoals)
+        }
         VerifiedByResult::Fact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
             let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
@@ -78,15 +92,10 @@ fn verified_by_result_json_value(
         VerifiedByResult::VerifiedBys(w) => {
             verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
         }
-        VerifiedByResult::ForallProof(_) => forall_proof_verified_by_value(),
+        VerifiedByResult::ForallProof(proof) => {
+            JsonValue::Object(forall_proof_top_level_fields(runtime, proof))
+        }
     }
-}
-
-fn forall_proof_verified_by_value() -> JsonValue {
-    JsonValue::Object(vec![(
-        "summary".to_string(),
-        JsonValue::JsonString("conclusions verified under forall assumptions".to_string()),
-    )])
 }
 
 fn forall_proof_top_level_fields(
@@ -95,7 +104,7 @@ fn forall_proof_top_level_fields(
 ) -> Vec<(String, JsonValue)> {
     let parameters = forall_param_items(&proof.forall_fact.params_def_with_type);
     let assumptions = forall_assumption_items(proof);
-    let conclusions = proof
+    let conclusions_with_verification = proof
         .proves
         .iter()
         .map(|proved| forall_proved_fact_value(runtime, proof, proved))
@@ -104,7 +113,10 @@ fn forall_proof_top_level_fields(
     vec![
         ("parameters".to_string(), JsonValue::Array(parameters)),
         ("assumptions".to_string(), JsonValue::Array(assumptions)),
-        ("conclusions".to_string(), JsonValue::Array(conclusions)),
+        (
+            JSON_KEY_CONCLUSIONS_WITH_VERIFICATION.to_string(),
+            JsonValue::Array(conclusions_with_verification),
+        ),
     ]
 }
 
@@ -144,13 +156,13 @@ fn forall_proved_fact_value(
     proved: &ForallProvedFactResult,
 ) -> JsonValue {
     let stmt_text = user_visible_stmt_or_msg_text(&proved.stmt.to_string());
-    let by_value = match forall_local_assumption_source(proof, &proved.stmt) {
+    let verification = match forall_local_assumption_source(proof, &proved.stmt) {
         Some(source) => forall_local_assumption_value(source),
         None => stmt_result_to_composite_step_verified_by(runtime, proved.result.as_ref()),
     };
     JsonValue::Object(vec![
-        ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
-        ("by".to_string(), by_value),
+        (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
+        (JSON_KEY_VERIFICATION.to_string(), verification),
     ])
 }
 
@@ -300,9 +312,12 @@ fn verified_bys_enum_json_value(
     include_verify_what: bool,
 ) -> JsonValue {
     match item {
-        VerifiedBysEnum::ByBuiltinRule(r) => {
-            verified_by_builtin_rule_value(&r.msg, include_verify_what.then_some(&r.verify_what))
-        }
+        VerifiedBysEnum::ByBuiltinRule(r) => verified_by_builtin_rule_value(
+            runtime,
+            &r.msg,
+            include_verify_what.then_some(&r.verify_what),
+            &r.subgoals,
+        ),
         VerifiedBysEnum::ByFact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
             let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
@@ -346,7 +361,7 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
                 JsonValue::JsonString("accepted statement".to_string()),
             ),
             (
-                "stmt_type".to_string(),
+                "statement_type".to_string(),
                 JsonValue::JsonString(n.stmt.stmt_type_name().to_string()),
             ),
         ])
@@ -356,6 +371,42 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
             JsonValue::JsonString("unknown".to_string()),
         )])
     }
+}
+
+fn subgoal_values(runtime: &Runtime, subgoals: &[StmtResult]) -> Vec<JsonValue> {
+    subgoals
+        .iter()
+        .map(|subgoal| subgoal_value(runtime, subgoal))
+        .collect::<Vec<_>>()
+}
+
+fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult) -> JsonValue {
+    let mut fields = Vec::new();
+    if let Some(f) = subgoal.factual_success() {
+        fields.push((
+            JSON_KEY_STMT.to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&f.stmt.to_string())),
+        ));
+        fields.push((
+            JSON_KEY_VERIFICATION.to_string(),
+            factual_success_verified_by_value(runtime, f),
+        ));
+    } else if let Some(n) = subgoal.non_factual_success() {
+        fields.push((
+            JSON_KEY_STMT.to_string(),
+            JsonValue::JsonString(stmt_text_for_json(runtime, &n.stmt)),
+        ));
+        fields.push((
+            JSON_KEY_VERIFICATION.to_string(),
+            stmt_result_to_composite_step_verified_by(runtime, subgoal),
+        ));
+    } else {
+        fields.push((
+            "type".to_string(),
+            JsonValue::JsonString("unknown".to_string()),
+        ));
+    }
+    JsonValue::Object(fields)
 }
 
 fn composite_step_value(
@@ -373,7 +424,7 @@ fn composite_step_value(
     if !runtime.detail_output {
         return JsonValue::Object(vec![
             (fact_field.0, fact_field.1),
-            (JSON_KEY_VERIFIED_BY.to_string(), evidence),
+            (JSON_KEY_VERIFICATION.to_string(), evidence),
         ]);
     }
 
@@ -382,7 +433,7 @@ fn composite_step_value(
         ("step_index".to_string(), JsonValue::Number(step_index)),
         ("step_count".to_string(), JsonValue::Number(step_count)),
         (fact_field.0, fact_field.1),
-        (JSON_KEY_VERIFIED_BY.to_string(), evidence),
+        (JSON_KEY_VERIFICATION.to_string(), evidence),
     ])
 }
 
@@ -394,6 +445,12 @@ fn folded_builtin_steps_value(runtime: &Runtime, items: &[VerifiedBysEnum]) -> O
         VerifiedBysEnum::ByBuiltinRule(r) => r.msg.as_str(),
         _ => return None,
     };
+    if items
+        .iter()
+        .any(|item| matches!(item, VerifiedBysEnum::ByBuiltinRule(r) if !r.subgoals.is_empty()))
+    {
+        return None;
+    }
     if !items
         .iter()
         .all(|item| matches!(item, VerifiedBysEnum::ByBuiltinRule(r) if r.msg == first_rule))
@@ -412,8 +469,8 @@ fn folded_builtin_steps_value(runtime: &Runtime, items: &[VerifiedBysEnum]) -> O
     Some(JsonValue::Object(vec![
         ("facts".to_string(), JsonValue::Array(facts)),
         (
-            JSON_KEY_VERIFIED_BY.to_string(),
-            verified_by_builtin_rule_value(first_rule, None),
+            JSON_KEY_VERIFICATION.to_string(),
+            verified_by_builtin_rule_value(runtime, first_rule, None, &[]),
         ),
     ]))
 }
@@ -434,7 +491,7 @@ fn known_forall_instantiation_json_value(
         ),
         ("cite_source".to_string(), cite_source),
         (
-            "cited_stmt".to_string(),
+            "cited_statement".to_string(),
             JsonValue::JsonString(cited_stmt_plain),
         ),
         (
@@ -482,13 +539,13 @@ fn known_forall_requirement_items(
         .map(|requirement| {
             JsonValue::Object(vec![
                 (
-                    "stmt".to_string(),
+                    JSON_KEY_STMT.to_string(),
                     JsonValue::JsonString(user_visible_stmt_or_msg_text(
                         &requirement.stmt.to_string(),
                     )),
                 ),
                 (
-                    JSON_KEY_VERIFIED_BY.to_string(),
+                    JSON_KEY_VERIFICATION.to_string(),
                     stmt_result_to_composite_step_verified_by(runtime, requirement.result.as_ref()),
                 ),
             ])
@@ -506,7 +563,7 @@ fn citation_type_for_stmt(stmt: &Stmt) -> String {
         Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite let def".to_string(),
         Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(_)) => "cite algo def".to_string(),
         Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(_)) => "cite struct def".to_string(),
-        _ => format!("cite {} stmt", stmt_type_label_for_citation(stmt)),
+        _ => format!("cite {} statement", stmt_type_label_for_citation(stmt)),
     }
 }
 
@@ -566,7 +623,7 @@ fn verified_by_citation_object(
             JsonValue::JsonString(citation_type.to_string()),
         ),
         ("cite_source".to_string(), cite_source),
-        ("cited_stmt".to_string(), cited_stmt),
+        ("cited_statement".to_string(), cited_stmt),
     ];
     if msg != cited_stmt_plain {
         fields.push(("detail".to_string(), JsonValue::JsonString(msg.to_string())));

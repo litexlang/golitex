@@ -74,7 +74,7 @@ The `.deb` package installs the standard library at `/usr/share/litex/std`.
 To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'import Trig' | grep '"stmt": "import Trig"'
+litex -e $'import Trig' | grep '"statement": "import Trig"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'import Trig' | grep '"stmt": "import Trig"'
+litex -e $'import Trig' | grep '"statement": "import Trig"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 ---
@@ -331,17 +331,20 @@ Example success output looks like this. The exact output may differ by version:
 {
   "result": "success",
   "line": 1,
-  "stmt": "1 + 1 = 2",
-  "verified_by": {
+  "statement": "1 + 1 = 2",
+  "verification": {
     "type": "builtin rule",
     "rule": "calculation"
   }
 }
 ```
 
-For factual statements, `verified_by` is the proof route. Composite proofs can
-put sub-checks in `verified_by.steps`. Successful non-factual statements, such
-as definitions or proof blocks, use `accepted_by` for the top-level summary.
+For most factual statements, `verification` is the proof route. Composite proofs
+can put sub-checks in `verification.steps`. A successful `forall` fact uses
+top-level `parameters`, `assumptions`, and `conclusions_with_verification`
+instead, with each conclusion carrying a `verification` object. Successful
+non-factual statements, such as definitions or proof blocks, use `accepted_by`
+for the top-level summary.
 
 If an error occurs, Litex prints an error JSON object. The important fields are usually:
 
@@ -360,12 +363,12 @@ Example error output looks like this. The exact output may differ by version:
   "result": "error",
   "line": 1,
   "message": "verification failed",
-  "stmt": "1 = 0",
+  "statement": "1 = 0",
   "previous_error": {
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "stmt": "1 = 0",
+    "statement": "1 = 0",
     "previous_error": null
   }
 }

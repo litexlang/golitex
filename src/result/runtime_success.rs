@@ -58,6 +58,7 @@ pub struct CaseSplitCoverage {
 #[derive(Debug)]
 pub struct VerifiedByBuiltinRuleResult {
     pub msg: String,
+    pub subgoals: Vec<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -104,6 +105,7 @@ pub struct ForallProvedFactResult {
 pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
     pub msg: String,
     pub verify_what: Fact,
+    pub subgoals: Vec<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -161,9 +163,9 @@ impl FactualStmtSuccess {
         step_results: Vec<StmtResult>,
     ) -> Self {
         let infers = InferResult::new();
-        let verified_by = merge_verified_by_with_steps(
+        let verified_by = VerifiedByResult::builtin_rule_with_subgoals(
+            builtin_rule_label,
             stmt.clone(),
-            VerifiedByResult::builtin_rule(builtin_rule_label, stmt.clone()),
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
@@ -175,9 +177,9 @@ impl FactualStmtSuccess {
         builtin_rule_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = merge_verified_by_with_steps(
+        let verified_by = VerifiedByResult::builtin_rule_with_subgoals(
+            builtin_rule_label,
             stmt.clone(),
-            VerifiedByResult::builtin_rule(builtin_rule_label, stmt.clone()),
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
@@ -217,7 +219,18 @@ impl FactualStmtSuccess {
 
 impl VerifiedByResult {
     pub fn builtin_rule(msg: impl Into<String>, _goal: Fact) -> Self {
-        Self::BuiltinRule(VerifiedByBuiltinRuleResult { msg: msg.into() })
+        Self::builtin_rule_with_subgoals(msg, _goal, Vec::new())
+    }
+
+    pub fn builtin_rule_with_subgoals(
+        msg: impl Into<String>,
+        _goal: Fact,
+        subgoals: Vec<StmtResult>,
+    ) -> Self {
+        Self::BuiltinRule(VerifiedByBuiltinRuleResult {
+            msg: msg.into(),
+            subgoals,
+        })
     }
 
     pub fn cited_fact(_goal: Fact, cite_what: Fact, detail: Option<String>) -> Self {
@@ -290,8 +303,12 @@ impl VerifiedByResult {
 }
 
 impl VerifiedBysEnum {
-    pub fn builtin_rule(msg: String, verify_what: Fact) -> Self {
-        VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys { msg, verify_what })
+    pub fn builtin_rule(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
+        VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys {
+            msg,
+            verify_what,
+            subgoals,
+        })
     }
 
     pub fn cited_fact(verify_what: Fact, cite_what: Fact, detail: Option<String>) -> Self {
@@ -323,7 +340,9 @@ impl VerifiedBysEnum {
 
     fn from_verified_by_result(verify_what: Fact, verified_by: VerifiedByResult) -> Vec<Self> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(r) => vec![Self::builtin_rule(r.msg, verify_what)],
+            VerifiedByResult::BuiltinRule(r) => {
+                vec![Self::builtin_rule(r.msg, verify_what, r.subgoals)]
+            }
             VerifiedByResult::Fact(r) => {
                 vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
             }

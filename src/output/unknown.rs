@@ -1,7 +1,7 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::*;
 
-use super::fields::user_visible_stmt_or_msg_text;
+use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STMT};
 use super::normalize::json_value_is_empty_in_normal_output;
 
 pub(crate) fn unknown_result_json_value(
@@ -191,7 +191,7 @@ fn part_json_value(runtime: &Runtime, part: &FactUnknownPart) -> JsonValue {
         fields.push(("count".to_string(), JsonValue::Number(part.count)));
     }
     fields.push((
-        "stmt".to_string(),
+        JSON_KEY_STMT.to_string(),
         JsonValue::JsonString(user_visible_stmt_or_msg_text(&part.stmt.to_string())),
     ));
     if let Some(unknown) = &part.unknown {

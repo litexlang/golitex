@@ -3395,13 +3395,13 @@ $q(1)
     assert!(run_output.contains("\"instantiation\": {"));
     assert!(run_output.contains("\"x\": \"2\""));
     assert!(run_output.contains("\"requirements\": ["));
-    assert!(run_output.contains("\"stmt\": \"2 $in R\""));
+    assert!(run_output.contains("\"statement\": \"2 $in R\""));
     assert!(run_output.contains("\"type\": \"cite atomic fact\""));
     assert!(run_output.contains("\"type\": \"cite prop def\""));
 }
 
 #[test]
-fn factual_verified_by_uses_stable_object_shape() {
+fn factual_verification_uses_stable_object_shape() {
     let source_code = r#"
 1 = 1
 forall x R:
@@ -3420,25 +3420,84 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"verified_by\": {\n    \"type\": \"builtin rule\""),
-        "builtin fact should render verified_by as an object:\n{}",
+        run_output.contains("\"verification\": {\n    \"type\": \"builtin rule\""),
+        "builtin fact should render verification as an object:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"verified_by\": {\n    \"summary\": \"conclusions verified under forall assumptions\""),
-        "forall fact should render verified_by as a short object:\n{}",
+        !run_output.contains("\"summary\": \"conclusions verified under forall assumptions\""),
+        "forall fact should not render a separate top-level verification summary:\n{}",
         run_output
     );
     assert!(run_output.contains("\"parameters\": ["));
     assert!(run_output.contains("\"assumptions\": ["));
     assert!(
-        !run_output.contains("\"verified_by\": ["),
-        "verified_by should not render as a top-level array:\n{}",
+        !run_output.contains("\"verified_by\""),
+        "public output should use verification instead of verified_by:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"conclusions\": ["),
-        "forall proof should keep one proof entry per then fact:\n{}",
+        run_output.contains("\"conclusions_with_verification\": ["),
+        "forall proof should keep one verification entry per then fact:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"verification\": {"),
+        "forall proof conclusions should carry their own verification objects:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn builtin_rule_subgoals_are_nested_under_chain_step() {
+    let source_code = r#"
+forall x R_pos:
+    x^3 = 8
+    =>:
+        3 = log(2, 8) = log(2, x^3) = 3 * log(2, x)
+        log(2, x) = 1
+        x = 2^1 = 2
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("builtin_rule_subgoals_are_nested");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "builtin subgoal fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"x = 2 ^ 1 = 2\""),
+        "chain conclusion should use the public statement key:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"fact\": \"x = 2 ^ 1\""),
+        "outer chain steps should include the proved chain segment:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"subgoals\": ["),
+        "builtin-rule premises should be nested as subgoals:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"1 = log (2, x)\""),
+        "the log premise should be a nested subgoal statement:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"fact\": \"1 = log (2, x)\""),
+        "builtin-rule premises should not be flattened into outer chain steps:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"verified_by\""),
+        "public output should use verification consistently:\n{}",
         run_output
     );
 }
@@ -3518,12 +3577,12 @@ have by exist x R st {x = x}: c
                 run_output
             );
             assert!(
-                run_output.contains("\"stmt\": \"$is_nonempty_set(R)\""),
+                run_output.contains("\"statement\": \"$is_nonempty_set(R)\""),
                 "have a R should show the nonempty check for R:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("\"stmt\": \"a $in R\""),
+                run_output.contains("\"statement\": \"a $in R\""),
                 "have b R = a should show the type-check proof for a:\n{}",
                 run_output
             );
@@ -3578,8 +3637,8 @@ forall n N:
     assert!(!run_output.contains("\"name\": \"n\""));
     assert!(run_output.contains("\"assumptions\": ["));
     assert!(run_output.contains("\"n $in N\""));
-    assert!(run_output.contains("\"conclusions\": ["));
-    assert!(run_output.contains("\"stmt\": \"n $in N\""));
+    assert!(run_output.contains("\"conclusions_with_verification\": ["));
+    assert!(run_output.contains("\"statement\": \"n $in N\""));
     assert!(run_output.contains("\"type\": \"local assumption\""));
     assert!(run_output.contains("\"source\": \"parameter declaration\""));
     assert!(!run_output.contains("\"cite_source\""));
@@ -3639,7 +3698,7 @@ by cases 1 = 1:
     );
     assert!(
         !run_output.contains("\"type\": \"chain fact\""),
-        "normal output should not repeat the composite fact type inside verified_by:\n{}",
+        "normal output should not repeat the composite fact type inside verification:\n{}",
         run_output
     );
     assert!(
