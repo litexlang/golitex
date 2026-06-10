@@ -14,15 +14,11 @@ pub(crate) fn finalize_display_text_with_optional_strip(
     }
 }
 
-pub(crate) fn json_value_for_output(runtime: &Runtime, value: JsonValue) -> JsonValue {
-    if runtime.detail_output {
-        value
-    } else {
-        remove_empty_json_fields(value)
-    }
+pub(crate) fn json_value_for_output(_runtime: &Runtime, value: JsonValue) -> JsonValue {
+    remove_empty_json_fields(value)
 }
 
-fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
+pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
     match value {
         JsonValue::Object(fields) => {
             let mut next_fields: Vec<(String, JsonValue)> = Vec::new();
@@ -46,8 +42,10 @@ fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
 
 pub(crate) fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
     match value {
+        JsonValue::Null => true,
         JsonValue::JsonString(s) => s.is_empty(),
         JsonValue::Array(items) => items.is_empty(),
+        JsonValue::Object(fields) => fields.is_empty(),
         _ => false,
     }
 }

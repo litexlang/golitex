@@ -1,7 +1,7 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::{
-    AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason, Fact, InferEffect,
-    InferReason, InferResult, InferRuleReason, OutputWarning,
+    AbstractPropDefinitionEffect, AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason,
+    Fact, InferEffect, InferReason, InferResult, InferRuleReason, OutputWarning,
 };
 
 use super::fields::user_visible_stmt_or_msg_text;
@@ -28,8 +28,39 @@ pub(crate) fn effects_json_values_for_fact(
 fn effect_json_value(effect: &InferEffect, primary_fact: Option<&Fact>) -> Option<JsonValue> {
     match effect {
         InferEffect::AddsToContext(adds) => adds_to_context_json_value(adds, primary_fact),
+        InferEffect::AbstractPropDefinition(definition) => {
+            Some(abstract_prop_definition_json_value(definition))
+        }
         InferEffect::Warning(warning) => Some(warning_json_value(warning)),
     }
+}
+
+fn abstract_prop_definition_json_value(definition: &AbstractPropDefinitionEffect) -> JsonValue {
+    let param_items = definition
+        .params
+        .iter()
+        .cloned()
+        .map(JsonValue::JsonString)
+        .collect::<Vec<_>>();
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("define abstract prop".to_string()),
+        ),
+        (
+            "name".to_string(),
+            JsonValue::JsonString(definition.name.clone()),
+        ),
+        (
+            "arity".to_string(),
+            JsonValue::Number(definition.params.len()),
+        ),
+        ("parameters".to_string(), JsonValue::Array(param_items)),
+        (
+            "definition".to_string(),
+            JsonValue::JsonString("unspecified".to_string()),
+        ),
+    ])
 }
 
 fn adds_to_context_json_value(

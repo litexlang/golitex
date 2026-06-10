@@ -340,11 +340,11 @@ Example success output looks like this. The exact output may differ by version:
 ```
 
 For most factual statements, `verification` is the proof route. Composite proofs
-can put sub-checks in `verification.steps`. A successful `forall` fact uses
-top-level `parameters`, `assumptions`, and `conclusions_with_verification`
-instead, with each conclusion carrying a `verification` object. Successful
-non-factual statements, such as definitions or proof blocks, use `accepted_by`
-for the top-level summary.
+can put sub-checks in `verification.steps`. A successful `forall` fact reports
+`conclusions_with_verification`, with each conclusion carrying a `verification`
+object; detail output additionally expands the local `parameters` and
+`assumptions`. Successful non-factual statements, such as definitions or proof
+blocks, use `accepted_by` for the top-level summary.
 
 If an error occurs, Litex prints an error JSON object. The important fields are usually:
 
@@ -368,8 +368,7 @@ Example error output looks like this. The exact output may differ by version:
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "statement": "1 = 0",
-    "previous_error": null
+    "statement": "1 = 0"
   }
 }
 ```

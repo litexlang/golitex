@@ -79,8 +79,8 @@ pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::infer::{
-    AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason, InferEffect, InferReason,
-    InferResult, InferRuleReason, OutputWarning,
+    AbstractPropDefinitionEffect, AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason,
+    InferEffect, InferReason, InferResult, InferRuleReason, OutputWarning,
 };
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;

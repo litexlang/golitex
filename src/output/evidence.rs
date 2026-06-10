@@ -102,22 +102,28 @@ fn forall_proof_top_level_fields(
     runtime: &Runtime,
     proof: &ForallProofResult,
 ) -> Vec<(String, JsonValue)> {
-    let parameters = forall_param_items(&proof.forall_fact.params_def_with_type);
-    let assumptions = forall_assumption_items(proof);
     let conclusions_with_verification = proof
         .proves
         .iter()
         .map(|proved| forall_proved_fact_value(runtime, proof, proved))
         .collect::<Vec<_>>();
 
-    vec![
-        ("parameters".to_string(), JsonValue::Array(parameters)),
-        ("assumptions".to_string(), JsonValue::Array(assumptions)),
-        (
-            JSON_KEY_CONCLUSIONS_WITH_VERIFICATION.to_string(),
-            JsonValue::Array(conclusions_with_verification),
-        ),
-    ]
+    let mut fields = Vec::new();
+    if runtime.detail_output {
+        fields.push((
+            "parameters".to_string(),
+            JsonValue::Array(forall_param_items(&proof.forall_fact.params_def_with_type)),
+        ));
+        fields.push((
+            "assumptions".to_string(),
+            JsonValue::Array(forall_assumption_items(proof)),
+        ));
+    }
+    fields.push((
+        JSON_KEY_CONCLUSIONS_WITH_VERIFICATION.to_string(),
+        JsonValue::Array(conclusions_with_verification),
+    ));
+    fields
 }
 
 fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {

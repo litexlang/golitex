@@ -9,6 +9,7 @@ pub struct InferResult {
 #[derive(Clone, Debug)]
 pub enum InferEffect {
     AddsToContext(AddsToContextEffect),
+    AbstractPropDefinition(AbstractPropDefinitionEffect),
     Warning(OutputWarning),
 }
 
@@ -16,6 +17,12 @@ pub enum InferEffect {
 pub struct AddsToContextEffect {
     pub reason: InferReason,
     pub facts: Vec<Fact>,
+}
+
+#[derive(Clone, Debug)]
+pub struct AbstractPropDefinitionEffect {
+    pub name: String,
+    pub params: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -227,6 +234,12 @@ impl InferResult {
             .push(InferEffect::Warning(OutputWarning::new(message)));
     }
 
+    pub fn add_abstract_prop_definition(&mut self, name: &str, params: &[String]) {
+        self.effects.push(InferEffect::AbstractPropDefinition(
+            AbstractPropDefinitionEffect::new(name.to_string(), params.to_vec()),
+        ));
+    }
+
     pub fn add_fact_with_reason(&mut self, reason: InferReason, fact: &Fact) {
         self.push_fact_with_reason(reason, fact.clone());
     }
@@ -266,10 +279,23 @@ impl InferResult {
                 InferEffect::AddsToContext(adds) => {
                     lines.extend(adds.facts.iter().map(|fact| fact.to_string()));
                 }
+                InferEffect::AbstractPropDefinition(definition) => {
+                    lines.push(format!(
+                        "defined abstract prop {}({}) with unspecified definition",
+                        definition.name,
+                        definition.params.join(", ")
+                    ));
+                }
                 InferEffect::Warning(warning) => lines.push(warning.message.clone()),
             }
         }
         lines
+    }
+}
+
+impl AbstractPropDefinitionEffect {
+    pub fn new(name: String, params: Vec<String>) -> Self {
+        AbstractPropDefinitionEffect { name, params }
     }
 }
 

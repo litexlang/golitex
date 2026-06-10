@@ -7,24 +7,24 @@ Start with the smaller structure examples before the longer case studies. The
 larger quotient and set-theory examples show how several small ideas combine in
 a more realistic development.
 
-## 1. `abstract_integral`
+## 1. `differential_on_unit`
 
 - Category: `case study`
-- Purpose: Shows how an abstract integration rule can be used as a local assumption.
+- Purpose: Shows how an abstract differential rule can be used as a local assumption.
 
 ```litex
-abstract_prop integral_on_unit(f, value)
+abstract_prop differential_on_unit(f, value)
 
 forall f, g fn(x R) R, s, t R:
     forall u, v fn(x R) R, a, b R:
-        $integral_on_unit(u, a)
-        $integral_on_unit(v, b)
+        $differential_on_unit(u, a)
+        $differential_on_unit(v, b)
         =>:
-            $integral_on_unit('R(x){u(x) + v(x)}, a + b)
-    $integral_on_unit(f, s)
-    $integral_on_unit(g, t)
+            $differential_on_unit('R(x){u(x) + v(x)}, a + b)
+    $differential_on_unit(f, s)
+    $differential_on_unit(g, t)
     =>:
-        $integral_on_unit('R(x){f(x) + g(x)}, s + t)
+        $differential_on_unit('R(x){f(x) + g(x)}, s + t)
 ```
 
 ## 2. `diagonal_matrix`
