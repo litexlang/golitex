@@ -67,6 +67,25 @@ pub struct VerifiedByFactResult {
 }
 
 #[derive(Debug)]
+pub struct KnownForallInstantiationItem {
+    pub param: String,
+    pub arg: String,
+}
+
+#[derive(Debug)]
+pub struct KnownForallRequirementResult {
+    pub stmt: Fact,
+    pub result: Box<StmtResult>,
+}
+
+#[derive(Debug)]
+pub struct KnownForallInstantiationResult {
+    pub cite_what: Box<Stmt>,
+    pub instantiation: Vec<KnownForallInstantiationItem>,
+    pub requirements: Vec<KnownForallRequirementResult>,
+}
+
+#[derive(Debug)]
 pub struct VerifiedBysResult {
     pub cite_what: Vec<VerifiedBysEnum>,
 }
@@ -95,15 +114,23 @@ pub struct FactVerifiedByFactInVerifiedBys {
 }
 
 #[derive(Debug)]
+pub struct FactVerifiedByKnownForallInVerifiedBys {
+    pub verify_what: Fact,
+    pub result: KnownForallInstantiationResult,
+}
+
+#[derive(Debug)]
 pub enum VerifiedBysEnum {
     ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys),
     ByFact(FactVerifiedByFactInVerifiedBys),
+    ByKnownForall(FactVerifiedByKnownForallInVerifiedBys),
 }
 
 #[derive(Debug)]
 pub enum VerifiedByResult {
     BuiltinRule(VerifiedByBuiltinRuleResult),
     Fact(VerifiedByFactResult),
+    KnownForallInstantiation(KnownForallInstantiationResult),
     VerifiedBys(VerifiedBysResult),
     ForallProof(ForallProofResult),
 }
@@ -204,6 +231,18 @@ impl VerifiedByResult {
         })
     }
 
+    pub fn known_forall_instantiation(
+        cite_what: Fact,
+        instantiation: Vec<KnownForallInstantiationItem>,
+        requirements: Vec<KnownForallRequirementResult>,
+    ) -> Self {
+        Self::KnownForallInstantiation(KnownForallInstantiationResult::new(
+            cite_what.into_stmt(),
+            instantiation,
+            requirements,
+        ))
+    }
+
     /// Same statement as goal and citation; optional human note in `msg`.
     pub fn fact_with_note(goal: Fact, msg: Option<String>) -> Self {
         let cite_what = goal.clone();
@@ -241,6 +280,7 @@ impl VerifiedByResult {
         match self {
             VerifiedByResult::BuiltinRule(r) => !r.msg.is_empty(),
             VerifiedByResult::Fact(_) => false,
+            VerifiedByResult::KnownForallInstantiation(_) => false,
             VerifiedByResult::VerifiedBys(w) => {
                 !w.cite_what.is_empty() && w.cite_what.iter().all(|b| b.is_builtin_rule())
             }
@@ -266,6 +306,16 @@ impl VerifiedBysEnum {
         })
     }
 
+    pub fn known_forall_instantiation(
+        verify_what: Fact,
+        result: KnownForallInstantiationResult,
+    ) -> Self {
+        VerifiedBysEnum::ByKnownForall(FactVerifiedByKnownForallInVerifiedBys {
+            verify_what,
+            result,
+        })
+    }
+
     pub fn fact_with_note(verify_what: Fact, msg: Option<String>) -> Self {
         let cite_what = verify_what.clone();
         Self::cited_fact(verify_what, cite_what, msg)
@@ -276,6 +326,9 @@ impl VerifiedBysEnum {
             VerifiedByResult::BuiltinRule(r) => vec![Self::builtin_rule(r.msg, verify_what)],
             VerifiedByResult::Fact(r) => {
                 vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
+            }
+            VerifiedByResult::KnownForallInstantiation(r) => {
+                vec![Self::known_forall_instantiation(verify_what, r)]
             }
             VerifiedByResult::VerifiedBys(w) => w.cite_what,
             VerifiedByResult::ForallProof(_) => {
@@ -290,7 +343,36 @@ impl VerifiedBysEnum {
     fn is_builtin_rule(&self) -> bool {
         match self {
             VerifiedBysEnum::ByBuiltinRule(r) => !r.msg.is_empty(),
-            VerifiedBysEnum::ByFact(_) => false,
+            VerifiedBysEnum::ByFact(_) | VerifiedBysEnum::ByKnownForall(_) => false,
+        }
+    }
+}
+
+impl KnownForallInstantiationItem {
+    pub fn new(param: String, arg: String) -> Self {
+        KnownForallInstantiationItem { param, arg }
+    }
+}
+
+impl KnownForallRequirementResult {
+    pub fn new(stmt: Fact, result: StmtResult) -> Self {
+        KnownForallRequirementResult {
+            stmt,
+            result: Box::new(result),
+        }
+    }
+}
+
+impl KnownForallInstantiationResult {
+    pub fn new(
+        cite_what: Stmt,
+        instantiation: Vec<KnownForallInstantiationItem>,
+        requirements: Vec<KnownForallRequirementResult>,
+    ) -> Self {
+        KnownForallInstantiationResult {
+            cite_what: Box::new(cite_what),
+            instantiation,
+            requirements,
         }
     }
 }

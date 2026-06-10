@@ -474,7 +474,9 @@ fn build_display_error_json_object(
         include_previous_error,
         context_for_child,
     );
-    field_lines.push(previous_error_line);
+    if let Some(previous_error_line) = previous_error_line {
+        field_lines.push(previous_error_line);
+    }
 
     format!(
         "{}{{\n{}\n{}}}",
@@ -491,9 +493,15 @@ fn build_previous_error_field_line(
     previous_error_depth: usize,
     include_previous_error: bool,
     context_for_child: Option<&Stmt>,
-) -> String {
+) -> Option<String> {
     if !include_previous_error {
-        return format!("{}\"{}\": null", indent_inner, JSON_KEY_PREVIOUS_ERROR);
+        if runtime.detail_output {
+            return Some(format!(
+                "{}\"{}\": null",
+                indent_inner, JSON_KEY_PREVIOUS_ERROR
+            ));
+        }
+        return None;
     }
 
     let previous_error_reference = get_previous_error_reference(error);
@@ -506,12 +514,21 @@ fn build_previous_error_field_line(
                 true,
                 context_for_child,
             );
-            format!(
+            Some(format!(
                 "{}\"{}\":\n{}",
                 indent_inner, JSON_KEY_PREVIOUS_ERROR, previous_error_json
-            )
+            ))
         }
-        None => format!("{}\"{}\": null", indent_inner, JSON_KEY_PREVIOUS_ERROR),
+        None => {
+            if runtime.detail_output {
+                Some(format!(
+                    "{}\"{}\": null",
+                    indent_inner, JSON_KEY_PREVIOUS_ERROR
+                ))
+            } else {
+                None
+            }
+        }
     }
 }
 

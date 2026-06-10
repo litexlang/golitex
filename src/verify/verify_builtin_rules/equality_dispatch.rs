@@ -390,12 +390,9 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_empty(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_empty(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 

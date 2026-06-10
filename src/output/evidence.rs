@@ -1,17 +1,24 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::*;
 
-use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STEPS};
+use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STEPS, JSON_KEY_VERIFIED_BY};
 use super::source::source_ref_json_value;
 
 fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> JsonValue {
+    let public_rule = builtin_rule_public_text(rule);
     let mut fields = vec![
         (
             "type".to_string(),
             JsonValue::JsonString("builtin rule".to_string()),
         ),
-        ("rule".to_string(), JsonValue::JsonString(rule.to_string())),
+        (
+            "rule".to_string(),
+            JsonValue::JsonString(public_rule.clone()),
+        ),
     ];
+    if let Some(rule_id) = builtin_rule_id(rule, &public_rule) {
+        fields.push(("rule_id".to_string(), JsonValue::JsonString(rule_id)));
+    }
     if let Some(vw) = verify_what {
         fields.push((
             "verify_what".to_string(),
@@ -60,6 +67,9 @@ fn verified_by_result_json_value(
                 display_text.as_str(),
                 None,
             )
+        }
+        VerifiedByResult::KnownForallInstantiation(r) => {
+            known_forall_instantiation_json_value(runtime, current_line_file, r, None)
         }
         VerifiedByResult::VerifiedBys(w) => {
             verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
@@ -192,10 +202,7 @@ fn verified_by_steps_object(
     current_line_file: &LineFile,
     verify_goal: Option<&Fact>,
 ) -> JsonValue {
-    let steps = items
-        .iter()
-        .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file))
-        .collect::<Vec<_>>();
+    let steps = verified_by_step_items(runtime, items, current_line_file, verify_goal);
     let mut fields = vec![(
         "type".to_string(),
         JsonValue::JsonString(verified_by_steps_type(verify_goal).to_string()),
@@ -206,8 +213,42 @@ fn verified_by_steps_object(
             JsonValue::JsonString(summary.to_string()),
         ));
     }
+    if let Some(main_rule) = verified_by_steps_main_rule(verify_goal) {
+        fields.push((
+            "main_rule".to_string(),
+            JsonValue::JsonString(main_rule.to_string()),
+        ));
+    }
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(steps)));
     JsonValue::Object(fields)
+}
+
+fn verified_by_step_items(
+    runtime: &Runtime,
+    items: &[VerifiedBysEnum],
+    current_line_file: &LineFile,
+    verify_goal: Option<&Fact>,
+) -> Vec<JsonValue> {
+    let Some(role) = composite_step_role(verify_goal) else {
+        return items
+            .iter()
+            .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file, true))
+            .collect::<Vec<_>>();
+    };
+
+    if let Some(folded) = folded_builtin_steps_value(runtime, items, role) {
+        return vec![folded];
+    }
+
+    let count = items.len();
+    items
+        .iter()
+        .enumerate()
+        .map(|(idx, item)| {
+            let evidence = verified_bys_enum_json_value(runtime, item, current_line_file, false);
+            composite_step_value(role, idx + 1, count, item.verify_what(), evidence)
+        })
+        .collect::<Vec<_>>()
 }
 
 fn verified_by_steps_type(verify_goal: Option<&Fact>) -> &'static str {
@@ -238,14 +279,31 @@ fn verified_by_steps_summary(verify_goal: Option<&Fact>) -> Option<&'static str>
     }
 }
 
+fn verified_by_steps_main_rule(verify_goal: Option<&Fact>) -> Option<&'static str> {
+    match verify_goal {
+        Some(Fact::AndFact(_)) => Some("and decomposition"),
+        Some(Fact::ChainFact(_)) => Some("chain decomposition"),
+        _ => None,
+    }
+}
+
+fn composite_step_role(verify_goal: Option<&Fact>) -> Option<&'static str> {
+    match verify_goal {
+        Some(Fact::AndFact(_)) => Some("conjunct"),
+        Some(Fact::ChainFact(_)) => Some("chain step"),
+        _ => None,
+    }
+}
+
 fn verified_bys_enum_json_value(
     runtime: &Runtime,
     item: &VerifiedBysEnum,
     current_line_file: &LineFile,
+    include_verify_what: bool,
 ) -> JsonValue {
     match item {
         VerifiedBysEnum::ByBuiltinRule(r) => {
-            verified_by_builtin_rule_value(&r.msg, Some(&r.verify_what))
+            verified_by_builtin_rule_value(&r.msg, include_verify_what.then_some(&r.verify_what))
         }
         VerifiedBysEnum::ByFact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
@@ -265,9 +323,15 @@ fn verified_bys_enum_json_value(
                 JsonValue::JsonString(cited_stmt_plain.clone()),
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
-                Some(&r.verify_what),
+                include_verify_what.then_some(&r.verify_what),
             )
         }
+        VerifiedBysEnum::ByKnownForall(r) => known_forall_instantiation_json_value(
+            runtime,
+            current_line_file,
+            &r.result,
+            include_verify_what.then_some(&r.verify_what),
+        ),
     }
 }
 
@@ -294,6 +358,143 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
             JsonValue::JsonString("unknown".to_string()),
         )])
     }
+}
+
+fn composite_step_value(
+    role: &str,
+    step_index: usize,
+    step_count: usize,
+    fact: &Fact,
+    evidence: JsonValue,
+) -> JsonValue {
+    JsonValue::Object(vec![
+        ("role".to_string(), JsonValue::JsonString(role.to_string())),
+        ("step_index".to_string(), JsonValue::Number(step_index)),
+        ("step_count".to_string(), JsonValue::Number(step_count)),
+        (
+            "fact".to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())),
+        ),
+        (JSON_KEY_VERIFIED_BY.to_string(), evidence),
+    ])
+}
+
+fn folded_builtin_steps_value(
+    runtime: &Runtime,
+    items: &[VerifiedBysEnum],
+    role: &str,
+) -> Option<JsonValue> {
+    if runtime.detail_output || items.len() < 2 {
+        return None;
+    }
+    let first_rule = match items.first()? {
+        VerifiedBysEnum::ByBuiltinRule(r) => r.msg.as_str(),
+        _ => return None,
+    };
+    if !items
+        .iter()
+        .all(|item| matches!(item, VerifiedBysEnum::ByBuiltinRule(r) if r.msg == first_rule))
+    {
+        return None;
+    }
+
+    let step_indices = (1..=items.len()).map(JsonValue::Number).collect::<Vec<_>>();
+    let facts = items
+        .iter()
+        .map(|item| {
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(
+                &item.verify_what().to_string(),
+            ))
+        })
+        .collect::<Vec<_>>();
+    Some(JsonValue::Object(vec![
+        ("role".to_string(), JsonValue::JsonString(role.to_string())),
+        ("step_indices".to_string(), JsonValue::Array(step_indices)),
+        ("step_count".to_string(), JsonValue::Number(items.len())),
+        ("facts".to_string(), JsonValue::Array(facts)),
+        (
+            JSON_KEY_VERIFIED_BY.to_string(),
+            verified_by_builtin_rule_value(first_rule, None),
+        ),
+    ]))
+}
+
+fn known_forall_instantiation_json_value(
+    runtime: &Runtime,
+    current_line_file: &LineFile,
+    result: &KnownForallInstantiationResult,
+    verify_what: Option<&Fact>,
+) -> JsonValue {
+    let citation_line_file = result.cite_what.line_file();
+    let cite_source = source_ref_json_value(runtime, &citation_line_file, Some(current_line_file));
+    let cited_stmt_plain = user_visible_stmt_or_msg_text(&result.cite_what.to_string());
+    let mut fields = vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("cite forall fact".to_string()),
+        ),
+        ("cite_source".to_string(), cite_source),
+        (
+            "cited_stmt".to_string(),
+            JsonValue::JsonString(cited_stmt_plain),
+        ),
+        (
+            "instantiation".to_string(),
+            JsonValue::Object(known_forall_instantiation_fields(&result.instantiation)),
+        ),
+        (
+            "requirements".to_string(),
+            JsonValue::Array(known_forall_requirement_items(
+                runtime,
+                &result.requirements,
+            )),
+        ),
+    ];
+    if let Some(vw) = verify_what {
+        fields.push((
+            "verify_what".to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&vw.to_string())),
+        ));
+    }
+    fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
+    JsonValue::Object(fields)
+}
+
+fn known_forall_instantiation_fields(
+    instantiation: &[KnownForallInstantiationItem],
+) -> Vec<(String, JsonValue)> {
+    instantiation
+        .iter()
+        .map(|item| {
+            (
+                item.param.clone(),
+                JsonValue::JsonString(user_visible_stmt_or_msg_text(&item.arg)),
+            )
+        })
+        .collect::<Vec<_>>()
+}
+
+fn known_forall_requirement_items(
+    runtime: &Runtime,
+    requirements: &[KnownForallRequirementResult],
+) -> Vec<JsonValue> {
+    requirements
+        .iter()
+        .map(|requirement| {
+            JsonValue::Object(vec![
+                (
+                    "stmt".to_string(),
+                    JsonValue::JsonString(user_visible_stmt_or_msg_text(
+                        &requirement.stmt.to_string(),
+                    )),
+                ),
+                (
+                    JSON_KEY_VERIFIED_BY.to_string(),
+                    stmt_result_to_composite_step_verified_by(runtime, requirement.result.as_ref()),
+                ),
+            ])
+        })
+        .collect::<Vec<_>>()
 }
 
 fn citation_type_for_stmt(stmt: &Stmt) -> String {
@@ -379,4 +580,86 @@ fn verified_by_citation_object(
     }
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
+}
+
+impl VerifiedBysEnum {
+    fn verify_what(&self) -> &Fact {
+        match self {
+            VerifiedBysEnum::ByBuiltinRule(r) => &r.verify_what,
+            VerifiedBysEnum::ByFact(r) => &r.verify_what,
+            VerifiedBysEnum::ByKnownForall(r) => &r.verify_what,
+        }
+    }
+}
+
+fn builtin_rule_public_text(rule: &str) -> String {
+    match rule {
+        "they are the same" => "same expression on both sides".to_string(),
+        "known-only equality: they are the same" => {
+            "same expression on both sides from the known/builtin-only checker".to_string()
+        }
+        "or: complementary atomic facts (make_reversed first equals second)" => {
+            "complementary facts cover all cases".to_string()
+        }
+        "calculation and rational expression simplification" => {
+            "exact calculation and rational expression simplification".to_string()
+        }
+        "mul_opposite_signs_product_in_R_neg" => {
+            "product of opposite-sign factors is in R_neg".to_string()
+        }
+        "mul_opposite_signs_product_in_Q_neg" => {
+            "product of opposite-sign factors is in Q_neg".to_string()
+        }
+        "mul_opposite_signs_product_in_Z_neg" => {
+            "product of opposite-sign factors is in Z_neg".to_string()
+        }
+        _ => humanize_builtin_rule_label(rule),
+    }
+}
+
+fn builtin_rule_id(rule: &str, public_rule: &str) -> Option<String> {
+    match rule {
+        "they are the same" => Some("equality.same_expression".to_string()),
+        "known-only equality: they are the same" => {
+            Some("equality.same_expression.known_or_builtin_only".to_string())
+        }
+        "or: complementary atomic facts (make_reversed first equals second)" => {
+            Some("or.complementary_facts".to_string())
+        }
+        "calculation and rational expression simplification" => {
+            Some("equality.exact_calculation".to_string())
+        }
+        _ if public_rule != rule => Some(rule.to_string()),
+        _ => None,
+    }
+}
+
+fn humanize_builtin_rule_label(rule: &str) -> String {
+    if !looks_like_internal_rule_id(rule) {
+        return rule.to_string();
+    }
+
+    let mut text = rule.replace('_', " ");
+    for (plain, original) in [
+        ("N pos", "N_pos"),
+        ("Q pos", "Q_pos"),
+        ("R pos", "R_pos"),
+        ("Z neg", "Z_neg"),
+        ("Q neg", "Q_neg"),
+        ("R neg", "R_neg"),
+        ("Z nz", "Z_nz"),
+        ("Q nz", "Q_nz"),
+        ("R nz", "R_nz"),
+    ] {
+        text = text.replace(plain, original);
+    }
+    text = text.replace("fn ", "function ");
+    text = text.replace(" ret ", " return ");
+    text
+}
+
+fn looks_like_internal_rule_id(rule: &str) -> bool {
+    rule.contains('_')
+        && rule.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+        && !rule.chars().any(char::is_whitespace)
 }
