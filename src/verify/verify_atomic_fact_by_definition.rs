@@ -39,7 +39,7 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -74,7 +74,7 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -170,8 +170,8 @@ impl Runtime {
                         )))
                     }
                 })?;
-            let iff_clause_verify_result =
-                self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
+            let iff_clause_verify_result = self
+                .verify_fact_full(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
             if iff_clause_verify_result.is_unknown() {
                 return Ok(None);
             }

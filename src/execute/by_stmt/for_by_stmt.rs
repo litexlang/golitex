@@ -427,7 +427,7 @@ impl Runtime {
     fn exec_by_for_stmt_dom_proof_then(&mut self, stmt: &ByForStmt) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
-            let verify_dom_result = self.verify_fact(dom_fact, &verify_state)?;
+            let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
                 self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                     dom_fact.clone(),
@@ -435,7 +435,7 @@ impl Runtime {
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
-                        self.verify_fact(&negated_domain, &verify_state)?;
+                        self.verify_fact_full(&negated_domain, &verify_state)?;
                     if verify_negation_result.is_true() {
                         return Ok(());
                     }

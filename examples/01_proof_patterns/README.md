@@ -1002,6 +1002,23 @@ forall x, y Q, n N_pos:
         x^n >= y^n
         y^n >= 0
 
+forall x R:
+    x < 0
+    =>:
+        x^3 < 0
+
+forall x R, n N_pos:
+    x < 0
+    n % 2 = 1
+    =>:
+        x^n < 0
+
+forall x, y R, n N_pos:
+    x < y
+    n % 2 = 1
+    =>:
+        x^n < y^n
+
 forall x Q, n N_pos:
     abs(x^n) = abs(x)^n
 

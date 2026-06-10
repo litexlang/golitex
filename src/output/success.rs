@@ -5,9 +5,10 @@ use crate::prelude::{
     UnsafeStmt,
 };
 
-use super::effects::effects_json_values;
+use super::effects::{effects_json_values, effects_json_values_for_fact};
 use super::evidence::{
-    factual_success_verified_by_value, stmt_result_to_composite_step_verified_by,
+    factual_success_forall_proof_fields, factual_success_verified_by_value,
+    stmt_result_to_composite_step_verified_by,
 };
 use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_ACCEPTED_BY, JSON_KEY_EFFECTS, JSON_KEY_INSIDE_RESULTS,
@@ -41,12 +42,6 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
     let stmt_text = stmt_text_for_json(runtime, &x.stmt);
     let effect_items = effects_json_values(&x.infers);
 
-    let inside_items: Vec<JsonValue> = x
-        .inside_results
-        .iter()
-        .map(|r| stmt_exec_result_json_value(runtime, r))
-        .collect();
-
     let mut fields = vec![
         (
             JSON_KEY_RESULT.to_string(),
@@ -78,10 +73,23 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 
     fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
-        JsonValue::Array(inside_items),
+        inside_results_value(runtime, &x.inside_results),
     ));
 
     JsonValue::Object(fields)
+}
+
+fn inside_results_value(runtime: &Runtime, inside_results: &[StmtResult]) -> JsonValue {
+    if !runtime.detail_output {
+        return JsonValue::Array(vec![]);
+    }
+
+    JsonValue::Array(
+        inside_results
+            .iter()
+            .map(|r| stmt_exec_result_json_value(runtime, r))
+            .collect::<Vec<_>>(),
+    )
 }
 
 fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
@@ -96,9 +104,9 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
-    let effect_items = effects_json_values(&x.infers);
+    let effect_items = effects_json_values_for_fact(&x.infers, &x.stmt);
 
-    JsonValue::Object(vec![
+    let mut fields = vec![
         (
             JSON_KEY_RESULT.to_string(),
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
@@ -115,19 +123,25 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             "stmt".to_string(),
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
+    ];
+
+    fields.extend(factual_success_forall_proof_fields(runtime, x));
+    fields.extend(vec![
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
         ("inside_results".to_string(), JsonValue::Array(vec![])),
-    ])
+    ]);
+
+    JsonValue::Object(fields)
 }
 
 fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
-    let effect_items = effects_json_values(&x.infers);
+    let effect_items = effects_json_values_for_fact(&x.infers, &x.stmt);
 
-    JsonValue::Object(vec![
+    let mut fields = vec![
         (
             JSON_KEY_RESULT.to_string(),
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
@@ -144,10 +158,16 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             "stmt".to_string(),
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
+    ];
+
+    fields.extend(factual_success_forall_proof_fields(runtime, x));
+    fields.extend(vec![
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
         ("inside_results".to_string(), JsonValue::Array(vec![])),
-    ])
+    ]);
+
+    JsonValue::Object(fields)
 }
 
 fn statement_trust_is_unsafe(stmt: &Stmt) -> bool {
@@ -323,7 +343,7 @@ fn accepted_by_case_json_value(
     case: &CaseSplitAcceptedBy,
     goals: &[Fact],
 ) -> JsonValue {
-    let proves_items = goals
+    let conclusion_items = goals
         .iter()
         .map(|goal| JsonValue::JsonString(user_visible_stmt_or_msg_text(&goal.to_string())))
         .collect::<Vec<_>>();
@@ -332,7 +352,10 @@ fn accepted_by_case_json_value(
             "case".to_string(),
             JsonValue::JsonString(user_visible_stmt_or_msg_text(&case.case_fact.to_string())),
         ),
-        ("proves".to_string(), JsonValue::Array(proves_items)),
+        (
+            "conclusions".to_string(),
+            JsonValue::Array(conclusion_items),
+        ),
         (
             "steps_count".to_string(),
             JsonValue::Number(case.inside_results.len()),
@@ -356,14 +379,9 @@ fn accepted_by_case_json_value(
     }
 
     if runtime.detail_output {
-        let inside_items = case
-            .inside_results
-            .iter()
-            .map(|r| stmt_exec_result_json_value(runtime, r))
-            .collect::<Vec<_>>();
         fields.push((
             JSON_KEY_INSIDE_RESULTS.to_string(),
-            JsonValue::Array(inside_items),
+            inside_results_value(runtime, &case.inside_results),
         ));
     }
 

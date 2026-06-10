@@ -168,41 +168,43 @@ fn push_runtime_error_output_field_lines(
             &failed_goal.to_string(),
         );
     }
-    if let Some(index) = output.proof_step_index {
-        push_json_value_field_line(
-            runtime,
-            field_lines,
-            indent_inner,
-            "proof_step_index",
-            JsonValue::Number(index),
-        );
-    }
-    if let Some(count) = output.proof_step_count {
-        push_json_value_field_line(
-            runtime,
-            field_lines,
-            indent_inner,
-            "proof_step_count",
-            JsonValue::Number(count),
-        );
-    }
-    if let Some(index) = output.then_clause_index {
-        push_json_value_field_line(
-            runtime,
-            field_lines,
-            indent_inner,
-            "then_clause_index",
-            JsonValue::Number(index),
-        );
-    }
-    if let Some(count) = output.then_clause_count {
-        push_json_value_field_line(
-            runtime,
-            field_lines,
-            indent_inner,
-            "then_clause_count",
-            JsonValue::Number(count),
-        );
+    if runtime.detail_output {
+        if let Some(index) = output.proof_step_index {
+            push_json_value_field_line(
+                runtime,
+                field_lines,
+                indent_inner,
+                "proof_step_index",
+                JsonValue::Number(index),
+            );
+        }
+        if let Some(count) = output.proof_step_count {
+            push_json_value_field_line(
+                runtime,
+                field_lines,
+                indent_inner,
+                "proof_step_count",
+                JsonValue::Number(count),
+            );
+        }
+        if let Some(index) = output.then_clause_index {
+            push_json_value_field_line(
+                runtime,
+                field_lines,
+                indent_inner,
+                "then_clause_index",
+                JsonValue::Number(index),
+            );
+        }
+        if let Some(count) = output.then_clause_count {
+            push_json_value_field_line(
+                runtime,
+                field_lines,
+                indent_inner,
+                "then_clause_count",
+                JsonValue::Number(count),
+            );
+        }
     }
     if let Some(unknown_result) = &output.unknown_result {
         push_json_value_field_line(

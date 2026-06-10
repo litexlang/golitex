@@ -11,14 +11,8 @@ fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> Jso
             "type".to_string(),
             JsonValue::JsonString("builtin rule".to_string()),
         ),
-        (
-            "rule".to_string(),
-            JsonValue::JsonString(public_rule.clone()),
-        ),
+        ("rule".to_string(), JsonValue::JsonString(public_rule)),
     ];
-    if let Some(rule_id) = builtin_rule_id(rule, &public_rule) {
-        fields.push(("rule_id".to_string(), JsonValue::JsonString(rule_id)));
-    }
     if let Some(vw) = verify_what {
         fields.push((
             "verify_what".to_string(),
@@ -36,6 +30,16 @@ pub(crate) fn factual_success_verified_by_value(
 ) -> JsonValue {
     let current_line_file = x.stmt.line_file();
     verified_by_result_json_value(runtime, &x.verified_by, &current_line_file, Some(&x.stmt))
+}
+
+pub(crate) fn factual_success_forall_proof_fields(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+) -> Vec<(String, JsonValue)> {
+    match &x.verified_by {
+        VerifiedByResult::ForallProof(proof) => forall_proof_top_level_fields(runtime, proof),
+        _ => vec![],
+    }
 }
 
 fn verified_by_result_json_value(
@@ -74,52 +78,64 @@ fn verified_by_result_json_value(
         VerifiedByResult::VerifiedBys(w) => {
             verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
         }
-        VerifiedByResult::ForallProof(w) => forall_proof_verified_by_value(runtime, w),
+        VerifiedByResult::ForallProof(_) => forall_proof_verified_by_value(),
     }
 }
 
-fn forall_proof_verified_by_value(runtime: &Runtime, proof: &ForallProofResult) -> JsonValue {
-    let params = forall_param_items(&proof.forall_fact.params_def_with_type);
-    let requirements = proof
-        .forall_fact
-        .dom_facts
-        .iter()
-        .map(|fact| {
-            forall_local_fact_item(
-                &user_visible_stmt_or_msg_text(&fact.to_string()),
-                "forall requirement",
-            )
-        })
-        .collect::<Vec<_>>();
-    let proves = proof
+fn forall_proof_verified_by_value() -> JsonValue {
+    JsonValue::Object(vec![(
+        "summary".to_string(),
+        JsonValue::JsonString("conclusions verified under forall assumptions".to_string()),
+    )])
+}
+
+fn forall_proof_top_level_fields(
+    runtime: &Runtime,
+    proof: &ForallProofResult,
+) -> Vec<(String, JsonValue)> {
+    let parameters = forall_param_items(&proof.forall_fact.params_def_with_type);
+    let assumptions = forall_assumption_items(proof);
+    let conclusions = proof
         .proves
         .iter()
         .map(|proved| forall_proved_fact_value(runtime, proof, proved))
         .collect::<Vec<_>>();
 
-    JsonValue::Object(vec![
-        (
-            "type".to_string(),
-            JsonValue::JsonString("forall proof".to_string()),
-        ),
-        ("params".to_string(), JsonValue::Array(params)),
-        ("requirements".to_string(), JsonValue::Array(requirements)),
-        ("proves".to_string(), JsonValue::Array(proves)),
-    ])
+    vec![
+        ("parameters".to_string(), JsonValue::Array(parameters)),
+        ("assumptions".to_string(), JsonValue::Array(assumptions)),
+        ("conclusions".to_string(), JsonValue::Array(conclusions)),
+    ]
 }
 
 fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {
-    let mut items = Vec::new();
-    for (name, param_type) in param_defs.collect_param_names_with_types() {
-        items.push(JsonValue::Object(vec![
-            ("name".to_string(), JsonValue::JsonString(name)),
-            (
-                "type".to_string(),
-                JsonValue::JsonString(user_visible_stmt_or_msg_text(&param_type.to_string())),
-            ),
-        ]));
-    }
-    items
+    param_defs
+        .collect_param_names()
+        .into_iter()
+        .map(|name| JsonValue::JsonString(user_visible_stmt_or_msg_text(&name)))
+        .collect::<Vec<_>>()
+}
+
+fn forall_assumption_items(proof: &ForallProofResult) -> Vec<JsonValue> {
+    let mut facts = forall_param_type_assumption_facts(&proof.forall_fact.params_def_with_type);
+    facts.extend(proof.forall_fact.dom_facts.iter().cloned());
+    facts
+        .iter()
+        .map(|fact| JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())))
+        .collect::<Vec<_>>()
+}
+
+fn forall_local_assumption_value(source: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("local assumption".to_string()),
+        ),
+        (
+            "source".to_string(),
+            JsonValue::JsonString(source.to_string()),
+        ),
+    ])
 }
 
 fn forall_proved_fact_value(
@@ -138,29 +154,6 @@ fn forall_proved_fact_value(
     ])
 }
 
-fn forall_local_fact_item(stmt_text: &str, source: &str) -> JsonValue {
-    JsonValue::Object(vec![
-        (
-            "stmt".to_string(),
-            JsonValue::JsonString(stmt_text.to_string()),
-        ),
-        ("by".to_string(), forall_local_assumption_value(source)),
-    ])
-}
-
-fn forall_local_assumption_value(source: &str) -> JsonValue {
-    JsonValue::Object(vec![
-        (
-            "type".to_string(),
-            JsonValue::JsonString("local assumption".to_string()),
-        ),
-        (
-            "source".to_string(),
-            JsonValue::JsonString(source.to_string()),
-        ),
-    ])
-}
-
 fn forall_local_assumption_source(
     proof: &ForallProofResult,
     stmt: &ExistOrAndChainAtomicFact,
@@ -173,7 +166,7 @@ fn forall_local_assumption_source(
     }
     for fact in proof.forall_fact.dom_facts.iter() {
         if fact.to_string() == target {
-            return Some("forall requirement");
+            return Some("forall premise");
         }
     }
     None
@@ -203,21 +196,26 @@ fn verified_by_steps_object(
     verify_goal: Option<&Fact>,
 ) -> JsonValue {
     let steps = verified_by_step_items(runtime, items, current_line_file, verify_goal);
-    let mut fields = vec![(
-        "type".to_string(),
-        JsonValue::JsonString(verified_by_steps_type(verify_goal).to_string()),
-    )];
+    let mut fields = Vec::new();
+    if runtime.detail_output {
+        fields.push((
+            "type".to_string(),
+            JsonValue::JsonString(verified_by_steps_type(verify_goal).to_string()),
+        ));
+    }
     if let Some(summary) = verified_by_steps_summary(verify_goal) {
         fields.push((
             "summary".to_string(),
             JsonValue::JsonString(summary.to_string()),
         ));
     }
-    if let Some(main_rule) = verified_by_steps_main_rule(verify_goal) {
-        fields.push((
-            "main_rule".to_string(),
-            JsonValue::JsonString(main_rule.to_string()),
-        ));
+    if runtime.detail_output {
+        if let Some(main_rule) = verified_by_steps_main_rule(verify_goal) {
+            fields.push((
+                "main_rule".to_string(),
+                JsonValue::JsonString(main_rule.to_string()),
+            ));
+        }
     }
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(steps)));
     JsonValue::Object(fields)
@@ -236,7 +234,7 @@ fn verified_by_step_items(
             .collect::<Vec<_>>();
     };
 
-    if let Some(folded) = folded_builtin_steps_value(runtime, items, role) {
+    if let Some(folded) = folded_builtin_steps_value(runtime, items) {
         return vec![folded];
     }
 
@@ -246,7 +244,7 @@ fn verified_by_step_items(
         .enumerate()
         .map(|(idx, item)| {
             let evidence = verified_bys_enum_json_value(runtime, item, current_line_file, false);
-            composite_step_value(role, idx + 1, count, item.verify_what(), evidence)
+            composite_step_value(runtime, role, idx + 1, count, item.verify_what(), evidence)
         })
         .collect::<Vec<_>>()
 }
@@ -361,29 +359,34 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
 }
 
 fn composite_step_value(
+    runtime: &Runtime,
     role: &str,
     step_index: usize,
     step_count: usize,
     fact: &Fact,
     evidence: JsonValue,
 ) -> JsonValue {
+    let fact_field = (
+        "fact".to_string(),
+        JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())),
+    );
+    if !runtime.detail_output {
+        return JsonValue::Object(vec![
+            (fact_field.0, fact_field.1),
+            (JSON_KEY_VERIFIED_BY.to_string(), evidence),
+        ]);
+    }
+
     JsonValue::Object(vec![
         ("role".to_string(), JsonValue::JsonString(role.to_string())),
         ("step_index".to_string(), JsonValue::Number(step_index)),
         ("step_count".to_string(), JsonValue::Number(step_count)),
-        (
-            "fact".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())),
-        ),
+        (fact_field.0, fact_field.1),
         (JSON_KEY_VERIFIED_BY.to_string(), evidence),
     ])
 }
 
-fn folded_builtin_steps_value(
-    runtime: &Runtime,
-    items: &[VerifiedBysEnum],
-    role: &str,
-) -> Option<JsonValue> {
+fn folded_builtin_steps_value(runtime: &Runtime, items: &[VerifiedBysEnum]) -> Option<JsonValue> {
     if runtime.detail_output || items.len() < 2 {
         return None;
     }
@@ -398,7 +401,6 @@ fn folded_builtin_steps_value(
         return None;
     }
 
-    let step_indices = (1..=items.len()).map(JsonValue::Number).collect::<Vec<_>>();
     let facts = items
         .iter()
         .map(|item| {
@@ -408,9 +410,6 @@ fn folded_builtin_steps_value(
         })
         .collect::<Vec<_>>();
     Some(JsonValue::Object(vec![
-        ("role".to_string(), JsonValue::JsonString(role.to_string())),
-        ("step_indices".to_string(), JsonValue::Array(step_indices)),
-        ("step_count".to_string(), JsonValue::Number(items.len())),
         ("facts".to_string(), JsonValue::Array(facts)),
         (
             JSON_KEY_VERIFIED_BY.to_string(),
@@ -614,23 +613,6 @@ fn builtin_rule_public_text(rule: &str) -> String {
             "product of opposite-sign factors is in Z_neg".to_string()
         }
         _ => humanize_builtin_rule_label(rule),
-    }
-}
-
-fn builtin_rule_id(rule: &str, public_rule: &str) -> Option<String> {
-    match rule {
-        "they are the same" => Some("equality.same_expression".to_string()),
-        "known-only equality: they are the same" => {
-            Some("equality.same_expression.known_or_builtin_only".to_string())
-        }
-        "or: complementary atomic facts (make_reversed first equals second)" => {
-            Some("or.complementary_facts".to_string())
-        }
-        "calculation and rational expression simplification" => {
-            Some("equality.exact_calculation".to_string())
-        }
-        _ if public_rule != rule => Some(rule.to_string()),
-        _ => None,
     }
 }
 

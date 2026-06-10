@@ -145,6 +145,32 @@ impl Runtime {
         self.objs_have_same_known_equality_rc_in_some_env(&mod_obj, &zero)
     }
 
+    // k in N_pos and k % 2 = 1, or k is a positive odd literal.
+    fn verify_odd_exponent_in_n_pos_subgoal(
+        &mut self,
+        exp: &Obj,
+        lf: &LineFile,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        if Self::obj_is_positive_odd_integer_number(exp) {
+            return Ok(Some(Vec::new()));
+        }
+        let mut steps = Vec::new();
+        let n_pos_result = self.verify_obj_in_n_pos_subgoal(exp, lf)?;
+        if !n_pos_result.is_true() {
+            return Ok(None);
+        }
+        steps.push(n_pos_result);
+        let two: Obj = Number::new("2".to_string()).into();
+        let one = Self::literal_one_obj();
+        let mod_obj: Obj = Mod::new(exp.clone(), two).into();
+        let odd_result = self.verify_objs_are_equal_known_only(&mod_obj, &one, lf.clone());
+        if odd_result.is_true() {
+            steps.push(odd_result);
+            return Ok(Some(steps));
+        }
+        Ok(None)
+    }
+
     fn objs_same_by_display(left: &Obj, right: &Obj) -> bool {
         left.to_string() == right.to_string()
     }
@@ -319,9 +345,11 @@ impl Runtime {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
         }
-        if !Self::obj_is_positive_odd_integer_number(left_pow.exponent.as_ref()) {
+        let Some(mut step_results) =
+            self.verify_odd_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), lf)?
+        else {
             return Ok(None);
-        }
+        };
 
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
@@ -331,12 +359,13 @@ impl Runtime {
         if !result.is_true() {
             return Ok(None);
         }
+        step_results.push(result);
 
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n <= b^n from a <= b and positive odd integer n".to_string(),
-                vec![result],
+                step_results,
             ),
         )))
     }
@@ -483,9 +512,11 @@ impl Runtime {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
         }
-        if !Self::obj_is_positive_odd_integer_number(left_pow.exponent.as_ref()) {
+        let Some(mut step_results) =
+            self.verify_odd_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), lf)?
+        else {
             return Ok(None);
-        }
+        };
 
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
@@ -495,12 +526,77 @@ impl Runtime {
         if !result.is_true() {
             return Ok(None);
         }
+        step_results.push(result);
 
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "a^n < b^n from a < b and positive odd integer n".to_string(),
-                vec![result],
+                step_results,
+            ),
+        )))
+    }
+
+    // Negative sign preservation for positive odd integer powers.
+    // Example: from `x <= 0` and odd `n`, prove `x^n <= 0`.
+    fn try_pow_le_zero_odd_exponent_from_nonpositive_base(
+        &mut self,
+        pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(mut step_results) =
+            self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf)?
+        else {
+            return Ok(None);
+        };
+
+        let zero = Self::literal_zero_obj();
+        let base_nonpositive: AtomicFact =
+            LessEqualFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
+        let base_result = self.verify_order_subgoal(base_nonpositive)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        step_results.push(base_result);
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n <= 0 from a <= 0 and positive odd integer n".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
+    // Strict negative sign preservation for positive odd integer powers.
+    // Example: from `x < 0` and odd `n`, prove `x^n < 0`.
+    fn try_pow_lt_zero_odd_exponent_from_negative_base(
+        &mut self,
+        pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(mut step_results) =
+            self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf)?
+        else {
+            return Ok(None);
+        };
+
+        let zero = Self::literal_zero_obj();
+        let base_negative: AtomicFact =
+            LessFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
+        let base_result = self.verify_order_subgoal(base_negative)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        step_results.push(base_result);
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n < 0 from a < 0 and positive odd integer n".to_string(),
+                step_results,
             ),
         )))
     }
@@ -1028,6 +1124,13 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            if let Obj::Pow(pow) = &f.left {
+                if let Some(r) =
+                    self.try_pow_le_zero_odd_exponent_from_nonpositive_base(pow, lf, atomic_fact)?
+                {
+                    return Ok(Some(r));
+                }
+            }
             if let Obj::Mul(m) = &f.left {
                 if let Some(r) = self.try_mul_le_zero_by_weak_signs(
                     m.left.as_ref(),
@@ -1529,6 +1632,13 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            if let Obj::Pow(pow) = &f.left {
+                if let Some(r) =
+                    self.try_pow_lt_zero_odd_exponent_from_negative_base(pow, lf, atomic_fact)?
+                {
+                    return Ok(Some(r));
+                }
+            }
             if let Obj::Mul(m) = &f.left {
                 if let Some(r) = self.try_mul_lt_zero_by_signs(
                     m.left.as_ref(),

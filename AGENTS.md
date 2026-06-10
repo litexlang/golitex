@@ -110,38 +110,34 @@ newly created or touched, maintain a structured translation item record with
 this shape:
 
 ```yaml
-id:
 source:
-topic:
-difficulty:
-natural_language_idea:
+problem:
+proof_idea:
 litex_code:
-proof_attempt:
-status: translated/checkable/blocked
-blocker:
-notes:
+comments:
 ```
 
 Use these fields consistently:
 
-- `id`: stable item id, unique inside the source.
 - `source`: dataset, book, exam, contest, or source name.
-- `topic`: algebra, inequality, sequence, set, geometry, number theory, etc.
-- `difficulty`: easy/medium/hard or 1-5, following the local source convention.
-- `natural_language_idea`: the mathematical idea before Litex code.
+- `problem`: source problem, theorem, exercise, or a reusable reformulation if
+  the source text cannot be redistributed.
+- `proof_idea`: the mathematical idea before Litex code.
 - `litex_code`: the current runnable or intended Litex code.
-- `proof_attempt`: what was tried, especially for partial or blocked proofs.
-- `status`: `translated`, `checkable`, or `blocked`.
-- `blocker`: one primary blocker label when status is `blocked`; otherwise
-  leave it empty.
-- `notes`: source caveats, license notes, verifier command, or follow-up work.
+- `comments`: verifier command, proof attempt notes, blocker label, source or
+  license caveats, and follow-up work.
 
 Do not submit only raw Litex code for a translation item. Record the
-mathematical idea and current status. Do not mark an item `checkable` unless
-the relevant Litex code has been run and verified. If source text cannot be
-redistributed, record a reusable mathematical reformulation and put the license
-concern in `notes`. Existing datasets do not need to be migrated all at once,
-but newly created or modified records should follow this contract.
+mathematical idea and, in `comments` or local tracking, the current status. Do
+not mark an item `checkable` unless the relevant Litex code has been run and
+verified. If source text cannot be redistributed, record a reusable
+mathematical reformulation and put the license concern in `comments`. Existing
+datasets do not need to be migrated all at once, but newly created or modified
+records should follow this contract.
+
+If a workspace needs dashboard or batch-tracking fields such as `id`, `topic`,
+`difficulty`, `status`, or `blocker`, add them locally, but do not treat them
+as required fields for ordinary translation records.
 
 For each item, proceed in this order:
 

@@ -1833,7 +1833,7 @@ forall a, b R:
     );
     assert!(run_output
         .contains("\"rule\": \"exact calculation and rational expression simplification\""));
-    assert!(run_output.contains("\"rule_id\": \"equality.exact_calculation\""));
+    assert!(!run_output.contains("\"rule_id\""));
 }
 
 #[test]
@@ -1854,7 +1854,7 @@ fn builtin_rule_output_hides_internal_complement_helper_name() {
         run_output
     );
     assert!(run_output.contains("\"rule\": \"complementary facts cover all cases\""));
-    assert!(run_output.contains("\"rule_id\": \"or.complementary_facts\""));
+    assert!(!run_output.contains("\"rule_id\""));
     assert!(
         !run_output.contains("make_reversed"),
         "public builtin rule output should not expose helper names:\n{}",
@@ -2792,6 +2792,200 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
 }
 
 #[test]
+fn normal_output_folds_proof_level_inside_results() {
+    let source_code = r#"
+sketch:
+    1 = 1
+
+claim:
+    prove:
+        1 = 1
+    1 = 1
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("normal_output_folds_proof_trace");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "normal proof-trace fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"SketchStmt\""));
+    assert!(run_output.contains("\"type\": \"ClaimStmt\""));
+    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"type\": \"proof block\""));
+    assert!(run_output.contains("\"type\": \"case split\""));
+    assert!(run_output.contains("\"type\": \"witness\""));
+    assert!(
+        !run_output.contains("\"inside_results\": ["),
+        "normal output should fold raw recursive inside_results:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn detail_output_expands_proof_level_inside_results() {
+    let source_code = r#"
+sketch:
+    1 = 1
+
+claim:
+    prove:
+        1 = 1
+    1 = 1
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("detail_output_expands_proof_trace");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "detail proof-trace fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"SketchStmt\""));
+    assert!(run_output.contains("\"type\": \"ClaimStmt\""));
+    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(
+        run_output.matches("\"inside_results\": [").count() >= 4,
+        "detail output should expand raw recursive inside_results:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_induc_output_uses_same_trace_for_normal_and_detail() {
+    let source_code = r#"
+abstract_prop p(a)
+know $p(0)
+know forall m Z:
+    m >= 0
+    $p(m)
+    =>:
+        $p(m + 1)
+by induc n from 0:
+    prove:
+        $p(n)
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("by_induc_normal_trace");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "normal by induc fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"ByInducStmt\""));
+    assert!(run_output.contains("\"steps_count\": 4"));
+    assert!(
+        !run_output.contains("\"inside_results\": ["),
+        "normal by induc output should fold raw inside_results:\n{}",
+        run_output
+    );
+
+    let mut detail_runtime = Runtime::new_with_builtin_code();
+    detail_runtime.new_file_path_new_env_new_name_scope("by_induc_detail_trace");
+    detail_runtime.detail_output = true;
+    let (detail_stmt_results, detail_runtime_error) =
+        run_source_code(source_code, &mut detail_runtime);
+    let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+        &detail_runtime,
+        &detail_stmt_results,
+        &detail_runtime_error,
+        false,
+    );
+
+    assert!(
+        detail_run_succeeded,
+        "detail by induc fixture failed:\n{}",
+        detail_run_output
+    );
+    assert!(detail_run_output.contains("\"type\": \"ByInducStmt\""));
+    assert!(detail_run_output.contains("\"inside_results\": ["));
+    assert!(detail_run_output.contains("\"stmt\": \"$p(0)\""));
+    assert!(
+        detail_run_output
+            .matches("\"type\": \"AtomicFact\"")
+            .count()
+            >= 4,
+        "detail by induc output should expand base/step proof and obligation checks:\n{}",
+        detail_run_output
+    );
+    assert!(detail_run_output.contains("+ 1)"));
+}
+
+#[test]
+fn witness_detail_output_keeps_proof_and_obligation_trace() {
+    let source_code = r#"
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("witness_detail_output_keeps_trace");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "witness detail fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"type\": \"witness\""));
+    assert!(
+        run_output.matches("\"stmt\": \"1 = 1\"").count() >= 2,
+        "witness detail output should include the proof step and the instantiated obligation:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"inside_results\": ["),
+        "witness detail output should expand its proof trace:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn builtin_citation_source_uses_safe_builtin_label() {
     let source_code = "have a, b R\na < b or a = b or a > b";
 
@@ -3231,17 +3425,19 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"verified_by\": {\n    \"type\": \"forall proof\""),
-        "forall fact should render verified_by as an object:\n{}",
+        run_output.contains("\"verified_by\": {\n    \"summary\": \"conclusions verified under forall assumptions\""),
+        "forall fact should render verified_by as a short object:\n{}",
         run_output
     );
+    assert!(run_output.contains("\"parameters\": ["));
+    assert!(run_output.contains("\"assumptions\": ["));
     assert!(
         !run_output.contains("\"verified_by\": ["),
         "verified_by should not render as a top-level array:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"proves\": ["),
+        run_output.contains("\"conclusions\": ["),
         "forall proof should keep one proof entry per then fact:\n{}",
         run_output
     );
@@ -3277,13 +3473,12 @@ $q(1)
     );
     assert!(!run_output.contains("\"infer_facts\""));
     assert!(run_output.contains("\"effects\": ["));
-    assert!(run_output.contains("\"reason\": \"verified statement\""));
+    assert!(run_output.contains("\"type\": \"add proven fact to context\""));
     assert!(run_output.contains("\"reason\": \"proved claim\""));
     assert!(run_output.contains("\"reason\": \"unsafe assumption\""));
     assert!(run_output.contains("\"reason\": \"let binding\""));
     assert!(run_output.contains("\"trust\": \"unsafe\""));
-    assert!(run_output.contains("\"reason\": \"by definition\""));
-    assert!(run_output.contains("\"definition\": \"q\""));
+    assert!(run_output.contains("\"type\": \"cite prop def\""));
 }
 
 #[test]
@@ -3377,11 +3572,13 @@ forall n N:
         "forall parameter assumption fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"forall proof\""));
-    assert!(run_output.contains("\"params\": ["));
-    assert!(run_output.contains("\"name\": \"n\""));
-    assert!(run_output.contains("\"type\": \"N\""));
-    assert!(run_output.contains("\"proves\": ["));
+    assert!(!run_output.contains("\"type\": \"forall proof\""));
+    assert!(run_output.contains("\"parameters\": ["));
+    assert!(run_output.contains("\"n\""));
+    assert!(!run_output.contains("\"name\": \"n\""));
+    assert!(run_output.contains("\"assumptions\": ["));
+    assert!(run_output.contains("\"n $in N\""));
+    assert!(run_output.contains("\"conclusions\": ["));
     assert!(run_output.contains("\"stmt\": \"n $in N\""));
     assert!(run_output.contains("\"type\": \"local assumption\""));
     assert!(run_output.contains("\"source\": \"parameter declaration\""));
@@ -3431,38 +3628,43 @@ by cases 1 = 1:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"and fact\""),
-        "and facts should summarize their composite proof:\n{}",
+        run_output.contains("\"summary\": \"each conjunct verified in order\""),
+        "and facts should keep a short composite proof summary:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"chain fact\""),
-        "chain facts should summarize their composite proof:\n{}",
+        run_output.contains("\"summary\": \"each chain step verified in order\""),
+        "chain facts should keep a short composite proof summary:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"main_rule\": \"chain decomposition\""),
-        "chain facts should name the structural proof rule:\n{}",
+        !run_output.contains("\"type\": \"chain fact\""),
+        "normal output should not repeat the composite fact type inside verified_by:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"role\": \"chain step\""),
-        "chain facts should label folded or expanded proof steps:\n{}",
+        !run_output.contains("\"main_rule\": \"chain decomposition\""),
+        "normal output should hide chain structural-rule debug metadata:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"step_indices\": ["),
-        "normal output should fold duplicate chain proof steps:\n{}",
+        !run_output.contains("\"role\": \"chain step\""),
+        "normal output should hide chain step roles:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"main_rule\": \"and decomposition\""),
-        "and facts should name the structural proof rule:\n{}",
+        !run_output.contains("\"step_indices\": ["),
+        "normal folded output should not expose step indices:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"role\": \"conjunct\""),
-        "and facts should label each conjunct proof step:\n{}",
+        !run_output.contains("\"main_rule\": \"and decomposition\""),
+        "normal output should hide and structural-rule debug metadata:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"role\": \"conjunct\""),
+        "normal output should hide conjunct step roles:\n{}",
         run_output
     );
     assert!(
@@ -3501,8 +3703,8 @@ by cases 1 = 1:
         run_output
     );
     assert!(
-        run_output.contains("\"proves\": ["),
-        "by cases should summarize what each case proves:\n{}",
+        run_output.contains("\"conclusions\": ["),
+        "by cases should summarize each case conclusion:\n{}",
         run_output
     );
     assert!(
@@ -3549,8 +3751,9 @@ by cases:
         run_output
     );
     assert!(
-        run_output.contains("\"proves\": [\n          \"1 = 1\",\n          \"2 = 2\"\n        ]"),
-        "by cases should list all goals proved by each case:\n{}",
+        run_output
+            .contains("\"conclusions\": [\n          \"1 = 1\",\n          \"2 = 2\"\n        ]"),
+        "by cases should list all conclusions established by each case:\n{}",
         run_output
     );
     assert!(
@@ -3627,6 +3830,36 @@ fn unknown_fact_failure_has_structured_output_fields() {
 }
 
 #[test]
+fn detail_output_keeps_composite_fact_step_metadata() {
+    let source_code = r#"
+1 = 1 and 2 = 2
+1 = 1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime
+        .new_file_path_new_env_new_name_scope("detail_output_keeps_composite_fact_step_metadata");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "detail composite fact fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"and fact\""));
+    assert!(run_output.contains("\"type\": \"chain fact\""));
+    assert!(run_output.contains("\"main_rule\": \"and decomposition\""));
+    assert!(run_output.contains("\"main_rule\": \"chain decomposition\""));
+    assert!(run_output.contains("\"role\": \"conjunct\""));
+    assert!(run_output.contains("\"role\": \"chain step\""));
+    assert!(run_output.contains("\"step_index\": 1"));
+    assert!(run_output.contains("\"step_count\": 2"));
+}
+
+#[test]
 fn and_fact_unknown_reports_failed_part() {
     let source_code = "1 = 1 and 1 = 2";
 
@@ -3651,9 +3884,14 @@ fn and_fact_unknown_reports_failed_part() {
         "and fact unknown should expose the failed part:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"index\": 2"));
     assert!(run_output.contains("\"stmt\": \"1 = 2\""));
-    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+    assert!(!run_output.contains("\"index\": 2"));
+    assert!(!run_output.contains("\"count\": 2"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
 }
 
 #[test]
@@ -3677,10 +3915,14 @@ fn chain_fact_unknown_reports_failed_chain_step() {
         "chain fact unknown should expose the failed chain step:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"index\": 1"));
-    assert!(run_output.contains("\"count\": 2"));
     assert!(run_output.contains("\"stmt\": \"1 = 0\""));
-    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 2"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
     assert!(
         !run_output.contains("unverified chain step"),
         "chain unknown output should not hide the failed step in a detail string:\n{}",
@@ -3716,7 +3958,13 @@ forall x R:
     assert!(run_output.contains("\"name\": \"x\""));
     assert!(run_output.contains("\"failed_prove\": {"));
     assert!(run_output.contains("\"stmt\": \"~1x = 0\""));
-    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 1"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
 }
 
 #[test]
@@ -3742,8 +3990,39 @@ forall x R:
     assert!(run_output.contains("\"type\": \"chain fact unknown\""));
     assert!(run_output.contains("\"failed_chain_step\": {"));
     assert!(run_output.contains("\"stmt\": \"~1x = 0\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 2"));
     assert!(!run_output.contains("unverified chain step"));
     assert!(!run_output.contains("\"previous_error\": null"));
+}
+
+#[test]
+fn detail_unknown_output_keeps_failed_part_position_metadata() {
+    let source_code = r#"
+forall x R:
+    x = 0 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_unknown_output_keeps_failed_part_position_metadata",
+    );
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "detail forall-chain unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"failed_prove\": {"));
+    assert!(run_output.contains("\"index\": 1"));
+    assert!(run_output.contains("\"count\": 1"));
+    assert!(run_output.contains("\"failed_chain_step\": {"));
+    assert!(run_output.contains("\"count\": 2"));
+    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
 }
 
 #[test]
@@ -3795,8 +4074,8 @@ claim:
         run_output
     );
     assert!(
-        run_output.contains("\"then_clause_index\": 1"),
-        "claim failure should expose then_clause_index:\n{}",
+        !run_output.contains("\"then_clause_index\": 1"),
+        "normal claim failure should hide positional metadata:\n{}",
         run_output
     );
     assert!(
@@ -3804,6 +4083,34 @@ claim:
         "claim failure should expose structured unknown_result:\n{}",
         run_output
     );
+}
+
+#[test]
+fn detail_proof_block_failure_keeps_then_clause_position_metadata() {
+    let source_code = r#"
+claim:
+    prove:
+        forall:
+            2 = 3
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_proof_block_failure_keeps_then_clause_position_metadata",
+    );
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "detail claim fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"then_clause_index\": 1"));
+    assert!(run_output.contains("\"then_clause_count\": 1"));
 }
 
 #[test]

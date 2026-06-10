@@ -241,7 +241,7 @@ impl Runtime {
         let uniqueness_forall = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
 
         let uniqueness_fact: Fact = uniqueness_forall.clone().into();
-        let uniq_res = self.verify_fact(&uniqueness_fact, &wd_ok)?;
+        let uniq_res = self.verify_fact_full(&uniqueness_fact, &wd_ok)?;
         if !uniq_res.is_true() {
             return Ok(None);
         }
