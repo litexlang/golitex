@@ -483,88 +483,16 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = known_forall.params_def.collect_param_names();
-
-        if !param_names
-            .iter()
-            .all(|param_name| arg_map.contains_key(param_name))
-        {
-            return Ok(None);
-        }
-
-        // Collect the arg for each param.
-        let mut args_for_params: Vec<Obj> = Vec::new();
-
-        for param_name in param_names.iter() {
-            let obj = match arg_map.get(param_name) {
-                Some(v) => v,
-                None => return Ok(None),
-            };
-
-            args_for_params.push(obj.clone());
-        }
-
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &known_forall.params_def,
-                &args_for_params,
+        let Some((instantiation, requirements)) = self
+            .verify_known_forall_requirements_and_build_evidence(
+                known_forall.as_ref(),
+                &arg_map,
+                given_atomic_fact.clone().into(),
                 verify_state,
-                ParamObjType::Forall,
-            )
-            .map_err(|e| {
-                {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                        String::new(),
-                        given_atomic_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                }
-            })?;
-        if args_param_types.is_unknown() {
+            )?
+        else {
             return Ok(None);
-        }
-
-        let param_to_arg_map = match known_forall
-            .params_def
-            .param_def_params_to_arg_map(&arg_map)
-        {
-            Some(m) => m,
-            None => return Ok(None),
         };
-
-        for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_atomic_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            let result = self
-                .verify_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_atomic_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-        }
 
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
@@ -574,10 +502,10 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
-            VerifiedByResult::cited_fact(
-                given_atomic_fact.clone().into(),
+            VerifiedByResult::known_forall_instantiation(
                 verified_by_known_forall_fact.clone().into(),
-                None,
+                instantiation,
+                requirements,
             ),
             Vec::new(),
         );

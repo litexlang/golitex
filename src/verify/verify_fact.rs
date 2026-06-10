@@ -49,7 +49,7 @@ impl Runtime {
         }
     }
 
-    fn structured_unknown_result_for_failed_fact(
+    pub(crate) fn structured_unknown_result_for_failed_fact(
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
@@ -95,7 +95,7 @@ impl Runtime {
                             facts.len(),
                             child_fact.clone().into(),
                             child_result.as_fact_unknown().cloned(),
-                            vec![format!("unverified chain step: {}", child_fact)],
+                            vec![],
                         )
                         .into());
                     }

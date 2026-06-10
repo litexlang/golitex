@@ -3108,11 +3108,11 @@ forall a, x R:
 
 This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`.
 
-For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. A `forall` fact uses a dedicated `verified_by` shape: `type` is `forall proof`, `params` lists the locally declared parameters, `requirements` lists local hypotheses when there are any, and `proves` lists each then-fact together with its `by` reason. If a then-fact is available from the local forall context, its reason is shown as `type: "local assumption"` with source such as `parameter declaration` or `forall requirement`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`.
+For factual statements, `verified_by` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. Builtin rule evidence uses `rule` for the user-facing mathematical explanation and may include `rule_id` for the internal/debug label. Known `forall` use records the cited `forall`, the parameter `instantiation`, and the instantiated `requirements` checked before the conclusion is accepted. A `forall` fact uses a dedicated `verified_by` shape: `type` is `forall proof`, `params` lists the locally declared parameters, `requirements` lists local hypotheses when there are any, and `proves` lists each then-fact together with its `by` reason. If a then-fact is available from the local forall context, its reason is shown as `type: "local assumption"` with source such as `parameter declaration` or `forall requirement`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`; chain and conjunction steps include their role, index, fact, and nested `verified_by` evidence.
 
-When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Composite facts report their failed subgoal under `failed_part`. This keeps the failure shape aligned with the fact shape instead of hiding every failure behind a single generic `unknown`.
+When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Conjunctions report their failed subgoal under `failed_part`; chains report the failed segment under `failed_chain_step`. This keeps the failure shape aligned with the fact shape instead of hiding every failure behind a single generic `unknown`.
 
-For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `infer_facts` records facts added to the context after the statement; it is not the primary proof route.
+For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `effects` records facts added to the context after the statement; it is not the primary proof route.
 
 ---
 
@@ -4175,7 +4175,7 @@ reason:
     x can be resolved to 2
 ```
 
-This may not always appear as a separate displayed `infer_facts` line. Sometimes it is stored as side information used later by resolution.
+This may not always appear as a separate displayed `effects` entry. Sometimes it is stored as side information used later by resolution.
 
 For a compound-expression example, see the polynomial-identity calculation in [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
@@ -4519,7 +4519,7 @@ They can still be used in proofs. Builtin inference simply does not unfold them 
 
 ### Read The Output Message
 
-When Litex runs, the output may include `infer_facts` or other recorded information. Read that message when you want to understand what inference added after a fact was stored.
+When Litex runs, the output may include `effects` or other recorded information. Read that message when you want to understand what inference added after a fact was stored.
 
 If a later fact succeeds unexpectedly, the reason is often that an earlier fact inferred useful information such as a sign condition, a membership consequence, a tuple shape, or a numeric substitution.
 

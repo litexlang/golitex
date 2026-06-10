@@ -91,7 +91,7 @@ fn chain_fact_unknown_json_value(runtime: &Runtime, unknown: &ChainFactUnknown) 
     push_part_field(
         runtime,
         &mut fields,
-        "failed_part",
+        "failed_chain_step",
         unknown.failed_part.as_ref(),
     );
     push_detail_field(runtime, &mut fields, unknown.detail.as_deref());

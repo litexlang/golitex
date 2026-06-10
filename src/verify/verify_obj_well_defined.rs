@@ -73,9 +73,7 @@ impl Runtime {
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
-            Obj::SumOfFiniteSet(x) => {
-                self.verify_finite_set_sum_obj_well_defined(x, verify_state)
-            }
+            Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::ProductOfFiniteSet(x) => {
                 self.verify_finite_set_product_obj_well_defined(x, verify_state)
@@ -1575,11 +1573,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn finite_set_sum_application_obj(
-        &self,
-        func: &Obj,
-        arg: &Obj,
-    ) -> Result<Obj, RuntimeError> {
+    fn finite_set_sum_application_obj(&self, func: &Obj, arg: &Obj) -> Result<Obj, RuntimeError> {
         if let Obj::FnObj(fo) = func {
             if !fo.body.is_empty() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(

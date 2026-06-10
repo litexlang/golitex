@@ -101,6 +101,11 @@ impl Runtime {
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let then_fact_as_fact = then_fact.clone().to_fact();
+                let result = self.structured_unknown_result_for_failed_fact(
+                    &then_fact_as_fact,
+                    verify_state,
+                    result,
+                )?;
                 let result = result.wrap_unknown_for_fact(then_fact_as_fact.clone());
                 let child_unknown = result.as_fact_unknown().cloned();
                 let detail_lines = by_cases_case_label
