@@ -73,7 +73,7 @@ and similar proof moves. These forms are not all foundationally primitive in
 the same sense. They are there because they make Litex code feel familiar and
 reduce the distance between a paper proof and a checked script.
 
-So `obj` and `stmt` in Litex are a design boundary. Objects are the
+So `obj` and `statement` in Litex are a design boundary. Objects are the
 mathematical expressions facts can talk about. Statements are the actions that
 introduce objects, define vocabulary, assert facts, and organize proofs. A new
 object or statement form has to earn its place: either the checker needs it as
@@ -503,8 +503,8 @@ adds a fact to the current context after checking that the statement is
 meaningful enough to store. Later checked facts may depend on it.
 
 The name can be misleading if read informally. In documentation and audits,
-read `know P` as "assume P from this point onward." If a later `verified_by`
-trace cites a fact that came from `know`, the trace explains why the later line
+read `know P` as "assume P from this point onward." If a later `verification`
+trace cites a fact that came from `know`, that trace explains why the later line
 follows from the injected assumption; it does not show that the injected
 assumption was proved by Litex.
 

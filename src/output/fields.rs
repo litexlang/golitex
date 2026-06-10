@@ -1,7 +1,8 @@
 pub(crate) const JSON_KEY_RESULT: &str = "result";
 pub(crate) const JSON_KEY_SUCCESS: &str = "success";
 pub(crate) const JSON_KEY_EFFECTS: &str = "effects";
-pub(crate) const JSON_KEY_VERIFIED_BY: &str = "verified_by";
+pub(crate) const JSON_KEY_VERIFICATION: &str = "verification";
+pub(crate) const JSON_KEY_CONCLUSIONS_WITH_VERIFICATION: &str = "conclusions_with_verification";
 pub(crate) const JSON_KEY_ACCEPTED_BY: &str = "accepted_by";
 pub(crate) const JSON_KEY_STEPS: &str = "steps";
 
@@ -10,7 +11,7 @@ pub(crate) const JSON_KEY_MESSAGE: &str = "message";
 pub(crate) const JSON_KEY_LINE: &str = "line";
 pub(crate) const JSON_KEY_SOURCE: &str = "source";
 pub(crate) const JSON_KEY_STMT_TYPE: &str = "type";
-pub(crate) const JSON_KEY_STMT: &str = "stmt";
+pub(crate) const JSON_KEY_STMT: &str = "statement";
 pub(crate) const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 pub(crate) const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 pub(crate) const JSON_KEY_FAILED_STEP: &str = "failed_step";

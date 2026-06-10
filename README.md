@@ -116,10 +116,10 @@ the important shape is:
 ```text
 {
   "result": "success",
-  "stmt": "$mortal(Socrates)",
-  "verified_by": {
+  "statement": "$mortal(Socrates)",
+  "verification": {
     "type": "cite forall fact",
-    "cited_stmt": "forall x human: $mortal(x)"
+    "cited_statement": "forall x human: $mortal(x)"
   }
 }
 ```
@@ -129,10 +129,12 @@ the route was arithmetic, a known fact, a matching `forall`, or an inferred
 consequence. That makes Litex a feedback loop: write the next fact, run the
 checker, read what happened, and add the next piece of context.
 
-For factual statements, the proof route is reported under `verified_by`. More
-structured facts can include a `steps` array inside that object. For
-non-factual statements such as definitions, `claim`, `thm`, and `by cases`,
-the top-level summary is reported under `accepted_by`.
+For most factual statements, the proof route is reported under `verification`.
+More structured facts can include a `steps` array inside that object. A
+successful `forall` fact instead lists its local `parameters`, `assumptions`,
+and `conclusions_with_verification`, where each conclusion carries its own
+`verification`. For non-factual statements such as definitions, `claim`, `thm`,
+and `by cases`, the top-level summary is reported under `accepted_by`.
 
 Every factual statement has exactly one of three outcomes: **true**,
 **unknown**, or **error**. `true` means Litex found a proof path relative to the
@@ -322,7 +324,9 @@ project goal is not to hide that boundary; it is to make the boundary visible
 while keeping the user-facing proof script close to ordinary mathematical
 writing.
 
-Here is the whole landscape of Litex kernel:
+For a textual walkthrough of the implementation pipeline, see
+[Architecture](https://litexlang.com/doc/Architecture). The diagram below gives
+the broader component landscape:
 
 <div align="center">
   <img src="assets/verifier_flow.png" alt="Litex kernel" width="1000">
@@ -337,11 +341,13 @@ Litex keeps the public documentation small:
    run files, and understand CLI output.
 2. [Manual](https://litexlang.com/doc/Manual): the source of truth for syntax,
    statements, proof flow, builtin rules, and inference.
-3. [FAQ](https://litexlang.com/doc/FAQ): design rationale, trust boundaries,
+3. [Architecture](https://litexlang.com/doc/Architecture): the main pipeline
+   from source text to parsing, execution, verification, inference, and output.
+4. [FAQ](https://litexlang.com/doc/FAQ): design rationale, trust boundaries,
    comparison notes, and old overview material in condensed form.
-4. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): dedicated
+5. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): dedicated
    comparison with Lean's interface and ecosystem.
-5. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): Chinese introduction and project framing.
+6. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): Chinese introduction and project framing.
 
 Resources:
 
