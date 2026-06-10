@@ -10,24 +10,45 @@ pub(crate) fn effects_json_values(infers: &InferResult) -> Vec<JsonValue> {
     infers
         .effects()
         .iter()
-        .filter_map(effect_json_value)
+        .filter_map(|effect| effect_json_value(effect, None))
         .collect::<Vec<_>>()
 }
 
-fn effect_json_value(effect: &InferEffect) -> Option<JsonValue> {
+pub(crate) fn effects_json_values_for_fact(
+    infers: &InferResult,
+    primary_fact: &Fact,
+) -> Vec<JsonValue> {
+    infers
+        .effects()
+        .iter()
+        .filter_map(|effect| effect_json_value(effect, Some(primary_fact)))
+        .collect::<Vec<_>>()
+}
+
+fn effect_json_value(effect: &InferEffect, primary_fact: Option<&Fact>) -> Option<JsonValue> {
     match effect {
-        InferEffect::AddsToContext(adds) => adds_to_context_json_value(adds),
+        InferEffect::AddsToContext(adds) => adds_to_context_json_value(adds, primary_fact),
         InferEffect::Warning(warning) => Some(warning_json_value(warning)),
     }
 }
 
-fn adds_to_context_json_value(adds: &AddsToContextEffect) -> Option<JsonValue> {
+fn adds_to_context_json_value(
+    adds: &AddsToContextEffect,
+    primary_fact: Option<&Fact>,
+) -> Option<JsonValue> {
     let fact_items = unique_fact_strings(&adds.facts)
         .into_iter()
         .map(JsonValue::JsonString)
         .collect::<Vec<_>>();
     if fact_items.is_empty() {
         return None;
+    }
+
+    if adds_exact_primary_fact(adds, primary_fact) {
+        return Some(JsonValue::Object(vec![(
+            "type".to_string(),
+            JsonValue::JsonString("add proven fact to context".to_string()),
+        )]));
     }
 
     let mut fields = vec![
@@ -47,6 +68,13 @@ fn adds_to_context_json_value(adds: &AddsToContextEffect) -> Option<JsonValue> {
 
     fields.push(("facts".to_string(), JsonValue::Array(fact_items)));
     Some(JsonValue::Object(fields))
+}
+
+fn adds_exact_primary_fact(adds: &AddsToContextEffect, primary_fact: Option<&Fact>) -> bool {
+    let Some(primary_fact) = primary_fact else {
+        return false;
+    };
+    adds.facts.len() == 1 && adds.facts[0].to_string() == primary_fact.to_string()
 }
 
 fn warning_json_value(warning: &OutputWarning) -> JsonValue {

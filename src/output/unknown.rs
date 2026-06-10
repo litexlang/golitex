@@ -185,21 +185,42 @@ fn push_part_field(
 }
 
 fn part_json_value(runtime: &Runtime, part: &FactUnknownPart) -> JsonValue {
-    let mut fields = vec![
-        ("index".to_string(), JsonValue::Number(part.index)),
-        ("count".to_string(), JsonValue::Number(part.count)),
-        (
-            "stmt".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&part.stmt.to_string())),
-        ),
-    ];
+    let mut fields = Vec::new();
+    if runtime.detail_output {
+        fields.push(("index".to_string(), JsonValue::Number(part.index)));
+        fields.push(("count".to_string(), JsonValue::Number(part.count)));
+    }
+    fields.push((
+        "stmt".to_string(),
+        JsonValue::JsonString(user_visible_stmt_or_msg_text(&part.stmt.to_string())),
+    ));
     if let Some(unknown) = &part.unknown {
-        fields.push((
-            "unknown_result".to_string(),
-            fact_unknown_json_value(runtime, unknown.as_ref()),
-        ));
+        if should_show_nested_part_unknown(runtime, part, unknown.as_ref()) {
+            fields.push((
+                "unknown_result".to_string(),
+                fact_unknown_json_value(runtime, unknown.as_ref()),
+            ));
+        }
     }
     JsonValue::Object(fields)
+}
+
+fn should_show_nested_part_unknown(
+    runtime: &Runtime,
+    part: &FactUnknownPart,
+    unknown: &FactUnknown,
+) -> bool {
+    if runtime.detail_output {
+        return true;
+    }
+    !is_trivial_atomic_unknown_for_same_fact(part, unknown)
+}
+
+fn is_trivial_atomic_unknown_for_same_fact(part: &FactUnknownPart, unknown: &FactUnknown) -> bool {
+    let FactUnknown::AtomicFact(atomic_unknown) = unknown else {
+        return false;
+    };
+    atomic_unknown.detail.is_none() && atomic_unknown.goal.to_string() == part.stmt.to_string()
 }
 
 fn push_detail_field(

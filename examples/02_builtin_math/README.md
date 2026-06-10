@@ -922,6 +922,29 @@ forall x, y R, m N_pos:
     =>:
         x^m <= y^m
 
+forall x R:
+    x < 0
+    =>:
+        x^3 < 0
+
+forall x R, m N_pos:
+    x < 0
+    m % 2 = 1
+    =>:
+        x^m < 0
+
+forall x R, m N_pos:
+    x <= 0
+    m % 2 = 1
+    =>:
+        x^m <= 0
+
+forall x, y R, m N_pos:
+    x < y
+    m % 2 = 1
+    =>:
+        x^m < y^m
+
 forall x, y R, m N_pos:
     x >= 0
     y >= 0

@@ -1,13 +1,19 @@
 use crate::prelude::*;
-use std::result::Result;
 
 impl Runtime {
-    pub fn verify_fact_return_err_if_not_true(
+    /// Full fact verification used for user proof obligations.
+    ///
+    /// This path may use the full verifier stack for the fact shape, including
+    /// known forall instantiation, user strategies, definitions, and recursive
+    /// proof obligations where those features are part of the ordinary proof
+    /// model. Restricted builtin premises should use
+    /// `verify_fact_restricted_known_builtin` instead.
+    pub fn verify_fact_full(
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let result = match fact {
+        match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
             Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, verify_state),
@@ -18,8 +24,25 @@ impl Runtime {
             Fact::NotForall(not_forall) => self.verify_not_forall_fact(not_forall, verify_state),
             Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, verify_state),
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
-        }?;
+        }
+    }
 
+    /// Compatibility name for older call sites. New code should prefer
+    /// `verify_fact_full` so the proof mode is explicit.
+    pub fn verify_fact(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_fact_full(fact, verify_state)
+    }
+
+    pub fn verify_fact_return_err_if_not_true(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let result = self.verify_fact_full(fact, verify_state)?;
         let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
 
         if result.is_unknown() {
@@ -44,9 +67,9 @@ impl Runtime {
                     vec![],
                 ),
             )));
-        } else {
-            Ok(result)
         }
+
+        Ok(result)
     }
 
     pub(crate) fn structured_unknown_result_for_failed_fact(
@@ -105,9 +128,6 @@ impl Runtime {
             _ => Ok(result.wrap_unknown_for_fact(fact.clone())),
         }
     }
-}
-
-impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact(
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,

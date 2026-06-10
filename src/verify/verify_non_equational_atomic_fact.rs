@@ -53,25 +53,6 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    pub fn verify_fact(
-        &mut self,
-        fact: &Fact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        match fact {
-            Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
-            Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
-            Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, verify_state),
-            Fact::ForallFact(forall_fact) => self.verify_forall_fact(forall_fact, verify_state),
-            Fact::ForallFactWithIff(forall_iff) => {
-                self.verify_forall_fact_with_iff(forall_iff, verify_state)
-            }
-            Fact::NotForall(not_forall) => self.verify_not_forall_fact(not_forall, verify_state),
-            Fact::ExistFact(exist_fact) => self.verify_exist_fact(exist_fact, verify_state),
-            Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
-        }
-    }
-
     // If direct verification failed, try order-dual, then registered user-defined prop properties.
     fn post_process_non_equational_atomic_fact(
         &mut self,
