@@ -16,7 +16,7 @@
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
-**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome everyone to try it.**
+**Beta notice:** Litex is experimental and not ready for mission-critical work.
 
 </div>
 
@@ -215,7 +215,7 @@ divisor of `1 * 2 * ... * a + 1`, split on whether it is already below `a`,
 derive the modular contradiction, and return the larger prime as a witness.
 
 <!-- litex:skip-test -->
-```litex
+```text
 claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
     2 <= a <= product(1, a, '(x N_pos) N_pos {x}) <= product(1, a, '(x N_pos) N_pos {x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = 0}: k
@@ -232,7 +232,6 @@ claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
 Mathematical structures can be defined directly, with operations and axioms
 kept close to the ordinary textbook shape:
 
-<!-- litex:skip-test -->
 ```litex
 prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
     forall x, y, z s:
