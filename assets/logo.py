@@ -18,11 +18,13 @@
 
 import turtle
 import random
-from PIL import ImageGrab
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont, ImageGrab
 
 random.seed(0)
 full_depth = 9
 root_depth = 5
+screen = None
 
 
 def green_gradient(score):
@@ -97,33 +99,40 @@ def draw_inverted_tree(t, branch_len, angle, depth):
     t.pendown()
 
 
-screen = turtle.Screen()
-screen.setup(800, 800)  # Larger canvas size for more space
-screen.bgcolor(1.0, 0.95, 0.8)  # warm yellow background
+def draw_logo_screen():
+    global screen
 
-t = turtle.Turtle()
-t.speed(0)
-t.width(16)
-t.left(90)
-t.up()
-t.goto(0, -200)  # Adjust starting position for better centering
-t.down()
+    screen = turtle.Screen()
+    screen.setup(800, 800)  # Larger canvas size for more space
+    screen.bgcolor(1.0, 0.95, 0.8)  # warm yellow background
 
-# Draw main tree
-draw_tree(t, 150, 30, full_depth)
+    t = turtle.Turtle()
+    t.speed(0)
+    t.width(16)
+    t.left(90)
+    t.up()
+    t.goto(0, -200)  # Adjust starting position for better centering
+    t.down()
 
-# Draw inverted tree
-t.right(180)
-t.up()
-t.goto(0, -200)
-t.down()
-draw_inverted_tree(t, 50, 30, root_depth)
+    # Draw main tree
+    draw_tree(t, 150, 30, full_depth)
 
-t.hideturtle()
-screen.update()
+    # Draw inverted tree
+    t.right(180)
+    t.up()
+    t.goto(0, -200)
+    t.down()
+    draw_inverted_tree(t, 50, 30, root_depth)
+
+    t.hideturtle()
+    screen.update()
+    return screen
 
 
 def save_image(filename="LiTeXNewLogo.PNG"):
+    if screen is None:
+        draw_logo_screen()
+
     canvas = screen.getcanvas()
     x = canvas.winfo_rootx()
     y = canvas.winfo_rooty()
@@ -133,3 +142,64 @@ def save_image(filename="LiTeXNewLogo.PNG"):
     image.save(filename)
     print(f"{filename} saved")
 
+
+def save_logo_with_text(
+    base_filename="assets/logo.PNG",
+    filename="assets/litex_logo_with_text.PNG",
+    text="Litex",
+):
+    base_path = Path(base_filename)
+    output_path = Path(filename)
+    icon = Image.open(base_path).convert("RGBA")
+
+    canvas_width = 1400
+    canvas_height = 800
+    background = (255, 244, 205, 255)
+    canvas = Image.new("RGBA", (canvas_width, canvas_height), background)
+
+    icon_size = 620
+    icon = icon.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
+    icon_x = 90
+    icon_y = (canvas_height - icon_size) // 2
+    canvas.alpha_composite(icon, (icon_x, icon_y))
+
+    draw = ImageDraw.Draw(canvas)
+    font = load_text_logo_font(210)
+    text_color = (18, 95, 35, 255)
+    shadow_color = (126, 176, 94, 115)
+    text_bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    text_x = 715
+    text_y = (canvas_height - text_height) // 2 - 24
+
+    draw.text((text_x + 6, text_y + 8), text, font=font, fill=shadow_color)
+    draw.text((text_x, text_y), text, font=font, fill=text_color)
+
+    underline_y = text_y + text_height + 34
+    draw.rounded_rectangle(
+        (text_x + 8, underline_y, text_x + text_width - 2, underline_y + 16),
+        radius=8,
+        fill=(50, 150, 66, 255),
+    )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path)
+    print(f"{output_path} saved")
+
+
+def load_text_logo_font(size):
+    font_paths = [
+        "/System/Library/Fonts/Supplemental/Avenir Next.ttc",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "/Library/Fonts/Arial Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    ]
+    for font_path in font_paths:
+        if Path(font_path).exists():
+            return ImageFont.truetype(font_path, size=size)
+    return ImageFont.load_default()
+
+
+if __name__ == "__main__":
+    save_logo_with_text()

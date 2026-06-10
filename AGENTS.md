@@ -82,6 +82,30 @@ Record broad proof debt in nearby comments or todo files; only introduce a
 named prop when it is a real source definition or a reusable local interface
 that later checked statements actually depend on.
 
+Use source-local cite packages for lengthy supporting facts. This is the
+preferred workflow for textbook and dataset formalization when the main
+mathematical line is clear but a surrounding fact has a long, routine, or
+library-shaped proof. Keep the main chapter or problem file focused on the
+source-facing definitions, theorem statements, core proof route, and checked
+derivations. Put the surrounding fact into an adjacent module such as
+`chap7_cite/main.lit`, `<source>_cite/main.lit`, or a local `cite/main.lit`.
+The main file should import this module with `import "../chap7_cite"` or the
+analogous relative module import; do not use `run_file` for cite packages.
+Reserve `run_file` for source-order reuse such as one chapter loading an
+earlier chapter.
+
+Cite packages are explicit proof-debt interfaces, not completed standard
+library modules. Facts in a cite package should be named `thm` or `claim`
+interfaces whose unproved step is marked with `know`, and each such debt should
+be tracked in the nearby `todo.md` or unfinished notes. An imported cite module
+must be self-contained: import the std modules it needs, and put shared source
+vocabulary in a small real `prop`/`have` module such as `chap9_vocab/main.lit`
+rather than copying existing chapter definitions as `abstract_prop` inside the
+cite package. Use `abstract_prop` only for genuinely external background
+interfaces that do not yet have a usable definition. Only move a cite theorem
+into `std` after its statement is stable, its proof or intended trusted
+interface is understood, and multiple files genuinely need it.
+
 By September, a good outcome is not only a large number of translated items. A
 good outcome is a working translation pipeline, checkable examples across the
 main source families, a clear standard library gap map, a benchmark set for
@@ -157,13 +181,18 @@ For each item, proceed in this order:
    and keep the textbook proof idea in a local `prove` block, proof sketch, or
    nearby todo until it is checkable.
 
-4. If the proof cannot be completed immediately, write the best partial Litex
+4. If a supporting fact is lengthy, routine, or only needed as a background
+   citation for the current source item, put it in a source-local cite package
+   and import that package from the main file. This keeps the main file
+   readable while preserving a named theorem interface and explicit proof debt.
+
+5. If the proof cannot be completed immediately, write the best partial Litex
    proof first. It is acceptable to use `know` temporarily, but only for the
    blocked step. Next to each temporary `know`, add a concise comment saying
    why the step is not yet proved and what kind of missing support it appears
    to need.
 
-5. Put unfinished attempts in the local unfinished-explanation area. In
+6. Put unfinished attempts in the local unfinished-explanation area. In
    MiniF2F this is
    `scripts/litex-minif2f/unfinished_dataset/problem_notes/`.
    For another dataset or textbook workspace, create the analogous nearby
@@ -171,17 +200,17 @@ For each item, proceed in this order:
    id. Record the proof idea, the current Litex attempt, the exact verifier
    failure if any, every remaining `know`, and the primary blocker label.
 
-6. Iterate by removing proof debt one step at a time. Run the verifier after
+7. Iterate by removing proof debt one step at a time. Run the verifier after
    each small change and use the exact output to decide the next correction.
    Try splitting algebraic or numeric jumps into smaller equalities before
    searching for new theorems.
 
-7. When the item becomes checkable, move it out of the unfinished area and into
+8. When the item becomes checkable, move it out of the unfinished area and into
    the finished area for that source. Delete the matching unfinished-explanation
    file, update any local JSONL/status/todo bookkeeping, and keep the final
    `.lit` file runnable.
 
-8. After solving a formerly unfinished item, write a short "war story" in the
+9. After solving a formerly unfinished item, write a short "war story" in the
    local solved-experience area. In MiniF2F this is
    `scripts/litex-minif2f/experience/problem_notes/`. For another
    source, create the analogous nearby folder if needed. Record the natural

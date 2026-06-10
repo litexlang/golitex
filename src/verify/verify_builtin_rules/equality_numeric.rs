@@ -1708,11 +1708,22 @@ impl Runtime {
                     verify_state,
                 )?;
                 if exp_ok.is_true() {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                    let mut subgoals = equality_builtin_match_subgoals(
+                        p.base.as_ref(),
+                        log.base.as_ref(),
+                        base_ok,
+                    );
+                    subgoals.extend(equality_builtin_match_subgoals(
+                        p.exponent.as_ref(),
+                        other,
+                        exp_ok,
+                    ));
+                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                         left,
                         right,
                         line_file,
                         "equality: log(a, a^b) = b",
+                        subgoals,
                     )));
                 }
             }
@@ -1746,11 +1757,13 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a^b, c) = log(a, c) / b",
+                subgoals,
             )));
         }
         Ok(None)
@@ -1783,11 +1796,13 @@ impl Runtime {
                 verify_state,
             )?;
             if inner.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, x^b) = b * log(a, x)",
+                    subgoals,
                 )));
             }
         }
@@ -1822,11 +1837,13 @@ impl Runtime {
                 verify_state,
             )?;
             if inner.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, x*y) = log(a, x) + log(a, y)",
+                    subgoals,
                 )));
             }
         }
@@ -1859,11 +1876,13 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a, x/y) = log(a, x) - log(a, y)",
+                subgoals,
             )));
         }
         Ok(None)
@@ -1949,11 +1968,14 @@ impl Runtime {
                 verify_state,
             )?;
             if ok.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let mut subgoals = equality_builtin_match_subgoals(d.left.as_ref(), &one, one_ok);
+                subgoals.extend(equality_builtin_match_subgoals(other, &expected, ok));
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, 1/x) = -log(a, x)",
+                    subgoals,
                 )));
             }
         }
@@ -2010,11 +2032,25 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        let mut subgoals =
+            equality_builtin_match_subgoals(log_cb.base.as_ref(), log_ca.base.as_ref(), base_ok);
+        subgoals.extend(equality_builtin_match_subgoals(
+            log_cb.arg.as_ref(),
+            log_ab.arg.as_ref(),
+            arg_ok,
+        ));
+        subgoals.extend(equality_builtin_match_subgoals(
+            log_ca.arg.as_ref(),
+            log_ab.base.as_ref(),
+            inner_ok,
+        ));
+
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             left,
             right,
             line_file,
             "equality: log(a, b) = log(c, b) / log(c, a)",
+            subgoals,
         )))
     }
 
@@ -2039,11 +2075,12 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a, b) = c from a^c = b",
+                vec![inner],
             )));
         }
         Ok(None)
