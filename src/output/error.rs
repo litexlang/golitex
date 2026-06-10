@@ -10,6 +10,7 @@ use super::fields::{
 };
 use super::normalize::{
     finalize_display_text_with_optional_strip, json_value_is_empty_in_normal_output,
+    remove_empty_json_fields,
 };
 use super::source::{source_ref_json_fields, stmt_json_field_lines, stmt_json_value};
 use super::success::display_stmt_exec_result_json;
@@ -51,13 +52,14 @@ fn json_value_field_line(indent_inner: &str, json_key: &str, value: &JsonValue) 
 }
 
 fn push_json_value_field_line(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     field_lines: &mut Vec<String>,
     indent_inner: &str,
     json_key: &str,
     value: JsonValue,
 ) {
-    if runtime.detail_output || !json_value_is_empty_in_normal_output(&value) {
+    let value = remove_empty_json_fields(value);
+    if !json_value_is_empty_in_normal_output(&value) {
         field_lines.push(json_value_field_line(indent_inner, json_key, &value));
     }
 }
@@ -123,7 +125,7 @@ fn push_source_ref_field_lines(
     current_line_file: Option<&LineFile>,
 ) {
     for (key, value) in source_ref_json_fields(runtime, source_line_file, current_line_file) {
-        field_lines.push(json_value_field_line(indent_inner, key.as_str(), &value));
+        push_json_value_field_line(runtime, field_lines, indent_inner, key.as_str(), value);
     }
 }
 
@@ -380,7 +382,7 @@ fn build_display_error_json_object(
                     false,
                 ));
             }
-            if runtime.detail_output || !inside_result_elements.is_empty() {
+            if !inside_result_elements.is_empty() {
                 field_lines.push(json_array_field_line(
                     indent_inner.as_str(),
                     JSON_KEY_INSIDE_RESULTS,
@@ -497,12 +499,6 @@ fn build_previous_error_field_line(
     context_for_child: Option<&Stmt>,
 ) -> Option<String> {
     if !include_previous_error {
-        if runtime.detail_output {
-            return Some(format!(
-                "{}\"{}\": null",
-                indent_inner, JSON_KEY_PREVIOUS_ERROR
-            ));
-        }
         return None;
     }
 
@@ -521,16 +517,7 @@ fn build_previous_error_field_line(
                 indent_inner, JSON_KEY_PREVIOUS_ERROR, previous_error_json
             ))
         }
-        None => {
-            if runtime.detail_output {
-                Some(format!(
-                    "{}\"{}\": null",
-                    indent_inner, JSON_KEY_PREVIOUS_ERROR
-                ))
-            } else {
-                None
-            }
-        }
+        None => None,
     }
 }
 

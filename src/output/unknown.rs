@@ -2,7 +2,7 @@ use crate::common::json_value::JsonValue;
 use crate::prelude::*;
 
 use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STMT};
-use super::normalize::json_value_is_empty_in_normal_output;
+use super::normalize::{json_value_is_empty_in_normal_output, remove_empty_json_fields};
 
 pub(crate) fn unknown_result_json_value(
     runtime: &Runtime,
@@ -179,8 +179,6 @@ fn push_part_field(
 ) {
     if let Some(part) = part {
         fields.push((key.to_string(), part_json_value(runtime, part)));
-    } else if runtime.detail_output {
-        fields.push((key.to_string(), JsonValue::Object(vec![])));
     }
 }
 
@@ -237,12 +235,13 @@ fn push_detail_field(
 }
 
 fn push_json_field(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     fields: &mut Vec<(String, JsonValue)>,
     key: &str,
     value: JsonValue,
 ) {
-    if runtime.detail_output || !json_value_is_empty_in_normal_output(&value) {
+    let value = remove_empty_json_fields(value);
+    if !json_value_is_empty_in_normal_output(&value) {
         fields.push((key.to_string(), value));
     }
 }
