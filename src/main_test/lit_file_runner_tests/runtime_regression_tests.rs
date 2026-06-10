@@ -3485,6 +3485,17 @@ forall x R_pos:
         "builtin-rule premises should be nested as subgoals:\n{}",
         run_output
     );
+    assert_eq!(
+        run_output.matches("\"subgoals\": [").count(),
+        2,
+        "normal output should show only nontrivial builtin-rule proof premises:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"2 ^ 3 = 8\""),
+        "log(a,b)=c should expose the a^c=b proof premise:\n{}",
+        run_output
+    );
     assert!(
         run_output.contains("\"statement\": \"1 = log (2, x)\""),
         "the log premise should be a nested subgoal statement:\n{}",

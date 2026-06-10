@@ -654,6 +654,10 @@ fn builtin_rule_public_text(rule: &str) -> String {
         "known-only equality: they are the same" => {
             "same expression on both sides from the known/builtin-only checker".to_string()
         }
+        "known-only equality: same known equality class" => "same known equality class".to_string(),
+        "known-only equality: resolved objects match" => {
+            "same value after resolving known values".to_string()
+        }
         "or: complementary atomic facts (make_reversed first equals second)" => {
             "complementary facts cover all cases".to_string()
         }

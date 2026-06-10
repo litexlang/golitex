@@ -175,11 +175,39 @@ pub(crate) fn factual_equal_success_by_builtin_reason(
     line_file: LineFile,
     reason: &str,
 ) -> StmtResult {
+    factual_equal_success_by_builtin_reason_with_subgoals(
+        left,
+        right,
+        line_file,
+        reason,
+        Vec::new(),
+    )
+}
+
+pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
+    left: &Obj,
+    right: &Obj,
+    line_file: LineFile,
+    reason: &str,
+    subgoals: Vec<StmtResult>,
+) -> StmtResult {
     StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             EqualFact::new(left.clone(), right.clone(), line_file).into(),
             reason.to_string(),
-            Vec::new(),
+            subgoals,
         ),
     )
+}
+
+pub(crate) fn equality_builtin_match_subgoals(
+    actual: &Obj,
+    expected: &Obj,
+    result: StmtResult,
+) -> Vec<StmtResult> {
+    if verify_equality_by_they_are_the_same(actual, expected) {
+        Vec::new()
+    } else {
+        vec![result]
+    }
 }
