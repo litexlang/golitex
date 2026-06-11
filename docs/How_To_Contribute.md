@@ -7,7 +7,7 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/How_To_Cont
 Litex is experimental. The most helpful contributions right now are simple:
 
 1. Tell us where the documentation is confusing.
-2. Help improve the dataset and textbook translation work.
+2. Help improve the dataset and textbook translation work. See https://github.com/litexlang/litex-math500 and https://github.com/litexlang/litex-minif2f
 
 You do not need to know the Rust kernel to help.
 
@@ -30,217 +30,105 @@ comment like "the docs are hard to read."
 
 ## 2. Work on Datasets or Textbooks
 
-The datasets and textbooks Litex wants to explore are tracked here:
+The best first dataset contribution is concrete, runnable proof work on
+MiniF2F and MATH500:
 
-https://github.com/litexlang/datasets_and_textbooks
+- https://github.com/litexlang/litex-minif2f
+- https://github.com/litexlang/litex-math500
 
-This work has two main directions:
+There are two useful kinds of dataset work:
 
-- **Horizontal work: datasets.** Improve or expand problem datasets such as
-  MATH500, miniF2F-style problems, high-school math, contests, and exams.
-- **Vertical work: textbooks.** Translate a mathematical book or chapter in
-  order, preserving the source structure and recording what Litex can or cannot
-  express yet.
+1. Finish unfinished problems by removing or reducing `know`.
+2. Improve already finished problems when the code is too long, unclear, or
+   semantically weaker than the source problem.
 
-#### Turn Scaffolding Into Checked Proofs
+Quality matters more than count. A small number of checkable, readable files is
+more useful than a large set of broad suggestions.
 
-The goal is not only to make files run. Many current files intentionally use
-`know` or `abstract_prop` as temporary scaffolding so that a larger translation
-can stay runnable while the missing mathematics remains visible. A useful
-contribution is to make that scaffolding smaller, more precise, or unnecessary.
+### Finish Unfinished Problems
 
-Good dataset/textbook work usually looks like one of these:
+A strong result is a fully checkable `.lit` file with no non-background `know`.
+A useful partial result is also acceptable: if the original proof had one broad
+`know`, split it into several smaller mathematical steps, prove the steps you
+can, and leave only the precise blocked step as `know`.
 
-- prove an existing `know` directly and remove it;
-- find several similar `know` facts and replace them with one reusable theorem,
-  definition, or standard-library interface;
-- split one broad `know` into a real proof outline, with only the one remaining
-  hard sub-step still marked by `know`;
-- replace an `abstract_prop` with a concrete `prop` when the intended meaning
-  is now clear enough to define;
-- record why a proof is blocked, including the smallest useful statement that
-  still fails;
-- add source or license notes when the original text cannot be redistributed.
+For any remaining `know`, add a short comment in the `.lit` file explaining:
 
-A practical workflow is:
+- what exact mathematical step is still missing;
+- why the current proof attempt does not close it;
+- whether it looks like `proof_debt` or `kernel_problem`.
 
-1. Make one to three quick passes over a batch and solve the easy items first.
-   These are often arithmetic cleanups, missing intermediate equalities,
-   obvious witnesses, or small theorem calls.
-2. When an item stays stuck after several passes, stop trying random formal
-   rewrites. Read the math and write the proof in natural language first.
-3. Break that proof into small Litex-shaped steps: definitions to unfold,
-   intermediate equalities, estimates, cases, witnesses, and local lemmas.
-4. Formalize those steps one by one. If a step still cannot be proved, put the
-   `know` on that narrow step, not on the whole theorem.
-5. Keep the item status honest: `checkable` only after the relevant Litex code
-   verifies; `translated` when the statement is natural but unfinished;
-   `blocked` when the remaining obstacle is understood and recorded.
+### Improve Finished Problems
 
-Here is a more realistic example of the workflow. Suppose the source problem
-is Euclid's theorem in bounded form:
+Already-finished files can still be useful contributions if you make them
+mathematically stronger or easier to read. Good improvements include:
 
-> For every positive integer `a >= 2`, there is a prime number `k > a`.
+- strengthening a statement that was weaker than the source problem;
+- removing assumptions that hide too much mathematical content;
+- shortening a proof without making it less explicit;
+- making the proof more Litex-native;
+- replacing repeated local clutter with a small clear claim.
 
-A first translation might keep the file runnable by assuming exactly the
-conclusion it still needs:
+Do not submit cosmetic-only changes.
 
-```text
-prop prime(a N_pos):
-    2 <= a
-    forall b N_pos:
-        2 <= b < a
-        =>:
-            a % b != 0
+### Rules For Dataset Work
 
-claim:
-    prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {k > a, $prime(k)}
-    have k N_pos
-    know k > a
-    know $prime(k)
-    witness exist k N_pos st {k > a, $prime(k)} from k
+- Every submitted `.lit` file must be runnable from the command line.
+- Do not weaken the original problem statement.
+- Do not add broad assumptions just to make the proof pass.
+- Do not replace proof work with `abstract_prop`.
+- Do not replace one large unexplained `know` with another large unexplained
+  `know`.
+- Do not leave failed attempts, chat logs, or AI-generated commentary inside
+  final `.lit` files.
+- Keep final Litex code clean and readable.
+- Prefer explicit equality chains, inequalities, witnesses, finite case splits,
+  and small named claims.
+- If you use AI, you must understand and be able to explain every line you
+  submit.
+
+### Verification And Experience
+
+Include a `verify.sh` script that runs every `.lit` file you submit. For
+example:
+
+```sh
+#!/usr/bin/env sh
+set -eu
+
+litex -f unfinished_solved/<problem_id_1>.lit
+litex -f finished_improved/<problem_id_2>.lit
 ```
 
-That version is only a placeholder. The natural-language proof has real
-structure:
+Also include a short `experience.md`. Keep it concrete. The point is to show
+what you learned from actually trying to make Litex proofs verify:
 
-1. Let `P = 1 * 2 * ... * a` and consider `P + 1`.
-2. Use a general theorem that every natural number `n >= 2` has a prime
-   divisor.
-3. Let `k` be a prime divisor of `P + 1`.
-4. If `k <= a`, then `k` divides the product `P`, so `P % k = 0`.
-5. Since `k` also divides `P + 1`, we get `(P + 1) % k = 0`; but from
-   `P % k = 0`, the same remainder is `1`, a contradiction.
-6. Therefore `k > a`, and this prime `k` is the witness.
+- unfinished problems that are now fully checkable;
+- already-finished problems that you cleaned, shortened, or strengthened;
+- partial progress where a broad `know` was reduced to a precise remaining
+  step;
+- proof patterns that worked, such as equality chains, explicit witnesses,
+  finite case splits, zero-product arguments via division, or local claims;
+- problem types where Litex struggled;
+- workarounds you found;
+- kernel rules, infer rules, standard-library lemmas, syntax, diagnostics,
+  examples, tutorials, or task instructions that would have helped.
 
-After writing this outline, split the broad assumption into reusable subgoals
-and check the standard library before proving them locally. Here one subgoal is
-already a standard-library theorem: `Nat::exists_prime_and_dvd`. In a real file,
-you would import `Nat` and use the std theorem, adapting from std's
-`$Nat::Prime` / `$Nat::Dvd` interface to the local statement shape if needed.
-The product-divisibility step is also a reusable theorem candidate: it can be
-proved locally by induction or by splitting the finite product at `k`, but if it
-appears in several problems it should be promoted into std instead of copied
-every time.
+A good partial result is not just "I could not solve it." A good partial result
+says: "I reduced the missing step from this broad claim to this exact lemma.
+These intermediate claims now verify. This one remaining step is blocked for
+this precise reason."
 
-```text
-# First reusable fact: use std instead of reproving prime divisors.
-import Nat
+### Textbook Work Is A Harder Next Step
 
-claim:
-    prove:
-        forall n N_pos:
-            2 <= n
-            =>:
-                exist k N_pos st {$prime(k), n % k = 0}
-    # In the final proof, cite `Nat::exists_prime_and_dvd(n)` and bridge the
-    # std facts `$Nat::Prime(k)` and `$Nat::Dvd(k, n)` to this local surface.
-    by thm Nat::exists_prime_and_dvd(n)
-    # bridge the std witness to the local `$prime(k), n % k = 0` shape here
+Textbook formalization is valuable, but it is usually harder than dataset work
+because a chapter has local definitions, source order, omitted proofs, examples,
+and long dependency chains. If you want to work on a textbook, first read
+`docs/Tutorial/Textbook_Formalization_Guide.md`.
 
-# Second reusable fact: prove once, then consider moving it into std.
-claim:
-    prove:
-        forall a, k N_pos:
-            k <= a
-            =>:
-                product(1, a, 'N_pos(x){x}) % k = 0
-    know:
-        forall a, k N_pos:
-            k <= a
-            =>:
-                product(1, a, 'N_pos(x){x}) % k = 0
-
-# The Euclid step now has no broad know.
-claim:
-    prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {k > a, $prime(k)}
-    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases k > a:
-        case k <= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
-        case k > a:
-            do_nothing
-    witness exist k N_pos st {k > a, $prime(k)} from k
-```
-
-That is already a much better contribution. The remaining work is not "prove
-infinite primes" as one opaque task; it is a small list of named mathematical
-interfaces. In the checked case study, the product-divisibility fact is proved
-by splitting the product at `k`. Once the small interfaces are available, the
-Euclid step above becomes a clean final proof. The full checked version is in
-`examples/05_case_studies/README.md`.
-
-#### Preserve the Mathematical Meaning
-
-Be careful with semantic translation. A bad formalization can pass by proving
-the wrong thing. Do not replace a problem with a tautology such as `1 = 1`, and
-do not prove only one example when the source statement is quantified. For
-example, if the problem says "for positive real `x`, prove `x = 2` from
-`x^3 = 8`", proving only `2^3 = 8` misses the statement. The formalization
-should keep the variable, hypothesis, and conclusion:
-
-```text
-forall x R_pos:
-    x^3 = 8
-    =>:
-        3 = log(2, 8)
-        log(2, 8) = log(2, x^3)
-        log(2, x^3) = 3 * log(2, x)
-        log(2, x) = 1
-        x = 2^1 = 2
-```
-
-The exact proof route may change depending on the available library, but the
-translation must preserve the mathematical content of the original problem.
-
-
-### Enrich the Standard Library
-
-Dataset and textbook work is one of the main ways Litex discovers what should
-belong in the standard library.
-
-The standard library has two jobs:
-
-- record basic background interfaces, such as the relationships among builtin
-  objects, predicates, arithmetic, order, membership, divisibility, primes, and
-  finite products;
-- store reusable theorems that are mathematically routine but too long to
-  reprove inside every dataset item.
-
-The second kind is often discovered only after doing real problems. A human may
-look at a line like "every number at least two has a prime divisor" or "if
-`k <= a`, then `k` divides `1 * ... * a`" and treat it as obvious background.
-In a formal language, each of those facts may require induction, witnesses,
-divisibility bookkeeping, or product-splitting. When the same proof debt appears
-across many items, the right contribution is not to keep copying `know`; it is
-to turn the pattern into a named std theorem, prove it once, and replace local
-uses with a theorem call.
-
-
-For each translated item, record the math idea before the Litex code:
-
-```yaml
-source:
-problem:
-proof_idea:
-litex_code:
-comments:
-```
-
-Use `comments` for verifier commands, proof-attempt notes, blockers, license
-caveats, and follow-up work. Add extra fields such as `id`, `topic`, `status`,
-or `blocker` only when a local dataset dashboard needs them.
+That guide explains how to split a chapter into `narrative`, `object
+definition`, `prop definition`, `thm`, and `example sketch` items before writing
+Litex code.
 
 ## What to Avoid at First
 
