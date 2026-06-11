@@ -2164,21 +2164,17 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(x)) => x.to_latex_string(),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt(x)) => x.to_latex_string(),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasPropStmt(x)) => {
+            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(x)) => x.to_latex_string(),
+            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
+            Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasThmStmt(x)) => {
+            Stmt::DefAliasStmt(DefAliasStmt::AliasThmStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(x)) => x.to_latex_string(),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
+            Stmt::DefAlgoStmt(x) => x.to_latex_string(),
+            Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }

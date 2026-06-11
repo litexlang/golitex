@@ -413,10 +413,13 @@ impl AcceptedByResult {
                 Self::new(AcceptedByKind::ExistElimination)
             }
             Stmt::DefObjStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(_))
-            | Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(_))
-            | Stmt::ProofBlock(_) => Self::proof_block(None, steps_count),
+            Stmt::DefThmStmt(_) | Stmt::DefStrategyStmt(_) | Stmt::ProofBlock(_) => {
+                Self::proof_block(None, steps_count)
+            }
+            Stmt::DefPredicateStmt(_) => Self::new(AcceptedByKind::Definition),
+            Stmt::DefAliasStmt(_) => Self::new(AcceptedByKind::Definition),
             Stmt::DefInterfaceStmt(_) => Self::new(AcceptedByKind::Definition),
+            Stmt::DefAlgoStmt(_) => Self::new(AcceptedByKind::Definition),
             Stmt::By(ByStmt::ByCasesStmt(_)) => Self::case_split(vec![], vec![]),
             Stmt::By(ByStmt::ByThmStmt(_)) => Self::new(AcceptedByKind::TheoremCall),
             Stmt::By(_) => Self::proof_block(None, steps_count),

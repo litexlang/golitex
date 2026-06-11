@@ -27,27 +27,21 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(d)) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt(d)
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt(d)) => self.exec_def_prop_stmt(d),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(d)) => {
+            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(d)) => self.exec_def_prop_stmt(d),
+            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(d)) => {
                 self.exec_def_abstract_prop_stmt(d)
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasPropStmt(d)) => {
-                self.exec_alias_prop_stmt(d)
-            }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::AliasThmStmt(d)) => {
-                self.exec_alias_thm_stmt(d)
-            }
+            Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(d)) => self.exec_alias_prop_stmt(d),
+            Stmt::DefAliasStmt(DefAliasStmt::AliasThmStmt(d)) => self.exec_alias_thm_stmt(d),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(d)) => {
                 self.exec_def_template_stmt(d)
-            }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(d)) => self.exec_def_algo_stmt(d),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefThmStmt(s)) => self.exec_def_thm_stmt(s),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStrategyStmt(s)) => {
-                self.exec_def_strategy_stmt(s)
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
                 self.exec_def_struct_stmt(s)
             }
+            Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
+            Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
+            Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),

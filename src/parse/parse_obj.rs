@@ -2020,7 +2020,7 @@ mod module_qualification_parse_tests {
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
-        let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(stmt)) = stmt else {
+        let Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(stmt)) = stmt else {
             panic!("expected abstract prop definition");
         };
         assert_eq!(stmt.name, "some_prop");

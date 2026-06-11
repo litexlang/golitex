@@ -14,25 +14,25 @@ impl From<DefLetStmt> for Stmt {
 
 impl From<DefPropStmt> for Stmt {
     fn from(v: DefPropStmt) -> Self {
-        DefInterfaceStmt::DefPropStmt(v).into()
+        DefPredicateStmt::DefPropStmt(v).into()
     }
 }
 
 impl From<DefAbstractPropStmt> for Stmt {
     fn from(v: DefAbstractPropStmt) -> Self {
-        DefInterfaceStmt::DefAbstractPropStmt(v).into()
+        DefPredicateStmt::DefAbstractPropStmt(v).into()
     }
 }
 
 impl From<AliasPropStmt> for Stmt {
     fn from(v: AliasPropStmt) -> Self {
-        DefInterfaceStmt::AliasPropStmt(v).into()
+        DefAliasStmt::AliasPropStmt(v).into()
     }
 }
 
 impl From<AliasThmStmt> for Stmt {
     fn from(v: AliasThmStmt) -> Self {
-        DefInterfaceStmt::AliasThmStmt(v).into()
+        DefAliasStmt::AliasThmStmt(v).into()
     }
 }
 
@@ -98,7 +98,7 @@ impl From<DefTemplateStmt> for Stmt {
 
 impl From<DefAlgoStmt> for Stmt {
     fn from(v: DefAlgoStmt) -> Self {
-        DefInterfaceStmt::DefAlgoStmt(v).into()
+        Stmt::DefAlgoStmt(v)
     }
 }
 
@@ -284,7 +284,7 @@ impl From<ByThmStmt> for Stmt {
 
 impl From<DefThmStmt> for Stmt {
     fn from(v: DefThmStmt) -> Self {
-        DefInterfaceStmt::DefThmStmt(v).into()
+        Stmt::DefThmStmt(v)
     }
 }
 
@@ -302,7 +302,7 @@ impl From<StopStrategyStmt> for Stmt {
 
 impl From<DefStrategyStmt> for Stmt {
     fn from(v: DefStrategyStmt) -> Self {
-        DefInterfaceStmt::DefStrategyStmt(v).into()
+        Stmt::DefStrategyStmt(v)
     }
 }
 
@@ -315,6 +315,18 @@ impl From<DefStructStmt> for Stmt {
 impl From<DefObjStmt> for Stmt {
     fn from(v: DefObjStmt) -> Self {
         Stmt::DefObjStmt(v)
+    }
+}
+
+impl From<DefPredicateStmt> for Stmt {
+    fn from(v: DefPredicateStmt) -> Self {
+        Stmt::DefPredicateStmt(v)
+    }
+}
+
+impl From<DefAliasStmt> for Stmt {
+    fn from(v: DefAliasStmt) -> Self {
+        Stmt::DefAliasStmt(v)
     }
 }
 

@@ -1,0 +1,28 @@
+claim:
+    prove:
+        forall S set:
+            forall A S:
+                $is_nonempty_set(A)
+            =>:
+                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+
+    by axiom_of_choice: set S
+
+像 claim 这种，field 应该是 
+
+{
+    result
+    type
+    line
+    assumptions: [
+        声明变量{            
+
+        }
+        假设变量有哪些性质
+    ]
+    证明过程：[
+        claim下面的每个语句一个个执行得到的结果
+    ]
+    证明被claim的事实：怎么证明的
+    Effect: 大环境里有了新的被证明的事实
+}
