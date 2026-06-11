@@ -1,6 +1,6 @@
 use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::{
-    AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, DefInterfaceStmt,
+    AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, DefPredicateStmt,
     Fact, FactualStmtSuccess, NonFactualStmtSuccess, ObjectIntroductionItem, Runtime, Stmt,
     StmtResult, UnsafeStmt, VerifiedByResult,
 };
@@ -421,7 +421,7 @@ fn accepted_by_summary(success: &NonFactualStmtSuccess) -> Option<&'static str> 
         Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
             return Some("binding accepted without proof obligation");
         }
-        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(_)) => {
+        Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(_)) => {
             return Some("abstract prop interface registered");
         }
         _ => {}

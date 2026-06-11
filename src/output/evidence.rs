@@ -562,12 +562,12 @@ fn known_forall_requirement_items(
 fn citation_type_for_stmt(stmt: &Stmt) -> String {
     match stmt {
         Stmt::Fact(fact) => format!("cite {}", citation_fact_type_label(fact)),
-        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefPropStmt(_)) => "cite prop def".to_string(),
-        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAbstractPropStmt(_)) => {
+        Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(_)) => "cite prop def".to_string(),
+        Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(_)) => {
             "cite abstract prop def".to_string()
         }
         Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite let def".to_string(),
-        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefAlgoStmt(_)) => "cite algo def".to_string(),
+        Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
         Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(_)) => "cite struct def".to_string(),
         _ => format!("cite {} statement", stmt_type_label_for_citation(stmt)),
     }

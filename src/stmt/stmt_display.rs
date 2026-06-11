@@ -13,7 +13,12 @@ impl fmt::Display for Stmt {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
             Stmt::DefObjStmt(x) => write!(f, "{}", x),
+            Stmt::DefPredicateStmt(x) => write!(f, "{}", x),
+            Stmt::DefAliasStmt(x) => write!(f, "{}", x),
             Stmt::DefInterfaceStmt(x) => write!(f, "{}", x),
+            Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
+            Stmt::DefThmStmt(x) => write!(f, "{}", x),
+            Stmt::DefStrategyStmt(x) => write!(f, "{}", x),
             Stmt::By(x) => write!(f, "{}", x),
             Stmt::Witness(x) => write!(f, "{}", x),
             Stmt::ProofBlock(x) => write!(f, "{}", x),
@@ -47,17 +52,28 @@ impl fmt::Display for DefObjStmt {
     }
 }
 
+impl fmt::Display for DefPredicateStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DefPredicateStmt::DefPropStmt(x) => write!(f, "{}", x),
+            DefPredicateStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl fmt::Display for DefAliasStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DefAliasStmt::AliasPropStmt(x) => write!(f, "{}", x),
+            DefAliasStmt::AliasThmStmt(x) => write!(f, "{}", x),
+        }
+    }
+}
+
 impl fmt::Display for DefInterfaceStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DefInterfaceStmt::DefPropStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::AliasPropStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::AliasThmStmt(x) => write!(f, "{}", x),
             DefInterfaceStmt::DefTemplateStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefAlgoStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefThmStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefStrategyStmt(x) => write!(f, "{}", x),
             DefInterfaceStmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }

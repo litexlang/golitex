@@ -5,7 +5,12 @@ pub enum Stmt {
     Fact(Fact),
     UnsafeStmt(UnsafeStmt),
     DefObjStmt(DefObjStmt),
+    DefPredicateStmt(DefPredicateStmt),
+    DefAliasStmt(DefAliasStmt),
     DefInterfaceStmt(DefInterfaceStmt),
+    DefAlgoStmt(DefAlgoStmt),
+    DefThmStmt(DefThmStmt),
+    DefStrategyStmt(DefStrategyStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
@@ -32,15 +37,20 @@ pub enum DefObjStmt {
 }
 
 #[derive(Clone)]
-pub enum DefInterfaceStmt {
+pub enum DefPredicateStmt {
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
+}
+
+#[derive(Clone)]
+pub enum DefAliasStmt {
     AliasPropStmt(AliasPropStmt),
     AliasThmStmt(AliasThmStmt),
+}
+
+#[derive(Clone)]
+pub enum DefInterfaceStmt {
     DefTemplateStmt(DefTemplateStmt),
-    DefAlgoStmt(DefAlgoStmt),
-    DefThmStmt(DefThmStmt),
-    DefStrategyStmt(DefStrategyStmt),
     DefStructStmt(DefStructStmt),
 }
 

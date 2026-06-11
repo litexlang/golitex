@@ -6,7 +6,12 @@ impl Stmt {
             Stmt::Fact(fact) => fact.line_file(),
             Stmt::UnsafeStmt(stmt) => stmt.line_file(),
             Stmt::DefObjStmt(stmt) => stmt.line_file(),
+            Stmt::DefPredicateStmt(stmt) => stmt.line_file(),
+            Stmt::DefAliasStmt(stmt) => stmt.line_file(),
             Stmt::DefInterfaceStmt(stmt) => stmt.line_file(),
+            Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
             Stmt::By(stmt) => stmt.line_file(),
             Stmt::Witness(stmt) => stmt.line_file(),
             Stmt::ProofBlock(stmt) => stmt.line_file(),
@@ -19,7 +24,12 @@ impl Stmt {
             Stmt::Fact(fact) => fact.fact_type_string(),
             Stmt::UnsafeStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefObjStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefPredicateStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefAliasStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefInterfaceStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::By(stmt) => stmt.stmt_type_name(),
             Stmt::Witness(stmt) => stmt.stmt_type_name(),
             Stmt::ProofBlock(stmt) => stmt.stmt_type_name(),
@@ -74,31 +84,49 @@ impl DefObjStmt {
     }
 }
 
+impl DefPredicateStmt {
+    pub fn line_file(&self) -> LineFile {
+        match self {
+            DefPredicateStmt::DefPropStmt(stmt) => stmt.line_file.clone(),
+            DefPredicateStmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
+        }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        match self {
+            DefPredicateStmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
+            DefPredicateStmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+}
+
+impl DefAliasStmt {
+    pub fn line_file(&self) -> LineFile {
+        match self {
+            DefAliasStmt::AliasPropStmt(stmt) => stmt.line_file.clone(),
+            DefAliasStmt::AliasThmStmt(stmt) => stmt.line_file.clone(),
+        }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        match self {
+            DefAliasStmt::AliasPropStmt(stmt) => stmt.stmt_type_name(),
+            DefAliasStmt::AliasThmStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+}
+
 impl DefInterfaceStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            DefInterfaceStmt::DefPropStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::AliasPropStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::AliasThmStmt(stmt) => stmt.line_file.clone(),
             DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefThmStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
             DefInterfaceStmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
     pub fn stmt_type_name(&self) -> String {
         match self {
-            DefInterfaceStmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::AliasPropStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::AliasThmStmt(stmt) => stmt.stmt_type_name(),
             DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
             DefInterfaceStmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }

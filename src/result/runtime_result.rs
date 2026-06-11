@@ -6,7 +6,12 @@ pub enum StmtResult {
     Fact(Box<FactResult>),
     UnsafeStmt(Box<UnsafeStmtResult>),
     DefObjStmt(Box<DefObjStmtResult>),
+    DefPredicateStmt(Box<DefPredicateStmtResult>),
+    DefAliasStmt(Box<DefAliasStmtResult>),
     DefInterfaceStmt(Box<DefInterfaceStmtResult>),
+    DefAlgoStmt(NonFactualStmtSuccess),
+    DefThmStmt(NonFactualStmtSuccess),
+    DefStrategyStmt(NonFactualStmtSuccess),
     By(Box<ByStmtResult>),
     Witness(Box<WitnessStmtResult>),
     ProofBlock(Box<ProofBlockStmtResult>),
@@ -18,9 +23,16 @@ impl From<NonFactualStmtSuccess> for StmtResult {
         match &v.stmt {
             Stmt::UnsafeStmt(_) => StmtResult::UnsafeStmt(Box::new(UnsafeStmtResult::new(v))),
             Stmt::DefObjStmt(_) => StmtResult::DefObjStmt(Box::new(DefObjStmtResult::new(v))),
+            Stmt::DefPredicateStmt(_) => {
+                StmtResult::DefPredicateStmt(Box::new(DefPredicateStmtResult::new(v)))
+            }
+            Stmt::DefAliasStmt(_) => StmtResult::DefAliasStmt(Box::new(DefAliasStmtResult::new(v))),
             Stmt::DefInterfaceStmt(_) => {
                 StmtResult::DefInterfaceStmt(Box::new(DefInterfaceStmtResult::new(v)))
             }
+            Stmt::DefAlgoStmt(_) => StmtResult::DefAlgoStmt(v),
+            Stmt::DefThmStmt(_) => StmtResult::DefThmStmt(v),
+            Stmt::DefStrategyStmt(_) => StmtResult::DefStrategyStmt(v),
             Stmt::By(_) => StmtResult::By(Box::new(ByStmtResult::new(v))),
             Stmt::Witness(_) => StmtResult::Witness(Box::new(WitnessStmtResult::new(v))),
             Stmt::ProofBlock(_) => StmtResult::ProofBlock(Box::new(ProofBlockStmtResult::new(v))),
@@ -129,7 +141,12 @@ impl StmtResult {
         match self {
             StmtResult::UnsafeStmt(x) => Some(x.success()),
             StmtResult::DefObjStmt(x) => Some(x.success()),
+            StmtResult::DefPredicateStmt(x) => Some(x.success()),
+            StmtResult::DefAliasStmt(x) => Some(x.success()),
             StmtResult::DefInterfaceStmt(x) => Some(x.success()),
+            StmtResult::DefAlgoStmt(x)
+            | StmtResult::DefThmStmt(x)
+            | StmtResult::DefStrategyStmt(x) => Some(x),
             StmtResult::By(x) => Some(x.success()),
             StmtResult::Witness(x) => Some(x.success()),
             StmtResult::ProofBlock(x) => Some(x.success()),
@@ -142,7 +159,12 @@ impl StmtResult {
         match self {
             StmtResult::UnsafeStmt(x) => Some(x.success_mut()),
             StmtResult::DefObjStmt(x) => Some(x.success_mut()),
+            StmtResult::DefPredicateStmt(x) => Some(x.success_mut()),
+            StmtResult::DefAliasStmt(x) => Some(x.success_mut()),
             StmtResult::DefInterfaceStmt(x) => Some(x.success_mut()),
+            StmtResult::DefAlgoStmt(x)
+            | StmtResult::DefThmStmt(x)
+            | StmtResult::DefStrategyStmt(x) => Some(x),
             StmtResult::By(x) => Some(x.success_mut()),
             StmtResult::Witness(x) => Some(x.success_mut()),
             StmtResult::ProofBlock(x) => Some(x.success_mut()),
@@ -172,7 +194,12 @@ impl StmtResult {
         match self {
             StmtResult::UnsafeStmt(x) => Some((*x).into_success()),
             StmtResult::DefObjStmt(x) => Some((*x).into_success()),
+            StmtResult::DefPredicateStmt(x) => Some((*x).into_success()),
+            StmtResult::DefAliasStmt(x) => Some((*x).into_success()),
             StmtResult::DefInterfaceStmt(x) => Some((*x).into_success()),
+            StmtResult::DefAlgoStmt(x)
+            | StmtResult::DefThmStmt(x)
+            | StmtResult::DefStrategyStmt(x) => Some(x),
             StmtResult::By(x) => Some((*x).into_success()),
             StmtResult::Witness(x) => Some((*x).into_success()),
             StmtResult::ProofBlock(x) => Some((*x).into_success()),
