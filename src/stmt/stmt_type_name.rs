@@ -314,3 +314,318 @@ impl HaveFnByForallExistUniqueStmt {
         "HaveFnByForallExistUniqueStmt".to_string()
     }
 }
+
+impl SketchStmt {
+    pub fn output_type_string() -> String {
+        "proof sketch".to_string()
+    }
+}
+
+impl ClaimStmt {
+    pub fn output_type_string() -> String {
+        "proved claim".to_string()
+    }
+}
+
+impl KnowStmt {
+    pub fn output_type_string() -> String {
+        "unsafe assumption".to_string()
+    }
+}
+
+impl EvalStmt {
+    pub fn output_type_string() -> String {
+        "evaluation statement".to_string()
+    }
+}
+
+impl EvalByStmt {
+    pub fn output_type_string() -> String {
+        "evaluation by statement".to_string()
+    }
+}
+
+impl DefAlgoStmt {
+    pub fn output_type_string() -> String {
+        "algorithm definition".to_string()
+    }
+}
+
+impl DefTemplateStmt {
+    pub fn output_type_string() -> String {
+        "template definition".to_string()
+    }
+}
+
+impl RunFileStmt {
+    pub fn output_type_string() -> String {
+        "run file statement".to_string()
+    }
+}
+
+impl ImportRelativePathStmt {
+    pub fn output_type_string() -> String {
+        "import statement".to_string()
+    }
+}
+
+impl ImportGlobalModuleStmt {
+    pub fn output_type_string() -> String {
+        "import statement".to_string()
+    }
+}
+
+impl ImportStmt {
+    pub fn output_type_string(&self) -> String {
+        match self {
+            ImportStmt::ImportRelativePath(_) => ImportRelativePathStmt::output_type_string(),
+            ImportStmt::ImportGlobalModule(_) => ImportGlobalModuleStmt::output_type_string(),
+        }
+    }
+}
+
+impl DoNothingStmt {
+    pub fn output_type_string() -> String {
+        "no-op statement".to_string()
+    }
+}
+
+impl ClearStmt {
+    pub fn output_type_string() -> String {
+        "clear statement".to_string()
+    }
+}
+
+impl StopImportStmt {
+    pub fn output_type_string() -> String {
+        "stop import statement".to_string()
+    }
+}
+
+impl WitnessExistFact {
+    pub fn output_type_string() -> String {
+        "existence witness".to_string()
+    }
+}
+
+impl WitnessNonemptySet {
+    pub fn output_type_string() -> String {
+        "nonempty set witness".to_string()
+    }
+}
+
+impl ByEnumerateFiniteSetStmt {
+    pub fn output_type_string() -> String {
+        "proof by finite set enumeration".to_string()
+    }
+}
+
+impl ByCasesStmt {
+    pub fn output_type_string() -> String {
+        "proof by cases".to_string()
+    }
+}
+
+impl ByContraStmt {
+    pub fn output_type_string() -> String {
+        "proof by contradiction".to_string()
+    }
+}
+
+impl ByInducStmt {
+    pub fn output_type_string() -> String {
+        "proof by induction".to_string()
+    }
+}
+
+impl ByForStmt {
+    pub fn output_type_string() -> String {
+        "proof by universal introduction".to_string()
+    }
+}
+
+impl ByExtensionStmt {
+    pub fn output_type_string() -> String {
+        "proof by extension".to_string()
+    }
+}
+
+impl ByFnAsSetStmt {
+    pub fn output_type_string() -> String {
+        "proof by function-as-set expansion".to_string()
+    }
+}
+
+impl ByFnSetAsSetStmt {
+    pub fn output_type_string() -> String {
+        "proof by function-set expansion".to_string()
+    }
+}
+
+impl ByEnumerateRangeStmt {
+    pub fn output_type_string() -> String {
+        "proof by range enumeration".to_string()
+    }
+}
+
+impl ByTupleAsSetStmt {
+    pub fn output_type_string() -> String {
+        "proof by tuple-as-set expansion".to_string()
+    }
+}
+
+impl ByClosedRangeAsCasesStmt {
+    pub fn output_type_string() -> String {
+        "proof by closed range cases".to_string()
+    }
+}
+
+impl ByTransitivePropStmt {
+    pub fn output_type_string() -> String {
+        "proof by transitivity".to_string()
+    }
+}
+
+impl BySymmetricPropStmt {
+    pub fn output_type_string() -> String {
+        "proof by symmetry".to_string()
+    }
+}
+
+impl ByReflexivePropStmt {
+    pub fn output_type_string() -> String {
+        "proof by reflexivity".to_string()
+    }
+}
+
+impl ByAntisymmetricPropStmt {
+    pub fn output_type_string() -> String {
+        "proof by antisymmetry".to_string()
+    }
+}
+
+impl ByZornLemmaStmt {
+    pub fn output_type_string() -> String {
+        "proof by Zorn lemma".to_string()
+    }
+}
+
+impl ByAxiomOfChoiceStmt {
+    pub fn output_type_string() -> String {
+        "proof by axiom of choice".to_string()
+    }
+}
+
+impl ByThmStmt {
+    pub fn output_type_string() -> String {
+        "proof by theorem".to_string()
+    }
+}
+
+impl DefThmStmt {
+    pub fn output_type_string() -> String {
+        "theorem definition".to_string()
+    }
+}
+
+impl UseStrategyStmt {
+    pub fn output_type_string() -> String {
+        "use strategy statement".to_string()
+    }
+}
+
+impl StopStrategyStmt {
+    pub fn output_type_string() -> String {
+        "stop strategy statement".to_string()
+    }
+}
+
+impl DefStrategyStmt {
+    pub fn output_type_string() -> String {
+        "strategy definition".to_string()
+    }
+}
+
+impl DefAbstractPropStmt {
+    pub fn output_type_string() -> String {
+        "abstract predicate interface".to_string()
+    }
+}
+
+impl DefPropStmt {
+    pub fn output_type_string() -> String {
+        "predicate definition".to_string()
+    }
+}
+
+impl AliasPropStmt {
+    pub fn output_type_string() -> String {
+        "predicate alias".to_string()
+    }
+}
+
+impl AliasThmStmt {
+    pub fn output_type_string() -> String {
+        "theorem alias".to_string()
+    }
+}
+
+impl DefLetStmt {
+    pub fn output_type_string() -> String {
+        "unsafe let binding".to_string()
+    }
+}
+
+impl HaveObjInNonemptySetOrParamTypeStmt {
+    pub fn output_type_string() -> String {
+        "object declaration".to_string()
+    }
+}
+
+impl HaveObjEqualStmt {
+    pub fn output_type_string() -> String {
+        "object definition".to_string()
+    }
+}
+
+impl HaveObjByExistFactsStmt {
+    pub fn output_type_string() -> String {
+        "object definition by existence".to_string()
+    }
+}
+
+impl HaveByExistStmt {
+    pub fn output_type_string() -> String {
+        "object definition by existence".to_string()
+    }
+}
+
+impl HaveByPreimageStmt {
+    pub fn output_type_string() -> String {
+        "preimage object definition".to_string()
+    }
+}
+
+impl HaveFnEqualStmt {
+    pub fn output_type_string() -> String {
+        "function definition".to_string()
+    }
+}
+
+impl HaveFnEqualCaseByCaseStmt {
+    pub fn output_type_string() -> String {
+        "casewise function definition".to_string()
+    }
+}
+
+impl HaveFnByInducStmt {
+    pub fn output_type_string() -> String {
+        "recursive function definition".to_string()
+    }
+}
+
+impl HaveFnByForallExistUniqueStmt {
+    pub fn output_type_string() -> String {
+        "function definition by unique existence".to_string()
+    }
+}

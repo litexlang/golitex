@@ -11,6 +11,14 @@ impl KnowStmt {
     pub fn new(facts: Vec<Fact>, line_file: LineFile) -> Self {
         KnowStmt { facts, line_file }
     }
+
+    pub fn store_reason() -> &'static str {
+        "warning: unsafe know assumption"
+    }
+
+    pub fn strict_mode_rejection_message() -> &'static str {
+        "strict mode rejects user know statements; use claim/thm/prove or move trusted background into an imported module"
+    }
 }
 
 impl fmt::Display for KnowStmt {

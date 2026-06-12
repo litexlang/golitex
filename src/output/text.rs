@@ -1,7 +1,7 @@
 use crate::prelude::{InferResult, StmtResult, VerifiedByResult, VerifiedBysEnum, SUCCESS_COLON};
 
 const VERIFIED_BY: &str = "verified by";
-const EFFECTS_COLON: &str = "effects:";
+const STORE_FACTS_COLON: &str = "store facts:";
 
 pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
     if let Some(x) = result.non_factual_success() {
@@ -35,7 +35,7 @@ fn infer_block_string(infer_result: &InferResult) -> String {
     }
     format!(
         "\n\n{}\n{}",
-        EFFECTS_COLON,
+        STORE_FACTS_COLON,
         infer_result.join_infer_lines("\n")
     )
 }

@@ -10,7 +10,9 @@ impl Runtime {
             .map_err(|define_params_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
             })?;
-        infer_result.relabel_all_added_facts(InferReason::ObjectIntroduction);
+        infer_result.relabel_all_added_facts_with_store_reason(
+            HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
+        );
         let checks = self
             .object_introduction_nonempty_checks_for_param_def(&stmt.param_def)
             .map_err(|check_error| {

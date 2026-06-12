@@ -20,7 +20,7 @@ impl Runtime {
                     .into();
                     self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
-                        InferReason::ParameterDeclaration,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 Obj::SeqSet(ss) => {
@@ -33,7 +33,7 @@ impl Runtime {
                     .into();
                     self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
-                        InferReason::ParameterDeclaration,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 Obj::MatrixSet(ms) => {
@@ -46,7 +46,7 @@ impl Runtime {
                     .into();
                     self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
-                        InferReason::ParameterDeclaration,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
@@ -75,7 +75,7 @@ impl Runtime {
         .into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             type_fact,
-            InferReason::ParameterDeclaration,
+            InferReason::ParameterDefinition,
         )
     }
 
@@ -92,7 +92,7 @@ impl Runtime {
         .into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             type_fact,
-            InferReason::ParameterDeclaration,
+            InferReason::ParameterDefinition,
         )
     }
 
@@ -109,7 +109,7 @@ impl Runtime {
         .into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             type_fact,
-            InferReason::ParameterDeclaration,
+            InferReason::ParameterDefinition,
         )
     }
 
@@ -126,7 +126,7 @@ impl Runtime {
         .into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             type_fact,
-            InferReason::ParameterDeclaration,
+            InferReason::ParameterDefinition,
         )
     }
 

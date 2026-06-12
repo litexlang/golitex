@@ -28,6 +28,10 @@ impl ParamDefWithType {
         }
     }
 
+    pub fn store_reason() -> &'static str {
+        "parameter definition"
+    }
+
     pub fn len(&self) -> usize {
         self.groups.len()
     }

@@ -5,7 +5,7 @@ impl Runtime {
         if self.strict_mode {
             return Err(short_exec_error(
                 def_let_stmt.clone().into(),
-                "strict mode rejects user let statements; use have/claim/thm/prove or move trusted background into an imported module",
+                DefLetStmt::strict_mode_rejection_message(),
                 None,
                 vec![],
             ));
