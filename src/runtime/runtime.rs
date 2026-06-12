@@ -12,6 +12,7 @@ pub struct Runtime {
     pub parsing_free_param_collection: FreeParamCollection,
     pub detail_output: bool,
     pub strict_mode: bool,
+    pub output_language: OutputLanguage,
 }
 
 impl Runtime {
@@ -27,6 +28,7 @@ impl Runtime {
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: false,
             strict_mode: false,
+            output_language: OutputLanguage::English,
         }
     }
 
@@ -58,6 +60,7 @@ impl Runtime {
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: parent_runtime.detail_output,
             strict_mode: false,
+            output_language: parent_runtime.output_language,
         }
     }
 }

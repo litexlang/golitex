@@ -1,6 +1,278 @@
 # Litex Output Is Your Friend
 
-### 
+### Litex Supports Multiple Output Languages
+
+```litex
+1 + 1 = 2
+```
+
+```json
+{
+  "result": "success",
+  "type": "equality fact",
+  "line": 1,
+  "statement": "1 + 1 = 2",
+  "verification": {
+    "type": "builtin rule",
+    "rule": "calculation"
+  },
+  "store_facts": [
+    {
+      "fact": "1 + 1 = 2",
+      "reason": "proved statement"
+    }
+  ]
+}
+
+
+
+{
+  "结果": "成功",
+  "类型": "等式事实",
+  "行": 1,
+  "语句": "1 + 1 = 2",
+  "验证": {
+    "类型": "内置规则",
+    "规则": "calculation"
+  },
+  "存储事实": [
+    {
+      "事实": "1 + 1 = 2",
+      "原因": "已证明语句"
+    }
+  ]
+}
+
+
+
+{
+  "結果": "成功",
+  "類型": "等式事實",
+  "行": 1,
+  "語句": "1 + 1 = 2",
+  "驗證": {
+    "類型": "內建規則",
+    "規則": "calculation"
+  },
+  "儲存事實": [
+    {
+      "事實": "1 + 1 = 2",
+      "原因": "已證明語句"
+    }
+  ]
+}
+
+
+
+{
+  "結果": "成功",
+  "種類": "等式事実",
+  "行": 1,
+  "文": "1 + 1 = 2",
+  "検証": {
+    "種類": "組み込みルール",
+    "ルール": "calculation"
+  },
+  "保存された事実": [
+    {
+      "事実": "1 + 1 = 2",
+      "理由": "証明済み文"
+    }
+  ]
+}
+
+
+
+{
+  "결과": "성공",
+  "유형": "등식 사실",
+  "줄": 1,
+  "문장": "1 + 1 = 2",
+  "검증": {
+    "유형": "내장 규칙",
+    "규칙": "calculation"
+  },
+  "저장된 사실": [
+    {
+      "사실": "1 + 1 = 2",
+      "이유": "증명된 문장"
+    }
+  ]
+}
+
+
+
+{
+  "resultado": "éxito",
+  "tipo": "hecho de igualdad",
+  "línea": 1,
+  "enunciado": "1 + 1 = 2",
+  "verificación": {
+    "tipo": "regla integrada",
+    "regla": "calculation"
+  },
+  "hechos_guardados": [
+    {
+      "hecho": "1 + 1 = 2",
+      "razón": "enunciado probado"
+    }
+  ]
+}
+
+
+
+{
+  "résultat": "succès",
+  "type": "fait d'égalité",
+  "ligne": 1,
+  "énoncé": "1 + 1 = 2",
+  "vérification": {
+    "type": "règle intégrée",
+    "règle": "calculation"
+  },
+  "faits_enregistrés": [
+    {
+      "fait": "1 + 1 = 2",
+      "raison": "énoncé prouvé"
+    }
+  ]
+}
+
+
+
+{
+  "Ergebnis": "Erfolg",
+  "Typ": "Gleichheitsfakt",
+  "Zeile": 1,
+  "Anweisung": "1 + 1 = 2",
+  "Verifikation": {
+    "Typ": "eingebaute Regel",
+    "Regel": "calculation"
+  },
+  "gespeicherte_Fakten": [
+    {
+      "Fakt": "1 + 1 = 2",
+      "Grund": "bewiesene Anweisung"
+    }
+  ]
+}
+
+
+
+{
+  "resultado": "sucesso",
+  "tipo": "fato de igualdade",
+  "linha": 1,
+  "declaração": "1 + 1 = 2",
+  "verificação": {
+    "tipo": "regra interna",
+    "regra": "calculation"
+  },
+  "fatos_armazenados": [
+    {
+      "fato": "1 + 1 = 2",
+      "razão": "declaração provada"
+    }
+  ]
+}
+
+
+
+{
+  "результат": "успех",
+  "тип": "факт равенства",
+  "строка": 1,
+  "утверждение": "1 + 1 = 2",
+  "проверка": {
+    "тип": "встроенное правило",
+    "правило": "calculation"
+  },
+  "сохранённые_факты": [
+    {
+      "факт": "1 + 1 = 2",
+      "причина": "доказанное утверждение"
+    }
+  ]
+}
+
+
+
+{
+  "النتيجة": "نجاح",
+  "النوع": "حقيقة مساواة",
+  "السطر": 1,
+  "العبارة": "1 + 1 = 2",
+  "التحقق": {
+    "النوع": "قاعدة مضمنة",
+    "القاعدة": "calculation"
+  },
+  "الحقائق_المخزنة": [
+    {
+      "الحقيقة": "1 + 1 = 2",
+      "السبب": "عبارة مبرهنة"
+    }
+  ]
+}
+
+
+
+{
+  "परिणाम": "सफलता",
+  "प्रकार": "समानता तथ्य",
+  "पंक्ति": 1,
+  "कथन": "1 + 1 = 2",
+  "सत्यापन": {
+    "प्रकार": "आंतरिक नियम",
+    "नियम": "calculation"
+  },
+  "संग्रहीत_तथ्य": [
+    {
+      "तथ्य": "1 + 1 = 2",
+      "कारण": "सिद्ध कथन"
+    }
+  ]
+}
+
+
+
+{
+  "kết_quả": "thành công",
+  "kiểu": "sự kiện đẳng thức",
+  "dòng": 1,
+  "mệnh_đề": "1 + 1 = 2",
+  "xác_minh": {
+    "kiểu": "quy tắc tích hợp",
+    "quy_tắc": "calculation"
+  },
+  "sự_kiện_đã_lưu": [
+    {
+      "sự_kiện": "1 + 1 = 2",
+      "lý_do": "mệnh đề đã chứng minh"
+    }
+  ]
+}
+
+
+
+{
+  "hasil": "sukses",
+  "tipe": "fakta kesamaan",
+  "baris": 1,
+  "pernyataan": "1 + 1 = 2",
+  "verifikasi": {
+    "tipe": "aturan bawaan",
+    "aturan": "calculation"
+  },
+  "fakta_tersimpan": [
+    {
+      "fakta": "1 + 1 = 2",
+      "alasan": "pernyataan terbukti"
+    }
+  ]
+}
+```
+
+### An Example of Litex Output
 
 ```litex
 # Atomic fact verification route gallery.

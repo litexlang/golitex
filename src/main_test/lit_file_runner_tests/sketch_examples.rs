@@ -76,6 +76,67 @@ fn run_tmp_lit_file(file_name: &str) {
 }
 
 #[test]
+#[ignore]
+fn print_tmp_lit_in_all_output_languages() {
+    run_with_large_stack("print_tmp_lit_in_all_output_languages_large_stack", || {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let tmp_lit_path = manifest_dir.join("examples").join("tmp.lit");
+        let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
+        };
+        let path_str = match tmp_lit_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
+        };
+        let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
+        let languages = vec![
+            ("en", OutputLanguage::English),
+            ("zh", OutputLanguage::SimplifiedChinese),
+            ("zh-Hans", OutputLanguage::TraditionalChinese),
+            ("ja", OutputLanguage::Japanese),
+            ("ko", OutputLanguage::Korean),
+            ("es", OutputLanguage::Spanish),
+            ("fr", OutputLanguage::French),
+            ("de", OutputLanguage::German),
+            ("pt", OutputLanguage::Portuguese),
+            ("ru", OutputLanguage::Russian),
+            ("ar", OutputLanguage::Arabic),
+            ("hi", OutputLanguage::Hindi),
+            ("vi", OutputLanguage::Vietnamese),
+            ("id", OutputLanguage::Indonesian),
+        ];
+
+        for (language_code, output_language) in languages {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(path_str);
+            runtime.output_language = output_language;
+
+            let start_time = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            println!(
+                "\n=== [lang={}] examples/tmp.lit {} ({:.2} ms user file only) ===\n{}\n",
+                language_code,
+                if run_succeeded { "OK" } else { "FAILED" },
+                duration_ms,
+                run_output
+            );
+
+            assert!(
+                run_succeeded,
+                "examples/tmp.lit failed for language `{}`",
+                language_code
+            );
+        }
+    });
+}
+
+#[test]
 fn run_tmp0() {
     run_with_large_stack("run_tmp0_large_stack", || run_tmp_lit_file("tmp.lit"));
 }

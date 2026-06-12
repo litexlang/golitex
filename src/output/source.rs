@@ -1,4 +1,6 @@
-use crate::common::json_value::{json_string_literal, line_file_line_json_value, JsonValue};
+use crate::common::json_value::{
+    json_one_level_indent, line_file_line_json_value, render_json_value, JsonValue,
+};
 use crate::prelude::*;
 use std::path::Path;
 use std::rc::Rc;
@@ -7,6 +9,7 @@ use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_LINE, JSON_KEY_SOURCE, JSON_KEY_STMT,
     JSON_KEY_STMT_TYPE,
 };
+use super::language::localize_json_value;
 
 const SOURCE_KIND: &str = "source_kind";
 const SOURCE_KIND_ENTRY: &str = "entry";
@@ -172,21 +175,20 @@ pub(crate) fn stmt_json_field_lines(
     indent_inner: &str,
     stmt: &Stmt,
 ) -> Vec<String> {
-    let stmt_display_string = stmt_text_for_json(runtime, stmt);
-    let mut lines: Vec<String> = Vec::new();
-    lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
-        JSON_KEY_STMT_TYPE,
-        json_string_literal(&stmt.output_type_string())
-    ));
-    lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
-        JSON_KEY_STMT,
-        json_string_literal(&stmt_display_string)
-    ));
-    lines
+    let value = localize_json_value(runtime, stmt_json_value(runtime, stmt));
+    let JsonValue::Object(fields) = value else {
+        return vec![];
+    };
+    let field_depth = indent_inner.len() / json_one_level_indent(1).len();
+    let object_depth = field_depth.saturating_sub(1);
+    let rendered = render_json_value(&JsonValue::Object(fields), object_depth);
+    let mut lines = rendered.lines().collect::<Vec<_>>();
+    if lines.len() < 3 {
+        return vec![];
+    }
+    lines.remove(0);
+    lines.pop();
+    lines.into_iter().map(|line| line.to_string()).collect()
 }
 
 pub(crate) fn stmt_json_value(runtime: &Runtime, stmt: &Stmt) -> JsonValue {

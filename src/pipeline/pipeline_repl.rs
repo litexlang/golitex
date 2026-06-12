@@ -13,7 +13,7 @@ pub fn run_repl(version: &str) {
 }
 
 pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
-    return run_repl_loop_internal(version, detail_output, false);
+    return run_repl_loop_internal(version, detail_output, false, OutputLanguage::English);
 }
 
 pub fn run_repl_with_detail_output_and_strict(
@@ -21,14 +21,28 @@ pub fn run_repl_with_detail_output_and_strict(
     detail_output: bool,
     strict_mode: bool,
 ) {
-    return run_repl_loop_internal(version, detail_output, strict_mode);
+    return run_repl_loop_internal(version, detail_output, strict_mode, OutputLanguage::English);
+}
+
+pub fn run_repl_with_detail_output_and_strict_and_language(
+    version: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) {
+    return run_repl_loop_internal(version, detail_output, strict_mode, output_language);
 }
 
 pub fn run_latex_repl(version: &str) {
     return run_latex_repl_loop_internal(version);
 }
 
-fn run_repl_loop_internal(version_banner: &str, detail_output: bool, strict_mode: bool) {
+fn run_repl_loop_internal(
+    version_banner: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -38,13 +52,22 @@ fn run_repl_loop_internal(version_banner: &str, detail_output: bool, strict_mode
             version_banner,
             detail_output,
             true,
+            output_language,
+            &mut stdin_locked,
+            &mut stdout_locked,
+        )
+    } else if output_language == OutputLanguage::English {
+        run_repl_loop_with_readers(
+            version_banner,
+            detail_output,
             &mut stdin_locked,
             &mut stdout_locked,
         )
     } else {
-        run_repl_loop_with_readers(
+        run_repl_loop_with_readers_and_language(
             version_banner,
             detail_output,
+            output_language,
             &mut stdin_locked,
             &mut stdout_locked,
         )
@@ -76,10 +99,27 @@ fn run_repl_loop_with_readers(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
+    run_repl_loop_with_readers_and_language(
+        version_banner,
+        detail_output,
+        OutputLanguage::English,
+        stdin_reader,
+        stdout_writer,
+    )
+}
+
+fn run_repl_loop_with_readers_and_language(
+    version_banner: &str,
+    detail_output: bool,
+    output_language: OutputLanguage,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
     run_repl_loop_with_readers_and_strict(
         version_banner,
         detail_output,
         false,
+        output_language,
         stdin_reader,
         stdout_writer,
     )
@@ -89,6 +129,7 @@ fn run_repl_loop_with_readers_and_strict(
     version_banner: &str,
     detail_output: bool,
     strict_mode: bool,
+    output_language: OutputLanguage,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
@@ -96,6 +137,7 @@ fn run_repl_loop_with_readers_and_strict(
         version_banner,
         detail_output,
         strict_mode,
+        output_language,
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
@@ -111,6 +153,7 @@ fn run_latex_repl_loop_with_readers(
         version_banner,
         false,
         false,
+        OutputLanguage::English,
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Latex,
@@ -121,6 +164,7 @@ fn run_repl_loop_with_readers_and_mode(
     version_banner: &str,
     detail_output: bool,
     strict_mode: bool,
+    output_language: OutputLanguage,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
@@ -142,6 +186,7 @@ fn run_repl_loop_with_readers_and_mode(
     runtime.new_file_path_new_env_new_name_scope("repl");
     runtime.detail_output = detail_output;
     runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
 
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();

@@ -3089,6 +3089,15 @@ The builtin layer is Litex's shared mathematical background. User-defined `prop`
 
 When Litex verifies a file, read the output message. It tells you how each fact was proved.
 
+Output localization is a preview convenience. Use `litex -lang <code> ...` to
+print JSON keys and explanatory labels in another language. Supported codes are
+`en`, `zh`, `zh-Hans`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`, `hi`,
+`vi`, and `id`. In Litex output, `zh` selects Simplified Chinese and `zh-Hans`
+selects Traditional Chinese. Litex syntax inside `statement`, `fact`,
+`cited_statement`, and related mathematical fields stays unchanged, because
+those strings are the proof script and facts themselves. The default output
+language remains English; `litex -lang en ...` selects it explicitly.
+
 For example, a successful fact result may show:
 
 ```litex
