@@ -125,12 +125,6 @@ by antisymmetric_prop:
                 x = y
     x = y
 
-# Set-theoretic bridge by statements.
-have tmp_f fn(x R)R
-by fn as set: tmp_f
-by tuple as set: (1, 2)
-by fn set as set: tmp_f $in fn(x R)R
-
 # Trusted preview: obligations are checked before the trusted conclusion.
 have tmp_family set
 by axiom_of_choice: set tmp_family:

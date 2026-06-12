@@ -210,24 +210,6 @@ impl From<ByExtensionStmt> for Stmt {
     }
 }
 
-impl From<ByFnAsSetStmt> for Stmt {
-    fn from(v: ByFnAsSetStmt) -> Self {
-        ByStmt::ByFnAsSetStmt(v).into()
-    }
-}
-
-impl From<ByTupleAsSetStmt> for Stmt {
-    fn from(v: ByTupleAsSetStmt) -> Self {
-        ByStmt::ByTupleAsSetStmt(v).into()
-    }
-}
-
-impl From<ByFnSetAsSetStmt> for Stmt {
-    fn from(v: ByFnSetAsSetStmt) -> Self {
-        ByStmt::ByFnSetAsSetStmt(v).into()
-    }
-}
-
 impl From<ByEnumerateRangeStmt> for Stmt {
     fn from(v: ByEnumerateRangeStmt) -> Self {
         ByStmt::ByEnumerateRangeStmt(v).into()

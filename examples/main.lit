@@ -206,14 +206,6 @@ clear
 
 # snippet 14, source: README.md:235
 
-have f fn(x R)R
-
-by fn as set: f
-
-clear
-
-# snippet 15, source: README.md:246
-
 by for:
     prove:
         forall n range(0, 10):
@@ -441,14 +433,6 @@ forall a, b, c set:
         $p(a, c)
 
 clear
-
-# snippet 22, source: README.md:492
-
-by tuple as set: (1, 2)
-
-clear
-
-# snippet 23, source: README.md:501
 
 claim:
     prove:

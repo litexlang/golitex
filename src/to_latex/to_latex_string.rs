@@ -283,25 +283,6 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFnSetAsSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn set as set}}:}} & {} \\in {}\\\\\n& \\quad \\text{{Unfold this membership via the set-theoretic definition of the function space; obtain the corresponding facts.}}\n\\end{{aligned}}",
-            self.func.to_latex_string(),
-            self.fn_set.to_latex_string()
-        )
-    }
-}
-
-impl ByFnAsSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn as set}}:}} & \\text{{Use the graph / function definition of }} {}\\text{{.}}\n\\end{{aligned}}",
-            self.function.to_latex_string()
-        )
-    }
-}
-
 impl ByForStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
@@ -442,15 +423,6 @@ impl ByInducStmt {
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
-        )
-    }
-}
-
-impl ByTupleAsSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple as set}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
-            self.obj.to_latex_string()
         )
     }
 }
@@ -2200,9 +2172,6 @@ impl Stmt {
             Stmt::By(ByStmt::ByInducStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByForStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByExtensionStmt(x)) => x.to_latex_string(),
-            Stmt::By(ByStmt::ByFnAsSetStmt(x)) => x.to_latex_string(),
-            Stmt::By(ByStmt::ByTupleAsSetStmt(x)) => x.to_latex_string(),
-            Stmt::By(ByStmt::ByFnSetAsSetStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByEnumerateRangeStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByTransitivePropStmt(x)) => x.to_latex_string(),

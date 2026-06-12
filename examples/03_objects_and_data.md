@@ -932,16 +932,6 @@ sketch:
     {1, 2} = {2, 1}
 ```
 
-**function-as-set reasoning — use the graph characterization of a function in a function space**
-
-
-```litex
-sketch:
-    have fn f(x R) R = 1
-
-    by fn as set: f
-```
-
 **struct declarations — define a structure shape for future struct features**
 
 

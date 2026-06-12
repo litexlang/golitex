@@ -8,9 +8,6 @@ pub enum ByStmtResult {
     ByInducStmt(NonFactualStmtSuccess),
     ByForStmt(NonFactualStmtSuccess),
     ByExtensionStmt(NonFactualStmtSuccess),
-    ByFnAsSetStmt(NonFactualStmtSuccess),
-    ByTupleAsSetStmt(NonFactualStmtSuccess),
-    ByFnSetAsSetStmt(NonFactualStmtSuccess),
     ByEnumerateRangeStmt(NonFactualStmtSuccess),
     ByClosedRangeAsCasesStmt(NonFactualStmtSuccess),
     ByTransitivePropStmt(NonFactualStmtSuccess),
@@ -33,9 +30,6 @@ impl ByStmtResult {
             Stmt::By(ByStmt::ByInducStmt(_)) => ByStmtResult::ByInducStmt(success),
             Stmt::By(ByStmt::ByForStmt(_)) => ByStmtResult::ByForStmt(success),
             Stmt::By(ByStmt::ByExtensionStmt(_)) => ByStmtResult::ByExtensionStmt(success),
-            Stmt::By(ByStmt::ByFnAsSetStmt(_)) => ByStmtResult::ByFnAsSetStmt(success),
-            Stmt::By(ByStmt::ByTupleAsSetStmt(_)) => ByStmtResult::ByTupleAsSetStmt(success),
-            Stmt::By(ByStmt::ByFnSetAsSetStmt(_)) => ByStmtResult::ByFnSetAsSetStmt(success),
             Stmt::By(ByStmt::ByEnumerateRangeStmt(_)) => {
                 ByStmtResult::ByEnumerateRangeStmt(success)
             }
@@ -65,9 +59,6 @@ impl ByStmtResult {
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)
-            | ByStmtResult::ByFnAsSetStmt(success)
-            | ByStmtResult::ByTupleAsSetStmt(success)
-            | ByStmtResult::ByFnSetAsSetStmt(success)
             | ByStmtResult::ByEnumerateRangeStmt(success)
             | ByStmtResult::ByClosedRangeAsCasesStmt(success)
             | ByStmtResult::ByTransitivePropStmt(success)
@@ -88,9 +79,6 @@ impl ByStmtResult {
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)
-            | ByStmtResult::ByFnAsSetStmt(success)
-            | ByStmtResult::ByTupleAsSetStmt(success)
-            | ByStmtResult::ByFnSetAsSetStmt(success)
             | ByStmtResult::ByEnumerateRangeStmt(success)
             | ByStmtResult::ByClosedRangeAsCasesStmt(success)
             | ByStmtResult::ByTransitivePropStmt(success)
@@ -111,9 +99,6 @@ impl ByStmtResult {
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)
-            | ByStmtResult::ByFnAsSetStmt(success)
-            | ByStmtResult::ByTupleAsSetStmt(success)
-            | ByStmtResult::ByFnSetAsSetStmt(success)
             | ByStmtResult::ByEnumerateRangeStmt(success)
             | ByStmtResult::ByClosedRangeAsCasesStmt(success)
             | ByStmtResult::ByTransitivePropStmt(success)

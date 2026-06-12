@@ -63,9 +63,6 @@ impl Runtime {
             Stmt::By(ByStmt::ByInducStmt(s)) => self.exec_by_induc_stmt(s),
             Stmt::By(ByStmt::ByForStmt(s)) => self.exec_by_for_stmt(s),
             Stmt::By(ByStmt::ByExtensionStmt(s)) => self.exec_by_extension_stmt(s),
-            Stmt::By(ByStmt::ByFnAsSetStmt(s)) => self.exec_by_fn_stmt(s),
-            Stmt::By(ByStmt::ByTupleAsSetStmt(s)) => self.exec_by_tuple_stmt(s),
-            Stmt::By(ByStmt::ByFnSetAsSetStmt(s)) => self.exec_by_fn_set_stmt(s),
             Stmt::By(ByStmt::ByEnumerateRangeStmt(s)) => self.exec_by_enumerate_range_stmt(s),
             Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(s)) => {
                 self.exec_by_closed_range_as_cases_stmt(s)

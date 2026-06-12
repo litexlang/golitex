@@ -1226,13 +1226,7 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("proof by induction", "归纳证明"),
     ("proof by universal introduction", "全称引入证明"),
     ("proof by extension", "外延性证明"),
-    (
-        "proof by function-as-set expansion",
-        "由函数作为集合展开证明",
-    ),
-    ("proof by function-set expansion", "由函数集合展开证明"),
     ("proof by range enumeration", "由范围枚举证明"),
-    ("proof by tuple-as-set expansion", "由元组作为集合展开证明"),
     ("proof by closed range cases", "由闭区间分类证明"),
     ("proof by transitivity", "由传递性证明"),
     ("proof by symmetry", "由对称性证明"),
