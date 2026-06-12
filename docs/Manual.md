@@ -776,7 +776,7 @@ $is_one(1)
 
 The call `$is_one(1)` is atomic. Litex can unfold the `prop` definition and check that `1 = 1`.
 
-> Hint: A predicate definition is written with `prop is_one(...)`, but a predicate fact is called with `$is_one(...)`.
+> Hint: A predicate definition is written with `prop is_one(...)`, but a prop fact is called with `$is_one(...)`.
 
 Atomic facts are usually checked by:
 
@@ -1125,7 +1125,7 @@ Common fact types:
 | Atomic fact | Equality | `1 + 1 = 2` |
 | Atomic fact | Inequality / order | `2 < 3`, `3 <= 3` |
 | Atomic fact | Membership | `2 $in R` |
-| Atomic fact | Predicate fact | `$prime(17)` |
+| Atomic fact | Prop fact | `$prime(17)` |
 | Atomic fact | Atomic negation | `2 != 3`, `not 1.1 $in Z` |
 | Compound fact | Conjunction | `1 < 2 and 2 < 3` |
 | Compound fact | Disjunction | `1 < 2 or 1 >= 2` |
@@ -1142,7 +1142,7 @@ For a fuller explanation, see [Factual Statements](https://litexlang.com/doc/Man
 
 Use **`prop`** to name a mathematical property. The body says what the property means.
 
-After a `prop` is defined, Litex can verify later predicate facts by using that definition. In the example below, `$p(1)` holds because `1 $in R` and `1 = 1`.
+After a `prop` is defined, Litex can verify later prop facts by using that definition. In the example below, `$p(1)` holds because `1 $in R` and `1 = 1`.
 
 ```litex
 prop p(x R):
@@ -1162,7 +1162,7 @@ definition under a new name. The alias has the same parameters and definition
 body as the target prop. `abstract_prop` targets are intentionally not accepted
 by this form, because they do not carry a checked definition body.
 
-Use **`alias thm new_name <=> old_name`** to copy an existing theorem definition
+Use **`alias thm new_name <=> old_name`** to copy an existing theorem
 under a new theorem name. The new name can then be used with `by thm`.
 
 ```litex
@@ -2216,7 +2216,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
-| `alias thm` | Copy a theorem definition under a new name |
+| `alias thm` | Copy a theorem under a new name |
 | `know` | Add facts or axioms to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
@@ -2482,7 +2482,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | inject explicit assumptions | `know x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
-| copy a theorem definition under a new name | `alias thm eq_refl <=> self_eq` |
+| copy a theorem under a new name | `alias thm eq_refl <=> self_eq` |
 | call a named theorem with arguments | `by thm self_eq(1)` |
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
@@ -4540,11 +4540,11 @@ _– George S. Patton_
 
 ### Non-Equality Atomic Predicate Flow
 
-For a non-equality atomic predicate fact such as `$p(a)` or `$p(a, b)`, the verification path looks like this:
+For a non-equality atomic prop fact such as `$p(a)` or `$p(a, b)`, the verification path looks like this:
 
 ```mermaid
 flowchart TD
-    atomicGoal["Non-equality atomic predicate fact"]
+    atomicGoal["Non-equality atomic prop fact"]
     wellDefined["Step 1: Check every object makes sense"]
     notWellDefined["error: some object is not well-defined"]
     builtinRules["Step 2: Try builtin math rules"]

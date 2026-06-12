@@ -392,7 +392,7 @@ interface.
 
 The user writes mathematical facts: equalities, memberships, implications,
 existential witnesses, `forall` statements, function facts, set facts, and
-predicate facts. The verifier then asks whether the new fact follows from the
+prop facts. The verifier then asks whether the new fact follows from the
 current verified context by builtin rules, known facts, known `forall` facts,
 definitions, matching, and substitution.
 

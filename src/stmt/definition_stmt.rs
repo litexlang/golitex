@@ -247,7 +247,7 @@ impl DefLetStmt {
     }
 
     pub fn store_reason() -> &'static str {
-        "warning: unsafe let binding"
+        "warning: unproved object definition"
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {

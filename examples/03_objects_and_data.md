@@ -501,7 +501,7 @@ have f fn(x R, y Q) R
 $restricts_to(f, fn(a Q, b Q) R)
 ```
 
-**named predicate facts**
+**named prop facts**
 
 
 
