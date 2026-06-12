@@ -6,6 +6,7 @@ use super::fields::{
     JSON_KEY_VERIFICATION,
 };
 use super::source::{source_ref_json_value, stmt_text_for_json};
+use super::store_facts::store_fact_json_values;
 
 fn verified_by_builtin_rule_value(
     runtime: &Runtime,
@@ -106,20 +107,25 @@ fn forall_proof_top_level_fields(
     let conclusions = proof
         .proves
         .iter()
-        .map(|proved| forall_proved_fact_value(runtime, proof, proved))
+        .map(|proved| {
+            forall_proved_fact_value(
+                runtime,
+                &proof.forall_fact,
+                &proved.stmt,
+                proved.result.as_ref(),
+            )
+        })
         .collect::<Vec<_>>();
 
     let mut fields = Vec::new();
-    if runtime.detail_output {
-        fields.push((
-            "parameters".to_string(),
-            JsonValue::Array(forall_param_items(&proof.forall_fact.params_def_with_type)),
-        ));
-        fields.push((
-            "assumptions".to_string(),
-            JsonValue::Array(forall_assumption_items(proof)),
-        ));
-    }
+    fields.push((
+        "parameters".to_string(),
+        JsonValue::Array(forall_param_items(&proof.forall_fact.params_def_with_type)),
+    ));
+    fields.push((
+        "assumptions".to_string(),
+        JsonValue::Array(forall_assumption_items(&proof.assumption_infers)),
+    ));
     fields.push((
         JSON_KEY_CONCLUSIONS.to_string(),
         JsonValue::Array(conclusions),
@@ -127,7 +133,7 @@ fn forall_proof_top_level_fields(
     fields
 }
 
-fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {
+pub(crate) fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {
     param_defs
         .collect_param_names()
         .into_iter()
@@ -135,13 +141,8 @@ fn forall_param_items(param_defs: &ParamDefWithType) -> Vec<JsonValue> {
         .collect::<Vec<_>>()
 }
 
-fn forall_assumption_items(proof: &ForallProofResult) -> Vec<JsonValue> {
-    let mut facts = forall_param_type_assumption_facts(&proof.forall_fact.params_def_with_type);
-    facts.extend(proof.forall_fact.dom_facts.iter().cloned());
-    facts
-        .iter()
-        .map(|fact| JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())))
-        .collect::<Vec<_>>()
+pub(crate) fn forall_assumption_items(assumption_infers: &InferResult) -> Vec<JsonValue> {
+    store_fact_json_values(assumption_infers)
 }
 
 fn forall_local_assumption_value(source: &str) -> JsonValue {
@@ -157,15 +158,16 @@ fn forall_local_assumption_value(source: &str) -> JsonValue {
     ])
 }
 
-fn forall_proved_fact_value(
+pub(crate) fn forall_proved_fact_value(
     runtime: &Runtime,
-    proof: &ForallProofResult,
-    proved: &ForallProvedFactResult,
+    forall_fact: &ForallFact,
+    stmt: &ExistOrAndChainAtomicFact,
+    result: &StmtResult,
 ) -> JsonValue {
-    let stmt_text = user_visible_stmt_or_msg_text(&proved.stmt.to_string());
-    let verification = match forall_local_assumption_source(proof, &proved.stmt) {
+    let stmt_text = user_visible_stmt_or_msg_text(&stmt.to_string());
+    let verification = match forall_local_assumption_source(forall_fact, stmt) {
         Some(source) => forall_local_assumption_value(source),
-        None => stmt_result_to_composite_step_verified_by(runtime, proved.result.as_ref()),
+        None => stmt_result_to_composite_step_verified_by(runtime, result),
     };
     JsonValue::Object(vec![
         (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
@@ -174,18 +176,18 @@ fn forall_proved_fact_value(
 }
 
 fn forall_local_assumption_source(
-    proof: &ForallProofResult,
+    forall_fact: &ForallFact,
     stmt: &ExistOrAndChainAtomicFact,
 ) -> Option<&'static str> {
     let target = stmt.clone().to_fact().to_string();
-    for fact in forall_param_type_assumption_facts(&proof.forall_fact.params_def_with_type) {
+    for fact in forall_param_type_assumption_facts(&forall_fact.params_def_with_type) {
         if fact.to_string() == target {
             return Some(ParamDefWithType::store_reason());
         }
     }
-    for fact in proof.forall_fact.dom_facts.iter() {
+    for fact in forall_fact.dom_facts.iter() {
         if fact.to_string() == target {
-            return Some("forall premise");
+            return Some(ForallFact::premise_store_reason());
         }
     }
     None

@@ -190,24 +190,27 @@ prove:
 
 #[test]
 fn internal_claim_prove_block_remains_supported() {
-    let source_code = r#"
+    run_with_large_stack("internal_claim_prove_block_remains_supported", || {
+        let source_code = r#"
 claim:
     prove:
         1 = 1
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("internal_claim_prove_block_remains_supported");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("internal_claim_prove_block_remains_supported");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "internal claim prove block should still run:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "internal claim prove block should still run:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -2861,7 +2864,8 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
 
 #[test]
 fn normal_output_folds_proof_level_inside_results() {
-    let source_code = r#"
+    run_with_large_stack("normal_output_folds_proof_level_inside_results", || {
+        let source_code = r#"
 sketch:
     1 = 1
 
@@ -2880,32 +2884,34 @@ witness exist x R st {x = 1} from 1:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("normal_output_folds_proof_trace");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("normal_output_folds_proof_trace");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "normal proof-trace fixture failed:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"type\": \"proof sketch\""));
-    assert!(run_output.contains("\"type\": \"proved claim\""));
-    assert!(run_output.contains("\"type\": \"proof by cases\""));
-    assert!(run_output.contains("\"type\": \"existence witness\""));
-    assert_no_legacy_acceptance_field(&run_output, "normal");
-    assert!(
-        !run_output.contains("\"inside_results\": ["),
-        "normal output should fold raw recursive inside_results:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "normal proof-trace fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof sketch\""));
+        assert!(run_output.contains("\"type\": \"proved claim\""));
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert_no_legacy_acceptance_field(&run_output, "normal");
+        assert!(
+            !run_output.contains("\"inside_results\": ["),
+            "normal output should fold raw recursive inside_results:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
 fn detail_output_expands_proof_level_inside_results() {
-    let source_code = r#"
+    run_with_large_stack("detail_output_expands_proof_level_inside_results", || {
+        let source_code = r#"
 sketch:
     1 = 1
 
@@ -2924,27 +2930,28 @@ witness exist x R st {x = 1} from 1:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("detail_output_expands_proof_trace");
-    runtime.detail_output = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("detail_output_expands_proof_trace");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "detail proof-trace fixture failed:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"type\": \"proof sketch\""));
-    assert!(run_output.contains("\"type\": \"proved claim\""));
-    assert!(run_output.contains("\"type\": \"proof by cases\""));
-    assert!(run_output.contains("\"type\": \"existence witness\""));
-    assert!(
-        run_output.matches("\"inside_results\": [").count() >= 3,
-        "detail output should expand available raw recursive inside_results:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "detail proof-trace fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof sketch\""));
+        assert!(run_output.contains("\"type\": \"proved claim\""));
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert!(
+            run_output.matches("\"inside_results\": [").count() >= 3,
+            "detail output should expand available raw recursive inside_results:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -4207,8 +4214,149 @@ forall n N:
 }
 
 #[test]
+fn forall_output_exposes_parameters_and_assumption_store_facts() {
+    run_with_large_stack(
+        "forall_output_exposes_parameters_and_assumption_store_facts",
+        || {
+            let source_code = r#"
+abstract_prop p(a, b, c)
+forall a, b, c, d, e, f R:
+    $p(a, b, c)
+    a = d
+    b = e
+    c = f
+    =>:
+        $p(d, e, f)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "forall_output_exposes_assumption_store_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "forall assumption store-fact output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"a\""));
+            assert!(run_output.contains("\"f\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"fact\": \"a $in R\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"$p(a, b, c)\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"a = d\""));
+            assert!(run_output.contains("\"fact\": \"b = e\""));
+            assert!(run_output.contains("\"fact\": \"c = f\""));
+            assert_eq!(run_output.matches("\"fact\": \"a $in R\"").count(), 1);
+        },
+    );
+}
+
+#[test]
+fn claim_forall_output_explains_parameters_proof_steps_and_conclusions() {
+    run_with_large_stack(
+        "claim_forall_output_explains_parameters_proof_steps_and_conclusions",
+        || {
+            let source_code = r#"
+claim:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+    x = x
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("claim_forall_output_explains_proof");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "claim forall output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proved claim\""));
+            assert!(run_output.contains("\"type\": \"claim forall proof\""));
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"x\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"fact\": \"x $in R\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"x = 1\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"statement\": \"x = x\""));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"statement\": \"x = 1\""));
+            assert!(run_output.contains("\"type\": \"local assumption\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn claim_fact_output_explains_proof_steps_and_final_goal() {
+    run_with_large_stack(
+        "claim_fact_output_explains_proof_steps_and_final_goal",
+        || {
+            let source_code = r#"
+claim 1 = 1:
+    1 = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("claim_fact_output_explains_goal");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "claim fact output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proved claim\""));
+            assert!(run_output.contains("\"type\": \"claim proof\""));
+            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"conclusion\": {"));
+            assert!(run_output.contains("\"type\": \"cite equality fact\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn output_contract_covers_composite_facts_and_control_statements() {
-    let source_code = r#"
+    run_with_large_stack(
+        "output_contract_covers_composite_facts_and_control_statements",
+        || {
+            let source_code = r#"
 1 = 1 and 2 = 2
 1 = 1 = 1
 
@@ -4233,85 +4381,90 @@ by cases 1 = 1:
         impossible 1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "output_contract_covers_composite_facts_and_control_statements",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "output_contract_covers_composite_facts_and_control_statements",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "output contract fixture failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"summary\": \"each conjunct verified in order\""),
-        "and facts should keep a short composite proof summary:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"summary\": \"each chain step verified in order\""),
-        "chain facts should keep a short composite proof summary:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"type\": \"chain fact\""),
-        "normal output should not repeat the composite fact type inside verification:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"main_rule\": \"chain decomposition\""),
-        "normal output should hide chain structural-rule debug metadata:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"role\": \"chain step\""),
-        "normal output should hide chain step roles:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"step_indices\": ["),
-        "normal folded output should not expose step indices:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"main_rule\": \"and decomposition\""),
-        "normal output should hide and structural-rule debug metadata:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"role\": \"conjunct\""),
-        "normal output should hide conjunct step roles:\n{}",
-        run_output
-    );
-    assert_no_legacy_acceptance_field(&run_output, "successful");
-    assert!(
-        run_output.contains("\"type\": \"proved claim\""),
-        "claim/thm statements should expose their semantic statement type:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"proof by theorem\""),
-        "by thm statements should expose their semantic statement type:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"proof by cases\""),
-        "by cases statements should expose their semantic statement type:\n{}",
-        run_output
-    );
-    assert!(
-        !run_output.contains("\"unknown_result\""),
-        "successful output should not use failure-only unknown_result:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "output contract fixture failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"summary\": \"each conjunct verified in order\""),
+                "and facts should keep a short composite proof summary:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"summary\": \"each chain step verified in order\""),
+                "chain facts should keep a short composite proof summary:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"type\": \"chain fact\""),
+                "normal output should not repeat the composite fact type inside verification:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"main_rule\": \"chain decomposition\""),
+                "normal output should hide chain structural-rule debug metadata:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"role\": \"chain step\""),
+                "normal output should hide chain step roles:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"step_indices\": ["),
+                "normal folded output should not expose step indices:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"main_rule\": \"and decomposition\""),
+                "normal output should hide and structural-rule debug metadata:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"role\": \"conjunct\""),
+                "normal output should hide conjunct step roles:\n{}",
+                run_output
+            );
+            assert_no_legacy_acceptance_field(&run_output, "successful");
+            assert!(
+                run_output.contains("\"type\": \"proved claim\""),
+                "claim/thm statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by theorem\""),
+                "by thm statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by cases\""),
+                "by cases statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"unknown_result\""),
+                "successful output should not use failure-only unknown_result:\n{}",
+                run_output
+            );
+        },
     );
 }
 
 #[test]
 fn by_cases_normal_output_lists_multiple_proved_goals_per_case() {
-    let source_code = r#"
+    run_with_large_stack(
+        "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+        || {
+            let source_code = r#"
 by cases:
     prove:
         1 = 1
@@ -4322,28 +4475,40 @@ by cases:
         impossible 1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "by_cases_normal_output_lists_multiple_proved_goals_per_case",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "by cases multi-goal fixture failed:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "by cases multi-goal fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proof by cases\""));
+            assert!(run_output.contains("\"type\": \"by cases proof\""));
+            assert!(run_output.contains("\"prove_goals\": ["));
+            assert!(run_output.contains("\"case_coverage\": {"));
+            assert!(run_output.contains("\"cases\": ["));
+            assert!(run_output.contains("\"reason\": \"case assumption\""));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"impossible\": {"));
+            assert!(run_output.contains("\"role\": \"impossible fact\""));
+            assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
+            assert_no_legacy_acceptance_field(&run_output, "by cases");
+            assert!(run_output.contains("\"1 = 1\""));
+            assert!(run_output.contains("\"2 = 2\""));
+        },
     );
-    assert!(run_output.contains("\"type\": \"proof by cases\""));
-    assert_no_legacy_acceptance_field(&run_output, "by cases");
-    assert!(run_output.contains("\"1 = 1\""));
-    assert!(run_output.contains("\"2 = 2\""));
 }
 
 #[test]
 fn by_cases_detail_output_expands_case_inside_results() {
-    let source_code = r#"
+    run_with_large_stack("by_cases_detail_output_expands_case_inside_results", || {
+        let source_code = r#"
 by cases 1 = 1:
     case 1 = 1:
         do_nothing
@@ -4351,21 +4516,66 @@ by cases 1 = 1:
         impossible 1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("by_cases_detail_output_expands_cases");
-    runtime.detail_output = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_cases_detail_output_expands_cases");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "by cases detail fixture failed:\n{}",
-        run_output
+        assert!(
+            run_succeeded,
+            "by cases detail fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert_no_legacy_acceptance_field(&run_output, "detail");
+        assert!(run_output.contains("\"1 = 1\""));
+    });
+}
+
+#[test]
+fn by_contra_output_explains_reverse_assumption_proof_and_impossible_checks() {
+    run_with_large_stack(
+        "by_contra_output_explains_reverse_assumption_proof_and_impossible_checks",
+        || {
+            let source_code = r#"
+by contra 1 = 1:
+    do_nothing
+    impossible 1 != 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("by_contra_output_explains_steps");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "by contra output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proof by contradiction\""));
+            assert!(run_output.contains("\"type\": \"by contra proof\""));
+            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
+            assert!(run_output.contains("\"reverse_assumption\": {"));
+            assert!(run_output.contains("\"fact\": \"1 != 1\""));
+            assert!(run_output.contains("\"reason\": \"by contra assumption\""));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"statement\": \"do_nothing\""));
+            assert!(run_output.contains("\"impossible\": {"));
+            assert!(run_output.contains("\"role\": \"impossible fact\""));
+            assert!(run_output.contains("\"statement\": \"1 != 1\""));
+            assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
+            assert!(run_output.contains("\"statement\": \"1 = 1\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal by contra output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
     );
-    assert!(run_output.contains("\"type\": \"proof by cases\""));
-    assert_no_legacy_acceptance_field(&run_output, "detail");
-    assert!(run_output.contains("\"1 = 1\""));
 }
 
 #[test]
@@ -4686,32 +4896,37 @@ claim:
 
 #[test]
 fn by_cases_failure_reports_case_split_failure_context() {
-    let source_code = r#"
+    run_with_large_stack(
+        "by_cases_failure_reports_case_split_failure_context",
+        || {
+            let source_code = r#"
 by cases 1 = 1:
     case 1 = 2:
         do_nothing
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("by_cases_failure_context");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("by_cases_failure_context");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "non-covering case split should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("by cases: cannot verify that all cases cover all situations"),
-        "by cases failure should keep the case split failure message:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"proof by cases\""),
-        "by cases failure should identify the failing statement:\n{}",
-        run_output
+            assert!(
+                !run_succeeded,
+                "non-covering case split should fail:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("by cases: cannot verify that all cases cover all situations"),
+                "by cases failure should keep the case split failure message:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by cases\""),
+                "by cases failure should identify the failing statement:\n{}",
+                run_output
+            );
+        },
     );
 }
 

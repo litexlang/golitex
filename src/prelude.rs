@@ -187,8 +187,14 @@ pub use crate::rational_expression::{
 };
 pub use crate::result::AndFactUnknown;
 pub use crate::result::AtomicFactUnknown;
+pub use crate::result::ByCasesVerificationResult;
+pub use crate::result::ByContraVerificationResult;
 pub use crate::result::ByStmtResult;
+pub use crate::result::ByVerificationResult;
 pub use crate::result::ChainFactUnknown;
+pub use crate::result::ClaimFactVerificationResult;
+pub use crate::result::ClaimForallVerificationResult;
+pub use crate::result::ClaimVerificationResult;
 pub use crate::result::CommandStmtResult;
 pub use crate::result::DefAliasStmtResult;
 pub use crate::result::DefInterfaceStmtResult;

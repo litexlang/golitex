@@ -69,6 +69,8 @@ impl Runtime {
                     vec![],
                 ));
             }
+            inside_results.push(verify_impossible_fact_result);
+            inside_results.push(verify_reversed_impossible_fact_result);
 
             Ok((inside_results, last_error))
         })?;
@@ -97,10 +99,20 @@ impl Runtime {
                 )
             })?;
 
-        Ok((NonFactualStmtSuccess::new(
+        let reverse_assumption = reverse_fact_for_by_contra(&stmt.to_prove)?;
+        let by_verification = ByContraVerificationResult::new(
+            stmt.to_prove.clone(),
+            reverse_assumption,
+            stmt.proof.len(),
+            stmt.impossible_fact.clone(),
+        )
+        .into();
+
+        Ok((NonFactualStmtSuccess::new_with_by_verification(
             stmt.clone().into(),
             infer_result,
             exec_proof_inside_results,
+            by_verification,
         ))
         .into())
     }

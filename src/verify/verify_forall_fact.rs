@@ -10,23 +10,25 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
-        if let Err(e) = self.define_params_with_type(
-            &forall_fact.params_def_with_type,
-            false,
-            ParamObjType::Forall,
-        ) {
-            return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "failed to define parameters in forall fact".to_string(),
-                forall_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            ))
-            .into());
-        }
+        let mut assumption_infer_result = self
+            .define_params_with_type(
+                &forall_fact.params_def_with_type,
+                false,
+                ParamObjType::Forall,
+            )
+            .map_err(|e| {
+                WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "failed to define parameters in forall fact".to_string(),
+                    forall_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                ))
+            })?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            self.verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+            let mut dom_infer_result = self
+                .verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -45,8 +47,11 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
+            dom_infer_result
+                .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+            assumption_infer_result.new_infer_result_inside(dom_infer_result);
         }
-        Ok(InferResult::new())
+        Ok(assumption_infer_result)
     }
 
     /// Verify and store each `then` clause of `forall_fact` in the current environment.
@@ -56,6 +61,7 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
         infer_result: &mut InferResult,
+        assumption_infers: InferResult,
         by_cases_case_label: Option<&str>,
     ) -> Result<StmtResult, RuntimeError> {
         let mut then_verification_results: Vec<StmtResult> = Vec::new();
@@ -144,7 +150,11 @@ impl Runtime {
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),
             infer_for_success,
-            VerifiedByResult::forall_proof(forall_fact.clone(), then_verification_results),
+            VerifiedByResult::forall_proof(
+                forall_fact.clone(),
+                then_verification_results,
+                assumption_infers,
+            ),
         ))
         .into())
     }
@@ -166,12 +176,14 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            let mut infer_result =
+            let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
+            let mut infer_result = InferResult::new();
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,
                 verify_state,
                 &mut infer_result,
+                assumption_infer_result,
                 None,
             )
         })
