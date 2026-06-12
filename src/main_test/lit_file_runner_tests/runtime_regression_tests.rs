@@ -3120,6 +3120,412 @@ fn runner_accepts_let_as_normal_execution() {
 }
 
 #[test]
+fn zh_output_localizes_unproved_know_labels() {
+    let source_code = "abstract_prop tmp_rel(m, n)\nknow exist! m, n R st {$tmp_rel(m, n)}\n";
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_know_labels");
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
+    assert!(run_output.contains("\"结果\": \"成功\""));
+    assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
+    assert!(run_output.contains("\"原因\": \"警告：未经证明的 know 假设\""));
+    assert!(run_output.contains("\"事实\": \"exist! m, n R st {$tmp_rel("));
+    assert!(!run_output.contains("\"result\": \"success\""));
+}
+
+#[test]
+fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
+    let source_code = "prop is_one_tmp(t R):\n    t = 1\n\n$is_one_tmp(1)\n";
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zh_output_localizes_citation_evidence_but_keeps_litex_statement",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "Chinese citation run failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"验证\""));
+    assert!(run_output.contains("\"类型\": \"引用 prop 定义\""));
+    assert!(run_output.contains("\"被引用语句\": \"prop is_one_tmp(t R):\\n"));
+    assert!(run_output.contains("\"语句\": \"$is_one_tmp(1)\""));
+}
+
+#[test]
+fn zh_runner_localizes_wrapper_and_trace() {
+    let (ok, output) = run_runner_for_code_with_language(
+        "know 1 = 1",
+        "-runner-test",
+        true,
+        OutputLanguage::SimplifiedChinese,
+    );
+
+    assert!(ok, "Chinese runner should succeed:\n{}", output);
+    assert!(output.contains("\"运行器\": \"litex-runner\""));
+    assert!(output.contains("\"结果\": \"成功\""));
+    assert!(output.contains("\"运行轨迹\""));
+    assert!(output.contains("\\\"类型\\\": \\\"未经证明的假设\\\""));
+}
+
+#[test]
+fn output_language_parses_supported_cli_codes() {
+    let cases = vec![
+        ("en", OutputLanguage::English),
+        ("zh", OutputLanguage::SimplifiedChinese),
+        ("zh-Hans", OutputLanguage::TraditionalChinese),
+        ("ja", OutputLanguage::Japanese),
+        ("ko", OutputLanguage::Korean),
+        ("es", OutputLanguage::Spanish),
+        ("fr", OutputLanguage::French),
+        ("de", OutputLanguage::German),
+        ("pt", OutputLanguage::Portuguese),
+        ("ru", OutputLanguage::Russian),
+        ("ar", OutputLanguage::Arabic),
+        ("hi", OutputLanguage::Hindi),
+        ("vi", OutputLanguage::Vietnamese),
+        ("id", OutputLanguage::Indonesian),
+    ];
+
+    for (code, expected) in cases {
+        assert_eq!(OutputLanguage::from_cli_lang(code), Ok(expected));
+    }
+
+    let err = OutputLanguage::from_cli_lang("xx").expect_err("xx should be unsupported");
+    assert!(err.contains("en, zh, zh-Hans, ja, ko, es, fr, de, pt, ru, ar, hi, vi, id"));
+}
+
+#[test]
+fn non_english_languages_localize_unproved_know_labels() {
+    let cases = vec![
+        (
+            OutputLanguage::SimplifiedChinese,
+            "结果",
+            "成功",
+            "类型",
+            "未经证明的假设",
+            "语句",
+            "事实",
+            "原因",
+            "警告：未经证明的 know 假设",
+        ),
+        (
+            OutputLanguage::TraditionalChinese,
+            "結果",
+            "成功",
+            "類型",
+            "未經證明的假設",
+            "語句",
+            "事實",
+            "原因",
+            "警告：未經證明的 know 假設",
+        ),
+        (
+            OutputLanguage::Japanese,
+            "結果",
+            "成功",
+            "種類",
+            "証明されていない仮定",
+            "文",
+            "事実",
+            "理由",
+            "警告：証明されていない know 仮定",
+        ),
+        (
+            OutputLanguage::Korean,
+            "결과",
+            "성공",
+            "유형",
+            "증명되지 않은 가정",
+            "문장",
+            "사실",
+            "이유",
+            "경고: 증명되지 않은 know 가정",
+        ),
+        (
+            OutputLanguage::Spanish,
+            "resultado",
+            "éxito",
+            "tipo",
+            "suposición no demostrada",
+            "enunciado",
+            "hecho",
+            "razón",
+            "advertencia: suposición know no demostrada",
+        ),
+        (
+            OutputLanguage::French,
+            "résultat",
+            "succès",
+            "type",
+            "hypothèse non prouvée",
+            "énoncé",
+            "fait",
+            "raison",
+            "avertissement : hypothèse know non prouvée",
+        ),
+        (
+            OutputLanguage::German,
+            "Ergebnis",
+            "Erfolg",
+            "Typ",
+            "unbewiesene Annahme",
+            "Anweisung",
+            "Fakt",
+            "Grund",
+            "Warnung: unbewiesene know-Annahme",
+        ),
+        (
+            OutputLanguage::Portuguese,
+            "resultado",
+            "sucesso",
+            "tipo",
+            "suposição não provada",
+            "declaração",
+            "fato",
+            "razão",
+            "aviso: suposição know não provada",
+        ),
+        (
+            OutputLanguage::Russian,
+            "результат",
+            "успех",
+            "тип",
+            "недоказанное предположение",
+            "утверждение",
+            "факт",
+            "причина",
+            "предупреждение: недоказанное предположение know",
+        ),
+        (
+            OutputLanguage::Arabic,
+            "النتيجة",
+            "نجاح",
+            "النوع",
+            "افتراض غير مبرهن",
+            "العبارة",
+            "الحقيقة",
+            "السبب",
+            "تحذير: افتراض know غير مبرهن",
+        ),
+        (
+            OutputLanguage::Hindi,
+            "परिणाम",
+            "सफलता",
+            "प्रकार",
+            "अप्रमाणित मान्यता",
+            "कथन",
+            "तथ्य",
+            "कारण",
+            "चेतावनी: अप्रमाणित know मान्यता",
+        ),
+        (
+            OutputLanguage::Vietnamese,
+            "kết_quả",
+            "thành công",
+            "kiểu",
+            "giả thiết chưa chứng minh",
+            "mệnh_đề",
+            "sự_kiện",
+            "lý_do",
+            "cảnh báo: giả thiết know chưa chứng minh",
+        ),
+        (
+            OutputLanguage::Indonesian,
+            "hasil",
+            "sukses",
+            "tipe",
+            "asumsi belum terbukti",
+            "pernyataan",
+            "fakta",
+            "alasan",
+            "peringatan: asumsi know belum terbukti",
+        ),
+    ];
+
+    for (
+        language,
+        result_key,
+        success_text,
+        type_key,
+        type_text,
+        statement_key,
+        fact_key,
+        reason_key,
+        reason_text,
+    ) in cases
+    {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "non_english_languages_localize_unproved_know_labels",
+        );
+        runtime.output_language = language;
+
+        let (stmt_results, runtime_error) = run_source_code("know 1 = 1", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "localized output run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"know 1 = 1\"", statement_key)));
+        assert!(run_output.contains(&format!("\"{}\": \"1 = 1\"", fact_key)));
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", reason_key, reason_text)));
+        assert!(!run_output.contains("\"result\": \"success\""));
+    }
+}
+
+#[test]
+fn non_english_runner_localizes_wrapper_keys() {
+    let cases = vec![
+        (
+            OutputLanguage::SimplifiedChinese,
+            "运行器",
+            "结果",
+            "成功",
+            "是否成功",
+            "运行目标",
+            "运行轨迹",
+        ),
+        (
+            OutputLanguage::TraditionalChinese,
+            "執行器",
+            "結果",
+            "成功",
+            "是否成功",
+            "目標",
+            "執行追蹤",
+        ),
+        (
+            OutputLanguage::Japanese,
+            "ランナー",
+            "結果",
+            "成功",
+            "成功",
+            "対象",
+            "実行トレース",
+        ),
+        (
+            OutputLanguage::Korean,
+            "러너",
+            "결과",
+            "성공",
+            "성공 여부",
+            "대상",
+            "실행 추적",
+        ),
+        (
+            OutputLanguage::Spanish,
+            "ejecutor",
+            "resultado",
+            "éxito",
+            "correcto",
+            "objetivo",
+            "traza",
+        ),
+        (
+            OutputLanguage::French,
+            "exécuteur",
+            "résultat",
+            "succès",
+            "réussi",
+            "cible",
+            "trace",
+        ),
+        (
+            OutputLanguage::German,
+            "Runner",
+            "Ergebnis",
+            "Erfolg",
+            "erfolgreich",
+            "Ziel",
+            "Ablaufspur",
+        ),
+        (
+            OutputLanguage::Portuguese,
+            "executor",
+            "resultado",
+            "sucesso",
+            "bem_sucedido",
+            "alvo",
+            "rastreamento",
+        ),
+        (
+            OutputLanguage::Russian,
+            "запускатель",
+            "результат",
+            "успех",
+            "успешно",
+            "цель",
+            "трасса",
+        ),
+        (
+            OutputLanguage::Arabic,
+            "المشغل",
+            "النتيجة",
+            "نجاح",
+            "ناجح",
+            "الهدف",
+            "الأثر",
+        ),
+        (
+            OutputLanguage::Hindi,
+            "रनर",
+            "परिणाम",
+            "सफलता",
+            "सफल",
+            "लक्ष्य",
+            "चलन_चिह्न",
+        ),
+        (
+            OutputLanguage::Vietnamese,
+            "trình_chạy",
+            "kết_quả",
+            "thành công",
+            "đúng",
+            "mục_tiêu",
+            "vết_chạy",
+        ),
+        (
+            OutputLanguage::Indonesian,
+            "runner",
+            "hasil",
+            "sukses",
+            "berhasil",
+            "target",
+            "jejak",
+        ),
+    ];
+
+    for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
+        let (ok, output) =
+            run_runner_for_code_with_language("know 1 = 1", "-runner-test", true, language);
+
+        assert!(ok, "localized runner should succeed:\n{}", output);
+        assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
+        assert!(output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
+        assert!(output.contains(&format!("\"{}\": true", ok_key)));
+        assert!(output.contains(&format!("\"{}\"", target_key)));
+        assert!(output.contains(&format!("\"{}\"", trace_key)));
+        assert!(!output.contains("\"result\": \"success\""));
+    }
+}
+
+#[test]
 fn strict_mode_rejects_user_know() {
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_know");

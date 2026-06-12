@@ -15,7 +15,8 @@ pub(crate) fn finalize_display_text_with_optional_strip(
 }
 
 pub(crate) fn json_value_for_output(_runtime: &Runtime, value: JsonValue) -> JsonValue {
-    remove_empty_json_fields(value)
+    let value = remove_empty_json_fields(value);
+    crate::output::localize_json_value(_runtime, value)
 }
 
 pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {

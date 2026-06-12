@@ -1,6 +1,4 @@
-use crate::common::json_value::{
-    json_one_level_indent, json_string_literal, render_json_value, JsonValue,
-};
+use crate::common::json_value::{json_one_level_indent, render_json_value, JsonValue};
 use crate::prelude::{CommandStmt, LineFile, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
 
 use super::fields::{
@@ -8,6 +6,7 @@ use super::fields::{
     JSON_KEY_INSIDE_RESULTS, JSON_KEY_MESSAGE, JSON_KEY_PREVIOUS_ERROR, JSON_KEY_RESULT,
     JSON_KEY_UNKNOWN_RESULT, JSON_VALUE_ERROR,
 };
+use super::language::{localize_json_key, localize_json_value};
 use super::normalize::{
     finalize_display_text_with_optional_strip, json_value_is_empty_in_normal_output,
     remove_empty_json_fields,
@@ -25,22 +24,34 @@ pub fn display_runtime_error_json(
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
-fn json_array_field_line(indent_inner: &str, json_key: &str, json_elements: &[String]) -> String {
+fn json_array_field_line(
+    runtime: &Runtime,
+    indent_inner: &str,
+    json_key: &str,
+    json_elements: &[String],
+) -> String {
+    let localized_key = localize_json_key(runtime.output_language, json_key);
     if json_elements.is_empty() {
-        format!("{}\"{}\": []", indent_inner, json_key)
+        format!("{}\"{}\": []", indent_inner, localized_key)
     } else {
         let joined_elements = json_elements.join(",\n");
         format!(
             "{}\"{}\": [\n{}\n{}]",
-            indent_inner, json_key, joined_elements, indent_inner
+            indent_inner, localized_key, joined_elements, indent_inner
         )
     }
 }
 
-fn json_value_field_line(indent_inner: &str, json_key: &str, value: &JsonValue) -> String {
+fn json_value_field_line(
+    runtime: &Runtime,
+    indent_inner: &str,
+    json_key: &str,
+    value: &JsonValue,
+) -> String {
     let field_depth = indent_inner.len() / json_one_level_indent(1).len();
     let object_depth = field_depth.saturating_sub(1);
     let single_field_object = JsonValue::Object(vec![(json_key.to_string(), value.clone())]);
+    let single_field_object = localize_json_value(runtime, single_field_object);
     let rendered = render_json_value(&single_field_object, object_depth);
     let mut lines = rendered.lines().collect::<Vec<_>>();
     if lines.len() < 3 {
@@ -52,7 +63,7 @@ fn json_value_field_line(indent_inner: &str, json_key: &str, value: &JsonValue) 
 }
 
 fn push_json_value_field_line(
-    _runtime: &Runtime,
+    runtime: &Runtime,
     field_lines: &mut Vec<String>,
     indent_inner: &str,
     json_key: &str,
@@ -60,7 +71,12 @@ fn push_json_value_field_line(
 ) {
     let value = remove_empty_json_fields(value);
     if !json_value_is_empty_in_normal_output(&value) {
-        field_lines.push(json_value_field_line(indent_inner, json_key, &value));
+        field_lines.push(json_value_field_line(
+            runtime,
+            indent_inner,
+            json_key,
+            &value,
+        ));
     }
 }
 
@@ -264,18 +280,20 @@ fn build_display_error_json_object(
     let indent_inner = json_one_level_indent(depth + 1);
     let mut field_lines: Vec<String> = Vec::new();
 
-    field_lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
+    push_json_value_field_line(
+        runtime,
+        &mut field_lines,
+        indent_inner.as_str(),
         JSON_KEY_ERROR_TYPE,
-        json_string_literal(error.display_label())
-    ));
-    field_lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
+        JsonValue::JsonString(error.display_label().to_string()),
+    );
+    push_json_value_field_line(
+        runtime,
+        &mut field_lines,
+        indent_inner.as_str(),
         JSON_KEY_RESULT,
-        json_string_literal(JSON_VALUE_ERROR)
-    ));
+        JsonValue::JsonString(JSON_VALUE_ERROR.to_string()),
+    );
 
     let line_file = error.line_file();
     push_source_ref_field_lines(
@@ -384,6 +402,7 @@ fn build_display_error_json_object(
             }
             if !inside_result_elements.is_empty() {
                 field_lines.push(json_array_field_line(
+                    runtime,
                     indent_inner.as_str(),
                     JSON_KEY_INSIDE_RESULTS,
                     &inside_result_elements,
@@ -512,9 +531,11 @@ fn build_previous_error_field_line(
                 true,
                 context_for_child,
             );
+            let previous_error_key =
+                localize_json_key(runtime.output_language, JSON_KEY_PREVIOUS_ERROR);
             Some(format!(
                 "{}\"{}\":\n{}",
-                indent_inner, JSON_KEY_PREVIOUS_ERROR, previous_error_json
+                indent_inner, previous_error_key, previous_error_json
             ))
         }
         None => None,

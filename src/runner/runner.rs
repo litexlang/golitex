@@ -8,7 +8,16 @@ const RUNNER_VERSION: &str = "0.1";
 const MAIN_DOT_LIT: &str = "main.lit";
 
 pub fn run_runner_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
-    run_runner_on_source("code", label, code, hide_file_paths, false)
+    run_runner_for_code_with_language(code, label, hide_file_paths, OutputLanguage::English)
+}
+
+pub fn run_runner_for_code_with_language(
+    code: &str,
+    label: &str,
+    hide_file_paths: bool,
+    output_language: OutputLanguage,
+) -> (bool, String) {
+    run_runner_on_source("code", label, code, hide_file_paths, false, output_language)
 }
 
 pub fn run_runner_for_code_strict(
@@ -16,7 +25,16 @@ pub fn run_runner_for_code_strict(
     label: &str,
     hide_file_paths: bool,
 ) -> (bool, String) {
-    run_runner_on_source("code", label, code, hide_file_paths, true)
+    run_runner_for_code_strict_with_language(code, label, hide_file_paths, OutputLanguage::English)
+}
+
+pub fn run_runner_for_code_strict_with_language(
+    code: &str,
+    label: &str,
+    hide_file_paths: bool,
+    output_language: OutputLanguage,
+) -> (bool, String) {
+    run_runner_on_source("code", label, code, hide_file_paths, true, output_language)
 }
 
 pub fn run_runner_for_file(file_path: &str, hide_file_paths: bool) -> (bool, String) {
@@ -28,10 +46,30 @@ pub fn run_runner_for_file_with_strict(
     hide_file_paths: bool,
     strict_mode: bool,
 ) -> (bool, String) {
+    run_runner_for_file_with_strict_and_language(
+        file_path,
+        hide_file_paths,
+        strict_mode,
+        OutputLanguage::English,
+    )
+}
+
+pub fn run_runner_for_file_with_strict_and_language(
+    file_path: &str,
+    hide_file_paths: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) -> (bool, String) {
     let resolved_path = match resolve_litex_file_path(file_path) {
         Ok(path) => path,
         Err(message) => {
-            return runner_target_error_output("file", file_path, hide_file_paths, message);
+            return runner_target_error_output(
+                "file",
+                file_path,
+                hide_file_paths,
+                message,
+                output_language,
+            );
         }
     };
 
@@ -48,6 +86,7 @@ pub fn run_runner_for_file_with_strict(
                 resolved_path.as_str(),
                 hide_file_paths,
                 message,
+                output_language,
             );
         }
     };
@@ -58,6 +97,7 @@ pub fn run_runner_for_file_with_strict(
         source_code.as_str(),
         hide_file_paths,
         strict_mode,
+        output_language,
     )
 }
 
@@ -70,6 +110,20 @@ pub fn run_runner_for_repo_with_strict(
     hide_file_paths: bool,
     strict_mode: bool,
 ) -> (bool, String) {
+    run_runner_for_repo_with_strict_and_language(
+        repo_path,
+        hide_file_paths,
+        strict_mode,
+        OutputLanguage::English,
+    )
+}
+
+pub fn run_runner_for_repo_with_strict_and_language(
+    repo_path: &str,
+    hide_file_paths: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) -> (bool, String) {
     let joined = Path::new(repo_path).join(MAIN_DOT_LIT);
     let joined_string = match joined.to_str() {
         Some(path_string) => path_string.to_string(),
@@ -79,6 +133,7 @@ pub fn run_runner_for_repo_with_strict(
                 repo_path,
                 hide_file_paths,
                 "repo path is not valid UTF-8".to_string(),
+                output_language,
             );
         }
     };
@@ -86,7 +141,13 @@ pub fn run_runner_for_repo_with_strict(
     let resolved_path = match resolve_litex_file_path(joined_string.as_str()) {
         Ok(path) => path,
         Err(message) => {
-            return runner_target_error_output("repo", repo_path, hide_file_paths, message);
+            return runner_target_error_output(
+                "repo",
+                repo_path,
+                hide_file_paths,
+                message,
+                output_language,
+            );
         }
     };
 
@@ -101,7 +162,13 @@ pub fn run_runner_for_repo_with_strict(
                     resolved_path, error
                 )
             };
-            return runner_target_error_output("repo", repo_path, hide_file_paths, message);
+            return runner_target_error_output(
+                "repo",
+                repo_path,
+                hide_file_paths,
+                message,
+                output_language,
+            );
         }
     };
 
@@ -111,6 +178,7 @@ pub fn run_runner_for_repo_with_strict(
         source_code.as_str(),
         hide_file_paths,
         strict_mode,
+        output_language,
     )
 }
 
@@ -140,12 +208,14 @@ fn run_runner_on_source(
     source_code: &str,
     hide_file_paths: bool,
     strict_mode: bool,
+    output_language: OutputLanguage,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
 
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     let (ok, trace_output) =
@@ -177,7 +247,10 @@ fn run_runner_on_source(
         ),
     ];
 
-    (ok, render_json_value(&JsonValue::Object(fields), 0))
+    (
+        ok,
+        render_runner_json_value(output_language, JsonValue::Object(fields)),
+    )
 }
 
 fn runner_target_error_output(
@@ -185,6 +258,7 @@ fn runner_target_error_output(
     target_label: &str,
     hide_file_paths: bool,
     message: String,
+    output_language: OutputLanguage,
 ) -> (bool, String) {
     let error = JsonValue::Object(vec![
         (
@@ -215,7 +289,12 @@ fn runner_target_error_output(
         ("trace".to_string(), JsonValue::JsonString(String::new())),
     ]);
 
-    (false, render_json_value(&output, 0))
+    (false, render_runner_json_value(output_language, output))
+}
+
+fn render_runner_json_value(output_language: OutputLanguage, value: JsonValue) -> String {
+    let value = crate::output::localize_json_value_for_language(output_language, value);
+    render_json_value(&value, 0)
 }
 
 fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: bool) -> JsonValue {
