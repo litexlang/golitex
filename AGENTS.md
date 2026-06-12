@@ -39,28 +39,16 @@ For each translated item, follow this loop:
    - `blocked`: the failure reason is understood and recorded with a minimal
      reproduction.
 
-Classify blockers explicitly. Useful blocker labels include:
+Classify blockers explicitly with only these labels:
 
-1. `blocked_by_language`: Litex cannot naturally express the object,
-   binding structure, or proposition yet.
+1. `proof_debt`: the current proof is not complete. Use this for missing
+   definitions, lemmas, theorem organization, automation, syntax, diagnostics,
+   formulation work, or any case where the honest statement is that we do not
+   yet know how to finish the proof in Litex.
 
-2. `blocked_by_stdlib`: the proof needs missing definitions, lemmas, or
-   theorem organization.
-
-3. `blocked_by_infer_rule`: the mathematical step is simple but needs a new
-   infer rule or builtin rule.
-
-4. `blocked_by_kernel`: the verifier, runtime, well-definedness logic, or
-   core proof model is missing required behavior.
-
-5. `blocked_by_syntax`: the parser or syntax makes the intended expression
-   awkward or impossible.
-
-6. `blocked_by_diagnostics`: the verifier output is too indirect, confusing,
-   or misleading to support a tight feedback loop.
-
-7. `blocked_by_formulation`: the source statement needs a more natural Litex
-   formulation rather than a mechanical translation.
+2. `kernel_problem`: the issue appears to be in Litex's verifier, runtime,
+   well-definedness logic, core proof model, or another kernel-level behavior
+   rather than in the current proof attempt.
 
 Prefer early work on low-dependency, high-feedback corpora such as MATH500,
 high-school math, and small miniF2F slices. Use Mathematics in Lean as a
@@ -94,6 +82,30 @@ Record broad proof debt in nearby comments or todo files; only introduce a
 named prop when it is a real source definition or a reusable local interface
 that later checked statements actually depend on.
 
+Use source-local cite packages for lengthy supporting facts. This is the
+preferred workflow for textbook and dataset formalization when the main
+mathematical line is clear but a surrounding fact has a long, routine, or
+library-shaped proof. Keep the main chapter or problem file focused on the
+source-facing definitions, theorem statements, core proof route, and checked
+derivations. Put the surrounding fact into an adjacent module such as
+`chap7_cite/main.lit`, `<source>_cite/main.lit`, or a local `cite/main.lit`.
+The main file should import this module with `import "../chap7_cite"` or the
+analogous relative module import; do not use `run_file` for cite packages.
+Reserve `run_file` for source-order reuse such as one chapter loading an
+earlier chapter.
+
+Cite packages are explicit proof-debt interfaces, not completed standard
+library modules. Facts in a cite package should be named `thm` or `claim`
+interfaces whose unproved step is marked with `know`, and each such debt should
+be tracked in the nearby `todo.md` or unfinished notes. An imported cite module
+must be self-contained: import the std modules it needs, and put shared source
+vocabulary in a small real `prop`/`have` module such as `chap9_vocab/main.lit`
+rather than copying existing chapter definitions as `abstract_prop` inside the
+cite package. Use `abstract_prop` only for genuinely external background
+interfaces that do not yet have a usable definition. Only move a cite theorem
+into `std` after its statement is stable, its proof or intended trusted
+interface is understood, and multiple files genuinely need it.
+
 By September, a good outcome is not only a large number of translated items. A
 good outcome is a working translation pipeline, checkable examples across the
 main source families, a clear standard library gap map, a benchmark set for
@@ -122,38 +134,34 @@ newly created or touched, maintain a structured translation item record with
 this shape:
 
 ```yaml
-id:
 source:
-topic:
-difficulty:
-natural_language_idea:
+problem:
+proof_idea:
 litex_code:
-proof_attempt:
-status: translated/checkable/blocked
-blocker:
-notes:
+comments:
 ```
 
 Use these fields consistently:
 
-- `id`: stable item id, unique inside the source.
 - `source`: dataset, book, exam, contest, or source name.
-- `topic`: algebra, inequality, sequence, set, geometry, number theory, etc.
-- `difficulty`: easy/medium/hard or 1-5, following the local source convention.
-- `natural_language_idea`: the mathematical idea before Litex code.
+- `problem`: source problem, theorem, exercise, or a reusable reformulation if
+  the source text cannot be redistributed.
+- `proof_idea`: the mathematical idea before Litex code.
 - `litex_code`: the current runnable or intended Litex code.
-- `proof_attempt`: what was tried, especially for partial or blocked proofs.
-- `status`: `translated`, `checkable`, or `blocked`.
-- `blocker`: one primary blocker label when status is `blocked`; otherwise
-  leave it empty.
-- `notes`: source caveats, license notes, verifier command, or follow-up work.
+- `comments`: verifier command, proof attempt notes, blocker label, source or
+  license caveats, and follow-up work.
 
 Do not submit only raw Litex code for a translation item. Record the
-mathematical idea and current status. Do not mark an item `checkable` unless
-the relevant Litex code has been run and verified. If source text cannot be
-redistributed, record a reusable mathematical reformulation and put the license
-concern in `notes`. Existing datasets do not need to be migrated all at once,
-but newly created or modified records should follow this contract.
+mathematical idea and, in `comments` or local tracking, the current status. Do
+not mark an item `checkable` unless the relevant Litex code has been run and
+verified. If source text cannot be redistributed, record a reusable
+mathematical reformulation and put the license concern in `comments`. Existing
+datasets do not need to be migrated all at once, but newly created or modified
+records should follow this contract.
+
+If a workspace needs dashboard or batch-tracking fields such as `id`, `topic`,
+`difficulty`, `status`, or `blocker`, add them locally, but do not treat them
+as required fields for ordinary translation records.
 
 For each item, proceed in this order:
 
@@ -173,13 +181,18 @@ For each item, proceed in this order:
    and keep the textbook proof idea in a local `prove` block, proof sketch, or
    nearby todo until it is checkable.
 
-4. If the proof cannot be completed immediately, write the best partial Litex
+4. If a supporting fact is lengthy, routine, or only needed as a background
+   citation for the current source item, put it in a source-local cite package
+   and import that package from the main file. This keeps the main file
+   readable while preserving a named theorem interface and explicit proof debt.
+
+5. If the proof cannot be completed immediately, write the best partial Litex
    proof first. It is acceptable to use `know` temporarily, but only for the
    blocked step. Next to each temporary `know`, add a concise comment saying
    why the step is not yet proved and what kind of missing support it appears
    to need.
 
-5. Put unfinished attempts in the local unfinished-explanation area. In
+6. Put unfinished attempts in the local unfinished-explanation area. In
    MiniF2F this is
    `scripts/litex-minif2f/unfinished_dataset/problem_notes/`.
    For another dataset or textbook workspace, create the analogous nearby
@@ -187,17 +200,17 @@ For each item, proceed in this order:
    id. Record the proof idea, the current Litex attempt, the exact verifier
    failure if any, every remaining `know`, and the primary blocker label.
 
-6. Iterate by removing proof debt one step at a time. Run the verifier after
+7. Iterate by removing proof debt one step at a time. Run the verifier after
    each small change and use the exact output to decide the next correction.
    Try splitting algebraic or numeric jumps into smaller equalities before
    searching for new theorems.
 
-7. When the item becomes checkable, move it out of the unfinished area and into
+8. When the item becomes checkable, move it out of the unfinished area and into
    the finished area for that source. Delete the matching unfinished-explanation
    file, update any local JSONL/status/todo bookkeeping, and keep the final
    `.lit` file runnable.
 
-8. After solving a formerly unfinished item, write a short "war story" in the
+9. After solving a formerly unfinished item, write a short "war story" in the
    local solved-experience area. In MiniF2F this is
    `scripts/litex-minif2f/experience/problem_notes/`. For another
    source, create the analogous nearby folder if needed. Record the natural

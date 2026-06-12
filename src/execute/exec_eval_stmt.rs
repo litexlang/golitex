@@ -1388,11 +1388,11 @@ impl Runtime {
         )
         .into();
 
-        let mut infer_result = InferResult::new();
-        infer_result.new_fact(&evaluated_equal_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-            evaluated_equal_fact,
-        )?;
+        let infer_result = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                evaluated_equal_fact,
+                InferReason::Evaluation,
+            )?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
@@ -1402,8 +1402,11 @@ impl Runtime {
             EqualFact::new(stmt.lhs.clone(), stmt.rhs.clone(), stmt.line_file.clone()).into();
         let lhs_equal_rhs_result =
             self.verify_fact_return_err_if_not_true(&lhs_equal_rhs, &VerifyState::new(0, false))?;
-        let lhs_equal_rhs_infer =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(lhs_equal_rhs)?;
+        let lhs_equal_rhs_infer = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                lhs_equal_rhs,
+                InferReason::Evaluation,
+            )?;
 
         let eval_rhs_stmt = EvalStmt::new(stmt.rhs.clone(), stmt.line_file.clone());
         let evaluated_obj = self.evaluate_obj_for_eval_stmt(&eval_rhs_stmt)?;
@@ -1415,15 +1418,17 @@ impl Runtime {
         )
         .into();
         let rhs_equal_evaluated_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                 rhs_equal_evaluated,
+                InferReason::Evaluation,
             )?;
 
         let lhs_equal_evaluated: Fact =
             EqualFact::new(stmt.lhs.clone(), evaluated_obj, stmt.line_file.clone()).into();
         let lhs_equal_evaluated_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                 lhs_equal_evaluated,
+                InferReason::Evaluation,
             )?;
 
         let mut infer_result = InferResult::new();

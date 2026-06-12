@@ -17,7 +17,7 @@ impl Obj {
                     let sum = if normalized_decimal_str_is_non_negative(a)
                         && normalized_decimal_str_is_non_negative(b)
                     {
-                        // `add_decimal_str_and_normalize` 仅适用于两操作数非负（见函数注释）
+                        // This helper expects both operands to be non-negative.
                         add_decimal_str_and_normalize(a, b)
                     } else {
                         add_signed_decimal_str(a, b)
@@ -36,7 +36,7 @@ impl Obj {
                     let diff = if normalized_decimal_str_is_non_negative(a)
                         && normalized_decimal_str_is_non_negative(b)
                     {
-                        // `sub_decimal_str_and_normalize` 的竖式比较同样按非负量设计
+                        // This helper compares magnitudes and expects non-negative operands.
                         sub_decimal_str_and_normalize(a, b)
                     } else {
                         sub_signed_decimal_str(a, b)
@@ -203,7 +203,7 @@ impl Obj {
     }
 }
 
-/// 规范化后的十进制串是否表示非负数（无 `-` 前缀；`-0` 若已规范为 `0` 亦视为非负）。
+/// Returns whether a normalized decimal string is non-negative.
 fn normalized_decimal_str_is_non_negative(s: &str) -> bool {
     !s.trim().starts_with('-')
 }
@@ -235,7 +235,7 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
     }
 }
 
-/// 带符号加法 a + b（系数合并用；`add_decimal_str_and_normalize` 仅适用于非负操作数）
+/// Adds signed decimal strings; magnitude addition only handles non-negative operands.
 pub fn add_signed_decimal_str(a: &str, b: &str) -> String {
     let (a_neg, a_mag) = split_sign_and_magnitude(a);
     let (b_neg, b_mag) = split_sign_and_magnitude(b);
@@ -254,7 +254,7 @@ pub fn add_signed_decimal_str(a: &str, b: &str) -> String {
     }
 }
 
-/// 带符号减法 a - b
+/// Subtracts signed decimal strings.
 pub fn sub_signed_decimal_str(a: &str, b: &str) -> String {
     add_signed_decimal_str(a, &mul_signed_decimal_str(b, "-1"))
 }
@@ -269,7 +269,7 @@ impl Obj {
     }
 }
 
-/// 竖式加法：两个表示非负数的数字串（可含小数点），返回和的字符串
+/// Adds two non-negative decimal strings and returns a normalized sum.
 pub fn add_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (mut int_a, mut frac_a) = parse_decimal_parts(a);
     let (mut int_b, mut frac_b) = parse_decimal_parts(b);
@@ -310,7 +310,7 @@ pub fn add_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&result)
 }
 
-/// 竖式减法：a - b，若 a >= b 返回非负结果字符串，否则返回 "-" + (b - a) 的字符串
+/// Subtracts two non-negative decimal strings and preserves the sign when needed.
 pub fn sub_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, frac_a) = parse_decimal_parts(a);
     let (int_b, frac_b) = parse_decimal_parts(b);
@@ -405,7 +405,7 @@ fn compare_decimal_parts(int_a: &[u8], frac_a: &[u8], int_b: &[u8], frac_b: &[u8
     0
 }
 
-/// 竖式乘法：两个非负数字串，返回积的字符串（product[0]=个位，即最低位）
+/// Multiplies two non-negative decimal strings and returns a normalized product.
 pub fn mul_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, frac_a) = parse_decimal_parts(a);
     let (int_b, frac_b) = parse_decimal_parts(b);
@@ -471,7 +471,7 @@ pub fn mul_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&result)
 }
 
-/// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
+/// Computes integer remainder on decimal strings, using the integer part of `a`.
 pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, _) = parse_decimal_parts(a);
     let (int_b, _) = parse_decimal_parts(b);
@@ -615,7 +615,7 @@ fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
     d[start..].to_vec()
 }
 
-/// 数字序列转字符串（高位在前）
+/// Converts big-endian digits into a decimal string.
 fn digits_to_string(d: &[u8]) -> String {
     let t = trim_leading_zeros(d);
     if t.is_empty() {
@@ -624,7 +624,7 @@ fn digits_to_string(d: &[u8]) -> String {
     t.iter().map(|&x| (b'0' + x) as char).collect()
 }
 
-/// 大数乘一位数：b * d，0 <= d <= 9，返回各位（高位在前）
+/// Multiplies big-endian digits by one digit.
 fn mul_digit(b: &[u8], d: u8) -> Vec<u8> {
     if d == 0 {
         return vec![0];
@@ -645,7 +645,7 @@ fn mul_digit(b: &[u8], d: u8) -> Vec<u8> {
     trim_leading_zeros(&b)
 }
 
-/// 比较两个“整数”数字序列（高位在前）
+/// Compares two big-endian integer digit sequences.
 fn compare_digits(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
     let a = trim_leading_zeros(a);
     let b = trim_leading_zeros(b);
@@ -660,7 +660,7 @@ fn compare_digits(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
     std::cmp::Ordering::Equal
 }
 
-/// 大数减法：要求 a >= b，返回 a - b 的各位（高位在前）
+/// Subtracts big-endian digit sequences, assuming `a >= b`.
 fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
     let mut a = a.to_vec();
     let mut b = b.to_vec();
@@ -684,7 +684,7 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
     trim_leading_zeros(&out)
 }
 
-/// 化简结果：多个负号合并（---1.1 -> -1.1）、0.0或者-0 写成 0、小数尾零去掉（1.000 -> 1）
+/// Normalizes signs, zero forms, and trailing decimal zeros.
 pub fn normalize_decimal_number_string(s: &str) -> String {
     let s = s.trim();
     if s.is_empty() {
@@ -724,7 +724,7 @@ pub fn normalize_decimal_number_string(s: &str) -> String {
     }
 }
 
-/// 解析数字串为 (整数部分数字, 小数部分数字)，允许 "123.45"、"123"、".5"、"0.5"
+/// Parses a decimal string into integer and fractional digit vectors.
 fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
     let s = s.trim();
     let (int_str, frac_str) = match s.find('.') {

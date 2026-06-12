@@ -1,7 +1,0 @@
-import Trig
-
-Trig::sin(0) = 0
-Trig::cos(0) = 1
-(2 * pi / 3 - pi / 2) / pi = 1 / 6
-
-Trig::cos(2 * pi / 3) != 0

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    // Built-in subset/superset/restrict_fn_in definitions first, then user `prop` iff-clauses.
+    // Built-in subset/superset/restricts_to definitions first, then user `prop` iff-clauses.
     pub(crate) fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -39,7 +39,7 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -74,7 +74,7 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -170,27 +170,24 @@ impl Runtime {
                         )))
                     }
                 })?;
-            let iff_clause_verify_result =
-                self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
+            let iff_clause_verify_result = self
+                .verify_fact_full(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
             if iff_clause_verify_result.is_unknown() {
                 return Ok(None);
             }
-            match &iff_clause_verify_result {
-                StmtResult::FactualStmtSuccess(factual_success) => {
-                    infer_result.new_infer_result_inside(factual_success.infers.clone());
-                }
-                StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-                }
-                StmtResult::StmtUnknown(_) => return Ok(None),
-            }
+            infer_result.new_infer_result_inside(iff_clause_verify_result.infer_result());
         }
 
         let verified_by_text = format!(
             "prop with meaning `{}` (param constraints and definition clauses)",
             predicate_name
         );
-        infer_result.new_fact(&normal_atomic_fact.clone().into());
+        let fact_by_definition: Fact = normal_atomic_fact.clone().into();
+        infer_result.add_fact_by_definition(
+            Some(fact_by_definition.clone()),
+            Some(predicate_name),
+            &fact_by_definition,
+        );
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),

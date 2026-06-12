@@ -52,6 +52,84 @@ prop Coprime(a, b N):
 have choose_fn fn(n, k N) N
 have sqrt_nat fn(n N) N
 
+# Well-ordering interface for natural-number subsets.
+# The primitive background is Litex's builtin `min_of_N_set`, restricted to
+# non-empty subsets of `N`; the std theorem names below are the public API.
+prop LeastElementOfNSubset(S power_set(N), m N):
+    m $in S
+    forall x S:
+        m <= x
+
+thm min_of_N_set_is_least:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                $LeastElementOfNSubset(S, min_of_N_set(S))
+    min_of_N_set(S) $in S
+    forall x S:
+        min_of_N_set(S) <= x
+    $LeastElementOfNSubset(S, min_of_N_set(S))
+
+thm least_of_N_subset_unique:
+    prove:
+        forall S power_set(N), m, n N:
+            $LeastElementOfNSubset(S, m)
+            $LeastElementOfNSubset(S, n)
+            =>:
+                m = n
+    m $in S
+    n $in S
+    forall x S:
+        m <= x
+    m <= n
+    forall x S:
+        n <= x
+    n <= m
+    m = n
+
+thm exists_least_of_nonempty_N_subset:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                exist m N st {$LeastElementOfNSubset(S, m)}
+    by thm min_of_N_set_is_least(S)
+    witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
+        $LeastElementOfNSubset(S, min_of_N_set(S))
+
+thm exists_unique_least_of_nonempty_N_subset, well_ordering_principle:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                exist! m N st {$LeastElementOfNSubset(S, m)}
+    by thm min_of_N_set_is_least(S)
+    witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
+        $LeastElementOfNSubset(S, min_of_N_set(S))
+    claim:
+        prove:
+            forall m, n N:
+                $LeastElementOfNSubset(S, m)
+                $LeastElementOfNSubset(S, n)
+                =>:
+                    m = n
+        by thm least_of_N_subset_unique(S, m, n)
+        m = n
+    exist! m N st {$LeastElementOfNSubset(S, m)}
+
+have fn least_of_N_subset(S power_set(N): $is_nonempty_set(S)) N = min_of_N_set(S)
+
+thm least_of_N_subset_is_least:
+    prove:
+        forall S power_set(N):
+            $is_nonempty_set(S)
+            =>:
+                $LeastElementOfNSubset(S, least_of_N_subset(S))
+    by thm min_of_N_set_is_least(S)
+    least_of_N_subset(S) = min_of_N_set(S)
+    $LeastElementOfNSubset(S, least_of_N_subset(S))
+
 # Mathlib: Nat.divisors, exposed as a finite set of natural divisors.
 prop divisors_value(n N, s power_set(N)):
     forall d N:
@@ -98,9 +176,6 @@ know:
         n != 0
         =>:
             0 < n
-
-    forall n N, q N_pos:
-        exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
     forall n N:
         (-1)^n $in Z
@@ -246,13 +321,54 @@ thm not_prime_one:
             not $Prime(1)
     not $Prime(1)
 
-# Textbook/API bridge: Euclidean division is currently available as a named
-# Nat theorem backed by std proof debt. Tao-style constructive proofs should
-# eventually replace the broad `know` fact above.
+thm euclidean_division_fixed_divisor:
+    prove:
+        forall q N_pos, n N:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    by induc n from 0:
+        prove:
+            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+
+        prove from n = 0:
+            witness exist m, r N st {$EuclideanDivision(0, q, m, r)} from 0, 0:
+                0 <= 0
+                0 < q
+                0 = 0 * q + 0
+                $EuclideanDivision(0, q, 0, 0)
+
+        prove induc:
+            have by exist m, r N st {$EuclideanDivision(n, q, m, r)}: m, r
+            by cases:
+                prove:
+                    exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)}
+                case r + 1 < q:
+                    witness exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)} from m, r + 1:
+                        0 <= r + 1
+                        r + 1 < q
+                        n + 1 = (m * q + r) + 1
+                        (m * q + r) + 1 = m * q + (r + 1)
+                        n + 1 = m * q + (r + 1)
+                        $EuclideanDivision(n + 1, q, m, r + 1)
+                case r + 1 >= q:
+                    r + 1 <= q
+                    r + 1 = q
+                    witness exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)} from m + 1, 0:
+                        0 <= 0
+                        0 < q
+                        n + 1 = (m * q + r) + 1
+                        (m * q + r) + 1 = m * q + (r + 1)
+                        m * q + (r + 1) = m * q + q
+                        m * q + q = (m + 1) * q + 0
+                        n + 1 = (m + 1) * q + 0
+                        $EuclideanDivision(n + 1, q, m + 1, 0)
+
+# Textbook/API bridge: Euclidean division is exposed as a named Nat theorem
+# after the elementary induction proof above.
 thm euclidean_division:
     prove:
         forall n N, q N_pos:
             exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    by thm euclidean_division_fixed_divisor(q, n)
     exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
 # Mathlib: Nat.dvd_refl

@@ -1,6 +1,0 @@
-abstract_prop p(x)
-abstract_prop q(x, y)
-
-know exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
-
-exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}

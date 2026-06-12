@@ -7,6 +7,19 @@ impl Runtime {
         fact: Fact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
+        self.verify_well_defined_and_store_and_infer_with_reason(
+            fact,
+            verify_state,
+            InferReason::VerifiedStatement,
+        )
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        verify_state: &VerifyState,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
         if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
@@ -17,28 +30,38 @@ impl Runtime {
             ))
             .into());
         }
-        self.store_and_infer_fact_without_well_defined_verified(fact)
+        self.store_and_infer_fact_without_well_defined_verified_with_reason(fact, reason)
     }
 
     pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        let verify_state = match fact {
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            fact,
+            InferReason::VerifiedStatement,
+        )
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        let verify_state = match &fact {
             Fact::ForallFact(_) => VerifyState::new(0, false),
             Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
             _ => VerifyState::new_with_final_round(false),
         };
-        self.verify_well_defined_and_store_and_infer(fact, &verify_state)
+        self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
     }
 
-    fn store_and_infer_fact_without_well_defined_verified(
+    fn store_and_infer_fact_without_well_defined_verified_with_reason(
         &mut self,
         fact: Fact,
+        reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-
-        infer_result.new_fact(&fact);
+        let output_fact = fact.clone();
 
         let ret = match fact {
             Fact::AtomicFact(_)
@@ -56,8 +79,9 @@ impl Runtime {
                 ),
         };
 
-        infer_result.new_infer_result_inside(ret?);
-
+        let inferred_facts = ret?.inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&output_fact, reason.store_reason(), inferred_facts);
         Ok(infer_result)
     }
 
@@ -65,7 +89,24 @@ impl Runtime {
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_whole_fact_update_cache_known_fact_and_infer(fact)
+        self.store_fact_without_forall_coverage_check_and_infer_with_reason(
+            fact,
+            InferReason::StoredFactWithoutForallCoverageCheck.store_reason(),
+        )
+    }
+
+    pub fn store_fact_without_forall_coverage_check_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        reason: impl Into<String>,
+    ) -> Result<InferResult, RuntimeError> {
+        let output_fact = fact.clone();
+        let inferred_facts = self
+            .store_whole_fact_update_cache_known_fact_and_infer(fact)?
+            .inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&output_fact, reason, inferred_facts);
+        Ok(infer_result)
     }
 
     pub(crate) fn store_forall_fact_without_well_defined_verified_and_infer(
@@ -93,7 +134,17 @@ impl Runtime {
             }
         }
 
-        self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact))
+        let output_fact: Fact = forall_fact.clone().into();
+        let inferred_facts = self
+            .store_whole_fact_update_cache_known_fact_and_infer(output_fact.clone())?
+            .inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(
+            &output_fact,
+            InferReason::StoredForallFact.store_reason(),
+            inferred_facts,
+        );
+        Ok(infer_result)
     }
 
     fn store_forall_fact_with_iff_without_well_defined_verified_and_infer(
@@ -141,6 +192,17 @@ impl Runtime {
         &mut self,
         fact: AndChainAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
+        self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+            fact,
+            InferReason::StoredFact.store_reason(),
+        )
+    }
+
+    pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        &mut self,
+        fact: AndChainAtomicFact,
+        reason: impl Into<String>,
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
@@ -163,12 +225,26 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        Ok(self.infer(&fact_for_infer)?)
+        let inferred_facts = self.infer(&fact_for_infer)?.inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&fact_for_infer, reason, inferred_facts);
+        Ok(infer_result)
     }
 
     pub fn store_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: AtomicFact,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+            fact,
+            InferReason::StoredFact.store_reason(),
+        )
+    }
+
+    pub fn store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        &mut self,
+        fact: AtomicFact,
+        reason: impl Into<String>,
     ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
@@ -178,12 +254,26 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        Ok(self.infer(&infer_wrapped_fact)?)
+        let inferred_facts = self.infer(&infer_wrapped_fact)?.inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&infer_wrapped_fact, reason, inferred_facts);
+        Ok(infer_result)
     }
 
     pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: ExistOrAndChainAtomicFact,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+            fact,
+            InferReason::StoredFact.store_reason(),
+        )
+    }
+
+    pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        &mut self,
+        fact: ExistOrAndChainAtomicFact,
+        reason: impl Into<String>,
     ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
@@ -208,12 +298,29 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        Ok(self.infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?)
+        let output_fact = fact_for_infer.clone().to_fact();
+        let inferred_facts = self
+            .infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?
+            .inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&output_fact, reason, inferred_facts);
+        Ok(infer_result)
     }
 
     pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: OrAndChainAtomicFact,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+            fact,
+            InferReason::StoredFact.store_reason(),
+        )
+    }
+
+    pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        &mut self,
+        fact: OrAndChainAtomicFact,
+        reason: impl Into<String>,
     ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
@@ -237,7 +344,13 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        Ok(self.infer_or_and_chain_atomic_fact(&fact_for_infer)?)
+        let output_fact = fact_for_infer.clone().to_fact();
+        let inferred_facts = self
+            .infer_or_and_chain_atomic_fact(&fact_for_infer)?
+            .inferred_facts();
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&output_fact, reason, inferred_facts);
+        Ok(infer_result)
     }
 
     fn store_transitive_prop_chain_atomic_facts(

@@ -8,6 +8,95 @@ This page collects common questions about Litex's design, performance model,
 and intended proof style. It is written as a living note: answers should stay
 concrete, modest, and close to the current verifier behavior.
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [`docs/cli.md`](cli.md) for the supported language codes.
+
+## Why is Litex called Litex?
+
+Litex = Lisp + LaTeX. 
+
+Litex is inspired by Lisp not only in the idea “data
+as code,” but also in its taste for a small uniform
+core, symbolic manipulation, tree-shaped programs,
+interactive feedback, and language-building through
+small composable forms.
+
+Litex is inspired by LaTeX's practical design for writing mathematics.
+
+## Does Litex support multiple output languages?
+
+Yes. Use `litex -lang <code> ...` to localize JSON keys and explanatory labels.
+The proof script inside fields such as `statement`, `fact`, and
+`cited_statement` remains ordinary Litex code. Supported codes include `en`,
+`zh`, `zh-Hans`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`, `hi`, `vi`,
+and `id`.
+
+## How is Litex invented?
+
+By iteratively implementing and refining the Litex language. The design process and implementation process happen side by side. The author took 6000 git commits (mostly before AI becomes sort of usable to help him to do kernel development) to finally know what he is implementing and designing. It's hard to imagine a better way to do something like this. When everything comes together, it's a beautiful thing.
+
+## Is Litex a programming language?
+
+No. Litex is a domain language for and just for mathematics reasoning. It is not a programming language. By sacrificing the programming language features, Litex can focus on the mathematics reasoning features. This is very different from Lean, Coq, and Isabelle. That's why it can be designed as close to ordinary mathematics as possible.
+
+## Where does features of Litex come from?
+
+The features of Litex come from the author's experience in writing mathematics. The author has been writing mathematics for a long time, and he has some understanding of the mathematics reasoning process. The author has also been writing code for a long time, and he has some understanding of the code reasoning process. He thinks formal language should be used by everyone, just like math is used by everyone.
+
+Most of the features of Litex come from the author's experience in writing mathematics and code. The core verification process `match and substitute` is inspired by how people verify a fact: When he sees a fact not yet proven, he will try to match the fact with a known fact, and if the match is successful, he will substitute the arguments of the known fact into the fact to be proven. If it's ok to substitute, then the fact is proven.
+
+`template` of Litex is inspired by the `template` of C++.
+
+`struct` of Litex is inspired by the `struct` of C.
+
+`claim`, `thm` of Litex is inspired by what `theorem` means in math books.
+
+`strategy` and builtin rules of Litex is inspired by how people verify the well-definedness of a recursively defined object.
+
+Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired by the discovery that when we talk about sets, we almost always are saying that `something is a set`. So the word `set` never appear independently in the language. It always shows up together with `<some_object> is a set`.
+
+Anonymous function syntax like`'(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
+
+The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
+
+## Why does Litex have this particular menu of objects and statements?
+
+Litex's grammar is intentionally finite and opinionated. The goal is not to
+let every possible proof-engine concept become a new surface form. The goal is
+to keep a small set of object and statement forms that make ordinary
+mathematical writing comfortable while remaining checkable.
+
+There are two main reasons a form becomes first-class.
+
+First, some forms are basic mathematical or logical infrastructure. Equality,
+membership, number literals, arithmetic, function application, `forall`,
+`exist`, conjunction, cases, witnesses, definitions, and proof blocks are
+trusted background, logical organization, or computational material that the
+verifier needs to understand directly. If these were only encoded through a
+more remote abstraction, nearly every proof would spend its budget on
+bookkeeping before reaching the mathematical idea.
+
+Second, some forms are user-interface choices. They are included because
+mathematicians already write them, often with a close LaTeX analogue: set
+displays, tuples, Cartesian products, intervals, sums, anonymous functions,
+chained equalities or inequalities, `have`, `claim`, `witness`, `by cases`,
+and similar proof moves. These forms are not all foundationally primitive in
+the same sense. They are there because they make Litex code feel familiar and
+reduce the distance between a paper proof and a checked script.
+
+So `obj` and `statement` in Litex are a design boundary. Objects are the
+mathematical expressions facts can talk about. Statements are the actions that
+introduce objects, define vocabulary, assert facts, and organize proofs. A new
+object or statement form has to earn its place: either the checker needs it as
+direct mathematical background, or it makes the user-facing mathematical
+surface substantially clearer.
+
+This is one of Litex's unusual design choices. It optimizes for user comfort
+and mathematical familiarity with as few first-class forms as possible, rather
+than starting from a maximally general programming language or proof-term
+calculus.
+
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 
 It can become slow if all ten thousand universal facts are active automatic
@@ -79,6 +168,76 @@ canonical type that determines all later notation. The same object may be known
 to belong to several sets. Litex uses the currently verified membership,
 function-space, and set-property facts to decide whether expressions are
 well-defined and whether later facts can be proved.
+
+## Why does Litex emphasize relationships instead of construction ancestry?
+
+Many familiar mathematical objects can be constructed in more than one way.
+Integers can be built from pairs of natural numbers, rationals from pairs of
+integers, and reals from Cauchy sequences, Dedekind cuts, decimal expansions,
+or other equivalent constructions. Litex does not make ordinary users inherit
+all of that construction history every time they write `Z`, `Q`, or `R`.
+
+Instead, Litex is relationship-first. The kernel and standard library expose
+common objects and the relationships that make them useful: membership,
+arithmetic, order, density, floor bounds, completeness, function spaces, set
+operations, and so on. For many day-to-day proofs, the exact construction of
+`R` from `Q` is not the point; what matters is that `Q` embeds into `R`,
+rationals are dense in reals, Cauchy real sequences converge, and bounded
+nonempty real sets have least upper bounds.
+
+This is a deliberate design trade-off. Litex's builtin `R` is a mathematical
+surface with verifier-visible properties, not a proof term saying "this object
+was constructed by this exact chain of quotients and completions." The standard
+library may record facts such as rational density or real completeness with
+`know` because, for Litex's default std interpretation, those are trusted
+background facts about the standard numeric objects. For example, `std/Rat`
+records the reduced numerator/denominator interface for builtin `Q`, while
+`std/Real` records the usual real-line relationships. In `std/Real`, the
+intended model is the usual real numbers, which can be obtained as the
+completion of `Q`; the std file exposes that model through relationship facts
+rather than forcing every development to replay the construction.
+
+The practical rule is:
+
+- use builtin objects such as `Z`, `Q`, and `R` directly when the proof only
+  needs their ordinary relationships;
+- put broad semantic background, such as density of `Q` in `R` or completeness
+  of `R`, in the relevant std package and make the trust boundary visible;
+- keep chapter-specific or domain-specific theorems local until they are worth
+  extracting into a reusable package;
+- formalize a construction explicitly only when the construction itself is the
+  mathematical subject.
+
+So Litex is not anti-foundational. It simply chooses a lighter user-facing
+route for ordinary mathematics: expose the relationships people actually use,
+then make any trusted background facts explicit enough to audit.
+
+## Why not just import a big library and cite the theorem?
+
+For many mature proof-assistant projects, importing a large library and citing
+the strongest available theorem is the most efficient path. That is a real
+advantage of systems with large libraries.
+
+Litex is aimed at a different workflow, especially for textbooks and education.
+If the goal is to formalize a calculus or analysis book, the proof script
+should ideally show the derivation the book is teaching: definitions, local
+lemmas, intermediate facts, and the way later results use earlier ones. If the
+main work becomes "find a theorem in a mathematical dictionary and cite it",
+the final result may verify, but the code no longer records the learning path.
+It records where the result already exists.
+
+Litex therefore tries to make the basic mathematical ground cheap enough that
+users can write the book's proof directly. Builtin objects and small background
+interfaces let the file get started without a huge import. Larger packages
+still matter, but they should provide visible background or reusable interfaces,
+not erase the central proof of the current chapter.
+
+This is not a claim that imports are bad. It is a claim about where the
+mathematical labor should live. For textbook-first formalization, the proof
+script should be the derivation, not only a pointer into a theorem database.
+In systems such as Lean or Isabelle, the large-library route is often excellent
+formal engineering. Litex is exploring whether a lighter base can make the
+book's own proof cheap enough to write and check directly.
 
 ## What are the boundaries of Litex's type system?
 
@@ -162,6 +321,28 @@ rules.
 such as a set, a structure, or a carrier satisfying some condition, when that
 parameter cannot be modeled as the input of one ordinary set-theoretic function.
 
+A useful way to read a template is: first pretend that the angle-bracket
+parameters have already been introduced and satisfy the header conditions.
+Then run the statements inside the template body as ordinary definition
+statements in that temporary context. If those statements check, Litex stores
+the result as a family. When you later write an instance such as `\name<R>`,
+Litex substitutes the concrete argument for the parameter and gives you the
+corresponding defined object or function.
+
+For example:
+
+```litex
+template<s set>:
+    have carrier_copy set = s
+
+\carrier_copy<R> = R
+\carrier_copy<Z> = Z
+```
+
+The reading is: first fix an arbitrary set `s`; in that temporary context,
+`carrier_copy` is definable as `s`; because this works for every `s set`, the
+family can later be called as `\carrier_copy<R>`, `\carrier_copy<Z>`, and so on.
+
 The simplest reason is the one above: a Litex function input must range over a
 particular domain set. But `set` is not itself a particular domain set. It is a
 surface parameter kind meaning "introduce a parameter and check that it is a
@@ -223,7 +404,7 @@ interface.
 
 The user writes mathematical facts: equalities, memberships, implications,
 existential witnesses, `forall` statements, function facts, set facts, and
-predicate facts. The verifier then asks whether the new fact follows from the
+prop facts. The verifier then asks whether the new fact follows from the
 current verified context by builtin rules, known facts, known `forall` facts,
 definitions, matching, and substitution.
 
@@ -329,9 +510,18 @@ often makes the proof easier to audit.
 
 ## Is `know` a proof?
 
-No. `know` is not a proof-producing command. It adds a fact to the current
-context after checking that the statement is meaningful enough to store. Later
-checked facts may depend on it.
+No. `know` is explicit assumption injection, not a proof-producing command. It
+adds a fact to the current context after checking that the statement is
+meaningful enough to store. Later checked facts may depend on it.
+
+The name can be misleading if read informally. In documentation and audits,
+read `know P` as "assume P from this point onward." If a later `verification`
+trace cites a fact that came from `know`, that trace explains why the later line
+follows from the injected assumption; it does not show that the injected
+assumption was proved by Litex.
+
+Likewise, success on a `know` line only means the assumption was accepted into
+the context. It is not a certificate that the injected fact was proved.
 
 This is useful for three narrow purposes:
 
@@ -370,12 +560,14 @@ Litex form of that ordinary mathematical move.
 For example:
 
 ```litex
-know exist u R st {u > 0, u < 1}
+witness exist u R st {u > 0, u < 1} from 1 / 2:
+    1 / 2 > 0
+    1 / 2 < 1
 have by exist v R st {v > 0, v < 1}: w
 w > 0
 ```
 
-The first line records an existential fact. The `have by exist` line introduces
+The first block proves an existential fact. The `have by exist` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
@@ -392,7 +584,7 @@ preimage. `have by preimage` turns that move into an explicit proof step.
 For example:
 
 ```litex
-prove:
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -422,6 +614,11 @@ do not silently participate in every later search.
 The point is not only speed. It is auditability. If a proof depends on a large
 external result, the proof is often clearer when that dependency appears as an
 explicit citation instead of an invisible background match.
+
+This is also a textbook-design issue. When a file is following a book, imports
+should not silently turn the chapter into theorem lookup. `stop import` gives
+the author a way to keep a module available for explicit citation while making
+the active proof context reflect the local derivation.
 
 ## What is `strategy` for?
 
@@ -501,9 +698,9 @@ set interfaces, and algebraic proof flows.
 
 ## Soundness And Limitations
 
-A Litex success is relative to the trusted background. `know` is an
-assumption-facing tool, similar in role to Lean's `by sorry`: it adds facts to
-the context without proving them. `abstract_prop` declares an uninterpreted
+A Litex success is relative to the trusted background. `know` is explicit
+assumption injection, similar in role to Lean's `by sorry`: it adds facts to the
+context without proving them. `abstract_prop` declares an uninterpreted
 predicate name and gives it no mathematical content by itself. In final
 artifacts, each use should be replaced by a checked claim/theorem, justified as
 trusted background, or recorded as remaining proof debt.
@@ -538,7 +735,7 @@ The Manual carries the durable version of this learning path.
 ## Tutorial Examples
 
 Small examples are still valuable, but they should live as runnable `.lit` files
-or short Manual snippets rather than a separate prose page that can drift from
+or short Manual examples rather than a separate prose page that can drift from
 the language reference.
 
 ## Hilbert Axioms Of Euclidean Geometry

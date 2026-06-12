@@ -2,7 +2,7 @@
 
 Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
 
-Try all snippets in browser: https://litexlang.com/doc/Setup
+Try the examples in browser: https://litexlang.com/doc/Setup
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
 
@@ -74,7 +74,7 @@ The `.deb` package installs the standard library at `/usr/share/litex/std`.
 To verify that the CLI accepts a standard-library import registration, run:
 
 ```bash
-litex -e $'import Trig' | grep '"stmt": "import Trig"'
+litex -e $'import Trig' | grep '"statement": "import Trig"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'import Trig' | grep '"stmt": "import Trig"'
+litex -e $'import Trig' | grep '"statement": "import Trig"'
 ```
 
 ---
@@ -152,7 +152,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -187,7 +187,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 ### Upgrade Litex on Windows
@@ -221,7 +221,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"stmt": "import Trig"'
+litex -e "import Trig" | Select-String '"statement": "import Trig"'
 ```
 
 ---
@@ -242,7 +242,7 @@ Upgrade Litex? Run `litex -upgrade` for platform instructions.
 Copyright (C) 2024-2026 Jiachen Shen
 website: https://litexlang.com
 github: https://github.com/litexlang/golitex
-Ctrl+D to exit.
+Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter.
 >>>
 ```
 
@@ -269,6 +269,9 @@ litex -upgrade
 
 ## Command-line options
 
+For the full command-line grammar and current edge-case behavior, see
+[`docs/cli.md`](cli.md).
+
 In examples, the executable is written as:
 
 ```text
@@ -293,6 +296,7 @@ Basic behavior:
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
 | `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
+| `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
 | `-latex` | Start an interactive REPL that prints LaTeX output. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
 | `-latex -e <code>` | Compile a source string to LaTeX, when available. |
@@ -303,7 +307,10 @@ Basic behavior:
 | `-update <module>` | Update a module, when available. |
 | `-tutorial` | Run the tutorial, when available. |
 
-Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+
+Litex supports multiple output languages through `-lang <code>`. See
+[`docs/cli.md`](cli.md) for the current list of supported language codes.
 
 Hint: if your Litex code contains spaces, newlines, or shell-sensitive characters, wrap it in quotes when using `-e`, or put it in a `.lit` file and run it with `-f`.
 
@@ -330,15 +337,22 @@ Example success output looks like this. The exact output may differ by version:
 ```json
 {
   "result": "success",
-  "type": "AtomicFact",
   "line": 1,
-  "stmt": "1 + 1 = 2",
-  "verified_by": {
+  "statement": "1 + 1 = 2",
+  "verification": {
     "type": "builtin rule",
     "rule": "calculation"
   }
 }
 ```
+
+For most factual statements, `verification` is the proof route. Composite proofs
+can put sub-checks in `verification.steps`. A successful `forall` fact reports
+`conclusions`, with each conclusion carrying a `verification` object; detail
+output additionally expands the local `parameters` and `assumptions`.
+Successful non-factual statements, such as definitions or proof
+blocks, report context changes under `effects`; detail output can expand nested
+`inside_results` when available.
 
 If an error occurs, Litex prints an error JSON object. The important fields are usually:
 
@@ -357,15 +371,12 @@ Example error output looks like this. The exact output may differ by version:
   "result": "error",
   "line": 1,
   "message": "verification failed",
-  "type": "AtomicFact",
-  "stmt": "1 = 0",
+  "statement": "1 = 0",
   "previous_error": {
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "type": "AtomicFact",
-    "stmt": "1 = 0",
-    "previous_error": null
+    "statement": "1 = 0"
   }
 }
 ```

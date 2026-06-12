@@ -10,11 +10,20 @@ pub const MAIN_DOT_LIT: &str = "main.lit";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
+const LANGUAGE_FLAG: &str = "-lang";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let detail_output = remove_flag(&mut args, DETAIL_FLAG);
-    let reject_user_know = remove_flag(&mut args, STRICT_FLAG);
+    let strict_mode = remove_flag(&mut args, STRICT_FLAG);
+    let output_language = match remove_language_flag(&mut args) {
+        Ok(language) => language,
+        Err(message) => {
+            eprintln!("{}", message);
+            print_help_message();
+            process::exit(2);
+        }
+    };
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -48,7 +57,8 @@ pub fn run_cli() {
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
                 runtime.detail_output = detail_output;
-                runtime.reject_user_know = reject_user_know;
+                runtime.strict_mode = strict_mode;
+                runtime.output_language = output_language;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
                 let output =
@@ -66,7 +76,12 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str(), detail_output, reject_user_know);
+                main_flag_file(
+                    file_path.as_str(),
+                    detail_output,
+                    strict_mode,
+                    output_language,
+                );
                 return;
             }
             "-r" => {
@@ -87,20 +102,30 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str(), detail_output, reject_user_know);
+                main_flag_file(
+                    joined_string.as_str(),
+                    detail_output,
+                    strict_mode,
+                    output_language,
+                );
                 return;
             }
             "-runner" => {
                 index += 1;
-                let (ok, output) =
-                    match main_flag_runner(&args, &mut index, detail_output, reject_user_know) {
-                        Ok(output) => output,
-                        Err(message) => {
-                            eprintln!("{}", message);
-                            print_help_message();
-                            process::exit(2);
-                        }
-                    };
+                let (ok, output) = match main_flag_runner(
+                    &args,
+                    &mut index,
+                    detail_output,
+                    strict_mode,
+                    output_language,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
                 println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
                 if !ok {
                     process::exit(1);
@@ -133,7 +158,7 @@ pub fn run_cli() {
                                     process::exit(2);
                                 }
                             };
-                        compile_file_to_latex(file_path.as_str())
+                        compile_file_to_latex(file_path.as_str(), output_language)
                     }
                     "-e" => {
                         let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
@@ -144,7 +169,7 @@ pub fn run_cli() {
                                 process::exit(2);
                             }
                         };
-                        compile_code_to_latex(code.as_str())
+                        compile_code_to_latex(code.as_str(), output_language)
                     }
                     "-r" => {
                         let repo_path =
@@ -164,7 +189,7 @@ pub fn run_cli() {
                                 process::exit(1);
                             }
                         };
-                        compile_file_to_latex(joined_string.as_str())
+                        compile_file_to_latex(joined_string.as_str(), output_language)
                     }
                     _ => {
                         eprintln!(
@@ -248,13 +273,36 @@ pub fn run_cli() {
         }
     }
 
-    run_repl_with_detail_output_and_strict(VERSION, detail_output, reject_user_know);
+    run_repl_with_detail_output_and_strict_and_language(
+        VERSION,
+        detail_output,
+        strict_mode,
+        output_language,
+    );
 }
 
 fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
     let before_len = args.len();
     args.retain(|arg| arg != flag_name);
     args.len() != before_len
+}
+
+fn remove_language_flag(args: &mut Vec<String>) -> Result<OutputLanguage, String> {
+    let Some(flag_index) = args.iter().position(|arg| arg == LANGUAGE_FLAG) else {
+        return Ok(OutputLanguage::English);
+    };
+
+    if flag_index + 1 >= args.len() {
+        return Err(format!(
+            "{} requires a value: {}",
+            LANGUAGE_FLAG,
+            OutputLanguage::supported_codes_text()
+        ));
+    }
+
+    let value = args.remove(flag_index + 1);
+    args.remove(flag_index);
+    OutputLanguage::from_cli_lang(value.as_str())
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -295,7 +343,12 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str, detail_output: bool, reject_user_know: bool) {
+fn main_flag_file(
+    file_flag: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -325,10 +378,11 @@ fn main_flag_file(file_flag: &str, detail_output: bool, reject_user_know: bool) 
         }
     };
 
-    let output = run_source_code_in_file_for_cli_with_strict(
+    let output = run_source_code_in_file_for_cli_with_strict_and_language(
         path_string.as_str(),
         detail_output,
-        reject_user_know,
+        strict_mode,
+        output_language,
     );
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
@@ -337,34 +391,47 @@ fn main_flag_runner(
     args: &[String],
     index: &mut usize,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-runner")?;
     let hide_file_paths = !detail_output;
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            let output = if reject_user_know {
-                run_runner_for_code_strict(code.as_str(), "-runner -e", hide_file_paths)
+            let output = if strict_mode {
+                run_runner_for_code_strict_with_language(
+                    code.as_str(),
+                    "-runner -e",
+                    hide_file_paths,
+                    output_language,
+                )
             } else {
-                run_runner_for_code(code.as_str(), "-runner -e", hide_file_paths)
+                run_runner_for_code_with_language(
+                    code.as_str(),
+                    "-runner -e",
+                    hide_file_paths,
+                    output_language,
+                )
             };
             Ok(output)
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            Ok(run_runner_for_file_with_strict(
+            Ok(run_runner_for_file_with_strict_and_language(
                 file_path.as_str(),
                 hide_file_paths,
-                reject_user_know,
+                strict_mode,
+                output_language,
             ))
         }
         "-r" => {
             let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            Ok(run_runner_for_repo_with_strict(
+            Ok(run_runner_for_repo_with_strict_and_language(
                 repo_path.as_str(),
                 hide_file_paths,
-                reject_user_know,
+                strict_mode,
+                output_language,
             ))
         }
         _ => Err("-runner must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string()),
@@ -375,18 +442,19 @@ fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
 }
 
-fn compile_code_to_latex(code: &str) -> String {
+fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
     match to_latex_from_source_after_builtins(code.as_str(), "-latex -e") {
         Ok(s) => s,
         Err(e) => {
-            let runtime = Runtime::new();
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
             display_runtime_error_json(&runtime, &e, true)
         }
     }
 }
 
-fn compile_file_to_latex(file_path: &str) -> String {
+fn compile_file_to_latex(file_path: &str, output_language: OutputLanguage) -> String {
     let source = match fs::read_to_string(file_path) {
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
@@ -394,7 +462,8 @@ fn compile_file_to_latex(file_path: &str) -> String {
     match to_latex_from_source_after_builtins(source.as_str(), file_path) {
         Ok(s) => s,
         Err(e) => {
-            let runtime = Runtime::new();
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
             display_runtime_error_json(&runtime, &e, true)
         }
     }
@@ -477,7 +546,8 @@ litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
-litex -strict : reject user know statements after builtin initialization
+litex -strict : reject user know and let statements after builtin initialization
+litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
 litex -install <module> : install the given module
 litex -uninstall <module> : uninstall the given module

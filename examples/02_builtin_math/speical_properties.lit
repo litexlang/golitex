@@ -1,5 +1,0 @@
-# Order chains using <=, =, < (or >=, =, >) get transitive closure when stored.
-let a, b, c R, d R:
-    a < b = c <= d
-
-a < d

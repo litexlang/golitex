@@ -28,6 +28,10 @@ impl ParamDefWithType {
         }
     }
 
+    pub fn store_reason() -> &'static str {
+        "parameter definition"
+    }
+
     pub fn len(&self) -> usize {
         self.groups.len()
     }
@@ -788,6 +792,20 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::FnRangeOn(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.function,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
         Obj::Sum(x) => {
             collect_cited_param_indices_from_obj(
                 &x.start,
@@ -797,6 +815,34 @@ fn collect_cited_param_indices_from_obj(
             );
             collect_cited_param_indices_from_obj(
                 &x.end,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.func,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
+        Obj::SumOfFiniteSet(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.func,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
+        Obj::ProductOfFiniteSet(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.set,
                 previous_param_indices,
                 shadowed_names,
                 out,

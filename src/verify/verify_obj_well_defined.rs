@@ -71,8 +71,13 @@ impl Runtime {
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
+            Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
+            Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
+            Obj::ProductOfFiniteSet(x) => {
+                self.verify_finite_set_product_obj_well_defined(x, verify_state)
+            }
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::IntervalObj(x) => self.verify_interval_obj_well_defined(x, verify_state),
@@ -1001,7 +1006,7 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
 
-        let next_verify_state = verify_state.make_state_with_req_ok_set_to_true();
+        let next_verify_state = verify_state.with_well_defined_already_verified();
         let len = x.list.len();
         let mut i = 0;
         while i < len {
@@ -1398,7 +1403,7 @@ impl Runtime {
         x: &Count,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        // 必须 is_finite_set
+        // `count` is well-defined only for finite sets.
         let is_finite_set_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
@@ -1429,6 +1434,32 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_fn_range_on_well_defined(
+        &mut self,
+        x: &FnRangeOn,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        let target_fn_set = self.fn_range_on_target_fn_set(x, default_line_file())?;
+        let restrict_fact = RestrictFact::new(
+            x.function.as_ref().clone(),
+            target_fn_set.into(),
+            default_line_file(),
+        );
+        let restrict_result =
+            self.verify_restrict_fact_using_its_definition(&restrict_fact, verify_state)?;
+        match restrict_result {
+            Some(result) if result.is_true() => Ok(()),
+            _ => Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on cannot verify that {} is defined on {}",
+                    x.function, x.set
+                )),
+            ))),
+        }
+    }
+
     fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
@@ -1454,6 +1485,228 @@ impl Runtime {
             verify_state,
             "sum",
         )
+    }
+
+    fn verify_finite_set_sum_obj_well_defined(
+        &mut self,
+        x: &SumOfFiniteSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
+        let finite_result = self.verify_atomic_fact(&finite_fact, verify_state)?;
+        if finite_result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_sum: set {} is not a finite set",
+                    x.set
+                )),
+            )));
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        if let Obj::ListSet(list_set) = x.set.as_ref() {
+            return self.verify_finite_set_sum_list_summand_well_defined(
+                list_set,
+                x.func.as_ref(),
+                verify_state,
+            );
+        }
+        if let Obj::ClosedRange(range) = x.set.as_ref() {
+            let range_sum = Sum::new(
+                range.start.as_ref().clone(),
+                range.end.as_ref().clone(),
+                x.func.as_ref().clone(),
+            );
+            return self.verify_sum_obj_well_defined(&range_sum, verify_state);
+        }
+        let fn_range_on = FnRangeOn::new((*x.func).clone(), (*x.set).clone());
+        self.verify_fn_range_on_well_defined(&fn_range_on, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!(
+                            "finite_set_sum: cannot verify that {} is defined on {}",
+                            x.func, x.set
+                        ),
+                        e,
+                    ),
+                ))
+            })
+    }
+
+    fn verify_finite_set_sum_list_summand_well_defined(
+        &mut self,
+        list_set: &ListSet,
+        func: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(func) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_sum: summand must be a unary function; got {}",
+                    func
+                )),
+            )));
+        };
+        if ParamGroupWithSet::number_of_params(&body.params_def_with_set) != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "finite_set_sum: summand must be unary (one parameter)".to_string(),
+                ),
+            )));
+        }
+        for element in list_set.list.iter() {
+            let application = self.finite_set_sum_application_obj(func, element.as_ref())?;
+            self.verify_obj_well_defined_and_store_cache(&application, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "finite_set_sum: summand {} is not defined at {}",
+                                func, element
+                            ),
+                            e,
+                        ),
+                    ))
+                })?;
+        }
+        Ok(())
+    }
+
+    fn finite_set_sum_application_obj(&self, func: &Obj, arg: &Obj) -> Result<Obj, RuntimeError> {
+        if let Obj::FnObj(fo) = func {
+            if !fo.body.is_empty() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "finite_set_sum: expected a bare function, not a function application {}",
+                        func
+                    )),
+                )));
+            }
+            return Ok(FnObj::new((*fo.head).clone(), vec![vec![Box::new(arg.clone())]]).into());
+        }
+        let Some(head) = FnObjHead::from_callable_obj(func.clone()) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_sum: summand must be callable; got {}",
+                    func
+                )),
+            )));
+        };
+        Ok(FnObj::new(head, vec![vec![Box::new(arg.clone())]]).into())
+    }
+
+    fn verify_finite_set_product_obj_well_defined(
+        &mut self,
+        x: &ProductOfFiniteSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
+        let finite_result = self.verify_atomic_fact(&finite_fact, verify_state)?;
+        if finite_result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_product: set {} is not a finite set",
+                    x.set
+                )),
+            )));
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        if let Obj::ListSet(list_set) = x.set.as_ref() {
+            return self.verify_finite_set_product_list_factor_well_defined(
+                list_set,
+                x.func.as_ref(),
+                verify_state,
+            );
+        }
+        if let Obj::ClosedRange(range) = x.set.as_ref() {
+            let range_product = Product::new(
+                range.start.as_ref().clone(),
+                range.end.as_ref().clone(),
+                x.func.as_ref().clone(),
+            );
+            return self.verify_product_obj_well_defined(&range_product, verify_state);
+        }
+        let fn_range_on = FnRangeOn::new((*x.func).clone(), (*x.set).clone());
+        self.verify_fn_range_on_well_defined(&fn_range_on, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!(
+                            "finite_set_product: cannot verify that {} is defined on {}",
+                            x.func, x.set
+                        ),
+                        e,
+                    ),
+                ))
+            })
+    }
+
+    fn verify_finite_set_product_list_factor_well_defined(
+        &mut self,
+        list_set: &ListSet,
+        func: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(func) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_product: factor must be a unary function; got {}",
+                    func
+                )),
+            )));
+        };
+        if ParamGroupWithSet::number_of_params(&body.params_def_with_set) != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "finite_set_product: factor must be unary (one parameter)".to_string(),
+                ),
+            )));
+        }
+        for element in list_set.list.iter() {
+            let application = self.finite_set_product_application_obj(func, element.as_ref())?;
+            self.verify_obj_well_defined_and_store_cache(&application, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "finite_set_product: factor {} is not defined at {}",
+                                func, element
+                            ),
+                            e,
+                        ),
+                    ))
+                })?;
+        }
+        Ok(())
+    }
+
+    fn finite_set_product_application_obj(
+        &self,
+        func: &Obj,
+        arg: &Obj,
+    ) -> Result<Obj, RuntimeError> {
+        if let Obj::FnObj(fo) = func {
+            if !fo.body.is_empty() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "finite_set_product: expected a bare function, not a function application {}",
+                        func
+                    )),
+                )));
+            }
+            return Ok(FnObj::new((*fo.head).clone(), vec![vec![Box::new(arg.clone())]]).into());
+        }
+        let Some(head) = FnObjHead::from_callable_obj(func.clone()) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "finite_set_product: factor must be callable; got {}",
+                    func
+                )),
+            )));
+        };
+        Ok(FnObj::new(head, vec![vec![Box::new(arg.clone())]]).into())
     }
 
     fn verify_product_obj_well_defined(

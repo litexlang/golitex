@@ -74,10 +74,15 @@ impl Runtime {
             ));
         }
 
-        self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
+        let mut inside_results =
+            vec![self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?];
+        let mut case_result_counts = Vec::new();
 
         for case_index in 0..stmt.cases.len() {
-            self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            let mut case_results =
+                self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            case_result_counts.push(case_results.len());
+            inside_results.append(&mut case_results);
         }
 
         let mut infer_result = InferResult::new();
@@ -97,18 +102,37 @@ impl Runtime {
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
 
-        // Omit per-case stmt results from JSON/output; failures still attach inside_results on errors.
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+        let proof_step_counts = stmt
+            .proofs
+            .iter()
+            .map(|proof| proof.len())
+            .collect::<Vec<_>>();
+        let by_verification = ByCasesVerificationResult::new(
+            stmt.cases.clone(),
+            stmt.then_facts.clone(),
+            proof_step_counts,
+            case_result_counts,
+            stmt.impossible_facts.clone(),
+        )
+        .into();
+
+        Ok((NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification,
+        ))
+        .into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let all_cases_or_fact: Fact =
             OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         let vs = VerifyState::new(0, false);
-        if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
+        let result = if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             self.run_in_local_env(|rt| {
                 rt.forall_assume_params_and_dom_in_current_env(ff, &vs)?;
                 rt.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
@@ -120,7 +144,7 @@ impl Runtime {
                     Some(verify_error),
                     vec![],
                 )
-            })?;
+            })?
         } else {
             self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
                 .map_err(|verify_error| {
@@ -130,9 +154,9 @@ impl Runtime {
                         Some(verify_error),
                         vec![],
                     )
-                })?;
-        }
-        Ok(())
+                })?
+        };
+        Ok(result)
     }
 
     fn exec_by_cases_stmt_prove_then_facts_under_case(
@@ -169,7 +193,7 @@ impl Runtime {
         let vs = VerifyState::new(0, false);
 
         if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
-            let mut infer_acc = self
+            let assumption_infer_result = self
                 .forall_assume_params_and_dom_in_current_env(ff, &vs)
                 .map_err(|e| {
                     short_exec_error(
@@ -182,6 +206,7 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+            let mut infer_acc = InferResult::new();
 
             self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                 case_fact.clone(),
@@ -217,6 +242,7 @@ impl Runtime {
                 ff,
                 &vs,
                 &mut infer_acc,
+                assumption_infer_result,
                 Some(&case_label),
             )?;
             if !forall_then_result.is_true() {

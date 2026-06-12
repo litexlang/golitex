@@ -30,7 +30,7 @@ fn fn_set_equality_verified_by_builtin_rules_result(
     line_file: LineFile,
 ) -> StmtResult {
     let stmt = fn_set_equality_fact(left, right, line_file);
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             stmt,
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),

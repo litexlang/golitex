@@ -1,3 +1,10 @@
+//! Kernel-internal convenience imports.
+//!
+//! This module is a broad import surface for Litex's Rust implementation. It is
+//! not intended to define a public Rust API; repository code uses
+//! `use crate::prelude::*;` so implementation files can focus on kernel logic
+//! instead of long import lists.
+
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
@@ -5,6 +12,7 @@ pub use crate::common::name_types::{
     IdentifierName, ObjOperatorString, ObjString, OrFactKey, PropName, StrategyName, StructName,
     TemplateName, ThmName,
 };
+pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
@@ -20,7 +28,9 @@ pub use crate::error::NameAlreadyUsedRuntimeError;
 pub use crate::error::NewFactRuntimeError;
 pub use crate::error::ParseRuntimeError;
 pub use crate::error::RuntimeError;
+pub use crate::error::RuntimeErrorOutput;
 pub use crate::error::RuntimeErrorStruct;
+pub use crate::error::RuntimeErrorUnknownResult;
 pub use crate::error::StoreFactRuntimeError;
 pub use crate::error::UnknownRuntimeError;
 pub use crate::error::VerifyRuntimeError;
@@ -76,7 +86,10 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
-pub use crate::infer::InferResult;
+pub use crate::infer::{
+    BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
+    StoreFactOutput,
+};
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -101,6 +114,7 @@ pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::FnObj;
 pub use crate::obj::FnObjHead;
 pub use crate::obj::FnRange;
+pub use crate::obj::FnRangeOn;
 pub use crate::obj::FnSet;
 pub use crate::obj::FnSetBody;
 pub use crate::obj::FnSetFreeParamObj;
@@ -136,6 +150,7 @@ pub use crate::obj::ParamObjType;
 pub use crate::obj::Pow;
 pub use crate::obj::PowerSet;
 pub use crate::obj::Product;
+pub use crate::obj::ProductOfFiniteSet;
 pub use crate::obj::Proj;
 pub use crate::obj::Range;
 pub use crate::obj::SeqSet;
@@ -148,6 +163,7 @@ pub use crate::obj::StandardSet;
 pub use crate::obj::StructObj;
 pub use crate::obj::Sub;
 pub use crate::obj::Sum;
+pub use crate::obj::SumOfFiniteSet;
 pub use crate::obj::Tuple;
 pub use crate::obj::TupleDim;
 pub use crate::obj::Union;
@@ -157,10 +173,11 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_latex_repl, run_repl, run_repl_with_detail_output,
-    run_repl_with_detail_output_and_strict, run_source_code, run_source_code_in_file,
+    run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
+    run_repl_with_detail_output_and_strict_and_language, run_source_code, run_source_code_in_file,
     run_source_code_in_file_for_cli, run_source_code_in_file_for_cli_with_strict,
-    run_source_code_in_file_with_ok, run_stmt_at_global_env,
+    run_source_code_in_file_for_cli_with_strict_and_language, run_source_code_in_file_with_ok,
+    run_stmt_at_global_env,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
@@ -168,19 +185,64 @@ pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation
 pub use crate::rational_expression::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
+pub use crate::result::AndFactUnknown;
+pub use crate::result::AtomicFactUnknown;
+pub use crate::result::ByAssignmentVerificationResult;
+pub use crate::result::ByCasesVerificationResult;
+pub use crate::result::ByChoiceVerificationResult;
+pub use crate::result::ByContraVerificationResult;
+pub use crate::result::ByEnumerateFiniteSetVerificationResult;
+pub use crate::result::ByEnumerateRangeVerificationResult;
+pub use crate::result::ByExtensionVerificationResult;
+pub use crate::result::ByForVerificationResult;
+pub use crate::result::ByInducVerificationResult;
+pub use crate::result::ByPropRegistrationVerificationResult;
+pub use crate::result::ByStmtResult;
+pub use crate::result::ByTheoremVerificationResult;
+pub use crate::result::ByVerificationResult;
+pub use crate::result::ChainFactUnknown;
+pub use crate::result::ClaimFactVerificationResult;
+pub use crate::result::ClaimForallVerificationResult;
+pub use crate::result::ClaimVerificationResult;
+pub use crate::result::CommandStmtResult;
+pub use crate::result::DefAliasStmtResult;
+pub use crate::result::DefInterfaceStmtResult;
+pub use crate::result::DefObjStmtResult;
+pub use crate::result::DefPredicateStmtResult;
+pub use crate::result::ExistFactUnknown;
+pub use crate::result::FactResult;
+pub use crate::result::FactStmtResult;
+pub use crate::result::FactUnknown;
+pub use crate::result::FactUnknownParam;
+pub use crate::result::FactUnknownPart;
 pub use crate::result::FactualStmtSuccess;
+pub use crate::result::ForallFactUnknown;
+pub use crate::result::ForallFactWithIffUnknown;
+pub use crate::result::ForallProofResult;
+pub use crate::result::ForallProvedFactResult;
+pub use crate::result::KnownForallInstantiationItem;
+pub use crate::result::KnownForallInstantiationResult;
+pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::NonFactualStmtSuccess;
+pub use crate::result::NotForallUnknown;
+pub use crate::result::ObjectIntroductionItem;
+pub use crate::result::OrFactUnknown;
+pub use crate::result::ProofBlockStmtResult;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
+pub use crate::result::UnsafeStmtResult;
 pub use crate::result::VerifiedByBuiltinRuleResult;
 pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
+pub use crate::result::WitnessStmtResult;
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
-    run_runner_for_file, run_runner_for_file_with_strict, run_runner_for_repo,
-    run_runner_for_repo_with_strict,
+    run_runner_for_code_strict_with_language, run_runner_for_code_with_language,
+    run_runner_for_file, run_runner_for_file_with_strict,
+    run_runner_for_file_with_strict_and_language, run_runner_for_repo,
+    run_runner_for_repo_with_strict, run_runner_for_repo_with_strict_and_language,
 };
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::Runtime;
@@ -190,15 +252,12 @@ pub use crate::stmt::by_stmt::ByCasesStmt;
 pub use crate::stmt::by_stmt::ByContraStmt;
 pub use crate::stmt::by_stmt::ByEnumerateFiniteSetStmt;
 pub use crate::stmt::by_stmt::ByExtensionStmt;
-pub use crate::stmt::by_stmt::ByFnAsSetStmt;
-pub use crate::stmt::by_stmt::ByFnSetAsSetStmt;
 pub use crate::stmt::by_stmt::ByForExpansion;
 pub use crate::stmt::by_stmt::ByForStmt;
 pub use crate::stmt::by_stmt::ByInducStmt;
 pub use crate::stmt::by_stmt::ByReflexivePropStmt;
 pub use crate::stmt::by_stmt::BySymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByTransitivePropStmt;
-pub use crate::stmt::by_stmt::ByTupleAsSetStmt;
 pub use crate::stmt::by_stmt::ByZornLemmaStmt;
 pub use crate::stmt::by_stmt::ClosedRangeOrRange;
 pub use crate::stmt::claim_stmt::ClaimStmt;
@@ -233,7 +292,7 @@ pub use crate::stmt::parameter_def::ParamGroupWithParamType;
 pub use crate::stmt::parameter_def::ParamGroupWithSet;
 pub use crate::stmt::parameter_def::ParamType;
 pub use crate::stmt::parameter_def::Set;
-pub use crate::stmt::prove_stmt::ProveStmt;
+pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
@@ -243,16 +302,27 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::tooling_stmt::StopImportStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
+pub use crate::stmt::AliasPropStmt;
+pub use crate::stmt::AliasThmStmt;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::ByEnumerateRangeStmt;
+pub use crate::stmt::ByStmt;
 pub use crate::stmt::ByThmStmt;
+pub use crate::stmt::CommandStmt;
+pub use crate::stmt::DefAliasStmt;
+pub use crate::stmt::DefInterfaceStmt;
+pub use crate::stmt::DefObjStmt;
+pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::EvalByStmt;
+pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
 pub use crate::stmt::StopStrategyStmt;
+pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::UseStrategyStmt;
+pub use crate::stmt::WitnessStmt;
 pub use crate::verify::VerifyState;
 
 pub use crate::cli::run_cli;
@@ -287,6 +357,7 @@ pub use crate::common::keywords::ABS;
 pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
+pub use crate::common::keywords::ALIAS;
 pub use crate::common::keywords::AND;
 pub use crate::common::keywords::ANONYMOUS_FN_PREFIX;
 pub use crate::common::keywords::ANTISYMMETRIC_PROP;
@@ -325,10 +396,13 @@ pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;
 pub use crate::common::keywords::FINITE_SET;
+pub use crate::common::keywords::FINITE_SET_PRODUCT;
+pub use crate::common::keywords::FINITE_SET_SUM;
 pub use crate::common::keywords::FN_EQ;
 pub use crate::common::keywords::FN_EQ_IN;
 pub use crate::common::keywords::FN_LOWER_CASE;
 pub use crate::common::keywords::FN_RANGE;
+pub use crate::common::keywords::FN_RANGE_ON;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FORALL_BANG;
@@ -392,7 +466,7 @@ pub use crate::common::keywords::Q_POS;
 pub use crate::common::keywords::R;
 pub use crate::common::keywords::RANGE;
 pub use crate::common::keywords::REFLEXIVE_PROP;
-pub use crate::common::keywords::RESTRICT_FN_IN;
+pub use crate::common::keywords::RESTRICTS_TO;
 pub use crate::common::keywords::RIGHT_ARROW;
 pub use crate::common::keywords::RIGHT_BRACE;
 pub use crate::common::keywords::RIGHT_BRACKET;
@@ -401,10 +475,12 @@ pub use crate::common::keywords::RUN_FILE;
 pub use crate::common::keywords::R_NEG;
 pub use crate::common::keywords::R_NZ;
 pub use crate::common::keywords::R_POS;
+pub use crate::common::keywords::SCRATCH;
 pub use crate::common::keywords::SEQ;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
+pub use crate::common::keywords::SKETCH;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
 pub use crate::common::keywords::STOP;

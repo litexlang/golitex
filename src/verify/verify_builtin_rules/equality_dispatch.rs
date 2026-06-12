@@ -348,6 +348,90 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_finite_set_sum_empty(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_list_expansion(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_closed_range_bridge(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_constant_summand(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_pointwise_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_finite_set_product_empty(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_list_expansion(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_closed_range_bridge(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_constant_factor(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_pointwise_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.

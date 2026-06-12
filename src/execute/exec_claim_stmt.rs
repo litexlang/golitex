@@ -16,85 +16,75 @@ impl Runtime {
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
-                    rt.define_params_with_type(
-                        &forall_fact.params_def_with_type,
-                        false,
-                        ParamObjType::Forall,
-                    )
-                        .map_err(|define_params_error| {
-                            exec_stmt_error_with_stmt_and_cause(
-                                stmt.clone().into(),
-                                define_params_error,
-                            )
-                        })?;
-
-                    for dom_fact in forall_fact.dom_facts.iter() {
-                        rt.verify_well_defined_and_store_and_infer(
-                            dom_fact.clone(),
-                            &VerifyState::new(0, false),
-                        )?;
-                    }
+                    let assumption_infers = rt.forall_assume_params_and_dom_in_current_env(
+                        forall_fact,
+                        &VerifyState::new(0, false),
+                    )?;
 
                     let mut inside_results = vec![];
                     let proof_len = stmt.proof.len();
                     for (proof_index, proof_stmt) in stmt.proof.iter().enumerate() {
                         let result = rt.exec_stmt(proof_stmt)?;
                         if result.is_unknown() {
-                            return Err(
-                                UnknownRuntimeError(RuntimeErrorStruct::new(
-                                    Some(proof_stmt.clone()),
-                                    format!(
-                                        "claim failed: proof step {}/{} is unknown: `{}`\n{}",
-                                        proof_index + 1,
-                                        proof_len,
-                                        proof_stmt,
-                                        result.body_string()
-                                    ),
-                                    proof_stmt.line_file(),
-                                    None,
-                                    vec![],
-                                ))
-                                .into(),
-                            );
+                            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
+                                Some(proof_stmt.clone()),
+                                "claim failed: proof step is unknown".to_string(),
+                                proof_stmt.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::proof_step_unknown(
+                                    proof_stmt.clone(),
+                                    proof_index + 1,
+                                    proof_len,
+                                    &result,
+                                ),
+                            ))
+                            .into());
                         }
                         inside_results.push(result);
                     }
 
                     let then_count = forall_fact.then_facts.len();
                     for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
-                        let result = rt.verify_exist_or_and_chain_atomic_fact(
+                        let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                             then_fact,
                             &VerifyState::new(0, false),
                         )?;
                         if result.is_unknown() {
-                            return Err(
-                                UnknownRuntimeError(RuntimeErrorStruct::new(
-                                    Some(Stmt::Fact(then_fact.clone().to_fact())),
-                                    format!(
-                                        "claim failed: cannot prove goal `{}`; then-clause {}/{} `{}` is unknown\n{}",
-                                        stmt.fact,
-                                        then_index + 1,
-                                        then_count,
-                                        then_fact,
-                                        result.body_string()
-                                    ),
-                                    then_fact.line_file(),
-                                    None,
-                                    vec![],
-                                ))
-                                .into(),
-                            );
+                            let then_goal = then_fact.clone().to_fact();
+                            result = result.wrap_unknown_for_fact(then_goal.clone());
+                            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
+                                Some(then_goal.clone().into()),
+                                "claim failed: cannot prove then-clause".to_string(),
+                                then_fact.line_file(),
+                                None,
+                                vec![],
+                                RuntimeErrorOutput::then_clause_unknown(
+                                    then_goal,
+                                    then_index + 1,
+                                    then_count,
+                                    &result,
+                                ),
+                            ))
+                            .into());
                         }
-
                         inside_results.push(result);
                     }
 
-                    Ok(NonFactualStmtSuccess::new(
-                            stmt.clone().into(),
-                            InferResult::new(),
-                            inside_results,
-                        )
-                        .into())
+                    let claim_verification = ClaimForallVerificationResult::new(
+                        forall_fact.clone(),
+                        assumption_infers,
+                        proof_len,
+                    )
+                    .into();
+
+                    Ok(NonFactualStmtSuccess::new_with_claim_verification(
+                        stmt.clone().into(),
+                        InferResult::new(),
+                        inside_results,
+                        claim_verification,
+                    )
+                    .into())
                 });
 
                 let non_err_after_body: StmtResult = match body_exec_result {
@@ -104,11 +94,7 @@ impl Runtime {
                 if non_err_after_body.is_unknown() {
                     return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
                         Some(stmt.clone().into()),
-                        format!(
-                            "claim failed: cannot prove `{}`\n{}",
-                            stmt.fact,
-                            non_err_after_body.body_string()
-                        ),
+                        format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file.clone(),
                         None,
                         vec![],
@@ -117,8 +103,9 @@ impl Runtime {
                 }
 
                 let infer_result_after_store = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         stmt.fact.clone(),
+                        InferReason::ProvedClaim,
                     )?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
@@ -141,12 +128,21 @@ impl Runtime {
                         inside_results.push(proof_exec_result);
                     }
 
-                    rt.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
+                    let target_result = rt.verify_fact_return_err_if_not_true(
+                        &stmt.fact,
+                        &VerifyState::new(0, false),
+                    )?;
+                    inside_results.push(target_result);
 
-                    Ok(NonFactualStmtSuccess::new(
+                    let claim_verification =
+                        ClaimFactVerificationResult::new(stmt.fact.clone(), stmt.proof.len())
+                            .into();
+
+                    Ok(NonFactualStmtSuccess::new_with_claim_verification(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
+                        claim_verification,
                     )
                     .into())
                 });
@@ -156,8 +152,9 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 let infer_result_after_store = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         stmt.fact.clone(),
+                        InferReason::ProvedClaim,
                     )?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))

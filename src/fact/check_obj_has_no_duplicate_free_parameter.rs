@@ -183,6 +183,18 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::FnRangeOn(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.function,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.set,
+                free_param_type,
+                params_already_used,
+            )
+        }
         Obj::Sum(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.start,
@@ -191,6 +203,30 @@ fn check_obj_has_no_duplicate_free_parameter(
             )?;
             check_obj_has_no_duplicate_free_parameter(
                 &obj.end,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.func,
+                free_param_type,
+                params_already_used,
+            )
+        }
+        Obj::SumOfFiniteSet(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.func,
+                free_param_type,
+                params_already_used,
+            )
+        }
+        Obj::ProductOfFiniteSet(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.set,
                 free_param_type,
                 params_already_used,
             )?;

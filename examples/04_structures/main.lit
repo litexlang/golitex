@@ -1,0 +1,766 @@
+# Extracted runnable Litex snippets from README.md.
+
+# Keep the README for explanation; this file exposes the checked code as a .lit example.
+
+# snippet 1, source: README.md:15
+
+abstract_prop differential_on_unit(f, value)
+
+forall f, g fn(x R) R, s, t R:
+    forall u, v fn(x R) R, a, b R:
+        $differential_on_unit(u, a)
+        $differential_on_unit(v, b)
+        =>:
+            $differential_on_unit('R(x){u(x) + v(x)}, a + b)
+    $differential_on_unit(f, s)
+    $differential_on_unit(g, t)
+    =>:
+        $differential_on_unit('R(x){f(x) + g(x)}, s + t)
+
+clear
+
+# snippet 2, source: README.md:35
+
+prop is_diagonal_matrix(n N_pos, m fn(i closed_range(1, n), j closed_range(1, n)) R):
+    forall i closed_range(1, n), j closed_range(1, n):
+        i != j
+        =>:
+            m(i, j) = 0
+
+claim:
+    prove:
+        forall M fn(i closed_range(1, 3), j closed_range(1, 3)) R:
+            M(1, 1) = 1
+            M(1, 2) = 0
+            M(1, 3) = 0
+            M(2, 1) = 0
+            M(2, 2) = 1
+            M(2, 3) = 0
+            M(3, 1) = 0
+            M(3, 2) = 0
+            M(3, 3) = 1
+            =>:
+                $is_diagonal_matrix(3, M)
+    
+    by for:
+        prove:
+            forall i closed_range(1, 3), j closed_range(1, 3):
+                i != j
+                =>:
+                    M(i, j) = 0
+
+clear
+
+# snippet 3, source: README.md:70
+
+prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
+    forall x, y, z s:
+        add(x, add(y, z)) = add(add(x, y), z)
+    forall x s:
+        add(x, zero) = x
+        add(zero, x) = x
+        add(x, inv(x)) = zero
+        add(inv(x), x) = zero
+
+struct group<s set>:
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(s, zero, add, inv)
+
+clear
+
+# snippet 4, source: README.md:93
+
+prop has_left_identity(s nonempty_set, e s, op fn(x, y s) s):
+    forall x s:
+        op(e, x) = x
+
+forall s nonempty_set, e s, op fn(x, y s) s:
+    $has_left_identity(s, e, op)
+    =>:
+        op(e, e) = e
+
+clear
+
+# snippet 5, source: README.md:109
+
+# Quotient set and quotient multiplication for a normal subgroup.
+
+prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s nonempty_set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+
+macro G "&Group<s>{g}"
+
+prop is_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
+    @G.e $in h
+    forall a, b s:
+        a $in h
+        b $in h
+        =>:
+            @G.op(a, b) $in h
+    forall a s:
+        a $in h
+        =>:
+            @G.inv(a) $in h
+
+prop is_normal_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
+    $is_subgroup(s, g, h)
+    forall x, a s:
+        a $in h
+        =>:
+            @G.op(@G.op(x, a), @G.inv(x)) $in h
+
+prop is_left_coset_with_representative(s nonempty_set, g &Group<s>, h power_set(s), x s, c power_set(s)):
+    forall y s:
+        =>:
+            y $in c
+        <=>:
+            exist a s st {a $in h, y = @G.op(x, a)}
+
+prop is_in_left_coset_by_representative(s nonempty_set, g &Group<s>, h power_set(s), x, y s):
+    exist a s st {a $in h, y = @G.op(x, a)}
+
+prop is_left_coset(s nonempty_set, g &Group<s>, h power_set(s), c power_set(s)):
+    exist x s st {$is_left_coset_with_representative(s, g, h, x, c)}
+
+prop is_group_quotient_set(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
+    q = {c power_set(s): $is_left_coset(s, g, h, c)}
+
+claim:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+    witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
+        $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
+
+template<s nonempty_set>:
+    have fn group_quotient as set:
+        prove:
+            forall g &Group<s>, h power_set(s):
+                exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+
+prop is_quotient_product_coset(s nonempty_set, g &Group<s>, h power_set(s), c1 power_set(s), c2 power_set(s), c3 power_set(s)):
+    forall x, y s:
+        $is_left_coset_with_representative(s, g, h, x, c1)
+        $is_left_coset_with_representative(s, g, h, y, c2)
+        =>:
+            $is_left_coset_with_representative(s, g, h, @G.op(x, y), c3)
+
+prop quotient_product_representatives_equal(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q, x1, x2, y1, y2 s, out1, out2 q):
+    out1 = out2
+
+prop quotient_product_well_defined(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s))):
+    forall c1, c2 q, x1, x2, y1, y2 s, out1, out2 q:
+        $is_left_coset_with_representative(s, g, h, x1, c1)
+        $is_left_coset_with_representative(s, g, h, x2, c1)
+        $is_left_coset_with_representative(s, g, h, y1, c2)
+        $is_left_coset_with_representative(s, g, h, y2, c2)
+        $is_left_coset_with_representative(s, g, h, @G.op(x1, y1), out1)
+        $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out2)
+        =>:
+            $quotient_product_representatives_equal(s, g, h, q, c1, c2, x1, x2, y1, y2, out1, out2)
+
+prop is_quotient_multiplication(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), quotient_mul fn(c1, c2 q) q):
+    forall c1, c2 q:
+        $is_quotient_product_coset(s, g, h, c1, c2, quotient_mul(c1, c2))
+
+thm group_left_cancel:
+    prove:
+        forall s nonempty_set, g &Group<s>, a, b, c s:
+            @G.op(a, b) = @G.op(a, c)
+            =>:
+                b = c
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    @G.op(@G.inv(a), a) = @G.e
+    @G.op(@G.e, b) = b
+    @G.op(@G.e, c) = c
+    @G.op(@G.op(@G.inv(a), a), b) = @G.op(@G.e, b) = b
+    @G.op(@G.op(@G.inv(a), a), b) = @G.op(@G.inv(a), @G.op(a, b)) = @G.op(@G.inv(a), @G.op(a, c)) = @G.op(@G.op(@G.inv(a), a), c) = @G.op(@G.e, c) = c
+    b = c
+
+thm group_inv_inv:
+    prove:
+        forall s nonempty_set, g &Group<s>, a s:
+            @G.inv(@G.inv(a)) = a
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.e
+    @G.op(@G.inv(a), a) = @G.e
+    @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.op(@G.inv(a), a)
+    by thm group_left_cancel(s, g, @G.inv(a), @G.inv(@G.inv(a)), a)
+
+thm normal_subgroup_inv_conjugate:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), y, a s:
+            $is_normal_subgroup(s, g, h)
+            a $in h
+            =>:
+                @G.op(@G.op(@G.inv(y), a), y) $in h
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    by thm group_inv_inv(s, g, y)
+    @G.op(@G.op(@G.inv(y), a), @G.inv(@G.inv(y))) $in h
+    @G.op(@G.op(@G.inv(y), a), @G.inv(@G.inv(y))) = @G.op(@G.op(@G.inv(y), a), y)
+    @G.op(@G.op(@G.inv(y), a), y) $in h
+
+thm left_coset_contains_representative:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), x s, c power_set(s):
+            $is_subgroup(s, g, h)
+            $is_left_coset_with_representative(s, g, h, x, c)
+            =>:
+                x $in c
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    h $in power_set(s)
+    @G.e $in h
+    @G.e $in s
+    @G.op(x, @G.e) = x
+    x = @G.op(x, @G.e)
+    witness exist a s st {a $in h, x = @G.op(x, a)} from @G.e:
+        @G.e $in h
+        x = @G.op(x, @G.e)
+    x $in c
+
+thm same_left_coset_has_factor:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), c power_set(s), x, y s:
+            $is_subgroup(s, g, h)
+            $is_left_coset_with_representative(s, g, h, x, c)
+            $is_left_coset_with_representative(s, g, h, y, c)
+            =>:
+                exist a s st {a $in h, y = @G.op(x, a)}
+    by thm left_coset_contains_representative(s, g, h, y, c)
+    y $in c
+    exist a s st {a $in h, y = @G.op(x, a)}
+
+thm same_representative_left_cosets_equal:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), x s, c, d power_set(s):
+            $is_left_coset_with_representative(s, g, h, x, c)
+            $is_left_coset_with_representative(s, g, h, x, d)
+            =>:
+                c = d
+    by extension:
+        prove:
+            c = d
+        forall y c:
+            y $in c
+            exist a s st {a $in h, y = @G.op(x, a)}
+            y $in d
+        forall y d:
+            y $in d
+            exist a s st {a $in h, y = @G.op(x, a)}
+            y $in c
+
+thm left_coset_change_representative:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), x, y s, c power_set(s), a s:
+            $is_subgroup(s, g, h)
+            $is_left_coset_with_representative(s, g, h, x, c)
+            a $in h
+            y = @G.op(x, a)
+            =>:
+                $is_left_coset_with_representative(s, g, h, y, c)
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    h $in power_set(s)
+    @G.inv(a) $in h
+    claim:
+        prove:
+            forall z s:
+                z $in c
+                =>:
+                    exist b s st {b $in h, z = @G.op(y, b)}
+        have by exist b s st {b $in h, z = @G.op(x, b)}: b
+        @G.op(@G.inv(a), b) $in h
+        @G.op(a, @G.inv(a)) = @G.e
+        @G.op(@G.e, b) = b
+        @G.op(a, @G.op(@G.inv(a), b)) = @G.op(@G.op(a, @G.inv(a)), b)
+        @G.op(x, @G.op(a, @G.op(@G.inv(a), b))) = @G.op(x, @G.op(@G.op(a, @G.inv(a)), b))
+        @G.op(y, @G.op(@G.inv(a), b)) = @G.op(@G.op(x, a), @G.op(@G.inv(a), b)) = @G.op(x, @G.op(a, @G.op(@G.inv(a), b))) = @G.op(x, @G.op(@G.op(a, @G.inv(a)), b)) = @G.op(x, @G.op(@G.e, b)) = @G.op(x, b) = z
+        z = @G.op(y, @G.op(@G.inv(a), b))
+        witness exist t s st {t $in h, z = @G.op(y, t)} from @G.op(@G.inv(a), b):
+            @G.op(@G.inv(a), b) $in h
+            z = @G.op(y, @G.op(@G.inv(a), b))
+    claim:
+        prove:
+            forall z s:
+                exist b s st {b $in h, z = @G.op(y, b)}
+                =>:
+                    z $in c
+        have by exist b s st {b $in h, z = @G.op(y, b)}: b
+        @G.op(a, b) $in h
+        @G.op(y, b) = @G.op(@G.op(x, a), b) = @G.op(x, @G.op(a, b))
+        z = @G.op(x, @G.op(a, b))
+        witness exist t s st {t $in h, z = @G.op(x, t)} from @G.op(a, b):
+            @G.op(a, b) $in h
+            z = @G.op(x, @G.op(a, b))
+        z $in c
+    $is_left_coset_with_representative(s, g, h, y, c)
+
+thm group_move_across:
+    prove:
+        forall s nonempty_set, g &Group<s>, y, u, k s:
+            k = @G.op(@G.op(@G.inv(y), u), y)
+            =>:
+                @G.op(u, y) = @G.op(y, k)
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    @G.op(y, @G.inv(y)) = @G.e
+    @G.op(@G.e, u) = u
+    @G.op(y, @G.op(@G.inv(y), u)) = @G.op(@G.op(y, @G.inv(y)), u)
+    @G.op(@G.op(y, @G.op(@G.inv(y), u)), y) = @G.op(@G.op(@G.op(y, @G.inv(y)), u), y)
+    @G.op(y, k) = @G.op(y, @G.op(@G.op(@G.inv(y), u), y)) = @G.op(@G.op(y, @G.op(@G.inv(y), u)), y) = @G.op(@G.op(@G.op(y, @G.inv(y)), u), y) = @G.op(@G.op(@G.e, u), y) = @G.op(u, y)
+    @G.op(u, y) = @G.op(y, k)
+
+thm quotient_product_has_factor:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), x1, x2, y1, y2, u, v s:
+            $is_normal_subgroup(s, g, h)
+            u $in h
+            v $in h
+            x2 = @G.op(x1, u)
+            y2 = @G.op(y1, v)
+            =>:
+                exist a s st {a $in h, @G.op(x2, y2) = @G.op(@G.op(x1, y1), a)}
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    have k set = @G.op(@G.op(@G.inv(y1), u), y1)
+    k $in s
+    by thm normal_subgroup_inv_conjugate(s, g, h, y1, u)
+    k $in h
+    @G.op(k, v) $in h
+    by thm group_move_across(s, g, y1, u, k)
+    @G.op(u, y1) = @G.op(y1, k)
+    @G.op(u, @G.op(y1, v)) = @G.op(@G.op(u, y1), v)
+    @G.op(x1, @G.op(u, @G.op(y1, v))) = @G.op(x1, @G.op(@G.op(u, y1), v))
+    @G.op(x1, @G.op(@G.op(u, y1), v)) = @G.op(x1, @G.op(@G.op(y1, k), v))
+    @G.op(@G.op(y1, k), v) = @G.op(y1, @G.op(k, v))
+    @G.op(x1, @G.op(@G.op(y1, k), v)) = @G.op(x1, @G.op(y1, @G.op(k, v)))
+    @G.op(x1, @G.op(y1, @G.op(k, v))) = @G.op(@G.op(x1, y1), @G.op(k, v))
+    @G.op(x2, y2) = @G.op(@G.op(x1, u), @G.op(y1, v)) = @G.op(x1, @G.op(u, @G.op(y1, v))) = @G.op(x1, @G.op(@G.op(u, y1), v)) = @G.op(x1, @G.op(@G.op(y1, k), v)) = @G.op(x1, @G.op(y1, @G.op(k, v))) = @G.op(@G.op(x1, y1), @G.op(k, v))
+    witness exist a s st {a $in h, @G.op(x2, y2) = @G.op(@G.op(x1, y1), a)} from @G.op(k, v):
+        @G.op(k, v) $in h
+        @G.op(x2, y2) = @G.op(@G.op(x1, y1), @G.op(k, v))
+
+thm quotient_product_well_defined_for_representatives:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q, x1, x2, y1, y2 s, out1, out2 q:
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            $is_left_coset_with_representative(s, g, h, x1, c1)
+            $is_left_coset_with_representative(s, g, h, x2, c1)
+            $is_left_coset_with_representative(s, g, h, y1, c2)
+            $is_left_coset_with_representative(s, g, h, y2, c2)
+            $is_left_coset_with_representative(s, g, h, @G.op(x1, y1), out1)
+            $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out2)
+            =>:
+                out1 = out2
+    $is_subgroup(s, g, h)
+    by thm same_left_coset_has_factor(s, g, h, c1, x1, x2)
+    have by exist u s st {u $in h, x2 = @G.op(x1, u)}: u
+    by thm same_left_coset_has_factor(s, g, h, c2, y1, y2)
+    have by exist v s st {v $in h, y2 = @G.op(y1, v)}: v
+    by thm quotient_product_has_factor(s, g, h, x1, x2, y1, y2, u, v)
+    have by exist a s st {a $in h, @G.op(x2, y2) = @G.op(@G.op(x1, y1), a)}: a
+    by thm left_coset_change_representative(s, g, h, @G.op(x1, y1), @G.op(x2, y2), out1, a)
+    $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out1)
+    by thm same_representative_left_cosets_equal(s, g, h, @G.op(x2, y2), out1, out2)
+    out1 = out2
+
+thm quotient_product_well_defined_thm:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                $quotient_product_well_defined(s, g, h, q)
+    claim:
+        prove:
+            forall c1, c2 q, x1, x2, y1, y2 s, out1, out2 q:
+                $is_left_coset_with_representative(s, g, h, x1, c1)
+                $is_left_coset_with_representative(s, g, h, x2, c1)
+                $is_left_coset_with_representative(s, g, h, y1, c2)
+                $is_left_coset_with_representative(s, g, h, y2, c2)
+                $is_left_coset_with_representative(s, g, h, @G.op(x1, y1), out1)
+                $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out2)
+                =>:
+                    $quotient_product_representatives_equal(s, g, h, q, c1, c2, x1, x2, y1, y2, out1, out2)
+        by thm quotient_product_well_defined_for_representatives(s, g, h, q, c1, c2, x1, x2, y1, y2, out1, out2)
+    $quotient_product_well_defined(s, g, h, q)
+
+thm quotient_set_member_is_left_coset:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c q:
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                $is_left_coset(s, g, h, c)
+    c $in q
+    $is_left_coset(s, g, h, c)
+
+thm left_coset_member_of_quotient_set:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), coset power_set(s):
+            $is_group_quotient_set(s, g, h, q)
+            $is_left_coset(s, g, h, coset)
+            =>:
+                coset $in q
+    q = {c power_set(s): $is_left_coset(s, g, h, c)}
+    coset $in {c power_set(s): $is_left_coset(s, g, h, c)}
+    coset $in q
+
+thm left_coset_exists_for_representative:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), x s:
+            exist c power_set(s) st {$is_left_coset_with_representative(s, g, h, x, c)}
+    have c0 power_set(s) = {z s: $is_in_left_coset_by_representative(s, g, h, x, z)}
+    claim:
+        prove:
+            forall y s:
+                y $in c0
+                =>:
+                    exist a s st {a $in h, y = @G.op(x, a)}
+        y $in c0
+        $is_in_left_coset_by_representative(s, g, h, x, y)
+        exist a s st {a $in h, y = @G.op(x, a)}
+    claim:
+        prove:
+            forall y s:
+                exist a s st {a $in h, y = @G.op(x, a)}
+                =>:
+                    y $in c0
+        $is_in_left_coset_by_representative(s, g, h, x, y)
+        y $in {z s: $is_in_left_coset_by_representative(s, g, h, x, z)}
+        y $in c0
+    $is_left_coset_with_representative(s, g, h, x, c0)
+    witness exist c power_set(s) st {$is_left_coset_with_representative(s, g, h, x, c)} from c0:
+        $is_left_coset_with_representative(s, g, h, x, c0)
+
+thm chosen_product_coset_is_product:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q, x, y s, out q:
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            $is_left_coset_with_representative(s, g, h, x, c1)
+            $is_left_coset_with_representative(s, g, h, y, c2)
+            $is_left_coset_with_representative(s, g, h, @G.op(x, y), out)
+            =>:
+                $is_quotient_product_coset(s, g, h, c1, c2, out)
+    $is_subgroup(s, g, h)
+    claim:
+        prove:
+            forall x2, y2 s:
+                $is_left_coset_with_representative(s, g, h, x2, c1)
+                $is_left_coset_with_representative(s, g, h, y2, c2)
+                =>:
+                    $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out)
+        by thm same_left_coset_has_factor(s, g, h, c1, x, x2)
+        have by exist u s st {u $in h, x2 = @G.op(x, u)}: u
+        by thm same_left_coset_has_factor(s, g, h, c2, y, y2)
+        have by exist v s st {v $in h, y2 = @G.op(y, v)}: v
+        by thm quotient_product_has_factor(s, g, h, x, x2, y, y2, u, v)
+        have by exist a s st {a $in h, @G.op(x2, y2) = @G.op(@G.op(x, y), a)}: a
+        by thm left_coset_change_representative(s, g, h, @G.op(x, y), @G.op(x2, y2), out, a)
+        $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out)
+    $is_quotient_product_coset(s, g, h, c1, c2, out)
+
+thm quotient_product_coset_unique:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q, out1, out2 q:
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            $is_quotient_product_coset(s, g, h, c1, c2, out1)
+            $is_quotient_product_coset(s, g, h, c1, c2, out2)
+            =>:
+                out1 = out2
+    by thm quotient_set_member_is_left_coset(s, g, h, q, c1)
+    have by exist x s st {$is_left_coset_with_representative(s, g, h, x, c1)}: x
+    by thm quotient_set_member_is_left_coset(s, g, h, q, c2)
+    have by exist y s st {$is_left_coset_with_representative(s, g, h, y, c2)}: y
+    $is_left_coset_with_representative(s, g, h, @G.op(x, y), out1)
+    $is_left_coset_with_representative(s, g, h, @G.op(x, y), out2)
+    by thm same_representative_left_cosets_equal(s, g, h, @G.op(x, y), out1, out2)
+    out1 = out2
+
+claim:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q:
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                exist! out q st {$is_quotient_product_coset(s, g, h, c1, c2, out)}
+    by thm quotient_set_member_is_left_coset(s, g, h, q, c1)
+    have by exist x s st {$is_left_coset_with_representative(s, g, h, x, c1)}: x
+    by thm quotient_set_member_is_left_coset(s, g, h, q, c2)
+    have by exist y s st {$is_left_coset_with_representative(s, g, h, y, c2)}: y
+    by thm left_coset_exists_for_representative(s, g, h, @G.op(x, y))
+    have by exist out power_set(s) st {$is_left_coset_with_representative(s, g, h, @G.op(x, y), out)}: out
+    witness exist r s st {$is_left_coset_with_representative(s, g, h, r, out)} from @G.op(x, y):
+        $is_left_coset_with_representative(s, g, h, @G.op(x, y), out)
+    $is_left_coset(s, g, h, out)
+    by thm left_coset_member_of_quotient_set(s, g, h, q, out)
+    out $in q
+    by thm chosen_product_coset_is_product(s, g, h, q, c1, c2, x, y, out)
+    $is_quotient_product_coset(s, g, h, c1, c2, out)
+    claim:
+        prove:
+            forall out1, out2 q:
+                $is_quotient_product_coset(s, g, h, c1, c2, out1)
+                $is_quotient_product_coset(s, g, h, c1, c2, out2)
+                =>:
+                    out1 = out2
+        by thm quotient_product_coset_unique(s, g, h, q, c1, c2, out1, out2)
+    witness exist! out2 q st {$is_quotient_product_coset(s, g, h, c1, c2, out2)} from out:
+        $is_quotient_product_coset(s, g, h, c1, c2, out)
+
+claim:
+    prove:
+        forall s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)):
+            $is_normal_subgroup(s, g, h)
+            $is_group_quotient_set(s, g, h, q)
+            =>:
+                exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+    have fn quotient_mul as set:
+        prove:
+            forall c1, c2 q:
+                exist! out q st {$is_quotient_product_coset(s, g, h, c1, c2, out)}
+    $is_quotient_multiplication(s, g, h, q, quotient_mul)
+    witness exist! quotient_mul2 fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul2)} from quotient_mul:
+        $is_quotient_multiplication(s, g, h, q, quotient_mul)
+
+template<s nonempty_set, q power_set(power_set(s))>:
+    have fn quotient_op as set:
+        prove:
+            forall g &Group<s>, h power_set(s):
+                $is_normal_subgroup(s, g, h)
+                $is_group_quotient_set(s, g, h, q)
+                =>:
+                    exist! quotient_mul fn(c1, c2 q) q st {$is_quotient_multiplication(s, g, h, q, quotient_mul)}
+
+struct QuotientGroup<s nonempty_set, q power_set(power_set(s))>:
+    base &Group<s>
+    normal_subgroup power_set(s)
+    quotient_mul fn(c1, c2 q) q
+    <=>:
+        $is_normal_subgroup(s, base, normal_subgroup)
+        $is_group_quotient_set(s, base, normal_subgroup, q)
+        $is_quotient_multiplication(s, base, normal_subgroup, q, quotient_mul)
+
+thm group_quotient_interface_thm:
+    prove:
+        forall g &Group<R>, h power_set(R):
+            $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))
+    $is_group_quotient_set(R, g, h, \group_quotient<R>(g, h))
+
+thm quotient_op_interface_thm:
+    prove:
+        forall g &Group<R>, h power_set(R), q power_set(power_set(R)):
+            $is_normal_subgroup(R, g, h)
+            $is_group_quotient_set(R, g, h, q)
+            =>:
+                $quotient_product_well_defined(R, g, h, q)
+                $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))
+    by thm quotient_product_well_defined_thm(R, g, h, q)
+    $quotient_product_well_defined(R, g, h, q)
+    $is_quotient_multiplication(R, g, h, q, \quotient_op<R, q>(g, h))
+
+thm identity_subgroup_is_normal:
+    prove:
+        forall s nonempty_set, g &Group<s>:
+            $is_normal_subgroup(s, g, {@G.e})
+    $GroupProperty(s, @G.inv, @G.op, @G.e)
+    claim:
+        prove:
+            forall a, b s:
+                a $in {@G.e}
+                b $in {@G.e}
+                =>:
+                    @G.op(a, b) $in {@G.e}
+        a = @G.e
+        b = @G.e
+        @G.op(a, b) = @G.op(@G.e, @G.e) = @G.e
+        @G.op(a, b) $in {@G.e}
+    claim:
+        prove:
+            forall a s:
+                a $in {@G.e}
+                =>:
+                    @G.inv(a) $in {@G.e}
+        a = @G.e
+        @G.op(@G.e, @G.inv(@G.e)) = @G.e
+        @G.op(@G.e, @G.inv(@G.e)) = @G.inv(@G.e)
+        @G.inv(a) = @G.inv(@G.e) = @G.e
+        @G.inv(a) $in {@G.e}
+    $is_subgroup(s, g, {@G.e})
+    claim:
+        prove:
+            forall x, a s:
+                a $in {@G.e}
+                =>:
+                    @G.op(@G.op(x, a), @G.inv(x)) $in {@G.e}
+        a = @G.e
+        @G.op(x, a) = @G.op(x, @G.e) = x
+        @G.op(@G.op(x, a), @G.inv(x)) = @G.op(x, @G.inv(x)) = @G.e
+        @G.op(@G.op(x, a), @G.inv(x)) $in {@G.e}
+    $is_normal_subgroup(s, g, {@G.e})
+
+# Example: the quotient operation for the real additive group modulo {0}.
+$GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group<R>
+
+macro RG "&Group<R>{real_add_group}"
+
+claim:
+    prove:
+        forall real_add_group &Group<R>, real_add_quotient power_set(power_set(R)):
+            real_add_group = ('R(x){-x}, 'R(x, y){x + y}, 0)
+            real_add_quotient = \group_quotient<R>(real_add_group, {@RG.e})
+            =>:
+                @RG.e = 0
+                $is_normal_subgroup(R, real_add_group, {@RG.e})
+                $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+                $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+                $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+    @RG.e = 0
+    by thm identity_subgroup_is_normal(R, real_add_group)
+    $is_normal_subgroup(R, real_add_group, {@RG.e})
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, \group_quotient<R>(real_add_group, {@RG.e}))
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+    by thm quotient_op_interface_thm(real_add_group, {@RG.e}, real_add_quotient)
+    $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+    $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+
+claim:
+    prove:
+        forall real_add_group &Group<R>, real_add_quotient power_set(power_set(R)), c1, c2 real_add_quotient:
+            real_add_group = ('R(x){-x}, 'R(x, y){x + y}, 0)
+            real_add_quotient = \group_quotient<R>(real_add_group, {@RG.e})
+            =>:
+                @RG.e = 0
+                $is_normal_subgroup(R, real_add_group, {@RG.e})
+                $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+                $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+                $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+                $is_quotient_product_coset(R, real_add_group, {@RG.e}, c1, c2, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e})(c1, c2))
+    @RG.e = 0
+    by thm identity_subgroup_is_normal(R, real_add_group)
+    $is_normal_subgroup(R, real_add_group, {@RG.e})
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, \group_quotient<R>(real_add_group, {@RG.e}))
+    $is_group_quotient_set(R, real_add_group, {@RG.e}, real_add_quotient)
+    by thm quotient_op_interface_thm(real_add_group, {@RG.e}, real_add_quotient)
+    $quotient_product_well_defined(R, real_add_group, {@RG.e}, real_add_quotient)
+    $is_quotient_multiplication(R, real_add_group, {@RG.e}, real_add_quotient, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e}))
+    $is_quotient_product_coset(R, real_add_group, {@RG.e}, c1, c2, \quotient_op<R, real_add_quotient>(real_add_group, {@RG.e})(c1, c2))
+
+clear
+
+# snippet 6, source: README.md:693
+
+by for:
+    prove:
+        forall i closed_range(1, 3), j closed_range(1, 3):
+            i = 1 and j = 1 or i = 1 and j = 2 or i = 1 and j = 3 or i = 2 and j = 1 or i = 2 and j = 2 or i = 2 and j = 3 or i = 3 and j = 1 or i = 3 and j = 2 or i = 3 and j = 3
+
+have fn M(i closed_range(1, 3), j closed_range(1, 3)) R by cases:
+    case i = 1 and j = 1: 1
+    case i = 1 and j = 2: 0
+    case i = 1 and j = 3: 0
+    case i = 2 and j = 1: 0
+    case i = 2 and j = 2: 1
+    case i = 2 and j = 3: 0
+    case i = 3 and j = 1: 0
+    case i = 3 and j = 2: 0
+    case i = 3 and j = 3: 1
+
+M $in fn(i closed_range(1, 3), j closed_range(1, 3)) R
+
+prop is_diagonal_matrix(n N_pos, m fn(i closed_range(1, n), j closed_range(1, n)) R):
+    forall i closed_range(1, n), j closed_range(1, n):
+        i != j
+        =>:
+            m(i, j) = 0
+
+by for:
+    prove:
+        forall i closed_range(1, 3), j closed_range(1, 3):
+            i != j
+            =>:
+                M(i, j) = 0
+
+$is_diagonal_matrix(3, M)
+
+clear
+
+# snippet 7, source: README.md:733
+
+have fn f(x R: x > 0) R = x^2
+
+claim $increasing({x R: x > 0}, f):
+    claim forall! x, y R: x > 0, y > 0, x < y => f(x) < f(y):
+        f(y) - f(x) = y^2 - x^2 = (y - x) * (y + x) > 0
+
+have fn g(x R) R = x^2
+
+claim $increasing({x R: x > 0}, g):
+    claim forall! x, y R: x > 0, y > 0, x < y => g(x) < g(y):
+        g(y) - g(x) = y^2 - x^2 = (y - x) * (y + x) > 0
+
+clear
+
+# snippet 8, source: README.md:755
+
+sketch:
+    not $is_nonempty_set({})
+
+clear
+
+# snippet 9, source: README.md:760
+
+sketch:
+    not 4 $in {1, 2, 3}
+
+clear
+
+# snippet 10, source: README.md:765
+
+sketch:
+    have x Z = 4
+    x != 1
+    x != 2
+    x != 3
+    not x $in {1, 2, 3}
+
+clear
+
+# snippet 11, source: README.md:779
+
+prop toy_integrable(f fn(x R) R):
+    f = f
+
+strategy sum_toy_integrable:
+    prove:
+        forall f, g fn(x R) R:
+            $toy_integrable(f)
+            $toy_integrable(g)
+            =>:
+                $toy_integrable('R(x){f(x) + g(x)})
+    'R(x){f(x) + g(x)} = 'R(x){f(x) + g(x)}
+
+use strategy sum_toy_integrable
+
+forall f, g fn(x R) R:
+    $toy_integrable(f)
+    $toy_integrable(g)
+    =>:
+        $toy_integrable('R(x){f(x) + g(x)})

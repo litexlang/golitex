@@ -1,9 +1,0 @@
-import Fintype
-
-$Fintype::Fintype({1, 2})
-$Fintype::Finite({1, 2})
-$Fintype::Card({1, 2}, 2)
-Fintype::card({1, 2}) = 2
-
-by thm Fintype::card_eq_count({1, 2})
-Fintype::card({1, 2}) = count({1, 2})

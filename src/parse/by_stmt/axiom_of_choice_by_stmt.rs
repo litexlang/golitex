@@ -9,7 +9,8 @@ impl Runtime {
         if !tb.current_token_is_equal_to(COLON) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by axiom_of_choice: expected `by axiom_of_choice: set S:`".to_string(),
+                    "by axiom_of_choice: expected `by axiom_of_choice: set S:` or `by axiom_of_choice: set S`"
+                        .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -17,21 +18,16 @@ impl Runtime {
         tb.skip_token(COLON)?;
         tb.skip_token(SET)?;
         let family = self.parse_obj(tb)?;
-        tb.skip_token(COLON)?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by axiom_of_choice: expected end of head after trailing `:`".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
+        let has_proof_body = self.parse_optional_trailing_proof_colon(tb, "by axiom_of_choice")?;
 
-        let proof = tb
-            .body
-            .iter_mut()
-            .map(|block| self.parse_stmt(block))
-            .collect::<Result<_, _>>()?;
+        let proof = if has_proof_body {
+            tb.body
+                .iter_mut()
+                .map(|block| self.parse_stmt(block))
+                .collect::<Result<_, _>>()?
+        } else {
+            vec![]
+        };
 
         Ok(ByAxiomOfChoiceStmt::new(family, proof, tb.line_file.clone()).into())
     }

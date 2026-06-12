@@ -1,59 +1,11 @@
-# Monotonicity predicates and basic monotone-convergence interfaces.
+# Monotone real-sequence theorem interfaces.
 #
-# This module keeps order-theoretic vocabulary separate from `Real`, while
-# depending on `Real` for sequence convergence and completeness interfaces.
+# This module is intentionally small: Tao Analysis chapters use it as the
+# reusable std boundary for bounded monotone convergence, while detailed
+# supremum-based proofs remain analysis stdlib work.
 
 import Real
 
-# Monotonicity on a specified real domain. These are useful when a theorem only
-# controls a function on an interval or another subset of R.
-prop increasing_on(S set, f fn(x R) R):
-    forall x, y R:
-        x $in S
-        y $in S
-        x <= y
-        =>:
-            f(x) <= f(y)
-
-prop decreasing_on(S set, f fn(x R) R):
-    forall x, y R:
-        x $in S
-        y $in S
-        x <= y
-        =>:
-            f(y) <= f(x)
-
-prop strictly_increasing_on(S set, f fn(x R) R):
-    forall x, y R:
-        x $in S
-        y $in S
-        x < y
-        =>:
-            f(x) < f(y)
-
-prop strictly_decreasing_on(S set, f fn(x R) R):
-    forall x, y R:
-        x $in S
-        y $in S
-        x < y
-        =>:
-            f(y) < f(x)
-
-# Global monotonicity on all real inputs.
-prop monotone(f fn(x R) R):
-    forall x, y R:
-        x <= y
-        =>:
-            f(x) <= f(y)
-
-prop antitone(f fn(x R) R):
-    forall x, y R:
-        x <= y
-        =>:
-            f(y) <= f(x)
-
-# Sequence-level monotonicity. These are separate from function monotonicity
-# because many textbook convergence arguments are stated directly for sequences.
 prop increasing_seq(a seq(R)):
     forall n N_pos:
         a(n) <= a(n + 1)
@@ -62,7 +14,6 @@ prop decreasing_seq(a seq(R)):
     forall n N_pos:
         a(n + 1) <= a(n)
 
-# Pointwise bounds for a sequence.
 prop is_seq_upper_bound(a seq(R), M R):
     forall n N_pos:
         a(n) <= M
@@ -78,24 +29,23 @@ prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
 
 know:
-    # Monotone convergence for real sequences.  The intended proof takes the
-    # supremum/infimum of the sequence range and uses the approximation
-    # theorem for that extremum.
+    # proof_debt: prove from the real least-upper-bound interface by
+    # taking the supremum of the sequence range.
     forall a seq(R):
         $increasing_seq(a)
         $bounded_above_seq(a)
         =>:
             $Real::convergent_seq(a)
 
+    # proof_debt: dual bounded monotone convergence theorem, using the
+    # infimum of the sequence range.
     forall a seq(R):
         $decreasing_seq(a)
         $bounded_below_seq(a)
         =>:
             $Real::convergent_seq(a)
 
-# Increasing monotone convergence theorem: an increasing real sequence bounded
-# above converges.
-thm increasing_bounded_above_seq_converges, monotone_convergence_increasing:
+thm increasing_bounded_above_seq_converges:
     prove:
         forall a seq(R):
             $increasing_seq(a)
@@ -104,9 +54,7 @@ thm increasing_bounded_above_seq_converges, monotone_convergence_increasing:
                 $Real::convergent_seq(a)
     $Real::convergent_seq(a)
 
-# Decreasing monotone convergence theorem: a decreasing real sequence bounded
-# below converges.
-thm decreasing_bounded_below_seq_converges, monotone_convergence_decreasing:
+thm decreasing_bounded_below_seq_converges:
     prove:
         forall a seq(R):
             $decreasing_seq(a)

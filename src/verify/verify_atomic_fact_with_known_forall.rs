@@ -483,88 +483,16 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = known_forall.params_def.collect_param_names();
-
-        if !param_names
-            .iter()
-            .all(|param_name| arg_map.contains_key(param_name))
-        {
-            return Ok(None);
-        }
-
-        // Collect the arg for each param.
-        let mut args_for_params: Vec<Obj> = Vec::new();
-
-        for param_name in param_names.iter() {
-            let obj = match arg_map.get(param_name) {
-                Some(v) => v,
-                None => return Ok(None),
-            };
-
-            args_for_params.push(obj.clone());
-        }
-
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &known_forall.params_def,
-                &args_for_params,
+        let Some((instantiation, requirements)) = self
+            .verify_known_forall_requirements_and_build_evidence(
+                known_forall.as_ref(),
+                &arg_map,
+                given_atomic_fact.clone().into(),
                 verify_state,
-                ParamObjType::Forall,
-            )
-            .map_err(|e| {
-                {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                        String::new(),
-                        given_atomic_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                }
-            })?;
-        if args_param_types.is_unknown() {
+            )?
+        else {
             return Ok(None);
-        }
-
-        let param_to_arg_map = match known_forall
-            .params_def
-            .param_def_params_to_arg_map(&arg_map)
-        {
-            Some(m) => m,
-            None => return Ok(None),
         };
-
-        for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_atomic_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            let result = self
-                .verify_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_atomic_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-        }
 
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
@@ -574,10 +502,10 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
-            VerifiedByResult::cited_fact(
-                given_atomic_fact.clone().into(),
+            VerifiedByResult::known_forall_instantiation(
                 verified_by_known_forall_fact.clone().into(),
-                None,
+                instantiation,
+                requirements,
             ),
             Vec::new(),
         );
@@ -760,15 +688,30 @@ impl Runtime {
             Obj::FnRange(ref left) => {
                 self.match_arg_when_left_is_fn_range(left.function.as_ref(), given_arg)
             }
+            Obj::FnRangeOn(ref left) => self.match_arg_when_left_is_fn_range_on(
+                left.function.as_ref(),
+                left.set.as_ref(),
+                given_arg,
+            ),
             Obj::Sum(ref left) => self.match_arg_when_left_is_sum(
                 left.start.as_ref(),
                 left.end.as_ref(),
                 left.func.as_ref(),
                 given_arg,
             ),
+            Obj::SumOfFiniteSet(ref left) => self.match_arg_when_left_is_finite_set_sum(
+                left.set.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
             Obj::Product(ref left) => self.match_arg_when_left_is_product(
                 left.start.as_ref(),
                 left.end.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
+            Obj::ProductOfFiniteSet(ref left) => self.match_arg_when_left_is_finite_set_product(
+                left.set.as_ref(),
                 left.func.as_ref(),
                 given_arg,
             ),
@@ -2324,6 +2267,23 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_fn_range_on(
+        &mut self,
+        left_function: &Obj,
+        left_set: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FnRangeOn(ref given) => self.match_arg_binary_then_merge(
+                left_function,
+                left_set,
+                given.function.as_ref(),
+                given.set.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_range(
         &mut self,
         left_start: &Obj,
@@ -2361,6 +2321,23 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_finite_set_sum(
+        &mut self,
+        left_set: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::SumOfFiniteSet(ref g) => self.match_arg_binary_then_merge(
+                left_set,
+                left_func,
+                g.set.as_ref(),
+                g.func.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_product(
         &mut self,
         left_start: &Obj,
@@ -2375,6 +2352,23 @@ impl Runtime {
                 left_func,
                 g.start.as_ref(),
                 g.end.as_ref(),
+                g.func.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_set_product(
+        &mut self,
+        left_set: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::ProductOfFiniteSet(ref g) => self.match_arg_binary_then_merge(
+                left_set,
+                left_func,
+                g.set.as_ref(),
                 g.func.as_ref(),
             ),
             _ => Ok(None),

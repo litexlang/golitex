@@ -5,11 +5,19 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self
+        let mut infer_result = self
             .define_params_with_type(&stmt.param_def, true, ParamObjType::Identifier)
             .map_err(|define_params_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
             })?;
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+        infer_result.relabel_all_added_facts_with_store_reason(
+            HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
+        );
+        let checks = self
+            .object_introduction_nonempty_checks_for_param_def(&stmt.param_def)
+            .map_err(|check_error| {
+                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), check_error)
+            })?;
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, checks)).into())
     }
 }

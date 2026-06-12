@@ -9,6 +9,7 @@ impl Runtime {
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
             let witness_stmt = stmt.clone().into();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
             let expected_param_count = stmt
@@ -105,13 +106,16 @@ impl Runtime {
             }
 
             for proof_stmt in stmt.proof.iter() {
-                if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
-                    return Err(short_exec_error(
-                        witness_stmt.clone(),
-                        proof_stmt.to_string(),
-                        Some(proof_exec_error),
-                        vec![],
-                    ));
+                match rt.exec_stmt(proof_stmt) {
+                    Ok(result) => inside_results.push(result),
+                    Err(proof_exec_error) => {
+                        return Err(short_exec_error(
+                            witness_stmt.clone(),
+                            proof_stmt.to_string(),
+                            Some(proof_exec_error),
+                            std::mem::take(&mut inside_results),
+                        ));
+                    }
                 }
             }
 
@@ -129,21 +133,32 @@ impl Runtime {
             let verify_state_for_proof_check = VerifyState::new(0, false);
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
-                let verification_result = rt.verify_fact_return_err_if_not_true(
-                    &internal_fact,
-                    &verify_state_for_proof_check,
-                );
-                if let Err(verify_error) = verification_result {
-                    return Err(verify_error);
-                }
+                let verification_result = rt
+                    .verify_fact_return_err_if_not_true(
+                        &internal_fact,
+                        &verify_state_for_proof_check,
+                    )
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            witness_stmt.clone(),
+                            format!(
+                                "witness exist fact: failed to verify internal fact `{}`",
+                                internal_fact
+                            ),
+                            Some(verify_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                inside_results.push(verification_result);
             }
 
-            Ok(())
+            Ok(inside_results)
         });
 
-        if let Err(e) = inside_results_when_verify {
-            return Err(e);
-        }
+        let inside_results = match inside_results_when_verify {
+            Ok(inside_results) => inside_results,
+            Err(e) => return Err(e),
+        };
 
         // 6) Store exist fact into the top-level (big) environment.
         let store_result = self.verify_well_defined_and_store_and_infer_with_default_verify_state(
@@ -151,7 +166,7 @@ impl Runtime {
         );
         match store_result {
             Ok(infer_result) => {
-                Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into())
+                Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into())
             }
             Err(store_error) => Err(short_exec_error(
                 witness_stmt,
@@ -170,6 +185,7 @@ impl Runtime {
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
             let witness_stmt = stmt.clone().into();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
 
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
@@ -196,13 +212,16 @@ impl Runtime {
             }
 
             for proof_stmt in stmt.proof.iter() {
-                if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
-                    return Err(short_exec_error(
-                        witness_stmt.clone(),
-                        proof_stmt.to_string(),
-                        Some(proof_exec_error),
-                        vec![],
-                    ));
+                match rt.exec_stmt(proof_stmt) {
+                    Ok(result) => inside_results.push(result),
+                    Err(proof_exec_error) => {
+                        return Err(short_exec_error(
+                            witness_stmt.clone(),
+                            proof_stmt.to_string(),
+                            Some(proof_exec_error),
+                            std::mem::take(&mut inside_results),
+                        ));
+                    }
                 }
             }
 
@@ -218,20 +237,35 @@ impl Runtime {
                     &verify_state_for_proof_check,
                 )?;
                 if ret_check.is_true() {
-                    return Ok(());
+                    inside_results.push(ret_check);
+                    return Ok(inside_results);
                 }
             }
 
             let membership_fact =
                 InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
-            rt.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;
+            let membership_result = rt
+                .verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)
+                .map_err(|verify_error| {
+                    short_exec_error(
+                        witness_stmt.clone(),
+                        format!(
+                            "witness nonempty set: failed to verify witness membership `{}`",
+                            membership_fact
+                        ),
+                        Some(verify_error),
+                        std::mem::take(&mut inside_results),
+                    )
+                })?;
+            inside_results.push(membership_result);
 
-            Ok(())
+            Ok(inside_results)
         });
 
-        if let Err(e) = inside_results_when_verify {
-            return Err(e);
-        }
+        let inside_results = match inside_results_when_verify {
+            Ok(inside_results) => inside_results,
+            Err(e) => return Err(e),
+        };
 
         // 6) Store nonempty set fact into the top-level (big) environment.
         let store_result = self.verify_well_defined_and_store_and_infer_with_default_verify_state(
@@ -239,7 +273,7 @@ impl Runtime {
         );
         match store_result {
             Ok(infer_result) => {
-                Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into())
+                Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into())
             }
             Err(store_error) => Err(short_exec_error(
                 witness_stmt,

@@ -1,7 +1,7 @@
 # clear empties the top env and top parse-time name map; use separate top-level blocks
 # so the second `let` is parsed after `clear` runs (parse-time names from the first block remain
 # only until that block finishes executing).
-prove:
+sketch:
     let a R:
         a = 1
     a = 1

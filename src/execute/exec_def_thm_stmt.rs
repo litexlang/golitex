@@ -39,19 +39,18 @@ impl Runtime {
                 let result = rt.exec_stmt(proof_stmt)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
+                        RuntimeErrorStruct::new_with_output(
                             Some(proof_stmt.clone()),
-                            format!(
-                                "thm `{}` failed: proof step {}/{} is unknown: `{}`\n{}",
-                                thm_names,
-                                proof_index + 1,
-                                proof_len,
-                                proof_stmt,
-                                result.body_string()
-                            ),
+                            format!("thm `{}` failed: proof step is unknown", thm_names),
                             proof_stmt.line_file(),
                             None,
                             vec![],
+                            RuntimeErrorOutput::proof_step_unknown(
+                                proof_stmt.clone(),
+                                proof_index + 1,
+                                proof_len,
+                                &result,
+                            ),
                         ),
                     )));
                 }
@@ -60,25 +59,26 @@ impl Runtime {
 
             let then_count = stmt.forall_fact.then_facts.len();
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
-                let result = rt.verify_exist_or_and_chain_atomic_fact(
+                let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &VerifyState::new(0, false),
                 )?;
                 if result.is_unknown() {
+                    let then_goal = then_fact.clone().to_fact();
+                    result = result.wrap_unknown_for_fact(then_goal.clone());
                     return Err(RuntimeError::from(UnknownRuntimeError(
-                        RuntimeErrorStruct::new(
-                            Some(Stmt::Fact(then_fact.clone().to_fact())),
-                            format!(
-                                "thm `{}` failed: cannot prove then-clause {}/{} `{}`\n{}",
-                                thm_names,
-                                then_index + 1,
-                                then_count,
-                                then_fact,
-                                result.body_string()
-                            ),
+                        RuntimeErrorStruct::new_with_output(
+                            Some(then_goal.clone().into()),
+                            format!("thm `{}` failed: cannot prove then-clause", thm_names),
                             then_fact.line_file(),
                             None,
                             vec![],
+                            RuntimeErrorOutput::then_clause_unknown(
+                                then_goal,
+                                then_index + 1,
+                                then_count,
+                                &result,
+                            ),
                         ),
                     )));
                 }

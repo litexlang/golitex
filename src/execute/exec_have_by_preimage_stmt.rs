@@ -5,17 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let fn_range = match &stmt.range_membership.set {
-            Obj::FnRange(fn_range) => fn_range,
-            _ => {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    "have by preimage expects `from z $in fn_range(f)`".to_string(),
-                    None,
-                    vec![],
-                ));
-            }
-        };
+        let (function, fn_body) = self.preimage_function_and_body(stmt)?;
 
         let source_atomic: AtomicFact = stmt.range_membership.clone().into();
         let verify_state = VerifyState::new(0, false);
@@ -33,19 +23,6 @@ impl Runtime {
             ));
         }
 
-        let fn_body = self
-            .get_fn_range_function_body(&fn_range.function)
-            .ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!(
-                        "have by preimage: function `{}` has no known function set",
-                        fn_range.function
-                    ),
-                    None,
-                    vec![],
-                )
-            })?;
         let param_count = fn_body.params_def_with_set.number_of_params();
         if stmt.preimage_names.len() != param_count {
             return Err(short_exec_error(
@@ -84,7 +61,7 @@ impl Runtime {
         )?);
         infer_result.new_infer_result_inside(self.store_preimage_value_equality(
             stmt,
-            fn_range,
+            &function,
             &preimage_objs,
         )?);
 
@@ -92,6 +69,42 @@ impl Runtime {
             NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![source_result])
                 .into(),
         )
+    }
+
+    fn preimage_function_and_body(
+        &self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<(Obj, FnSetBody), RuntimeError> {
+        match &stmt.range_membership.set {
+            Obj::FnRange(fn_range) => {
+                let fn_body = self
+                    .get_fn_range_function_body(&fn_range.function)
+                    .ok_or_else(|| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "have by preimage: function `{}` has no known function set",
+                                fn_range.function
+                            ),
+                            None,
+                            vec![],
+                        )
+                    })?;
+                Ok((fn_range.function.as_ref().clone(), fn_body))
+            }
+            Obj::FnRangeOn(fn_range_on) => {
+                let fn_set = self
+                    .fn_range_on_target_fn_set(fn_range_on, stmt.line_file.clone())
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+                Ok((fn_range_on.function.as_ref().clone(), fn_set.body.clone()))
+            }
+            _ => Err(short_exec_error(
+                stmt.clone().into(),
+                "have by preimage expects `from z $in fn_range(f)` or `from z $in fn_range_on(f, S)`".to_string(),
+                None,
+                vec![],
+            )),
+        }
     }
 
     fn store_preimage_param_set_facts(
@@ -161,21 +174,20 @@ impl Runtime {
     fn store_preimage_value_equality(
         &mut self,
         stmt: &HaveByPreimageStmt,
-        fn_range: &FnRange,
+        function: &Obj,
         preimage_objs: &Vec<Obj>,
     ) -> Result<InferResult, RuntimeError> {
-        let application =
-            preimage_application_obj(&fn_range.function, preimage_objs).ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!(
-                        "have by preimage: cannot build a function application for `{}`",
-                        fn_range.function
-                    ),
-                    None,
-                    vec![],
-                )
-            })?;
+        let application = preimage_application_obj(function, preimage_objs).ok_or_else(|| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "have by preimage: cannot build a function application for `{}`",
+                    function
+                ),
+                None,
+                vec![],
+            )
+        })?;
         let equality_fact: Fact = EqualFact::new(
             stmt.range_membership.element.clone(),
             application,

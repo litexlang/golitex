@@ -295,7 +295,7 @@ fn run_math23k_solutions_impl() {
 
 // cargo test run_math23k_debug_items -- --ignored --nocapture
 // LITEX_MATH23K_TITLE=Math23k_15120 cargo test run_math23k_debug_items -- --ignored --nocapture
-// LITEX_MATH23K_FILTER=相机 LITEX_MATH23K_LIMIT=5 cargo test run_math23k_debug_items -- --ignored --nocapture
+// LITEX_MATH23K_FILTER=camera LITEX_MATH23K_LIMIT=5 cargo test run_math23k_debug_items -- --ignored --nocapture
 #[test]
 #[ignore = "local debug helper; filters Math23K items with env vars"]
 fn run_math23k_debug_items() {

@@ -10,23 +10,25 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
-        if let Err(e) = self.define_params_with_type(
-            &forall_fact.params_def_with_type,
-            false,
-            ParamObjType::Forall,
-        ) {
-            return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "failed to define parameters in forall fact".to_string(),
-                forall_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            ))
-            .into());
-        }
+        let mut assumption_infer_result = self
+            .define_params_with_type(
+                &forall_fact.params_def_with_type,
+                false,
+                ParamObjType::Forall,
+            )
+            .map_err(|e| {
+                WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "failed to define parameters in forall fact".to_string(),
+                    forall_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                ))
+            })?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            self.verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+            let mut dom_infer_result = self
+                .verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -45,8 +47,11 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
+            dom_infer_result
+                .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+            assumption_infer_result.new_infer_result_inside(dom_infer_result);
         }
-        Ok(InferResult::new())
+        Ok(assumption_infer_result)
     }
 
     /// Verify and store each `then` clause of `forall_fact` in the current environment.
@@ -56,9 +61,9 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
         infer_result: &mut InferResult,
+        assumption_infers: InferResult,
         by_cases_case_label: Option<&str>,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut all_then_facts_are_verified_by_builtin_rules = true;
         let mut then_verification_results: Vec<StmtResult> = Vec::new();
 
         let then_count = forall_fact.then_facts.len();
@@ -101,73 +106,57 @@ impl Runtime {
             }
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
-                let detail_header = match by_cases_case_label {
-                    None => format!(
-                        "forall: then-fact {}/{} could not be verified (unknown): `{}`",
-                        then_one_based, then_count, then_fact
-                    ),
-                    Some(case_s) => format!(
-                        "by cases: under case `{case_s}`: forall: then-fact {then_one_based}/{then_count} could not be verified (unknown): `{then}`",
-                        case_s = case_s,
-                        then_one_based = then_one_based,
-                        then_count = then_count,
-                        then = then_fact
-                    ),
-                };
-                let detail_lines = vec![detail_header, result.body_string()];
-                return Ok(StmtUnknown::new_with_detail_lines(detail_lines).into());
+                let then_fact_as_fact = then_fact.clone().to_fact();
+                let result = self.structured_unknown_result_for_failed_fact(
+                    &then_fact_as_fact,
+                    verify_state,
+                    result,
+                )?;
+                let result = result.wrap_unknown_for_fact(then_fact_as_fact.clone());
+                let child_unknown = result.as_fact_unknown().cloned();
+                let detail_lines = by_cases_case_label
+                    .map(|case_s| format!("by cases: under case `{}`", case_s))
+                    .into_iter()
+                    .collect::<Vec<_>>();
+                return Ok(FactUnknown::forall_with_failed_prove(
+                    forall_fact.clone(),
+                    then_one_based,
+                    then_count,
+                    then_fact_as_fact,
+                    child_unknown,
+                    detail_lines,
+                )
+                .into());
             }
 
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                 then_fact.clone(),
             )?;
 
-            match &result {
-                StmtResult::FactualStmtSuccess(factual_verification_result) => {
-                    if !factual_verification_result.is_verified_by_builtin_rules_only() {
-                        all_then_facts_are_verified_by_builtin_rules = false;
-                    }
-                    // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
-                    // `min(a,b) <= a` from a known forall). Each then proof is attached as Steps under
-                    // `verified_by` for JSON/CLI.
-                }
-                StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                    all_then_facts_are_verified_by_builtin_rules = false;
-                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-                }
-                StmtResult::StmtUnknown(_) => {
-                    unreachable!("stmt unknown is handled above before this match")
-                }
+            if let Some(non_factual_success) = result.non_factual_success() {
+                infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+            } else if result.factual_success().is_some() {
+                // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
+                // `min(a,b) <= a` from a known forall). Each then proof is attached as Steps under
+                // `verified_by` for JSON/CLI.
+            } else {
+                unreachable!("stmt unknown is handled above before this match")
             }
             then_verification_results.push(result);
         }
 
-        if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
-            let forall_infers = InferResult::from_fact(&forall_fact.clone().into());
-            let cite_items: Vec<VerifiedBysEnum> = then_verification_results
-                .into_iter()
-                .flat_map(crate::result::verified_by_items_from_stmt_result)
-                .collect();
-            let verified_by = VerifiedByResult::wrap_bys(cite_items);
-            return Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                forall_fact.clone().into(),
-                forall_infers,
-                verified_by,
-            )
-            .into());
-        }
-
-        infer_result.new_fact(&forall_fact.clone().into());
+        infer_result.add_verified_statement(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, InferResult::new());
-        Ok(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
-                forall_fact.clone().into(),
-                infer_for_success,
-                VerifiedByResult::wrap_bys(Vec::new()),
+        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            forall_fact.clone().into(),
+            infer_for_success,
+            VerifiedByResult::forall_proof(
+                forall_fact.clone(),
                 then_verification_results,
-            ))
-            .into(),
-        )
+                assumption_infers,
+            ),
+        ))
+        .into())
     }
 
     /// Declare params, assume dom facts hold, then verify each then_fact.
@@ -183,16 +172,18 @@ impl Runtime {
         }
 
         if !verify_state.is_round_0() {
-            return Ok(StmtResult::StmtUnknown(StmtUnknown::new()).into());
+            return Ok(StmtUnknown::new().into());
         }
 
         self.run_in_local_env(|rt| {
-            let mut infer_result =
+            let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
+            let mut infer_result = InferResult::new();
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,
                 verify_state,
                 &mut infer_result,
+                assumption_infer_result,
                 None,
             )
         })

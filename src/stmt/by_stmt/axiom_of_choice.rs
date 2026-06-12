@@ -20,6 +20,13 @@ impl ByAxiomOfChoiceStmt {
 
 impl fmt::Display for ByAxiomOfChoiceStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.proof.is_empty() {
+            return write!(
+                f,
+                "{} {}{} {} {}",
+                BY, AXIOM_OF_CHOICE, COLON, SET, self.family
+            );
+        }
         write!(
             f,
             "{} {}{} {} {}{}",

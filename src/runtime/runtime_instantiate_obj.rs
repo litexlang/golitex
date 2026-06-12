@@ -70,8 +70,15 @@ impl Runtime {
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
+            Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
+            Obj::SumOfFiniteSet(inner) => {
+                self.inst_finite_set_sum(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
+            Obj::ProductOfFiniteSet(inner) => {
+                self.inst_finite_set_product(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
@@ -775,6 +782,19 @@ impl Runtime {
         )
     }
 
+    pub fn inst_fn_range_on(
+        &self,
+        fn_range_on: &FnRangeOn,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FnRangeOn::new(
+            self.inst_obj(&fn_range_on.function, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&fn_range_on.set, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
     pub fn inst_sum(
         &self,
         sum: &Sum,
@@ -789,6 +809,19 @@ impl Runtime {
         .into())
     }
 
+    pub fn inst_finite_set_sum(
+        &self,
+        sum: &SumOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(SumOfFiniteSet::new(
+            self.inst_obj(&sum.set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
     pub fn inst_product(
         &self,
         product: &Product,
@@ -798,6 +831,19 @@ impl Runtime {
         Ok(Product::new(
             self.inst_obj(&product.start, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&product.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_finite_set_product(
+        &self,
+        product: &ProductOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(ProductOfFiniteSet::new(
+            self.inst_obj(&product.set, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
         )
         .into())

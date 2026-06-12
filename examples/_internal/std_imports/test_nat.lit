@@ -46,6 +46,15 @@ exist p N st {$Nat::Prime(p), $Nat::Dvd(p, 91)}
 Nat::choose_fn(5, 0) = 1
 Nat::sqrt_nat(9)^2 <= 9
 
+# Natural-number well-ordering for non-empty subsets of N.
+$is_nonempty_set({2, 5})
+by thm Nat::well_ordering_principle({2, 5})
+exist! m N st {$Nat::LeastElementOfNSubset({2, 5}, m)}
+
+by thm Nat::least_of_N_subset_is_least({2, 5})
+$Nat::LeastElementOfNSubset({2, 5}, Nat::least_of_N_subset({2, 5}))
+Nat::least_of_N_subset({2, 5}) $in {2, 5}
+
 # Trivial Mathlib Nat facts are examples, not std theorem aliases.
 claim:
     prove:

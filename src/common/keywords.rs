@@ -61,6 +61,7 @@ pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const FN_RANGE: &str = "fn_range";
+pub const FN_RANGE_ON: &str = "fn_range_on";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
@@ -75,7 +76,9 @@ pub const INFC: &str = "infc";
 pub const OINF: &str = "oinf";
 pub const CINF: &str = "cinf";
 pub const SUM: &str = "sum";
+pub const FINITE_SET_SUM: &str = "finite_set_sum";
 pub const PRODUCT: &str = "product";
+pub const FINITE_SET_PRODUCT: &str = "finite_set_product";
 pub const EXIST: &str = "exist";
 /// User-facing spelling for unique existence (`exist` + `!` as two tokens in the source).
 pub const EXIST_BANG: &str = "exist!";
@@ -96,11 +99,14 @@ pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
 pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
+pub const ALIAS: &str = "alias";
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
+pub const SKETCH: &str = "sketch";
+pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
 pub const STOP: &str = "stop";
@@ -113,7 +119,7 @@ pub const ENUMERATE: &str = "enumerate";
 pub const INDUC: &str = "induc";
 /// Strong (complete) induction on integers: same shape as `by induc`, but the step uses a `forall` band hypothesis.
 pub const STRONG_INDUC: &str = "strong_induc";
-/// 保留名（旧版最后一项 `case` 曾用 `param = param_2 + n`）；当前语法最后一项为 `case >= n:`（n 为特例个数），不再登记此名。
+/// Reserved helper name for older induction-case expansion forms.
 pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
@@ -154,7 +160,7 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
-pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
+pub const RESTRICTS_TO: &str = "restricts_to";
 pub const STRATEGY: &str = "strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
@@ -234,8 +240,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROJ,
         COUNT,
         FN_RANGE,
+        FN_RANGE_ON,
         SUM,
+        FINITE_SET_SUM,
         PRODUCT,
+        FINITE_SET_PRODUCT,
         FINITE_SEQ,
         SEQ,
         MATRIX,
@@ -265,10 +274,13 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SUPERSET,
         SUCCESS_COLON,
         UNKNOWN_COLON,
+        ALIAS,
         LET,
         PROP,
         ABSTRACT_PROP,
         CLAIM,
+        SKETCH,
+        SCRATCH,
         PROVE,
         THM,
         STOP,
@@ -314,7 +326,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         TEMPLATE,
-        RESTRICT_FN_IN,
+        RESTRICTS_TO,
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,
@@ -378,7 +390,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUBSET
         || atom_name == SUPERSET
         || atom_name == IN
-        || atom_name == RESTRICT_FN_IN
+        || atom_name == RESTRICTS_TO
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
 }

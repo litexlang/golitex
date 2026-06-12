@@ -194,35 +194,9 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Obj::FnObj(fn_obj) = application_side else {
-            return Ok(None);
-        };
-        if fn_obj.body.is_empty() {
-            return Ok(None);
-        }
-        let key = match fn_obj.head.as_ref() {
-            FnObjHead::Identifier(i) => i.to_string(),
-            FnObjHead::IdentifierWithMod(i) => i.to_string(),
-            _ => return Ok(None),
-        };
-        let Some((fn_set_body, equal_to_expr, _)) =
-            self.get_known_fn_body_and_equal_to_for_key(key.as_str())
+        let Some(reduced) =
+            self.unfold_known_fn_application_once(application_side, verify_state)?
         else {
-            return Ok(None);
-        };
-        let param_defs = &fn_set_body.params_def_with_set;
-        let n_params = ParamGroupWithSet::number_of_params(param_defs);
-        if n_params == 0 {
-            return Ok(None);
-        }
-        let Some((args, extra_layers)) = split_fn_body_at_complete_layer(&fn_obj.body, n_params)
-        else {
-            return Ok(None);
-        };
-        let param_to_arg_map =
-            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
-        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
-        let Some(reduced) = apply_extra_curried_layers(reduced, extra_layers) else {
             return Ok(None);
         };
         let inner = self.verify_objs_are_equal_in_equality_builtin(
@@ -748,6 +722,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::FnRangeOn(left_range), Obj::FnRangeOn(right_range)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_range.function,
+                    &left_range.set,
+                    &right_range.function,
+                    &right_range.set,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Range(left_range), Obj::Range(right_range)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_range.start,
@@ -766,6 +749,44 @@ impl Runtime {
                     verify_state,
                     equality_line_file.clone(),
                 )? {
+                    return Ok(false);
+                }
+                self.verify_function_args_are_equal_for_iterated_operator(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
+            (Obj::SumOfFiniteSet(ls), Obj::SumOfFiniteSet(rs)) => {
+                if !self
+                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+                        ls.set.as_ref(),
+                        rs.set.as_ref(),
+                        verify_state,
+                        equality_line_file.clone(),
+                    )?
+                    .is_true()
+                {
+                    return Ok(false);
+                }
+                self.verify_function_args_are_equal_for_iterated_operator(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
+            (Obj::ProductOfFiniteSet(ls), Obj::ProductOfFiniteSet(rs)) => {
+                if !self
+                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+                        ls.set.as_ref(),
+                        rs.set.as_ref(),
+                        verify_state,
+                        equality_line_file.clone(),
+                    )?
+                    .is_true()
+                {
                     return Ok(false);
                 }
                 self.verify_function_args_are_equal_for_iterated_operator(
@@ -980,71 +1001,6 @@ fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) ->
     }
 
     FnObj::new(fn_obj.head.as_ref().clone(), kept_body_groups).into()
-}
-
-fn split_fn_body_at_complete_layer(
-    body: &[Vec<Box<Obj>>],
-    n_params: usize,
-) -> Option<(Vec<Obj>, Vec<Vec<Box<Obj>>>)> {
-    let mut args = Vec::new();
-    let mut extra_layers = Vec::new();
-    let mut consumed = 0;
-    let mut outer_application_done = false;
-
-    for layer in body.iter() {
-        if outer_application_done {
-            extra_layers.push(layer.clone());
-            continue;
-        }
-
-        let next_consumed = consumed + layer.len();
-        if next_consumed > n_params {
-            return None;
-        }
-
-        for arg in layer.iter() {
-            args.push((**arg).clone());
-        }
-        consumed = next_consumed;
-
-        if consumed == n_params {
-            outer_application_done = true;
-        }
-    }
-
-    if consumed != n_params {
-        return None;
-    }
-
-    Some((args, extra_layers))
-}
-
-fn apply_extra_curried_layers(obj: Obj, extra_layers: Vec<Vec<Box<Obj>>>) -> Option<Obj> {
-    if extra_layers.is_empty() {
-        return Some(obj);
-    }
-
-    // Curried `have fn` definitions store the outer application first:
-    // `f(a) = '(x T) U {...}`.  To unfold `f(a)(x)`, apply the remaining
-    // argument layers to the stored right-hand side before comparing.
-    match obj {
-        Obj::AnonymousFn(anonymous_fn) => Some(
-            FnObj::new(
-                FnObjHead::AnonymousFnLiteral(Box::new(anonymous_fn)),
-                extra_layers,
-            )
-            .into(),
-        ),
-        Obj::Atom(atom) => {
-            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(Obj::Atom(atom))?;
-            Some(FnObj::new(head, extra_layers).into())
-        }
-        Obj::FnObj(mut fn_obj) => {
-            fn_obj.body.extend(extra_layers);
-            Some(fn_obj.into())
-        }
-        _ => None,
-    }
 }
 
 fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {

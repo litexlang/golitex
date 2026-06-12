@@ -59,6 +59,12 @@ impl Runtime {
         }
         match obj {
             Obj::Number(number) => number.clone().into(),
+            Obj::Atom(AtomObj::IdentifierWithMod(identifier))
+                if self.is_current_parse_module(&identifier.mod_name) =>
+            {
+                let local_obj: Obj = Identifier::new(identifier.name.clone()).into();
+                self.resolve_obj(&local_obj)
+            }
             Obj::Add(add) => {
                 let result: Obj =
                     Add::new(self.resolve_obj(&add.left), self.resolve_obj(&add.right)).into();
@@ -345,6 +351,11 @@ impl Runtime {
                 _ => obj.clone(),
             },
             Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
+            Obj::FnRangeOn(fn_range_on) => FnRangeOn::new(
+                self.resolve_obj(&fn_range_on.function),
+                self.resolve_obj(&fn_range_on.set),
+            )
+            .into(),
             Obj::TupleDim(dim) => match &*dim.arg {
                 Obj::Tuple(tuple) => Number::new(tuple.args.len().to_string()).into(),
                 _ => obj.clone(),

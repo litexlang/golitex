@@ -17,12 +17,19 @@ know:
             max_of_finite_set(s) $in s
             min_of_finite_set(s) $in s
 
-let min_of_N_set fn(s power_set(N)) N
+# Natural-number well-ordering: every non-empty subset of N has a least
+# element. Example: if `S power_set(N)` and `$is_nonempty_set(S)`, then
+# `min_of_N_set(S) $in S` and `min_of_N_set(S) <= x` for every `x S`.
+let min_of_N_set fn(s power_set(N): $is_nonempty_set(s)) N
 
 know:
     forall s power_set(N), item s:
-        min_of_N_set(s) <= item
+        $is_nonempty_set(s)
+        =>:
+            min_of_N_set(s) <= item
 
     forall s power_set(N):
-        min_of_N_set(s) $in s
+        $is_nonempty_set(s)
+        =>:
+            min_of_N_set(s) $in s
 "#;

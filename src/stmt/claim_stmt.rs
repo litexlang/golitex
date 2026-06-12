@@ -16,6 +16,10 @@ impl ClaimStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "proved claim"
+    }
 }
 
 impl fmt::Display for ClaimStmt {

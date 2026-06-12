@@ -375,7 +375,7 @@ impl Runtime {
             }
         }
 
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
         if or_fact.facts.len() == 2 {
             if let (
@@ -492,7 +492,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok(StmtUnknown::new().into())
     }
 
     /// Integer lower-bound split into finitely many successor equalities plus a strict tail.

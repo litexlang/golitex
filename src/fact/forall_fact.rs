@@ -43,6 +43,10 @@ impl ForallFact {
         self.then_facts = new_then;
         Ok(())
     }
+
+    pub fn premise_store_reason() -> &'static str {
+        "forall premise"
+    }
 }
 
 impl fmt::Display for ForallFact {

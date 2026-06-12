@@ -78,6 +78,10 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
         Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
         Obj::FnRange(r) => obj_expr_mentions_bare_id(r.function.as_ref(), id),
+        Obj::FnRangeOn(r) => {
+            obj_expr_mentions_bare_id(r.function.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.set.as_ref(), id)
+        }
         Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
         Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
         Obj::Proj(p) => {
@@ -99,9 +103,17 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.func.as_ref(), id)
         }
+        Obj::SumOfFiniteSet(s) => {
+            obj_expr_mentions_bare_id(s.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.func.as_ref(), id)
+        }
         Obj::Product(p) => {
             obj_expr_mentions_bare_id(p.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.func.as_ref(), id)
+        }
+        Obj::ProductOfFiniteSet(p) => {
+            obj_expr_mentions_bare_id(p.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.func.as_ref(), id)
         }
         Obj::FiniteSeqListObj(f) => f
@@ -163,11 +175,39 @@ pub(crate) fn factual_equal_success_by_builtin_reason(
     line_file: LineFile,
     reason: &str,
 ) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    factual_equal_success_by_builtin_reason_with_subgoals(
+        left,
+        right,
+        line_file,
+        reason,
+        Vec::new(),
+    )
+}
+
+pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
+    left: &Obj,
+    right: &Obj,
+    line_file: LineFile,
+    reason: &str,
+    subgoals: Vec<StmtResult>,
+) -> StmtResult {
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             EqualFact::new(left.clone(), right.clone(), line_file).into(),
             reason.to_string(),
-            Vec::new(),
+            subgoals,
         ),
     )
+}
+
+pub(crate) fn equality_builtin_match_subgoals(
+    actual: &Obj,
+    expected: &Obj,
+    result: StmtResult,
+) -> Vec<StmtResult> {
+    if verify_equality_by_they_are_the_same(actual, expected) {
+        Vec::new()
+    } else {
+        vec![result]
+    }
 }
