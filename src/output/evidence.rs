@@ -2,8 +2,8 @@ use crate::common::json_value::JsonValue;
 use crate::prelude::*;
 
 use super::fields::{
-    user_visible_stmt_or_msg_text, JSON_KEY_CONCLUSIONS_WITH_VERIFICATION, JSON_KEY_STEPS,
-    JSON_KEY_STMT, JSON_KEY_VERIFICATION,
+    user_visible_stmt_or_msg_text, JSON_KEY_CONCLUSIONS, JSON_KEY_STEPS, JSON_KEY_STMT,
+    JSON_KEY_VERIFICATION,
 };
 use super::source::{source_ref_json_value, stmt_text_for_json};
 
@@ -103,7 +103,7 @@ fn forall_proof_top_level_fields(
     runtime: &Runtime,
     proof: &ForallProofResult,
 ) -> Vec<(String, JsonValue)> {
-    let conclusions_with_verification = proof
+    let conclusions = proof
         .proves
         .iter()
         .map(|proved| forall_proved_fact_value(runtime, proof, proved))
@@ -121,8 +121,8 @@ fn forall_proof_top_level_fields(
         ));
     }
     fields.push((
-        JSON_KEY_CONCLUSIONS_WITH_VERIFICATION.to_string(),
-        JsonValue::Array(conclusions_with_verification),
+        JSON_KEY_CONCLUSIONS.to_string(),
+        JsonValue::Array(conclusions),
     ));
     fields
 }
@@ -501,18 +501,20 @@ fn known_forall_instantiation_json_value(
             "cited_statement".to_string(),
             JsonValue::JsonString(cited_stmt_plain),
         ),
-        (
+    ];
+    if runtime.detail_output {
+        fields.push((
             "instantiation".to_string(),
             JsonValue::Object(known_forall_instantiation_fields(&result.instantiation)),
-        ),
-        (
+        ));
+        fields.push((
             "requirements".to_string(),
             JsonValue::Array(known_forall_requirement_items(
                 runtime,
                 &result.requirements,
             )),
-        ),
-    ];
+        ));
+    }
     if let Some(vw) = verify_what {
         fields.push((
             "verify_what".to_string(),

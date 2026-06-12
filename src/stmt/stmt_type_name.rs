@@ -578,7 +578,7 @@ impl DefLetStmt {
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn output_type_string() -> String {
-        "object declaration".to_string()
+        "object definition".to_string()
     }
 }
 

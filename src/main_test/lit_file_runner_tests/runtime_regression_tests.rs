@@ -3220,6 +3220,44 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
 }
 
 #[test]
+fn zh_forall_output_uses_short_conclusions_and_compact_citation() {
+    let source_code = r#"
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zh_forall_output_uses_short_conclusions_and_compact_citation",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "Chinese forall output run failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"结论\": ["));
+    assert!(run_output.contains("\"类型\": \"引用 forall 事实\""));
+    assert!(run_output.contains("\"被引用语句\": \"forall x human:\\n    $mortal(x)\""));
+    assert!(run_output.contains("\"原因\": \"已证明语句\""));
+    assert!(!run_output.contains("\"带验证的结论\""));
+    assert!(!run_output.contains("\"原因\": \"推导事实\""));
+    assert!(!run_output.contains("\"实例化\""));
+    assert!(!run_output.contains("\"要求\""));
+}
+
+#[test]
 fn zh_runner_localizes_wrapper_and_trace() {
     let (ok, output) = run_runner_for_code_with_language(
         "know 1 = 1",
@@ -3859,10 +3897,9 @@ $q(1)
         run_output
     );
     assert!(run_output.contains("\"type\": \"cite forall fact\""));
-    assert!(run_output.contains("\"instantiation\": {"));
-    assert!(run_output.contains("\"x\": \"2\""));
-    assert!(run_output.contains("\"requirements\": ["));
-    assert!(run_output.contains("\"statement\": \"2 $in R\""));
+    assert!(!run_output.contains("\"instantiation\""));
+    assert!(!run_output.contains("\"requirements\""));
+    assert!(!run_output.contains("\"statement\": \"2 $in R\""));
     assert!(run_output.contains("\"type\": \"cite equality fact\""));
     assert!(run_output.contains("\"type\": \"cite prop def\""));
 }
@@ -3877,6 +3914,7 @@ forall x R:
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("factual_verified_by_stable_shape");
+    runtime.detail_output = true;
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -3904,7 +3942,7 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"conclusions_with_verification\": ["),
+        run_output.contains("\"conclusions\": ["),
         "forall proof should keep one verification entry per then fact:\n{}",
         run_output
     );
@@ -4158,7 +4196,7 @@ forall n N:
     );
     assert!(!run_output.contains("\"type\": \"forall proof\""));
     assert!(run_output.contains("\"n $in N\""));
-    assert!(run_output.contains("\"conclusions_with_verification\": ["));
+    assert!(run_output.contains("\"conclusions\": ["));
     assert!(run_output.contains("\"statement\": \"n $in N\""));
     assert!(run_output.contains("\"type\": \"local assumption\""));
     assert!(run_output

@@ -37,19 +37,7 @@ The accepted fact can also carry an explanation like this:
     "cite_source": {
       "line": 4
     },
-    "cited_statement": "forall x human:\n    $mortal(x)",
-    "instantiation": {
-      "x": "Socrates"
-    },
-    "requirements": [
-      {
-        "statement": "Socrates $in human",
-        "verification": {
-          "type": "cite atomic fact",
-          "cited_statement": "Socrates $in human"
-        }
-      }
-    ]
+    "cited_statement": "forall x human:\n    $mortal(x)"
   }
 }
 ```

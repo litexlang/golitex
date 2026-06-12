@@ -269,6 +269,9 @@ litex -upgrade
 
 ## Command-line options
 
+For the full command-line grammar and current edge-case behavior, see
+[`docs/cli.md`](cli.md).
+
 In examples, the executable is written as:
 
 ```text
@@ -341,9 +344,9 @@ Example success output looks like this. The exact output may differ by version:
 
 For most factual statements, `verification` is the proof route. Composite proofs
 can put sub-checks in `verification.steps`. A successful `forall` fact reports
-`conclusions_with_verification`, with each conclusion carrying a `verification`
-object; detail output additionally expands the local `parameters` and
-`assumptions`. Successful non-factual statements, such as definitions or proof
+`conclusions`, with each conclusion carrying a `verification` object; detail
+output additionally expands the local `parameters` and `assumptions`.
+Successful non-factual statements, such as definitions or proof
 blocks, report context changes under `effects`; detail output can expand nested
 `inside_results` when available.
 

@@ -16,7 +16,7 @@ impl Runtime {
                 },
                 "" => Err(parse_stmt_error(
                     tb,
-                    "have: expected object declaration, `fn`, `by exist`, or `by preimage`",
+                    "have: expected object definition, `fn`, `by exist`, or `by preimage`",
                 )),
                 _ => self.parse_have_obj_stmt(tb),
             },
@@ -94,7 +94,7 @@ mod parse_stmt_diagnostic_tests {
         let cases = [
             (
                 "have",
-                "have: expected object declaration, `fn`, `by exist`, or `by preimage`",
+                "have: expected object definition, `fn`, `by exist`, or `by preimage`",
             ),
             ("have by", "have by: expected `exist` or `preimage`"),
             ("stop", "stop: expected `import` or `strategy`"),
