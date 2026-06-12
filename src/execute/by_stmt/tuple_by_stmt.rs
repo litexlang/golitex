@@ -47,7 +47,10 @@ impl Runtime {
             )
         })?;
 
-        let equal_fact = EqualFact::new(stmt.obj.clone(), encoded, stmt.line_file.clone()).into();
+        let encoded_string = encoded.to_string();
+        let equal_fact: Fact =
+            EqualFact::new(stmt.obj.clone(), encoded, stmt.line_file.clone()).into();
+        let equal_fact_string = equal_fact.to_string();
 
         match self.verify_well_defined_and_store_and_infer_with_default_verify_state(equal_fact) {
             Ok(infer_result) => {
@@ -57,7 +60,18 @@ impl Runtime {
                     None,
                     stmt.line_file.clone(),
                 );
-                Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
+                let by_verification = ByTupleAsSetVerificationResult::new(
+                    stmt.obj.to_string(),
+                    encoded_string,
+                    equal_fact_string,
+                );
+                Ok((NonFactualStmtSuccess::new_with_by_verification(
+                    stmt_exec,
+                    infer_result,
+                    vec![],
+                    by_verification.into(),
+                ))
+                .into())
             }
             Err(store_error) => Err(short_exec_error(
                 stmt_exec,

@@ -481,6 +481,32 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    fn fn_characterization_items(
+        forall_shape: &Fact,
+        forall_in: &Fact,
+        forall_exist: &Fact,
+        forall_unique: &Fact,
+    ) -> Vec<ByGeneratedFactItem> {
+        vec![
+            ByGeneratedFactItem::new(
+                "cart/tuple shape characterization".to_string(),
+                forall_shape.to_string(),
+            ),
+            ByGeneratedFactItem::new(
+                "graph-element characterization".to_string(),
+                forall_in.to_string(),
+            ),
+            ByGeneratedFactItem::new(
+                "graph-coverage characterization".to_string(),
+                forall_exist.to_string(),
+            ),
+            ByGeneratedFactItem::new(
+                "graph-uniqueness characterization".to_string(),
+                forall_unique.to_string(),
+            ),
+        ]
+    }
+
     pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnAsSetStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
 
@@ -507,6 +533,12 @@ impl Runtime {
                 &stmt_exec,
                 "by fn as set",
             )?;
+        let generated_facts = Self::fn_characterization_items(
+            &forall_shape,
+            &forall_in,
+            &forall_exist,
+            &forall_unique,
+        );
 
         self.run_in_local_env(|rt| rt.exec_by_fn_stmt_verify_process())?;
 
@@ -518,7 +550,15 @@ impl Runtime {
             forall_unique,
         )?;
 
-        Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
+        let by_verification =
+            ByFnAsSetVerificationResult::new(stmt.function.to_string(), generated_facts);
+        Ok((NonFactualStmtSuccess::new_with_by_verification(
+            stmt_exec,
+            infer_result,
+            vec![],
+            by_verification.into(),
+        ))
+        .into())
     }
 
     fn exec_by_fn_set_stmt_verify_process(
@@ -629,6 +669,12 @@ impl Runtime {
                 &stmt_exec,
                 "by fn set as set",
             )?;
+        let generated_facts = Self::fn_characterization_items(
+            &forall_shape,
+            &forall_in,
+            &forall_exist,
+            &forall_unique,
+        );
 
         let verify_inside_results = self.run_in_local_env(|rt| {
             rt.exec_by_fn_set_stmt_verify_process(
@@ -642,6 +688,24 @@ impl Runtime {
 
         let infer_result = self.exec_by_fn_set_stmt_store_process(stmt, &stmt_exec)?;
 
-        Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, verify_inside_results)).into())
+        let stored_membership = InFact::new(
+            stmt.func.clone(),
+            stmt.fn_set.clone().into(),
+            stmt.line_file.clone(),
+        )
+        .to_string();
+        let by_verification = ByFnSetAsSetVerificationResult::new(
+            stmt.func.to_string(),
+            stmt.fn_set.to_string(),
+            generated_facts,
+            stored_membership,
+        );
+        Ok((NonFactualStmtSuccess::new_with_by_verification(
+            stmt_exec,
+            infer_result,
+            verify_inside_results,
+            by_verification.into(),
+        ))
+        .into())
     }
 }

@@ -39,10 +39,11 @@ impl Runtime {
             }
         }
 
-        let inside_results = self.run_in_local_env(|rt| {
+        let (inside_results, assumption_infer_result) = self.run_in_local_env(|rt| {
             let verify_state = VerifyState::new(0, false);
             let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
+            let verification_assumption_infer_result = assumption_infer_result.clone();
             let mut infer_result = InferResult::new();
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
@@ -64,7 +65,7 @@ impl Runtime {
                 ));
             }
             inside_results.push(result);
-            Ok(inside_results)
+            Ok((inside_results, verification_assumption_infer_result))
         })?;
 
         self.top_level_env()
@@ -72,6 +73,19 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_with_msg(format!("registered `{}` as reflexive", prop_name));
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        let by_verification = ByPropRegistrationVerificationResult::new(
+            "reflexive".to_string(),
+            prop_name,
+            stmt.forall_fact.clone(),
+            assumption_infer_result,
+            stmt.proof.len(),
+        );
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification.into(),
+        )
+        .into())
     }
 }

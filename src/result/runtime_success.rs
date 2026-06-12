@@ -29,6 +29,18 @@ pub struct ClaimFactVerificationResult {
 pub enum ByVerificationResult {
     Cases(ByCasesVerificationResult),
     Contra(ByContraVerificationResult),
+    EnumerateFiniteSet(ByEnumerateFiniteSetVerificationResult),
+    EnumerateRange(ByEnumerateRangeVerificationResult),
+    Induc(ByInducVerificationResult),
+    For(ByForVerificationResult),
+    Extension(ByExtensionVerificationResult),
+    PropRegistration(ByPropRegistrationVerificationResult),
+    AxiomOfChoice(ByChoiceVerificationResult),
+    ZornLemma(ByChoiceVerificationResult),
+    Theorem(ByTheoremVerificationResult),
+    FnAsSet(ByFnAsSetVerificationResult),
+    TupleAsSet(ByTupleAsSetVerificationResult),
+    FnSetAsSet(ByFnSetAsSetVerificationResult),
 }
 
 pub struct ByCasesVerificationResult {
@@ -44,6 +56,126 @@ pub struct ByContraVerificationResult {
     pub reverse_assumption: Fact,
     pub proof_step_count: usize,
     pub impossible_fact: AtomicFact,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByAssignmentVerificationResult {
+    pub assignment: Vec<(String, String)>,
+    pub assumptions: Vec<(String, String)>,
+    pub domain_check_count: usize,
+    pub proof_step_count: usize,
+    pub conclusion_count: usize,
+    pub skipped_domain: Option<String>,
+    pub result_count: usize,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByEnumerateFiniteSetVerificationResult {
+    pub parameters: Vec<String>,
+    pub parameter_sets: Vec<String>,
+    pub prove_goal: String,
+    pub assignments: Vec<ByAssignmentVerificationResult>,
+    pub generated_forall: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByForVerificationResult {
+    pub iteration_mode: String,
+    pub parameters: Vec<String>,
+    pub domains: Vec<String>,
+    pub prove_goal: String,
+    pub assignments: Vec<ByAssignmentVerificationResult>,
+    pub generated_forall: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByEnumerateRangeVerificationResult {
+    pub proof_type: String,
+    pub element: String,
+    pub range: String,
+    pub membership_fact: String,
+    pub endpoint_facts: Vec<String>,
+    pub generated_cases: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByInducVerificationResult {
+    pub strong: bool,
+    pub structured: bool,
+    pub parameter: String,
+    pub start: String,
+    pub prove_goals: Vec<String>,
+    pub generated_forall: String,
+    pub proof_step_count: usize,
+    pub base_assumptions: Vec<(String, String)>,
+    pub base_proof_step_count: usize,
+    pub base_result_count: usize,
+    pub step_assumptions: Vec<(String, String)>,
+    pub step_proof_step_count: usize,
+    pub step_result_count: usize,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByExtensionVerificationResult {
+    pub left: String,
+    pub right: String,
+    pub prove_goal: String,
+    pub proof_step_count: usize,
+    pub left_to_right_subset: String,
+    pub right_to_left_subset: String,
+}
+
+#[derive(Clone)]
+pub struct ByPropRegistrationVerificationResult {
+    pub registration_type: String,
+    pub prop_name: String,
+    pub forall_fact: ForallFact,
+    pub assumption_infers: InferResult,
+    pub proof_step_count: usize,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByChoiceVerificationResult {
+    pub proof_type: String,
+    pub target: String,
+    pub proof_step_count: usize,
+    pub obligations: Vec<(String, String, bool)>,
+    pub trusted_conclusion: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByTheoremVerificationResult {
+    pub theorem: String,
+    pub arguments: Vec<String>,
+    pub domain_facts: Vec<String>,
+    pub stored_then_facts: Vec<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByGeneratedFactItem {
+    pub role: String,
+    pub fact: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByFnAsSetVerificationResult {
+    pub function: String,
+    pub generated_facts: Vec<ByGeneratedFactItem>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByTupleAsSetVerificationResult {
+    pub object: String,
+    pub encoding: String,
+    pub conclusion: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByFnSetAsSetVerificationResult {
+    pub function: String,
+    pub fn_set: String,
+    pub generated_facts: Vec<ByGeneratedFactItem>,
+    pub stored_membership: String,
 }
 
 #[derive(Clone, Debug)]
@@ -565,6 +697,233 @@ impl ByContraVerificationResult {
     }
 }
 
+impl ByAssignmentVerificationResult {
+    pub fn new(
+        assignment: Vec<(String, String)>,
+        assumptions: Vec<(String, String)>,
+        domain_check_count: usize,
+        proof_step_count: usize,
+        conclusion_count: usize,
+        skipped_domain: Option<String>,
+        result_count: usize,
+    ) -> Self {
+        ByAssignmentVerificationResult {
+            assignment,
+            assumptions,
+            domain_check_count,
+            proof_step_count,
+            conclusion_count,
+            skipped_domain,
+            result_count,
+        }
+    }
+}
+
+impl ByEnumerateFiniteSetVerificationResult {
+    pub fn new(
+        parameters: Vec<String>,
+        parameter_sets: Vec<String>,
+        prove_goal: String,
+        assignments: Vec<ByAssignmentVerificationResult>,
+        generated_forall: String,
+    ) -> Self {
+        ByEnumerateFiniteSetVerificationResult {
+            parameters,
+            parameter_sets,
+            prove_goal,
+            assignments,
+            generated_forall,
+        }
+    }
+}
+
+impl ByForVerificationResult {
+    pub fn new(
+        iteration_mode: String,
+        parameters: Vec<String>,
+        domains: Vec<String>,
+        prove_goal: String,
+        assignments: Vec<ByAssignmentVerificationResult>,
+        generated_forall: String,
+    ) -> Self {
+        ByForVerificationResult {
+            iteration_mode,
+            parameters,
+            domains,
+            prove_goal,
+            assignments,
+            generated_forall,
+        }
+    }
+}
+
+impl ByEnumerateRangeVerificationResult {
+    pub fn new(
+        proof_type: String,
+        element: String,
+        range: String,
+        membership_fact: String,
+        endpoint_facts: Vec<String>,
+        generated_cases: String,
+    ) -> Self {
+        ByEnumerateRangeVerificationResult {
+            proof_type,
+            element,
+            range,
+            membership_fact,
+            endpoint_facts,
+            generated_cases,
+        }
+    }
+}
+
+impl ByInducVerificationResult {
+    pub fn new(
+        strong: bool,
+        structured: bool,
+        parameter: String,
+        start: String,
+        prove_goals: Vec<String>,
+        generated_forall: String,
+        proof_step_count: usize,
+        base_assumptions: Vec<(String, String)>,
+        base_proof_step_count: usize,
+        base_result_count: usize,
+        step_assumptions: Vec<(String, String)>,
+        step_proof_step_count: usize,
+        step_result_count: usize,
+    ) -> Self {
+        ByInducVerificationResult {
+            strong,
+            structured,
+            parameter,
+            start,
+            prove_goals,
+            generated_forall,
+            proof_step_count,
+            base_assumptions,
+            base_proof_step_count,
+            base_result_count,
+            step_assumptions,
+            step_proof_step_count,
+            step_result_count,
+        }
+    }
+}
+
+impl ByExtensionVerificationResult {
+    pub fn new(
+        left: String,
+        right: String,
+        prove_goal: String,
+        proof_step_count: usize,
+        left_to_right_subset: String,
+        right_to_left_subset: String,
+    ) -> Self {
+        ByExtensionVerificationResult {
+            left,
+            right,
+            prove_goal,
+            proof_step_count,
+            left_to_right_subset,
+            right_to_left_subset,
+        }
+    }
+}
+
+impl ByPropRegistrationVerificationResult {
+    pub fn new(
+        registration_type: String,
+        prop_name: String,
+        forall_fact: ForallFact,
+        assumption_infers: InferResult,
+        proof_step_count: usize,
+    ) -> Self {
+        ByPropRegistrationVerificationResult {
+            registration_type,
+            prop_name,
+            forall_fact,
+            assumption_infers,
+            proof_step_count,
+        }
+    }
+}
+
+impl ByChoiceVerificationResult {
+    pub fn new(
+        proof_type: String,
+        target: String,
+        proof_step_count: usize,
+        obligations: Vec<(String, String, bool)>,
+        trusted_conclusion: String,
+    ) -> Self {
+        ByChoiceVerificationResult {
+            proof_type,
+            target,
+            proof_step_count,
+            obligations,
+            trusted_conclusion,
+        }
+    }
+}
+
+impl ByTheoremVerificationResult {
+    pub fn new(
+        theorem: String,
+        arguments: Vec<String>,
+        domain_facts: Vec<String>,
+        stored_then_facts: Vec<String>,
+    ) -> Self {
+        ByTheoremVerificationResult {
+            theorem,
+            arguments,
+            domain_facts,
+            stored_then_facts,
+        }
+    }
+}
+
+impl ByGeneratedFactItem {
+    pub fn new(role: String, fact: String) -> Self {
+        ByGeneratedFactItem { role, fact }
+    }
+}
+
+impl ByFnAsSetVerificationResult {
+    pub fn new(function: String, generated_facts: Vec<ByGeneratedFactItem>) -> Self {
+        ByFnAsSetVerificationResult {
+            function,
+            generated_facts,
+        }
+    }
+}
+
+impl ByTupleAsSetVerificationResult {
+    pub fn new(object: String, encoding: String, conclusion: String) -> Self {
+        ByTupleAsSetVerificationResult {
+            object,
+            encoding,
+            conclusion,
+        }
+    }
+}
+
+impl ByFnSetAsSetVerificationResult {
+    pub fn new(
+        function: String,
+        fn_set: String,
+        generated_facts: Vec<ByGeneratedFactItem>,
+        stored_membership: String,
+    ) -> Self {
+        ByFnSetAsSetVerificationResult {
+            function,
+            fn_set,
+            generated_facts,
+            stored_membership,
+        }
+    }
+}
+
 impl From<ByCasesVerificationResult> for ByVerificationResult {
     fn from(v: ByCasesVerificationResult) -> Self {
         ByVerificationResult::Cases(v)
@@ -574,6 +933,66 @@ impl From<ByCasesVerificationResult> for ByVerificationResult {
 impl From<ByContraVerificationResult> for ByVerificationResult {
     fn from(v: ByContraVerificationResult) -> Self {
         ByVerificationResult::Contra(v)
+    }
+}
+
+impl From<ByEnumerateFiniteSetVerificationResult> for ByVerificationResult {
+    fn from(v: ByEnumerateFiniteSetVerificationResult) -> Self {
+        ByVerificationResult::EnumerateFiniteSet(v)
+    }
+}
+
+impl From<ByEnumerateRangeVerificationResult> for ByVerificationResult {
+    fn from(v: ByEnumerateRangeVerificationResult) -> Self {
+        ByVerificationResult::EnumerateRange(v)
+    }
+}
+
+impl From<ByInducVerificationResult> for ByVerificationResult {
+    fn from(v: ByInducVerificationResult) -> Self {
+        ByVerificationResult::Induc(v)
+    }
+}
+
+impl From<ByForVerificationResult> for ByVerificationResult {
+    fn from(v: ByForVerificationResult) -> Self {
+        ByVerificationResult::For(v)
+    }
+}
+
+impl From<ByExtensionVerificationResult> for ByVerificationResult {
+    fn from(v: ByExtensionVerificationResult) -> Self {
+        ByVerificationResult::Extension(v)
+    }
+}
+
+impl From<ByPropRegistrationVerificationResult> for ByVerificationResult {
+    fn from(v: ByPropRegistrationVerificationResult) -> Self {
+        ByVerificationResult::PropRegistration(v)
+    }
+}
+
+impl From<ByTheoremVerificationResult> for ByVerificationResult {
+    fn from(v: ByTheoremVerificationResult) -> Self {
+        ByVerificationResult::Theorem(v)
+    }
+}
+
+impl From<ByFnAsSetVerificationResult> for ByVerificationResult {
+    fn from(v: ByFnAsSetVerificationResult) -> Self {
+        ByVerificationResult::FnAsSet(v)
+    }
+}
+
+impl From<ByTupleAsSetVerificationResult> for ByVerificationResult {
+    fn from(v: ByTupleAsSetVerificationResult) -> Self {
+        ByVerificationResult::TupleAsSet(v)
+    }
+}
+
+impl From<ByFnSetAsSetVerificationResult> for ByVerificationResult {
+    fn from(v: ByFnSetAsSetVerificationResult) -> Self {
+        ByVerificationResult::FnSetAsSet(v)
     }
 }
 
@@ -610,6 +1029,26 @@ impl fmt::Debug for ByVerificationResult {
         match self {
             ByVerificationResult::Cases(v) => f.debug_tuple("Cases").field(v).finish(),
             ByVerificationResult::Contra(v) => f.debug_tuple("Contra").field(v).finish(),
+            ByVerificationResult::EnumerateFiniteSet(v) => {
+                f.debug_tuple("EnumerateFiniteSet").field(v).finish()
+            }
+            ByVerificationResult::EnumerateRange(v) => {
+                f.debug_tuple("EnumerateRange").field(v).finish()
+            }
+            ByVerificationResult::Induc(v) => f.debug_tuple("Induc").field(v).finish(),
+            ByVerificationResult::For(v) => f.debug_tuple("For").field(v).finish(),
+            ByVerificationResult::Extension(v) => f.debug_tuple("Extension").field(v).finish(),
+            ByVerificationResult::PropRegistration(v) => {
+                f.debug_tuple("PropRegistration").field(v).finish()
+            }
+            ByVerificationResult::AxiomOfChoice(v) => {
+                f.debug_tuple("AxiomOfChoice").field(v).finish()
+            }
+            ByVerificationResult::ZornLemma(v) => f.debug_tuple("ZornLemma").field(v).finish(),
+            ByVerificationResult::Theorem(v) => f.debug_tuple("Theorem").field(v).finish(),
+            ByVerificationResult::FnAsSet(v) => f.debug_tuple("FnAsSet").field(v).finish(),
+            ByVerificationResult::TupleAsSet(v) => f.debug_tuple("TupleAsSet").field(v).finish(),
+            ByVerificationResult::FnSetAsSet(v) => f.debug_tuple("FnSetAsSet").field(v).finish(),
         }
     }
 }
@@ -648,6 +1087,18 @@ impl fmt::Debug for ByContraVerificationResult {
             .field("reverse_assumption", &self.reverse_assumption.to_string())
             .field("proof_step_count", &self.proof_step_count)
             .field("impossible_fact", &self.impossible_fact.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for ByPropRegistrationVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ByPropRegistrationVerificationResult")
+            .field("registration_type", &self.registration_type)
+            .field("prop_name", &self.prop_name)
+            .field("forall_fact", &self.forall_fact.to_string())
+            .field("assumption_infers", &self.assumption_infers)
+            .field("proof_step_count", &self.proof_step_count)
             .finish()
     }
 }

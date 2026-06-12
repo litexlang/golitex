@@ -28,12 +28,17 @@ pub use fact_unknown::{
 pub use proof_block_stmt_result::ProofBlockStmtResult;
 pub use runtime_result::StmtResult;
 pub use runtime_success::{
-    ByCasesVerificationResult, ByContraVerificationResult, ByVerificationResult,
-    ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
-    FactualStmtSuccess, ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
-    KnownForallInstantiationResult, KnownForallRequirementResult, NonFactualStmtSuccess,
-    ObjectIntroductionItem, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
-    VerifiedBysEnum, VerifiedBysResult,
+    ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
+    ByContraVerificationResult, ByEnumerateFiniteSetVerificationResult,
+    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByFnAsSetVerificationResult,
+    ByFnSetAsSetVerificationResult, ByForVerificationResult, ByGeneratedFactItem,
+    ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
+    ByTupleAsSetVerificationResult, ByVerificationResult, ClaimFactVerificationResult,
+    ClaimForallVerificationResult, ClaimVerificationResult, FactualStmtSuccess, ForallProofResult,
+    ForallProvedFactResult, KnownForallInstantiationItem, KnownForallInstantiationResult,
+    KnownForallRequirementResult, NonFactualStmtSuccess, ObjectIntroductionItem,
+    VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum,
+    VerifiedBysResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

@@ -9,14 +9,14 @@ pub(crate) fn unknown_result_json_value(
     unknown_result: &RuntimeErrorUnknownResult,
 ) -> JsonValue {
     match unknown_result {
-        RuntimeErrorUnknownResult::Generic(unknown) => generic_unknown_json_value(runtime, unknown),
+        RuntimeErrorUnknownResult::Generic(unknown) => stmt_unknown_json_value(runtime, unknown),
         RuntimeErrorUnknownResult::Fact(unknown) => {
             fact_unknown_json_value(runtime, unknown.as_ref())
         }
     }
 }
 
-fn generic_unknown_json_value(runtime: &Runtime, unknown: &StmtUnknown) -> JsonValue {
+pub(crate) fn stmt_unknown_json_value(runtime: &Runtime, unknown: &StmtUnknown) -> JsonValue {
     let mut fields = vec![(
         "type".to_string(),
         JsonValue::JsonString("unknown".to_string()),
@@ -25,7 +25,7 @@ fn generic_unknown_json_value(runtime: &Runtime, unknown: &StmtUnknown) -> JsonV
     JsonValue::Object(fields)
 }
 
-fn fact_unknown_json_value(runtime: &Runtime, unknown: &FactUnknown) -> JsonValue {
+pub(crate) fn fact_unknown_json_value(runtime: &Runtime, unknown: &FactUnknown) -> JsonValue {
     match unknown {
         FactUnknown::AtomicFact(x) => atomic_fact_unknown_json_value(runtime, x),
         FactUnknown::ExistFact(x) => exist_fact_unknown_json_value(runtime, x),

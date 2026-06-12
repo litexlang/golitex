@@ -94,11 +94,16 @@ impl Tokenizer {
                 continue;
             }
 
-            if bytes[i].is_ascii_alphabetic() || bytes[i] == b'_' {
+            let current_ch = line[i..].chars().next().unwrap_or('\0');
+            if Self::is_identifier_start_char(current_ch) {
                 let start = i;
-                i += 1;
-                while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
-                    i += 1;
+                i += current_ch.len_utf8();
+                while i < line.len() {
+                    let next_ch = line[i..].chars().next().unwrap_or('\0');
+                    if !Self::is_identifier_continue_char(next_ch) {
+                        break;
+                    }
+                    i += next_ch.len_utf8();
                 }
                 tokens.push(line[start..i].to_string());
                 continue;
@@ -107,8 +112,12 @@ impl Tokenizer {
             if bytes[i] == b'@' {
                 let start = i;
                 i += 1;
-                while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
-                    i += 1;
+                while i < line.len() {
+                    let next_ch = line[i..].chars().next().unwrap_or('\0');
+                    if !Self::is_identifier_continue_char(next_ch) {
+                        break;
+                    }
+                    i += next_ch.len_utf8();
                 }
                 tokens.push(line[start..i].to_string());
                 continue;
@@ -459,10 +468,18 @@ impl Tokenizer {
     fn is_macro_name(name: &str) -> bool {
         let mut chars = name.chars();
         match chars.next() {
-            Some(ch) if ch.is_ascii_alphabetic() || ch == '_' => {}
+            Some(ch) if Self::is_identifier_start_char(ch) => {}
             _ => return false,
         }
-        chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
+        chars.all(Self::is_identifier_continue_char)
+    }
+
+    fn is_identifier_start_char(ch: char) -> bool {
+        ch == '_' || ch.is_alphabetic()
+    }
+
+    fn is_identifier_continue_char(ch: char) -> bool {
+        ch == '_' || ch.is_alphanumeric()
     }
 
     fn parse_error(message: String, line_file: LineFile) -> RuntimeError {
@@ -505,6 +522,17 @@ mod tests {
     }
 
     #[test]
+    fn unicode_identifier_is_one_token() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("alias thm 自反等式 <=> self_eq", test_line_file())
+                .unwrap(),
+            vec!["alias", "thm", "自反等式", "<=>", "self_eq"]
+        );
+    }
+
+    #[test]
     fn exist_bang_with_whitespace() {
         let tokenizer = Tokenizer::new();
         assert_eq!(
@@ -520,6 +548,16 @@ mod tests {
         let mut tokenizer = Tokenizer::new();
         let blocks = tokenizer
             .parse_blocks("macro eq \"a = b\"\nhave @eq", Rc::from("test.lit"))
+            .unwrap();
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].header, vec!["have", "a", "=", "b"]);
+    }
+
+    #[test]
+    fn unicode_macro_name_expands() {
+        let mut tokenizer = Tokenizer::new();
+        let blocks = tokenizer
+            .parse_blocks("macro 等式 \"a = b\"\nhave @等式", Rc::from("test.lit"))
             .unwrap();
         assert_eq!(blocks.len(), 1);
         assert_eq!(blocks[0].header, vec!["have", "a", "=", "b"]);

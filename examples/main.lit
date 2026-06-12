@@ -1123,6 +1123,18 @@ by thm thm_refl_r(0)
 by thm thm_refl_r_alias(0)
 0 = 0
 
+# A theorem alias can use a local-language name while the original theorem
+# keeps an English/std-facing name.
+thm self_eq_en:
+    prove:
+        forall x R:
+            x = x
+    x = x
+
+alias thm 自反等式 <=> self_eq_en
+by thm 自反等式(1)
+1 = 1
+
 # A theorem with one domain fact.
 thm thm_one_succ:
     prove:
