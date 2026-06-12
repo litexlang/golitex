@@ -1,0 +1,28 @@
+1 = 1
+
+claim:
+    prove:
+        2 = 2
+    2 = 2
+
+know:
+    3 = 3
+
+let a R:
+    a = a
+
+have x R
+have y R = x
+
+have fn id_tmp(t R) R = t
+
+thm tmp_one_eq_one:
+    prove:
+        forall:
+            4 = 4
+    4 = 4
+
+by thm tmp_one_eq_one()
+
+abstract_prop tmp_rel(u, v)
+know exist! m, n R st {$tmp_rel(m, n)}

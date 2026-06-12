@@ -13,7 +13,7 @@ impl KnowStmt {
     }
 
     pub fn store_reason() -> &'static str {
-        "warning: unsafe know assumption"
+        "warning: unproved know assumption"
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {

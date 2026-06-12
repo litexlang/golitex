@@ -2950,10 +2950,7 @@ by induc n from 0:
     assert!(detail_run_output.contains("\"inside_results\": ["));
     assert!(detail_run_output.contains("\"statement\": \"$p(0)\""));
     assert!(
-        detail_run_output
-            .matches("\"type\": \"predicate fact\"")
-            .count()
-            >= 4,
+        detail_run_output.matches("\"type\": \"prop fact\"").count() >= 4,
         "detail by induc output should expand base/step proof and obligation checks:\n{}",
         detail_run_output
     );
@@ -3513,7 +3510,7 @@ $sym_p(B, A)
     for route_type in [
         "builtin rule",
         "cite equality fact",
-        "cite predicate fact",
+        "cite prop fact",
         "cite forall fact",
     ] {
         assert!(
@@ -4407,7 +4404,7 @@ by thm same_one(1)
 
     assert!(
         run_succeeded,
-        "alias thm should copy and store the target theorem definition:\n{}",
+        "alias thm should copy and store the target theorem:\n{}",
         run_output
     );
     assert!(runtime.get_thm_definition_by_name("same_one").is_some());

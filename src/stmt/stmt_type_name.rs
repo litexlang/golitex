@@ -329,7 +329,7 @@ impl ClaimStmt {
 
 impl KnowStmt {
     pub fn output_type_string() -> String {
-        "unsafe assumption".to_string()
+        "unproved assumption".to_string()
     }
 }
 
@@ -524,7 +524,7 @@ impl ByThmStmt {
 
 impl DefThmStmt {
     pub fn output_type_string() -> String {
-        "theorem definition".to_string()
+        "theorem".to_string()
     }
 }
 
@@ -548,7 +548,7 @@ impl DefStrategyStmt {
 
 impl DefAbstractPropStmt {
     pub fn output_type_string() -> String {
-        "abstract predicate interface".to_string()
+        "abstract predicate interface definition".to_string()
     }
 }
 
@@ -572,7 +572,7 @@ impl AliasThmStmt {
 
 impl DefLetStmt {
     pub fn output_type_string() -> String {
-        "unsafe let binding".to_string()
+        "unproved object definition".to_string()
     }
 }
 
