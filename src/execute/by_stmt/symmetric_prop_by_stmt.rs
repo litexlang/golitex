@@ -46,8 +46,9 @@ impl Runtime {
 
         let inside_results = self.run_in_local_env(|rt| {
             let verify_state = VerifyState::new(0, false);
-            let mut infer_result =
+            let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
+            let mut infer_result = InferResult::new();
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 inside_results.push(rt.exec_stmt(proof_stmt)?);
@@ -56,6 +57,7 @@ impl Runtime {
                 &stmt.forall_fact,
                 &verify_state,
                 &mut infer_result,
+                assumption_infer_result,
                 None,
             )?;
             if result.is_unknown() {

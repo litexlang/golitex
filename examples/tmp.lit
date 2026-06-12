@@ -1,8 +1,18 @@
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
-
-forall:
-    forall x human:
-        $mortal(x)
+abstract_prop p(a, b, c)
+forall a, b, c, d, e, f R:
+    $p(a, b, c)
+    a = d
+    b = e
+    c = f
     =>:
-        $mortal(Socrates)
+        $p(d, e, f)
+
+"""
+1. 如果是 claim forall的 话，那既要1. 打印所有的参数的定义和条件，2. 打印所有的证明过程， 3. 打印conclusion是对的。
+
+2. 如果是非forall的claim语句，那就 1. 打印所有的证明过程 2. 为什么处理的prove的对象是对。
+
+2. by cases 根本看不出来它的运行方式：1. 先证明所有cases cover 了所有情况 2. 逐case证明：每个case下默认case对应的fact是成立的，然后里面的证明是否过（这里又要分类，一个是证明完，一个是impossible）
+
+3. 像 by contra 这种，中间步骤也没打印。其实也要打印的。具体过程是 1. assume 它的事实的逆是对的 2. 运行所有步骤 3. 最后一步impossible里的东西，正过来是对的，反过来证明也是对的。
+"""

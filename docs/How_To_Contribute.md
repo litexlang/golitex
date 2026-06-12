@@ -11,11 +11,6 @@ Litex is experimental. The most helpful contributions right now are simple:
 
 You do not need to know the Rust kernel to help.
 
-Litex source code stays the same across languages, but CLI output supports
-localized JSON keys and explanatory labels with `litex -lang <code> ...`.
-See [`docs/cli.md`](cli.md) for the supported language codes. Feedback on
-localized output is also useful documentation feedback.
-
 ## 1. Tell Us Where the Docs Are Bad
 
 Fresh-reader feedback is very useful. Read a small part of the README, Manual,
@@ -76,64 +71,18 @@ mathematically stronger or easier to read. Good improvements include:
 
 Do not submit cosmetic-only changes.
 
-### Rules For Dataset Work
-
-- Every submitted `.lit` file must be runnable from the command line.
-- Do not weaken the original problem statement.
-- Do not add broad assumptions just to make the proof pass.
-- Do not replace proof work with `abstract_prop`.
-- Do not replace one large unexplained `know` with another large unexplained
-  `know`.
-- Do not leave failed attempts, chat logs, or AI-generated commentary inside
-  final `.lit` files.
-- Keep final Litex code clean and readable.
-- Prefer explicit equality chains, inequalities, witnesses, finite case splits,
-  and small named claims.
-- If you use AI, you must understand and be able to explain every line you
-  submit.
-
-### Verification And Experience
-
-Include a `verify.sh` script that runs every `.lit` file you submit. For
-example:
-
-```sh
-#!/usr/bin/env sh
-set -eu
-
-litex -f unfinished_solved/<problem_id_1>.lit
-litex -f finished_improved/<problem_id_2>.lit
-```
-
-Also include a short `experience.md`. Keep it concrete. The point is to show
-what you learned from actually trying to make Litex proofs verify:
-
-- unfinished problems that are now fully checkable;
-- already-finished problems that you cleaned, shortened, or strengthened;
-- partial progress where a broad `know` was reduced to a precise remaining
-  step;
-- proof patterns that worked, such as equality chains, explicit witnesses,
-  finite case splits, zero-product arguments via division, or local claims;
-- problem types where Litex struggled;
-- workarounds you found;
-- kernel rules, infer rules, standard-library lemmas, syntax, diagnostics,
-  examples, tutorials, or task instructions that would have helped.
-
-A good partial result is not just "I could not solve it." A good partial result
-says: "I reduced the missing step from this broad claim to this exact lemma.
-These intermediate claims now verify. This one remaining step is blocked for
-this precise reason."
-
 ### Textbook Work Is A Harder Next Step
 
 Textbook formalization is valuable, but it is usually harder than dataset work
 because a chapter has local definitions, source order, omitted proofs, examples,
 and long dependency chains. If you want to work on a textbook, first read
-`docs/Tutorial/Textbook_Formalization_Guide.md`.
+`https://litexlang.com/doc/Tutorial/Textbook_Formalization_Guide`.
 
 That guide explains how to split a chapter into `narrative`, `object
 definition`, `prop definition`, `thm`, and `example sketch` items before writing
 Litex code.
+
+Try help with https://github.com/litexlang/litex-analysis-textbook .
 
 ## What to Avoid at First
 

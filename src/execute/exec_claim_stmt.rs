@@ -16,24 +16,10 @@ impl Runtime {
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
-                    rt.define_params_with_type(
-                        &forall_fact.params_def_with_type,
-                        false,
-                        ParamObjType::Forall,
-                    )
-                    .map_err(|define_params_error| {
-                        exec_stmt_error_with_stmt_and_cause(
-                            stmt.clone().into(),
-                            define_params_error,
-                        )
-                    })?;
-
-                    for dom_fact in forall_fact.dom_facts.iter() {
-                        rt.verify_well_defined_and_store_and_infer(
-                            dom_fact.clone(),
-                            &VerifyState::new(0, false),
-                        )?;
-                    }
+                    let assumption_infers = rt.forall_assume_params_and_dom_in_current_env(
+                        forall_fact,
+                        &VerifyState::new(0, false),
+                    )?;
 
                     let mut inside_results = vec![];
                     let proof_len = stmt.proof.len();
@@ -85,10 +71,18 @@ impl Runtime {
                         inside_results.push(result);
                     }
 
-                    Ok(NonFactualStmtSuccess::new(
+                    let claim_verification = ClaimForallVerificationResult::new(
+                        forall_fact.clone(),
+                        assumption_infers,
+                        proof_len,
+                    )
+                    .into();
+
+                    Ok(NonFactualStmtSuccess::new_with_claim_verification(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
+                        claim_verification,
                     )
                     .into())
                 });
@@ -134,12 +128,21 @@ impl Runtime {
                         inside_results.push(proof_exec_result);
                     }
 
-                    rt.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
+                    let target_result = rt.verify_fact_return_err_if_not_true(
+                        &stmt.fact,
+                        &VerifyState::new(0, false),
+                    )?;
+                    inside_results.push(target_result);
 
-                    Ok(NonFactualStmtSuccess::new(
+                    let claim_verification =
+                        ClaimFactVerificationResult::new(stmt.fact.clone(), stmt.proof.len())
+                            .into();
+
+                    Ok(NonFactualStmtSuccess::new_with_claim_verification(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
+                        claim_verification,
                     )
                     .into())
                 });

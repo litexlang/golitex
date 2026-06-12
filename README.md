@@ -60,11 +60,17 @@ attempts. The goal is to make ordinary mathematical reasoning precise enough
 for machine feedback while preserving the structure and appearance of
 mathematical reasoning itself.
 
-We want Litex to become a first language for learning formalization: readable
-enough that even a curious ten-year-old can follow the core idea. Because Litex
-output supports multiple languages(简体中文, 繁體中文, 日本語, English, 한국어, Español, Français, Deutsch, Português, Русский, العربية, हिन्दी, Tiếng Việt, and Bahasa Indonesia), learners can write Litex code while reading
-what each line does, and gradually feel the appeal of mathematics and
-formalization.
+*We want Litex to become a first language for learning formalization: readable enough that even a curious ten-year-old can follow the core idea*. Before
+learning a mature formal system such as Lean, Coq, or Isabelle, a learner can
+use Litex to get the basic feeling of formalization: state a mathematical fact,
+ask the checker whether it follows, read the output, and grow a verified
+context one line at a time.
+
+Because Litex output supports multiple languages (简体中文, 繁體中文, 日本語,
+English, 한국어, Español, Français, Deutsch, Português, Русский, العربية,
+हिन्दी, Tiếng Việt, and Bahasa Indonesia), learners can write the same Litex
+code while reading what each line does in a language they are comfortable with,
+and gradually feel the appeal of mathematics and formalization.
 
 ## The First Mental Model
 

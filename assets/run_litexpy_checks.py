@@ -4,7 +4,10 @@
 This is a lightweight Python analogue of `cargo test run_examples`: it keeps
 one interactive `litexpy.Runner`, runs independent files/snippets one by one,
 and clears the runner between items.
+
+python3 assets/run_litexpy_checks.py --target none --lit tmp/snippets/examples_01 --keep-going --output-file tmp/outputs/examples_01_outputs.txt
 """
+
 
 from __future__ import annotations
 

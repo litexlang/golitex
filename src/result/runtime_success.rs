@@ -6,6 +6,44 @@ pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
     pub inside_results: Vec<StmtResult>,
+    pub claim_verification: Option<ClaimVerificationResult>,
+    pub by_verification: Option<ByVerificationResult>,
+}
+
+pub enum ClaimVerificationResult {
+    Forall(ClaimForallVerificationResult),
+    Fact(ClaimFactVerificationResult),
+}
+
+pub struct ClaimForallVerificationResult {
+    pub forall_fact: ForallFact,
+    pub assumption_infers: InferResult,
+    pub proof_step_count: usize,
+}
+
+pub struct ClaimFactVerificationResult {
+    pub fact: Fact,
+    pub proof_step_count: usize,
+}
+
+pub enum ByVerificationResult {
+    Cases(ByCasesVerificationResult),
+    Contra(ByContraVerificationResult),
+}
+
+pub struct ByCasesVerificationResult {
+    pub cases: Vec<AndChainAtomicFact>,
+    pub then_facts: Vec<Fact>,
+    pub proof_step_counts: Vec<usize>,
+    pub case_result_counts: Vec<usize>,
+    pub impossible_facts: Vec<Option<AtomicFact>>,
+}
+
+pub struct ByContraVerificationResult {
+    pub to_prove: Fact,
+    pub reverse_assumption: Fact,
+    pub proof_step_count: usize,
+    pub impossible_fact: AtomicFact,
 }
 
 #[derive(Clone, Debug)]
@@ -52,6 +90,7 @@ pub struct VerifiedBysResult {
 
 pub struct ForallProofResult {
     pub forall_fact: ForallFact,
+    pub assumption_infers: InferResult,
     pub proves: Vec<ForallProvedFactResult>,
 }
 
@@ -235,7 +274,11 @@ impl VerifiedByResult {
         })
     }
 
-    pub fn forall_proof(forall_fact: ForallFact, then_results: Vec<StmtResult>) -> Self {
+    pub fn forall_proof(
+        forall_fact: ForallFact,
+        then_results: Vec<StmtResult>,
+        assumption_infers: InferResult,
+    ) -> Self {
         let mut proves = Vec::new();
         for (stmt, result) in forall_fact
             .then_facts
@@ -245,7 +288,11 @@ impl VerifiedByResult {
         {
             proves.push(ForallProvedFactResult::new(stmt, result));
         }
-        Self::ForallProof(ForallProofResult::new(forall_fact, proves))
+        Self::ForallProof(ForallProofResult::new(
+            forall_fact,
+            assumption_infers,
+            proves,
+        ))
     }
 
     pub fn tree_is_builtin_rules_only(&self) -> bool {
@@ -362,9 +409,14 @@ impl ObjectIntroductionItem {
 }
 
 impl ForallProofResult {
-    pub fn new(forall_fact: ForallFact, proves: Vec<ForallProvedFactResult>) -> Self {
+    pub fn new(
+        forall_fact: ForallFact,
+        assumption_infers: InferResult,
+        proves: Vec<ForallProvedFactResult>,
+    ) -> Self {
         ForallProofResult {
             forall_fact,
+            assumption_infers,
             proves,
         }
     }
@@ -383,6 +435,7 @@ impl fmt::Debug for ForallProofResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ForallProofResult")
             .field("forall_fact", &self.forall_fact.to_string())
+            .field("assumption_infers", &self.assumption_infers)
             .field("proves", &self.proves)
             .finish()
     }
@@ -403,11 +456,199 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            claim_verification: None,
+            by_verification: None,
+        }
+    }
+
+    pub fn new_with_claim_verification(
+        stmt: Stmt,
+        infers: InferResult,
+        inside_results: Vec<StmtResult>,
+        claim_verification: ClaimVerificationResult,
+    ) -> Self {
+        NonFactualStmtSuccess {
+            stmt,
+            infers,
+            inside_results,
+            claim_verification: Some(claim_verification),
+            by_verification: None,
+        }
+    }
+
+    pub fn new_with_by_verification(
+        stmt: Stmt,
+        infers: InferResult,
+        inside_results: Vec<StmtResult>,
+        by_verification: ByVerificationResult,
+    ) -> Self {
+        NonFactualStmtSuccess {
+            stmt,
+            infers,
+            inside_results,
+            claim_verification: None,
+            by_verification: Some(by_verification),
         }
     }
 
     pub fn new_with_stmt(stmt: Stmt) -> Self {
         Self::new(stmt, InferResult::new(), vec![])
+    }
+}
+
+impl ClaimForallVerificationResult {
+    pub fn new(
+        forall_fact: ForallFact,
+        assumption_infers: InferResult,
+        proof_step_count: usize,
+    ) -> Self {
+        ClaimForallVerificationResult {
+            forall_fact,
+            assumption_infers,
+            proof_step_count,
+        }
+    }
+}
+
+impl ClaimFactVerificationResult {
+    pub fn new(fact: Fact, proof_step_count: usize) -> Self {
+        ClaimFactVerificationResult {
+            fact,
+            proof_step_count,
+        }
+    }
+}
+
+impl From<ClaimForallVerificationResult> for ClaimVerificationResult {
+    fn from(v: ClaimForallVerificationResult) -> Self {
+        ClaimVerificationResult::Forall(v)
+    }
+}
+
+impl From<ClaimFactVerificationResult> for ClaimVerificationResult {
+    fn from(v: ClaimFactVerificationResult) -> Self {
+        ClaimVerificationResult::Fact(v)
+    }
+}
+
+impl ByCasesVerificationResult {
+    pub fn new(
+        cases: Vec<AndChainAtomicFact>,
+        then_facts: Vec<Fact>,
+        proof_step_counts: Vec<usize>,
+        case_result_counts: Vec<usize>,
+        impossible_facts: Vec<Option<AtomicFact>>,
+    ) -> Self {
+        ByCasesVerificationResult {
+            cases,
+            then_facts,
+            proof_step_counts,
+            case_result_counts,
+            impossible_facts,
+        }
+    }
+}
+
+impl ByContraVerificationResult {
+    pub fn new(
+        to_prove: Fact,
+        reverse_assumption: Fact,
+        proof_step_count: usize,
+        impossible_fact: AtomicFact,
+    ) -> Self {
+        ByContraVerificationResult {
+            to_prove,
+            reverse_assumption,
+            proof_step_count,
+            impossible_fact,
+        }
+    }
+}
+
+impl From<ByCasesVerificationResult> for ByVerificationResult {
+    fn from(v: ByCasesVerificationResult) -> Self {
+        ByVerificationResult::Cases(v)
+    }
+}
+
+impl From<ByContraVerificationResult> for ByVerificationResult {
+    fn from(v: ByContraVerificationResult) -> Self {
+        ByVerificationResult::Contra(v)
+    }
+}
+
+impl fmt::Debug for ClaimVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ClaimVerificationResult::Forall(v) => f.debug_tuple("Forall").field(v).finish(),
+            ClaimVerificationResult::Fact(v) => f.debug_tuple("Fact").field(v).finish(),
+        }
+    }
+}
+
+impl fmt::Debug for ClaimForallVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ClaimForallVerificationResult")
+            .field("forall_fact", &self.forall_fact.to_string())
+            .field("assumption_infers", &self.assumption_infers)
+            .field("proof_step_count", &self.proof_step_count)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ClaimFactVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ClaimFactVerificationResult")
+            .field("fact", &self.fact.to_string())
+            .field("proof_step_count", &self.proof_step_count)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ByVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ByVerificationResult::Cases(v) => f.debug_tuple("Cases").field(v).finish(),
+            ByVerificationResult::Contra(v) => f.debug_tuple("Contra").field(v).finish(),
+        }
+    }
+}
+
+impl fmt::Debug for ByCasesVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let cases = self
+            .cases
+            .iter()
+            .map(|case| case.to_string())
+            .collect::<Vec<_>>();
+        let then_facts = self
+            .then_facts
+            .iter()
+            .map(|fact| fact.to_string())
+            .collect::<Vec<_>>();
+        let impossible_facts = self
+            .impossible_facts
+            .iter()
+            .map(|fact| fact.as_ref().map(|f| f.to_string()))
+            .collect::<Vec<_>>();
+        f.debug_struct("ByCasesVerificationResult")
+            .field("cases", &cases)
+            .field("then_facts", &then_facts)
+            .field("proof_step_counts", &self.proof_step_counts)
+            .field("case_result_counts", &self.case_result_counts)
+            .field("impossible_facts", &impossible_facts)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ByContraVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ByContraVerificationResult")
+            .field("to_prove", &self.to_prove.to_string())
+            .field("reverse_assumption", &self.reverse_assumption.to_string())
+            .field("proof_step_count", &self.proof_step_count)
+            .field("impossible_fact", &self.impossible_fact.to_string())
+            .finish()
     }
 }
 
