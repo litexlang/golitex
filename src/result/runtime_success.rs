@@ -38,9 +38,6 @@ pub enum ByVerificationResult {
     AxiomOfChoice(ByChoiceVerificationResult),
     ZornLemma(ByChoiceVerificationResult),
     Theorem(ByTheoremVerificationResult),
-    FnAsSet(ByFnAsSetVerificationResult),
-    TupleAsSet(ByTupleAsSetVerificationResult),
-    FnSetAsSet(ByFnSetAsSetVerificationResult),
 }
 
 pub struct ByCasesVerificationResult {
@@ -149,33 +146,6 @@ pub struct ByTheoremVerificationResult {
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
     pub stored_then_facts: Vec<String>,
-}
-
-#[derive(Clone, Debug)]
-pub struct ByGeneratedFactItem {
-    pub role: String,
-    pub fact: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct ByFnAsSetVerificationResult {
-    pub function: String,
-    pub generated_facts: Vec<ByGeneratedFactItem>,
-}
-
-#[derive(Clone, Debug)]
-pub struct ByTupleAsSetVerificationResult {
-    pub object: String,
-    pub encoding: String,
-    pub conclusion: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct ByFnSetAsSetVerificationResult {
-    pub function: String,
-    pub fn_set: String,
-    pub generated_facts: Vec<ByGeneratedFactItem>,
-    pub stored_membership: String,
 }
 
 #[derive(Clone, Debug)]
@@ -883,47 +853,6 @@ impl ByTheoremVerificationResult {
     }
 }
 
-impl ByGeneratedFactItem {
-    pub fn new(role: String, fact: String) -> Self {
-        ByGeneratedFactItem { role, fact }
-    }
-}
-
-impl ByFnAsSetVerificationResult {
-    pub fn new(function: String, generated_facts: Vec<ByGeneratedFactItem>) -> Self {
-        ByFnAsSetVerificationResult {
-            function,
-            generated_facts,
-        }
-    }
-}
-
-impl ByTupleAsSetVerificationResult {
-    pub fn new(object: String, encoding: String, conclusion: String) -> Self {
-        ByTupleAsSetVerificationResult {
-            object,
-            encoding,
-            conclusion,
-        }
-    }
-}
-
-impl ByFnSetAsSetVerificationResult {
-    pub fn new(
-        function: String,
-        fn_set: String,
-        generated_facts: Vec<ByGeneratedFactItem>,
-        stored_membership: String,
-    ) -> Self {
-        ByFnSetAsSetVerificationResult {
-            function,
-            fn_set,
-            generated_facts,
-            stored_membership,
-        }
-    }
-}
-
 impl From<ByCasesVerificationResult> for ByVerificationResult {
     fn from(v: ByCasesVerificationResult) -> Self {
         ByVerificationResult::Cases(v)
@@ -978,24 +907,6 @@ impl From<ByTheoremVerificationResult> for ByVerificationResult {
     }
 }
 
-impl From<ByFnAsSetVerificationResult> for ByVerificationResult {
-    fn from(v: ByFnAsSetVerificationResult) -> Self {
-        ByVerificationResult::FnAsSet(v)
-    }
-}
-
-impl From<ByTupleAsSetVerificationResult> for ByVerificationResult {
-    fn from(v: ByTupleAsSetVerificationResult) -> Self {
-        ByVerificationResult::TupleAsSet(v)
-    }
-}
-
-impl From<ByFnSetAsSetVerificationResult> for ByVerificationResult {
-    fn from(v: ByFnSetAsSetVerificationResult) -> Self {
-        ByVerificationResult::FnSetAsSet(v)
-    }
-}
-
 impl fmt::Debug for ClaimVerificationResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -1046,9 +957,6 @@ impl fmt::Debug for ByVerificationResult {
             }
             ByVerificationResult::ZornLemma(v) => f.debug_tuple("ZornLemma").field(v).finish(),
             ByVerificationResult::Theorem(v) => f.debug_tuple("Theorem").field(v).finish(),
-            ByVerificationResult::FnAsSet(v) => f.debug_tuple("FnAsSet").field(v).finish(),
-            ByVerificationResult::TupleAsSet(v) => f.debug_tuple("TupleAsSet").field(v).finish(),
-            ByVerificationResult::FnSetAsSet(v) => f.debug_tuple("FnSetAsSet").field(v).finish(),
         }
     }
 }

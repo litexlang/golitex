@@ -1204,22 +1204,27 @@ sketch:
 
 #[test]
 fn dependent_fn_param_set_uses_previous_arg() {
-    let source_code = r#"
+    run_with_large_stack(
+        "dependent_fn_param_set_uses_previous_arg_large_stack",
+        || {
+            let source_code = r#"
 have f fn(n N_pos, x closed_range(1, n)) R
 f(3, 2) = f(3, 2)
-by fn as set: f
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime
+                .new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "dependent_fn_param_set_uses_previous_arg failed:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "dependent_fn_param_set_uses_previous_arg failed:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -4693,11 +4698,6 @@ by symmetric_prop:
     x = y
     y = x
 
-have local_f fn(x R)R
-by fn as set: local_f
-by tuple as set: (1, 2)
-by fn set as set: local_f $in fn(x R)R
-
 have local_family set
 by axiom_of_choice: set local_family:
     know forall A local_family:
@@ -4747,10 +4747,6 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             assert!(run_output.contains("\"type\": \"by prop registration proof\""));
             assert!(run_output.contains("\"registration\": \"reflexive\""));
             assert!(run_output.contains("\"registration\": \"symmetric\""));
-            assert!(run_output.contains("\"type\": \"by fn as set proof\""));
-            assert!(run_output.contains("\"type\": \"by tuple as set proof\""));
-            assert!(run_output.contains("\"type\": \"by fn set as set proof\""));
-            assert!(run_output.contains("\"stored_membership\": \"local_f $in fn (x R) R\""));
             assert!(run_output.contains("\"type\": \"by axiom_of_choice proof\""));
             assert!(run_output.contains("\"label\": \"members_nonempty\""));
             assert!(run_output.contains("\"type\": \"proved in proof steps\""));

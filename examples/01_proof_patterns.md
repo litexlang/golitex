@@ -227,18 +227,7 @@ by extension:
 by extension {1} = {1}
 ```
 
-## 10. `by_fn`
-
-- Category: `proof pattern`
-- Purpose: Shows construction of a function object.
-
-```litex
-have f fn(x R)R
-
-by fn as set: f
-```
-
-## 11. `by_for`
+## 10. `by_for`
 
 - Category: `proof pattern`
 - Purpose: Shows bounded universal proof automation.
@@ -299,7 +288,7 @@ sketch:
     witness exist k N_pos st {$superpowered(k) and not $superpowered(k + 1)} from 1
 ```
 
-## 13. `by_induc`
+## 11. `by_induc`
 
 - Category: `proof pattern`
 - Purpose: Shows ordinary induction.
@@ -330,7 +319,7 @@ claim:
             $p(n + 1)
 ```
 
-## 14. `by_induc_example1`
+## 12. `by_induc_example1`
 
 - Category: `proof pattern`
 - Purpose: Shows a small induction proof.
@@ -353,7 +342,7 @@ claim:
                 2 ^ (m + 1) = 2 ^ m * 2^1 >= (m+1) * 2 = (m + 1) + (m + 1) >= m + 1 + 1
 ```
 
-## 15. `by_induc_example2`
+## 13. `by_induc_example2`
 
 - Category: `proof pattern`
 - Purpose: Shows a larger induction proof with arithmetic state.
@@ -386,7 +375,7 @@ claim:
                 b(m + 1) % 2 = 1
 ```
 
-## 16. `by_symmetric_reflexive_antisymmetric_prop`
+## 14. `by_symmetric_reflexive_antisymmetric_prop`
 
 - Category: `proof pattern`
 - Purpose: Shows reflexive, symmetric, and antisymmetric proposition helpers.
@@ -457,7 +446,7 @@ sketch:
                     a = b
 ```
 
-## 17. `by_transitive_prop`
+## 15. `by_transitive_prop`
 
 - Category: `proof pattern`
 - Purpose: Shows transitive proposition chaining.
@@ -484,16 +473,7 @@ forall a, b, c set:
         $p(a, c)
 ```
 
-## 18. `by_tuple`
-
-- Category: `obj`
-- Purpose: Shows tuple construction as a set object.
-
-```litex
-by tuple as set: (1, 2)
-```
-
-## 19. `claim`
+## 16. `claim`
 
 - Category: `stmt`
 - Purpose: Shows local claim statements and reuse.
@@ -515,7 +495,7 @@ claim 1 = 1:
     do_nothing
 ```
 
-## 21. `exist`
+## 17. `exist`
 
 - Category: `fact`
 - Purpose: Shows existential and unique-existence facts.
@@ -586,7 +566,7 @@ forall:
         exist b R st {b > 0, b < 1}
 ```
 
-## 22. `exist_fact_that_contains_forall`
+## 18. `exist_fact_that_contains_forall`
 
 - Category: `fact`
 - Purpose: Shows extracting an existential whose witness carries a universal fact.
@@ -601,7 +581,7 @@ forall:
         exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
 ```
 
-## 23. `forall_in_forall`
+## 19. `forall_in_forall`
 
 - Category: `stmt`
 - Purpose: Shows nested universal facts and local instantiation.
@@ -674,7 +654,7 @@ forall:
         $q(1, 2)
 ```
 
-## 24. `inline_forall`
+## 20. `inline_forall`
 
 - Category: `stmt`
 - Purpose: Shows inline universal facts inside proposition bodies.
@@ -689,7 +669,7 @@ forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
 forall! a R: a > 0 => { a > -1, a + 1 > 0 }
 ```
 
-## 26. `logic`
+## 21. `logic`
 
 - Category: `proof pattern`
 - Purpose: Shows propositional reasoning, implication, cases, and negation.
@@ -812,7 +792,7 @@ forall:
         $p()
 ```
 
-## 27. `match_obj_with_free_param_in_forall`
+## 22. `match_obj_with_free_param_in_forall`
 
 - Category: `fact`
 - Purpose: Shows matching free parameters in universal facts.
@@ -831,7 +811,7 @@ forall:
         $q(1, {x R: $q(1 + 2, x)})
 ```
 
-## 28. `max_min_bounds`
+## 23. `max_min_bounds`
 
 - Category: `builtin rule`
 - Purpose: Shows builtin max/min order consequences.
@@ -852,7 +832,7 @@ forall a, b, c R:
         c <= min(a, b)
 ```
 
-## 29. `membership_in_set_valued_fn`
+## 24. `membership_in_set_valued_fn`
 
 - Category: `fact`
 - Purpose: Shows membership unfolding for set-valued functions.
@@ -877,7 +857,7 @@ forall p cart(R, R):
         p[1]^2 + p[2]^2 = 5^2
 ```
 
-## 30. `not_exist`
+## 25. `not_exist`
 
 - Category: `fact`
 - Purpose: Shows reasoning from negated existential facts.
@@ -898,7 +878,7 @@ forall x R:
         not $q(x, 1) or not $q(x, 2)
 ```
 
-## 31. `not_forall`
+## 26. `not_forall`
 
 - Category: `fact`
 - Purpose: Shows extracting counterexamples from negated universal facts.
@@ -920,7 +900,7 @@ forall:
         exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
 ```
 
-## 32. `or_fact`
+## 27. `or_fact`
 
 - Category: `fact`
 - Purpose: Shows disjunction introduction and use.
@@ -973,7 +953,7 @@ forall:
         $p(1, 2) or $q(1, 2)
 ```
 
-## 33. `power_builtin_rules`
+## 28. `power_builtin_rules`
 
 - Category: `builtin rule`
 - Purpose: Shows builtin exponent algebra and order rules.
@@ -1040,7 +1020,7 @@ forall a R_pos, x, y R:
         x = log(a, y)
 ```
 
-## 34. `set_algebra_builtin_rules`
+## 29. `set_algebra_builtin_rules`
 
 - Category: `builtin rule`
 - Purpose: Shows builtin subset/union/intersection algebra.
@@ -1069,7 +1049,7 @@ set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
 set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
 ```
 
-## 35. `strategy`
+## 30. `strategy`
 
 - Category: `proof pattern`
 - Purpose: Shows reusable proof strategies over abstract propositions.
@@ -1136,7 +1116,7 @@ use strategy prove_q
 $q(3)
 ```
 
-## 36. `strong_induc`
+## 31. `strong_induc`
 
 - Category: `proof pattern`
 - Purpose: Shows strong induction over integers.
@@ -1171,7 +1151,7 @@ claim:
             $p(n + 1)
 ```
 
-## 37. `syllogism`
+## 32. `syllogism`
 
 - Category: `proof pattern`
 - Purpose: Shows a minimal universal-instantiation argument.
@@ -1187,7 +1167,7 @@ forall:
         $mortal(Socrates)
 ```
 
-## 38. `thm`
+## 33. `thm`
 
 - Category: `stmt`
 - Purpose: Shows theorem declaration, aliases, and theorem application.
@@ -1335,7 +1315,7 @@ by thm thm_named_only(1)
 $thm_match_q(1)
 ```
 
-## 39. `use_builtin_code_to_verify`
+## 34. `use_builtin_code_to_verify`
 
 - Category: `builtin rule`
 - Purpose: Shows facts verified from builtin background code.
@@ -1362,7 +1342,7 @@ claim:
     Int::floor(x) $in R
 ```
 
-## 40. `use_forall_and_prop_def_to_verify_atomic_fact`
+## 35. `use_forall_and_prop_def_to_verify_atomic_fact`
 
 - Category: `fact`
 - Purpose: Shows atomic fact verification through prop definitions and forall facts.
@@ -1395,7 +1375,7 @@ forall b, c R:
         $p(c)
 ```
 
-## 41. `use_forall_arithmetic_to_prove`
+## 36. `use_forall_arithmetic_to_prove`
 
 - Category: `fact`
 - Purpose: Shows arithmetic instantiation of universal facts.
@@ -1485,7 +1465,7 @@ forall:
         $p(1)
 ```
 
-## 42. `verify_by_resolving_atomic_fact_arg`
+## 37. `verify_by_resolving_atomic_fact_arg`
 
 - Category: `fact`
 - Purpose: Shows resolving an atomic proposition argument before matching.
@@ -1503,7 +1483,7 @@ forall:
         $p(2)
 ```
 
-## 43. `witness_exist`
+## 38. `witness_exist`
 
 - Category: `proof pattern`
 - Purpose: Shows explicit witnesses for existential facts.
@@ -1515,7 +1495,7 @@ witness exist x, y R st {x > y} from 1, 0:
 exist x, y R st {x > y}
 ```
 
-## 44. `witness_nonempty`
+## 39. `witness_nonempty`
 
 - Category: `proof pattern`
 - Purpose: Shows explicit witnesses for nonempty sets.

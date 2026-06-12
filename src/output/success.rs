@@ -2,12 +2,11 @@ use crate::common::json_value::{line_file_line_json_value, render_json_value, Js
 use crate::prelude::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
     ByContraVerificationResult, ByEnumerateFiniteSetVerificationResult,
-    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByFnAsSetVerificationResult,
-    ByFnSetAsSetVerificationResult, ByForVerificationResult, ByGeneratedFactItem,
+    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
     ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
-    ByTupleAsSetVerificationResult, ByVerificationResult, ClaimFactVerificationResult,
-    ClaimForallVerificationResult, ClaimVerificationResult, CommandStmt, FactualStmtSuccess,
-    NonFactualStmtSuccess, Runtime, Stmt, StmtResult, VerifiedByResult,
+    ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
+    ClaimVerificationResult, CommandStmt, FactualStmtSuccess, NonFactualStmtSuccess, Runtime, Stmt,
+    StmtResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -184,15 +183,6 @@ fn non_factual_verification_value(
             verification,
             &x.inside_results,
         )),
-        ByVerificationResult::FnAsSet(verification) => {
-            Some(by_fn_as_set_verification_value(verification))
-        }
-        ByVerificationResult::TupleAsSet(verification) => {
-            Some(by_tuple_as_set_verification_value(verification))
-        }
-        ByVerificationResult::FnSetAsSet(verification) => Some(
-            by_fn_set_as_set_verification_value(runtime, verification, &x.inside_results),
-        ),
     }
 }
 
@@ -954,82 +944,6 @@ fn by_theorem_verification_value(
     ])
 }
 
-fn by_fn_as_set_verification_value(verification: &ByFnAsSetVerificationResult) -> JsonValue {
-    JsonValue::Object(vec![
-        (
-            "type".to_string(),
-            JsonValue::JsonString("by fn as set proof".to_string()),
-        ),
-        (
-            "function".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.function)),
-        ),
-        (
-            "generated_facts".to_string(),
-            JsonValue::Array(generated_fact_items(&verification.generated_facts)),
-        ),
-    ])
-}
-
-fn by_tuple_as_set_verification_value(verification: &ByTupleAsSetVerificationResult) -> JsonValue {
-    JsonValue::Object(vec![
-        (
-            "type".to_string(),
-            JsonValue::JsonString("by tuple as set proof".to_string()),
-        ),
-        (
-            "object".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.object)),
-        ),
-        (
-            "encoding".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.encoding)),
-        ),
-        (
-            "conclusion".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.conclusion)),
-        ),
-    ])
-}
-
-fn by_fn_set_as_set_verification_value(
-    runtime: &Runtime,
-    verification: &ByFnSetAsSetVerificationResult,
-    inside_results: &[StmtResult],
-) -> JsonValue {
-    let generated_checks = verification
-        .generated_facts
-        .iter()
-        .zip(inside_results.iter())
-        .map(|(item, result)| statement_check_value(runtime, &item.role, &item.fact, result))
-        .collect::<Vec<_>>();
-
-    JsonValue::Object(vec![
-        (
-            "type".to_string(),
-            JsonValue::JsonString("by fn set as set proof".to_string()),
-        ),
-        (
-            "function".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.function)),
-        ),
-        (
-            "fn_set".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&verification.fn_set)),
-        ),
-        (
-            "generated_facts".to_string(),
-            JsonValue::Array(generated_checks),
-        ),
-        (
-            "stored_membership".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(
-                &verification.stored_membership,
-            )),
-        ),
-    ])
-}
-
 fn impossible_verification_value(
     runtime: &Runtime,
     impossible_fact: &crate::prelude::AtomicFact,
@@ -1137,21 +1051,6 @@ fn assumption_pair_values(items: &[(String, String)]) -> Vec<JsonValue> {
     items
         .iter()
         .map(|(fact, reason)| local_assumption_fact_value(fact, reason))
-        .collect::<Vec<_>>()
-}
-
-fn generated_fact_items(items: &[ByGeneratedFactItem]) -> Vec<JsonValue> {
-    items
-        .iter()
-        .map(|item| {
-            JsonValue::Object(vec![
-                ("role".to_string(), JsonValue::JsonString(item.role.clone())),
-                (
-                    "fact".to_string(),
-                    JsonValue::JsonString(user_visible_stmt_or_msg_text(&item.fact)),
-                ),
-            ])
-        })
         .collect::<Vec<_>>()
 }
 

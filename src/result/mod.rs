@@ -30,15 +30,13 @@ pub use runtime_result::StmtResult;
 pub use runtime_success::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
     ByContraVerificationResult, ByEnumerateFiniteSetVerificationResult,
-    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByFnAsSetVerificationResult,
-    ByFnSetAsSetVerificationResult, ByForVerificationResult, ByGeneratedFactItem,
+    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
     ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
-    ByTupleAsSetVerificationResult, ByVerificationResult, ClaimFactVerificationResult,
-    ClaimForallVerificationResult, ClaimVerificationResult, FactualStmtSuccess, ForallProofResult,
-    ForallProvedFactResult, KnownForallInstantiationItem, KnownForallInstantiationResult,
-    KnownForallRequirementResult, NonFactualStmtSuccess, ObjectIntroductionItem,
-    VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum,
-    VerifiedBysResult,
+    ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
+    ClaimVerificationResult, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
+    KnownForallInstantiationItem, KnownForallInstantiationResult, KnownForallRequirementResult,
+    NonFactualStmtSuccess, ObjectIntroductionItem, VerifiedByBuiltinRuleResult,
+    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

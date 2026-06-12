@@ -135,27 +135,9 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFnAsSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByFnAsSetStmt".to_string()
-    }
-}
-
-impl ByFnSetAsSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByFnSetAsSetStmt".to_string()
-    }
-}
-
 impl ByEnumerateRangeStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByEnumerateRangeStmt".to_string()
-    }
-}
-
-impl ByTupleAsSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByTupleAsSetStmt".to_string()
     }
 }
 
@@ -450,27 +432,9 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFnAsSetStmt {
-    pub fn output_type_string() -> String {
-        "proof by function-as-set expansion".to_string()
-    }
-}
-
-impl ByFnSetAsSetStmt {
-    pub fn output_type_string() -> String {
-        "proof by function-set expansion".to_string()
-    }
-}
-
 impl ByEnumerateRangeStmt {
     pub fn output_type_string() -> String {
         "proof by range enumeration".to_string()
-    }
-}
-
-impl ByTupleAsSetStmt {
-    pub fn output_type_string() -> String {
-        "proof by tuple-as-set expansion".to_string()
     }
 }
 

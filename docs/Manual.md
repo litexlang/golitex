@@ -2220,22 +2220,6 @@ have x closed_range(a, a + 10)
 by closed_range as cases: x $in a...a + 10
 ```
 
----
-
-### Set-theoretic bridge tactics (`by fn as set`, `by tuple as set`, `by fn set as set`)
-
-These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, and a tuple by its components and product typing.
-
-| Statement | What it connects to |
-|-----------|---------------------|
-| `by fn as set: f` | The graph-style facts behind a known function `f` |
-| `by tuple as set: u` | The set-theoretic structure of a tuple object |
-| `by fn set as set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
-
-> Hint: Most users do not need these statements at first. They are mainly semantic bridge tools: useful when you need to expose the set-theoretic object behind a Litex surface form.
-
----
-
 ### Statement summary
 
 The sections above explain the common use cases. This table is a quick map of the statement families.
@@ -2280,7 +2264,6 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
 | `by zorn_lemma` | Preview trusted Zorn step for binary user-defined order predicates |
 | `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
-| `by fn as set` / `by fn set as set` / `by tuple as set` | Expose the set-theoretic meaning behind function and tuple objects |
 
 > Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `know` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
@@ -2552,9 +2535,6 @@ code, evaluate an expression, or register a reusable proof pattern.
 | ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
 | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
 | prove set equality by extensionality | `by extension A = B:` |
-| expose graph facts for a known function | `by fn as set: f` |
-| expose set-theoretic tuple encoding | `by tuple as set: (1, 2)` |
-| expose graph conditions for a function-space object | `by fn set as set: f $in fn(x R) R` |
 | register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
 | register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
 | register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
