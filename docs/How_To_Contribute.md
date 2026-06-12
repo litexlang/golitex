@@ -11,6 +11,11 @@ Litex is experimental. The most helpful contributions right now are simple:
 
 You do not need to know the Rust kernel to help.
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [`docs/cli.md`](cli.md) for the supported language codes. Feedback on
+localized output is also useful documentation feedback.
+
 ## 1. Tell Us Where the Docs Are Bad
 
 Fresh-reader feedback is very useful. Read a small part of the README, Manual,

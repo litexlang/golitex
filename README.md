@@ -52,16 +52,6 @@ context**. A Litex file introduces objects, states facts about them, checks
 which facts follow, stores the accepted ones, and makes them available to the
 lines that come after.
 
-Litex is especially interested in **textbook-first formalization**. The proof
-script should be the derivation, not only a pointer into a mathematical
-dictionary. In many mature proof-assistant workflows, a textbook theorem can be
-closed by importing a large library and citing an already-proved equivalent or
-stronger theorem. That is powerful, but it can turn formalizing a book into
-library lookup: the code mainly says where the theorem already lives. Litex
-explores a different route: start from basic objects, write the next fact in
-the order the book teaches it, check it, and let later facts reuse the context
-that was actually built.
-
 Litex is not intended to replace any other proof assistant. It explores a
 different path in formal mathematics: whether a readable, fact-oriented
 interface can make it easier for AI systems and humans to translate
@@ -69,6 +59,12 @@ natural-language problems and textbook theorems into checkable formal proof
 attempts. The goal is to make ordinary mathematical reasoning precise enough
 for machine feedback while preserving the structure and appearance of
 mathematical reasoning itself.
+
+We want Litex to become a first language for learning formalization: readable
+enough that even a curious ten-year-old can follow the core idea. Because Litex
+output supports multiple languages(简体中文, 繁體中文, 日本語, English, 한국어, Español, Français, Deutsch, Português, Русский, العربية, हिन्दी, Tiếng Việt, and Bahasa Indonesia), learners can write Litex code while reading
+what each line does, and gradually feel the appeal of mathematics and
+formalization.
 
 ## The First Mental Model
 
@@ -145,10 +141,7 @@ the route was arithmetic, a known fact, a matching `forall`, or an inferred
 consequence. That makes Litex a feedback loop: write the next fact, run the
 checker, read what happened, and add the next piece of context.
 
-Litex supports localized output in 14 language modes: 简体中文 (`zh`), English (`en`), 繁體中文 (`zh-Hans`), 日本語 (`ja`), 한국어 (`ko`),
-Español (`es`), Français (`fr`), Deutsch (`de`), Português (`pt`),
-Русский (`ru`), العربية (`ar`), हिन्दी (`hi`), Tiếng Việt (`vi`),
-and Bahasa Indonesia (`id`).
+Litex supports localized output in many languages.
 
 ```json
 {

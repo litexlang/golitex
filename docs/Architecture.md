@@ -12,6 +12,10 @@ soundness proof and not a claim that Litex already has the small-kernel trust
 model of mature proof assistants. The current system is better understood as a
 larger trusted implementation with clear layers around fact-oriented checking.
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
+
 ## Big Picture
 
 Litex is built around one loop:
