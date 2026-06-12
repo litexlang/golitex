@@ -5,6 +5,10 @@ not that these are hard theorems. The point is to show the same interface at
 several scales: write a fact, let Litex match it against the context, and keep
 growing a checked mathematical object.
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
+
 ## 1. Matching And Substitution
 
 The smallest useful pattern is a syllogism. We introduce a set of humans, an

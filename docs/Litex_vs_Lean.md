@@ -11,6 +11,10 @@ Related docs:
 - [Manual](https://litexlang.com/doc/Manual)
 - [FAQ](https://litexlang.com/doc/FAQ)
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
+
 _You can check out any time you like. But you can never leave._
 
 _— Hotel California_

@@ -296,6 +296,7 @@ Basic behavior:
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
 | `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
+| `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
 | `-latex` | Start an interactive REPL that prints LaTeX output. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
 | `-latex -e <code>` | Compile a source string to LaTeX, when available. |
@@ -306,7 +307,10 @@ Basic behavior:
 | `-update <module>` | Update a module, when available. |
 | `-tutorial` | Run the tutorial, when available. |
 
-Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+
+Litex supports multiple output languages through `-lang <code>`. See
+[`docs/cli.md`](cli.md) for the current list of supported language codes.
 
 Hint: if your Litex code contains spaces, newlines, or shell-sensitive characters, wrap it in quotes when using `-e`, or put it in a `.lit` file and run it with `-f`.
 

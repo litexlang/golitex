@@ -8,6 +8,10 @@ This page collects common questions about Litex's design, performance model,
 and intended proof style. It is written as a living note: answers should stay
 concrete, modest, and close to the current verifier behavior.
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [`docs/cli.md`](cli.md) for the supported language codes.
+
 ## Why is Litex called Litex?
 
 Litex = Lisp + LaTeX. 
@@ -19,6 +23,14 @@ interactive feedback, and language-building through
 small composable forms.
 
 Litex is inspired by LaTeX's practical design for writing mathematics.
+
+## Does Litex support multiple output languages?
+
+Yes. Use `litex -lang <code> ...` to localize JSON keys and explanatory labels.
+The proof script inside fields such as `statement`, `fact`, and
+`cited_statement` remains ordinary Litex code. Supported codes include `en`,
+`zh`, `zh-Hans`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`, `hi`, `vi`,
+and `id`.
 
 ## How is Litex invented?
 

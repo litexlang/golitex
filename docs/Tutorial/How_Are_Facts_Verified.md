@@ -4,6 +4,10 @@ Try the examples in browser: https://litexlang.com/doc/Tutorial/How_Are_Facts_Ve
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/How_Are_Facts_Verified.md
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
+
 ## Atomic Fact
 
 1. Check whether the atomic fact is well-defined.

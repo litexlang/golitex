@@ -1,5 +1,9 @@
 # How to Formalize a Textbook
 
+Litex source code stays the same across languages, but CLI output supports
+localized JSON keys and explanatory labels with `litex -lang <code> ...`.
+See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
+
 ## 1. Prepare the Source Material
 
 1. Download the textbook PDF.
