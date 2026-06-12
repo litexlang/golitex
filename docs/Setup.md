@@ -242,7 +242,7 @@ Upgrade Litex? Run `litex -upgrade` for platform instructions.
 Copyright (C) 2024-2026 Jiachen Shen
 website: https://litexlang.com
 github: https://github.com/litexlang/golitex
-Ctrl+D to exit.
+Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter.
 >>>
 ```
 

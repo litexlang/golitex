@@ -41,7 +41,7 @@ impl Runtime {
                 )
             })?;
 
-        let inside_results = self.run_in_local_env(|rt| {
+        let (inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 let result = rt.exec_stmt(proof_stmt).map_err(|statement_error| {
@@ -63,8 +63,10 @@ impl Runtime {
                 stmt.prop_name.clone(),
                 stmt.line_file.clone(),
             )?;
+            let mut obligations_for_output = Vec::new();
             for (label, fact) in obligations {
                 if section_inferred_fact(&inside_results, &fact) {
+                    obligations_for_output.push((label, fact.to_string(), false));
                     continue;
                 }
                 let result = rt
@@ -80,9 +82,10 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
+                obligations_for_output.push((label, fact.to_string(), true));
                 inside_results.push(result);
             }
-            Ok::<Vec<StmtResult>, RuntimeError>(inside_results)
+            Ok::<_, RuntimeError>((inside_results, obligations_for_output))
         })?;
 
         // Trusted Zorn step: once the local section proves nonempty, partial order,
@@ -93,6 +96,7 @@ impl Runtime {
             stmt.prop_name.clone(),
             stmt.line_file.clone(),
         )?;
+        let maximal_fact_string = maximal_fact.to_string();
         let infer_result = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(maximal_fact)
             .map_err(|store_error| {
@@ -104,7 +108,20 @@ impl Runtime {
                 )
             })?;
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        let by_verification = ByChoiceVerificationResult::new(
+            "by zorn_lemma proof".to_string(),
+            format!("set {}, prop {}", stmt.set, stmt.prop_name),
+            stmt.proof.len(),
+            obligations_for_output,
+            maximal_fact_string,
+        );
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            ByVerificationResult::ZornLemma(by_verification),
+        )
+        .into())
     }
 }
 

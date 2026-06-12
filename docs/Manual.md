@@ -404,6 +404,28 @@ The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A decla
 
 After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, those facts are stored twice: once with each field name replaced by its explicit field access, and once with each field name replaced by its tuple projection. When checking that a tuple itself belongs to a struct object, Litex can instantiate the `<=>:` facts directly with the tuple components.
 
+For example, a group-like struct can use `<=>:` to say that the tuple of fields
+is a member of `&group<s>` exactly when those fields satisfy the displayed group
+property.
+
+```litex
+prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
+    forall x, y, z s:
+        add(x, add(y, z)) = add(add(x, y), z)
+    forall x s:
+        add(x, zero) = x
+        add(zero, x) = x
+        add(x, inv(x)) = zero
+        add(inv(x), x) = zero
+
+struct group<s set>:
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(s, zero, add, inv)
+```
+
 If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
 
 #### Counting members
@@ -426,7 +448,12 @@ count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3
 
 #### Finite `sum` and `product`
 
-Summation and products over a bounded integer index with one expression body (indexed by a name like `x`).
+`sum(start, end, f)` is a finite summation over a bounded integer index. The
+first argument is the lower bound, the second argument is the upper bound, and
+the third argument is a function that gives the summand for each index. For
+example, `sum(1, 3, '(x Z) Z {x})` passes lower bound `1`, upper bound `3`, and
+the function `'(x Z) Z {x}`; mathematically it is
+`\sum_{x = 1}^{3} x`.
 
 ```litex
 sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
@@ -1164,6 +1191,9 @@ by this form, because they do not carry a checked definition body.
 
 Use **`alias thm new_name <=> old_name`** to copy an existing theorem
 under a new theorem name. The new name can then be used with `by thm`.
+An alias can use a local-language name. This lets a file keep an English,
+standard-library, or Lean-facing theorem name while giving learners a name they
+can read directly.
 
 ```litex
 prop is_one(x R):
@@ -1171,6 +1201,9 @@ prop is_one(x R):
 
 alias prop one_prop <=> is_one
 $one_prop(1)
+
+alias prop 是一 <=> is_one
+$是一(1)
 
 thm eq_one_reuses_hyp:
     prove:
@@ -1182,6 +1215,15 @@ thm eq_one_reuses_hyp:
 alias thm same_eq_one <=> eq_one_reuses_hyp
 1 = 1
 by thm same_eq_one(1)
+
+thm self_eq_en:
+    prove:
+        forall x R:
+            x = x
+    x = x
+
+alias thm 自反等式 <=> self_eq_en
+by thm 自反等式(1)
 ```
 
 ---

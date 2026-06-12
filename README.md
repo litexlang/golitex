@@ -71,6 +71,9 @@ English, 한국어, Español, Français, Deutsch, Português, Русский, ا
 हिन्दी, Tiếng Việt, and Bahasa Indonesia), learners can write the same Litex
 code while reading what each line does in a language they are comfortable with,
 and gradually feel the appeal of mathematics and formalization.
+Aliases can also give local-language names to English or standard-library-facing
+theorem names, for example `alias thm 自反等式 <=> self_eq_en`, so a learner can
+try the formal shape before moving on to Lean-style library names.
 
 ## The First Mental Model
 

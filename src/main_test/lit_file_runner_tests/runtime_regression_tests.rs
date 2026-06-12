@@ -4579,6 +4579,194 @@ by contra 1 = 1:
 }
 
 #[test]
+fn by_iteration_range_extension_and_theorem_outputs_explain_processes() {
+    run_with_large_stack(
+        "by_iteration_range_extension_and_theorem_outputs_explain_processes",
+        || {
+            let source_code = r#"
+thm local_one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm local_one_eq_one()
+
+by enumerate finite_set:
+    prove:
+        forall a {1, 2}:
+            a < 3
+    do_nothing
+
+by for:
+    prove:
+        forall n range(0, 3):
+            n < 3
+    do_nothing
+
+claim:
+    prove:
+        forall x range(1, 3):
+            x = 1 or x = 2
+    by enumerate range: x $in range(1, 3)
+
+claim:
+    prove:
+        forall y closed_range(1, 2):
+            y = 1 or y = 2
+    by closed_range as cases: y $in 1...2
+
+by extension {1} = {1}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_iteration_range_extension_and_theorem_outputs_explain_processes",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(run_succeeded, "by output fixture failed:\n{}", run_output);
+            assert!(run_output.contains("\"type\": \"by thm proof\""));
+            assert!(run_output.contains("\"parameter_type_check\": {"));
+            assert!(run_output.contains("\"stored_then_facts\": ["));
+            assert!(run_output.contains("\"type\": \"by enumerate finite_set proof\""));
+            assert!(run_output.contains("\"assignment\": {"));
+            assert!(run_output.contains("\"reason\": \"enumerated assignment\""));
+            assert!(run_output.contains("\"type\": \"by for proof\""));
+            assert!(run_output.contains("\"iteration_mode\": \"ranges\""));
+            assert!(run_output.contains("\"reason\": \"for assignment\""));
+            assert!(run_output.contains("\"type\": \"by enumerate range proof\""));
+            assert!(run_output.contains("\"generated_cases\":"));
+            assert!(run_output.contains("\"type\": \"by closed_range as cases proof\""));
+            assert!(run_output.contains("\"type\": \"by extension proof\""));
+            assert!(run_output.contains("\"subset_checks\": ["));
+            assert!(run_output.contains("\"reason\": \"set extensionality\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal output should keep raw by traces folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn by_induc_prop_bridge_and_trusted_outputs_explain_processes() {
+    run_with_large_stack(
+        "by_induc_prop_bridge_and_trusted_outputs_explain_processes",
+        || {
+            let source_code = r#"
+abstract_prop local_induc_p(a)
+know $local_induc_p(0)
+know forall m Z:
+    m >= 0
+    $local_induc_p(m)
+    =>:
+        $local_induc_p(m + 1)
+by induc n from 0:
+    prove:
+        $local_induc_p(n)
+
+    prove from n = 0:
+        $local_induc_p(0)
+
+    prove induc:
+        $local_induc_p(n + 1)
+
+prop local_same_obj(x set, y set):
+    x = y
+
+by reflexive_prop:
+    prove:
+        forall x set:
+            $local_same_obj(x, x)
+    x = x
+
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $local_same_obj(x, y)
+            =>:
+                $local_same_obj(y, x)
+    x = y
+    y = x
+
+have local_f fn(x R)R
+by fn as set: local_f
+by tuple as set: (1, 2)
+by fn set as set: local_f $in fn(x R)R
+
+have local_family set
+by axiom_of_choice: set local_family:
+    know forall A local_family:
+        $is_nonempty_set(A)
+
+have local_ordered_set set
+abstract_prop local_leq(x, y)
+by zorn_lemma: set local_ordered_set, prop local_leq:
+    know $is_nonempty_set(local_ordered_set)
+    know:
+        forall x local_ordered_set:
+            $local_leq(x, x)
+        forall x, y, z local_ordered_set:
+            $local_leq(x, y)
+            $local_leq(y, z)
+            =>:
+                $local_leq(x, z)
+        forall x, y local_ordered_set:
+            $local_leq(x, y)
+            $local_leq(y, x)
+            =>:
+                x = y
+        forall C power_set(local_ordered_set):
+            forall x, y C:
+                $local_leq(x, y) or $local_leq(y, x)
+            =>:
+                exist u local_ordered_set st {forall! x C: {$local_leq(x, u)}}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_induc_prop_bridge_and_trusted_outputs_explain_processes",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "structured by output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"by induc proof\""));
+            assert!(run_output.contains("\"base_case\": {"));
+            assert!(run_output.contains("\"step_case\": {"));
+            assert!(run_output.contains("\"reason\": \"induction hypothesis\""));
+            assert!(run_output.contains("\"type\": \"by prop registration proof\""));
+            assert!(run_output.contains("\"registration\": \"reflexive\""));
+            assert!(run_output.contains("\"registration\": \"symmetric\""));
+            assert!(run_output.contains("\"type\": \"by fn as set proof\""));
+            assert!(run_output.contains("\"type\": \"by tuple as set proof\""));
+            assert!(run_output.contains("\"type\": \"by fn set as set proof\""));
+            assert!(run_output.contains("\"stored_membership\": \"local_f $in fn (x R) R\""));
+            assert!(run_output.contains("\"type\": \"by axiom_of_choice proof\""));
+            assert!(run_output.contains("\"label\": \"members_nonempty\""));
+            assert!(run_output.contains("\"type\": \"proved in proof steps\""));
+            assert!(run_output.contains("\"type\": \"by zorn_lemma proof\""));
+            assert!(run_output.contains("\"label\": \"chain_upper_bound\""));
+            assert!(run_output.contains("\"trusted_conclusion\":"));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal output should keep raw by traces folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn unknown_fact_failure_has_structured_output_fields() {
     let source_code = "1 = 2";
 
@@ -5124,6 +5312,99 @@ by thm same_one(1)
         run_output
     );
     assert!(runtime.get_thm_definition_by_name("same_one").is_some());
+}
+
+#[test]
+fn unicode_alias_prop_name_works() {
+    run_with_large_stack("unicode_alias_prop_name_works", || {
+        let source_code = r#"
+prop is_one(x R):
+    x = 1
+alias prop 是一 <=> is_one
+$是一(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_alias_prop_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode alias prop names should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("alias prop 是一 <=> is_one"),
+            "output should include the Chinese prop alias statement:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("$是一(1)"),
+            "output should include use of the Chinese prop alias:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn unicode_object_name_works() {
+    run_with_large_stack("unicode_object_name_works", || {
+        let source_code = r#"
+have 甲 R = 1
+甲 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_object_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode object names should work:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn unicode_alias_thm_name_works() {
+    run_with_large_stack("unicode_alias_thm_name_works", || {
+        let source_code = r#"
+thm self_eq_en:
+    prove:
+        forall x R:
+            x = x
+    x = x
+alias thm 自反等式 <=> self_eq_en
+by thm 自反等式(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_alias_thm_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode alias theorem names should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("alias thm 自反等式 <=> self_eq_en"),
+            "output should include the Chinese theorem alias statement:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("by thm 自反等式(1)"),
+            "output should include use of the Chinese theorem alias:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

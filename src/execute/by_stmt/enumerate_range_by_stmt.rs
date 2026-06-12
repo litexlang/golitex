@@ -25,6 +25,8 @@ impl Runtime {
                 vec![],
             ));
         }
+        let mut inside_results = vec![membership];
+        let mut endpoint_facts = Vec::new();
 
         let z_set: Obj = StandardSet::Z.into();
         let lf = stmt.line_file.clone();
@@ -44,6 +46,8 @@ impl Runtime {
                     vec![],
                 ));
             }
+            endpoint_facts.push(in_z.to_string());
+            inside_results.push(in_z_ok);
         }
 
         let branches = match enumerate_range_equalities(stmt) {
@@ -72,6 +76,7 @@ impl Runtime {
         } else {
             OrFact::new(branches, stmt.line_file.clone()).into()
         };
+        let generated_fact_string = generated_fact.to_string();
         let infer_after_store = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(
                 generated_fact.clone(),
@@ -82,7 +87,21 @@ impl Runtime {
         infer_result.new_fact(&generated_fact);
         infer_result.new_infer_result_inside(infer_after_store);
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        let by_verification = ByEnumerateRangeVerificationResult::new(
+            format!("{} proof", stmt_name),
+            stmt.element.to_string(),
+            enumerated_range_set_obj(&stmt.range).to_string(),
+            in_fact.to_string(),
+            endpoint_facts,
+            generated_fact_string,
+        );
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification.into(),
+        )
+        .into())
     }
 }
 
