@@ -102,7 +102,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    // Do not record the whole forall in CLI/JSON `infer_facts`; inner then-clauses are stored as separate facts.
+    // Do not record the whole forall as an inferred fact; inner then-clauses are stored separately.
     fn infer_forall_fact(
         &mut self,
         _forall_fact: &ForallFact,

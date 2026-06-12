@@ -9,7 +9,7 @@ fn gcd(a: i128, b: i128) -> Option<i128> {
     Some(a)
 }
 
-// 判断是否有限小数
+// Returns the reduced fraction when the decimal division terminates.
 fn finite_reduced_fraction(a: &str, b: &str) -> Option<(i128, i128)> {
     fn parse(s: &str) -> Option<(i128, u32)> {
         if let Some(pos) = s.find('.') {
@@ -51,11 +51,11 @@ fn finite_reduced_fraction(a: &str, b: &str) -> Option<(i128, i128)> {
     }
 }
 
-// 字符串长除法（保证会终止）；这里只处理非负整数，符号在外层单独处理。
+// Long division for terminating non-negative integer quotients; signs are handled outside.
 fn divide(n: i128, d: i128) -> Option<String> {
     let mut result = String::new();
 
-    // 整数部分
+    // Integer part.
     result.push_str(&(n / d).to_string());
     let mut r = n % d;
 

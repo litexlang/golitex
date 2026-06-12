@@ -32,7 +32,7 @@ impl Runtime {
             })
         };
 
-        let non_err_after_body: StmtResult = match body_exec_result {
+        let mut non_err_after_body: StmtResult = match body_exec_result {
             Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
             Err(runtime_error) => return Err(runtime_error),
         };
@@ -52,6 +52,11 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+        let by_verification =
+            self.by_induc_verification_result(stmt, &corresponding_forall_fact)?;
+        if let Some(success) = non_err_after_body.non_factual_success_mut() {
+            success.by_verification = Some(by_verification.into());
+        }
         let infer_after_store = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
@@ -368,6 +373,113 @@ impl Runtime {
             stmt.line_file.clone(),
         )?
         .into())
+    }
+
+    fn by_induc_verification_result(
+        &self,
+        stmt: &ByInducStmt,
+        generated_forall: &Fact,
+    ) -> Result<ByInducVerificationResult, RuntimeError> {
+        let param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let base_assumptions = vec![
+            (
+                InFact::new(
+                    param_obj.clone(),
+                    StandardSet::Z.into(),
+                    stmt.line_file.clone(),
+                )
+                .to_string(),
+                "induction parameter".to_string(),
+            ),
+            (
+                EqualFact::new(
+                    param_obj.clone(),
+                    stmt.induc_from.clone(),
+                    stmt.line_file.clone(),
+                )
+                .to_string(),
+                "base case".to_string(),
+            ),
+        ];
+
+        let mut step_assumptions = vec![
+            (
+                InFact::new(
+                    param_obj.clone(),
+                    StandardSet::Z.into(),
+                    stmt.line_file.clone(),
+                )
+                .to_string(),
+                "induction parameter".to_string(),
+            ),
+            (
+                GreaterEqualFact::new(
+                    param_obj.clone(),
+                    stmt.induc_from.clone(),
+                    stmt.line_file.clone(),
+                )
+                .to_string(),
+                "induction domain".to_string(),
+            ),
+        ];
+        let induc_map: HashMap<String, Obj> = HashMap::from([(stmt.param.clone(), param_obj)]);
+        for fact in stmt.to_prove.iter() {
+            let assumption_fact = if stmt.strong {
+                self.strong_induc_ih_forall_fact(stmt, fact)?
+            } else {
+                self.inst_exist_or_and_chain_atomic_fact(
+                    fact,
+                    &induc_map,
+                    ParamObjType::Induc,
+                    None,
+                )?
+                .to_fact()
+            };
+            let reason = if stmt.strong {
+                "strong induction hypothesis"
+            } else {
+                "induction hypothesis"
+            };
+            step_assumptions.push((assumption_fact.to_string(), reason.to_string()));
+        }
+
+        let structured = stmt.has_structured_proof();
+        let base_proof_step_count = stmt
+            .base_proof
+            .as_ref()
+            .map(|proof| proof.len())
+            .unwrap_or(0);
+        let step_proof_step_count = stmt
+            .step_proof
+            .as_ref()
+            .map(|proof| proof.len())
+            .unwrap_or(0);
+        let base_result_count = if structured {
+            base_proof_step_count + stmt.to_prove.len()
+        } else {
+            0
+        };
+        let step_result_count = if structured {
+            step_proof_step_count + stmt.to_prove.len()
+        } else {
+            0
+        };
+
+        Ok(ByInducVerificationResult::new(
+            stmt.strong,
+            structured,
+            stmt.param.clone(),
+            stmt.induc_from.to_string(),
+            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
+            generated_forall.to_string(),
+            stmt.proof.len(),
+            base_assumptions,
+            base_proof_step_count,
+            base_result_count,
+            step_assumptions,
+            step_proof_step_count,
+            step_result_count,
+        ))
     }
 
     fn exec_by_induc_stmt_for_one_fact(

@@ -70,8 +70,9 @@ impl Runtime {
         .into();
 
         let mut infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                 function_in_function_set_fact,
+                InferReason::FunctionDefinition,
             )
             .map_err(|store_fact_error| {
                 short_exec_error(
@@ -138,7 +139,10 @@ impl Runtime {
                 })?;
 
             let forall_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_as_fact)
+                .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                    forall_as_fact,
+                    InferReason::FunctionDefinition,
+                )
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),

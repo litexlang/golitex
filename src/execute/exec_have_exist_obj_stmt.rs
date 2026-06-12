@@ -74,17 +74,18 @@ impl Runtime {
             self.store_free_param_or_identifier_name(obj, ParamObjType::Exist)?;
         }
 
-        let new_obj_names_as_identifier_objs = equal_tos
+        let new_obj_names_as_identifier_objs: Vec<Obj> = equal_tos
             .iter()
             .map(|s| Identifier::new(s.clone()).into())
             .collect();
 
         let mut infer_result = self
-            .store_args_satisfy_param_type_when_not_defining_new_identifiers(
+            .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
                 exist_fact_in_have_obj_stmt.params_def_with_type(),
                 &new_obj_names_as_identifier_objs,
-                line_file,
+                line_file.clone(),
                 ParamObjType::Exist,
+                InferReason::ExistElimination,
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
 
@@ -101,7 +102,11 @@ impl Runtime {
                 })?
                 .to_fact();
             let fact_infer_result = self
-                .verify_well_defined_and_store_and_infer(instantiated_fact, &body_fact_verify_state)
+                .verify_well_defined_and_store_and_infer_with_reason(
+                    instantiated_fact,
+                    &body_fact_verify_state,
+                    InferReason::ExistElimination,
+                )
                 .map_err(|store_fact_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), store_fact_error)
                 })?;

@@ -127,7 +127,7 @@ impl Runtime {
                     )))
                 })?;
             let result = self
-                .verify_fact(&instantiated_dom_fact, verify_state)
+                .verify_fact_full(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                         Some(Fact::from(atomic_fact.clone()).into_stmt()),

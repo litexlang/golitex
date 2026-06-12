@@ -63,21 +63,23 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                rt.verify_fact_return_err_if_not_true(
-                    &left_to_right_forall_fact,
-                    &VerifyState::new(0, false),
-                )
-                .map_err(|verify_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!(
-                            "by extension: failed to prove left subset right `{}`",
-                            left_to_right_forall_fact
-                        ),
-                        Some(verify_error),
-                        vec![],
+                let left_to_right_result = rt
+                    .verify_fact_return_err_if_not_true(
+                        &left_to_right_forall_fact,
+                        &VerifyState::new(0, false),
                     )
-                })?;
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by extension: failed to prove left subset right `{}`",
+                                left_to_right_forall_fact
+                            ),
+                            Some(verify_error),
+                            vec![],
+                        )
+                    })?;
+                inside_results.push(left_to_right_result);
 
                 let right_to_left_forall_fact = ForallFact::new(
                     ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -94,21 +96,23 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                rt.verify_fact_return_err_if_not_true(
-                    &right_to_left_forall_fact,
-                    &VerifyState::new(0, false),
-                )
-                .map_err(|verify_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!(
-                            "by extension: failed to prove right subset left `{}`",
-                            right_to_left_forall_fact
-                        ),
-                        Some(verify_error),
-                        vec![],
+                let right_to_left_result = rt
+                    .verify_fact_return_err_if_not_true(
+                        &right_to_left_forall_fact,
+                        &VerifyState::new(0, false),
                     )
-                })?;
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by extension: failed to prove right subset left `{}`",
+                                right_to_left_forall_fact
+                            ),
+                            Some(verify_error),
+                            vec![],
+                        )
+                    })?;
+                inside_results.push(right_to_left_result);
 
                 Ok::<_, RuntimeError>((
                     inside_results,
@@ -124,6 +128,7 @@ impl Runtime {
             stmt.right.clone(),
             stmt.line_file.clone(),
         ));
+        let prove_goal = left_equal_to_right_atomic_fact.to_string();
 
         let mut infer_result = InferResult::new();
         infer_result.new_infer_result_inside(
@@ -132,6 +137,51 @@ impl Runtime {
             )?,
         );
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+        let left_to_right_subset = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec!["x".to_string()],
+                ParamType::Obj(stmt.left.clone()),
+            )]),
+            vec![],
+            vec![InFact::new(
+                obj_for_bound_param_in_scope("x".to_string(), ParamObjType::Forall),
+                stmt.right.clone(),
+                stmt.line_file.clone(),
+            )
+            .into()],
+            stmt.line_file.clone(),
+        )?
+        .to_string();
+        let right_to_left_subset = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec!["x".to_string()],
+                ParamType::Obj(stmt.right.clone()),
+            )]),
+            vec![],
+            vec![InFact::new(
+                obj_for_bound_param_in_scope("x".to_string(), ParamObjType::Forall),
+                stmt.left.clone(),
+                stmt.line_file.clone(),
+            )
+            .into()],
+            stmt.line_file.clone(),
+        )?
+        .to_string();
+        let by_verification = ByExtensionVerificationResult::new(
+            stmt.left.to_string(),
+            stmt.right.to_string(),
+            prove_goal,
+            stmt.proof.len(),
+            left_to_right_subset,
+            right_to_left_subset,
+        );
+
+        Ok((NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification.into(),
+        ))
+        .into())
     }
 }

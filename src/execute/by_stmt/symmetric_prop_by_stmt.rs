@@ -44,10 +44,12 @@ impl Runtime {
             }
         }
 
-        let inside_results = self.run_in_local_env(|rt| {
+        let (inside_results, assumption_infer_result) = self.run_in_local_env(|rt| {
             let verify_state = VerifyState::new(0, false);
-            let mut infer_result =
+            let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
+            let verification_assumption_infer_result = assumption_infer_result.clone();
+            let mut infer_result = InferResult::new();
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 inside_results.push(rt.exec_stmt(proof_stmt)?);
@@ -56,6 +58,7 @@ impl Runtime {
                 &stmt.forall_fact,
                 &verify_state,
                 &mut infer_result,
+                assumption_infer_result,
                 None,
             )?;
             if result.is_unknown() {
@@ -67,7 +70,7 @@ impl Runtime {
                 ));
             }
             inside_results.push(result);
-            Ok(inside_results)
+            Ok((inside_results, verification_assumption_infer_result))
         })?;
 
         self.top_level_env().store_symmetric_prop_permutation(
@@ -81,6 +84,19 @@ impl Runtime {
             "registered symmetric permutation {:?} for `{}`",
             gather, prop_name
         ));
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        let by_verification = ByPropRegistrationVerificationResult::new(
+            "symmetric".to_string(),
+            prop_name,
+            stmt.forall_fact.clone(),
+            assumption_infer_result,
+            stmt.proof.len(),
+        );
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification.into(),
+        )
+        .into())
     }
 }

@@ -1,4 +1,5 @@
 mod by_stmt;
+mod exec_alias_stmt;
 mod exec_claim_stmt;
 mod exec_def_abstract_prop_stmt;
 mod exec_def_algo_stmt;
@@ -21,7 +22,8 @@ mod exec_have_obj_equal_stmt;
 mod exec_have_obj_in_nonempty_set_or_param_type_stmt;
 mod exec_know_stmt;
 mod exec_let_stmt;
-mod exec_prove_stmt;
+mod exec_object_introduction_helper;
+mod exec_sketch_stmt;
 mod exec_stmt;
 mod exec_store_definitions;
 mod exec_strategy_stmt;

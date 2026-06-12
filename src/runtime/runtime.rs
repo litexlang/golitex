@@ -11,7 +11,8 @@ pub struct Runtime {
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_free_param_collection: FreeParamCollection,
     pub detail_output: bool,
-    pub reject_user_know: bool,
+    pub strict_mode: bool,
+    pub output_language: OutputLanguage,
 }
 
 impl Runtime {
@@ -26,7 +27,8 @@ impl Runtime {
             environment_stack: vec![new_environment],
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: false,
-            reject_user_know: false,
+            strict_mode: false,
+            output_language: OutputLanguage::English,
         }
     }
 
@@ -57,7 +59,8 @@ impl Runtime {
             environment_stack: vec![builtin_env.clone()],
             parsing_free_param_collection: FreeParamCollection::new(),
             detail_output: parent_runtime.detail_output,
-            reject_user_know: false,
+            strict_mode: false,
+            output_language: parent_runtime.output_language,
         }
     }
 }
@@ -187,8 +190,8 @@ impl Runtime {
         self.environment_stack.len() > 1
     }
 
-    /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。
-    /// 与手写 `push`/`pop` 等价；若闭包 panic，栈不会恢复（与手写相同）。
+    /// Runs a closure in a temporary child environment and pops it on normal return.
+    /// This matches manual `push_env`/`pop_env`; a panic will not restore the stack.
     pub fn run_in_local_env<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,

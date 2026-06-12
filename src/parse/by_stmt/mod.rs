@@ -8,7 +8,6 @@ mod closed_range_by_stmt;
 mod contra_by_stmt;
 mod enumerate_by_stmt;
 mod extension_by_stmt;
-mod fn_tuple_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
 mod reflexive_prop_by_stmt;
@@ -37,10 +36,8 @@ impl Runtime {
             AXIOM_OF_CHOICE => self.parse_by_axiom_of_choice_stmt(tb),
             THM => self.parse_by_thm_stmt(tb),
             CLOSED_RANGE => self.parse_by_closed_range_as_cases_stmt(tb),
-            FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
-            TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, zorn_lemma, axiom_of_choice, thm, fn as set, fn set as set, or tuple as set after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, zorn_lemma, axiom_of_choice, or thm after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

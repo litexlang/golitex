@@ -151,7 +151,7 @@ impl Runtime {
 
         if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
@@ -165,7 +165,7 @@ impl Runtime {
                 less_equal_fact.line_file.clone(),
             );
             if equal_result.is_true() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_equality".to_string(),
@@ -182,7 +182,7 @@ impl Runtime {
             let strict_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
             if strict_result.is_true() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_strict_order".to_string(),
@@ -193,7 +193,7 @@ impl Runtime {
         }
         if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
@@ -207,7 +207,7 @@ impl Runtime {
                 greater_equal_fact.line_file.clone(),
             );
             if equal_result.is_true() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_equality".to_string(),
@@ -226,7 +226,7 @@ impl Runtime {
             let strict_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
             if strict_result.is_true() {
-                return Ok(StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_strict_order".to_string(),
@@ -236,7 +236,7 @@ impl Runtime {
             }
         }
         if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
-            Ok(StmtResult::FactualStmtSuccess(
+            Ok(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
@@ -244,7 +244,7 @@ impl Runtime {
                 ),
             ))
         } else {
-            Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+            Ok(StmtResult::Unknown(StmtUnknown::new()))
         }
     }
 
@@ -554,7 +554,7 @@ impl Runtime {
             .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
             .is_true()
         {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 0 from n $in N".to_string(),
@@ -604,7 +604,7 @@ impl Runtime {
             .verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?
             .is_true()
         {
-            return Ok(Some(StmtResult::FactualStmtSuccess(
+            return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 1 from n $in N_pos".to_string(),
@@ -665,7 +665,7 @@ impl Runtime {
         {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
@@ -723,7 +723,7 @@ impl Runtime {
         {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in Z and 0 < n".to_string(),
@@ -761,7 +761,7 @@ impl Runtime {
                         continue;
                     }
                     if target_bound <= known_bound {
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "weaken numeric lower bound from known lower bound".to_string(),
@@ -784,7 +784,7 @@ impl Runtime {
                         if !in_z_result.is_true() {
                             continue;
                         }
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "integer weak lower bound from strict predecessor lower bound"
@@ -818,7 +818,7 @@ impl Runtime {
                     let candidate_result =
                         self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
                     if candidate_result.is_true() {
-                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                        return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "weaken numeric strict lower bound from known lower bound"
@@ -892,7 +892,7 @@ impl Runtime {
         if !matches!(&f.right, Obj::Abs(_)) {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= abs(x) for x in R".to_string(),
@@ -932,7 +932,7 @@ impl Runtime {
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 <= sqrt(x) from 0 <= x".to_string(),
@@ -972,7 +972,7 @@ impl Runtime {
         if !positive_result.is_true() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 < sqrt(x) from 0 < x".to_string(),
@@ -1050,7 +1050,7 @@ impl Runtime {
         } else {
             "sqrt: sqrt(a) <= sqrt(b) from 0 <= a, 0 <= b, and a <= b"
         };
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
@@ -1068,7 +1068,7 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z: Obj = Number::new("0".to_string()).into();
         let success = |msg: &'static str| {
-            Ok(Some(StmtResult::FactualStmtSuccess(
+            Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     msg.to_string(),
@@ -1315,7 +1315,7 @@ impl Runtime {
                                 &verify_state,
                             )?;
                         if args_result.is_true() {
-                            return Ok(Some(StmtResult::FactualStmtSuccess(
+                            return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: base > 1 preserves strict order".to_string(),
@@ -1337,7 +1337,7 @@ impl Runtime {
                                 &verify_state,
                             )?;
                         if args_result.is_true() {
-                            return Ok(Some(StmtResult::FactualStmtSuccess(
+                            return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: 0 < base < 1 reverses strict order".to_string(),
@@ -1372,7 +1372,7 @@ impl Runtime {
                     if !arg_gt_one_result.is_true() {
                         return Ok(None);
                     }
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: 0 < log(a, x) from 1 < a and 1 < x".to_string(),
@@ -1417,7 +1417,7 @@ impl Runtime {
                     if !arg_positive_result.is_true() {
                         return Ok(None);
                     }
-                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                    return Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: log(a, x) < 0 from 1 < a and 0 < x < 1".to_string(),
@@ -1510,7 +1510,7 @@ impl Runtime {
                     result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
                 }
                 if result.is_true() {
-                    Ok(Some(StmtResult::FactualStmtSuccess(
+                    Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 <= u - v from v <= u".to_string(),
@@ -1537,7 +1537,7 @@ impl Runtime {
                     result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
                 }
                 if result.is_true() {
-                    Ok(Some(StmtResult::FactualStmtSuccess(
+                    Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 < u - v from v < u".to_string(),
@@ -1582,7 +1582,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a + b from known atomic facts 0 <= a and 0 <= b".to_string(),
@@ -1622,7 +1622,7 @@ impl Runtime {
             if !right_result.is_true() {
                 return Ok(None);
             }
-            Ok(Some(StmtResult::FactualStmtSuccess(
+            Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 < a and 0 <= b)".to_string(),
@@ -1641,7 +1641,7 @@ impl Runtime {
             if !right_result.is_true() {
                 return Ok(None);
             }
-            Ok(Some(StmtResult::FactualStmtSuccess(
+            Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 <= a and 0 < b)".to_string(),
@@ -1689,7 +1689,7 @@ impl Runtime {
         } else {
             "0 <= a^n for even integer n (forall a R)".to_string()
         };
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
@@ -1734,7 +1734,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^n for even integer n from a != 0".to_string(),
@@ -1780,7 +1780,7 @@ impl Runtime {
         if !in_r_result.is_true() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
@@ -1827,7 +1827,7 @@ impl Runtime {
         if !in_r_result.is_true() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^b from 0 < a and b in R".to_string(),
@@ -1875,7 +1875,7 @@ impl Runtime {
         if !in_n_pos_result.is_true() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^n from 0 <= a and n in N_pos".to_string(),
@@ -1929,7 +1929,7 @@ impl Runtime {
             _ => "0 <= a^n from 0 <= a and integer n".to_string(),
         };
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
@@ -1968,7 +1968,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a * b from 0 <= a and 0 <= b".to_string(),
@@ -2007,7 +2007,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a * b from 0 < a and 0 < b".to_string(),
@@ -2046,7 +2046,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a / b from 0 <= a and 0 < b".to_string(),
@@ -2085,7 +2085,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::FactualStmtSuccess(
+        Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a / b from 0 < a and 0 < b".to_string(),

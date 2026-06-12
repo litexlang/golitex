@@ -1,3 +1,0 @@
-struct C:
-    re R
-    im R

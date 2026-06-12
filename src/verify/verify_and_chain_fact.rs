@@ -36,10 +36,10 @@ impl Runtime {
             return Ok(fact_verified.into());
         }
 
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
         let mut child_results: Vec<StmtResult> = Vec::with_capacity(and_fact.facts.len());
-        for fact in &and_fact.facts {
+        for fact in and_fact.facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
                 return Ok(result);
@@ -48,10 +48,7 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::fact_with_note(
-                and_fact.clone().into(),
-                Some("and: each conjunct verified in order".to_string()),
-            )]),
+            VerifiedByResult::wrap_bys(Vec::new()),
             child_results,
         ))
         .into())
@@ -118,79 +115,16 @@ impl Runtime {
         given_and_fact: &AndFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = known_forall.params_def.collect_param_names();
-
-        if !param_names
-            .iter()
-            .all(|param_name| arg_map.contains_key(param_name))
-        {
-            return Ok(None);
-        }
-
-        let mut args_for_params: Vec<Obj> = Vec::new();
-        for param_name in param_names.iter() {
-            let obj = match arg_map.get(param_name) {
-                Some(v) => v,
-                None => return Ok(None),
-            };
-            args_for_params.push(obj.clone());
-        }
-
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &known_forall.params_def,
-                &args_for_params,
+        let Some((instantiation, requirements)) = self
+            .verify_known_forall_requirements_and_build_evidence(
+                known_forall.as_ref(),
+                &arg_map,
+                given_and_fact.clone().into(),
                 verify_state,
-                ParamObjType::Forall,
-            )
-            .map_err(|e| {
-                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                    Some(Fact::from(given_and_fact.clone()).into_stmt()),
-                    String::new(),
-                    given_and_fact.line_file(),
-                    Some(e),
-                    vec![],
-                )))
-            })?;
-        if args_param_types.is_unknown() {
+            )?
+        else {
             return Ok(None);
-        }
-
-        let param_to_arg_map = match known_forall
-            .params_def
-            .param_def_params_to_arg_map(&arg_map)
-        {
-            Some(m) => m,
-            None => return Ok(None),
         };
-
-        for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
-                .map_err(|e| {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(given_and_fact.clone()).into_stmt()),
-                        String::new(),
-                        given_and_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
-            let result = self
-                .verify_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|e| {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(given_and_fact.clone()).into_stmt()),
-                        String::new(),
-                        given_and_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-        }
 
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
@@ -200,10 +134,10 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_and_fact.clone().into(),
-            VerifiedByResult::cited_fact(
-                given_and_fact.clone().into(),
+            VerifiedByResult::known_forall_instantiation(
                 verified_by_known_forall_fact.into(),
-                None,
+                instantiation,
+                requirements,
             ),
             Vec::new(),
         );
@@ -236,7 +170,7 @@ impl Runtime {
             }
         }
 
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
         let facts = chain_fact.facts().map_err(|e| {
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -248,13 +182,13 @@ impl Runtime {
             )))
         })?;
         let mut child_results: Vec<StmtResult> = Vec::with_capacity(facts.len());
-        for fact in &facts {
+        for fact in facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
-                return Ok((StmtUnknown::new_with_detail(format!(
+                return Ok(StmtUnknown::new_with_detail(format!(
                     "unverified chain step: {}",
                     fact
-                )))
+                ))
                 .into());
             }
 
@@ -262,10 +196,7 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::fact_with_note(
-                chain_fact.clone().into(),
-                Some("chain: each step verified in order".to_string()),
-            )]),
+            VerifiedByResult::wrap_bys(Vec::new()),
             child_results,
         ))
         .into())

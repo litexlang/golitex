@@ -334,7 +334,7 @@ impl Runtime {
             }
         }
 
-        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtResult::Unknown(StmtUnknown::new()))
     }
 
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
@@ -1708,11 +1708,22 @@ impl Runtime {
                     verify_state,
                 )?;
                 if exp_ok.is_true() {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                    let mut subgoals = equality_builtin_match_subgoals(
+                        p.base.as_ref(),
+                        log.base.as_ref(),
+                        base_ok,
+                    );
+                    subgoals.extend(equality_builtin_match_subgoals(
+                        p.exponent.as_ref(),
+                        other,
+                        exp_ok,
+                    ));
+                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                         left,
                         right,
                         line_file,
                         "equality: log(a, a^b) = b",
+                        subgoals,
                     )));
                 }
             }
@@ -1746,11 +1757,13 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a^b, c) = log(a, c) / b",
+                subgoals,
             )));
         }
         Ok(None)
@@ -1783,11 +1796,13 @@ impl Runtime {
                 verify_state,
             )?;
             if inner.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, x^b) = b * log(a, x)",
+                    subgoals,
                 )));
             }
         }
@@ -1822,11 +1837,13 @@ impl Runtime {
                 verify_state,
             )?;
             if inner.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, x*y) = log(a, x) + log(a, y)",
+                    subgoals,
                 )));
             }
         }
@@ -1859,11 +1876,13 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a, x/y) = log(a, x) - log(a, y)",
+                subgoals,
             )));
         }
         Ok(None)
@@ -1949,11 +1968,14 @@ impl Runtime {
                 verify_state,
             )?;
             if ok.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                let mut subgoals = equality_builtin_match_subgoals(d.left.as_ref(), &one, one_ok);
+                subgoals.extend(equality_builtin_match_subgoals(other, &expected, ok));
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     left,
                     right,
                     line_file,
                     "equality: log(a, 1/x) = -log(a, x)",
+                    subgoals,
                 )));
             }
         }
@@ -2010,11 +2032,25 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        let mut subgoals =
+            equality_builtin_match_subgoals(log_cb.base.as_ref(), log_ca.base.as_ref(), base_ok);
+        subgoals.extend(equality_builtin_match_subgoals(
+            log_cb.arg.as_ref(),
+            log_ab.arg.as_ref(),
+            arg_ok,
+        ));
+        subgoals.extend(equality_builtin_match_subgoals(
+            log_ca.arg.as_ref(),
+            log_ab.base.as_ref(),
+            inner_ok,
+        ));
+
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             left,
             right,
             line_file,
             "equality: log(a, b) = log(c, b) / log(c, a)",
+            subgoals,
         )))
     }
 
@@ -2039,11 +2075,12 @@ impl Runtime {
             verify_state,
         )?;
         if inner.is_true() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 left,
                 right,
                 line_file,
                 "equality: log(a, b) = c from a^c = b",
+                vec![inner],
             )));
         }
         Ok(None)
@@ -2974,6 +3011,629 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    // A finite-set sum over the empty set is zero.
+    // Example: `finite_set_sum({}, 'Z(x){x}) = 0`.
+    pub(crate) fn try_verify_finite_set_sum_empty(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let empty_set: Obj = ListSet::new(vec![]).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        for (sum_side, other) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(s) = sum_side else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    s.set.as_ref(),
+                    &empty_set,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &zero,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum over empty set is zero",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A finite-set sum over a displayed finite set expands to the left-associated sum
+    // of the summand at each listed element. Example:
+    // `finite_set_sum({1, 2}, 'Z(x){x}) = 1 + 2`.
+    pub(crate) fn try_verify_finite_set_sum_list_expansion(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (sum_side, other) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(s) = sum_side else {
+                continue;
+            };
+            let Obj::ListSet(list_set) = s.set.as_ref() else {
+                continue;
+            };
+            let mut terms = Vec::with_capacity(list_set.list.len());
+            for element in list_set.list.iter() {
+                let Some(term) =
+                    self.instantiate_unary_function_at(s.func.as_ref(), element.as_ref())?
+                else {
+                    terms.clear();
+                    break;
+                };
+                terms.push(term);
+            }
+            if terms.len() != list_set.list.len() {
+                continue;
+            }
+            let expected = Self::left_assoc_add_from_terms(terms);
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &expected,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum over displayed set expands elementwise",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A finite-set sum over an integer closed range agrees with the existing range sum.
+    // Example: `finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})`.
+    pub(crate) fn try_verify_finite_set_sum_closed_range_bridge(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (finite_side, range_side) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(finite_sum) = finite_side else {
+                continue;
+            };
+            let Obj::ClosedRange(range) = finite_sum.set.as_ref() else {
+                continue;
+            };
+            let Obj::Sum(range_sum) = range_side else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    range.start.as_ref(),
+                    range_sum.start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    range.end.as_ref(),
+                    range_sum.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    finite_sum.func.as_ref(),
+                    range_sum.func.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set sum over closed integer range equals range sum",
+            )));
+        }
+        Ok(None)
+    }
+
+    // A constant finite-set summand is the set cardinality times the constant.
+    // Example: `finite_set_sum(X, '(x X) R {c}) = count(X) * c`.
+    pub(crate) fn try_verify_finite_set_sum_constant_summand(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (sum_side, other) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(s) = sum_side else {
+                continue;
+            };
+            let af = match s.func.as_ref() {
+                Obj::AnonymousFn(af) => af,
+                Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => continue,
+                },
+                _ => continue,
+            };
+            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+                continue;
+            }
+            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let pname = match names.first() {
+                Some(n) => n.as_str(),
+                None => continue,
+            };
+            if obj_expr_mentions_bare_id(af.equal_to.as_ref(), pname) {
+                continue;
+            }
+            let c = (*af.equal_to).clone();
+            let count: Obj = Count::new((*s.set).clone()).into();
+            let m1: Obj = Mul::new(count.clone(), c.clone()).into();
+            let m2: Obj = Mul::new(c, count).into();
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &m1,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+                || self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        other,
+                        &m2,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum of a constant summand",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // Finite-set sums are equal when their summands are pointwise equal on the same finite set.
+    // Example: from `forall x X: f(x) = g(x)`, prove
+    // `finite_set_sum(X, f) = finite_set_sum(X, g)`.
+    pub(crate) fn try_verify_finite_set_sum_pointwise_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (left_sum, right_sum) = match (left, right) {
+            (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => (l, r),
+            _ => return Ok(None),
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.set.as_ref(),
+                right_sum.set.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_inst) =
+            self.instantiate_unary_function_at(right_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let then_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file.clone()).into();
+        let r = self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            x_name,
+            left_sum.set.as_ref().clone(),
+            &then_fact,
+            verify_state,
+        )?;
+        if r.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set sums from pointwise equality on the finite set",
+            )));
+        }
+        Ok(None)
+    }
+
+    // A finite-set product over the empty set is one.
+    // Example: `finite_set_product({}, 'Z(x){x}) = 1`.
+    pub(crate) fn try_verify_finite_set_product_empty(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let empty_set: Obj = ListSet::new(vec![]).into();
+        let one: Obj = Number::new("1".to_string()).into();
+        for (product_side, other) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(p) = product_side else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    p.set.as_ref(),
+                    &empty_set,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &one,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set product over empty set is one",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A finite-set product over a displayed finite set expands to the left-associated product
+    // of the factor at each listed element. Example:
+    // `finite_set_product({1, 2}, 'Z(x){x}) = 1 * 2`.
+    pub(crate) fn try_verify_finite_set_product_list_expansion(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (product_side, other) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(p) = product_side else {
+                continue;
+            };
+            let Obj::ListSet(list_set) = p.set.as_ref() else {
+                continue;
+            };
+            let mut terms = Vec::with_capacity(list_set.list.len());
+            for element in list_set.list.iter() {
+                let Some(term) =
+                    self.instantiate_unary_function_at(p.func.as_ref(), element.as_ref())?
+                else {
+                    terms.clear();
+                    break;
+                };
+                terms.push(term);
+            }
+            if terms.len() != list_set.list.len() {
+                continue;
+            }
+            let expected = Self::left_assoc_mul_from_terms(terms);
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &expected,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set product over displayed set expands elementwise",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A finite-set product over an integer closed range agrees with the existing range product.
+    // Example: `finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})`.
+    pub(crate) fn try_verify_finite_set_product_closed_range_bridge(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (finite_side, range_side) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(finite_product) = finite_side else {
+                continue;
+            };
+            let Obj::ClosedRange(range) = finite_product.set.as_ref() else {
+                continue;
+            };
+            let Obj::Product(range_product) = range_side else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    range.start.as_ref(),
+                    range_product.start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    range.end.as_ref(),
+                    range_product.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    finite_product.func.as_ref(),
+                    range_product.func.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set product over closed integer range equals range product",
+            )));
+        }
+        Ok(None)
+    }
+
+    // A constant finite-set factor is the constant raised to the set cardinality.
+    // Example: `finite_set_product(X, '(x X) R {c}) = c ^ count(X)`.
+    pub(crate) fn try_verify_finite_set_product_constant_factor(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (product_side, other) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(p) = product_side else {
+                continue;
+            };
+            let af = match p.func.as_ref() {
+                Obj::AnonymousFn(af) => af,
+                Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => continue,
+                },
+                _ => continue,
+            };
+            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+                continue;
+            }
+            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let pname = match names.first() {
+                Some(n) => n.as_str(),
+                None => continue,
+            };
+            if obj_expr_mentions_bare_id(af.equal_to.as_ref(), pname) {
+                continue;
+            }
+            let c = (*af.equal_to).clone();
+            let count: Obj = Count::new((*p.set).clone()).into();
+            let expected: Obj = Pow::new(c, count).into();
+            if self
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &expected,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set product of a constant factor",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // Finite-set products are equal when their factors are pointwise equal on the same finite set.
+    // Example: from `forall x X: f(x) = g(x)`, prove
+    // `finite_set_product(X, f) = finite_set_product(X, g)`.
+    pub(crate) fn try_verify_finite_set_product_pointwise_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (left_product, right_product) = match (left, right) {
+            (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
+            _ => return Ok(None),
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_product.set.as_ref(),
+                right_product.set.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) =
+            self.instantiate_unary_function_at(left_product.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_inst) =
+            self.instantiate_unary_function_at(right_product.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let then_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file.clone()).into();
+        let r = self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            x_name,
+            left_product.set.as_ref().clone(),
+            &then_fact,
+            verify_state,
+        )?;
+        if r.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set products from pointwise equality on the finite set",
+            )));
+        }
+        Ok(None)
+    }
+
+    fn left_assoc_add_from_terms(terms: Vec<Obj>) -> Obj {
+        let mut it = terms.into_iter();
+        let Some(first) = it.next() else {
+            return Number::new("0".to_string()).into();
+        };
+        let mut acc = first;
+        for term in it {
+            acc = Add::new(acc, term).into();
+        }
+        acc
+    }
+
+    fn left_assoc_mul_from_terms(terms: Vec<Obj>) -> Obj {
+        let mut it = terms.into_iter();
+        let Some(first) = it.next() else {
+            return Number::new("1".to_string()).into();
+        };
+        let mut acc = first;
+        for term in it {
+            acc = Mul::new(acc, term).into();
+        }
+        acc
+    }
+
+    fn instantiate_unary_function_at(
+        &mut self,
+        func: &Obj,
+        x: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if let Some(instantiated) = self.instantiate_unary_anonymous_summand_at(func, x)? {
+            return Ok(Some(instantiated));
+        }
+        if let Obj::FnObj(fo) = func {
+            if !fo.body.is_empty() {
+                return Ok(None);
+            }
+            return Ok(Some(
+                FnObj::new((*fo.head).clone(), vec![vec![Box::new(x.clone())]]).into(),
+            ));
+        }
+        let Some(head) = FnObjHead::from_callable_obj(func.clone()) else {
+            return Ok(None);
+        };
+        Ok(Some(
+            FnObj::new(head, vec![vec![Box::new(x.clone())]]).into(),
+        ))
+    }
+
+    fn verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        param_name: String,
+        set: Obj,
+        then_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![param_name],
+                ParamType::Obj(set),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
+        })
     }
 
     /// `(x mod m) mod m = x mod m` when the nested `%` uses the same modulus as the outer `%`.

@@ -17,7 +17,7 @@ impl Runtime {
         false
     }
 
-    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restrict_fn_in` targets.
+    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restricts_to` targets.
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
@@ -29,7 +29,7 @@ impl Runtime {
     }
 
     /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
-    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for well-defined/calls.
+    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restricts_to`) for well-defined/calls.
     pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
@@ -75,6 +75,53 @@ impl Runtime {
         }
     }
 
+    pub fn get_fn_range_on_function_body(&self, function: &Obj) -> Option<FnSetBody> {
+        match function {
+            Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
+            _ => self.get_object_in_fn_set_or_restrict(function),
+        }
+    }
+
+    pub fn fn_range_on_target_fn_set(
+        &self,
+        fn_range_on: &FnRangeOn,
+        _line_file: LineFile,
+    ) -> Result<FnSet, RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on expects a function with a known function set, got {}",
+                    fn_range_on.function
+                )),
+            )));
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "fn_range_on expects a unary function, got {}",
+                    fn_range_on.function
+                )),
+            )));
+        }
+        let param = self.generate_random_unused_name();
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![param],
+                fn_range_on.set.as_ref().clone(),
+            )],
+            vec![],
+            body.ret_set.as_ref().clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_cause(
+                    format!("failed to build restriction target for {}", fn_range_on),
+                    e,
+                ),
+            ))
+        })
+    }
+
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
     /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
     pub fn get_known_fn_body_and_equal_to_for_key(
@@ -89,6 +136,80 @@ impl Runtime {
             }
         }
         None
+    }
+
+    pub(crate) fn unfold_known_fn_application_once(
+        &mut self,
+        application: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = application else {
+            return Ok(None);
+        };
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+        let key = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(i) => i.to_string(),
+            FnObjHead::IdentifierWithMod(i) => i.to_string(),
+            _ => return Ok(None),
+        };
+        let Some((fn_set_body, equal_to_expr, _)) =
+            self.get_known_fn_body_and_equal_to_for_key(key.as_str())
+        else {
+            return Ok(None);
+        };
+
+        let param_defs = &fn_set_body.params_def_with_set;
+        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        if n_params == 0 {
+            return Ok(None);
+        }
+        let Some((args, extra_layers)) =
+            split_fn_body_at_complete_layer_for_unfolding(&fn_obj.body, n_params)
+        else {
+            return Ok(None);
+        };
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+
+        let param_membership_facts =
+            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
+                self,
+                param_defs,
+                &args,
+                ParamObjType::FnSet,
+            )?;
+        for param_membership_fact in param_membership_facts.iter() {
+            let result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                param_membership_fact,
+                verify_state,
+            )?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+        for dom_fact in fn_set_body.dom_facts.iter() {
+            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &param_to_arg_map,
+                ParamObjType::FnSet,
+                None,
+            )?;
+            let result = self.verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+                &instantiated_dom_fact,
+                verify_state,
+            )?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+
+        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
+        Ok(apply_extra_curried_layers_for_unfolding(
+            reduced,
+            extra_layers,
+        ))
     }
 
     fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
@@ -354,6 +475,48 @@ impl Runtime {
         result
     }
 
+    pub fn get_all_obj_representatives_equal_to_given(&self, given: &Obj) -> Vec<Obj> {
+        let given_key = given.to_string();
+        let mut result = Vec::new();
+        for env in self.iter_environments_from_top() {
+            Self::extend_obj_representatives_equal_to_given_in_environment(
+                &mut result,
+                env,
+                &given_key,
+            );
+        }
+
+        if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
+            if let Some(env) = self.active_imported_module_environment(module_name) {
+                Self::extend_obj_representatives_equal_to_given_in_environment(
+                    &mut result,
+                    env.as_ref(),
+                    local_name,
+                );
+            }
+        }
+
+        result.retain(|obj| obj.to_string() != given_key);
+        result
+    }
+
+    fn extend_obj_representatives_equal_to_given_in_environment(
+        result: &mut Vec<Obj>,
+        environment: &Environment,
+        given: &str,
+    ) {
+        if let Some((_, equiv_class_members_rc)) = environment.known_equality.get(given) {
+            for obj in equiv_class_members_rc.iter() {
+                if !result
+                    .iter()
+                    .any(|known_obj: &Obj| known_obj.to_string() == obj.to_string())
+                {
+                    result.push(obj.clone());
+                }
+            }
+        }
+    }
+
     pub fn get_all_objs_equal_to_given_in_environment(
         environment: &Environment,
         given: &str,
@@ -413,6 +576,71 @@ impl Runtime {
         let mut module_names = vec![];
         collect_module_names_from_obj(obj, &mut module_names);
         module_names
+    }
+}
+
+fn split_fn_body_at_complete_layer_for_unfolding(
+    body: &[Vec<Box<Obj>>],
+    n_params: usize,
+) -> Option<(Vec<Obj>, Vec<Vec<Box<Obj>>>)> {
+    let mut args = Vec::new();
+    let mut extra_layers = Vec::new();
+    let mut consumed = 0;
+    let mut outer_application_done = false;
+
+    for layer in body.iter() {
+        if outer_application_done {
+            extra_layers.push(layer.clone());
+            continue;
+        }
+
+        let next_consumed = consumed + layer.len();
+        if next_consumed > n_params {
+            return None;
+        }
+
+        for arg in layer.iter() {
+            args.push((**arg).clone());
+        }
+        consumed = next_consumed;
+
+        if consumed == n_params {
+            outer_application_done = true;
+        }
+    }
+
+    if consumed != n_params {
+        return None;
+    }
+
+    Some((args, extra_layers))
+}
+
+fn apply_extra_curried_layers_for_unfolding(
+    obj: Obj,
+    extra_layers: Vec<Vec<Box<Obj>>>,
+) -> Option<Obj> {
+    if extra_layers.is_empty() {
+        return Some(obj);
+    }
+
+    match obj {
+        Obj::AnonymousFn(anonymous_fn) => Some(
+            FnObj::new(
+                FnObjHead::AnonymousFnLiteral(Box::new(anonymous_fn)),
+                extra_layers,
+            )
+            .into(),
+        ),
+        Obj::Atom(atom) => {
+            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(Obj::Atom(atom))?;
+            Some(FnObj::new(head, extra_layers).into())
+        }
+        Obj::FnObj(mut fn_obj) => {
+            fn_obj.body.extend(extra_layers);
+            Some(fn_obj.into())
+        }
+        _ => None,
     }
 }
 
@@ -491,9 +719,17 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(&x.end, module_names);
             collect_module_names_from_obj(&x.func, module_names);
         }
+        Obj::SumOfFiniteSet(x) => {
+            collect_module_names_from_obj(&x.set, module_names);
+            collect_module_names_from_obj(&x.func, module_names);
+        }
         Obj::Product(x) => {
             collect_module_names_from_obj(&x.start, module_names);
             collect_module_names_from_obj(&x.end, module_names);
+            collect_module_names_from_obj(&x.func, module_names);
+        }
+        Obj::ProductOfFiniteSet(x) => {
+            collect_module_names_from_obj(&x.set, module_names);
             collect_module_names_from_obj(&x.func, module_names);
         }
         Obj::Abs(x) => collect_module_names_from_obj(&x.arg, module_names),
@@ -503,6 +739,10 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::Count(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
+        Obj::FnRangeOn(x) => {
+            collect_module_names_from_obj(&x.function, module_names);
+            collect_module_names_from_obj(&x.set, module_names);
+        }
         Obj::TupleDim(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::CartDim(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::OneSideInfinityIntervalObj(x) => {

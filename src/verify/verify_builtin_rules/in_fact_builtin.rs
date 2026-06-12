@@ -103,6 +103,11 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.maybe_verify_in_fact_in_unfolded_user_defined_set(in_fact, verify_state)?
+        {
+            return Ok(result);
+        }
         match (&in_fact.element, &in_fact.set) {
             (_, Obj::StructObj(struct_obj)) => {
                 return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
@@ -136,6 +141,20 @@ impl Runtime {
                     verify_state,
                     "product",
                 ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::NPos,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::NPos,
+                    verify_state,
+                ),
             (Obj::Add(add), Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_add_in_n_from_summands_in_n(in_fact, add, verify_state)
             }
@@ -152,6 +171,20 @@ impl Runtime {
                     StandardSet::N,
                     "N: a^k from a in N and k in N",
                 ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::N,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::N,
+                    verify_state,
+                ),
             (Obj::Count(count), Obj::StandardSet(StandardSet::N))
             | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
             | (Obj::Count(count), Obj::StandardSet(StandardSet::Q))
@@ -161,6 +194,13 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
+            (Obj::FnObj(fn_obj), Obj::FnRangeOn(fn_range_on)) => self
+                .verify_in_fact_fn_application_in_fn_range_on(
+                    in_fact,
+                    fn_obj,
+                    fn_range_on,
+                    verify_state,
+                ),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
@@ -177,6 +217,12 @@ impl Runtime {
                     verify_state,
                     StandardSet::NPos,
                     "N_pos: a^k from a in N_pos and k in N",
+                ),
+            (Obj::Pow(pow), Obj::StandardSet(StandardSet::RPos)) => self
+                .verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
+                    in_fact,
+                    pow,
+                    verify_state,
                 ),
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
@@ -304,12 +350,40 @@ impl Runtime {
                     verify_state,
                     "product: well-defined on an integer range, in R",
                 ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::R,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::R,
+                    verify_state,
+                ),
             (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
                 .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
                     in_fact,
                     sum.func.as_ref(),
                     verify_state,
                     "sum",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::Z,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::Z,
+                    verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
                 .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
@@ -324,6 +398,20 @@ impl Runtime {
                     sum.func.as_ref(),
                     verify_state,
                     "sum",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::Q,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::Q,
+                    verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
                 .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
@@ -348,6 +436,13 @@ impl Runtime {
                 ),
             (Obj::FnRange(fn_range), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_fn_range_in_power_set(in_fact, fn_range, power_set, verify_state),
+            (Obj::FnRangeOn(fn_range_on), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_fn_range_on_in_power_set(
+                    in_fact,
+                    fn_range_on,
+                    power_set,
+                    verify_state,
+                ),
             (_, Obj::SetBuilder(set_builder)) => self
                 .verify_in_fact_in_set_builder_by_defining_facts(
                     in_fact,
@@ -547,6 +642,60 @@ impl Runtime {
         )
     }
 
+    // Restricted function range introduction: if `x $in S` and `f(x)` is well-defined,
+    // then `f(x) $in fn_range_on(f, S)`.
+    // Example: `have a seq(R)` proves `a(1) $in fn_range_on(a, 1...3)`.
+    fn verify_in_fact_fn_application_in_fn_range_on(
+        &mut self,
+        in_fact: &InFact,
+        fn_obj: &FnObj,
+        fn_range_on: &FnRangeOn,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let head_obj: Obj = fn_obj.head.as_ref().clone().into();
+        if head_obj.to_string() != fn_range_on.function.to_string() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let arg = fn_obj.body[0][0].as_ref().clone();
+        let arg_in_domain: AtomicFact = InFact::new(
+            arg,
+            fn_range_on.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let arg_in_domain_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&arg_in_domain, verify_state)?;
+        if !arg_in_domain_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range_on membership: a well-defined function application with argument in the restricted domain is in the restricted function range"
+                    .to_string(),
+                vec![arg_in_domain_result],
+            )
+            .into(),
+        )
+    }
+
     // The range of `f : ... -> T` is a subset of `T`; hence it is in `power_set(U)` when `T subset U`.
     // Example: `have f fn(x S) T` proves `fn_range(f) $in power_set(T)`.
     fn verify_in_fact_fn_range_in_power_set(
@@ -575,6 +724,42 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn_range power_set membership: function range is contained in the codomain"
+                    .to_string(),
+                vec![subset_result],
+            )
+            .into(),
+        )
+    }
+
+    // The restricted range of `f : ... -> T` is a subset of `T`;
+    // hence it is in `power_set(U)` when `T subset U`.
+    // Example: `have a seq(R)` proves `fn_range_on(a, 1...3) $in power_set(R)`.
+    fn verify_in_fact_fn_range_on_in_power_set(
+        &mut self,
+        in_fact: &InFact,
+        fn_range_on: &FnRangeOn,
+        power_set: &PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let subset_fact: AtomicFact = SubsetFact::new(
+            body.ret_set.as_ref().clone(),
+            power_set.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn_range_on power_set membership: restricted function range is contained in the codomain"
                     .to_string(),
                 vec![subset_result],
             )
@@ -648,6 +833,47 @@ impl Runtime {
             step_results,
         )
         .into())
+    }
+
+    // Membership through a set-valued definition: if `S(a) = {x T: P(x)}`,
+    // then `y $in S(a)` is checked by unfolding one layer and proving
+    // `y $in T` plus `P(y)`. Example: `(3, 4) $in circle(5)`.
+    fn maybe_verify_in_fact_in_unfolded_user_defined_set(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(unfolded_set) =
+            self.unfold_known_fn_application_once(&in_fact.set, verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Obj::SetBuilder(set_builder) = unfolded_set else {
+            return Ok(None);
+        };
+
+        let unfolded_fact = InFact::new(
+            in_fact.element.clone(),
+            set_builder.clone().into(),
+            in_fact.line_file.clone(),
+        );
+        let unfolded_result = self.verify_in_fact_in_set_builder_by_defining_facts(
+            &unfolded_fact,
+            &set_builder,
+            verify_state,
+        )?;
+        if !unfolded_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "membership in a set-valued user-defined function: unfold one function application to a set builder".to_string(),
+                vec![unfolded_result],
+            )
+            .into(),
+        ))
     }
 
     fn verify_in_fact_by_struct_obj(
@@ -738,7 +964,7 @@ impl Runtime {
 }
 
 fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
@@ -751,7 +977,7 @@ fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,
 ) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             not_in_fact.clone().into(),
             reason.to_string(),
@@ -761,7 +987,7 @@ fn not_in_fact_verified_by_builtin_rules_result(
 }
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> StmtResult {
-    StmtResult::FactualStmtSuccess(
+    StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             "arithmetic expression is in R".to_string(),
@@ -781,21 +1007,21 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
             if number_is_in_r_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNeg => {
             if number_is_in_r_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNz => {
             if number_is_in_r_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Q => number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q"),
@@ -803,56 +1029,56 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
             if number_is_in_q_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNeg => {
             if number_is_in_q_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNz => {
             if number_is_in_q_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Z => {
             if number_is_in_z(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNeg => {
             if number_is_in_z_neg(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNz => {
             if number_is_in_z_nz(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::N => {
             if number_is_in_n(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in N")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::NPos => {
             if number_is_in_n_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in N_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
     }
@@ -864,82 +1090,82 @@ fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     standard_set: &StandardSet,
 ) -> StmtResult {
     match standard_set {
-        StandardSet::R | StandardSet::Q => StmtResult::StmtUnknown(StmtUnknown::new()),
+        StandardSet::R | StandardSet::Q => StmtResult::Unknown(StmtUnknown::new()),
         StandardSet::RPos => {
             if !number_is_in_r_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNeg => {
             if !number_is_in_r_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::RNz => {
             if !number_is_in_r_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QPos => {
             if !number_is_in_q_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNeg => {
             if !number_is_in_q_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::QNz => {
             if !number_is_in_q_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::Z => {
             if !number_is_in_z(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNeg => {
             if !number_is_in_z_neg(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_neg")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::ZNz => {
             if !number_is_in_z_nz(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_nz")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::N => {
             if !number_is_in_n(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
         StandardSet::NPos => {
             if !number_is_in_n_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N_pos")
             } else {
-                StmtResult::StmtUnknown(StmtUnknown::new())
+                StmtResult::Unknown(StmtUnknown::new())
             }
         }
     }
@@ -1021,6 +1247,101 @@ impl Runtime {
                 .get_object_in_fn_set_or_restrict(func)
                 .map(|fn_set_body| (*fn_set_body.ret_set).clone()),
         }
+    }
+
+    // Finite-set sum: the return set of the summand controls the numeric set of the sum.
+    // Example: `finite_set_sum({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the domain must be nonempty.
+    fn verify_in_fact_finite_set_sum_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        sum: &SumOfFiniteSet,
+        target_set: StandardSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(sum.func.as_ref()) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Obj::StandardSet(ret_standard_set) = ret_set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if matches!(&target_set, StandardSet::NPos) {
+            if !matches!(&ret_standard_set, StandardSet::NPos) {
+                return Ok((StmtUnknown::new()).into());
+            }
+            let nonempty_fact: AtomicFact =
+                IsNonemptySetFact::new((*sum.set).clone(), in_fact.line_file.clone()).into();
+            let nonempty_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &nonempty_fact,
+                verify_state,
+            )?;
+            if !nonempty_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "finite_set_sum: positive summand over a nonempty finite set",
+            ));
+        }
+        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!(
+            "finite_set_sum: summand return set {} is contained in {}",
+            ret_standard_set, target_set
+        );
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
+    }
+
+    // Finite-set product: the return set of the factor controls the numeric set of the product.
+    // Example: `finite_set_product({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the empty product is `1`.
+    fn verify_in_fact_finite_set_product_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        product: &ProductOfFiniteSet,
+        target_set: StandardSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(product.func.as_ref()) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Obj::StandardSet(ret_standard_set) = ret_set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if matches!(&target_set, StandardSet::NPos) {
+            if !matches!(&ret_standard_set, StandardSet::NPos) {
+                return Ok((StmtUnknown::new()).into());
+            }
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "finite_set_product: positive factors give a positive finite product",
+            ));
+        }
+        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!(
+            "finite_set_product: factor return set {} is contained in {}",
+            ret_standard_set, target_set
+        );
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
     }
 
     // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return
@@ -1388,6 +1709,42 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
+                vec![base_result, exponent_result],
+            )
+            .into(),
+        )
+    }
+
+    // Positive real bases raised to real exponents are positive reals.
+    // Example: `forall a R_pos, x R: a^x $in R_pos`.
+    fn verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
+        &mut self,
+        in_fact: &InFact,
+        pow: &Pow,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let lf = in_fact.line_file.clone();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let base_positive: AtomicFact =
+            LessFact::new(zero, pow.base.as_ref().clone(), lf.clone()).into();
+        let exponent_in_r: AtomicFact =
+            InFact::new(pow.exponent.as_ref().clone(), StandardSet::R.into(), lf).into();
+
+        let base_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&base_positive, verify_state)?;
+        if !base_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let exponent_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&exponent_in_r, verify_state)?;
+        if !exponent_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "R_pos: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
             )
             .into(),
@@ -2172,17 +2529,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         let mut infer_result = InferResult::new();
-        match verify_subset_result {
-            StmtResult::FactualStmtSuccess(factual_success) => {
-                infer_result.new_infer_result_inside(factual_success.infers.clone());
-            }
-            StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-            }
-            StmtResult::StmtUnknown(_) => {
-                return Ok((StmtUnknown::new()).into());
-            }
-        }
+        infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -2218,17 +2565,7 @@ impl Runtime {
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
-            match verify_one_element_result {
-                StmtResult::FactualStmtSuccess(factual_success) => {
-                    infer_result.new_infer_result_inside(factual_success.infers.clone());
-                }
-                StmtResult::NonFactualStmtSuccess(non_factual_success) => {
-                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
-                }
-                StmtResult::StmtUnknown(_) => {
-                    return Ok((StmtUnknown::new()).into());
-                }
-            }
+            infer_result.new_infer_result_inside(verify_one_element_result.infer_result());
         }
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);

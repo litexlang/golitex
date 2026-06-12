@@ -58,8 +58,9 @@ impl Runtime {
         .into();
 
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                 function_in_function_set_fact,
+                InferReason::FunctionDefinition,
             )
             .map_err(|store_fact_error| {
                 short_exec_error(
@@ -85,9 +86,10 @@ impl Runtime {
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
-        let _ = self
-            .store_atomic_fact_without_well_defined_verified_and_infer(
+        let function_definition_infer_result = self
+            .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                 function_equals_anonymous_fn_fact,
+                HaveFnEqualStmt::store_reason(),
             )
             .map_err(|store_fact_error| {
                 short_exec_error(
@@ -97,6 +99,8 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let mut infer_result = infer_result;
+        infer_result.new_infer_result_inside(function_definition_infer_result);
 
         Ok(infer_result)
     }

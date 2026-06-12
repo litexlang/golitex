@@ -6,7 +6,7 @@ impl Runtime {
         self.parse_obj_hierarchy1(tb)
     }
 
-    /// + - 优先级最低，左结合，可连续 2 + 3 - 4
+    /// Lowest-precedence additive operators; left associative, e.g. `2 + 3 - 4`.
     fn parse_obj_hierarchy1(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy2(tb)?;
         loop {
@@ -28,7 +28,7 @@ impl Runtime {
         }
     }
 
-    /// * / % 高于 + -，左结合
+    /// Multiplicative operators bind tighter than `+` and `-`; left associative.
     fn parse_obj_hierarchy2(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy3(tb)?;
         loop {
@@ -57,7 +57,7 @@ impl Runtime {
         }
     }
 
-    /// ^ 高于 * / %，右结合：2^3^2 = 2^(3^2)
+    /// Power and matrix operators bind tighter than multiplication; power is right associative.
     fn parse_obj_hierarchy3(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy4(tb)?;
         if tb.exceed_end_of_head() {
@@ -65,7 +65,7 @@ impl Runtime {
         }
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
+            let right = self.parse_obj_hierarchy3(tb)?; // Right associative: the right side may contain another `^`.
             Ok(Pow::new(left, right).into())
         } else if tb.current_token_is_equal_to(MATRIX_POW) {
             tb.skip()?;
@@ -510,14 +510,14 @@ impl Runtime {
         }
     }
 
-    /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
+    /// Parses a numeric literal, primary object, or callable head with argument groups.
     fn parse_number_or_primary_obj_or_fn_obj(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Obj, RuntimeError> {
         let token = tb.current()?;
 
-        // 0. (obj) 或 (obj, obj, ...)
+        // 0. Parenthesized object or tuple.
         if token == LEFT_BRACE {
             tb.skip()?;
             let obj = self.parse_obj(tb)?;
@@ -537,10 +537,10 @@ impl Runtime {
             }
         }
 
-        // 1. 数字
+        // 1. Numeric literal.
         if starts_with_digit(token) {
             let number = tb.advance()?;
-            // 若已经到行尾，则直接检查并返回
+            // If the line ends here, validate and return the number directly.
             if tb.exceed_end_of_head() {
                 if !is_number(&number) {
                     return Err(RuntimeError::from(ParseRuntimeError(
@@ -579,10 +579,10 @@ impl Runtime {
             }
         }
 
-        // 2. 多元关键字、或 atom（内建 `StandardSet` 名在 reclassify 中处理）
+        // 2. Parse a primary object; builtin standard-set names are reclassified later.
         let mut result = self.parse_primary_obj(tb)?;
 
-        // 3. 若是 callable head，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
+        // 3. If the result is callable, parse all following argument groups.
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
@@ -622,7 +622,7 @@ impl Runtime {
         Ok(result)
     }
 
-    /// 解析「主元」：当前 token 必须是多元关键字、或普通标识符 (atom)（内建 `StandardSet` 名走 atom 路径）。
+    /// Parses a primary object from a keyword form or ordinary atom.
     fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let tok = tb.current()?;
 
@@ -737,7 +737,7 @@ impl Runtime {
             return Ok(Log::new(base, arg).into());
         }
 
-        // 多元关键字：吃关键字 + 括号里若干 obj
+        // Keyword forms consume the keyword and then parse their braced objects.
         if tok == UNION {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1258,6 +1258,36 @@ impl Runtime {
             })?;
             return Ok(FnRange::new(function).into());
         }
+        if tok == FN_RANGE_ON {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "fn_range_on expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let function = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "fn_range_on expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "fn_range_on expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(FnRangeOn::new(function, set).into());
+        }
         if tok == SUM {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1296,6 +1326,36 @@ impl Runtime {
             })?;
             return Ok(Sum::new(start, end, func).into());
         }
+        if tok == FINITE_SET_SUM {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_sum expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_sum expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_sum expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(SumOfFiniteSet::new(set, func).into());
+        }
         if tok == PRODUCT {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1333,6 +1393,36 @@ impl Runtime {
                 ))
             })?;
             return Ok(Product::new(start, end, func).into());
+        }
+        if tok == FINITE_SET_PRODUCT {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_product expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_product expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_product expects 2 arguments (set, function)".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(ProductOfFiniteSet::new(set, func).into());
         }
         if tok == CART {
             tb.skip()?;
@@ -1460,7 +1550,7 @@ impl Runtime {
         Ok(parsed_obj)
     }
 
-    /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
+    /// Parses a comma-separated object list until the next token is not a comma.
     pub fn parse_obj_list(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
@@ -1578,7 +1668,7 @@ impl Runtime {
         })
     }
 
-    /// ListSet: { a b c } 或 { 1, 0, 2 }；遇逗号先 skip 再解析下一项
+    /// Parses a list set after the first object, accepting optional commas between items.
     fn parse_list_set_obj_with_leftmost_obj(
         &mut self,
         tb: &mut TokenBlock,
@@ -1895,7 +1985,7 @@ mod module_qualification_parse_tests {
             &mut rt,
             "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    e s",
         );
-        let Stmt::DefStructStmt(stmt) = stmt else {
+        let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(stmt)) = stmt else {
             panic!("expected struct definition");
         };
         let Some((param_def, _)) = &stmt.param_def_with_dom else {
@@ -1930,7 +2020,7 @@ mod module_qualification_parse_tests {
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
-        let Stmt::DefAbstractPropStmt(stmt) = stmt else {
+        let Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(stmt)) = stmt else {
             panic!("expected abstract prop definition");
         };
         assert_eq!(stmt.name, "some_prop");
@@ -2033,19 +2123,19 @@ mod module_qualification_parse_tests {
         rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "Nat", "T");
 
         let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
-        let Stmt::UseStrategyStmt(strategy_stmt) = strategy_stmt else {
+        let Stmt::Command(CommandStmt::UseStrategyStmt(strategy_stmt)) = strategy_stmt else {
             panic!("expected use strategy stmt");
         };
         assert_with_mod(&strategy_stmt.name, "Nat", "S");
 
         let stop_stmt = parse_one_stmt_line_with_runtime(&mut rt, "stop strategy S");
-        let Stmt::StopStrategyStmt(stop_stmt) = stop_stmt else {
+        let Stmt::Command(CommandStmt::StopStrategyStmt(stop_stmt)) = stop_stmt else {
             panic!("expected stop strategy stmt");
         };
         assert_with_mod(&stop_stmt.name, "Nat", "S");
@@ -2069,7 +2159,7 @@ mod module_qualification_parse_tests {
         rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "Other", "T");
@@ -2121,7 +2211,7 @@ mod module_qualification_parse_tests {
         assert_eq!(name, "some_prop");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-        let Stmt::ByThmStmt(thm_stmt) = thm_stmt else {
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_without_mod(&thm_stmt.name, "T");

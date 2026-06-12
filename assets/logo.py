@@ -132,4 +132,3 @@ def save_image(filename="LiTeXNewLogo.PNG"):
     image = ImageGrab.grab((x, y, x + width, y + height))
     image.save(filename)
     print(f"{filename} saved")
-

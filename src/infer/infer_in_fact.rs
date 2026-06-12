@@ -80,7 +80,7 @@ impl Runtime {
         }
     }
 
-    /// Record `$restrict_fn_in(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
+    /// Record `$restricts_to(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
     pub(crate) fn register_known_fn_restrict_to_for_element(
         &mut self,
         element: &Obj,
@@ -110,7 +110,7 @@ impl Runtime {
         }
     }
 
-    /// `$restrict_fn_in(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
+    /// `$restricts_to(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
     /// If the RHS is a set, treat it as a unary real-valued restriction on that domain.
     pub fn infer_restrict_fact(&mut self, rf: &RestrictFact) -> Result<InferResult, RuntimeError> {
         let restrict_body = match &rf.obj_can_restrict_to_fn_set {
@@ -193,6 +193,34 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    // Alias-to-function-space inference: if `S = fn(...) T`, then `x $in S` also gives
+    // `x $in fn(...) T`, which registers `x` as callable with that function signature.
+    // Example: `A $in \tensor3<R, 3>` and `\tensor3<R, 3> = fn(i, j, k closed_range(1, 3)) R`.
+    fn infer_membership_in_equal_fn_set_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        for equal_set in self
+            .get_all_obj_representatives_equal_to_given(&in_fact.set)
+            .into_iter()
+        {
+            let Obj::FnSet(fn_set) = equal_set else {
+                continue;
+            };
+            let expanded_atomic: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                fn_set.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            infer_result.new_infer_result_inside(
+                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+            );
+        }
+        Ok(infer_result)
+    }
+
     // RHS is set-builder `{ x $in S | ... }`: emit `element $in S` and each defining fact with `x := element`.
     pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
@@ -258,6 +286,11 @@ impl Runtime {
             // Function range: `z $in fn_range(f)` implies `z` is in the codomain of `f`.
             // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers `z $in T`.
             Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
+            // Restricted function range: `z $in fn_range_on(f, S)` implies `z` is in the codomain of `f`.
+            // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers `z $in R`.
+            Obj::FnRangeOn(fn_range_on) => {
+                self.infer_membership_in_fn_range_on(in_fact, fn_range_on)
+            }
             // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
@@ -670,6 +703,19 @@ impl Runtime {
                 Ok(infer_result)
             }
             set_obj => {
+                let alias_infer = self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
+                if !alias_infer.is_empty() {
+                    return Ok(alias_infer);
+                }
+                // If the set side is a one-layer user-defined set builder, unfold it
+                // for inference too. Example: `(3,4) $in circle(5)` infers
+                // `(3,4) $in cart(R,R)` and the instantiated circle equation.
+                if let Some(Obj::SetBuilder(set_builder)) =
+                    self.unfold_known_fn_application_once(set_obj, &VerifyState::new(0, false))?
+                {
+                    return self
+                        .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
+                }
                 if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
                     self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
                 } else {
@@ -685,6 +731,28 @@ impl Runtime {
         fn_range: &FnRange,
     ) -> Result<InferResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+            return Ok(InferResult::new());
+        };
+        let codomain_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            body.ret_set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&codomain_fact);
+        infer_result.new_infer_result_inside(
+            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
+        );
+        Ok(infer_result)
+    }
+
+    fn infer_membership_in_fn_range_on(
+        &mut self,
+        in_fact: &InFact,
+        fn_range_on: &FnRangeOn,
+    ) -> Result<InferResult, RuntimeError> {
+        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
             return Ok(InferResult::new());
         };
         let codomain_fact: AtomicFact = InFact::new(

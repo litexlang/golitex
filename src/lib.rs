@@ -11,6 +11,7 @@ pub mod infer;
 pub mod main_test;
 pub mod module_manager;
 pub mod obj;
+pub mod output;
 pub mod parse;
 pub mod pipeline;
 pub mod prelude;

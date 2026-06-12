@@ -27,7 +27,7 @@ impl Runtime {
             | AtomicFact::GreaterEqualFact(_) => {
                 self.infer_numeric_order_sign_from_order_atomic(atomic_fact)
             }
-            // e.g. negated atoms, `is_set`, `not_restrict_fn_in`: no inference on this path.
+            // e.g. negated atoms, `$is_set`, `not f $restricts_to T`: no inference on this path.
             _ => Ok(InferResult::new()),
         }
     }

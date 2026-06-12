@@ -456,14 +456,14 @@ impl Runtime {
         }
     }
 
-    // hierarchy 3: and 并列
+    // Hierarchy 3: parse `and` chains.
     pub fn parse_and_chain_atomic_fact(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<AndChainAtomicFact, RuntimeError> {
         let first = self.parse_chain_atomic(tb, true)?;
 
-        // 如果是chain，那直接返回
+        // Chain facts already encode their own comparison sequence.
         match first {
             ChainAtomicFact::ChainFact(c) => return Ok(AndChainAtomicFact::ChainFact(c)),
             ChainAtomicFact::AtomicFact(a) => {

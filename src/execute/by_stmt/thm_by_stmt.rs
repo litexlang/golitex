@@ -51,6 +51,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         Self::merge_stmt_result_infers(&mut infer_result, &arg_type_result);
         let mut inside_results = vec![arg_type_result];
+        let mut domain_facts = Vec::new();
         for dom_fact in thm.forall_fact.dom_facts.iter() {
             let instantiated_dom = self
                 .inst_fact(
@@ -71,7 +72,7 @@ impl Runtime {
                     )
                 })?;
             let dom_result = self
-                .verify_fact(&instantiated_dom, &verify_state)
+                .verify_fact_full(&instantiated_dom, &verify_state)
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -95,9 +96,11 @@ impl Runtime {
                 ));
             }
             Self::merge_stmt_result_infers(&mut infer_result, &dom_result);
+            domain_facts.push(instantiated_dom.to_string());
             inside_results.push(dom_result);
         }
 
+        let mut stored_then_facts = Vec::new();
         for then_fact in thm.forall_fact.then_facts.iter() {
             let instantiated_then = self
                 .inst_exist_or_and_chain_atomic_fact(
@@ -117,10 +120,12 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+            stored_then_facts.push(instantiated_then.to_string());
             infer_result.new_infer_result_inside(
-                self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason(
                     &instantiated_then,
                     &verify_state,
+                    InferReason::TheoremInstantiation,
                 )
                 .map_err(|e| {
                     short_exec_error(
@@ -136,18 +141,22 @@ impl Runtime {
             );
         }
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        let by_verification = ByTheoremVerificationResult::new(
+            thm_name,
+            stmt.args.iter().map(|arg| arg.to_string()).collect(),
+            domain_facts,
+            stored_then_facts,
+        );
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            by_verification.into(),
+        )
+        .into())
     }
 
     fn merge_stmt_result_infers(infer_result: &mut InferResult, stmt_result: &StmtResult) {
-        match stmt_result {
-            StmtResult::NonFactualStmtSuccess(success) => {
-                infer_result.new_infer_result_inside(success.infers.clone());
-            }
-            StmtResult::FactualStmtSuccess(success) => {
-                infer_result.new_infer_result_inside(success.infers.clone());
-            }
-            StmtResult::StmtUnknown(_) => {}
-        }
+        infer_result.new_infer_result_inside(stmt_result.infer_result());
     }
 }

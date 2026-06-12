@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
@@ -59,7 +60,7 @@ impl Runtime {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
                     let ret =
-                        self.verify_fact(&nonempty_fact.into(), &VerifyState::new(0, false))?;
+                        self.verify_fact_full(&nonempty_fact.into(), &VerifyState::new(0, false))?;
                     if ret.is_unknown() {
                         return Err(RuntimeError::from(VerifyRuntimeError(
                             RuntimeErrorStruct::new_with_just_msg(
@@ -73,7 +74,13 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
+    /// Restricted verification mode for builtin premises and well-definedness
+    /// side checks.
+    ///
+    /// This mode may use cached known facts and builtin-only checks. It must not
+    /// invoke the full verifier features such as known forall instantiation,
+    /// user strategies, or definition expansion.
+    pub(crate) fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -96,22 +103,30 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
+    }
+
     pub(crate) fn verify_atomic_fact_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+        self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
     }
 
-    pub(crate) fn verify_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_fact_restricted_known_builtin(
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+                self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
             Fact::AndFact(and_fact) => {
                 self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
@@ -129,6 +144,14 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn verify_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_fact_restricted_known_builtin(fact, verify_state)
+    }
+
     pub(crate) fn non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -139,14 +162,14 @@ impl Runtime {
         Ok(result.is_true())
     }
 
-    pub(crate) fn verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_or_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_by_known_atomic_or_builtin_only(atomic_fact, verify_state)
+                self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
             OrAndChainAtomicFact::AndFact(and_fact) => {
                 self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
@@ -160,14 +183,22 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_and_chain_atomic_fact_known_then_builtin_rules_only(
+    pub(crate) fn verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+        &mut self,
+        fact: &OrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_or_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
+    }
+
+    pub(crate) fn verify_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &AndChainAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_known_then_builtin_rules_only(atomic_fact, verify_state)
+                self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
             AndChainAtomicFact::AndFact(and_fact) => {
                 self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
@@ -176,6 +207,14 @@ impl Runtime {
                 self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
             }
         }
+    }
+
+    pub(crate) fn verify_and_chain_atomic_fact_known_then_builtin_rules_only(
+        &mut self,
+        fact: &AndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
     }
 
     pub(crate) fn verify_and_fact_known_then_builtin_rules_only(
@@ -242,4 +281,125 @@ impl Runtime {
         }
         Ok(StmtUnknown::new().into())
     }
+
+    pub(crate) fn verify_known_forall_requirements_and_build_evidence(
+        &mut self,
+        known_forall: &KnownForallFactParamsAndDom,
+        arg_map: &HashMap<String, Obj>,
+        goal: Fact,
+        verify_state: &VerifyState,
+    ) -> Result<
+        Option<(
+            Vec<KnownForallInstantiationItem>,
+            Vec<KnownForallRequirementResult>,
+        )>,
+        RuntimeError,
+    > {
+        let param_names = known_forall.params_def.collect_param_names();
+        if !param_names
+            .iter()
+            .all(|param_name| arg_map.contains_key(param_name))
+        {
+            return Ok(None);
+        }
+
+        let mut args_for_params: Vec<Obj> = Vec::new();
+        for param_name in param_names.iter() {
+            let Some(obj) = arg_map.get(param_name) else {
+                return Ok(None);
+            };
+            args_for_params.push(obj.clone());
+        }
+
+        let mut requirements = Vec::new();
+        if !self.verify_known_forall_param_type_requirements(
+            known_forall,
+            &args_for_params,
+            &goal,
+            verify_state,
+            &mut requirements,
+        )? {
+            return Ok(None);
+        }
+
+        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(arg_map) {
+            Some(m) => m,
+            None => return Ok(None),
+        };
+
+        for dom_fact in known_forall.dom.iter() {
+            let instantiated_dom_fact = self
+                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
+                .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
+            let result = self
+                .verify_fact_full(&instantiated_dom_fact, verify_state)
+                .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
+            if result.is_unknown() {
+                return Ok(None);
+            }
+            requirements.push(KnownForallRequirementResult::new(
+                instantiated_dom_fact,
+                result,
+            ));
+        }
+
+        let instantiation = param_names
+            .iter()
+            .zip(args_for_params.iter())
+            .map(|(param, arg)| KnownForallInstantiationItem::new(param.clone(), arg.to_string()))
+            .collect::<Vec<_>>();
+
+        Ok(Some((instantiation, requirements)))
+    }
+
+    fn verify_known_forall_param_type_requirements(
+        &mut self,
+        known_forall: &KnownForallFactParamsAndDom,
+        args_for_params: &Vec<Obj>,
+        goal: &Fact,
+        verify_state: &VerifyState,
+        requirements: &mut Vec<KnownForallRequirementResult>,
+    ) -> Result<bool, RuntimeError> {
+        let instantiated_types = self
+            .inst_param_def_with_type_one_by_one(
+                &known_forall.params_def,
+                args_for_params,
+                ParamObjType::Forall,
+            )
+            .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
+        let flat_types = known_forall
+            .params_def
+            .flat_instantiated_types_for_args(&instantiated_types);
+        for (arg, param_type) in args_for_params.iter().zip(flat_types.iter()) {
+            let requirement_fact =
+                fact_for_param_type_requirement(arg.clone(), param_type, default_line_file());
+            let result = self
+                .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
+                .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
+            if result.is_unknown() {
+                return Ok(false);
+            }
+            requirements.push(KnownForallRequirementResult::new(requirement_fact, result));
+        }
+        Ok(true)
+    }
+}
+
+fn fact_for_param_type_requirement(obj: Obj, param_type: &ParamType, line_file: LineFile) -> Fact {
+    match param_type {
+        ParamType::Obj(set_obj) => InFact::new(obj, set_obj.clone(), line_file).into(),
+        ParamType::Set(_) => IsSetFact::new(obj, line_file).into(),
+        ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, line_file).into(),
+        ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, line_file).into(),
+    }
+}
+
+fn known_forall_requirement_error(goal: Fact, cause: RuntimeError) -> RuntimeError {
+    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+        Some(goal.clone().into_stmt()),
+        String::new(),
+        goal.line_file(),
+        Some(cause),
+        vec![],
+    )))
 }

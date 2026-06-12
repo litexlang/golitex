@@ -50,7 +50,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok(StmtUnknown::new().into())
     }
 
     pub(crate) fn build_exist_unique_uniqueness_forall_fact(
@@ -232,7 +232,7 @@ impl Runtime {
             exist_fact.facts().clone(),
             exist_fact.line_file(),
         )?);
-        let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
+        let wd_ok = verify_state.with_well_defined_already_verified();
         let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
         if !plain_res.is_true() {
             return Ok(None);
@@ -241,7 +241,7 @@ impl Runtime {
         let uniqueness_forall = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
 
         let uniqueness_fact: Fact = uniqueness_forall.clone().into();
-        let uniq_res = self.verify_fact(&uniqueness_fact, &wd_ok)?;
+        let uniq_res = self.verify_fact_full(&uniqueness_fact, &wd_ok)?;
         if !uniq_res.is_true() {
             return Ok(None);
         }
@@ -404,9 +404,5 @@ impl Runtime {
 }
 
 fn stmt_result_infers(result: &StmtResult) -> InferResult {
-    match result {
-        StmtResult::FactualStmtSuccess(x) => x.infers.clone(),
-        StmtResult::NonFactualStmtSuccess(x) => x.infers.clone(),
-        StmtResult::StmtUnknown(_) => InferResult::new(),
-    }
+    result.infer_result()
 }

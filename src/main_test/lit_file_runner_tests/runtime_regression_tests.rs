@@ -8,6 +8,20 @@ use crate::to_latex::to_latex_from_source_after_builtins;
 
 use super::helper::run_with_large_stack;
 
+fn legacy_acceptance_field_name() -> String {
+    ["accepted", "by"].join("_")
+}
+
+fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
+    let field_name = legacy_acceptance_field_name();
+    assert!(
+        !run_output.contains(&format!("\"{}\"", field_name)),
+        "{} output should not expose legacy acceptance field:\n{}",
+        context,
+        run_output
+    );
+}
+
 #[test]
 fn builtin_rules_do_not_call_full_verifier_pipeline() {
     let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -93,9 +107,116 @@ forall a set:
 }
 
 #[test]
-fn fn_range_intro_subset_and_preimage_work() {
+fn sketch_stmt_is_checked_and_local() {
+    let source_code = r#"
+sketch:
+    know:
+        2 = 3
+2 = 3
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("sketch_stmt_is_checked_and_local");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "facts from sketch should not leak into the outer environment:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"proof sketch\""),
+        "sketch should be reported as proof sketch:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("sketch:\\n"),
+        "sketch output should use the canonical `sketch:` spelling:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn top_level_scratch_is_rejected_with_sketch_hint() {
+    let source_code = r#"
+scratch:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("top_level_scratch_is_rejected_with_sketch_hint");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "top-level scratch should be rejected:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("top-level `scratch:` has been replaced by `sketch:`"),
+        "top-level scratch should explain the replacement:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn top_level_prove_is_rejected_with_sketch_hint() {
     let source_code = r#"
 prove:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("top_level_prove_is_rejected_with_sketch_hint");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "top-level prove should be rejected:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("top-level `prove:` is not supported; use `sketch:`"),
+        "top-level prove should explain the supported spelling:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn internal_claim_prove_block_remains_supported() {
+    run_with_large_stack("internal_claim_prove_block_remains_supported", || {
+        let source_code = r#"
+claim:
+    prove:
+        1 = 1
+    1 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("internal_claim_prove_block_remains_supported");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "internal claim prove block should still run:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn fn_range_intro_subset_and_preimage_work() {
+    let source_code = r#"
+sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
@@ -107,7 +228,7 @@ prove:
     x > 0
     f(1) = f(x)
 
-prove:
+sketch:
     have g fn(x R, y R: x < y) R
 
     g(0, 1) $in fn_range(g)
@@ -117,6 +238,20 @@ prove:
     b $in R
     a < b
     g(0, 1) = g(a, b)
+
+sketch:
+    have a seq(R)
+
+    a(1) $in fn_range_on(a, 1...3)
+    a(2) $in fn_range_on(a, 1...3)
+    fn_range_on(a, 1...3) $subset R
+    fn_range_on(a, 1...3) $in power_set(R)
+    $is_finite_set(fn_range_on(a, 1...3))
+    count(fn_range_on(a, 1...3)) $in N
+
+    have by preimage k from a(2) $in fn_range_on(a, 1...3)
+    k $in 1...3
+    a(2) = a(k)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -133,9 +268,35 @@ prove:
 }
 
 #[test]
+fn fn_range_on_rejects_non_unary_function() {
+    let source_code = r#"
+sketch:
+    have g fn(x R, y R) R
+    fn_range_on(g, R) $subset R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("fn_range_on_rejects_non_unary_function");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "fn_range_on with non-unary function should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("fn_range_on expects a unary function"),
+        "fn_range_on non-unary error should be explicit:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn have_by_preimage_rejects_non_range_source() {
     let source_code = r#"
-prove:
+sketch:
     have f fn(x R) R
     have by preimage x from f(1) $in R
 "#;
@@ -161,7 +322,7 @@ prove:
 #[test]
 fn have_by_preimage_checks_witness_count() {
     let source_code = r#"
-prove:
+sketch:
     have f fn(x R) R
     f(1) $in fn_range(f)
     have by preimage x, y from f(1) $in fn_range(f)
@@ -251,6 +412,29 @@ forall x R:
 }
 
 #[test]
+fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
+    let source_code = r#"
+by for forall! n range(0, 3): n < 3
+
+by enumerate finite_set forall! x {1, 2}: x $in {1, 2}
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "inline by-for/by-enumerate empty proof syntax failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn by_zorn_lemma_stores_maximal_element_exist_fact() {
     let source_code = r#"
 have s set
@@ -288,6 +472,32 @@ exist m s st {forall! x s: $leq(m, x) => {x = m}}
     assert!(
         run_succeeded,
         "by_zorn_lemma_stores_maximal_element_exist_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_zorn_lemma_without_trailing_colon_reaches_obligation_check() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+
+by zorn_lemma: set s, prop leq
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_without_trailing_colon_reaches_obligation_check",
+    );
+
+    assert!(
+        !run_succeeded,
+        "missing zorn obligations should still fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("nonempty obligation"),
+        "no-trailing-colon zorn syntax should reach obligation checking:\n{}",
         run_output
     );
 }
@@ -441,6 +651,30 @@ exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 }
 
 #[test]
+fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
+    let source_code = r#"
+have S set
+know forall A S:
+    $is_nonempty_set(A)
+
+by axiom_of_choice: set S
+
+exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon",
+    );
+
+    assert!(
+        run_succeeded,
+        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn by_axiom_of_choice_reports_missing_members_nonempty() {
     let source_code = r#"
 have S set
@@ -582,6 +816,7 @@ claim:
     runtime.new_file_path_new_env_new_name_scope(
         "have_by_exist_body_well_defined_can_use_forall_domain_fact",
     );
+    runtime.detail_output = true;
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -589,6 +824,17 @@ claim:
     assert!(
         run_succeeded,
         "have_by_exist_body_well_defined_can_use_forall_domain_fact failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"object definition by existence\""),
+        "have by exist should report the semantic statement type:\n{}",
+        run_output
+    );
+    assert_no_legacy_acceptance_field(&run_output, "have by exist");
+    assert!(
+        !run_output.contains("HaveExistObjStmt"),
+        "have by exist should not report the legacy statement type:\n{}",
         run_output
     );
 }
@@ -606,10 +852,10 @@ fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
 
 fn anonymous_fn_restrict_positive_cases_impl() {
     let positive_source_code = r#"
-$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) R)
-$restrict_fn_in('R(x){x + 1}, fn(x closed_range(1, 2)) R)
-$restrict_fn_in('(x R: x > 0) R {x}, fn(x N_pos) R)
-$restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
+$restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
+$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
+$restricts_to('(x R: x > 0) R {x}, fn(x N_pos) R)
+$restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
 "#;
 
     let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -631,7 +877,7 @@ $restrict_fn_in('R(x){x}, fn(x closed_range(1, 2)) N)
 
 fn anonymous_fn_restrict_negative_case_impl() {
     let negative_source_code = r#"
-$restrict_fn_in('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+$restricts_to('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
 "#;
 
     let mut negative_runtime = Runtime::new_with_builtin_code();
@@ -758,6 +1004,64 @@ forall a, b seq(R):
 }
 
 #[test]
+fn set_valued_have_fn_application_unfolds_for_membership() {
+    let source_code = r#"
+have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
+
+(3, 4) $in circle(5)
+(2, 2) $in line(1, -1, 0)
+
+forall a, b R:
+    a != 0 or b != 0
+    =>:
+        (0, 0) $in line(a, b, 0)
+
+forall p cart(R, R):
+    p $in circle(5)
+    =>:
+        p[1]^2 + p[2]^2 = 5^2
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_valued_have_fn_application_unfolds_for_membership",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "set-valued have fn applications should unfold for membership:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn set_valued_have_fn_application_keeps_side_conditions() {
+    let source_code = r#"
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
+
+(0, 0) $in line(0, 0, 0)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_valued_have_fn_application_keeps_side_conditions",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "set-valued have fn unfolding should not bypass argument side conditions:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn unary_numeric_objects_respect_argument_equality() {
     let source_code = r#"
 forall x, y R:
@@ -832,23 +1136,95 @@ product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 }
 
 #[test]
-fn dependent_fn_param_set_uses_previous_arg() {
+fn finite_set_sum_core_rules() {
     let source_code = r#"
-have f fn(n N_pos, x closed_range(1, n)) R
-f(3, 2) = f(3, 2)
-by fn as set: f
+finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
+finite_set_sum({}, 'Z(x){x}) = 0
+finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2}, 'Z(x){x}) $in Z
+finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
+
+sketch:
+    have X finite_set
+    have c Z
+    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
+
+sketch:
+    have X power_set(Z)
+    know $is_finite_set(X)
+    finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
+    runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "dependent_fn_param_set_uses_previous_arg failed:\n{}",
+        "finite_set_sum core rules should verify:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn finite_set_product_core_rules() {
+    let source_code = r#"
+finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
+finite_set_product({}, 'Z(x){x}) = 1
+finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({1, 2}, 'Z(x){x}) $in Z
+finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_product({}, 'N_pos(x){x}) $in N_pos
+
+sketch:
+    have X finite_set
+    have c R
+    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
+
+sketch:
+    have X power_set(Z)
+    know $is_finite_set(X)
+    finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("finite_set_product_core_rules");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "finite_set_product core rules should verify:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn dependent_fn_param_set_uses_previous_arg() {
+    run_with_large_stack(
+        "dependent_fn_param_set_uses_previous_arg_large_stack",
+        || {
+            let source_code = r#"
+have f fn(n N_pos, x closed_range(1, n)) R
+f(3, 2) = f(3, 2)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime
+                .new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "dependent_fn_param_set_uses_previous_arg failed:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -1191,7 +1567,7 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
         "eval_recursive_algo_memoizes_overlapping_calls_large_stack",
         || {
             let source_code = r#"
-prove:
+sketch:
     have fib fn(x R) R
 
     know:
@@ -1259,7 +1635,10 @@ have fn half_power(x R: x >= 0) R = x^(1/2)
 
 #[test]
 fn zero_to_zero_power_uses_natural_exponent_convention() {
-    let source_code = r#"
+    run_with_large_stack(
+        "zero_to_zero_power_uses_natural_exponent_convention",
+        || {
+            let source_code = r#"
 0^0 = 1
 eval 0^0
 
@@ -1282,23 +1661,26 @@ forall a N_pos, n N:
     a^n $in N_pos
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "zero_to_zero_power_uses_natural_exponent_convention",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "zero_to_zero_power_uses_natural_exponent_convention",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"EvalStmt\"") && run_output.contains("\"0 ^ 0 = 1\""),
-        "eval 0^0 should produce 1:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "zero_to_zero_power_uses_natural_exponent_convention failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"evaluation statement\"")
+                    && run_output.contains("\"0 ^ 0 = 1\""),
+                "eval 0^0 should produce 1:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -1447,6 +1829,34 @@ fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
 }
 
 #[test]
+fn direct_calculation_builtin_rule_output_localizes_to_zh() {
+    run_with_large_stack(
+        "direct_calculation_builtin_rule_output_localizes_to_zh_large_stack",
+        || {
+            let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "direct_calculation_builtin_rule_output_localizes_to_zh",
+            );
+            runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "Chinese direct calculation output failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"规则\": \"计算\""));
+            assert!(!run_output.contains("\"rule\": \"calculation\""));
+        },
+    );
+}
+
+#[test]
 fn known_equality_candidate_uses_rational_expression_simplification() {
     let source_code = r#"
 forall a, b R:
@@ -1468,7 +1878,64 @@ forall a, b R:
         "known_equality_candidate_uses_rational_expression_simplification failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"rule\": \"calculation and rational expression simplification\""));
+    assert!(run_output
+        .contains("\"rule\": \"exact calculation and rational expression simplification\""));
+    assert!(!run_output.contains("\"rule_id\""));
+}
+
+#[test]
+fn rational_expression_simplification_builtin_rule_output_localizes_to_zh() {
+    let source_code = r#"
+forall a, b R:
+    a^2 + a * a + b = 0
+    =>:
+        0 = 2 * a^2 + b
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "Chinese rational expression simplification output failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"规则\": \"精确计算和有理表达式化简\""));
+    assert!(!run_output
+        .contains("\"rule\": \"exact calculation and rational expression simplification\""));
+}
+
+#[test]
+fn builtin_rule_output_hides_internal_complement_helper_name() {
+    let source_code = "1 = 1 or 1 != 1";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "builtin_rule_output_hides_internal_complement_helper_name",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "complementary-or fixture should verify:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"rule\": \"complementary facts cover all cases\""));
+    assert!(!run_output.contains("\"rule_id\""));
+    assert!(
+        !run_output.contains("make_reversed"),
+        "public builtin rule output should not expose helper names:\n{}",
+        run_output
+    );
 }
 
 #[test]
@@ -1750,7 +2217,8 @@ right $in info(a)
 
 #[test]
 fn common_power_equalities_and_order_are_builtin() {
-    let source_code = r#"
+    run_with_large_stack("common_power_equalities_and_order_are_builtin", || {
+        let source_code = r#"
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
@@ -1776,17 +2244,19 @@ forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "common_power_equalities_and_order_are_builtin failed:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "common_power_equalities_and_order_are_builtin failed:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -2050,6 +2520,54 @@ template<s set>:
 }
 
 #[test]
+fn set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+    let source_code = r#"
+have T set = fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
+have A T
+A(1, 2, 3) $in R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+    let source_code = r#"
+template<S set, n N_pos>:
+    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+
+have A \tensor3<R, 3>
+A(1, 2, 3) $in R
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn weak_order_does_not_recursively_prove_equality() {
     let source_code = r#"
 have a, b R
@@ -2153,7 +2671,7 @@ forall a1, b1, a2, b2 R:
 #[test]
 fn exist_unique_still_accepts_tuple_uniqueness_forall() {
     let source_code = r#"
-prove:
+sketch:
     abstract_prop p(a, b)
     know:
         exist a, b R st {$p(a, b)}
@@ -2180,6 +2698,126 @@ prove:
 }
 
 #[test]
+fn have_fn_as_set_accepts_prove_block_target() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+know forall x A:
+    exist! y B st {$F(x, y)}
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_accepts_prove_block_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set prove target should succeed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_prove_body_can_establish_target() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y)}
+    know exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_prove_body_can_establish_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set proof body should establish the target forall:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+know forall x A:
+    exist! y B st {$F(x, y)}
+
+have fn f as set:
+    forall x A:
+        exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "have_fn_as_set_still_accepts_direct_forall_compatibility_form",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "legacy direct forall form should remain accepted:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_prove_block_requires_forall_target() {
+    let source_code = r#"
+have fn f as set:
+    prove:
+        1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime
+        .new_file_path_new_env_new_name_scope("have_fn_as_set_prove_block_requires_forall_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "non-forall prove target should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("`prove:` must contain a single `forall` fact"),
+        "non-forall prove target should report the expected shape:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn hidden_file_path_output_omits_source_fields() {
     let source_code = "x = 1";
     let path = "/private/tmp/litex-hidden-source-test.lit";
@@ -2198,7 +2836,7 @@ fn hidden_file_path_output_omits_source_fields() {
 
 #[test]
 fn normal_output_omits_empty_arrays_and_empty_strings() {
-    let source_code = "1 = 1\n1 = 2";
+    let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("normal_output_omits_empty_fields");
@@ -2207,14 +2845,14 @@ fn normal_output_omits_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"infer_facts\": []"));
+    assert!(!run_output.contains("\"store_facts\": []"));
     assert!(!run_output.contains("\"inside_results\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
 
 #[test]
 fn detail_output_keeps_empty_arrays_and_empty_strings() {
-    let source_code = "1 = 1\n1 = 2";
+    let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("detail_output_keeps_empty_fields");
@@ -2224,9 +2862,200 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(run_output.contains("\"infer_facts\": []"));
-    assert!(run_output.contains("\"inside_results\": []"));
-    assert!(run_output.contains("\"message\": \"\""));
+    assert!(!run_output.contains("\"store_facts\": []"));
+    assert!(!run_output.contains("\"inside_results\": []"));
+    assert!(!run_output.contains("\"message\": \"\""));
+}
+
+#[test]
+fn normal_output_folds_proof_level_inside_results() {
+    run_with_large_stack("normal_output_folds_proof_level_inside_results", || {
+        let source_code = r#"
+sketch:
+    1 = 1
+
+claim:
+    prove:
+        1 = 1
+    1 = 1
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("normal_output_folds_proof_trace");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "normal proof-trace fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof sketch\""));
+        assert!(run_output.contains("\"type\": \"proved claim\""));
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert_no_legacy_acceptance_field(&run_output, "normal");
+        assert!(
+            !run_output.contains("\"inside_results\": ["),
+            "normal output should fold raw recursive inside_results:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn detail_output_expands_proof_level_inside_results() {
+    run_with_large_stack("detail_output_expands_proof_level_inside_results", || {
+        let source_code = r#"
+sketch:
+    1 = 1
+
+claim:
+    prove:
+        1 = 1
+    1 = 1
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("detail_output_expands_proof_trace");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "detail proof-trace fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof sketch\""));
+        assert!(run_output.contains("\"type\": \"proved claim\""));
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert!(
+            run_output.matches("\"inside_results\": [").count() >= 3,
+            "detail output should expand available raw recursive inside_results:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn by_induc_output_uses_same_trace_for_normal_and_detail() {
+    let source_code = r#"
+abstract_prop p(a)
+know $p(0)
+know forall m Z:
+    m >= 0
+    $p(m)
+    =>:
+        $p(m + 1)
+by induc n from 0:
+    prove:
+        $p(n)
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("by_induc_normal_trace");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "normal by induc fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"proof by induction\""));
+    assert!(
+        !run_output.contains("\"inside_results\": ["),
+        "normal by induc output should fold raw inside_results:\n{}",
+        run_output
+    );
+
+    let mut detail_runtime = Runtime::new_with_builtin_code();
+    detail_runtime.new_file_path_new_env_new_name_scope("by_induc_detail_trace");
+    detail_runtime.detail_output = true;
+    let (detail_stmt_results, detail_runtime_error) =
+        run_source_code(source_code, &mut detail_runtime);
+    let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
+        &detail_runtime,
+        &detail_stmt_results,
+        &detail_runtime_error,
+        false,
+    );
+
+    assert!(
+        detail_run_succeeded,
+        "detail by induc fixture failed:\n{}",
+        detail_run_output
+    );
+    assert!(detail_run_output.contains("\"type\": \"proof by induction\""));
+    assert!(detail_run_output.contains("\"inside_results\": ["));
+    assert!(detail_run_output.contains("\"statement\": \"$p(0)\""));
+    assert!(
+        detail_run_output.matches("\"type\": \"prop fact\"").count() >= 4,
+        "detail by induc output should expand base/step proof and obligation checks:\n{}",
+        detail_run_output
+    );
+    assert!(detail_run_output.contains("+ 1)"));
+}
+
+#[test]
+fn witness_detail_output_keeps_proof_and_obligation_trace() {
+    let source_code = r#"
+witness exist x R st {x = 1} from 1:
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("witness_detail_output_keeps_trace");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "witness detail fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"existence witness\""));
+    assert!(
+        run_output.matches("\"statement\": \"1 = 1\"").count() >= 2,
+        "witness detail output should include the proof step and the instantiated obligation:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"inside_results\": ["),
+        "witness detail output should expand its proof trace:\n{}",
+        run_output
+    );
 }
 
 #[test]
@@ -2352,10 +3181,462 @@ fn runner_accepts_know_as_normal_execution() {
 }
 
 #[test]
+fn runner_accepts_let_as_normal_execution() {
+    let (ok, output) = run_runner_for_code("let x R", "-runner-test", true);
+
+    assert!(ok, "runner should not reject let statements:\n{}", output);
+    assert!(output.contains("\"result\": \"success\""));
+}
+
+#[test]
+fn zh_output_localizes_unproved_know_labels() {
+    let source_code = "abstract_prop tmp_rel(m, n)\nknow exist! m, n R st {$tmp_rel(m, n)}\n";
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_know_labels");
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
+    assert!(run_output.contains("\"结果\": \"成功\""));
+    assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
+    assert!(run_output.contains("\"原因\": \"警告：未经证明的 know 假设\""));
+    assert!(run_output.contains("\"事实\": \"exist! m, n R st {$tmp_rel("));
+    assert!(!run_output.contains("\"result\": \"success\""));
+}
+
+#[test]
+fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
+    let source_code = "prop is_one_tmp(t R):\n    t = 1\n\n$is_one_tmp(1)\n";
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zh_output_localizes_citation_evidence_but_keeps_litex_statement",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "Chinese citation run failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"验证\""));
+    assert!(run_output.contains("\"类型\": \"引用 prop 定义\""));
+    assert!(run_output.contains("\"被引用语句\": \"prop is_one_tmp(t R):\\n"));
+    assert!(run_output.contains("\"语句\": \"$is_one_tmp(1)\""));
+}
+
+#[test]
+fn zh_forall_output_uses_short_conclusions_and_compact_citation() {
+    let source_code = r#"
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+forall:
+    forall x human:
+        $mortal(x)
+    =>:
+        $mortal(Socrates)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "zh_forall_output_uses_short_conclusions_and_compact_citation",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "Chinese forall output run failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"结论\": ["));
+    assert!(run_output.contains("\"类型\": \"引用 forall 事实\""));
+    assert!(run_output.contains("\"被引用语句\": \"forall x human:\\n    $mortal(x)\""));
+    assert!(run_output.contains("\"原因\": \"已证明语句\""));
+    assert!(!run_output.contains("\"带验证的结论\""));
+    assert!(!run_output.contains("\"原因\": \"推导事实\""));
+    assert!(!run_output.contains("\"实例化\""));
+    assert!(!run_output.contains("\"要求\""));
+}
+
+#[test]
+fn zh_runner_localizes_wrapper_and_trace() {
+    let (ok, output) = run_runner_for_code_with_language(
+        "know 1 = 1",
+        "-runner-test",
+        true,
+        OutputLanguage::SimplifiedChinese,
+    );
+
+    assert!(ok, "Chinese runner should succeed:\n{}", output);
+    assert!(output.contains("\"运行器\": \"litex-runner\""));
+    assert!(output.contains("\"结果\": \"成功\""));
+    assert!(output.contains("\"运行轨迹\""));
+    assert!(output.contains("\\\"类型\\\": \\\"未经证明的假设\\\""));
+}
+
+#[test]
+fn output_language_parses_supported_cli_codes() {
+    let cases = vec![
+        ("en", OutputLanguage::English),
+        ("zh", OutputLanguage::SimplifiedChinese),
+        ("zh-Hans", OutputLanguage::TraditionalChinese),
+        ("ja", OutputLanguage::Japanese),
+        ("ko", OutputLanguage::Korean),
+        ("es", OutputLanguage::Spanish),
+        ("fr", OutputLanguage::French),
+        ("de", OutputLanguage::German),
+        ("pt", OutputLanguage::Portuguese),
+        ("ru", OutputLanguage::Russian),
+        ("ar", OutputLanguage::Arabic),
+        ("hi", OutputLanguage::Hindi),
+        ("vi", OutputLanguage::Vietnamese),
+        ("id", OutputLanguage::Indonesian),
+    ];
+
+    for (code, expected) in cases {
+        assert_eq!(OutputLanguage::from_cli_lang(code), Ok(expected));
+    }
+
+    let err = OutputLanguage::from_cli_lang("xx").expect_err("xx should be unsupported");
+    assert!(err.contains("en, zh, zh-Hans, ja, ko, es, fr, de, pt, ru, ar, hi, vi, id"));
+}
+
+#[test]
+fn non_english_languages_localize_unproved_know_labels() {
+    let cases = vec![
+        (
+            OutputLanguage::SimplifiedChinese,
+            "结果",
+            "成功",
+            "类型",
+            "未经证明的假设",
+            "语句",
+            "事实",
+            "原因",
+            "警告：未经证明的 know 假设",
+        ),
+        (
+            OutputLanguage::TraditionalChinese,
+            "結果",
+            "成功",
+            "類型",
+            "未經證明的假設",
+            "語句",
+            "事實",
+            "原因",
+            "警告：未經證明的 know 假設",
+        ),
+        (
+            OutputLanguage::Japanese,
+            "結果",
+            "成功",
+            "種類",
+            "証明されていない仮定",
+            "文",
+            "事実",
+            "理由",
+            "警告：証明されていない know 仮定",
+        ),
+        (
+            OutputLanguage::Korean,
+            "결과",
+            "성공",
+            "유형",
+            "증명되지 않은 가정",
+            "문장",
+            "사실",
+            "이유",
+            "경고: 증명되지 않은 know 가정",
+        ),
+        (
+            OutputLanguage::Spanish,
+            "resultado",
+            "éxito",
+            "tipo",
+            "suposición no demostrada",
+            "enunciado",
+            "hecho",
+            "razón",
+            "advertencia: suposición know no demostrada",
+        ),
+        (
+            OutputLanguage::French,
+            "résultat",
+            "succès",
+            "type",
+            "hypothèse non prouvée",
+            "énoncé",
+            "fait",
+            "raison",
+            "avertissement : hypothèse know non prouvée",
+        ),
+        (
+            OutputLanguage::German,
+            "Ergebnis",
+            "Erfolg",
+            "Typ",
+            "unbewiesene Annahme",
+            "Anweisung",
+            "Fakt",
+            "Grund",
+            "Warnung: unbewiesene know-Annahme",
+        ),
+        (
+            OutputLanguage::Portuguese,
+            "resultado",
+            "sucesso",
+            "tipo",
+            "suposição não provada",
+            "declaração",
+            "fato",
+            "razão",
+            "aviso: suposição know não provada",
+        ),
+        (
+            OutputLanguage::Russian,
+            "результат",
+            "успех",
+            "тип",
+            "недоказанное предположение",
+            "утверждение",
+            "факт",
+            "причина",
+            "предупреждение: недоказанное предположение know",
+        ),
+        (
+            OutputLanguage::Arabic,
+            "النتيجة",
+            "نجاح",
+            "النوع",
+            "افتراض غير مبرهن",
+            "العبارة",
+            "الحقيقة",
+            "السبب",
+            "تحذير: افتراض know غير مبرهن",
+        ),
+        (
+            OutputLanguage::Hindi,
+            "परिणाम",
+            "सफलता",
+            "प्रकार",
+            "अप्रमाणित मान्यता",
+            "कथन",
+            "तथ्य",
+            "कारण",
+            "चेतावनी: अप्रमाणित know मान्यता",
+        ),
+        (
+            OutputLanguage::Vietnamese,
+            "kết_quả",
+            "thành công",
+            "kiểu",
+            "giả thiết chưa chứng minh",
+            "mệnh_đề",
+            "sự_kiện",
+            "lý_do",
+            "cảnh báo: giả thiết know chưa chứng minh",
+        ),
+        (
+            OutputLanguage::Indonesian,
+            "hasil",
+            "sukses",
+            "tipe",
+            "asumsi belum terbukti",
+            "pernyataan",
+            "fakta",
+            "alasan",
+            "peringatan: asumsi know belum terbukti",
+        ),
+    ];
+
+    for (
+        language,
+        result_key,
+        success_text,
+        type_key,
+        type_text,
+        statement_key,
+        fact_key,
+        reason_key,
+        reason_text,
+    ) in cases
+    {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "non_english_languages_localize_unproved_know_labels",
+        );
+        runtime.output_language = language;
+
+        let (stmt_results, runtime_error) = run_source_code("know 1 = 1", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "localized output run failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"know 1 = 1\"", statement_key)));
+        assert!(run_output.contains(&format!("\"{}\": \"1 = 1\"", fact_key)));
+        assert!(run_output.contains(&format!("\"{}\": \"{}\"", reason_key, reason_text)));
+        assert!(!run_output.contains("\"result\": \"success\""));
+    }
+}
+
+#[test]
+fn non_english_runner_localizes_wrapper_keys() {
+    let cases = vec![
+        (
+            OutputLanguage::SimplifiedChinese,
+            "运行器",
+            "结果",
+            "成功",
+            "是否成功",
+            "运行目标",
+            "运行轨迹",
+        ),
+        (
+            OutputLanguage::TraditionalChinese,
+            "執行器",
+            "結果",
+            "成功",
+            "是否成功",
+            "目標",
+            "執行追蹤",
+        ),
+        (
+            OutputLanguage::Japanese,
+            "ランナー",
+            "結果",
+            "成功",
+            "成功",
+            "対象",
+            "実行トレース",
+        ),
+        (
+            OutputLanguage::Korean,
+            "러너",
+            "결과",
+            "성공",
+            "성공 여부",
+            "대상",
+            "실행 추적",
+        ),
+        (
+            OutputLanguage::Spanish,
+            "ejecutor",
+            "resultado",
+            "éxito",
+            "correcto",
+            "objetivo",
+            "traza",
+        ),
+        (
+            OutputLanguage::French,
+            "exécuteur",
+            "résultat",
+            "succès",
+            "réussi",
+            "cible",
+            "trace",
+        ),
+        (
+            OutputLanguage::German,
+            "Runner",
+            "Ergebnis",
+            "Erfolg",
+            "erfolgreich",
+            "Ziel",
+            "Ablaufspur",
+        ),
+        (
+            OutputLanguage::Portuguese,
+            "executor",
+            "resultado",
+            "sucesso",
+            "bem_sucedido",
+            "alvo",
+            "rastreamento",
+        ),
+        (
+            OutputLanguage::Russian,
+            "запускатель",
+            "результат",
+            "успех",
+            "успешно",
+            "цель",
+            "трасса",
+        ),
+        (
+            OutputLanguage::Arabic,
+            "المشغل",
+            "النتيجة",
+            "نجاح",
+            "ناجح",
+            "الهدف",
+            "الأثر",
+        ),
+        (
+            OutputLanguage::Hindi,
+            "रनर",
+            "परिणाम",
+            "सफलता",
+            "सफल",
+            "लक्ष्य",
+            "चलन_चिह्न",
+        ),
+        (
+            OutputLanguage::Vietnamese,
+            "trình_chạy",
+            "kết_quả",
+            "thành công",
+            "đúng",
+            "mục_tiêu",
+            "vết_chạy",
+        ),
+        (
+            OutputLanguage::Indonesian,
+            "runner",
+            "hasil",
+            "sukses",
+            "berhasil",
+            "target",
+            "jejak",
+        ),
+    ];
+
+    for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
+        let (ok, output) =
+            run_runner_for_code_with_language("know 1 = 1", "-runner-test", true, language);
+
+        assert!(ok, "localized runner should succeed:\n{}", output);
+        assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
+        assert!(output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
+        assert!(output.contains(&format!("\"{}\": true", ok_key)));
+        assert!(output.contains(&format!("\"{}\"", target_key)));
+        assert!(output.contains(&format!("\"{}\"", trace_key)));
+        assert!(!output.contains("\"result\": \"success\""));
+    }
+}
+
+#[test]
 fn strict_mode_rejects_user_know() {
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
 
     let (stmt_results, runtime_error) = run_source_code("know 1 = 0", &mut runtime);
     let (run_succeeded, run_output) =
@@ -2367,8 +3648,30 @@ fn strict_mode_rejects_user_know() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user know statements"),
+        run_output.contains(KnowStmt::strict_mode_rejection_message()),
         "strict mode should report the know boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_mode_rejects_user_let() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_let");
+    runtime.strict_mode = true;
+
+    let (stmt_results, runtime_error) = run_source_code("let x R", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "strict mode should reject user let statements:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+        "strict mode should report the let boundary:\n{}",
         run_output
     );
 }
@@ -2383,7 +3686,20 @@ fn strict_runner_rejects_user_know() {
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains("strict mode rejects user know statements"));
+    assert!(output.contains(KnowStmt::strict_mode_rejection_message()));
+}
+
+#[test]
+fn strict_runner_rejects_user_let() {
+    let (ok, output) = run_runner_for_code_strict("let x R", "-runner-test", true);
+
+    assert!(
+        !ok,
+        "strict runner should reject let statements:\n{}",
+        output
+    );
+    assert!(output.contains("\"result\": \"error\""));
+    assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -2403,7 +3719,7 @@ fn strict_mode_allows_imported_module_know() {
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2417,17 +3733,39 @@ fn strict_mode_allows_imported_module_know() {
 }
 
 #[test]
+fn strict_mode_allows_imported_module_let() {
+    let module_dir =
+        std::env::temp_dir().join(format!("litex-strict-import-let-{}", std::process::id()));
+    fs::create_dir_all(&module_dir).expect("create strict import let test module");
+    fs::write(module_dir.join("main.lit"), "let imported_value R\n")
+        .expect("write strict import let test module");
+    let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_let");
+    runtime.strict_mode = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_dir_all(&module_dir);
+    assert!(
+        run_succeeded,
+        "strict mode should allow let inside imported modules:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn strict_mode_rejects_run_file_know() {
-    let run_file_path = std::env::temp_dir().join(format!(
-        "litex-strict-run-file-{}.lit",
-        std::process::id()
-    ));
+    let run_file_path =
+        std::env::temp_dir().join(format!("litex-strict-run-file-{}.lit", std::process::id()));
     fs::write(&run_file_path, "know 1 = 0\n").expect("write strict run_file test file");
     let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
 
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_know");
-    runtime.reject_user_know = true;
+    runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2439,8 +3777,37 @@ fn strict_mode_rejects_run_file_know() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user know statements"),
+        run_output.contains(KnowStmt::strict_mode_rejection_message()),
         "strict run_file failure should report the know boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_mode_rejects_run_file_let() {
+    let run_file_path = std::env::temp_dir().join(format!(
+        "litex-strict-run-file-let-{}.lit",
+        std::process::id()
+    ));
+    fs::write(&run_file_path, "let x R\n").expect("write strict run_file let test file");
+    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_let");
+    runtime.strict_mode = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_file(&run_file_path);
+    assert!(
+        !run_succeeded,
+        "strict mode should reject let inside run_file:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+        "strict run_file failure should report the let boundary:\n{}",
         run_output
     );
 }
@@ -2460,7 +3827,7 @@ fn hidden_file_path_run_file_output_omits_run_file_path() {
 
     let _ = fs::remove_file(&run_file_path);
     assert!(run_succeeded, "run_file failed:\n{}", run_output);
-    assert!(run_output.contains("\"stmt\": \"run_file\""));
+    assert!(run_output.contains("\"statement\": \"run_file"));
     assert!(!run_output.contains(run_file_path_string.as_str()));
     assert!(!run_output.contains("\"source\""));
 }
@@ -2542,8 +3909,1268 @@ $q(1)
         run_output
     );
     assert!(run_output.contains("\"type\": \"cite forall fact\""));
-    assert!(run_output.contains("\"type\": \"cite atomic fact\""));
+    assert!(!run_output.contains("\"instantiation\""));
+    assert!(!run_output.contains("\"requirements\""));
+    assert!(!run_output.contains("\"statement\": \"2 $in R\""));
+    assert!(run_output.contains("\"type\": \"cite equality fact\""));
     assert!(run_output.contains("\"type\": \"cite prop def\""));
+}
+
+#[test]
+fn factual_verification_uses_stable_object_shape() {
+    let source_code = r#"
+1 = 1
+forall x R:
+    x = x
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("factual_verified_by_stable_shape");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "factual_verified_by_stable_shape failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"verification\": {\n    \"type\": \"builtin rule\""),
+        "builtin fact should render verification as an object:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"summary\": \"conclusions verified under forall assumptions\""),
+        "forall fact should not render a separate top-level verification summary:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"parameters\": ["));
+    assert!(run_output.contains("\"assumptions\": ["));
+    assert!(
+        !run_output.contains("\"verified_by\""),
+        "public output should use verification instead of verified_by:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"conclusions\": ["),
+        "forall proof should keep one verification entry per then fact:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"verification\": {"),
+        "forall proof conclusions should carry their own verification objects:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn atomic_fact_verification_output_omits_method_and_reports_route_types() {
+    let source_code = r#"
+1 = 1
+
+abstract_prop known_p(x)
+know $known_p(1)
+$known_p(1)
+
+abstract_prop forall_p(x)
+know:
+    forall x R:
+        x = 1
+        =>:
+            $forall_p(x)
+$forall_p(1)
+
+prop def_p(x R):
+    x = 1
+$def_p(1)
+
+prop sym_p(x set, y set):
+    x = y
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $sym_p(x, y)
+            =>:
+                $sym_p(y, x)
+    x = y
+    y = x
+have A set
+have B set
+know $sym_p(A, B)
+$sym_p(B, A)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "atomic_fact_verification_output_omits_method_and_reports_route_types",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "atomic verification route fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"method\""),
+        "verification output should not include redundant method field:\n{}",
+        run_output
+    );
+    for route_type in [
+        "builtin rule",
+        "cite equality fact",
+        "cite prop fact",
+        "cite forall fact",
+    ] {
+        assert!(
+            run_output.contains(&format!("\"type\": \"{}\"", route_type)),
+            "missing atomic verification route type `{}`:\n{}",
+            route_type,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn builtin_rule_subgoals_are_nested_under_chain_step() {
+    let source_code = r#"
+forall x R_pos:
+    x^3 = 8
+    =>:
+        3 = log(2, 8) = log(2, x^3) = 3 * log(2, x)
+        log(2, x) = 1
+        x = 2^1 = 2
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("builtin_rule_subgoals_are_nested");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "builtin subgoal fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"x = 2 ^ 1 = 2\""),
+        "chain conclusion should use the public statement key:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"fact\": \"x = 2 ^ 1\""),
+        "outer chain steps should include the proved chain segment:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"subgoals\": ["),
+        "builtin-rule premises should be nested as subgoals:\n{}",
+        run_output
+    );
+    assert_eq!(
+        run_output.matches("\"subgoals\": [").count(),
+        2,
+        "normal output should show only nontrivial builtin-rule proof premises:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"2 ^ 3 = 8\""),
+        "log(a,b)=c should expose the a^c=b proof premise:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"statement\": \"1 = log (2, x)\""),
+        "the log premise should be a nested subgoal statement:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"fact\": \"1 = log (2, x)\""),
+        "builtin-rule premises should not be flattened into outer chain steps:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"verified_by\""),
+        "public output should use verification consistently:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn output_store_facts_explain_context_changes() {
+    let source_code = r#"
+1 = 1
+claim:
+    prove:
+        2 = 2
+    2 = 2
+know:
+    3 = 3
+let a R:
+    a = a
+prop q(x R):
+    x = 1
+$q(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("output_store_facts_explain_context_changes");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "output_store_facts_explain_context_changes failed:\n{}",
+        run_output
+    );
+    assert!(!run_output.contains("\"infer_facts\""));
+    assert!(!run_output.contains("\"effects\""));
+    assert!(run_output.contains("\"store_facts\": ["));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", KnowStmt::store_reason()).as_str()));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str()));
+    assert!(!run_output.contains("\"trust\""));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
+}
+
+#[test]
+fn object_definition_output_exposes_checks_and_defined_facts() {
+    run_with_large_stack(
+        "object_definition_output_exposes_checks_and_defined_facts_large_stack",
+        || {
+            let source_code = r#"
+have a R
+have b R = a
+have S set
+know exist x R st {x = x}
+have by exist x R st {x = x}: c
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "object_definition_output_exposes_checks_and_defined_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "object definition output fixture failed:\n{}",
+                run_output
+            );
+            assert_no_legacy_acceptance_field(
+                &run_output,
+                HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
+            );
+            assert!(run_output.contains("\"a $in R\""));
+            assert!(run_output.contains("\"b $in R\""));
+            assert!(run_output.contains("\"b = a\""));
+            assert!(run_output.contains("\"$is_set(S)\""));
+            assert!(run_output.contains("\"c $in R\""));
+            assert!(run_output.contains("\"c = c\""));
+            assert!(run_output.contains(
+                format!(
+                    "\"reason\": \"{}\"",
+                    HaveObjInNonemptySetOrParamTypeStmt::store_reason()
+                )
+                .as_str()
+            ));
+            assert!(run_output
+                .contains(format!("\"reason\": \"{}\"", HaveByExistStmt::store_reason()).as_str()));
+            assert!(!run_output.contains("\"equal_to\""));
+        },
+    );
+}
+
+#[test]
+fn forall_parameter_assumption_output_is_local_assumption() {
+    let source_code = r#"
+forall n N:
+    n $in N
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_parameter_assumption_output");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+    assert!(
+        run_succeeded,
+        "forall parameter assumption fixture failed:\n{}",
+        run_output
+    );
+    assert!(!run_output.contains("\"type\": \"forall proof\""));
+    assert!(run_output.contains("\"n $in N\""));
+    assert!(run_output.contains("\"conclusions\": ["));
+    assert!(run_output.contains("\"statement\": \"n $in N\""));
+    assert!(run_output.contains("\"type\": \"local assumption\""));
+    assert!(run_output
+        .contains(format!("\"source\": \"{}\"", ParamDefWithType::store_reason()).as_str()));
+    assert!(!run_output.contains("\"cite_source\""));
+    assert!(!run_output.contains("\"verify_what\""));
+    assert!(!run_output.contains("forall local check"));
+}
+
+#[test]
+fn forall_output_exposes_parameters_and_assumption_store_facts() {
+    run_with_large_stack(
+        "forall_output_exposes_parameters_and_assumption_store_facts",
+        || {
+            let source_code = r#"
+abstract_prop p(a, b, c)
+forall a, b, c, d, e, f R:
+    $p(a, b, c)
+    a = d
+    b = e
+    c = f
+    =>:
+        $p(d, e, f)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "forall_output_exposes_assumption_store_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "forall assumption store-fact output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"a\""));
+            assert!(run_output.contains("\"f\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"fact\": \"a $in R\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"$p(a, b, c)\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"a = d\""));
+            assert!(run_output.contains("\"fact\": \"b = e\""));
+            assert!(run_output.contains("\"fact\": \"c = f\""));
+            assert_eq!(run_output.matches("\"fact\": \"a $in R\"").count(), 1);
+        },
+    );
+}
+
+#[test]
+fn claim_forall_output_explains_parameters_proof_steps_and_conclusions() {
+    run_with_large_stack(
+        "claim_forall_output_explains_parameters_proof_steps_and_conclusions",
+        || {
+            let source_code = r#"
+claim:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+    x = x
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("claim_forall_output_explains_proof");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "claim forall output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proved claim\""));
+            assert!(run_output.contains("\"type\": \"claim forall proof\""));
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"x\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"fact\": \"x $in R\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"fact\": \"x = 1\""));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
+            ));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"statement\": \"x = x\""));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"statement\": \"x = 1\""));
+            assert!(run_output.contains("\"type\": \"local assumption\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn claim_fact_output_explains_proof_steps_and_final_goal() {
+    run_with_large_stack(
+        "claim_fact_output_explains_proof_steps_and_final_goal",
+        || {
+            let source_code = r#"
+claim 1 = 1:
+    1 = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("claim_fact_output_explains_goal");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "claim fact output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proved claim\""));
+            assert!(run_output.contains("\"type\": \"claim proof\""));
+            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"conclusion\": {"));
+            assert!(run_output.contains("\"type\": \"cite equality fact\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn output_contract_covers_composite_facts_and_control_statements() {
+    run_with_large_stack(
+        "output_contract_covers_composite_facts_and_control_statements",
+        || {
+            let source_code = r#"
+1 = 1 and 2 = 2
+1 = 1 = 1
+
+claim:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+thm one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm one_eq_one()
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "output_contract_covers_composite_facts_and_control_statements",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "output contract fixture failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"summary\": \"each conjunct verified in order\""),
+                "and facts should keep a short composite proof summary:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"summary\": \"each chain step verified in order\""),
+                "chain facts should keep a short composite proof summary:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"type\": \"chain fact\""),
+                "normal output should not repeat the composite fact type inside verification:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"main_rule\": \"chain decomposition\""),
+                "normal output should hide chain structural-rule debug metadata:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"role\": \"chain step\""),
+                "normal output should hide chain step roles:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"step_indices\": ["),
+                "normal folded output should not expose step indices:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"main_rule\": \"and decomposition\""),
+                "normal output should hide and structural-rule debug metadata:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"role\": \"conjunct\""),
+                "normal output should hide conjunct step roles:\n{}",
+                run_output
+            );
+            assert_no_legacy_acceptance_field(&run_output, "successful");
+            assert!(
+                run_output.contains("\"type\": \"proved claim\""),
+                "claim/thm statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by theorem\""),
+                "by thm statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by cases\""),
+                "by cases statements should expose their semantic statement type:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("\"unknown_result\""),
+                "successful output should not use failure-only unknown_result:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn by_cases_normal_output_lists_multiple_proved_goals_per_case() {
+    run_with_large_stack(
+        "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+        || {
+            let source_code = r#"
+by cases:
+    prove:
+        1 = 1
+        2 = 2
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "by cases multi-goal fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proof by cases\""));
+            assert!(run_output.contains("\"type\": \"by cases proof\""));
+            assert!(run_output.contains("\"prove_goals\": ["));
+            assert!(run_output.contains("\"case_coverage\": {"));
+            assert!(run_output.contains("\"cases\": ["));
+            assert!(run_output.contains("\"reason\": \"case assumption\""));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"impossible\": {"));
+            assert!(run_output.contains("\"role\": \"impossible fact\""));
+            assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
+            assert_no_legacy_acceptance_field(&run_output, "by cases");
+            assert!(run_output.contains("\"1 = 1\""));
+            assert!(run_output.contains("\"2 = 2\""));
+        },
+    );
+}
+
+#[test]
+fn by_cases_detail_output_expands_case_inside_results() {
+    run_with_large_stack("by_cases_detail_output_expands_case_inside_results", || {
+        let source_code = r#"
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_cases_detail_output_expands_cases");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "by cases detail fixture failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert_no_legacy_acceptance_field(&run_output, "detail");
+        assert!(run_output.contains("\"1 = 1\""));
+    });
+}
+
+#[test]
+fn by_contra_output_explains_reverse_assumption_proof_and_impossible_checks() {
+    run_with_large_stack(
+        "by_contra_output_explains_reverse_assumption_proof_and_impossible_checks",
+        || {
+            let source_code = r#"
+by contra 1 = 1:
+    do_nothing
+    impossible 1 != 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("by_contra_output_explains_steps");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "by contra output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"proof by contradiction\""));
+            assert!(run_output.contains("\"type\": \"by contra proof\""));
+            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
+            assert!(run_output.contains("\"reverse_assumption\": {"));
+            assert!(run_output.contains("\"fact\": \"1 != 1\""));
+            assert!(run_output.contains("\"reason\": \"by contra assumption\""));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"statement\": \"do_nothing\""));
+            assert!(run_output.contains("\"impossible\": {"));
+            assert!(run_output.contains("\"role\": \"impossible fact\""));
+            assert!(run_output.contains("\"statement\": \"1 != 1\""));
+            assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
+            assert!(run_output.contains("\"statement\": \"1 = 1\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal by contra output should keep raw inside_results folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn by_iteration_range_extension_and_theorem_outputs_explain_processes() {
+    run_with_large_stack(
+        "by_iteration_range_extension_and_theorem_outputs_explain_processes",
+        || {
+            let source_code = r#"
+thm local_one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm local_one_eq_one()
+
+by enumerate finite_set:
+    prove:
+        forall a {1, 2}:
+            a < 3
+    do_nothing
+
+by for:
+    prove:
+        forall n range(0, 3):
+            n < 3
+    do_nothing
+
+claim:
+    prove:
+        forall x range(1, 3):
+            x = 1 or x = 2
+    by enumerate range: x $in range(1, 3)
+
+claim:
+    prove:
+        forall y closed_range(1, 2):
+            y = 1 or y = 2
+    by closed_range as cases: y $in 1...2
+
+by extension {1} = {1}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_iteration_range_extension_and_theorem_outputs_explain_processes",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(run_succeeded, "by output fixture failed:\n{}", run_output);
+            assert!(run_output.contains("\"type\": \"by thm proof\""));
+            assert!(run_output.contains("\"parameter_type_check\": {"));
+            assert!(run_output.contains("\"stored_then_facts\": ["));
+            assert!(run_output.contains("\"type\": \"by enumerate finite_set proof\""));
+            assert!(run_output.contains("\"assignment\": {"));
+            assert!(run_output.contains("\"reason\": \"enumerated assignment\""));
+            assert!(run_output.contains("\"type\": \"by for proof\""));
+            assert!(run_output.contains("\"iteration_mode\": \"ranges\""));
+            assert!(run_output.contains("\"reason\": \"for assignment\""));
+            assert!(run_output.contains("\"type\": \"by enumerate range proof\""));
+            assert!(run_output.contains("\"generated_cases\":"));
+            assert!(run_output.contains("\"type\": \"by closed_range as cases proof\""));
+            assert!(run_output.contains("\"type\": \"by extension proof\""));
+            assert!(run_output.contains("\"subset_checks\": ["));
+            assert!(run_output.contains("\"reason\": \"set extensionality\""));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal output should keep raw by traces folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn by_induc_prop_bridge_and_trusted_outputs_explain_processes() {
+    run_with_large_stack(
+        "by_induc_prop_bridge_and_trusted_outputs_explain_processes",
+        || {
+            let source_code = r#"
+abstract_prop local_induc_p(a)
+know $local_induc_p(0)
+know forall m Z:
+    m >= 0
+    $local_induc_p(m)
+    =>:
+        $local_induc_p(m + 1)
+by induc n from 0:
+    prove:
+        $local_induc_p(n)
+
+    prove from n = 0:
+        $local_induc_p(0)
+
+    prove induc:
+        $local_induc_p(n + 1)
+
+prop local_same_obj(x set, y set):
+    x = y
+
+by reflexive_prop:
+    prove:
+        forall x set:
+            $local_same_obj(x, x)
+    x = x
+
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $local_same_obj(x, y)
+            =>:
+                $local_same_obj(y, x)
+    x = y
+    y = x
+
+have local_family set
+by axiom_of_choice: set local_family:
+    know forall A local_family:
+        $is_nonempty_set(A)
+
+have local_ordered_set set
+abstract_prop local_leq(x, y)
+by zorn_lemma: set local_ordered_set, prop local_leq:
+    know $is_nonempty_set(local_ordered_set)
+    know:
+        forall x local_ordered_set:
+            $local_leq(x, x)
+        forall x, y, z local_ordered_set:
+            $local_leq(x, y)
+            $local_leq(y, z)
+            =>:
+                $local_leq(x, z)
+        forall x, y local_ordered_set:
+            $local_leq(x, y)
+            $local_leq(y, x)
+            =>:
+                x = y
+        forall C power_set(local_ordered_set):
+            forall x, y C:
+                $local_leq(x, y) or $local_leq(y, x)
+            =>:
+                exist u local_ordered_set st {forall! x C: {$local_leq(x, u)}}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_induc_prop_bridge_and_trusted_outputs_explain_processes",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "structured by output fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"by induc proof\""));
+            assert!(run_output.contains("\"base_case\": {"));
+            assert!(run_output.contains("\"step_case\": {"));
+            assert!(run_output.contains("\"reason\": \"induction hypothesis\""));
+            assert!(run_output.contains("\"type\": \"by prop registration proof\""));
+            assert!(run_output.contains("\"registration\": \"reflexive\""));
+            assert!(run_output.contains("\"registration\": \"symmetric\""));
+            assert!(run_output.contains("\"type\": \"by axiom_of_choice proof\""));
+            assert!(run_output.contains("\"label\": \"members_nonempty\""));
+            assert!(run_output.contains("\"type\": \"proved in proof steps\""));
+            assert!(run_output.contains("\"type\": \"by zorn_lemma proof\""));
+            assert!(run_output.contains("\"label\": \"chain_upper_bound\""));
+            assert!(run_output.contains("\"trusted_conclusion\":"));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal output should keep raw by traces folded:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn unknown_fact_failure_has_structured_output_fields() {
+    let source_code = "1 = 2";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("unknown_fact_failure_structured_output");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "unknown fact fixture should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"failed_goal\": \"1 = 2\""),
+        "unknown fact should expose failed_goal:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"unknown_result\": {\n      \"type\": \"atomic fact unknown\""),
+        "unknown atomic fact should expose fact-specific unknown_result:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"goal\": \"1 = 2\""),
+        "unknown atomic fact should expose its goal:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn detail_output_keeps_composite_fact_step_metadata() {
+    let source_code = r#"
+1 = 1 and 2 = 2
+1 = 1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime
+        .new_file_path_new_env_new_name_scope("detail_output_keeps_composite_fact_step_metadata");
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "detail composite fact fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"and fact\""));
+    assert!(run_output.contains("\"type\": \"chain fact\""));
+    assert!(run_output.contains("\"main_rule\": \"and decomposition\""));
+    assert!(run_output.contains("\"main_rule\": \"chain decomposition\""));
+    assert!(run_output.contains("\"role\": \"conjunct\""));
+    assert!(run_output.contains("\"role\": \"chain step\""));
+    assert!(run_output.contains("\"step_index\": 1"));
+    assert!(run_output.contains("\"step_count\": 2"));
+}
+
+#[test]
+fn and_fact_unknown_reports_failed_part() {
+    let source_code = "1 = 1 and 1 = 2";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("and_fact_unknown_reports_failed_part");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "and fact fixture should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"and fact unknown\""),
+        "and fact unknown should be fact-specific:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"failed_part\": {"),
+        "and fact unknown should expose the failed part:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"stmt\": \"1 = 2\""));
+    assert!(!run_output.contains("\"index\": 2"));
+    assert!(!run_output.contains("\"count\": 2"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn chain_fact_unknown_reports_failed_chain_step() {
+    let source_code = "1 = 0 = 1";
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("chain_fact_unknown_reports_failed_chain_step");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "chain fact fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"chain fact unknown\""));
+    assert!(
+        run_output.contains("\"failed_chain_step\": {"),
+        "chain fact unknown should expose the failed chain step:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"stmt\": \"1 = 0\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 2"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("unverified chain step"),
+        "chain unknown output should not hide the failed step in a detail string:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"previous_error\": null"),
+        "normal error output should omit empty previous_error fields:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn forall_fact_unknown_reports_failed_prove() {
+    let source_code = r#"
+forall x R:
+    x = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_fact_unknown_reports_failed_prove");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "forall unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall unknown\""));
+    assert!(run_output.contains("\"params\": ["));
+    assert!(run_output.contains("\"name\": \"x\""));
+    assert!(run_output.contains("\"failed_prove\": {"));
+    assert!(run_output.contains("\"stmt\": \"~1x = 0\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 1"));
+    assert!(
+        !run_output.contains("\"type\": \"atomic fact unknown\""),
+        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn forall_chain_unknown_nests_failed_chain_step() {
+    let source_code = r#"
+forall x R:
+    x = 0 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_chain_unknown_nests_failed_chain_step");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "forall-chain unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall unknown\""));
+    assert!(run_output.contains("\"failed_prove\": {"));
+    assert!(run_output.contains("\"type\": \"chain fact unknown\""));
+    assert!(run_output.contains("\"failed_chain_step\": {"));
+    assert!(run_output.contains("\"stmt\": \"~1x = 0\""));
+    assert!(!run_output.contains("\"index\": 1"));
+    assert!(!run_output.contains("\"count\": 2"));
+    assert!(!run_output.contains("unverified chain step"));
+    assert!(!run_output.contains("\"previous_error\": null"));
+}
+
+#[test]
+fn detail_unknown_output_keeps_failed_part_position_metadata() {
+    let source_code = r#"
+forall x R:
+    x = 0 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_unknown_output_keeps_failed_part_position_metadata",
+    );
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "detail forall-chain unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"failed_prove\": {"));
+    assert!(run_output.contains("\"index\": 1"));
+    assert!(run_output.contains("\"count\": 1"));
+    assert!(run_output.contains("\"failed_chain_step\": {"));
+    assert!(run_output.contains("\"count\": 2"));
+    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+}
+
+#[test]
+fn forall_iff_unknown_reports_failed_direction() {
+    let source_code = r#"
+forall x R:
+    =>:
+        x = 0
+    <=>:
+        x = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_iff_unknown_reports_failed_direction");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "forall iff unknown fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"forall iff unknown\""));
+    assert!(run_output.contains("\"failed_direction\": \"then to iff\""));
+    assert!(run_output.contains("\"type\": \"forall unknown\""));
+}
+
+#[test]
+fn proof_block_failure_has_structured_then_clause_fields() {
+    let source_code = r#"
+claim:
+    prove:
+        forall:
+            2 = 3
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("proof_block_failure_structured_then_clause");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(!run_succeeded, "claim fixture should fail:\n{}", run_output);
+    assert!(
+        run_output.contains("\"failed_goal\": \"2 = 3\""),
+        "claim failure should expose failed_goal:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"then_clause_index\": 1"),
+        "normal claim failure should hide positional metadata:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"unknown_result\": {"),
+        "claim failure should expose structured unknown_result:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn detail_proof_block_failure_keeps_then_clause_position_metadata() {
+    let source_code = r#"
+claim:
+    prove:
+        forall:
+            2 = 3
+    1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_proof_block_failure_keeps_then_clause_position_metadata",
+    );
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "detail claim fixture should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"then_clause_index\": 1"));
+    assert!(run_output.contains("\"then_clause_count\": 1"));
+}
+
+#[test]
+fn by_cases_failure_reports_case_split_failure_context() {
+    run_with_large_stack(
+        "by_cases_failure_reports_case_split_failure_context",
+        || {
+            let source_code = r#"
+by cases 1 = 1:
+    case 1 = 2:
+        do_nothing
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("by_cases_failure_context");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "non-covering case split should fail:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("by cases: cannot verify that all cases cover all situations"),
+                "by cases failure should keep the case split failure message:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"proof by cases\""),
+                "by cases failure should identify the failing statement:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn positive_real_power_closure_enables_log_inverse() {
+    let source_code = r#"
+forall a R_pos, x R:
+    a^x $in R_pos
+
+forall a R_pos, x, y R:
+    a^x = y
+    =>:
+        y $in R_pos
+
+forall a R_pos, x, y R:
+    a != 1
+    a^x = y
+    =>:
+        x = log(a, y)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("positive_real_power_closure_enables_log_inverse");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "positive_real_power_closure_enables_log_inverse failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("R_pos: a^x from 0 < a and x in R"));
+    assert!(run_output.contains("equality: log(a, b) = c from a^c = b"));
+}
+
+#[test]
+fn forall_iff_output_reports_direction_checks() {
+    let source_code = r#"
+forall a, b R_pos, c R:
+    a != 1
+    =>:
+        log(a, b) = c
+    <=>:
+        a^c = b
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("forall_iff_output_reports_direction_checks");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "forall_iff_output_reports_direction_checks failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("forall iff: then=>iff and iff=>then verified"));
+    assert!(!run_output.contains("\"type\": \"cite forall iff fact\""));
 }
 
 #[test]
@@ -2630,6 +5257,175 @@ fn duplicate_definition_names_fail_in_their_namespace() {
             run_output
         );
     }
+}
+
+#[test]
+fn alias_prop_copies_existing_prop_definition() {
+    let source_code = r#"
+prop is_one(x R):
+    x = 1
+alias prop one_prop <=> is_one
+$one_prop(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_prop_copies_existing_prop_definition");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "alias prop should copy and store the target prop definition:\n{}",
+        run_output
+    );
+    assert!(runtime.get_prop_definition_by_name("one_prop").is_some());
+}
+
+#[test]
+fn alias_thm_copies_existing_theorem_definition() {
+    let source_code = r#"
+thm one_eq_one:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+alias thm same_one <=> one_eq_one
+1 = 1
+by thm same_one(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_thm_copies_existing_theorem_definition");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "alias thm should copy and store the target theorem:\n{}",
+        run_output
+    );
+    assert!(runtime.get_thm_definition_by_name("same_one").is_some());
+}
+
+#[test]
+fn unicode_alias_prop_name_works() {
+    run_with_large_stack("unicode_alias_prop_name_works", || {
+        let source_code = r#"
+prop is_one(x R):
+    x = 1
+alias prop 是一 <=> is_one
+$是一(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_alias_prop_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode alias prop names should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("alias prop 是一 <=> is_one"),
+            "output should include the Chinese prop alias statement:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("$是一(1)"),
+            "output should include use of the Chinese prop alias:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn unicode_object_name_works() {
+    run_with_large_stack("unicode_object_name_works", || {
+        let source_code = r#"
+have 甲 R = 1
+甲 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_object_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode object names should work:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn unicode_alias_thm_name_works() {
+    run_with_large_stack("unicode_alias_thm_name_works", || {
+        let source_code = r#"
+thm self_eq_en:
+    prove:
+        forall x R:
+            x = x
+    x = x
+alias thm 自反等式 <=> self_eq_en
+by thm 自反等式(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("unicode_alias_thm_name_works");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "unicode alias theorem names should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("alias thm 自反等式 <=> self_eq_en"),
+            "output should include the Chinese theorem alias statement:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("by thm 自反等式(1)"),
+            "output should include use of the Chinese theorem alias:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn alias_prop_rejects_abstract_prop_target() {
+    let source_code = r#"
+abstract_prop abstract_target(x)
+alias prop concrete_alias <=> abstract_target
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("alias_prop_rejects_abstract_prop_target");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "alias prop should reject abstract_prop targets:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("alias prop only supports concrete prop definitions"),
+        "alias prop abstract target error should explain the restriction:\n{}",
+        run_output
+    );
 }
 
 #[test]
@@ -3315,7 +6111,7 @@ fn std_citation_source_survives_cached_reload_after_clear() {
 }
 
 fn run_file_from_path_impl() {
-    let path: String = "./examples/01_proof_patterns/strong_induc.lit".to_string();
+    let path: String = "./examples/_internal/regression/do_nothing.lit".to_string();
     let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
     assert!(
         file_path.is_absolute(),

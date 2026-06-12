@@ -2,7 +2,6 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    // TODO: THIS IS A MESS
     pub fn exec_have_obj_equal_stmt(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
@@ -20,6 +19,7 @@ impl Runtime {
 
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
+        let mut check_results: Vec<StmtResult> = Vec::new();
         for param_def in have_obj_equal_stmt.param_def.groups.iter() {
             let current_type_holder = self
                 .inst_param_type(
@@ -65,6 +65,7 @@ impl Runtime {
                         vec![],
                     ));
                 }
+                check_results.push(verify_result);
 
                 param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
                 current_index += 1;
@@ -73,7 +74,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
 
-        let param_infer_result = self
+        let mut param_infer_result = self
             .define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 true,
@@ -87,6 +88,8 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        param_infer_result
+            .relabel_all_added_facts_with_store_reason(HaveObjEqualStmt::store_reason());
         infer_result.new_infer_result_inside(param_infer_result);
 
         for (name, obj) in have_obj_equal_stmt
@@ -95,14 +98,17 @@ impl Runtime {
             .iter()
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
-            let equal_to_fact = EqualFact::new(
+            let equal_to_fact: AtomicFact = EqualFact::new(
                 Identifier::new(name.clone()).into(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
             )
             .into();
             let equal_to_fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
+                .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    equal_to_fact,
+                    HaveObjEqualStmt::store_reason(),
+                )
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_obj_equal_stmt.clone().into(),
@@ -142,9 +148,11 @@ impl Runtime {
             }
         }
 
-        Ok(
-            (NonFactualStmtSuccess::new(have_obj_equal_stmt.clone().into(), infer_result, vec![]))
-                .into(),
-        )
+        Ok((NonFactualStmtSuccess::new(
+            have_obj_equal_stmt.clone().into(),
+            infer_result,
+            check_results,
+        ))
+        .into())
     }
 }

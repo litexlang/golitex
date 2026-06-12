@@ -178,91 +178,26 @@ impl Runtime {
             }
         }
 
-        // arg that matches forall params
         let param_names = known_forall.params_def.collect_param_names();
-
-        if !param_names
-            .iter()
-            .all(|param_name| arg_map.contains_key(param_name))
-        {
-            return Ok(None);
-        }
-
-        let mut args_for_params: Vec<Obj> = Vec::new();
-
         for param_name in param_names.iter() {
-            let obj = match arg_map.get(param_name) {
-                Some(v) => v,
-                None => return Ok(None),
+            let Some(obj) = arg_map.get(param_name) else {
+                return Ok(None);
             };
             if Self::obj_depends_on_given_exist_param(obj, &given_exist_param_names) {
                 return Ok(None);
             }
-
-            args_for_params.push(obj.clone());
         }
 
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &known_forall.params_def,
-                &args_for_params,
+        let Some((instantiation, requirements)) = self
+            .verify_known_forall_requirements_and_build_evidence(
+                known_forall.as_ref(),
+                &arg_map,
+                given_exist_fact.clone().into(),
                 verify_state,
-                ParamObjType::Forall,
-            )
-            .map_err(|e| {
-                {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                        String::new(),
-                        given_exist_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                }
-            })?;
-        if args_param_types.is_unknown() {
+            )?
+        else {
             return Ok(None);
-        }
-
-        let param_to_arg_map = match known_forall
-            .params_def
-            .param_def_params_to_arg_map(&arg_map)
-        {
-            Some(m) => m,
-            None => return Ok(None),
         };
-
-        for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_exist_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            let result = self
-                .verify_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                            String::new(),
-                            given_exist_fact.line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-        }
 
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
@@ -272,10 +207,10 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_exist_fact.clone().into(),
-            VerifiedByResult::cited_fact(
-                given_exist_fact.clone().into(),
+            VerifiedByResult::known_forall_instantiation(
                 verified_by_known_forall_fact.clone().into(),
-                None,
+                instantiation,
+                requirements,
             ),
             Vec::new(),
         );
@@ -435,15 +370,27 @@ impl Runtime {
             Obj::TupleDim(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Count(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::FnRange(x) => Self::obj_depends_on_given_exist_param(x.function.as_ref(), names),
+            Obj::FnRangeOn(x) => {
+                Self::obj_depends_on_given_exist_param(x.function.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
+            }
             Obj::SeqSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::Sum(x) => {
                 Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
             }
+            Obj::SumOfFiniteSet(x) => {
+                Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+            }
             Obj::Product(x) => {
                 Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+            }
+            Obj::ProductOfFiniteSet(x) => {
+                Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
             }
             Obj::ListSet(x) => Self::obj_list_depends_on_given_exist_param(&x.list, names),

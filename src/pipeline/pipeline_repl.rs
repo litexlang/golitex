@@ -13,38 +13,61 @@ pub fn run_repl(version: &str) {
 }
 
 pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
-    return run_repl_loop_internal(version, detail_output, false);
+    return run_repl_loop_internal(version, detail_output, false, OutputLanguage::English);
 }
 
 pub fn run_repl_with_detail_output_and_strict(
     version: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
 ) {
-    return run_repl_loop_internal(version, detail_output, reject_user_know);
+    return run_repl_loop_internal(version, detail_output, strict_mode, OutputLanguage::English);
+}
+
+pub fn run_repl_with_detail_output_and_strict_and_language(
+    version: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) {
+    return run_repl_loop_internal(version, detail_output, strict_mode, output_language);
 }
 
 pub fn run_latex_repl(version: &str) {
     return run_latex_repl_loop_internal(version);
 }
 
-fn run_repl_loop_internal(version_banner: &str, detail_output: bool, reject_user_know: bool) {
+fn run_repl_loop_internal(
+    version_banner: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
-    let result = if reject_user_know {
+    let result = if strict_mode {
         run_repl_loop_with_readers_and_strict(
             version_banner,
             detail_output,
             true,
+            output_language,
+            &mut stdin_locked,
+            &mut stdout_locked,
+        )
+    } else if output_language == OutputLanguage::English {
+        run_repl_loop_with_readers(
+            version_banner,
+            detail_output,
             &mut stdin_locked,
             &mut stdout_locked,
         )
     } else {
-        run_repl_loop_with_readers(
+        run_repl_loop_with_readers_and_language(
             version_banner,
             detail_output,
+            output_language,
             &mut stdin_locked,
             &mut stdout_locked,
         )
@@ -76,10 +99,27 @@ fn run_repl_loop_with_readers(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
+    run_repl_loop_with_readers_and_language(
+        version_banner,
+        detail_output,
+        OutputLanguage::English,
+        stdin_reader,
+        stdout_writer,
+    )
+}
+
+fn run_repl_loop_with_readers_and_language(
+    version_banner: &str,
+    detail_output: bool,
+    output_language: OutputLanguage,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
     run_repl_loop_with_readers_and_strict(
         version_banner,
         detail_output,
         false,
+        output_language,
         stdin_reader,
         stdout_writer,
     )
@@ -88,14 +128,16 @@ fn run_repl_loop_with_readers(
 fn run_repl_loop_with_readers_and_strict(
     version_banner: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
         detail_output,
-        reject_user_know,
+        strict_mode,
+        output_language,
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
@@ -111,6 +153,7 @@ fn run_latex_repl_loop_with_readers(
         version_banner,
         false,
         false,
+        OutputLanguage::English,
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Latex,
@@ -120,7 +163,8 @@ fn run_latex_repl_loop_with_readers(
 fn run_repl_loop_with_readers_and_mode(
     version_banner: &str,
     detail_output: bool,
-    reject_user_know: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
@@ -141,7 +185,8 @@ fn run_repl_loop_with_readers_and_mode(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("repl");
     runtime.detail_output = detail_output;
-    runtime.reject_user_know = reject_user_know;
+    runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
 
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();
@@ -247,7 +292,7 @@ mod tests {
 
     #[test]
     fn repl_accepts_multiline_block_after_blank_line() {
-        let input = b"prove:\n    1 = 1\n    2 = 2\n\n";
+        let input = b"sketch:\n    1 = 1\n    2 = 2\n\n";
         let mut stdin_reader = Cursor::new(input.as_slice());
         let mut stdout_writer = Vec::new();
 

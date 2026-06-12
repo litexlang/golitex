@@ -18,8 +18,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 Obj::SeqSet(ss) => {
@@ -30,8 +31,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 Obj::MatrixSet(ms) => {
@@ -42,8 +44,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         type_fact,
+                        InferReason::ParameterDefinition,
                     )
                 }
                 _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
@@ -70,7 +73,10 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            type_fact,
+            InferReason::ParameterDefinition,
+        )
     }
 
     fn define_parameter_by_binding_set(
@@ -84,7 +90,10 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            type_fact,
+            InferReason::ParameterDefinition,
+        )
     }
 
     fn define_parameter_by_binding_nonempty_set(
@@ -98,7 +107,10 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            type_fact,
+            InferReason::ParameterDefinition,
+        )
     }
 
     fn define_parameter_by_binding_finite_set(
@@ -112,7 +124,10 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            type_fact,
+            InferReason::ParameterDefinition,
+        )
     }
 
     pub fn define_params_with_type(

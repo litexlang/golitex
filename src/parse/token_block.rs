@@ -9,7 +9,7 @@ pub struct TokenBlock {
 }
 
 impl TokenBlock {
-    /// 返回当前 token；若已读完则返回 Error。
+    /// Returns the current token, or an error if the block is exhausted.
     pub fn current(&self) -> Result<&str, RuntimeError> {
         self.header
             .get(self.parse_index)

@@ -242,7 +242,7 @@ fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrdere
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    // 判断 exponent 字面量是否为 0 或正整数，返回 (是否 ok, 解析出的数字)
+    // Accept only literal non-negative integer exponents.
     let (exponent_ok, exponent_value) = if let Obj::Number(num) = &*pow.exponent {
         if is_number_string_literally_integer_without_dot(num.normalized_value.clone())
             && !num.normalized_value.starts_with('-')

@@ -9,7 +9,7 @@ const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 const SLOWEST_RUNS_TO_PRINT: usize = 10;
 pub(super) const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
 pub(super) const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/_internal/std_imports";
-pub(super) const SCRATCH_EXAMPLES_SUBDIR: &str = "examples/_internal/scratch";
+pub(super) const SKETCH_EXAMPLES_SUBDIR: &str = "examples/_internal/sketch";
 
 pub(super) fn print_known_forall_profile_summary(label: &str) {
     if !crate::verify::known_forall_profile::enabled() {
