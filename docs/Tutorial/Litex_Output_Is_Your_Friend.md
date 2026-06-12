@@ -648,34 +648,7 @@ The output explains the proof process step by step. By looking at the output, yo
     "cite_source": {
       "line": 28
     },
-    "cited_statement": "forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
-    "instantiation": {
-      "t": "1"
-    },
-    "requirements": [
-      {
-        "statement": "1 $in R",
-        "verification": {
-          "type": "cite membership fact",
-          "cite_source": {
-            "line": 18,
-            "source_kind": "entry",
-            "source": "entry"
-          },
-          "cited_statement": "1 $in R"
-        }
-      },
-      {
-        "statement": "1 = 1",
-        "verification": {
-          "type": "cite equality fact",
-          "cite_source": {
-            "line": 18
-          },
-          "cited_statement": "1 = 1"
-        }
-      }
-    ]
+    "cited_statement": "forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)"
   },
   "store_facts": [
     {
@@ -804,7 +777,7 @@ The output explains the proof process step by step. By looking at the output, yo
 
 {
   "result": "success",
-  "type": "object declaration",
+  "type": "object definition",
   "line": 68,
   "statement": "have A_tmp set",
   "store_facts": [
@@ -817,7 +790,7 @@ The output explains the proof process step by step. By looking at the output, yo
 
 {
   "result": "success",
-  "type": "object declaration",
+  "type": "object definition",
   "line": 69,
   "statement": "have B_tmp set",
   "store_facts": [
@@ -887,7 +860,7 @@ The output explains the proof process step by step. By looking at the output, yo
 
 {
   "result": "success",
-  "type": "object declaration",
+  "type": "object definition",
   "line": 82,
   "statement": "have C_tmp set",
   "store_facts": [

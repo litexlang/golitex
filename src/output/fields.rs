@@ -2,7 +2,7 @@ pub(crate) const JSON_KEY_RESULT: &str = "result";
 pub(crate) const JSON_KEY_SUCCESS: &str = "success";
 pub(crate) const JSON_KEY_STORE_FACTS: &str = "store_facts";
 pub(crate) const JSON_KEY_VERIFICATION: &str = "verification";
-pub(crate) const JSON_KEY_CONCLUSIONS_WITH_VERIFICATION: &str = "conclusions_with_verification";
+pub(crate) const JSON_KEY_CONCLUSIONS: &str = "conclusions";
 pub(crate) const JSON_KEY_STEPS: &str = "steps";
 
 pub(crate) const JSON_KEY_ERROR_TYPE: &str = "error_type";

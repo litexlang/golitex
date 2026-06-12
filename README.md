@@ -116,11 +116,27 @@ the important shape is:
 ```text
 {
   "result": "success",
-  "statement": "$mortal(Socrates)",
-  "verification": {
-    "type": "cite forall fact",
-    "cited_statement": "forall x human: $mortal(x)"
-  }
+  "type": "universal fact",
+  "line": 4,
+  "statement": "forall :\n    forall x human:\n        $mortal(x)\n =>:\n        $mortal(Socrates)",
+  "conclusions": [
+    {
+      "statement": "$mortal(Socrates)",
+      "verification": {
+        "type": "cite forall fact",
+        "cite_source": {
+          "line": 5
+        },
+        "cited_statement": "forall x human:\n    $mortal(x)"
+      }
+    }
+  ],
+  "store_facts": [
+    {
+      "fact": "forall :\n    forall x human:\n        $mortal(x)\n=>:\n        $mortal(Socrates)",
+      "reason": "proved statement"
+    }
+  ]
 }
 ```
 
@@ -129,9 +145,42 @@ the route was arithmetic, a known fact, a matching `forall`, or an inferred
 consequence. That makes Litex a feedback loop: write the next fact, run the
 checker, read what happened, and add the next piece of context.
 
+Litex supports localized output in 14 language modes: 简体中文 (`zh`), English (`en`), 繁體中文 (`zh-Hans`), 日本語 (`ja`), 한국어 (`ko`),
+Español (`es`), Français (`fr`), Deutsch (`de`), Português (`pt`),
+Русский (`ru`), العربية (`ar`), हिन्दी (`hi`), Tiếng Việt (`vi`),
+and Bahasa Indonesia (`id`).
+
+```json
+{
+  "结果": "成功",
+  "类型": "全称事实",
+  "行": 4,
+  "语句": "forall :\n    forall x human:\n        $mortal(x)\n    =>:\n        $mortal(Socrates)",
+  "结论": [
+    {
+      "语句": "$mortal(Socrates)",
+      "验证": {
+        "类型": "引用 forall 事实",
+        "引用来源": {
+          "行": 5
+        },
+        "被引用语句": "forall x human:\n    $mortal(x)"
+      }
+    }
+  ],
+  "存储事实": [
+    {
+      "事实": "forall :\n    forall x human:\n        $mortal(x)\n=>:\n        $mortal(Socrates)",
+      "原因": "已证明语句"
+    }
+  ]
+}
+
+```
+
 For most factual statements, the proof route is reported under `verification`.
 More structured facts can include a `steps` array inside that object. A
-successful `forall` fact instead reports `conclusions_with_verification`, where
+successful `forall` fact instead reports `conclusions`, where
 each conclusion carries its own `verification`; detail output additionally
 expands the local `parameters` and `assumptions`. Non-factual statements such
 as definitions, `claim`, `thm`, and `by cases` report their context changes
@@ -341,20 +390,11 @@ Litex keeps the public documentation small:
    run files, and understand CLI output.
 2. [Manual](https://litexlang.com/doc/Manual): the source of truth for syntax,
    statements, proof flow, builtin rules, and inference.
-3. [Architecture](https://litexlang.com/doc/Architecture): the main pipeline
-   from source text to parsing, execution, verification, inference, and output.
-4. [FAQ](https://litexlang.com/doc/FAQ): design rationale, trust boundaries,
+3. [FAQ](https://litexlang.com/doc/FAQ): design rationale, trust boundaries,
    comparison notes, and old overview material in condensed form.
-5. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): dedicated
+4. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): dedicated
    comparison with Lean's interface and ecosystem.
-6. [Litex 中文介绍](https://litexlang.com/doc/%E4%B8%AD%E6%96%87%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D): Chinese introduction and project framing.
-
-Resources:
-
-1. [Litex Kernel and Documents](https://github.com/litexlang/golitex)
-2. [litexpy: Use Litex in Python](https://github.com/litexlang/litexpy)
-3. [litex-lang on crates.io: Use Litex in Rust](https://crates.io/crates/litex-lang)
-4. [Hugging Face: Litex code examples and datasets](https://huggingface.co/litexlang)
+5. [Hugging Face: Litex code examples and datasets](https://huggingface.co/litexlang)
 
 Contact us:
 

@@ -139,7 +139,7 @@ impl Runtime {
             then_verification_results.push(result);
         }
 
-        infer_result.new_fact(&forall_fact.clone().into());
+        infer_result.add_verified_statement(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, InferResult::new());
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),

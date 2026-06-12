@@ -151,9 +151,8 @@ LaTeX, and CLI output.
 
 For most successful factual statements, the proof route is reported under
 `verification`. A successful `forall` fact reports
-`conclusions_with_verification`, where each conclusion carries its own
-`verification` object. Detail output additionally expands the local parameters
-and assumptions.
+`conclusions`, where each conclusion carries its own `verification` object.
+Detail output additionally expands the local parameters and assumptions.
 
 This output is part of the intended feedback loop. Users and agents should be
 able to inspect whether a step was accepted by calculation, a known fact, a
