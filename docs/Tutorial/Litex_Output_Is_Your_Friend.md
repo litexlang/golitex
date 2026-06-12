@@ -26,6 +26,7 @@
 
 
 
+
 {
   "结果": "成功",
   "类型": "等式事实",
@@ -33,7 +34,7 @@
   "语句": "1 + 1 = 2",
   "验证": {
     "类型": "内置规则",
-    "规则": "calculation"
+    "规则": "计算"
   },
   "存储事实": [
     {
@@ -45,6 +46,7 @@
 
 
 
+
 {
   "結果": "成功",
   "類型": "等式事實",
@@ -52,7 +54,7 @@
   "語句": "1 + 1 = 2",
   "驗證": {
     "類型": "內建規則",
-    "規則": "calculation"
+    "規則": "計算"
   },
   "儲存事實": [
     {
@@ -64,6 +66,7 @@
 
 
 
+
 {
   "結果": "成功",
   "種類": "等式事実",
@@ -71,7 +74,7 @@
   "文": "1 + 1 = 2",
   "検証": {
     "種類": "組み込みルール",
-    "ルール": "calculation"
+    "ルール": "計算"
   },
   "保存された事実": [
     {
@@ -83,6 +86,7 @@
 
 
 
+
 {
   "결과": "성공",
   "유형": "등식 사실",
@@ -90,7 +94,7 @@
   "문장": "1 + 1 = 2",
   "검증": {
     "유형": "내장 규칙",
-    "규칙": "calculation"
+    "규칙": "계산"
   },
   "저장된 사실": [
     {
@@ -102,6 +106,7 @@
 
 
 
+
 {
   "resultado": "éxito",
   "tipo": "hecho de igualdad",
@@ -109,7 +114,7 @@
   "enunciado": "1 + 1 = 2",
   "verificación": {
     "tipo": "regla integrada",
-    "regla": "calculation"
+    "regla": "cálculo"
   },
   "hechos_guardados": [
     {
@@ -121,6 +126,7 @@
 
 
 
+
 {
   "résultat": "succès",
   "type": "fait d'égalité",
@@ -128,7 +134,7 @@
   "énoncé": "1 + 1 = 2",
   "vérification": {
     "type": "règle intégrée",
-    "règle": "calculation"
+    "règle": "calcul"
   },
   "faits_enregistrés": [
     {
@@ -140,6 +146,7 @@
 
 
 
+
 {
   "Ergebnis": "Erfolg",
   "Typ": "Gleichheitsfakt",
@@ -147,7 +154,7 @@
   "Anweisung": "1 + 1 = 2",
   "Verifikation": {
     "Typ": "eingebaute Regel",
-    "Regel": "calculation"
+    "Regel": "Rechnung"
   },
   "gespeicherte_Fakten": [
     {
@@ -159,6 +166,7 @@
 
 
 
+
 {
   "resultado": "sucesso",
   "tipo": "fato de igualdade",
@@ -166,7 +174,7 @@
   "declaração": "1 + 1 = 2",
   "verificação": {
     "tipo": "regra interna",
-    "regra": "calculation"
+    "regra": "cálculo"
   },
   "fatos_armazenados": [
     {
@@ -178,6 +186,7 @@
 
 
 
+
 {
   "результат": "успех",
   "тип": "факт равенства",
@@ -185,7 +194,7 @@
   "утверждение": "1 + 1 = 2",
   "проверка": {
     "тип": "встроенное правило",
-    "правило": "calculation"
+    "правило": "вычисление"
   },
   "сохранённые_факты": [
     {
@@ -197,6 +206,7 @@
 
 
 
+
 {
   "النتيجة": "نجاح",
   "النوع": "حقيقة مساواة",
@@ -204,7 +214,7 @@
   "العبارة": "1 + 1 = 2",
   "التحقق": {
     "النوع": "قاعدة مضمنة",
-    "القاعدة": "calculation"
+    "القاعدة": "حساب"
   },
   "الحقائق_المخزنة": [
     {
@@ -216,6 +226,7 @@
 
 
 
+
 {
   "परिणाम": "सफलता",
   "प्रकार": "समानता तथ्य",
@@ -223,7 +234,7 @@
   "कथन": "1 + 1 = 2",
   "सत्यापन": {
     "प्रकार": "आंतरिक नियम",
-    "नियम": "calculation"
+    "नियम": "गणना"
   },
   "संग्रहीत_तथ्य": [
     {
@@ -235,6 +246,7 @@
 
 
 
+
 {
   "kết_quả": "thành công",
   "kiểu": "sự kiện đẳng thức",
@@ -242,7 +254,7 @@
   "mệnh_đề": "1 + 1 = 2",
   "xác_minh": {
     "kiểu": "quy tắc tích hợp",
-    "quy_tắc": "calculation"
+    "quy_tắc": "tính toán"
   },
   "sự_kiện_đã_lưu": [
     {
@@ -254,6 +266,7 @@
 
 
 
+
 {
   "hasil": "sukses",
   "tipe": "fakta kesamaan",
@@ -261,7 +274,7 @@
   "pernyataan": "1 + 1 = 2",
   "verifikasi": {
     "tipe": "aturan bawaan",
-    "aturan": "calculation"
+    "aturan": "perhitungan"
   },
   "fakta_tersimpan": [
     {
@@ -270,6 +283,7 @@
     }
   ]
 }
+
 ```
 
 ### An Example of Litex Output
