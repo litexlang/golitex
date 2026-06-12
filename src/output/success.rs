@@ -4,14 +4,14 @@ use crate::prelude::{
     VerifiedByResult,
 };
 
-use super::effects::{effects_json_values, effects_json_values_for_fact};
 use super::evidence::{factual_success_forall_proof_fields, factual_success_verified_by_value};
 use super::fields::{
-    user_visible_stmt_or_msg_text, JSON_KEY_EFFECTS, JSON_KEY_INSIDE_RESULTS, JSON_KEY_RESULT,
-    JSON_KEY_STMT, JSON_KEY_SUCCESS, JSON_KEY_VERIFICATION,
+    user_visible_stmt_or_msg_text, JSON_KEY_INSIDE_RESULTS, JSON_KEY_RESULT, JSON_KEY_STMT,
+    JSON_KEY_STMT_TYPE, JSON_KEY_STORE_FACTS, JSON_KEY_SUCCESS, JSON_KEY_VERIFICATION,
 };
 use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
 use super::source::stmt_text_for_json;
+use super::store_facts::{store_fact_json_values, store_fact_json_values_for_fact};
 
 pub fn display_stmt_exec_result_json(
     runtime: &Runtime,
@@ -36,7 +36,7 @@ fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_text = stmt_text_for_json(runtime, &x.stmt);
-    let effect_items = effects_json_values(&x.infers);
+    let store_fact_items = store_fact_json_values(&x.infers);
 
     let mut fields = vec![
         (
@@ -44,23 +44,19 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "type".to_string(),
-            JsonValue::JsonString(x.stmt.stmt_type_name().to_string()),
+            JSON_KEY_STMT_TYPE.to_string(),
+            JsonValue::JsonString(x.stmt.output_type_string()),
         ),
         (
             "line".to_string(),
             line_file_line_json_value(&stmt_line_file),
         ),
         (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
-        (JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)),
+        (
+            JSON_KEY_STORE_FACTS.to_string(),
+            JsonValue::Array(store_fact_items),
+        ),
     ];
-
-    if statement_trust_is_unsafe(&x.stmt) {
-        fields.push((
-            "trust".to_string(),
-            JsonValue::JsonString("unsafe".to_string()),
-        ));
-    }
 
     fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
@@ -100,7 +96,7 @@ fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Js
 fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let effect_items = effects_json_values_for_fact(&x.infers, &x.stmt);
+    let store_fact_items = store_fact_json_values_for_fact(&x.infers, &x.stmt);
 
     let mut fields = vec![
         (
@@ -108,8 +104,8 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "type".to_string(),
-            JsonValue::JsonString(x.stmt.fact_type_string()),
+            JSON_KEY_STMT_TYPE.to_string(),
+            JsonValue::JsonString(x.stmt.output_type_string()),
         ),
         (
             "line".to_string(),
@@ -128,7 +124,10 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             factual_success_verified_by_value(runtime, x),
         ));
     }
-    fields.push((JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)));
+    fields.push((
+        JSON_KEY_STORE_FACTS.to_string(),
+        JsonValue::Array(store_fact_items),
+    ));
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
 
     JsonValue::Object(fields)
@@ -137,7 +136,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
 fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let effect_items = effects_json_values_for_fact(&x.infers, &x.stmt);
+    let store_fact_items = store_fact_json_values_for_fact(&x.infers, &x.stmt);
 
     let mut fields = vec![
         (
@@ -145,8 +144,8 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "type".to_string(),
-            JsonValue::JsonString(x.stmt.fact_type_string()),
+            JSON_KEY_STMT_TYPE.to_string(),
+            JsonValue::JsonString(x.stmt.output_type_string()),
         ),
         (
             "line".to_string(),
@@ -165,7 +164,10 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             factual_success_verified_by_value(runtime, x),
         ));
     }
-    fields.push((JSON_KEY_EFFECTS.to_string(), JsonValue::Array(effect_items)));
+    fields.push((
+        JSON_KEY_STORE_FACTS.to_string(),
+        JsonValue::Array(store_fact_items),
+    ));
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
 
     JsonValue::Object(fields)
@@ -173,8 +175,4 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
 
 fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {
     matches!(x.verified_by, VerifiedByResult::ForallProof(_))
-}
-
-fn statement_trust_is_unsafe(stmt: &Stmt) -> bool {
-    matches!(stmt, Stmt::UnsafeStmt(_))
 }

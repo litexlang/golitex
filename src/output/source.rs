@@ -178,7 +178,7 @@ pub(crate) fn stmt_json_field_lines(
         "{}\"{}\": {}",
         indent_inner,
         JSON_KEY_STMT_TYPE,
-        json_string_literal(&stmt.stmt_type_name())
+        json_string_literal(&stmt.output_type_string())
     ));
     lines.push(format!(
         "{}\"{}\": {}",
@@ -193,7 +193,7 @@ pub(crate) fn stmt_json_value(runtime: &Runtime, stmt: &Stmt) -> JsonValue {
     JsonValue::Object(vec![
         (
             JSON_KEY_STMT_TYPE.to_string(),
-            JsonValue::JsonString(stmt.stmt_type_name()),
+            JsonValue::JsonString(stmt.output_type_string()),
         ),
         (
             JSON_KEY_STMT.to_string(),

@@ -127,8 +127,8 @@ sketch:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"SketchStmt\""),
-        "sketch should be reported as SketchStmt:\n{}",
+        run_output.contains("\"type\": \"proof sketch\""),
+        "sketch should be reported as proof sketch:\n{}",
         run_output
     );
     assert!(
@@ -813,6 +813,7 @@ claim:
     runtime.new_file_path_new_env_new_name_scope(
         "have_by_exist_body_well_defined_can_use_forall_domain_fact",
     );
+    runtime.detail_output = true;
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -823,8 +824,8 @@ claim:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"HaveByExistStmt\""),
-        "have by exist should report the canonical statement type:\n{}",
+        run_output.contains("\"type\": \"object definition by existence\""),
+        "have by exist should report the semantic statement type:\n{}",
         run_output
     );
     assert_no_legacy_acceptance_field(&run_output, "have by exist");
@@ -1666,7 +1667,7 @@ forall a N_pos, n N:
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"EvalStmt\"")
+                run_output.contains("\"type\": \"evaluation statement\"")
                     && run_output.contains("\"0 ^ 0 = 1\""),
                 "eval 0^0 should produce 1:\n{}",
                 run_output
@@ -2779,7 +2780,7 @@ fn normal_output_omits_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"effects\": []"));
+    assert!(!run_output.contains("\"store_facts\": []"));
     assert!(!run_output.contains("\"inside_results\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
@@ -2796,7 +2797,7 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"effects\": []"));
+    assert!(!run_output.contains("\"store_facts\": []"));
     assert!(!run_output.contains("\"inside_results\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
@@ -2833,10 +2834,10 @@ witness exist x R st {x = 1} from 1:
         "normal proof-trace fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"SketchStmt\""));
-    assert!(run_output.contains("\"type\": \"ClaimStmt\""));
-    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
-    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"type\": \"proof sketch\""));
+    assert!(run_output.contains("\"type\": \"proved claim\""));
+    assert!(run_output.contains("\"type\": \"proof by cases\""));
+    assert!(run_output.contains("\"type\": \"existence witness\""));
     assert_no_legacy_acceptance_field(&run_output, "normal");
     assert!(
         !run_output.contains("\"inside_results\": ["),
@@ -2878,10 +2879,10 @@ witness exist x R st {x = 1} from 1:
         "detail proof-trace fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"SketchStmt\""));
-    assert!(run_output.contains("\"type\": \"ClaimStmt\""));
-    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
-    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"type\": \"proof sketch\""));
+    assert!(run_output.contains("\"type\": \"proved claim\""));
+    assert!(run_output.contains("\"type\": \"proof by cases\""));
+    assert!(run_output.contains("\"type\": \"existence witness\""));
     assert!(
         run_output.matches("\"inside_results\": [").count() >= 3,
         "detail output should expand available raw recursive inside_results:\n{}",
@@ -2921,7 +2922,7 @@ by induc n from 0:
         "normal by induc fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"ByInducStmt\""));
+    assert!(run_output.contains("\"type\": \"proof by induction\""));
     assert!(
         !run_output.contains("\"inside_results\": ["),
         "normal by induc output should fold raw inside_results:\n{}",
@@ -2945,12 +2946,12 @@ by induc n from 0:
         "detail by induc fixture failed:\n{}",
         detail_run_output
     );
-    assert!(detail_run_output.contains("\"type\": \"ByInducStmt\""));
+    assert!(detail_run_output.contains("\"type\": \"proof by induction\""));
     assert!(detail_run_output.contains("\"inside_results\": ["));
     assert!(detail_run_output.contains("\"statement\": \"$p(0)\""));
     assert!(
         detail_run_output
-            .matches("\"type\": \"AtomicFact\"")
+            .matches("\"type\": \"predicate fact\"")
             .count()
             >= 4,
         "detail by induc output should expand base/step proof and obligation checks:\n{}",
@@ -2978,7 +2979,7 @@ witness exist x R st {x = 1} from 1:
         "witness detail fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"type\": \"existence witness\""));
     assert!(
         run_output.matches("\"statement\": \"1 = 1\"").count() >= 2,
         "witness detail output should include the proof step and the instantiated obligation:\n{}",
@@ -3137,7 +3138,7 @@ fn strict_mode_rejects_user_know() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user know statements"),
+        run_output.contains(KnowStmt::strict_mode_rejection_message()),
         "strict mode should report the know boundary:\n{}",
         run_output
     );
@@ -3159,7 +3160,7 @@ fn strict_mode_rejects_user_let() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user let statements"),
+        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
         "strict mode should report the let boundary:\n{}",
         run_output
     );
@@ -3175,7 +3176,7 @@ fn strict_runner_rejects_user_know() {
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains("strict mode rejects user know statements"));
+    assert!(output.contains(KnowStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -3188,7 +3189,7 @@ fn strict_runner_rejects_user_let() {
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains("strict mode rejects user let statements"));
+    assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -3266,7 +3267,7 @@ fn strict_mode_rejects_run_file_know() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user know statements"),
+        run_output.contains(KnowStmt::strict_mode_rejection_message()),
         "strict run_file failure should report the know boundary:\n{}",
         run_output
     );
@@ -3295,7 +3296,7 @@ fn strict_mode_rejects_run_file_let() {
         run_output
     );
     assert!(
-        run_output.contains("strict mode rejects user let statements"),
+        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
         "strict run_file failure should report the let boundary:\n{}",
         run_output
     );
@@ -3402,7 +3403,7 @@ $q(1)
     assert!(run_output.contains("\"x\": \"2\""));
     assert!(run_output.contains("\"requirements\": ["));
     assert!(run_output.contains("\"statement\": \"2 $in R\""));
-    assert!(run_output.contains("\"type\": \"cite atomic fact\""));
+    assert!(run_output.contains("\"type\": \"cite equality fact\""));
     assert!(run_output.contains("\"type\": \"cite prop def\""));
 }
 
@@ -3452,6 +3453,76 @@ forall x R:
         "forall proof conclusions should carry their own verification objects:\n{}",
         run_output
     );
+}
+
+#[test]
+fn atomic_fact_verification_output_omits_method_and_reports_route_types() {
+    let source_code = r#"
+1 = 1
+
+abstract_prop known_p(x)
+know $known_p(1)
+$known_p(1)
+
+abstract_prop forall_p(x)
+know:
+    forall x R:
+        x = 1
+        =>:
+            $forall_p(x)
+$forall_p(1)
+
+prop def_p(x R):
+    x = 1
+$def_p(1)
+
+prop sym_p(x set, y set):
+    x = y
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $sym_p(x, y)
+            =>:
+                $sym_p(y, x)
+    x = y
+    y = x
+have A set
+have B set
+know $sym_p(A, B)
+$sym_p(B, A)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "atomic_fact_verification_output_omits_method_and_reports_route_types",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "atomic verification route fixture failed:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"method\""),
+        "verification output should not include redundant method field:\n{}",
+        run_output
+    );
+    for route_type in [
+        "builtin rule",
+        "cite equality fact",
+        "cite predicate fact",
+        "cite forall fact",
+    ] {
+        assert!(
+            run_output.contains(&format!("\"type\": \"{}\"", route_type)),
+            "missing atomic verification route type `{}`:\n{}",
+            route_type,
+            run_output
+        );
+    }
 }
 
 #[test]
@@ -3520,7 +3591,7 @@ forall x R_pos:
 }
 
 #[test]
-fn output_effects_explain_context_changes() {
+fn output_store_facts_explain_context_changes() {
     let source_code = r#"
 1 = 1
 claim:
@@ -3537,30 +3608,30 @@ $q(1)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("output_effects_explain_context_changes");
+    runtime.new_file_path_new_env_new_name_scope("output_store_facts_explain_context_changes");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "output_effects_explain_context_changes failed:\n{}",
+        "output_store_facts_explain_context_changes failed:\n{}",
         run_output
     );
     assert!(!run_output.contains("\"infer_facts\""));
-    assert!(run_output.contains("\"effects\": ["));
-    assert!(run_output.contains("\"type\": \"add proven fact to context\""));
-    assert!(run_output.contains("\"reason\": \"proved claim\""));
-    assert!(run_output.contains("\"reason\": \"unsafe assumption\""));
-    assert!(run_output.contains("\"reason\": \"let binding\""));
-    assert!(run_output.contains("\"trust\": \"unsafe\""));
-    assert!(run_output.contains("\"type\": \"cite prop def\""));
+    assert!(!run_output.contains("\"effects\""));
+    assert!(run_output.contains("\"store_facts\": ["));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", KnowStmt::store_reason()).as_str()));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str()));
+    assert!(!run_output.contains("\"trust\""));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
 }
 
 #[test]
-fn object_introduction_output_exposes_checks_and_introduced_facts() {
+fn object_definition_output_exposes_checks_and_defined_facts() {
     run_with_large_stack(
-        "object_introduction_output_exposes_checks_and_introduced_facts_large_stack",
+        "object_definition_output_exposes_checks_and_defined_facts_large_stack",
         || {
             let source_code = r#"
 have a R
@@ -3572,7 +3643,7 @@ have by exist x R st {x = x}: c
 
             let mut runtime = Runtime::new_with_builtin_code();
             runtime.new_file_path_new_env_new_name_scope(
-                "object_introduction_output_exposes_checks_and_introduced_facts",
+                "object_definition_output_exposes_checks_and_defined_facts",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -3580,18 +3651,28 @@ have by exist x R st {x = x}: c
 
             assert!(
                 run_succeeded,
-                "object introduction output fixture failed:\n{}",
+                "object definition output fixture failed:\n{}",
                 run_output
             );
-            assert_no_legacy_acceptance_field(&run_output, "object introduction");
+            assert_no_legacy_acceptance_field(
+                &run_output,
+                HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
+            );
             assert!(run_output.contains("\"a $in R\""));
             assert!(run_output.contains("\"b $in R\""));
             assert!(run_output.contains("\"b = a\""));
             assert!(run_output.contains("\"$is_set(S)\""));
             assert!(run_output.contains("\"c $in R\""));
             assert!(run_output.contains("\"c = c\""));
-            assert!(run_output.contains("\"reason\": \"object introduction\""));
-            assert!(run_output.contains("\"reason\": \"exist elimination\""));
+            assert!(run_output.contains(
+                format!(
+                    "\"reason\": \"{}\"",
+                    HaveObjInNonemptySetOrParamTypeStmt::store_reason()
+                )
+                .as_str()
+            ));
+            assert!(run_output
+                .contains(format!("\"reason\": \"{}\"", HaveByExistStmt::store_reason()).as_str()));
             assert!(!run_output.contains("\"equal_to\""));
         },
     );
@@ -3620,7 +3701,8 @@ forall n N:
     assert!(run_output.contains("\"conclusions_with_verification\": ["));
     assert!(run_output.contains("\"statement\": \"n $in N\""));
     assert!(run_output.contains("\"type\": \"local assumption\""));
-    assert!(run_output.contains("\"source\": \"parameter declaration\""));
+    assert!(run_output
+        .contains(format!("\"source\": \"{}\"", ParamDefWithType::store_reason()).as_str()));
     assert!(!run_output.contains("\"cite_source\""));
     assert!(!run_output.contains("\"verify_what\""));
     assert!(!run_output.contains("forall local check"));
@@ -3708,18 +3790,18 @@ by cases 1 = 1:
     );
     assert_no_legacy_acceptance_field(&run_output, "successful");
     assert!(
-        run_output.contains("\"type\": \"ClaimStmt\""),
-        "claim/thm statements should still expose their statement type:\n{}",
+        run_output.contains("\"type\": \"proved claim\""),
+        "claim/thm statements should expose their semantic statement type:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"ByThmStmt\""),
-        "by thm statements should still expose their statement type:\n{}",
+        run_output.contains("\"type\": \"proof by theorem\""),
+        "by thm statements should expose their semantic statement type:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"ByCasesStmt\""),
-        "by cases statements should still expose their statement type:\n{}",
+        run_output.contains("\"type\": \"proof by cases\""),
+        "by cases statements should expose their semantic statement type:\n{}",
         run_output
     );
     assert!(
@@ -3755,7 +3837,7 @@ by cases:
         "by cases multi-goal fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert!(run_output.contains("\"type\": \"proof by cases\""));
     assert_no_legacy_acceptance_field(&run_output, "by cases");
     assert!(run_output.contains("\"1 = 1\""));
     assert!(run_output.contains("\"2 = 2\""));
@@ -3783,7 +3865,7 @@ by cases 1 = 1:
         "by cases detail fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert!(run_output.contains("\"type\": \"proof by cases\""));
     assert_no_legacy_acceptance_field(&run_output, "detail");
     assert!(run_output.contains("\"1 = 1\""));
 }
@@ -4129,7 +4211,7 @@ by cases 1 = 1:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"ByCasesStmt\""),
+        run_output.contains("\"type\": \"proof by cases\""),
         "by cases failure should identify the failing statement:\n{}",
         run_output
     );

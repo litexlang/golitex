@@ -179,7 +179,7 @@ fn forall_local_assumption_source(
     let target = stmt.clone().to_fact().to_string();
     for fact in forall_param_type_assumption_facts(&proof.forall_fact.params_def_with_type) {
         if fact.to_string() == target {
-            return Some("parameter declaration");
+            return Some(ParamDefWithType::store_reason());
         }
     }
     for fact in proof.forall_fact.dom_facts.iter() {
@@ -368,7 +368,7 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
             ),
             (
                 "statement_type".to_string(),
-                JsonValue::JsonString(n.stmt.stmt_type_name().to_string()),
+                JsonValue::JsonString(n.stmt.output_type_string()),
             ),
         ])
     } else {
@@ -561,7 +561,7 @@ fn known_forall_requirement_items(
 
 fn citation_type_for_stmt(stmt: &Stmt) -> String {
     match stmt {
-        Stmt::Fact(fact) => format!("cite {}", citation_fact_type_label(fact)),
+        Stmt::Fact(fact) => format!("cite {}", fact.output_type_string()),
         Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(_)) => "cite prop def".to_string(),
         Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(_)) => {
             "cite abstract prop def".to_string()
@@ -569,47 +569,8 @@ fn citation_type_for_stmt(stmt: &Stmt) -> String {
         Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite let def".to_string(),
         Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
         Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(_)) => "cite struct def".to_string(),
-        _ => format!("cite {} statement", stmt_type_label_for_citation(stmt)),
+        _ => format!("cite {}", stmt.output_type_string()),
     }
-}
-
-fn citation_fact_type_label(fact: &Fact) -> &'static str {
-    match fact {
-        Fact::AtomicFact(_) => "atomic fact",
-        Fact::ExistFact(_) => "exist fact",
-        Fact::OrFact(_) => "or fact",
-        Fact::AndFact(_) => "and fact",
-        Fact::ChainFact(_) => "chain fact",
-        Fact::ForallFact(_) => "forall fact",
-        Fact::ForallFactWithIff(_) => "forall iff fact",
-        Fact::NotForall(_) => "not forall fact",
-    }
-}
-
-fn stmt_type_label_for_citation(stmt: &Stmt) -> String {
-    let stmt_type_name = stmt.stmt_type_name();
-    let base_name = stmt_type_name
-        .strip_suffix("Stmt")
-        .unwrap_or(stmt_type_name.as_str());
-    lower_camel_case_words(base_name)
-}
-
-fn lower_camel_case_words(input: &str) -> String {
-    let mut out = String::new();
-    let mut prev_is_lower_or_digit = false;
-    for ch in input.chars() {
-        if ch.is_ascii_uppercase() {
-            if prev_is_lower_or_digit && !out.is_empty() {
-                out.push(' ');
-            }
-            out.push(ch.to_ascii_lowercase());
-            prev_is_lower_or_digit = false;
-        } else {
-            out.push(ch);
-            prev_is_lower_or_digit = ch.is_ascii_lowercase() || ch.is_ascii_digit();
-        }
-    }
-    out
 }
 
 fn verified_by_citation_object(

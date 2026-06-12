@@ -36,6 +36,24 @@ impl Stmt {
             Stmt::Command(stmt) => stmt.stmt_type_name(),
         }
     }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            Stmt::Fact(fact) => fact.output_type_string(),
+            Stmt::UnsafeStmt(stmt) => stmt.output_type_string(),
+            Stmt::DefObjStmt(stmt) => stmt.output_type_string(),
+            Stmt::DefPredicateStmt(stmt) => stmt.output_type_string(),
+            Stmt::DefAliasStmt(stmt) => stmt.output_type_string(),
+            Stmt::DefInterfaceStmt(stmt) => stmt.output_type_string(),
+            Stmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
+            Stmt::DefThmStmt(_) => DefThmStmt::output_type_string(),
+            Stmt::DefStrategyStmt(_) => DefStrategyStmt::output_type_string(),
+            Stmt::By(stmt) => stmt.output_type_string(),
+            Stmt::Witness(stmt) => stmt.output_type_string(),
+            Stmt::ProofBlock(stmt) => stmt.output_type_string(),
+            Stmt::Command(stmt) => stmt.output_type_string(),
+        }
+    }
 }
 
 impl UnsafeStmt {
@@ -50,6 +68,13 @@ impl UnsafeStmt {
         match self {
             UnsafeStmt::KnowStmt(stmt) => stmt.stmt_type_name(),
             UnsafeStmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            UnsafeStmt::KnowStmt(_) => KnowStmt::output_type_string(),
+            UnsafeStmt::DefLetStmt(_) => DefLetStmt::output_type_string(),
         }
     }
 }
@@ -82,6 +107,26 @@ impl DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
         }
     }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            DefObjStmt::HaveObjInNonemptySetStmt(_) => {
+                HaveObjInNonemptySetOrParamTypeStmt::output_type_string()
+            }
+            DefObjStmt::HaveObjEqualStmt(_) => HaveObjEqualStmt::output_type_string(),
+            DefObjStmt::HaveObjByExistFactsStmt(_) => HaveObjByExistFactsStmt::output_type_string(),
+            DefObjStmt::HaveByExistStmt(_) => HaveByExistStmt::output_type_string(),
+            DefObjStmt::HaveByPreimageStmt(_) => HaveByPreimageStmt::output_type_string(),
+            DefObjStmt::HaveFnEqualStmt(_) => HaveFnEqualStmt::output_type_string(),
+            DefObjStmt::HaveFnEqualCaseByCaseStmt(_) => {
+                HaveFnEqualCaseByCaseStmt::output_type_string()
+            }
+            DefObjStmt::HaveFnByInducStmt(_) => HaveFnByInducStmt::output_type_string(),
+            DefObjStmt::HaveFnByForallExistUniqueStmt(_) => {
+                HaveFnByForallExistUniqueStmt::output_type_string()
+            }
+        }
+    }
 }
 
 impl DefPredicateStmt {
@@ -96,6 +141,13 @@ impl DefPredicateStmt {
         match self {
             DefPredicateStmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
             DefPredicateStmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            DefPredicateStmt::DefPropStmt(_) => DefPropStmt::output_type_string(),
+            DefPredicateStmt::DefAbstractPropStmt(_) => DefAbstractPropStmt::output_type_string(),
         }
     }
 }
@@ -114,6 +166,13 @@ impl DefAliasStmt {
             DefAliasStmt::AliasThmStmt(stmt) => stmt.stmt_type_name(),
         }
     }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            DefAliasStmt::AliasPropStmt(_) => AliasPropStmt::output_type_string(),
+            DefAliasStmt::AliasThmStmt(_) => AliasThmStmt::output_type_string(),
+        }
+    }
 }
 
 impl DefInterfaceStmt {
@@ -128,6 +187,13 @@ impl DefInterfaceStmt {
         match self {
             DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
             DefInterfaceStmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            DefInterfaceStmt::DefTemplateStmt(_) => DefTemplateStmt::output_type_string(),
+            DefInterfaceStmt::DefStructStmt(_) => DefStructStmt::output_type_string(),
         }
     }
 }
@@ -178,6 +244,29 @@ impl ByStmt {
             ByStmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
         }
     }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            ByStmt::ByCasesStmt(_) => ByCasesStmt::output_type_string(),
+            ByStmt::ByContraStmt(_) => ByContraStmt::output_type_string(),
+            ByStmt::ByEnumerateFiniteSetStmt(_) => ByEnumerateFiniteSetStmt::output_type_string(),
+            ByStmt::ByInducStmt(_) => ByInducStmt::output_type_string(),
+            ByStmt::ByForStmt(_) => ByForStmt::output_type_string(),
+            ByStmt::ByExtensionStmt(_) => ByExtensionStmt::output_type_string(),
+            ByStmt::ByFnAsSetStmt(_) => ByFnAsSetStmt::output_type_string(),
+            ByStmt::ByTupleAsSetStmt(_) => ByTupleAsSetStmt::output_type_string(),
+            ByStmt::ByFnSetAsSetStmt(_) => ByFnSetAsSetStmt::output_type_string(),
+            ByStmt::ByEnumerateRangeStmt(_) => ByEnumerateRangeStmt::output_type_string(),
+            ByStmt::ByClosedRangeAsCasesStmt(_) => ByClosedRangeAsCasesStmt::output_type_string(),
+            ByStmt::ByTransitivePropStmt(_) => ByTransitivePropStmt::output_type_string(),
+            ByStmt::BySymmetricPropStmt(_) => BySymmetricPropStmt::output_type_string(),
+            ByStmt::ByReflexivePropStmt(_) => ByReflexivePropStmt::output_type_string(),
+            ByStmt::ByAntisymmetricPropStmt(_) => ByAntisymmetricPropStmt::output_type_string(),
+            ByStmt::ByZornLemmaStmt(_) => ByZornLemmaStmt::output_type_string(),
+            ByStmt::ByAxiomOfChoiceStmt(_) => ByAxiomOfChoiceStmt::output_type_string(),
+            ByStmt::ByThmStmt(_) => ByThmStmt::output_type_string(),
+        }
+    }
 }
 
 impl WitnessStmt {
@@ -194,6 +283,13 @@ impl WitnessStmt {
             WitnessStmt::WitnessNonemptySet(stmt) => stmt.stmt_type_name(),
         }
     }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            WitnessStmt::WitnessExistFact(_) => WitnessExistFact::output_type_string(),
+            WitnessStmt::WitnessNonemptySet(_) => WitnessNonemptySet::output_type_string(),
+        }
+    }
 }
 
 impl ProofBlockStmt {
@@ -208,6 +304,13 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             ProofBlockStmt::SketchStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            ProofBlockStmt::ClaimStmt(_) => ClaimStmt::output_type_string(),
+            ProofBlockStmt::SketchStmt(_) => SketchStmt::output_type_string(),
         }
     }
 }
@@ -238,6 +341,20 @@ impl CommandStmt {
             CommandStmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::StopStrategyStmt(stmt) => stmt.stmt_type_name(),
+        }
+    }
+
+    pub fn output_type_string(&self) -> String {
+        match self {
+            CommandStmt::ImportStmt(stmt) => stmt.output_type_string(),
+            CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
+            CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
+            CommandStmt::StopImportStmt(_) => StopImportStmt::output_type_string(),
+            CommandStmt::RunFileStmt(_) => RunFileStmt::output_type_string(),
+            CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),
+            CommandStmt::EvalByStmt(_) => EvalByStmt::output_type_string(),
+            CommandStmt::UseStrategyStmt(_) => UseStrategyStmt::output_type_string(),
+            CommandStmt::StopStrategyStmt(_) => StopStrategyStmt::output_type_string(),
         }
     }
 }

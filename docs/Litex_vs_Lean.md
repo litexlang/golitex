@@ -669,41 +669,97 @@ settles into its final form.
 
 ### Message Output Explains Each Step
 
-Litex also reports what happened. Its message output shows each statement, the facts inferred from it, and often where each proved fact came from. **This is useful because you can see how every step was obtained**, not only that the final result passed. It helps users trust successful proofs, debug failed proofs, and learn how Litex is using builtin rules, known facts, matching, and substitution.
+Lean's most visible interactive output is often state-oriented: after a command,
+the user looks at the current hypotheses and goals, then chooses the next proof
+command. Litex's message output is more transition-oriented: after a statement,
+it reports how the verified environment changed from the previous state to the
+current state.
+
+That means Litex output is not only "here is the current context." It is also
+"this statement added this definition or fact, these extra facts were inferred,
+and this accepted fact was proved by this route." This matters because Litex
+asks the user to write facts directly. If the checker closes routine steps
+automatically, that automation should be inspectable. The output therefore
+records statement effects, newly stored known facts, inferred facts, and
+provenance for accepted facts.
+
+The smallest possible example already shows the difference. In Litex, the
+program is just the proposition:
+
+```litex
+1 = 1
+```
+
+One JSON-shaped Litex output for that statement is:
+
+```json
+{
+  "result": "success",
+  "type": "equality fact",
+  "line": 1,
+  "statement": "1 = 1",
+  "verification": {
+    "type": "builtin rule",
+    "rule": "same expression on both sides"
+  },
+  "store_facts": [
+    {
+      "fact": "1 = 1",
+      "reason": "proved statement"
+    }
+  ]
+}
+```
+
+The corresponding Lean code is also tiny:
+
+```lean
+example : 1 = 1 := by
+  rfl
+```
+
+In a Lean-style interactive view, the output before `rfl` is the current goal:
+
+```text
+⊢ 1 = 1
+```
+
+After `rfl`, the state is closed:
+
+```text
+No goals
+```
 
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex transition output</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean-style state snapshot</th>
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
-    x = 2
-    =>:
-        x + 1 = 3</code></pre>
+<pre style="margin: 0; white-space: pre-wrap"><code>statement:
+  1 = 1
+verification:
+  builtin rule:
+    same expression on both sides
+environment effect:
+  store fact 1 = 1
+  reason: proved statement</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>known fact:
-  x = 2
-goal:
-  x + 1 = 3
-proof:
-  resolve x by x = 2
-  reduce 2 + 1 by builtin arithmetic
-  conclude x + 1 = 3</code></pre>
+<pre style="margin: 0; white-space: pre-wrap"><code>current proof state:
+|- 1 = 1
+
+after rfl:
+No goals</code></pre>
     </td>
   </tr>
 </table>
 
-**What differs.** Litex's output explains how each fact was obtained. That makes successful automation inspectable instead of opaque.
-
-```litex
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
-```
+**What differs.** Lean's interaction usually helps the user inspect the current
+proof state. Litex's output emphasizes the delta: what the last statement added,
+which facts it inferred, and how the accepted facts were obtained. That makes
+successful automation inspectable instead of opaque.
 
 ### Known Facts By Matching
 

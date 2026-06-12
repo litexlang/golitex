@@ -16,6 +16,10 @@ impl ByThmStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "theorem instantiation"
+    }
 }
 
 impl fmt::Display for ByThmStmt {

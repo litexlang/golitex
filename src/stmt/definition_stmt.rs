@@ -245,6 +245,14 @@ impl DefLetStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "warning: unsafe let binding"
+    }
+
+    pub fn strict_mode_rejection_message() -> &'static str {
+        "strict mode rejects user let statements; use have/claim/thm/prove or move trusted background into an imported module"
+    }
 }
 
 impl fmt::Display for DefLetStmt {
@@ -271,6 +279,10 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "object definition"
+    }
 }
 
 impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
@@ -290,6 +302,10 @@ impl HaveObjByExistFactsStmt {
             facts,
             line_file,
         }
+    }
+
+    pub fn store_reason() -> &'static str {
+        HaveByExistStmt::store_reason()
     }
 }
 
@@ -313,6 +329,10 @@ impl HaveObjEqualStmt {
             objs_equal_to,
             line_file,
         }
+    }
+
+    pub fn store_reason() -> &'static str {
+        HaveObjInNonemptySetOrParamTypeStmt::store_reason()
     }
 }
 
@@ -385,6 +405,10 @@ impl HaveByExistStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "exist elimination"
+    }
 }
 
 impl fmt::Display for HaveByExistStmt {
@@ -439,6 +463,10 @@ impl HaveFnEqualStmt {
             as_algo,
             line_file,
         }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "function definition"
     }
 }
 
@@ -662,6 +690,10 @@ impl HaveFnEqualCaseByCaseStmt {
             as_algo,
             line_file,
         }
+    }
+
+    pub fn store_reason() -> &'static str {
+        HaveFnEqualStmt::store_reason()
     }
 }
 

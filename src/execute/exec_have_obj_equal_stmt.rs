@@ -88,7 +88,8 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        param_infer_result.relabel_all_added_facts(InferReason::ObjectIntroduction);
+        param_infer_result
+            .relabel_all_added_facts_with_store_reason(HaveObjEqualStmt::store_reason());
         infer_result.new_infer_result_inside(param_infer_result);
 
         for (name, obj) in have_obj_equal_stmt
@@ -103,10 +104,11 @@ impl Runtime {
                 have_obj_equal_stmt.line_file.clone(),
             )
             .into();
-            let equal_to_fact_for_effect: Fact = equal_to_fact.clone().into();
-            infer_result.add_object_introduction(&equal_to_fact_for_effect);
             let equal_to_fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
+                .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    equal_to_fact,
+                    HaveObjEqualStmt::store_reason(),
+                )
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_obj_equal_stmt.clone().into(),

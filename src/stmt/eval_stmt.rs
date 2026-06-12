@@ -27,6 +27,10 @@ impl EvalStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        "evaluation result"
+    }
 }
 
 impl EvalByStmt {
@@ -36,6 +40,10 @@ impl EvalByStmt {
             rhs,
             line_file,
         }
+    }
+
+    pub fn store_reason() -> &'static str {
+        EvalStmt::store_reason()
     }
 }
 

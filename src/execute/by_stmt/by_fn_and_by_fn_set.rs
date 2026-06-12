@@ -428,7 +428,7 @@ impl Runtime {
         forall_unique: Fact,
     ) -> Result<InferResult, RuntimeError> {
         // `store_fact...` on forall facts already feeds the stored fact back through `infer`,
-        // so avoid pre-recording the same fact here or JSON `effects` will show duplicates.
+        // so avoid pre-recording the same fact here or JSON store output will show duplicates.
         let mut infer_result = InferResult::new();
         let infer_shape = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_shape)
@@ -602,15 +602,18 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
-            .map_err(|store_fact_error| {
-                short_exec_error(
-                    stmt_exec.clone(),
-                    "by fn set as set: failed to store membership fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                )
-            })
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+            membership_fact,
+            ByFnSetAsSetStmt::store_reason(),
+        )
+        .map_err(|store_fact_error| {
+            short_exec_error(
+                stmt_exec.clone(),
+                "by fn set as set: failed to store membership fact".to_string(),
+                Some(store_fact_error),
+                vec![],
+            )
+        })
     }
 
     pub fn exec_by_fn_set_stmt(

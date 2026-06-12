@@ -30,6 +30,10 @@ impl DefStructStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefStructStmt".to_string()
     }
+
+    pub fn output_type_string() -> String {
+        "structure definition".to_string()
+    }
 }
 
 impl fmt::Display for DefStructStmt {

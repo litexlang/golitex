@@ -9,6 +9,6 @@ mod infer_result;
 mod infer_set_relations;
 
 pub use infer_result::{
-    AbstractPropDefinitionEffect, AddsToContextEffect, BuiltinInferenceReason, ByDefinitionReason,
-    InferEffect, InferReason, InferResult, InferRuleReason, OutputWarning,
+    BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
+    StoreFactOutput,
 };

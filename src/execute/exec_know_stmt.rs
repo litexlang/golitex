@@ -5,7 +5,7 @@ impl Runtime {
         if self.strict_mode {
             return Err(short_exec_error(
                 know_stmt.clone().into(),
-                "strict mode rejects user know statements; use claim/thm/prove or move trusted background into an imported module",
+                KnowStmt::strict_mode_rejection_message(),
                 None,
                 vec![],
             ));

@@ -3,26 +3,13 @@ use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
 pub struct InferResult {
-    pub effects: Vec<InferEffect>,
+    pub store_fact_outputs: Vec<StoreFactOutput>,
 }
 
 #[derive(Clone, Debug)]
-pub enum InferEffect {
-    AddsToContext(AddsToContextEffect),
-    AbstractPropDefinition(AbstractPropDefinitionEffect),
-    Warning(OutputWarning),
-}
-
-#[derive(Clone, Debug)]
-pub struct AddsToContextEffect {
-    pub reason: InferReason,
-    pub facts: Vec<Fact>,
-}
-
-#[derive(Clone, Debug)]
-pub struct AbstractPropDefinitionEffect {
-    pub name: String,
-    pub params: Vec<String>,
+pub struct StoreFactOutput {
+    pub itself_and_why_itself_is_stored: (Fact, String),
+    pub inferred_facts: Vec<Fact>,
 }
 
 #[derive(Clone, Debug)]
@@ -31,14 +18,19 @@ pub enum InferReason {
     ProvedClaim,
     UnsafeAssumption,
     LetBinding,
-    ObjectIntroduction,
+    InferredFact,
+    StoredFact,
+    StoredFactWithoutForallCoverageCheck,
+    StoredForallFact,
+    ObjectDefinition,
+    FunctionDefinition,
     ExistElimination,
     TheoremInstantiation,
     ByDefinition(ByDefinitionReason),
     BuiltinInference(BuiltinInferenceReason),
     InferRule(InferRuleReason),
     Evaluation,
-    ParameterDeclaration,
+    ParameterDefinition,
     Other(String),
 }
 
@@ -60,14 +52,11 @@ pub struct InferRuleReason {
     pub rule: String,
 }
 
-#[derive(Clone, Debug)]
-pub struct OutputWarning {
-    pub message: String,
-}
-
 impl InferResult {
     pub fn new() -> Self {
-        InferResult { effects: vec![] }
+        InferResult {
+            store_fact_outputs: vec![],
+        }
     }
 
     pub fn from_fact(fact: &Fact) -> Self {
@@ -77,11 +66,11 @@ impl InferResult {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.effects.is_empty()
+        self.store_fact_outputs.is_empty()
     }
 
-    pub fn effects(&self) -> &[InferEffect] {
-        &self.effects
+    pub fn store_fact_outputs(&self) -> &[StoreFactOutput] {
+        &self.store_fact_outputs
     }
 
     pub fn infer_lines_unique_in_order(&self) -> Vec<String> {
@@ -94,9 +83,16 @@ impl InferResult {
 
     pub fn inferred_facts(&self) -> Vec<Fact> {
         let mut facts = Vec::new();
-        for effect in self.effects.iter() {
-            if let InferEffect::AddsToContext(adds) = effect {
-                facts.extend(adds.facts.iter().cloned());
+        let mut seen = HashSet::new();
+        for output in self.store_fact_outputs.iter() {
+            let fact = output.itself_and_why_itself_is_stored.0.clone();
+            if seen.insert(fact.to_string()) {
+                facts.push(fact);
+            }
+            for inferred_fact in output.inferred_facts.iter() {
+                if seen.insert(inferred_fact.to_string()) {
+                    facts.push(inferred_fact.clone());
+                }
             }
         }
         facts
@@ -104,29 +100,24 @@ impl InferResult {
 
     pub fn contains_added_fact(&self, fact: &Fact) -> bool {
         let target = fact.to_string();
-        self.effects.iter().any(|effect| {
-            let InferEffect::AddsToContext(adds) = effect else {
-                return false;
-            };
-            adds.facts
-                .iter()
-                .any(|added_fact| added_fact.to_string() == target)
+        self.store_fact_outputs.iter().any(|output| {
+            output.itself_and_why_itself_is_stored.0.to_string() == target
+                || output
+                    .inferred_facts
+                    .iter()
+                    .any(|added_fact| added_fact.to_string() == target)
         })
     }
 
     pub fn remove_first_verified_statement_for_fact(&mut self, fact: &Fact) {
         let target = fact.to_string();
         let mut removed = false;
-        self.effects.retain(|effect| {
+        self.store_fact_outputs.retain(|output| {
             if removed {
                 return true;
             }
-            let InferEffect::AddsToContext(adds) = effect else {
-                return true;
-            };
-            let is_target = matches!(adds.reason, InferReason::VerifiedStatement)
-                && adds.facts.len() == 1
-                && adds.facts[0].to_string() == target;
+            let is_target = output.itself_and_why_itself_is_stored.1 == Fact::store_reason()
+                && output.itself_and_why_itself_is_stored.0.to_string() == target;
             if is_target {
                 removed = true;
                 false
@@ -140,12 +131,10 @@ impl InferResult {
         self.infer_lines_unique_in_order().join(sep)
     }
 
-    pub fn new_with_msg(&mut self, msg: String) {
-        self.add_warning(msg);
-    }
+    pub fn new_with_msg(&mut self, _msg: String) {}
 
     pub fn new_fact(&mut self, fact: &Fact) {
-        self.add_infer_rule(None, "legacy inference", fact);
+        self.add_fact_with_reason(InferReason::InferredFact, fact);
     }
 
     pub fn push_atomic_fact(&mut self, atomic_fact: &AtomicFact) {
@@ -154,35 +143,48 @@ impl InferResult {
     }
 
     pub fn new_infer_result_inside(&mut self, other_infer_result: InferResult) {
-        self.effects.extend(other_infer_result.effects);
+        self.store_fact_outputs
+            .extend(other_infer_result.store_fact_outputs);
     }
 
     pub fn add_verified_statement(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::VerifiedStatement, fact);
+        self.add_store_fact_output(fact, Fact::store_reason(), Vec::new());
     }
 
     pub fn add_proved_claim(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::ProvedClaim, fact);
+        self.add_store_fact_output(fact, ClaimStmt::store_reason(), Vec::new());
     }
 
     pub fn add_unsafe_assumption(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::UnsafeAssumption, fact);
+        self.add_store_fact_output(fact, KnowStmt::store_reason(), Vec::new());
     }
 
     pub fn add_let_binding(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::LetBinding, fact);
+        self.add_store_fact_output(fact, DefLetStmt::store_reason(), Vec::new());
     }
 
-    pub fn add_object_introduction(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::ObjectIntroduction, fact);
+    pub fn add_object_definition(&mut self, fact: &Fact) {
+        self.add_store_fact_output(
+            fact,
+            HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
+            Vec::new(),
+        );
+    }
+
+    pub fn add_function_definition(&mut self, fact: &Fact) {
+        self.add_store_fact_output(fact, HaveFnEqualStmt::store_reason(), Vec::new());
+    }
+
+    pub fn add_function_case_definition(&mut self, fact: &Fact) {
+        self.add_store_fact_output(fact, HaveFnEqualCaseByCaseStmt::store_reason(), Vec::new());
     }
 
     pub fn add_exist_elimination(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::ExistElimination, fact);
+        self.add_store_fact_output(fact, HaveByExistStmt::store_reason(), Vec::new());
     }
 
     pub fn add_theorem_instantiation(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::TheoremInstantiation, fact);
+        self.add_store_fact_output(fact, ByThmStmt::store_reason(), Vec::new());
     }
 
     pub fn add_fact_by_definition(
@@ -222,86 +224,114 @@ impl InferResult {
     }
 
     pub fn add_evaluation(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::Evaluation, fact);
+        self.add_store_fact_output(fact, EvalStmt::store_reason(), Vec::new());
     }
 
-    pub fn add_parameter_declaration(&mut self, fact: &Fact) {
-        self.add_fact_with_reason(InferReason::ParameterDeclaration, fact);
-    }
-
-    pub fn add_warning(&mut self, message: String) {
-        self.effects
-            .push(InferEffect::Warning(OutputWarning::new(message)));
-    }
-
-    pub fn add_abstract_prop_definition(&mut self, name: &str, params: &[String]) {
-        self.effects.push(InferEffect::AbstractPropDefinition(
-            AbstractPropDefinitionEffect::new(name.to_string(), params.to_vec()),
-        ));
+    pub fn add_parameter_definition(&mut self, fact: &Fact) {
+        self.add_store_fact_output(fact, ParamDefWithType::store_reason(), Vec::new());
     }
 
     pub fn add_fact_with_reason(&mut self, reason: InferReason, fact: &Fact) {
-        self.push_fact_with_reason(reason, fact.clone());
+        let reason_text = reason.store_reason();
+        self.add_store_fact_output(fact, reason_text, Vec::new());
     }
 
     pub fn relabel_primary_fact(&mut self, fact: &Fact, reason: InferReason) {
-        for effect in self.effects.iter_mut() {
-            let InferEffect::AddsToContext(adds) = effect else {
-                continue;
-            };
-            if adds.facts.len() == 1 && adds.facts[0].to_string() == fact.to_string() {
-                adds.reason = reason;
+        let reason_text = reason.store_reason();
+        for output in self.store_fact_outputs.iter_mut() {
+            if output.itself_and_why_itself_is_stored.0.to_string() == fact.to_string() {
+                output.itself_and_why_itself_is_stored.1 = reason_text;
                 return;
             }
         }
     }
 
     pub fn relabel_all_added_facts(&mut self, reason: InferReason) {
-        for effect in self.effects.iter_mut() {
-            if let InferEffect::AddsToContext(adds) = effect {
-                adds.reason = reason.clone();
-            }
+        let reason_text = reason.store_reason();
+        self.relabel_all_added_facts_with_store_reason(reason_text);
+    }
+
+    pub fn relabel_all_added_facts_with_store_reason(&mut self, reason: impl Into<String>) {
+        let reason_text = reason.into();
+        for output in self.store_fact_outputs.iter_mut() {
+            output.itself_and_why_itself_is_stored.1 = reason_text.clone();
         }
     }
 
-    fn push_fact_with_reason(&mut self, reason: InferReason, fact: Fact) {
-        self.effects
-            .push(InferEffect::AddsToContext(AddsToContextEffect::new(
-                reason,
-                vec![fact],
-            )));
+    pub fn add_store_fact_output(
+        &mut self,
+        fact: &Fact,
+        reason: impl Into<String>,
+        inferred_facts: Vec<Fact>,
+    ) {
+        self.store_fact_outputs.push(StoreFactOutput::new(
+            fact.clone(),
+            reason.into(),
+            inferred_facts,
+        ));
     }
 
     fn infer_lines(&self) -> Vec<String> {
         let mut lines = Vec::new();
-        for effect in self.effects.iter() {
-            match effect {
-                InferEffect::AddsToContext(adds) => {
-                    lines.extend(adds.facts.iter().map(|fact| fact.to_string()));
-                }
-                InferEffect::AbstractPropDefinition(definition) => {
-                    lines.push(format!(
-                        "defined abstract prop {}({}) with unspecified definition",
-                        definition.name,
-                        definition.params.join(", ")
-                    ));
-                }
-                InferEffect::Warning(warning) => lines.push(warning.message.clone()),
+        for output in self.store_fact_outputs.iter() {
+            lines.push(format!(
+                "store {} ({})",
+                output.itself_and_why_itself_is_stored.0, output.itself_and_why_itself_is_stored.1
+            ));
+            for fact in output.inferred_facts.iter() {
+                lines.push(format!("infer {}", fact));
             }
         }
         lines
     }
 }
 
-impl AbstractPropDefinitionEffect {
-    pub fn new(name: String, params: Vec<String>) -> Self {
-        AbstractPropDefinitionEffect { name, params }
+impl StoreFactOutput {
+    pub fn new(fact: Fact, reason: String, inferred_facts: Vec<Fact>) -> Self {
+        let fact_text = fact.to_string();
+        let mut seen = HashSet::new();
+        let inferred_facts = inferred_facts
+            .into_iter()
+            .filter(|inferred_fact| {
+                let inferred_text = inferred_fact.to_string();
+                inferred_text != fact_text && seen.insert(inferred_text)
+            })
+            .collect::<Vec<_>>();
+        StoreFactOutput {
+            itself_and_why_itself_is_stored: (fact, reason),
+            inferred_facts,
+        }
     }
 }
 
-impl AddsToContextEffect {
-    pub fn new(reason: InferReason, facts: Vec<Fact>) -> Self {
-        AddsToContextEffect { reason, facts }
+impl InferReason {
+    pub fn store_reason(&self) -> String {
+        match self {
+            InferReason::VerifiedStatement => Fact::store_reason().to_string(),
+            InferReason::ProvedClaim => ClaimStmt::store_reason().to_string(),
+            InferReason::UnsafeAssumption => KnowStmt::store_reason().to_string(),
+            InferReason::LetBinding => DefLetStmt::store_reason().to_string(),
+            InferReason::InferredFact => "inferred fact".to_string(),
+            InferReason::StoredFact => "stored fact".to_string(),
+            InferReason::StoredFactWithoutForallCoverageCheck => {
+                "stored fact without forall coverage check".to_string()
+            }
+            InferReason::StoredForallFact => "stored forall fact".to_string(),
+            InferReason::ObjectDefinition => {
+                HaveObjInNonemptySetOrParamTypeStmt::store_reason().to_string()
+            }
+            InferReason::FunctionDefinition => HaveFnEqualStmt::store_reason().to_string(),
+            InferReason::ExistElimination => HaveByExistStmt::store_reason().to_string(),
+            InferReason::TheoremInstantiation => ByThmStmt::store_reason().to_string(),
+            InferReason::ByDefinition(_) => "inferred by definition".to_string(),
+            InferReason::BuiltinInference(reason) => {
+                format!("inferred by builtin rule `{}`", reason.rule)
+            }
+            InferReason::InferRule(reason) => format!("inferred by infer rule `{}`", reason.rule),
+            InferReason::Evaluation => EvalStmt::store_reason().to_string(),
+            InferReason::ParameterDefinition => ParamDefWithType::store_reason().to_string(),
+            InferReason::Other(s) => s.clone(),
+        }
     }
 }
 
@@ -329,11 +359,5 @@ impl InferRuleReason {
             source_fact: source_fact.map(Box::new),
             rule,
         }
-    }
-}
-
-impl OutputWarning {
-    pub fn new(message: String) -> Self {
-        OutputWarning { message }
     }
 }

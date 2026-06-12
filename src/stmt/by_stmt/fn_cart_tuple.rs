@@ -26,6 +26,10 @@ impl ByFnSetAsSetStmt {
             line_file,
         }
     }
+
+    pub fn store_reason() -> &'static str {
+        HaveFnEqualStmt::store_reason()
+    }
 }
 
 // view fn set as a subset of a cartesian product set

@@ -47,7 +47,7 @@ impl Runtime {
             let fact_infer_result = self
                 .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                     fact.clone(),
-                    InferReason::ParameterDeclaration,
+                    InferReason::ParameterDefinition,
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
