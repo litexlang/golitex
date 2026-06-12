@@ -28,7 +28,7 @@ impl Runtime {
             }
         }
 
-        let next_verify_state = verify_state.make_state_with_req_ok_set_to_true();
+        let next_verify_state = verify_state.with_well_defined_already_verified();
 
         match fact {
             AtomicFact::EqualFact(equal_fact) => {

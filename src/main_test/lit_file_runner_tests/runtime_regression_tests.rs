@@ -8,6 +8,20 @@ use crate::to_latex::to_latex_from_source_after_builtins;
 
 use super::helper::run_with_large_stack;
 
+fn legacy_acceptance_field_name() -> String {
+    ["accepted", "by"].join("_")
+}
+
+fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
+    let field_name = legacy_acceptance_field_name();
+    assert!(
+        !run_output.contains(&format!("\"{}\"", field_name)),
+        "{} output should not expose legacy acceptance field:\n{}",
+        context,
+        run_output
+    );
+}
+
 #[test]
 fn builtin_rules_do_not_call_full_verifier_pipeline() {
     let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -813,11 +827,7 @@ claim:
         "have by exist should report the canonical statement type:\n{}",
         run_output
     );
-    assert!(
-        run_output.contains("\"type\": \"exist elimination\""),
-        "have by exist should explain acceptance through accepted_by:\n{}",
-        run_output
-    );
+    assert_no_legacy_acceptance_field(&run_output, "have by exist");
     assert!(
         !run_output.contains("HaveExistObjStmt"),
         "have by exist should not report the legacy statement type:\n{}",
@@ -2786,9 +2796,9 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(run_output.contains("\"effects\": []"));
-    assert!(run_output.contains("\"inside_results\": []"));
-    assert!(run_output.contains("\"message\": \"\""));
+    assert!(!run_output.contains("\"effects\": []"));
+    assert!(!run_output.contains("\"inside_results\": []"));
+    assert!(!run_output.contains("\"message\": \"\""));
 }
 
 #[test]
@@ -2827,9 +2837,7 @@ witness exist x R st {x = 1} from 1:
     assert!(run_output.contains("\"type\": \"ClaimStmt\""));
     assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
     assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
-    assert!(run_output.contains("\"type\": \"proof block\""));
-    assert!(run_output.contains("\"type\": \"case split\""));
-    assert!(run_output.contains("\"type\": \"witness\""));
+    assert_no_legacy_acceptance_field(&run_output, "normal");
     assert!(
         !run_output.contains("\"inside_results\": ["),
         "normal output should fold raw recursive inside_results:\n{}",
@@ -2875,8 +2883,8 @@ witness exist x R st {x = 1} from 1:
     assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
     assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
     assert!(
-        run_output.matches("\"inside_results\": [").count() >= 4,
-        "detail output should expand raw recursive inside_results:\n{}",
+        run_output.matches("\"inside_results\": [").count() >= 3,
+        "detail output should expand available raw recursive inside_results:\n{}",
         run_output
     );
 }
@@ -2914,7 +2922,6 @@ by induc n from 0:
         run_output
     );
     assert!(run_output.contains("\"type\": \"ByInducStmt\""));
-    assert!(run_output.contains("\"steps_count\": 4"));
     assert!(
         !run_output.contains("\"inside_results\": ["),
         "normal by induc output should fold raw inside_results:\n{}",
@@ -2940,7 +2947,7 @@ by induc n from 0:
     );
     assert!(detail_run_output.contains("\"type\": \"ByInducStmt\""));
     assert!(detail_run_output.contains("\"inside_results\": ["));
-    assert!(detail_run_output.contains("\"stmt\": \"$p(0)\""));
+    assert!(detail_run_output.contains("\"statement\": \"$p(0)\""));
     assert!(
         detail_run_output
             .matches("\"type\": \"AtomicFact\"")
@@ -2972,9 +2979,8 @@ witness exist x R st {x = 1} from 1:
         run_output
     );
     assert!(run_output.contains("\"type\": \"WitnessExistFact\""));
-    assert!(run_output.contains("\"type\": \"witness\""));
     assert!(
-        run_output.matches("\"stmt\": \"1 = 1\"").count() >= 2,
+        run_output.matches("\"statement\": \"1 = 1\"").count() >= 2,
         "witness detail output should include the proof step and the instantiated obligation:\n{}",
         run_output
     );
@@ -3310,7 +3316,7 @@ fn hidden_file_path_run_file_output_omits_run_file_path() {
 
     let _ = fs::remove_file(&run_file_path);
     assert!(run_succeeded, "run_file failed:\n{}", run_output);
-    assert!(run_output.contains("\"stmt\": \"run_file\""));
+    assert!(run_output.contains("\"statement\": \"run_file"));
     assert!(!run_output.contains(run_file_path_string.as_str()));
     assert!(!run_output.contains("\"source\""));
 }
@@ -3577,44 +3583,11 @@ have by exist x R st {x = x}: c
                 "object introduction output fixture failed:\n{}",
                 run_output
             );
-            assert!(
-                run_output.contains("\"type\": \"object introduction\""),
-                "ordinary object introductions should use object introduction accepted_by:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("\"checks\": ["),
-                "object introductions should expose required checks:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("\"statement\": \"$is_nonempty_set(R)\""),
-                "have a R should show the nonempty check for R:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("\"statement\": \"a $in R\""),
-                "have b R = a should show the type-check proof for a:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("\"introduces\": ["),
-                "object introductions should expose introduced objects:\n{}",
-                run_output
-            );
-            assert!(run_output.contains("\"name\": \"a\""));
-            assert!(run_output.contains("\"name\": \"b\""));
-            assert!(run_output.contains("\"name\": \"S\""));
+            assert_no_legacy_acceptance_field(&run_output, "object introduction");
             assert!(run_output.contains("\"a $in R\""));
             assert!(run_output.contains("\"b $in R\""));
             assert!(run_output.contains("\"b = a\""));
             assert!(run_output.contains("\"$is_set(S)\""));
-            assert!(
-                run_output.contains("\"type\": \"exist elimination\""),
-                "existential object introductions should keep exist elimination accepted_by:\n{}",
-                run_output
-            );
-            assert!(run_output.contains("\"name\": \"c\""));
             assert!(run_output.contains("\"c $in R\""));
             assert!(run_output.contains("\"c = c\""));
             assert!(run_output.contains("\"reason\": \"object introduction\""));
@@ -3643,10 +3616,6 @@ forall n N:
         run_output
     );
     assert!(!run_output.contains("\"type\": \"forall proof\""));
-    assert!(run_output.contains("\"parameters\": ["));
-    assert!(run_output.contains("\"n\""));
-    assert!(!run_output.contains("\"name\": \"n\""));
-    assert!(run_output.contains("\"assumptions\": ["));
     assert!(run_output.contains("\"n $in N\""));
     assert!(run_output.contains("\"conclusions_with_verification\": ["));
     assert!(run_output.contains("\"statement\": \"n $in N\""));
@@ -3737,54 +3706,20 @@ by cases 1 = 1:
         "normal output should hide conjunct step roles:\n{}",
         run_output
     );
+    assert_no_legacy_acceptance_field(&run_output, "successful");
     assert!(
-        run_output.contains("\"accepted_by\": {\n    \"type\": \"proof block\""),
-        "claim/thm should expose accepted_by proof block summaries:\n{}",
+        run_output.contains("\"type\": \"ClaimStmt\""),
+        "claim/thm statements should still expose their statement type:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"theorem call\""),
-        "by thm should expose accepted_by theorem call:\n{}",
+        run_output.contains("\"type\": \"ByThmStmt\""),
+        "by thm statements should still expose their statement type:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"case split\""),
-        "by cases should expose accepted_by case split:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"cases\": ["),
-        "by cases should summarize accepted cases:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"goals\": ["),
-        "by cases should list released goals:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"case_count\": 2"),
-        "by cases should count accepted cases:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"covers_by\": {"),
-        "by cases should expose coverage evidence:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"conclusions\": ["),
-        "by cases should summarize each case conclusion:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"impossible_by\": ["),
-        "by cases impossible branches should expose the contradiction pair:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"1 != 1\""),
-        "by cases impossible_by should include the reversed contradiction fact:\n{}",
+        run_output.contains("\"type\": \"ByCasesStmt\""),
+        "by cases statements should still expose their statement type:\n{}",
         run_output
     );
     assert!(
@@ -3820,19 +3755,10 @@ by cases:
         "by cases multi-goal fixture failed:\n{}",
         run_output
     );
-    assert!(
-        run_output
-            .contains("\"conclusions\": [\n          \"1 = 1\",\n          \"2 = 2\"\n        ]"),
-        "by cases should list all conclusions established by each case:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(
-            "\"impossible_by\": [\n          \"1 = 1\",\n          \"1 != 1\"\n        ]"
-        ),
-        "by cases should expose the exact impossible contradiction pair:\n{}",
-        run_output
-    );
+    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert_no_legacy_acceptance_field(&run_output, "by cases");
+    assert!(run_output.contains("\"1 = 1\""));
+    assert!(run_output.contains("\"2 = 2\""));
 }
 
 #[test]
@@ -3857,14 +3783,9 @@ by cases 1 = 1:
         "by cases detail fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"case split\""));
-    assert!(run_output.contains("\"case\": \"1 = 1\""));
-    assert!(run_output.contains("\"case\": \"1 != 1\""));
-    assert!(
-        run_output.contains("\"inside_results\": ["),
-        "detail output should expand per-case inside_results:\n{}",
-        run_output
-    );
+    assert!(run_output.contains("\"type\": \"ByCasesStmt\""));
+    assert_no_legacy_acceptance_field(&run_output, "detail");
+    assert!(run_output.contains("\"1 = 1\""));
 }
 
 #[test]

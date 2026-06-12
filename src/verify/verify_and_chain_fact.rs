@@ -36,7 +36,7 @@ impl Runtime {
             return Ok(fact_verified.into());
         }
 
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
         let mut child_results: Vec<StmtResult> = Vec::with_capacity(and_fact.facts.len());
         for fact in and_fact.facts.iter() {
@@ -170,7 +170,7 @@ impl Runtime {
             }
         }
 
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
         let facts = chain_fact.facts().map_err(|e| {
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

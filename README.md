@@ -133,9 +133,9 @@ For most factual statements, the proof route is reported under `verification`.
 More structured facts can include a `steps` array inside that object. A
 successful `forall` fact instead reports `conclusions_with_verification`, where
 each conclusion carries its own `verification`; detail output additionally
-expands the local `parameters` and `assumptions`. For non-factual statements
-such as definitions, `claim`, `thm`, and `by cases`, the top-level summary is
-reported under `accepted_by`.
+expands the local `parameters` and `assumptions`. Non-factual statements such
+as definitions, `claim`, `thm`, and `by cases` report their context changes
+under `effects`; detail output can expand their local `inside_results`.
 
 Every factual statement has exactly one of three outcomes: **true**,
 **unknown**, or **error**. `true` means Litex found a proof path relative to the

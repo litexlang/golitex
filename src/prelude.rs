@@ -1,3 +1,10 @@
+//! Kernel-internal convenience imports.
+//!
+//! This module is a broad import surface for Litex's Rust implementation. It is
+//! not intended to define a public Rust API; repository code uses
+//! `use crate::prelude::*;` so implementation files can focus on kernel logic
+//! instead of long import lists.
+
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
@@ -176,13 +183,9 @@ pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation
 pub use crate::rational_expression::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
-pub use crate::result::AcceptedByKind;
-pub use crate::result::AcceptedByResult;
 pub use crate::result::AndFactUnknown;
 pub use crate::result::AtomicFactUnknown;
 pub use crate::result::ByStmtResult;
-pub use crate::result::CaseSplitAcceptedBy;
-pub use crate::result::CaseSplitCoverage;
 pub use crate::result::ChainFactUnknown;
 pub use crate::result::CommandStmtResult;
 pub use crate::result::DefAliasStmtResult;

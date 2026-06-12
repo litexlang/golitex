@@ -344,7 +344,8 @@ can put sub-checks in `verification.steps`. A successful `forall` fact reports
 `conclusions_with_verification`, with each conclusion carrying a `verification`
 object; detail output additionally expands the local `parameters` and
 `assumptions`. Successful non-factual statements, such as definitions or proof
-blocks, use `accepted_by` for the top-level summary.
+blocks, report context changes under `effects`; detail output can expand nested
+`inside_results` when available.
 
 If an error occurs, Litex prints an error JSON object. The important fields are usually:
 

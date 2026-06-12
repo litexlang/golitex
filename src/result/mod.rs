@@ -28,8 +28,7 @@ pub use fact_unknown::{
 pub use proof_block_stmt_result::ProofBlockStmtResult;
 pub use runtime_result::StmtResult;
 pub use runtime_success::{
-    AcceptedByKind, AcceptedByResult, CaseSplitAcceptedBy, CaseSplitCoverage, FactualStmtSuccess,
-    ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
+    FactualStmtSuccess, ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
     KnownForallInstantiationResult, KnownForallRequirementResult, NonFactualStmtSuccess,
     ObjectIntroductionItem, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
     VerifiedBysEnum, VerifiedBysResult,

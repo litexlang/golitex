@@ -84,7 +84,7 @@ impl Runtime {
 
         match fact {
             Fact::AndFact(and_fact) => {
-                let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+                let verify_state_for_children = verify_state.with_well_defined_already_verified();
                 for (fact_index, child_fact) in and_fact.facts.iter().enumerate() {
                     let child_result =
                         self.verify_atomic_fact(child_fact, &verify_state_for_children)?;
@@ -104,7 +104,7 @@ impl Runtime {
                 Ok(result.wrap_unknown_for_fact(fact.clone()))
             }
             Fact::ChainFact(chain_fact) => {
-                let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+                let verify_state_for_children = verify_state.with_well_defined_already_verified();
                 let facts = chain_fact.facts()?;
                 for (fact_index, child_fact) in facts.iter().enumerate() {
                     let child_result =

@@ -2,7 +2,7 @@ use super::free_param_obj::DefStructFieldFreeParamObj;
 use crate::prelude::*;
 use std::fmt;
 
-/// 仅「名字/绑定子」的 [`Obj`] 载荷：标识符、带 `::` 的名字、与解析期自由参标记。
+/// Object payloads that are represented by a name or parsing-time binder marker.
 #[derive(Clone)]
 pub enum AtomObj {
     Identifier(Identifier),

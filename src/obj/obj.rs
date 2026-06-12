@@ -1030,7 +1030,7 @@ impl ProductOfFiniteSet {
     }
 }
 
-/// 算术运算符优先级：数值越小绑定越紧。^ / matrix ops =1, * / % / *. =2, + -=3；非算术=0 不参与括号。
+/// Arithmetic precedence for display; smaller numbers bind tighter.
 fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,

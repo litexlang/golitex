@@ -6,53 +6,12 @@ pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
     pub inside_results: Vec<StmtResult>,
-    pub accepted_by: AcceptedByResult,
-}
-
-#[derive(Debug)]
-pub struct AcceptedByResult {
-    pub kind: Box<AcceptedByKind>,
-    pub introduces: Vec<ObjectIntroductionItem>,
-}
-
-#[derive(Debug)]
-pub enum AcceptedByKind {
-    Assumption,
-    Definition,
-    ObjectIntroduction,
-    ExistElimination,
-    ProofBlock {
-        proved: Option<Fact>,
-        steps_count: usize,
-    },
-    CaseSplit {
-        goals: Vec<Fact>,
-        coverage: Option<CaseSplitCoverage>,
-        cases: Vec<CaseSplitAcceptedBy>,
-    },
-    TheoremCall,
-    Witness,
-    NoOp,
-    Evaluation,
-    Command,
-    VerifiedFact,
 }
 
 #[derive(Clone, Debug)]
 pub struct ObjectIntroductionItem {
     pub name: String,
     pub facts: Vec<Fact>,
-}
-
-pub struct CaseSplitAcceptedBy {
-    pub case_fact: AndChainAtomicFact,
-    pub impossible_fact: Option<AtomicFact>,
-    pub inside_results: Vec<StmtResult>,
-}
-
-pub struct CaseSplitCoverage {
-    pub fact: Fact,
-    pub result: Box<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -396,109 +355,9 @@ impl KnownForallInstantiationResult {
     }
 }
 
-impl AcceptedByResult {
-    pub fn new(kind: AcceptedByKind) -> Self {
-        AcceptedByResult {
-            kind: Box::new(kind),
-            introduces: Vec::new(),
-        }
-    }
-
-    pub fn from_stmt(stmt: &Stmt, steps_count: usize) -> Self {
-        match stmt {
-            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(_)) => Self::new(AcceptedByKind::Assumption),
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(_))
-            | Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)) => {
-                Self::new(AcceptedByKind::ExistElimination)
-            }
-            Stmt::DefObjStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefThmStmt(_) | Stmt::DefStrategyStmt(_) | Stmt::ProofBlock(_) => {
-                Self::proof_block(None, steps_count)
-            }
-            Stmt::DefPredicateStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefAliasStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefInterfaceStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::DefAlgoStmt(_) => Self::new(AcceptedByKind::Definition),
-            Stmt::By(ByStmt::ByCasesStmt(_)) => Self::case_split(vec![], vec![]),
-            Stmt::By(ByStmt::ByThmStmt(_)) => Self::new(AcceptedByKind::TheoremCall),
-            Stmt::By(_) => Self::proof_block(None, steps_count),
-            Stmt::Witness(_) => Self::new(AcceptedByKind::Witness),
-            Stmt::Command(CommandStmt::DoNothingStmt(_)) => Self::new(AcceptedByKind::NoOp),
-            Stmt::Command(CommandStmt::EvalStmt(_)) | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
-                Self::new(AcceptedByKind::Evaluation)
-            }
-            Stmt::Command(_) => Self::new(AcceptedByKind::Command),
-            Stmt::Fact(_) => Self::new(AcceptedByKind::VerifiedFact),
-        }
-    }
-
-    pub fn proof_block(proved: Option<Fact>, steps_count: usize) -> Self {
-        Self::new(AcceptedByKind::ProofBlock {
-            proved,
-            steps_count,
-        })
-    }
-
-    pub fn case_split(goals: Vec<Fact>, cases: Vec<CaseSplitAcceptedBy>) -> Self {
-        Self::case_split_with_coverage(goals, None, cases)
-    }
-
-    pub fn case_split_with_coverage(
-        goals: Vec<Fact>,
-        coverage: Option<CaseSplitCoverage>,
-        cases: Vec<CaseSplitAcceptedBy>,
-    ) -> Self {
-        Self::new(AcceptedByKind::CaseSplit {
-            goals,
-            coverage,
-            cases,
-        })
-    }
-
-    pub fn exist_elimination() -> Self {
-        Self::new(AcceptedByKind::ExistElimination)
-    }
-
-    pub fn object_introduction(introduces: Vec<ObjectIntroductionItem>) -> Self {
-        let mut result = Self::new(AcceptedByKind::ObjectIntroduction);
-        result.introduces = introduces;
-        result
-    }
-
-    pub fn exist_elimination_with_introduces(introduces: Vec<ObjectIntroductionItem>) -> Self {
-        let mut result = Self::exist_elimination();
-        result.introduces = introduces;
-        result
-    }
-}
-
 impl ObjectIntroductionItem {
     pub fn new(name: String, facts: Vec<Fact>) -> Self {
         ObjectIntroductionItem { name, facts }
-    }
-}
-
-impl CaseSplitAcceptedBy {
-    pub fn new(
-        case_fact: AndChainAtomicFact,
-        impossible_fact: Option<AtomicFact>,
-        inside_results: Vec<StmtResult>,
-    ) -> Self {
-        CaseSplitAcceptedBy {
-            case_fact,
-            impossible_fact,
-            inside_results,
-        }
-    }
-}
-
-impl CaseSplitCoverage {
-    pub fn new(fact: Fact, result: StmtResult) -> Self {
-        CaseSplitCoverage {
-            fact,
-            result: Box::new(result),
-        }
     }
 }
 
@@ -538,45 +397,12 @@ impl fmt::Debug for ForallProvedFactResult {
     }
 }
 
-impl fmt::Debug for CaseSplitCoverage {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("CaseSplitCoverage")
-            .field("fact", &self.fact.to_string())
-            .field("result", &self.result)
-            .finish()
-    }
-}
-
-impl fmt::Debug for CaseSplitAcceptedBy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("CaseSplitAcceptedBy")
-            .field("case_fact", &self.case_fact.to_string())
-            .field(
-                "impossible_fact",
-                &self.impossible_fact.as_ref().map(|fact| fact.to_string()),
-            )
-            .field("inside_results", &self.inside_results)
-            .finish()
-    }
-}
-
 impl NonFactualStmtSuccess {
     pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
-        let accepted_by = AcceptedByResult::from_stmt(&stmt, inside_results.len());
-        Self::new_with_accepted_by(stmt, infers, inside_results, accepted_by)
-    }
-
-    pub fn new_with_accepted_by(
-        stmt: Stmt,
-        infers: InferResult,
-        inside_results: Vec<StmtResult>,
-        accepted_by: AcceptedByResult,
-    ) -> Self {
         NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
-            accepted_by,
         }
     }
 

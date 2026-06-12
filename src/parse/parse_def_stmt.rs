@@ -1158,7 +1158,7 @@ impl Runtime {
         })
     }
 
-    /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
+    /// Parses one `case <condition>: <return>` branch in an algorithm definition.
     fn parse_algo_case(&mut self, block: &mut TokenBlock) -> Result<AlgoCase, RuntimeError> {
         block.skip_token(CASE)?;
         let condition = self.parse_atomic_fact(block, true)?;
@@ -1172,7 +1172,7 @@ impl Runtime {
         ))
     }
 
-    /// head 里是 return，后跟 obj。
+    /// Parses the return object for an algorithm branch or default return.
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, RuntimeError> {
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, block.line_file.clone()))

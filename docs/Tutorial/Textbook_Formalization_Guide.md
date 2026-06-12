@@ -24,9 +24,9 @@ The output of this step is one markdown file per chapter. It is not Litex code y
 
 This section is the core rulebook for turning textbook content into a Litex formalization plan. Ask AI to use `chap9.md` in the appendix as the model and classify new chapters in the same style.
 
-- `narrative`: Use this for chapter transitions, motivation, and explanatory text. Most narrative can later become comments in the Litex file. Some narrative is only ordinary explanation and has no mathematical object to formalize; some narrative is really presenting a mathematical example, and that part can be extracted as an `example sketch`.
+- `narrative`: Use this for chapter transitions, motivation, and explanatory text. In the Litex chapter file, narrative items should not become global `claim`, `prop`, `have`, or theorem interfaces. If the narrative contains a useful runnable mathematical illustration, write it as a local `sketch:` block under the explanatory comment. If it is only ordinary explanation, keep it as comments only.
 
-- `object definition`: Use this when the book defines a mathematical object, function, set, template, or notation. If the object already corresponds to a Litex keyword or standard form, use the Litex-native interface directly instead of wrapping it in another definition. For example, intervals can correspond to `cc(a, b)`, `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `oinf(a)`, `info(a)`, and related interval forms.
+- `object definition`: Use this when the book defines a mathematical object, function, set, template, or notation. If the object already corresponds to a Litex keyword or built-in object, do not define a new wrapper. Use a local `sketch:` to show the built-in object's characteristic properties. For example, intervals can correspond to `cc(a, b)`, `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `oinf(a)`, `info(a)`, and related interval forms, and their endpoint/order facts can be shown inside `sketch:`. If the object is not built in, define it with `have` or the appropriate Litex definition form. If the textbook immediately states key properties of the new object that later arguments depend on, promote those properties to `thm`; if the properties are ordinary sanity checks or examples, keep them inside `sketch:`.
 
 - `prop definition`: Use this when the book defines a property, predicate, or relation. Some passages look like object definitions but are really prop definitions. For example, "x is an adherent point of X" is essentially a predicate. For naming, predicates without an obvious existential structure can use `is_xxx`; properties with an existential structure can use `has_xxx`.
 
@@ -35,6 +35,18 @@ This section is the core rulebook for turning textbook content into a Litex form
 - `example sketch`: Use this for examples after definitions or theorems. A textbook often gives many examples after one definition; the first pass does not need to formalize all of them. Pick the first representative example, or the example that best tests the current definition. Litex `sketch` opens a local environment and does not pollute the outer context, so it is a good fit for local demonstrations.
 
 Definitions must not be skipped. Even if a complete proof cannot be written immediately, record the definition and use the smallest honest placeholder during formalization. Examples may be skipped, especially if they are repetitive or do not affect the chapter dependency chain.
+
+For simple built-in facts inside `sketch:`, prefer the direct mathematical statement over a verbose local proof wrapper. For example, write
+
+```litex
+sketch:
+    forall a, b R, x cc(a, b):
+        x $in R
+        a <= x
+        x <= b
+```
+
+instead of wrapping the same statement in a local `claim` unless the proof steps themselves are pedagogically important.
 
 If the source book says `Proof. See Exercise ...`, then the book itself has omitted the proof. In the first pass, record the item as a `thm`, temporarily use `know` for the proof, mark it as proof debt, and return to it in a second pass.
 
@@ -62,6 +74,7 @@ If AI gets stuck on something you know how to do, guide it. If you also do not k
 This appendix illustrates several important patterns:
 
 - The sequence convention is recorded as `narrative`, because Tao's book indexes sequences from `N`, while this Litex workspace treats `a seq(R)` as a function from `N_pos` to `R`.
+- Narrative notes such as the sequence convention should be written as local `sketch:` blocks when they include runnable Litex examples, so they do not pollute the chapter's global theorem environment.
 - Intervals are `object definition` items, but the later Litex code should prefer existing interval notation.
 - Epsilon-adherent points, adherent points, closed sets, limit points, isolated points, and bounded sets are `prop definition` items.
 - Lemmas, corollaries, and the Heine-Borel theorem are all classified as `thm`.

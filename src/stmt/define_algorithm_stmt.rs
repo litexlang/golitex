@@ -20,7 +20,7 @@ pub struct AlgoReturn {
 }
 #[derive(Clone)]
 pub struct AlgoCase {
-    pub condition: AtomicFact, // 只有 atomic fact 能reverse，而 algo case 有可能需要被reverse掉（处理 default_return 的时候）。
+    pub condition: AtomicFact, // Algo cases may be negated when building default-return coverage.
     pub return_stmt: AlgoReturn,
     pub line_file: LineFile,
 }

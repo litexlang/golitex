@@ -94,7 +94,6 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
         let body_fact_verify_state = VerifyState::new(0, false);
-        let mut introduced_body_facts: Vec<Fact> = Vec::new();
         for fact in exist_fact_in_have_obj_stmt.facts().iter() {
             let instantiated_fact = self
                 .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
@@ -102,7 +101,6 @@ impl Runtime {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), runtime_error)
                 })?
                 .to_fact();
-            introduced_body_facts.push(instantiated_fact.clone());
             let fact_infer_result = self
                 .verify_well_defined_and_store_and_infer_with_reason(
                     instantiated_fact,
@@ -115,23 +113,6 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
-        let mut introduces = self
-            .object_introduction_items_for_named_args(
-                exist_fact_in_have_obj_stmt.params_def_with_type(),
-                equal_tos,
-                &new_obj_names_as_identifier_objs,
-                line_file,
-                ParamObjType::Exist,
-            )
-            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-        Self::add_facts_to_object_introduction_items(&mut introduces, &introduced_body_facts);
-
-        Ok((NonFactualStmtSuccess::new_with_accepted_by(
-            stmt,
-            infer_result,
-            vec![result],
-            AcceptedByResult::exist_elimination_with_introduces(introduces),
-        ))
-        .into())
+        Ok((NonFactualStmtSuccess::new(stmt, infer_result, vec![result])).into())
     }
 }

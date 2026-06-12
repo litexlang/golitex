@@ -79,13 +79,4 @@ impl Runtime {
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt(s),
         }
     }
-
-    pub fn stmt_unsupported(stmt: Stmt) -> Result<StmtResult, RuntimeError> {
-        Err(short_exec_error(
-            stmt,
-            "unimplemented".to_string(),
-            None,
-            vec![],
-        ))
-    }
 }

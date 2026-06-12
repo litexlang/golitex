@@ -1,4 +1,7 @@
 mod atomic_fact;
+mod atomic_fact_args;
+mod atomic_fact_from;
+mod atomic_fact_metadata;
 mod chain_fact_order_closure;
 mod check_fact_has_no_duplicate_free_parameter;
 mod check_obj_has_no_duplicate_free_parameter;

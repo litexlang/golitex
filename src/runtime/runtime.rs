@@ -187,8 +187,8 @@ impl Runtime {
         self.environment_stack.len() > 1
     }
 
-    /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。
-    /// 与手写 `push`/`pop` 等价；若闭包 panic，栈不会恢复（与手写相同）。
+    /// Runs a closure in a temporary child environment and pops it on normal return.
+    /// This matches manual `push_env`/`pop_env`; a panic will not restore the stack.
     pub fn run_in_local_env<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
