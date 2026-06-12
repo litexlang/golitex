@@ -1821,6 +1821,34 @@ fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
 }
 
 #[test]
+fn direct_calculation_builtin_rule_output_localizes_to_zh() {
+    run_with_large_stack(
+        "direct_calculation_builtin_rule_output_localizes_to_zh_large_stack",
+        || {
+            let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "direct_calculation_builtin_rule_output_localizes_to_zh",
+            );
+            runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "Chinese direct calculation output failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"规则\": \"计算\""));
+            assert!(!run_output.contains("\"rule\": \"calculation\""));
+        },
+    );
+}
+
+#[test]
 fn known_equality_candidate_uses_rational_expression_simplification() {
     let source_code = r#"
 forall a, b R:
@@ -1845,6 +1873,35 @@ forall a, b R:
     assert!(run_output
         .contains("\"rule\": \"exact calculation and rational expression simplification\""));
     assert!(!run_output.contains("\"rule_id\""));
+}
+
+#[test]
+fn rational_expression_simplification_builtin_rule_output_localizes_to_zh() {
+    let source_code = r#"
+forall a, b R:
+    a^2 + a * a + b = 0
+    =>:
+        0 = 2 * a^2 + b
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
+    );
+    runtime.output_language = OutputLanguage::SimplifiedChinese;
+
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "Chinese rational expression simplification output failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"规则\": \"精确计算和有理表达式化简\""));
+    assert!(!run_output
+        .contains("\"rule\": \"exact calculation and rational expression simplification\""));
 }
 
 #[test]

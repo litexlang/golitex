@@ -13,7 +13,8 @@ fn verified_by_builtin_rule_value(
     verify_what: Option<&Fact>,
     subgoals: &[StmtResult],
 ) -> JsonValue {
-    let public_rule = builtin_rule_public_text(rule);
+    let rule_output_text = builtin_rule_output_text(rule);
+    let public_rule = render_builtin_rule_output_text(runtime.output_language, &rule_output_text);
     let mut fields = vec![
         (
             "type".to_string(),
@@ -615,32 +616,254 @@ impl VerifiedBysEnum {
     }
 }
 
-fn builtin_rule_public_text(rule: &str) -> String {
+enum BuiltinRuleOutputText {
+    Calculation,
+    SameExpressionBothSides,
+    SameExpressionBothSidesFromKnownBuiltinOnlyChecker,
+    SameKnownEqualityClass,
+    SameValueAfterResolvingKnownValues,
+    ExactCalculationAndRationalExpressionSimplification,
+    ComplementaryFactsCoverAllCases,
+    OppositeSignProductInRNeg,
+    OppositeSignProductInQNeg,
+    OppositeSignProductInZNeg,
+    Fallback(String),
+}
+
+fn builtin_rule_output_text(rule: &str) -> BuiltinRuleOutputText {
     match rule {
-        "they are the same" => "same expression on both sides".to_string(),
+        "calculation" => BuiltinRuleOutputText::Calculation,
+        "they are the same" => BuiltinRuleOutputText::SameExpressionBothSides,
         "known-only equality: they are the same" => {
-            "same expression on both sides from the known/builtin-only checker".to_string()
+            BuiltinRuleOutputText::SameExpressionBothSidesFromKnownBuiltinOnlyChecker
         }
-        "known-only equality: same known equality class" => "same known equality class".to_string(),
+        "known-only equality: same known equality class" => {
+            BuiltinRuleOutputText::SameKnownEqualityClass
+        }
         "known-only equality: resolved objects match" => {
-            "same value after resolving known values".to_string()
+            BuiltinRuleOutputText::SameValueAfterResolvingKnownValues
         }
         "or: complementary atomic facts (make_reversed first equals second)" => {
-            "complementary facts cover all cases".to_string()
+            BuiltinRuleOutputText::ComplementaryFactsCoverAllCases
         }
         "calculation and rational expression simplification" => {
-            "exact calculation and rational expression simplification".to_string()
+            BuiltinRuleOutputText::ExactCalculationAndRationalExpressionSimplification
         }
-        "mul_opposite_signs_product_in_R_neg" => {
-            "product of opposite-sign factors is in R_neg".to_string()
+        "mul_opposite_signs_product_in_R_neg" => BuiltinRuleOutputText::OppositeSignProductInRNeg,
+        "mul_opposite_signs_product_in_Q_neg" => BuiltinRuleOutputText::OppositeSignProductInQNeg,
+        "mul_opposite_signs_product_in_Z_neg" => BuiltinRuleOutputText::OppositeSignProductInZNeg,
+        _ => BuiltinRuleOutputText::Fallback(humanize_builtin_rule_label(rule)),
+    }
+}
+
+fn render_builtin_rule_output_text(
+    output_language: OutputLanguage,
+    text: &BuiltinRuleOutputText,
+) -> String {
+    match text {
+        BuiltinRuleOutputText::Calculation => match output_language {
+            OutputLanguage::English => "calculation",
+            OutputLanguage::SimplifiedChinese => "计算",
+            OutputLanguage::TraditionalChinese => "計算",
+            OutputLanguage::Japanese => "計算",
+            OutputLanguage::Korean => "계산",
+            OutputLanguage::Spanish => "cálculo",
+            OutputLanguage::French => "calcul",
+            OutputLanguage::German => "Rechnung",
+            OutputLanguage::Portuguese => "cálculo",
+            OutputLanguage::Russian => "вычисление",
+            OutputLanguage::Arabic => "حساب",
+            OutputLanguage::Hindi => "गणना",
+            OutputLanguage::Vietnamese => "tính toán",
+            OutputLanguage::Indonesian => "perhitungan",
         }
-        "mul_opposite_signs_product_in_Q_neg" => {
-            "product of opposite-sign factors is in Q_neg".to_string()
+        .to_string(),
+        BuiltinRuleOutputText::SameExpressionBothSides => match output_language {
+            OutputLanguage::English => "same expression on both sides",
+            OutputLanguage::SimplifiedChinese => "两边是同一个表达式",
+            OutputLanguage::TraditionalChinese => "兩邊是同一個表達式",
+            OutputLanguage::Japanese => "両辺が同じ式",
+            OutputLanguage::Korean => "양변이 같은 식",
+            OutputLanguage::Spanish => "la misma expresión en ambos lados",
+            OutputLanguage::French => "même expression des deux côtés",
+            OutputLanguage::German => "gleicher Ausdruck auf beiden Seiten",
+            OutputLanguage::Portuguese => "mesma expressão nos dois lados",
+            OutputLanguage::Russian => "одинаковое выражение с обеих сторон",
+            OutputLanguage::Arabic => "نفس التعبير على الجانبين",
+            OutputLanguage::Hindi => "दोनों ओर समान expression",
+            OutputLanguage::Vietnamese => "cùng biểu thức ở hai vế",
+            OutputLanguage::Indonesian => "ekspresi yang sama di kedua sisi",
         }
-        "mul_opposite_signs_product_in_Z_neg" => {
-            "product of opposite-sign factors is in Z_neg".to_string()
+        .to_string(),
+        BuiltinRuleOutputText::SameExpressionBothSidesFromKnownBuiltinOnlyChecker => {
+            match output_language {
+                OutputLanguage::English => {
+                    "same expression on both sides from the known/builtin-only checker"
+                }
+                OutputLanguage::SimplifiedChinese => {
+                    "由仅使用已知事实和内置规则的检查器确认两边是同一个表达式"
+                }
+                OutputLanguage::TraditionalChinese => {
+                    "由僅使用已知事實和內建規則的檢查器確認兩邊是同一個表達式"
+                }
+                OutputLanguage::Japanese => {
+                    "既知事実と組み込みルールのみのチェッカーにより両辺が同じ式"
+                }
+                OutputLanguage::Korean => "알려진 사실과 내장 규칙만 사용하는 검사기에서 양변이 같은 식",
+                OutputLanguage::Spanish => {
+                    "la misma expresión en ambos lados según el verificador solo con hechos conocidos y reglas integradas"
+                }
+                OutputLanguage::French => {
+                    "même expression des deux côtés selon le vérificateur limité aux faits connus et règles intégrées"
+                }
+                OutputLanguage::German => {
+                    "gleicher Ausdruck auf beiden Seiten nach dem Prüfer nur mit bekannten Fakten und eingebauten Regeln"
+                }
+                OutputLanguage::Portuguese => {
+                    "mesma expressão nos dois lados pelo verificador apenas com fatos conhecidos e regras internas"
+                }
+                OutputLanguage::Russian => {
+                    "одинаковое выражение с обеих сторон по проверке только известными фактами и встроенными правилами"
+                }
+                OutputLanguage::Arabic => {
+                    "نفس التعبير على الجانبين حسب الفاحص المعتمد فقط على الحقائق المعروفة والقواعد المضمنة"
+                }
+                OutputLanguage::Hindi => {
+                    "ज्ञात तथ्यों और आंतरिक नियमों तक सीमित checker से दोनों ओर समान expression"
+                }
+                OutputLanguage::Vietnamese => {
+                    "cùng biểu thức ở hai vế theo bộ kiểm tra chỉ dùng sự kiện đã biết và quy tắc tích hợp"
+                }
+                OutputLanguage::Indonesian => {
+                    "ekspresi yang sama di kedua sisi menurut pemeriksa yang hanya memakai fakta diketahui dan aturan bawaan"
+                }
+            }
+            .to_string()
         }
-        _ => humanize_builtin_rule_label(rule),
+        BuiltinRuleOutputText::SameKnownEqualityClass => match output_language {
+            OutputLanguage::English => "same known equality class",
+            OutputLanguage::SimplifiedChinese => "属于同一个已知等价类",
+            OutputLanguage::TraditionalChinese => "屬於同一個已知等價類",
+            OutputLanguage::Japanese => "同じ既知の等価類",
+            OutputLanguage::Korean => "같은 알려진 동치류",
+            OutputLanguage::Spanish => "la misma clase de igualdad conocida",
+            OutputLanguage::French => "même classe d'égalité connue",
+            OutputLanguage::German => "gleiche bekannte Gleichheitsklasse",
+            OutputLanguage::Portuguese => "mesma classe de igualdade conhecida",
+            OutputLanguage::Russian => "тот же известный класс равенства",
+            OutputLanguage::Arabic => "نفس صنف المساواة المعروف",
+            OutputLanguage::Hindi => "समान ज्ञात equality class",
+            OutputLanguage::Vietnamese => "cùng lớp đẳng thức đã biết",
+            OutputLanguage::Indonesian => "kelas kesamaan yang sama diketahui",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::SameValueAfterResolvingKnownValues => match output_language {
+            OutputLanguage::English => "same value after resolving known values",
+            OutputLanguage::SimplifiedChinese => "解析已知值后相同",
+            OutputLanguage::TraditionalChinese => "解析已知值後相同",
+            OutputLanguage::Japanese => "既知値を解決すると同じ値",
+            OutputLanguage::Korean => "알려진 값을 해소한 뒤 같은 값",
+            OutputLanguage::Spanish => "mismo valor tras resolver valores conocidos",
+            OutputLanguage::French => "même valeur après résolution des valeurs connues",
+            OutputLanguage::German => "gleicher Wert nach Auflösung bekannter Werte",
+            OutputLanguage::Portuguese => "mesmo valor após resolver valores conhecidos",
+            OutputLanguage::Russian => "то же значение после раскрытия известных значений",
+            OutputLanguage::Arabic => "نفس القيمة بعد حل القيم المعروفة",
+            OutputLanguage::Hindi => "ज्ञात मान हल करने के बाद समान मान",
+            OutputLanguage::Vietnamese => "cùng giá trị sau khi giải các giá trị đã biết",
+            OutputLanguage::Indonesian => "nilai yang sama setelah nilai diketahui diselesaikan",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::ExactCalculationAndRationalExpressionSimplification => {
+            match output_language {
+                OutputLanguage::English => {
+                    "exact calculation and rational expression simplification"
+                }
+                OutputLanguage::SimplifiedChinese => "精确计算和有理表达式化简",
+                OutputLanguage::TraditionalChinese => "精確計算和有理表達式化簡",
+                OutputLanguage::Japanese => "厳密計算と有理式簡約",
+                OutputLanguage::Korean => "정확한 계산과 유리식 단순화",
+                OutputLanguage::Spanish => "cálculo exacto y simplificación racional",
+                OutputLanguage::French => "calcul exact et simplification rationnelle",
+                OutputLanguage::German => "exakte Rechnung und rationale Vereinfachung",
+                OutputLanguage::Portuguese => "cálculo exato e simplificação racional",
+                OutputLanguage::Russian => "точное вычисление и упрощение рационального выражения",
+                OutputLanguage::Arabic => "حساب دقيق وتبسيط تعبير كسري",
+                OutputLanguage::Hindi => "सटीक गणना और rational expression सरलीकरण",
+                OutputLanguage::Vietnamese => "tính toán chính xác và rút gọn biểu thức hữu tỉ",
+                OutputLanguage::Indonesian => "perhitungan eksak dan penyederhanaan ekspresi rasional",
+            }
+            .to_string()
+        }
+        BuiltinRuleOutputText::ComplementaryFactsCoverAllCases => match output_language {
+            OutputLanguage::English => "complementary facts cover all cases",
+            OutputLanguage::SimplifiedChinese => "互补事实覆盖所有情况",
+            OutputLanguage::TraditionalChinese => "互補事實覆蓋所有情況",
+            OutputLanguage::Japanese => "相補的な事実が全場合を覆う",
+            OutputLanguage::Korean => "상보적인 사실이 모든 경우를 덮음",
+            OutputLanguage::Spanish => "los hechos complementarios cubren todos los casos",
+            OutputLanguage::French => "les faits complémentaires couvrent tous les cas",
+            OutputLanguage::German => "komplementäre Fakten decken alle Fälle ab",
+            OutputLanguage::Portuguese => "fatos complementares cobrem todos os casos",
+            OutputLanguage::Russian => "дополнительные факты покрывают все случаи",
+            OutputLanguage::Arabic => "الحقائق المكملة تغطي كل الحالات",
+            OutputLanguage::Hindi => "पूरक तथ्य सभी मामलों को ढकते हैं",
+            OutputLanguage::Vietnamese => "các sự kiện bổ sung bao phủ mọi trường hợp",
+            OutputLanguage::Indonesian => "fakta pelengkap mencakup semua kasus",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::OppositeSignProductInRNeg => match output_language {
+            OutputLanguage::English => "product of opposite-sign factors is in R_neg",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 R_neg",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 R_neg",
+            OutputLanguage::Japanese => "異符号の因子の積は R_neg に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 R_neg에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en R_neg",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans R_neg",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in R_neg",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em R_neg",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в R_neg",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى R_neg",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल R_neg में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc R_neg",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di R_neg",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::OppositeSignProductInQNeg => match output_language {
+            OutputLanguage::English => "product of opposite-sign factors is in Q_neg",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Q_neg",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Q_neg",
+            OutputLanguage::Japanese => "異符号の因子の積は Q_neg に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Q_neg에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Q_neg",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Q_neg",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Q_neg",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Q_neg",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Q_neg",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Q_neg",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Q_neg में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Q_neg",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Q_neg",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::OppositeSignProductInZNeg => match output_language {
+            OutputLanguage::English => "product of opposite-sign factors is in Z_neg",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Z_neg",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Z_neg",
+            OutputLanguage::Japanese => "異符号の因子の積は Z_neg に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Z_neg에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Z_neg",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Z_neg",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Z_neg",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Z_neg",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Z_neg",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Z_neg",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Z_neg में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Z_neg",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Z_neg",
+        }
+        .to_string(),
+        BuiltinRuleOutputText::Fallback(text) => text.clone(),
     }
 }
 
@@ -672,4 +895,37 @@ fn looks_like_internal_rule_id(rule: &str) -> bool {
     rule.contains('_')
         && rule.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
         && !rule.chars().any(char::is_whitespace)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn non_english_builtin_rule_calculation_values_render() {
+        let cases = vec![
+            (OutputLanguage::English, "calculation"),
+            (OutputLanguage::SimplifiedChinese, "计算"),
+            (OutputLanguage::TraditionalChinese, "計算"),
+            (OutputLanguage::Japanese, "計算"),
+            (OutputLanguage::Korean, "계산"),
+            (OutputLanguage::Spanish, "cálculo"),
+            (OutputLanguage::French, "calcul"),
+            (OutputLanguage::German, "Rechnung"),
+            (OutputLanguage::Portuguese, "cálculo"),
+            (OutputLanguage::Russian, "вычисление"),
+            (OutputLanguage::Arabic, "حساب"),
+            (OutputLanguage::Hindi, "गणना"),
+            (OutputLanguage::Vietnamese, "tính toán"),
+            (OutputLanguage::Indonesian, "perhitungan"),
+        ];
+
+        for (language, expected) in cases {
+            let rendered =
+                render_builtin_rule_output_text(language, &BuiltinRuleOutputText::Calculation);
+
+            assert_eq!(rendered, expected);
+            assert!(!rendered.is_empty());
+        }
+    }
 }
