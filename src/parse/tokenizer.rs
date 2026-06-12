@@ -260,7 +260,7 @@ impl Tokenizer {
             }
 
             if Self::ends_with_colon(content) {
-                // 必须有 body
+                // A block header must have an indented body.
                 if *i >= lines.len() {
                     let line_file = (line_no, current_file_path.clone());
                     return Err(RuntimeError::from(ParseRuntimeError(

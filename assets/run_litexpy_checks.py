@@ -52,6 +52,7 @@ def main() -> None:
 
     failed: list[tuple[CheckItem, str]] = []
     durations: list[tuple[str, float]] = []
+    transcript: list[str] = []
     start_all = time.perf_counter()
 
     with litexpy.Runner(command=command, run_timeout=args.timeout) as runner:
@@ -61,6 +62,7 @@ def main() -> None:
             ok, output = run_item(runner, item, args.timeout)
             duration_ms = elapsed_ms(start_item)
             durations.append((item.label, duration_ms))
+            append_transcript(transcript, index, item, output, ok, duration_ms)
 
             if ok:
                 print(f"  OK {duration_ms:.2f} ms")
@@ -74,6 +76,8 @@ def main() -> None:
 
     print_slowest(durations)
     print(f"wall: {elapsed_ms(start_all):.2f} ms")
+    if args.output_file:
+        write_transcript(Path(args.output_file), transcript, command, items)
 
     if failed:
         print("--- failed items ---")
@@ -86,7 +90,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--target",
-        choices=["tmp", "run-examples", "mechanics"],
+        choices=["none", "tmp", "run-examples", "mechanics"],
         default="tmp",
         help="Built-in check set. Use --lit/--md to add explicit paths.",
     )
@@ -123,12 +127,18 @@ def parse_args() -> argparse.Namespace:
         "--litex-command",
         help="Command for litexpy.Runner, for example 'litex' or 'cargo run --quiet --'.",
     )
+    parser.add_argument(
+        "--output-file",
+        help="Write a detailed output transcript for the selected items.",
+    )
     return parser.parse_args()
 
 
 def collect_items(args: argparse.Namespace) -> list[CheckItem]:
     items: list[CheckItem] = []
-    if args.target == "tmp":
+    if args.target == "none":
+        pass
+    elif args.target == "tmp":
         items.extend(collect_tmp_lit_items())
     elif args.target == "run-examples":
         items.extend(collect_run_examples_items(include_std=args.include_std))
@@ -214,9 +224,9 @@ def run_item(runner: Any, item: CheckItem, timeout: float) -> tuple[bool, str]:
             results = runner.run(run_file_command(item.path), timeout=timeout)
         else:
             assert item.source is not None
-            results = run_markdown_snippet(runner, item.path, item.source, timeout)
+            results = runner.run(item.source, timeout=timeout)
         ok = results_are_successful(results)
-        return ok, "" if ok else format_results(results)
+        return ok, format_results(results)
     except Exception as error:  # noqa: BLE001 - harness output should preserve verifier failures.
         return False, f"{type(error).__name__}: {error}"
     finally:
@@ -281,6 +291,54 @@ def walk_result_dicts(value: Any) -> Iterable[dict[str, Any]]:
 
 def format_results(results: Any) -> str:
     return json.dumps(results, indent=2, ensure_ascii=False)
+
+
+def append_transcript(
+    transcript: list[str],
+    index: int,
+    item: CheckItem,
+    output: str,
+    ok: bool,
+    duration_ms: float,
+) -> None:
+    transcript.append("=" * 80)
+    transcript.append("")
+    transcript.append(f"### ITEM {index - 1}")
+    transcript.append(f"LABEL: {item.label}")
+    transcript.append(f"KIND: {item.kind}")
+    transcript.append(f"PATH: {item.path}")
+    transcript.append("SOURCE:")
+    transcript.append(item_source_text(item))
+    transcript.append("")
+    transcript.append("OUTPUT:")
+    transcript.append(output if output else "<success>")
+    transcript.append("")
+    transcript.append(f"STATUS: {'OK' if ok else 'FAILED'} ({duration_ms:.2f} ms)")
+    transcript.append("")
+
+
+def write_transcript(
+    output_path: Path,
+    transcript: list[str],
+    command: list[str],
+    items: list[CheckItem],
+) -> None:
+    if not output_path.is_absolute():
+        output_path = ROOT / output_path
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    header = [
+        f"Items: {len(items)}",
+        f"Command: {shlex.join(command)}",
+        "Runner: one litexpy.Runner; current environment cleared between items",
+        "",
+    ]
+    output_path.write_text("\n".join(header + transcript), encoding="utf-8")
+
+
+def item_source_text(item: CheckItem) -> str:
+    if item.source is not None:
+        return item.source
+    return item.path.read_text(encoding="utf-8").strip()
 
 
 def extract_litex_fenced_blocks(markdown: str) -> list[tuple[int, str]]:

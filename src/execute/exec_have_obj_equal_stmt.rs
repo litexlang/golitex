@@ -91,7 +91,6 @@ impl Runtime {
         param_infer_result.relabel_all_added_facts(InferReason::ObjectIntroduction);
         infer_result.new_infer_result_inside(param_infer_result);
 
-        let mut introduced_equal_facts: Vec<Fact> = Vec::new();
         for (name, obj) in have_obj_equal_stmt
             .param_def
             .collect_param_names()
@@ -105,7 +104,6 @@ impl Runtime {
             )
             .into();
             let equal_to_fact_for_effect: Fact = equal_to_fact.clone().into();
-            introduced_equal_facts.push(equal_to_fact_for_effect.clone());
             infer_result.add_object_introduction(&equal_to_fact_for_effect);
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
@@ -148,23 +146,10 @@ impl Runtime {
             }
         }
 
-        let mut introduces = self.object_introduction_items_for_defined_params(
-            &have_obj_equal_stmt.param_def,
-            have_obj_equal_stmt.line_file.clone(),
-            ParamObjType::Identifier,
-        );
-        for (item, fact) in introduces
-            .iter_mut()
-            .zip(introduced_equal_facts.into_iter())
-        {
-            item.facts.push(fact);
-        }
-
-        Ok((NonFactualStmtSuccess::new_with_accepted_by(
+        Ok((NonFactualStmtSuccess::new(
             have_obj_equal_stmt.clone().into(),
             infer_result,
             check_results,
-            AcceptedByResult::object_introduction(introduces),
         ))
         .into())
     }

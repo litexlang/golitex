@@ -1,28 +1,129 @@
-claim:
-    prove:
-        forall S set:
-            forall A S:
-                $is_nonempty_set(A)
-            =>:
-                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+"""
+let a R:
+    a > 1 
 
-    by axiom_of_choice: set S
+每个litex语句的功能，可以分类成
+1. 证明一些fact
+2. 执行一些语句
+3. 把最后结论存下来
 
-像 claim 这种，field 应该是 
+litex 的output要能litex内部是怎么处理一个语句的
+
+比如 claim forall 的步骤是
+
+1. 声明参数
+2. assume这些参数有什么性质，即把它们的性质保存下来
+3. 在这些性质假设成立的前提下，运行claim下面的proofs语句
+4. 运行完这些语句后，证明forall的then是不是对。
+
+我觉得litex应该通过output把这个流程反应出来
 
 {
-    result
-    type
-    line
-    assumptions: [
-        声明变量{            
-
-        }
-        假设变量有哪些性质
+    "type": "claim forall",
+    "stmt": 该claim语句
+    “parameters": [所有的参数]
+    "assumptions": [
+        "parameter1 $in 对应的集合，或者 $is_set 之类的",
+        ...
+        "assumption 事实，"
+    ],
+    ”proof_procedure":[
+        每句话的输出
     ]
-    证明过程：[
-        claim下面的每个语句一个个执行得到的结果
+    "prove_claimed_fact": [
+        forall 的 then 是怎么证明出来的
     ]
-    证明被claim的事实：怎么证明的
-    Effect: 大环境里有了新的被证明的事实
 }
+
+比如 
+
+claim:
+    prove:
+        forall a R:
+            $p(a , b)
+            =>:
+                $q(a, b)
+    $t(a, b)
+
+{
+    "type": "claim forall",
+    "stmt": "forall a R:\n    $p(a , b)\n    =>:\n        $q(a, b)",
+    "parameters": [a],
+    "assumptions": [
+        # 如果是存储一个 事实的时候， 可以这样打印：存了什么fact，以及这个fact infer了什么出来
+        {
+            "fact": "a $in R",
+            "infer": [
+                "...",
+            ] # 如果 没有infer，那就不用打印
+        }
+        {
+            "fact": "$p(a , b)",
+            "infer": [
+                "...",
+            ]
+        }
+    ],
+    "proof_procedure": [
+        {
+            "type": "atomic fact",
+            "stmt": "$t(a, b)",
+            "verification": ...
+            "infer": [
+                "...",
+            ]
+        }
+    ],
+    "prove_claimed_fact": [
+        {
+            "type": "atomic fact",
+            "stmt": "$q(a, b)",
+            "verification": ...
+            "infer": [
+                "...",
+            ]
+        }
+    ],
+    "stored_fact": {
+        "fact": "forall a R: $p(a , b) =>: $q(a, b)",
+        "infer": [
+            "...",
+        ]
+    }
+}
+
+如果单纯是 know 那就是
+{
+    "type": "know",
+    "stmt": "know ...",
+    "message": "warning: ...",
+    "stored_facts": [
+        {
+            "fact": "...",
+            "infer": [
+                "...",
+            ]
+        }
+        ...
+    ]
+}
+
+就是说呢，任何涉及到，把一个事实存下来的操作呢，都是返回 
+{
+    "fact": "...",
+    "infer": [
+        "...",
+    ]
+}
+
+我觉得可以做成一个struct实现什么的。就叫 StoreFactOutput 好了 
+struct StoreFactOutput {
+    fact: Fact,
+    infer: Vec<Fact>,
+}
+
+任何call到存储事实的函数的stmt的output，都有一个相关的field存这个 StoreFactOutput 结构体
+
+不同的stmt呢，其实最好是要配一个不一样的output struct 能反应其运行的顺序和效果，我之后自己设计设计，弄弄吧
+
+"""

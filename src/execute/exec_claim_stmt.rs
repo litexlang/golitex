@@ -85,14 +85,10 @@ impl Runtime {
                         inside_results.push(result);
                     }
 
-                    Ok(NonFactualStmtSuccess::new_with_accepted_by(
+                    Ok(NonFactualStmtSuccess::new(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
-                        AcceptedByResult::proof_block(
-                            Some(stmt.fact.clone()),
-                            proof_len + then_count,
-                        ),
                     )
                     .into())
                 });
@@ -140,11 +136,10 @@ impl Runtime {
 
                     rt.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
 
-                    Ok(NonFactualStmtSuccess::new_with_accepted_by(
+                    Ok(NonFactualStmtSuccess::new(
                         stmt.clone().into(),
                         InferResult::new(),
                         inside_results,
-                        AcceptedByResult::proof_block(Some(stmt.fact.clone()), stmt.proof.len()),
                     )
                     .into())
                 });

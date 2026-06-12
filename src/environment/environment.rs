@@ -10,6 +10,22 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
     HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
 >;
 
+/// The mutable mathematical context for a runtime environment.
+///
+/// `Environment` is intentionally broad: it is the physical storage for the
+/// checked world that later statements can reuse. The fields are grouped by
+/// role rather than by proof rule:
+///
+/// - definition tables for identifiers, predicates, algorithms, structs,
+///   templates, theorems, and strategies;
+/// - known fact indexes for equality, atomic, existential, and disjunctive
+///   facts;
+/// - known `forall` indexes, including argument-shape indexes for faster
+///   matching against later goals;
+/// - derived object-shape caches for tuples, carts, finite sequences,
+///   matrices, object values, set builders, and function-set information;
+/// - verification caches for well-defined objects and already-known facts;
+/// - strategy registrations and stopped-strategy state.
 #[derive(Clone)]
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,

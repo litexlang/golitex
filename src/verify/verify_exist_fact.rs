@@ -232,7 +232,7 @@ impl Runtime {
             exist_fact.facts().clone(),
             exist_fact.line_file(),
         )?);
-        let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
+        let wd_ok = verify_state.with_well_defined_already_verified();
         let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
         if !plain_res.is_true() {
             return Ok(None);

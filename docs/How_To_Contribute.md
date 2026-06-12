@@ -137,6 +137,38 @@ soundness-critical logic unless you already understand that part of the code.
 For new contributors, documentation feedback and dataset/textbook work are much
 better first contributions.
 
+## Kernel-Facing Cleanup Checklist
+
+When changing kernel-facing syntax or adding a statement form, keep the whole
+flow in sync. A statement is not complete just because one parser branch exists.
+Check the representation, parser, executor, output, tests, and documentation
+together.
+
+For a new or renamed statement form:
+
+- Add the statement data structure and place it in the appropriate `Stmt`
+  subgroup.
+- Add parser support and a clear parse error for legacy or invalid spellings.
+- Add executor support, or explicitly route unsupported forms to a clear error.
+- Update display, metadata, JSON/output evidence, and LaTeX output if the form
+  can be shown to users.
+- Add focused regression coverage for the success path and the most important
+  rejected spelling or malformed input.
+- Update the Manual or examples when the user-facing syntax changes.
+
+Prefer a small end-to-end change over a partial branch in only one layer. If the
+statement interacts with verification, imports, or proof blocks, run the
+broader verifier test suite before treating it as complete.
+
+Some small facts may be intuitive but hard to formalize because Litex's
+standard library is still missing supporting lemmas. For now, collect these
+cases and mark them uniformly with `know`. For example, many files use
+`finite_set_sum`, and a common fact is that permuting the same finite set should
+not change the result. It is acceptable to leave such facts as `know` for now:
+they are tedious to prove and do not block the main translation work. After the
+main line is complete, clean up these `know` steps together; some should become
+standard-library facts, and others should be proved locally.
+
 ## Help Make Litex Easier to Understand
 
 Another useful contribution is to make the project easier for outsiders to
@@ -152,3 +184,12 @@ understand. Good documentation, demos, and reports should answer questions like:
 If you improve a README section, demo note, benchmark page, or contribution
 guide so that one of these questions becomes clearer, that is a useful
 contribution.
+
+
+## Reference
+
+Here are videos on how to use AI to generate Lean code. Lean is a mature formalization system for mathematics. Although the first principle of Litex and Lean are different, we can still learn a lot from Lean on how to use AI to generate code.
+
+1. Terrence Tao on how to use claude code to write lean: https://www.youtube.com/watch?v=JHEO7cplfk8
+
+2. How mathematicians use lean: https://www.youtube.com/watch?v=I2zaPoj3G50&list=WL

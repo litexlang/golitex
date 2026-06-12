@@ -3,7 +3,6 @@ pub(crate) const JSON_KEY_SUCCESS: &str = "success";
 pub(crate) const JSON_KEY_EFFECTS: &str = "effects";
 pub(crate) const JSON_KEY_VERIFICATION: &str = "verification";
 pub(crate) const JSON_KEY_CONCLUSIONS_WITH_VERIFICATION: &str = "conclusions_with_verification";
-pub(crate) const JSON_KEY_ACCEPTED_BY: &str = "accepted_by";
 pub(crate) const JSON_KEY_STEPS: &str = "steps";
 
 pub(crate) const JSON_KEY_ERROR_TYPE: &str = "error_type";

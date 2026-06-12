@@ -1006,7 +1006,7 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
 
-        let next_verify_state = verify_state.make_state_with_req_ok_set_to_true();
+        let next_verify_state = verify_state.with_well_defined_already_verified();
         let len = x.list.len();
         let mut i = 0;
         while i < len {
@@ -1403,7 +1403,7 @@ impl Runtime {
         x: &Count,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        // 必须 is_finite_set
+        // `count` is well-defined only for finite sets.
         let is_finite_set_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {

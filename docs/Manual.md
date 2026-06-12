@@ -1653,6 +1653,12 @@ know:
 
 It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`.
 
+`sketch:` is the canonical top-level spelling for this checked sandbox. Older
+notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
+alias with an error message pointing to `sketch:`. A top-level `prove:` block is
+also rejected: use `sketch:` when you want a local checked block, and use
+`prove:` only inside a statement that owns a proof target.
+
 ```litex
 sketch:
     2 = 2
@@ -3113,7 +3119,7 @@ For most factual statements, `verification` is the stable place to read the proo
 
 When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Conjunctions report their failed subgoal under `failed_part`; chains report the failed segment under `failed_chain_step`. Normal output keeps these failure nodes focused on the failed statement and omits positional metadata such as child indexes; detail output keeps that metadata and the full nested unknown tree for debugging.
 
-For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, read `accepted_by` for the effect or proof-block summary. In normal output, `by cases` records the coverage proof under `covers_by`, lists each branch under `cases`, records the goals each branch proves under `proves`, and records contradiction pairs for impossible branches under `impossible_by`. In detail output, each case also expands its full local `inside_results`. `effects` records context changes after the statement, such as facts added to the context or an abstract prop interface being registered; it is not the primary proof route.
+For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, normal output reports the statement, its `effects`, and an empty `inside_results` array. Detail output expands `inside_results` for proof blocks and other nested checks when those results are available. `effects` records context changes after the statement, such as facts added to the context or an abstract prop interface being registered; it is not the primary proof route.
 
 ---
 

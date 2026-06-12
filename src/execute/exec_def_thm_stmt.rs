@@ -85,16 +85,10 @@ impl Runtime {
                 inside_results.push(result);
             }
 
-            Ok(NonFactualStmtSuccess::new_with_accepted_by(
-                stmt.clone().into(),
-                InferResult::new(),
-                inside_results,
-                AcceptedByResult::proof_block(
-                    Some(Fact::ForallFact(stmt.forall_fact.clone())),
-                    proof_len + then_count,
-                ),
+            Ok(
+                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
+                    .into(),
             )
-            .into())
         })?;
 
         self.store_def_thm(stmt)
