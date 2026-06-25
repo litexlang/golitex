@@ -1718,6 +1718,15 @@ successful facts and definitions are committed without running the body again.
 Control statements such as `clear`, `import`, `run_file`, and `stop import` are
 not allowed inside `try:`.
 
+This is especially useful for incremental proof writing and AI-generated proof
+scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
+the last statement is wrong, the useful prefix may have to be rerun or rebuilt
+before another attempt. With `try:`, the writer can submit a small batch, keep
+the statements that verify, and try a different next statement when the new one
+fails or becomes unknown. In practice, this turns proof construction into
+extending a checked prefix instead of rewriting the whole proof after every
+failed suffix.
+
 ```litex
 try:
     have x R = 1
