@@ -1,5 +1,5 @@
 # Nonempty finite sets have an index function.
-# Induction on count(s): base |s| = 1, then extend after removing min(s).
+# Induction on count(s): base |s| = 1, then extend after removing one element.
 
 prop injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
@@ -29,10 +29,8 @@ prop finite_set_with_given_size_has_index(n N_pos):
 
 thm singleton_sized_finite_set_minus_its_member_is_empty:
     prove:
-        forall s finite_set, a set:
-            $is_finite_set(s)
+        forall s finite_set, a s:
             count(s) = 1
-            a $in s
             =>:
                 set_minus(s, {a}) = {}
     intersect(s, {a}) = {a}
@@ -49,7 +47,6 @@ thm singleton_sized_finite_set_has_index:
                 $finite_set_has_index(s)
     $is_nonempty_set(s)
     have a s
-    a $in s
     by thm singleton_sized_finite_set_minus_its_member_is_empty(s, a)
     set_minus(s, {a}) = {}
     have fn idx(i N_pos: i <= count(s)) s = a
@@ -78,28 +75,19 @@ thm finite_sets_with_size_n_have_index_implies_size_n_plus_one_have_index:
     count(s) = n + 1 >= 1
     $is_nonempty_set(s)
     have a s
-    a $in s
     intersect(s, {a}) = {a}
     count({a}) = 1
-    $is_finite_set(set_minus(s, {a}))
     count(set_minus(s, {a})) = count(s) - count(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_with_given_size_has_index(n)
-    $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = n
     $finite_set_has_index(set_minus(s, {a}))
-    exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
     have by exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}: prev
     set_minus(s, {a}) $subset s
     have fn idx(i N_pos: i <= count(s)) s by cases:
         case i <= n: prev(i)
         case i = n + 1: a
-    idx(1) = prev(1)
-    prev(1) $in set_minus(s, {a})
-    prev(1) $in s
-    idx(1) $in s
+
     witness exist idx0 fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx0)} from idx:
         claim forall! y s => {exist i N_pos st {i <= count(s), y = idx0(i)}}:
-            y = a or y != a
             by cases:
                 prove:
                     exist i N_pos st {i <= count(s), y = idx0(i)}
@@ -113,10 +101,9 @@ thm finite_sets_with_size_n_have_index_implies_size_n_plus_one_have_index:
                     y $in set_minus(s, {a})
                     exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}
                     have by exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}: j
-                    j <= count(set_minus(s, {a}))
-                    j <= n
-                    n <= n + 1
-                    j <= n <= n + 1 = count(s)
+
+                    j <= count(set_minus(s, {a})) = n <= n + 1 = count(s)
+
                     idx0(j) = idx(j) = prev(j)
                     witness exist i N_pos st {i <= count(s), y = idx0(i)} from j:
                         j <= count(s)
@@ -124,7 +111,7 @@ thm finite_sets_with_size_n_have_index_implies_size_n_plus_one_have_index:
         $is_index_fn(s, idx0)
     $finite_set_has_index(s)
 
-thm finite_set_with_size_one_has_index:
+lemma finite_set_with_size_one_has_index:
     prove:
         forall s finite_set:
             count(s) = 1
@@ -133,7 +120,7 @@ thm finite_set_with_size_one_has_index:
     by thm singleton_sized_finite_set_has_index(s)
     $finite_set_has_index(s)
 
-thm finite_set_with_successor_size_has_index:
+lemma finite_set_with_successor_size_has_index:
     prove:
         forall n N_pos, s finite_set:
             $finite_set_with_given_size_has_index(n)
@@ -149,14 +136,6 @@ thm size_one_finite_sets_have_given_size_index:
             n = 1
             =>:
                 $finite_set_with_given_size_has_index(n)
-    claim:
-        prove:
-            forall s finite_set:
-                count(s) = 1
-                =>:
-                    $finite_set_has_index(s)
-        by thm finite_set_with_size_one_has_index(s)
-        $finite_set_has_index(s)
     $finite_set_with_given_size_has_index(1)
     $finite_set_with_given_size_has_index(n)
 
@@ -199,7 +178,6 @@ thm nonempty_finite_set_has_index:
             count(s) >= 1
             =>:
                 $finite_set_has_index(s)
-    count(s) >= 1
     count(s) $in N_pos
     have n N_pos = count(s)
     count(s) = n

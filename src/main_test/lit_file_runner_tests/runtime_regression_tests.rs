@@ -2814,7 +2814,8 @@ forall S set, x set, y set, z set:
 
     for (i, source_code) in cases.iter().enumerate() {
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("literal_set_intersection_filtering_is_builtin");
+        runtime
+            .new_file_path_new_env_new_name_scope("literal_set_intersection_filtering_is_builtin");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2822,8 +2823,7 @@ forall S set, x set, y set, z set:
         assert!(
             run_succeeded,
             "literal_set_intersection_filtering_is_builtin case {} failed:\n{}",
-            i,
-            run_output
+            i, run_output
         );
     }
 }
@@ -5916,6 +5916,74 @@ $target_thm_prop(1)
     assert!(
         run_output.contains("Unknown"),
         "thm named-only failure should be reported as unknown:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn lemma_definition_stores_forall_fact_for_known_forall_use() {
+    let source_code = r#"
+prop target_lemma_prop(x R):
+    x = 1
+
+lemma use_target_lemma:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_lemma_prop(x)
+
+    x = 1
+
+$target_lemma_prop(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "lemma_definition_stores_forall_fact_for_known_forall_use",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "lemma definition should store ordinary forall matching facts:\n{}",
+        run_output
+    );
+    assert!(runtime
+        .get_thm_definition_by_name("use_target_lemma")
+        .is_some());
+}
+
+#[test]
+fn lemma_definition_can_still_be_used_by_thm() {
+    let source_code = r#"
+prop target_lemma_prop(x R):
+    x = 1
+
+lemma use_target_lemma:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_lemma_prop(x)
+
+    x = 1
+
+by thm use_target_lemma(1)
+$target_lemma_prop(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("lemma_definition_can_still_be_used_by_thm");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "lemma should remain available through explicit by thm calls:\n{}",
         run_output
     );
 }

@@ -296,15 +296,21 @@ forall x R:
 
 The current `forall ... <=>:` syntax is an exception: if there are no shared hypotheses, keep the required `=>:` block for the left side of the iff.
 
-8. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
+8. Avoid restating type and membership facts that Litex has already introduced. For example, `forall s finite_set:` already gives the finite-set typing for `s`, and `forall a s:` or `have a s` already gives `a $in s`. Prefer `forall s finite_set, a s:` over `forall s finite_set, a set:` plus a separate `a $in s` premise when the theorem is only about members of `s`.
 
-9. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+9. Avoid proof scaffolding that only repeats the same proposition. After `by thm ...`, do not add an identical conclusion line or wrap the call in a `claim prove` block unless the verifier needs that exact intermediate fact to fold a prop, bind a local variable, or expose a `forall`/`exist` shape. Try the direct theorem call first, then keep the extra line only when a verifier run shows it is needed.
 
-10. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
+10. Avoid duplicate nearby facts such as repeating `$is_finite_set(T)` after it was just established, or writing both `count(s) >= 1` and `count(s) $in N_pos` when a typed binding such as `have n N_pos = count(s)` can be made directly. Keep these restatements only when they are the smallest verifier-checkable bridge.
 
-11. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+11. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-12. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+12. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+
+13. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
+
+14. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+
+15. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
 ## Dataset Translation To Litex
 

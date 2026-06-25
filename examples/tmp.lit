@@ -1,4 +1,3 @@
-forall s finite_set:
-    count(s) >= 1
-    =>:
-        $is_nonempty_set(s)
+forall s finite_set, s2 set:
+    $is_finite_set(set_minus(s, s2))
+

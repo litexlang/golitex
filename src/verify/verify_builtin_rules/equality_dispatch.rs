@@ -137,8 +137,7 @@ impl Runtime {
                 right,
                 line_file.clone(),
                 verify_state,
-            )?
-            {
+            )? {
                 return Ok(done);
             }
         }

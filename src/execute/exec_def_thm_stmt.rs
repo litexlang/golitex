@@ -3,6 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
         let thm_names = stmt.names.join(", ");
+        let keyword = stmt.keyword();
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
@@ -10,7 +11,7 @@ impl Runtime {
         .map_err(|e| {
             short_exec_error(
                 stmt.clone().into(),
-                "thm: forall fact is not well defined".to_string(),
+                format!("{}: forall fact is not well defined", keyword),
                 Some(e),
                 vec![],
             )
@@ -41,7 +42,7 @@ impl Runtime {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(proof_stmt.clone()),
-                            format!("thm `{}` failed: proof step is unknown", thm_names),
+                            format!("{} `{}` failed: proof step is unknown", keyword, thm_names),
                             proof_stmt.line_file(),
                             None,
                             vec![],
@@ -69,7 +70,10 @@ impl Runtime {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(then_goal.clone().into()),
-                            format!("thm `{}` failed: cannot prove then-clause", thm_names),
+                            format!(
+                                "{} `{}` failed: cannot prove then-clause",
+                                keyword, thm_names
+                            ),
                             then_fact.line_file(),
                             None,
                             vec![],
@@ -93,6 +97,15 @@ impl Runtime {
 
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+
+        if stmt.stores_forall_fact() {
+            let infer_result_after_store = self
+                .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                    Fact::ForallFact(stmt.forall_fact.clone()),
+                    InferReason::Other(DefThmStmt::store_reason().to_string()),
+                )?;
+            return Ok(body_exec_result.with_infers(infer_result_after_store));
+        }
 
         Ok(body_exec_result)
     }
