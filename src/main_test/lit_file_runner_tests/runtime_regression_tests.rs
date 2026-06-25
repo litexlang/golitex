@@ -5,6 +5,7 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 use crate::to_latex::to_latex_from_source_after_builtins;
+use crate::to_python::to_python_from_source_after_builtins;
 
 use super::helper::run_with_large_stack;
 
@@ -82,6 +83,90 @@ fn latex_output_is_fragment_without_default_packages() {
     assert!(!output.contains(r"\paragraph{Stmt 1}"));
     assert!(!output.contains(r"\usepackage{amsmath}"));
     assert!(!output.contains(r"\usepackage{amssymb}"));
+}
+
+#[test]
+fn python_extractor_outputs_supported_have_subset() {
+    run_with_large_stack("python_extractor_outputs_supported_have_subset", || {
+        let source_code = r#"
+have q Q = 1
+have z Z = 3
+
+have fn as algo f(x R) R = x + 1
+have fn as algo g(x R) R = f(x) + 2
+
+have fn as algo max2(x, y R) R by cases:
+    case x >= y: x
+    case x < y: y
+"#;
+
+        let output = to_python_from_source_after_builtins(
+            source_code,
+            "python_extractor_outputs_supported_have_subset",
+        )
+        .expect("supported Python extraction should succeed");
+
+        assert!(output.contains("q = 1.0"));
+        assert!(output.contains("z = 3.0"));
+        assert!(output.contains("def f(x):"));
+        assert!(output.contains("return (x + 1.0)"));
+        assert!(output.contains("def g(x):"));
+        assert!(output.contains("return (f(x) + 2.0)"));
+        assert!(output.contains("def max2(x, y):"));
+        assert!(output.contains("if x >= y:"));
+        assert!(output.contains("elif x < y:"));
+        assert!(output.contains("unreachable verified Litex cases"));
+    });
+}
+
+#[test]
+fn python_extractor_skips_non_numeric_have_obj_equal() {
+    run_with_large_stack("python_extractor_skips_non_numeric_have_obj_equal", || {
+        let output = to_python_from_source_after_builtins(
+            "have s set = R",
+            "python_extractor_skips_non_numeric_have_obj_equal",
+        )
+        .expect("non-numeric object definitions should be skipped");
+
+        assert_eq!(output, "# No Python-extractable Litex definitions.");
+    });
+}
+
+#[test]
+fn python_extractor_rejects_standalone_algo() {
+    run_with_large_stack("python_extractor_rejects_standalone_algo", || {
+        let source_code = r#"
+have fn f(x R) R = x
+
+algo f(x):
+    x
+"#;
+
+        let error = to_python_from_source_after_builtins(
+            source_code,
+            "python_extractor_rejects_standalone_algo",
+        )
+        .expect_err("standalone algo should not be extracted in v1");
+        let error_text = format!("{:?}", error);
+        assert!(error_text.contains("does not support standalone `algo`"));
+    });
+}
+
+#[test]
+fn python_extractor_rejects_non_real_function_parameters() {
+    run_with_large_stack(
+        "python_extractor_rejects_non_real_function_parameters",
+        || {
+            let source_code = "have fn as algo f(x Z) R = x";
+            let error = to_python_from_source_after_builtins(
+                source_code,
+                "python_extractor_rejects_non_real_function_parameters",
+            )
+            .expect_err("non-R function params should be rejected by Python extraction");
+            let error_text = format!("{:?}", error);
+            assert!(error_text.contains("supports only `R` function parameters"));
+        },
+    );
 }
 
 #[test]

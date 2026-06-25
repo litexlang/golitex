@@ -1,0 +1,35 @@
+# No imports.  The index set is the half-open range
+# `{0, 1, ..., count(S) - 1}`, so the empty finite set is covered too.
+
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
+
+prop is_index_fn(S finite_set, index fn(x S) range(0, count(S))):
+    $bijective_fn(S, range(0, count(S)), index)
+
+# General finite-set enumeration is the background interface for this file:
+# every finite set is bijective with its `count(S)` many indices.
+know:
+    forall S finite_set:
+        exist index fn(x S) range(0, count(S)) st {$bijective_fn(S, range(0, count(S)), index)}
+
+thm finite_set_has_index_fn:
+    prove:
+        forall S finite_set:
+            exist index fn(x S) range(0, count(S)) st {$is_index_fn(S, index)}
+    exist index fn(x S) range(0, count(S)) st {$bijective_fn(S, range(0, count(S)), index)}
+    have by exist index fn(x S) range(0, count(S)) st {$bijective_fn(S, range(0, count(S)), index)}: index
+    $is_index_fn(S, index)
+    witness exist f fn(x S) range(0, count(S)) st {$is_index_fn(S, f)} from index:
+        $is_index_fn(S, index)
