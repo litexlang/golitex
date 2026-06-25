@@ -879,6 +879,7 @@ sketch:
 
 ```litex
 0^0 = 1
+8^(1/3) = 2
 
 forall a R:
     a^0 = 1

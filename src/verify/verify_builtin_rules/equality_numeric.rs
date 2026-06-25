@@ -1566,6 +1566,79 @@ impl Runtime {
         )))
     }
 
+    fn reciprocal_positive_integer_denominator_for_power_root_builtin(
+        exponent: &Obj,
+    ) -> Option<Obj> {
+        let Obj::Div(div) = exponent else {
+            return None;
+        };
+        if !Self::obj_is_builtin_literal_one(div.left.as_ref()) {
+            return None;
+        }
+        Some(div.right.as_ref().clone())
+    }
+
+    // Principal nth-root equality: `x^(1/n) = z` follows from `x = z^n`,
+    // with `n` a positive integer and `z >= 0`.
+    // Example: `8^(1/3) = 2`, since `3 $in N_pos`, `0 <= 2`, and `8 = 2^3`.
+    pub(crate) fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (pow, root) = match (left, right) {
+            (Obj::Pow(pow), root) => (pow, root),
+            (root, Obj::Pow(pow)) => (pow, root),
+            _ => return Ok(None),
+        };
+        let Some(degree) = Self::reciprocal_positive_integer_denominator_for_power_root_builtin(
+            pow.exponent.as_ref(),
+        ) else {
+            return Ok(None);
+        };
+
+        let degree_in_n_pos: AtomicFact =
+            InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+        let degree_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&degree_in_n_pos, verify_state)?;
+        if !degree_result.is_true() {
+            return Ok(None);
+        }
+
+        let root_nonnegative: AtomicFact = LessEqualFact::new(
+            Self::literal_zero_obj_for_abs_builtin(),
+            root.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let root_nonnegative_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&root_nonnegative, verify_state)?;
+        if !root_nonnegative_result.is_true() {
+            return Ok(None);
+        }
+
+        let root_power: Obj = Pow::new(root.clone(), degree).into();
+        let inverse_result = self.verify_objs_are_equal_in_equality_builtin(
+            pow.base.as_ref(),
+            &root_power,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !inverse_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+            left,
+            right,
+            line_file,
+            "equality: x^(1/n) = z from x = z^n, n in N_pos, and z >= 0",
+            vec![degree_result, root_nonnegative_result, inverse_result],
+        )))
+    }
+
     fn verify_context_arg_equality(
         &mut self,
         left: &Obj,

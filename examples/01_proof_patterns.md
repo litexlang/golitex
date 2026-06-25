@@ -963,6 +963,7 @@ forall:
 # Example shape: use the equality or order relation directly.
 
 0^0 = 1
+8^(1/3) = 2
 
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)

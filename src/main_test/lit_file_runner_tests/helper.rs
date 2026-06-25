@@ -33,14 +33,19 @@ pub(super) fn print_known_forall_profile_summary(label: &str) {
     );
 }
 
-pub(super) fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
+pub(super) fn spawn_with_large_stack<T: Send + 'static>(
+    test_name: &str,
+    f: impl FnOnce() -> T + Send + 'static,
+) -> std::thread::JoinHandle<T> {
     std::thread::Builder::new()
         .name(test_name.to_string())
         .stack_size(LARGE_TEST_STACK_SIZE)
         .spawn(f)
         .unwrap()
-        .join()
-        .unwrap();
+}
+
+pub(super) fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
+    spawn_with_large_stack(test_name, f).join().unwrap();
 }
 
 pub(super) fn the_mechanics_dir(manifest_dir: &Path) -> PathBuf {

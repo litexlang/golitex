@@ -234,6 +234,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_pow_reciprocal_exponent_equals_root_by_power(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_same_algebra_context_by_equal_args(
             left,
             right,

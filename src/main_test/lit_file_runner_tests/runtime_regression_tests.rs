@@ -2242,6 +2242,8 @@ forall x Q, n N_pos:
 
 forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
+
+8^(1/3) = 2
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2256,7 +2258,34 @@ forall x Q_nz, n, m Z:
             "common_power_equalities_and_order_are_builtin failed:\n{}",
             run_output
         );
+        assert!(run_output.contains("equality: x^(1/n) = z from x = z^n, n in N_pos, and z >= 0"));
     });
+}
+
+#[test]
+fn reciprocal_power_root_rule_rejects_negative_even_root() {
+    run_with_large_stack(
+        "reciprocal_power_root_rule_rejects_negative_even_root",
+        || {
+            let source_code = r#"
+16^(1/2) = -4
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "reciprocal_power_root_rule_rejects_negative_even_root",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "principal root rule should not accept a negative even root:\n{}",
+                run_output
+            );
+        },
+    );
 }
 
 #[test]
