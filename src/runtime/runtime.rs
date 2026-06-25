@@ -202,6 +202,34 @@ impl Runtime {
         result
     }
 
+    /// Runs a closure in a temporary child environment. On success, commits the child environment
+    /// into the parent with environment merge semantics; on failure, discards it.
+    pub fn run_in_local_env_and_commit<T, F>(&mut self, f: F) -> Result<T, RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
+    {
+        let module_manager_before = self.module_manager.borrow().clone();
+        let parsing_free_params_before = self.parsing_free_param_collection.clone();
+
+        self.push_env();
+        let result = f(self);
+        let child = self
+            .environment_stack
+            .pop()
+            .expect("local environment should exist after push_env");
+
+        self.parsing_free_param_collection = parsing_free_params_before;
+        *self.module_manager.borrow_mut() = module_manager_before;
+
+        let value = result?;
+        let parent = self
+            .environment_stack
+            .last_mut()
+            .expect("parent environment should exist when committing child env");
+        parent.merge_committed_child(*child)?;
+        Ok(value)
+    }
+
     /// Restores [`Runtime::parsing_free_param_collection`] after `f` so parse-time bindings (e.g.
     /// `have x …` without `=`) do not leak across sibling `prove:` blocks or out of nested parses
     /// that use this wrapper (`forall`, `exist`, `prove`, `prop` bodies, etc.).

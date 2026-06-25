@@ -1728,6 +1728,23 @@ impl SketchStmt {
     }
 }
 
+impl TryStmt {
+    pub fn to_latex_string(&self) -> String {
+        if self.proof.is_empty() {
+            return r"\text{\texttt{(empty proof)}}".to_string();
+        }
+        let rows: Vec<String> = self
+            .proof
+            .iter()
+            .map(|st| format!(r"& \quad {}", st.to_latex_string()))
+            .collect();
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
 impl Range {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2155,6 +2172,7 @@ impl Stmt {
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),

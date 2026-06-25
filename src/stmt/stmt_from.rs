@@ -120,6 +120,12 @@ impl From<SketchStmt> for Stmt {
     }
 }
 
+impl From<TryStmt> for Stmt {
+    fn from(v: TryStmt) -> Self {
+        ProofBlockStmt::TryStmt(v).into()
+    }
+}
+
 impl From<ImportStmt> for Stmt {
     fn from(v: ImportStmt) -> Self {
         CommandStmt::ImportStmt(v).into()

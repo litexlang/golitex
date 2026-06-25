@@ -139,6 +139,280 @@ sketch:
 }
 
 #[test]
+fn try_stmt_is_checked_and_committed() {
+    run_with_large_stack("try_stmt_is_checked_and_committed", || {
+        let source_code = r#"
+try:
+    have x R = 1
+    x = 1
+x = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_is_checked_and_committed");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "try should commit successful facts:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("\"type\": \"try block\""),
+            "try should be reported as a try block:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("try:\\n"),
+            "try output should use the canonical `try:` spelling:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn try_stmt_commit_merges_child_equality_into_parent_equality_class() {
+    run_with_large_stack(
+        "try_stmt_commit_merges_child_equality_into_parent_equality_class",
+        || {
+            let source_code = r#"
+have a R = 1
+try:
+    have b R = a
+b = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "try_stmt_commit_merges_child_equality_into_parent_equality_class",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "try commit should replay child equalities through parent equality storage:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn try_stmt_commit_reactivates_parent_stopped_strategy() {
+    run_with_large_stack(
+        "try_stmt_commit_reactivates_parent_stopped_strategy",
+        || {
+            let source_code = r#"
+abstract_prop target_strategy_prop(x)
+
+strategy use_target_strategy:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                $target_strategy_prop(x)
+
+    know:
+        forall y R:
+            y = 1
+            =>:
+                $target_strategy_prop(y)
+
+use strategy use_target_strategy
+stop strategy use_target_strategy
+try:
+    use strategy use_target_strategy
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "try_stmt_commit_reactivates_parent_stopped_strategy",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "try commit should succeed when reactivating a strategy:\n{}",
+                run_output
+            );
+
+            let env = runtime
+                .environment_stack
+                .last()
+                .expect("runtime should have a current environment");
+            assert_eq!(
+                env.used_strategy_stmts
+                    .get(&("target_strategy_prop".to_string(), true)),
+                Some(&"use_target_strategy".to_string())
+            );
+            assert_eq!(
+                env.stopped_strategy_stmts
+                    .get(&("target_strategy_prop".to_string(), true)),
+                None
+            );
+        },
+    );
+}
+
+#[test]
+fn try_stmt_rejects_clear_control_statement() {
+    run_with_large_stack("try_stmt_rejects_clear_control_statement", || {
+        let source_code = r#"
+have x R
+try:
+    clear
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_clear_control_statement");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "try with clear should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("try cannot contain control statement `clear`"),
+            "try with clear should explain that control statements are disallowed:\n{}",
+            run_output
+        );
+
+        let (stmt_results_after, runtime_error_after) = run_source_code("x = x", &mut runtime);
+        let (run_succeeded_after, run_output_after) = render_run_source_code_output(
+            &runtime,
+            &stmt_results_after,
+            &runtime_error_after,
+            false,
+        );
+        assert!(
+            run_succeeded_after,
+            "rejected try should not have executed clear:\n{}",
+            run_output_after
+        );
+    });
+}
+
+#[test]
+fn try_stmt_rejects_nested_control_statement() {
+    run_with_large_stack("try_stmt_rejects_nested_control_statement", || {
+        let source_code = r#"
+try:
+    sketch:
+        clear
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_nested_control_statement");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "try with nested clear should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("try cannot contain control statement `clear`"),
+            "nested control statement should be rejected before execution:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn try_stmt_unknown_is_reported_and_local() {
+    run_with_large_stack("try_stmt_unknown_is_reported_and_local", || {
+        let source_code = r#"
+try:
+    know:
+        2 = 3
+    4 = 5
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_unknown_is_reported_and_local");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "unknown try body should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("UnknownError") || run_output.contains("try failed"),
+            "try should report the unknown inner step:\n{}",
+            run_output
+        );
+
+        let (stmt_results_after, runtime_error_after) = run_source_code("2 = 3", &mut runtime);
+        let (run_succeeded_after, run_output_after) = render_run_source_code_output(
+            &runtime,
+            &stmt_results_after,
+            &runtime_error_after,
+            false,
+        );
+        assert!(
+            !run_succeeded_after,
+            "facts from a failed try should not leak:\n{}",
+            run_output_after
+        );
+    });
+}
+
+#[test]
+fn try_stmt_error_is_reported_and_local() {
+    run_with_large_stack("try_stmt_error_is_reported_and_local", || {
+        let source_code = r#"
+try:
+    have a R
+    have a R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_error_is_reported_and_local");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "error try body should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("try:") || run_output.contains("have a R"),
+            "try should report the failing inner statement:\n{}",
+            run_output
+        );
+
+        let (stmt_results_after, runtime_error_after) = run_source_code("have a R", &mut runtime);
+        let (run_succeeded_after, run_output_after) = render_run_source_code_output(
+            &runtime,
+            &stmt_results_after,
+            &runtime_error_after,
+            false,
+        );
+        assert!(
+            run_succeeded_after,
+            "definitions from a failed try should not leak:\n{}",
+            run_output_after
+        );
+    });
+}
+
+#[test]
 fn top_level_scratch_is_rejected_with_sketch_hint() {
     let source_code = r#"
 scratch:

@@ -1708,6 +1708,25 @@ sketch:
 
 ---
 
+### Checked try block (`try`)
+
+**`try:`** opens a checked trial block. Litex first runs the nested statements
+in a temporary child environment. If any statement fails or is unknown, the
+failure is reported and the outer environment is unchanged. If every statement
+succeeds, Litex merges the child environment into the outer environment, so the
+successful facts and definitions are committed without running the body again.
+Control statements such as `clear`, `import`, `run_file`, and `stop import` are
+not allowed inside `try:`.
+
+```litex
+try:
+    have x R = 1
+    x = 1
+x = 1
+```
+
+---
+
 ### run file
 
 Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.

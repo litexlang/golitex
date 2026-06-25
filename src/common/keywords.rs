@@ -106,6 +106,7 @@ pub const PROP: &str = "prop";
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
 pub const SKETCH: &str = "sketch";
+pub const TRY: &str = "try";
 pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
@@ -280,6 +281,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         ABSTRACT_PROP,
         CLAIM,
         SKETCH,
+        TRY,
         SCRATCH,
         PROVE,
         THM,

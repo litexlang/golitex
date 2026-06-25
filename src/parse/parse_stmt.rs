@@ -32,6 +32,7 @@ impl Runtime {
                 _ => Err(parse_stmt_error(tb, "stop: expected `import` or `strategy`")),
             },
             SKETCH => self.parse_sketch_stmt(tb),
+            TRY => self.parse_try_stmt(tb),
             SCRATCH => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "top-level `scratch:` has been replaced by `sketch:`".to_string(),

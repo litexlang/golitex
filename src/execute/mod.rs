@@ -28,5 +28,6 @@ mod exec_stmt;
 mod exec_store_definitions;
 mod exec_strategy_stmt;
 mod exec_tooling_stmt;
+mod exec_try_stmt;
 mod exec_verify_then_store_facts;
 mod exec_witness_stmt;
