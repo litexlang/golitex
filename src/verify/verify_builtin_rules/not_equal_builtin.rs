@@ -55,6 +55,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_not_equal_from_membership_contradiction(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -222,6 +228,111 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    // Membership contradiction: if `x $in S` and `not y $in S`, then `x != y`.
+    // Example: from `x $in A` and `not y $in A`, prove `x != y` so `{x, y}` is well-defined.
+    fn try_verify_not_equal_from_membership_contradiction(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if self.loading_builtin_code {
+            return Ok(None);
+        }
+
+        let line_file = not_equal_fact.line_file.clone();
+        let candidates = [
+            (not_equal_fact.left.clone(), not_equal_fact.right.clone()),
+            (not_equal_fact.right.clone(), not_equal_fact.left.clone()),
+        ];
+
+        for (member_obj, non_member_obj) in candidates {
+            for set in self.known_sets_containing_obj(&member_obj) {
+                let not_in_set: AtomicFact =
+                    NotInFact::new(non_member_obj.clone(), set.clone(), line_file.clone()).into();
+                let not_in_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_in_set)?;
+                if !not_in_result.is_true() {
+                    continue;
+                }
+
+                let in_set: AtomicFact =
+                    InFact::new(member_obj.clone(), set, line_file.clone()).into();
+                let in_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_set)?;
+
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_membership_contradiction".to_string(),
+                        vec![in_result, not_in_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
+        let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
+        let lookup_key = (probe.key(), true);
+        let module_names = self.atomic_fact_referenced_module_names(&probe);
+        let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
+        let mut sets = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+
+        for environment in self.iter_environments_from_top() {
+            Self::collect_known_sets_containing_obj_in_environment(
+                environment,
+                &lookup_key,
+                &obj_strings,
+                &mut sets,
+                &mut seen,
+            );
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                Self::collect_known_sets_containing_obj_in_environment(
+                    environment.as_ref(),
+                    &lookup_key,
+                    &obj_strings,
+                    &mut sets,
+                    &mut seen,
+                );
+            }
+        }
+
+        sets
+    }
+
+    fn collect_known_sets_containing_obj_in_environment(
+        environment: &Environment,
+        lookup_key: &(AtomicFactKey, bool),
+        obj_strings: &[String],
+        sets: &mut Vec<Obj>,
+        seen: &mut std::collections::HashSet<String>,
+    ) {
+        let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(lookup_key)
+        else {
+            return;
+        };
+        for obj_string in obj_strings {
+            for ((member_string, _), known_fact) in known_facts_map.iter() {
+                if member_string != obj_string {
+                    continue;
+                }
+                let AtomicFact::InFact(in_fact) = known_fact else {
+                    continue;
+                };
+                let set_string = in_fact.set.to_string();
+                if seen.insert(set_string) {
+                    sets.push(in_fact.set.clone());
+                }
+            }
+        }
     }
 
     // Difference nonzero rule: if `a != b` is known, then `a - b != 0`.

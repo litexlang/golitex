@@ -521,6 +521,11 @@ count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({
 count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
 count(set_diff({1, 2}, {2, 3})) = count(set_minus({1, 2}, {2, 3})) + count(set_minus({2, 3}, {1, 2}))
 
+forall X finite_set:
+    count(X) >= 1
+    =>:
+        $is_nonempty_set(X)
+
 claim:
     prove:
         forall X, Y set:

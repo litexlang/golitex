@@ -13,6 +13,7 @@ pub struct Runtime {
     pub detail_output: bool,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
+    pub loading_builtin_code: bool,
 }
 
 impl Runtime {
@@ -29,12 +30,14 @@ impl Runtime {
             detail_output: false,
             strict_mode: false,
             output_language: OutputLanguage::English,
+            loading_builtin_code: false,
         }
     }
 
     // Same empty runtime as `new`, then runs builtin definitions; panics if that fails.
     pub fn new_with_builtin_code() -> Self {
         let mut runtime = Self::new();
+        runtime.loading_builtin_code = true;
         let (stmt_results, runtime_error) =
             crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
         let (ok, msg) = crate::pipeline::render_run_source_code_output(
@@ -43,6 +46,7 @@ impl Runtime {
             &runtime_error,
             true,
         );
+        runtime.loading_builtin_code = false;
         if !ok {
             panic!("builtin code execution failed: {}", msg);
         }
@@ -61,6 +65,7 @@ impl Runtime {
             detail_output: parent_runtime.detail_output,
             strict_mode: false,
             output_language: parent_runtime.output_language,
+            loading_builtin_code: false,
         }
     }
 }

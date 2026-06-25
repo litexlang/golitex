@@ -1,0 +1,4 @@
+forall s finite_set:
+    count(s) >= 1
+    =>:
+        $is_nonempty_set(s)

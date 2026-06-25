@@ -2762,6 +2762,73 @@ union(set_minus(A, B), set_minus(A, C)) = set_minus(A, intersect(B, C))
 }
 
 #[test]
+fn literal_set_intersection_filtering_is_builtin() {
+    let cases = [
+        r#"
+forall S set, x set:
+    x $in S
+    =>:
+        intersect(S, {x}) = {x}
+        {x} = intersect(S, {x})
+        intersect({x}, S) = {x}
+"#,
+        r#"
+forall S set, x set, y set:
+    x != y
+    x $in S
+    y $in S
+    =>:
+        intersect(S, {x, y}) = {x, y}
+        intersect({x, y}, S) = {x, y}
+"#,
+        r#"
+forall S set, x set, y set:
+    x $in S
+    not y $in S
+    =>:
+        intersect(S, {x, y}) = {x}
+        intersect({x, y}, S) = {x}
+        x != y
+        y != x
+"#,
+        r#"
+forall S set, x set, y set:
+    x != y
+    not x $in S
+    not y $in S
+    =>:
+        intersect(S, {x, y}) = {}
+"#,
+        r#"
+forall S set, x set, y set, z set:
+    x != y
+    x != z
+    y != z
+    x $in S
+    not y $in S
+    z $in S
+    =>:
+        intersect(S, {x, y, z}) = {x, z}
+"#,
+    ];
+
+    for (i, source_code) in cases.iter().enumerate() {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("literal_set_intersection_filtering_is_builtin");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "literal_set_intersection_filtering_is_builtin case {} failed:\n{}",
+            i,
+            run_output
+        );
+    }
+}
+
+#[test]
 fn one_side_infinity_interval_parse_arity_errors() {
     for source_code in ["have bad set = info()", "have bad set = info(0, 1)"] {
         let mut runtime = Runtime::new_with_builtin_code();
