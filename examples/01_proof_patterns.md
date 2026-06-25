@@ -1042,6 +1042,12 @@ forall A, B, C set:
 forall A, B, C set:
     set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
 
+forall S set, x set, y set:
+    x $in S
+    not y $in S
+    =>:
+        intersect(S, {x, y}) = {x}
+
 have A, B, C set
 intersect(A, B) = intersect(B, A)
 intersect(intersect(A, B), C) = intersect(A, intersect(B, C))

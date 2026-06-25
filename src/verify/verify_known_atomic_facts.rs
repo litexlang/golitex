@@ -158,7 +158,7 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    fn all_objs_equal_to_arg_for_known_atomic_fact(
+    pub(crate) fn all_objs_equal_to_arg_for_known_atomic_fact(
         &self,
         arg: &Obj,
         module_names: &[String],

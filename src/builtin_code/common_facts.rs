@@ -199,6 +199,13 @@ know:
             not $is_nonempty_set(a)
             a = {}
 
+    # A finite set with positive count is nonempty.
+    # Example: `count(A) >= 1 => $is_nonempty_set(A)`.
+    forall a finite_set:
+        count(a) >= 1
+        =>:
+            $is_nonempty_set(a)
+
     forall a, b N_pos:
         a % b = 0
         =>:

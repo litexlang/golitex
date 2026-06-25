@@ -129,6 +129,32 @@ impl Runtime {
             return Ok(done);
         }
 
+        if Self::intersection_has_literal_set_operand(left) {
+            if let Some(done) = self.try_verify_literal_set_intersection_filter(
+                left,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?
+            {
+                return Ok(done);
+            }
+        }
+        if Self::intersection_has_literal_set_operand(right) {
+            if let Some(done) = self.try_verify_literal_set_intersection_filter(
+                left,
+                right,
+                right,
+                left,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(done);
+            }
+        }
+
         if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
             return Ok(done);
         }
@@ -989,6 +1015,80 @@ impl Runtime {
 
     fn is_empty_list_set(obj: &Obj) -> bool {
         matches!(obj, Obj::ListSet(list_set) if list_set.list.is_empty())
+    }
+
+    fn intersection_has_literal_set_operand(obj: &Obj) -> bool {
+        let Obj::Intersect(intersection) = obj else {
+            return false;
+        };
+        matches!(intersection.left.as_ref(), Obj::ListSet(_))
+            || matches!(intersection.right.as_ref(), Obj::ListSet(_))
+    }
+
+    // Filters a literal set through an intersection using known membership facts.
+    // Example: from `x $in S` and `not y $in S`, prove `intersect(S, {x, y}) = {x}`.
+    fn try_verify_literal_set_intersection_filter(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        intersection_side: &Obj,
+        target_side: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if self.loading_builtin_code {
+            return Ok(None);
+        }
+
+        let Obj::Intersect(intersection) = intersection_side else {
+            return Ok(None);
+        };
+
+        let (set, literal_set) = match (intersection.left.as_ref(), intersection.right.as_ref()) {
+            (set, Obj::ListSet(literal_set)) => (set, literal_set),
+            (Obj::ListSet(literal_set), set) => (set, literal_set),
+            _ => return Ok(None),
+        };
+
+        let mut kept = Vec::new();
+        let mut steps = Vec::new();
+        for element in literal_set.list.iter() {
+            let element_obj = element.as_ref().clone();
+            let in_set: AtomicFact =
+                InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
+            let in_result =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?;
+            if in_result.is_true() {
+                kept.push(element_obj);
+                steps.push(in_result);
+                continue;
+            }
+
+            let not_in_set: AtomicFact =
+                NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
+            let not_in_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&not_in_set, verify_state)?;
+            if not_in_result.is_true() {
+                steps.push(not_in_result);
+                continue;
+            }
+
+            return Ok(None);
+        }
+
+        let filtered_set: Obj = ListSet::new(kept).into();
+        if !verify_equality_by_they_are_the_same(&filtered_set, target_side) {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into(),
+                "intersect_literal_set_filter".to_string(),
+                steps,
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_subtraction_from_known_addition(
