@@ -46,7 +46,7 @@ impl Stmt {
             Stmt::DefAliasStmt(stmt) => stmt.output_type_string(),
             Stmt::DefInterfaceStmt(stmt) => stmt.output_type_string(),
             Stmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
-            Stmt::DefThmStmt(_) => DefThmStmt::output_type_string(),
+            Stmt::DefThmStmt(stmt) => stmt.output_type_string_for_stmt(),
             Stmt::DefStrategyStmt(_) => DefStrategyStmt::output_type_string(),
             Stmt::By(stmt) => stmt.output_type_string(),
             Stmt::Witness(stmt) => stmt.output_type_string(),

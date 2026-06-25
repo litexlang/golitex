@@ -1,0 +1,535 @@
+# Every nonempty finite subset of R has an increasing index function.
+#
+# Proof shape: induct on the size.  For the successor step, choose a maximum
+# element a of S, recursively enumerate S \ {a}, and append a as the last value.
+
+prop is_index_fn(S finite_set, index fn(x N_pos: x <= count(S)) S):
+    forall! y S => {exist i N_pos st {i <= count(S), y = index(i)}}
+
+prop is_maximum_element_of_real_finite_set(S finite_set, a S):
+    S $subset R
+    forall x S:
+        x <= a
+
+prop is_increasing_index_fn(S finite_set, index fn(x N_pos: x <= count(S)) S):
+    $is_index_fn(S, index)
+    forall i, j N_pos:
+        i <= count(S)
+        j <= count(S)
+        i < j
+        =>:
+            index(i) < index(j)
+
+prop finite_real_set_has_increasing_index(S finite_set):
+    S $subset R
+    count(S) >= 1
+    exist idx fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx)}
+
+prop finite_real_set_with_given_size_has_increasing_index(n N_pos):
+    forall S finite_set:
+        S $subset R
+        count(S) = n
+        =>:
+            $finite_real_set_has_increasing_index(S)
+
+prop finite_real_set_has_maximum(S finite_set):
+    S $subset R
+    count(S) >= 1
+    exist a S st {$is_maximum_element_of_real_finite_set(S, a)}
+
+prop finite_real_set_with_given_size_has_maximum(n N_pos):
+    forall S finite_set:
+        S $subset R
+        count(S) = n
+        =>:
+            $finite_real_set_has_maximum(S)
+
+thm positive_integer_plus_one_is_at_least_two:
+    prove:
+        forall n N_pos:
+            n + 1 >= 2
+    n >= 1
+    n + 1 >= 1 + 1 = 2
+
+thm real_le_or_gt:
+    prove:
+        forall x, y R:
+            x <= y or x > y
+    by cases x <= y or x > y:
+        case x <= y:
+            x <= y or x > y
+        case x > y:
+            x <= y or x > y
+
+thm real_le_and_ne_imply_lt:
+    prove:
+        forall x, y R:
+            x <= y
+            x != y
+            =>:
+                x < y
+    by contra:
+        prove:
+            x < y
+        x >= y
+        x = y
+        impossible x != y
+
+thm singleton_real_finite_set_has_maximum:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) = 1
+            =>:
+                $finite_real_set_has_maximum(S)
+    $is_nonempty_set(S)
+    have a S
+    witness exist a0 S st {$is_maximum_element_of_real_finite_set(S, a0)} from a:
+        S $subset R
+        claim:
+            prove:
+                forall x S:
+                    x <= a
+            by contra x = a:
+                x != a
+                x $in set_minus(S, {a})
+                count({a}) = 1
+                intersect(S, {a}) = {a}
+                $is_finite_set(set_minus(S, {a}))
+                count(set_minus(S, {a})) = count(S) - count(intersect(S, {a})) = 1 - 1 = 0
+                set_minus(S, {a}) = {}
+                witness $is_nonempty_set(set_minus(S, {a})) from x:
+                    x $in set_minus(S, {a})
+                impossible set_minus(S, {a}) = {}
+            x = a
+            x <= a
+        $is_maximum_element_of_real_finite_set(S, a)
+    $finite_real_set_has_maximum(S)
+
+thm finite_real_set_maximum_extends_after_adding_member:
+    prove:
+        forall S finite_set, a S:
+            S $subset R
+            count(S) >= 2
+            $finite_real_set_has_maximum(set_minus(S, {a}))
+            =>:
+                $finite_real_set_has_maximum(S)
+    have by exist m set_minus(S, {a}) st {$is_maximum_element_of_real_finite_set(set_minus(S, {a}), m)}: m
+    $is_maximum_element_of_real_finite_set(set_minus(S, {a}), m)
+    m $in S
+    S $subset R
+    a $in R
+    m $in R
+    by thm real_le_or_gt(a, m)
+    a <= m or a > m
+    claim:
+        prove:
+            $finite_real_set_has_maximum(S)
+        by cases:
+            prove:
+                $finite_real_set_has_maximum(S)
+            case a <= m:
+                witness exist t S st {$is_maximum_element_of_real_finite_set(S, t)} from m:
+                    S $subset R
+                    claim:
+                        prove:
+                            forall x S:
+                                x <= m
+                        by cases:
+                            prove:
+                                x <= m
+                            case x = a:
+                                x = a <= m
+                            case x != a:
+                                x $in set_minus(S, {a})
+                                forall y set_minus(S, {a}):
+                                    y <= m
+                                x <= m
+                    $is_maximum_element_of_real_finite_set(S, m)
+                $finite_real_set_has_maximum(S)
+            case a > m:
+                witness exist t S st {$is_maximum_element_of_real_finite_set(S, t)} from a:
+                    S $subset R
+                    claim:
+                        prove:
+                            forall x S:
+                                x <= a
+                        by cases:
+                            prove:
+                                x <= a
+                            case x = a:
+                                x <= a
+                            case x != a:
+                                x $in set_minus(S, {a})
+                                forall y set_minus(S, {a}):
+                                    y <= m
+                                x <= m
+                                x <= m < a
+                                x <= a
+                    $is_maximum_element_of_real_finite_set(S, a)
+                $finite_real_set_has_maximum(S)
+    $finite_real_set_has_maximum(S)
+
+thm finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum:
+    prove:
+        forall n N_pos, S finite_set:
+            S $subset R
+            count(S) = n + 1
+            $finite_real_set_with_given_size_has_maximum(n)
+            =>:
+                $finite_real_set_has_maximum(S)
+    by thm positive_integer_plus_one_is_at_least_two(n)
+    n + 1 >= 2
+    count(S) = n + 1 >= 2
+    count(S) >= 2
+    S $subset R
+    $is_nonempty_set(S)
+    have a S
+    intersect(S, {a}) = {a}
+    count({a}) = 1
+    count(set_minus(S, {a})) = count(S) - count(intersect(S, {a})) = (n + 1) - 1 = n
+    set_minus(S, {a}) $subset S
+    set_minus(S, {a}) $subset R
+    $finite_real_set_with_given_size_has_maximum(n)
+    $finite_real_set_has_maximum(set_minus(S, {a}))
+    by thm finite_real_set_maximum_extends_after_adding_member(S, a)
+    $finite_real_set_has_maximum(S)
+
+thm size_one_finite_real_sets_have_given_size_maximum:
+    prove:
+        forall n N_pos:
+            n = 1
+            =>:
+                $finite_real_set_with_given_size_has_maximum(n)
+    claim:
+        prove:
+            forall S finite_set:
+                S $subset R
+                count(S) = 1
+                =>:
+                    $finite_real_set_has_maximum(S)
+        by thm singleton_real_finite_set_has_maximum(S)
+        $finite_real_set_has_maximum(S)
+    $finite_real_set_with_given_size_has_maximum(1)
+    $finite_real_set_with_given_size_has_maximum(n)
+
+thm finite_real_sets_with_given_size_maximum_imply_successor_size_maximum:
+    prove:
+        forall n N_pos:
+            $finite_real_set_with_given_size_has_maximum(n)
+            =>:
+                $finite_real_set_with_given_size_has_maximum(n + 1)
+    claim:
+        prove:
+            forall S finite_set:
+                S $subset R
+                count(S) = n + 1
+                =>:
+                    $finite_real_set_has_maximum(S)
+        by thm finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum(n, S)
+        $finite_real_set_has_maximum(S)
+    $finite_real_set_with_given_size_has_maximum(n + 1)
+
+thm finite_real_set_with_any_positive_size_has_maximum:
+    prove:
+        forall n N_pos:
+            $finite_real_set_with_given_size_has_maximum(n)
+    by induc n from 1:
+        prove:
+            $finite_real_set_with_given_size_has_maximum(n)
+
+        prove from n = 1:
+            by thm size_one_finite_real_sets_have_given_size_maximum(n)
+            $finite_real_set_with_given_size_has_maximum(n)
+
+        prove induc:
+            $finite_real_set_with_given_size_has_maximum(n)
+            by thm finite_real_sets_with_given_size_maximum_imply_successor_size_maximum(n)
+            $finite_real_set_with_given_size_has_maximum(n + 1)
+
+thm nonempty_finite_real_set_has_maximum:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) >= 1
+            =>:
+                $finite_real_set_has_maximum(S)
+    count(S) $in N_pos
+    have n N_pos = count(S)
+    count(S) = n
+    by thm finite_real_set_with_any_positive_size_has_maximum(n)
+    $finite_real_set_with_given_size_has_maximum(n)
+    $finite_real_set_has_maximum(S)
+
+thm finite_real_set_with_size_one_has_increasing_index:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) = 1
+            =>:
+                $finite_real_set_has_increasing_index(S)
+    $is_nonempty_set(S)
+    have a S
+    have fn idx(i N_pos: i <= count(S)) S = a
+    witness exist idx0 fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx0)} from idx:
+        claim:
+            prove:
+                forall y S:
+                    exist i N_pos st {i <= count(S), y = idx0(i)}
+            by contra y = a:
+                y != a
+                y $in set_minus(S, {a})
+                count({a}) = 1
+                intersect(S, {a}) = {a}
+                $is_finite_set(set_minus(S, {a}))
+                count(set_minus(S, {a})) = count(S) - count(intersect(S, {a})) = 1 - 1 = 0
+                set_minus(S, {a}) = {}
+                witness $is_nonempty_set(set_minus(S, {a})) from y:
+                    y $in set_minus(S, {a})
+                impossible set_minus(S, {a}) = {}
+            idx0(1) = idx(1) = a
+            witness exist i N_pos st {i <= count(S), y = idx0(i)} from 1:
+                1 <= count(S)
+                y = idx0(1)
+        $is_index_fn(S, idx0)
+        claim:
+            prove:
+                forall x, z N_pos:
+                    x <= count(S)
+                    z <= count(S)
+                    x < z
+                    =>:
+                        idx0(x) < idx0(z)
+            by contra:
+                prove:
+                    idx0(x) < idx0(z)
+                count(S) = 1
+                x <= 1
+                z <= 1
+                x >= 1
+                z >= 1
+                x = 1
+                z = 1
+                x = z
+                x != z
+                impossible x != z
+        $is_increasing_index_fn(S, idx0)
+    $finite_real_set_has_increasing_index(S)
+
+thm finite_real_set_increasing_index_extends_after_adding_maximum:
+    prove:
+        forall n N_pos, S finite_set, a S:
+            count(S) = n + 1
+            $is_maximum_element_of_real_finite_set(S, a)
+            $finite_real_set_has_increasing_index(set_minus(S, {a}))
+            =>:
+                $finite_real_set_has_increasing_index(S)
+    intersect(S, {a}) = {a}
+    count({a}) = 1
+    count(set_minus(S, {a})) = count(S) - count(intersect(S, {a})) = (n + 1) - 1 = n
+    set_minus(S, {a}) $subset S
+    $finite_real_set_has_increasing_index(set_minus(S, {a}))
+    have by exist prev fn(x N_pos: x <= count(set_minus(S, {a}))) set_minus(S, {a}) st {$is_increasing_index_fn(set_minus(S, {a}), prev)}: prev
+    S $subset R
+    count(S) = n + 1 >= 1
+    have fn idx(i N_pos: i <= count(S)) S by cases:
+        case i <= n: prev(i)
+        case i > n: a
+    witness exist idx0 fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx0)} from idx:
+        claim:
+            prove:
+                forall y S:
+                    exist i N_pos st {i <= count(S), y = idx0(i)}
+            by cases:
+                prove:
+                    exist i N_pos st {i <= count(S), y = idx0(i)}
+                case y = a:
+                    n + 1 <= count(S)
+                    n + 1 > n
+                    idx0(n + 1) = idx(n + 1) = a
+                    witness exist i N_pos st {i <= count(S), y = idx0(i)} from n + 1:
+                        n + 1 <= count(S)
+                        y = idx0(n + 1)
+                case y != a:
+                    y $in set_minus(S, {a})
+                    exist i N_pos st {i <= count(set_minus(S, {a})), y = prev(i)}
+                    have by exist i N_pos st {i <= count(set_minus(S, {a})), y = prev(i)}: k
+                    k <= count(set_minus(S, {a})) = n <= n + 1 = count(S)
+                    idx0(k) = idx(k) = prev(k)
+                    witness exist i N_pos st {i <= count(S), y = idx0(i)} from k:
+                        k <= count(S)
+                        y = idx0(k)
+        $is_index_fn(S, idx0)
+        claim:
+            prove:
+                forall i, j N_pos:
+                    i <= count(S)
+                    j <= count(S)
+                    i < j
+                    =>:
+                        idx0(i) < idx0(j)
+            by cases:
+                prove:
+                    idx0(i) < idx0(j)
+                case j <= n:
+                    i < j <= n
+                    i <= n
+                    i <= count(set_minus(S, {a}))
+                    j <= count(set_minus(S, {a}))
+                    forall p, q N_pos:
+                        p <= count(set_minus(S, {a}))
+                        q <= count(set_minus(S, {a}))
+                        p < q
+                        =>:
+                            prev(p) < prev(q)
+                    prev(i) < prev(j)
+                    idx0(i) = idx(i) = prev(i)
+                    idx0(j) = idx(j) = prev(j)
+                    idx0(i) < idx0(j)
+                case j > n:
+                    i < j
+                    j <= count(S)
+                    count(S) = n + 1
+                    i < j <= count(S) = n + 1
+                    i <= n
+                    i <= count(set_minus(S, {a}))
+                    idx0(i) = idx(i) = prev(i)
+                    idx0(j) = idx(j) = a
+                    prev(i) $in set_minus(S, {a})
+                    prev(i) $in S
+                    prev(i) != a
+                    forall x S:
+                        x <= a
+                    prev(i) <= a
+                    by thm real_le_and_ne_imply_lt(prev(i), a)
+                    prev(i) < a
+                    idx0(i) < idx0(j)
+        $is_increasing_index_fn(S, idx0)
+    $finite_real_set_has_increasing_index(S)
+
+thm finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index:
+    prove:
+        forall n N_pos, S finite_set:
+            S $subset R
+            count(S) = n + 1
+            $finite_real_set_with_given_size_has_increasing_index(n)
+            =>:
+                $finite_real_set_has_increasing_index(S)
+    by thm positive_integer_plus_one_is_at_least_two(n)
+    n + 1 >= 2
+    count(S) = n + 1 >= 2
+    count(S) >= 2
+    count(S) >= 1
+    by thm nonempty_finite_real_set_has_maximum(S)
+    $finite_real_set_has_maximum(S)
+    have by exist a S st {$is_maximum_element_of_real_finite_set(S, a)}: a
+    $is_maximum_element_of_real_finite_set(S, a)
+    intersect(S, {a}) = {a}
+    count({a}) = 1
+    count(set_minus(S, {a})) = count(S) - count(intersect(S, {a})) = (n + 1) - 1 = n
+    set_minus(S, {a}) $subset S
+    set_minus(S, {a}) $subset R
+    $finite_real_set_with_given_size_has_increasing_index(n)
+    $finite_real_set_has_increasing_index(set_minus(S, {a}))
+    by thm finite_real_set_increasing_index_extends_after_adding_maximum(n, S, a)
+    $finite_real_set_has_increasing_index(S)
+
+thm size_one_finite_real_sets_have_given_size_increasing_index:
+    prove:
+        forall n N_pos:
+            n = 1
+            =>:
+                $finite_real_set_with_given_size_has_increasing_index(n)
+    claim:
+        prove:
+            forall S finite_set:
+                S $subset R
+                count(S) = 1
+                =>:
+                    $finite_real_set_has_increasing_index(S)
+        by thm finite_real_set_with_size_one_has_increasing_index(S)
+        $finite_real_set_has_increasing_index(S)
+    $finite_real_set_with_given_size_has_increasing_index(1)
+    $finite_real_set_with_given_size_has_increasing_index(n)
+
+thm finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index:
+    prove:
+        forall n N_pos:
+            $finite_real_set_with_given_size_has_increasing_index(n)
+            =>:
+                $finite_real_set_with_given_size_has_increasing_index(n + 1)
+    claim:
+        prove:
+            forall S finite_set:
+                S $subset R
+                count(S) = n + 1
+                =>:
+                    $finite_real_set_has_increasing_index(S)
+        by thm finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index(n, S)
+        $finite_real_set_has_increasing_index(S)
+    $finite_real_set_with_given_size_has_increasing_index(n + 1)
+
+thm finite_real_set_with_any_positive_size_has_increasing_index:
+    prove:
+        forall n N_pos:
+            $finite_real_set_with_given_size_has_increasing_index(n)
+    by induc n from 1:
+        prove:
+            $finite_real_set_with_given_size_has_increasing_index(n)
+
+        prove from n = 1:
+            by thm size_one_finite_real_sets_have_given_size_increasing_index(n)
+            $finite_real_set_with_given_size_has_increasing_index(n)
+
+        prove induc:
+            $finite_real_set_with_given_size_has_increasing_index(n)
+            by thm finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index(n)
+            $finite_real_set_with_given_size_has_increasing_index(n + 1)
+
+thm nonempty_finite_real_set_has_increasing_index:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) >= 1
+            =>:
+                $finite_real_set_has_increasing_index(S)
+    count(S) $in N_pos
+    have n N_pos = count(S)
+    count(S) = n
+    by thm finite_real_set_with_any_positive_size_has_increasing_index(n)
+    $finite_real_set_with_given_size_has_increasing_index(n)
+    $finite_real_set_has_increasing_index(S)
+
+# This user-defined finite-set sum relation uses only an increasing index and
+# the ordinary integer-range `sum`; it does not depend on the builtin
+# `finite_set_sum(S, f)`.
+prop finite_real_set_sum_from_increasing_index(S finite_set, f fn(x S) R, idx fn(x N_pos: x <= count(S)) S, total R):
+    S $subset R
+    count(S) >= 1
+    $is_increasing_index_fn(S, idx)
+    total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+
+thm finite_real_set_sum_from_increasing_index_is_range_sum:
+    prove:
+        forall S finite_set, f fn(x S) R, idx fn(x N_pos: x <= count(S)) S, total R:
+            $finite_real_set_sum_from_increasing_index(S, f, idx, total)
+            =>:
+                total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+    total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+
+thm nonempty_finite_real_set_has_sum_from_increasing_index:
+    prove:
+        forall S finite_set, f fn(x S) R:
+            S $subset R
+            count(S) >= 1
+            =>:
+                exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))}
+    by thm nonempty_finite_real_set_has_increasing_index(S)
+    $finite_real_set_has_increasing_index(S)
+    have by exist idx fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx)}: idx
+    witness exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))} from idx:
+        S $subset R
+        count(S) >= 1
+        $is_increasing_index_fn(S, idx)
+        sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}) = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+        $finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))

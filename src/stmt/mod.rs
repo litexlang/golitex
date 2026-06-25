@@ -39,4 +39,5 @@ pub use strategy_stmt::DefStrategyStmt;
 pub use strategy_stmt::StopStrategyStmt;
 pub use strategy_stmt::UseStrategyStmt;
 pub use struct_stmt::DefStructStmt;
+pub use thm_stmt::DefThmKind;
 pub use thm_stmt::DefThmStmt;

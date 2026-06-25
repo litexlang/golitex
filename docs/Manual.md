@@ -31,7 +31,7 @@ A Litex file is not just a list of theorem declarations. It executes as a sequen
 
 Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
-Named theorems still matter. A `claim` exports a proved fact into the current context, so it is a good fit for short, local, or common facts that later goals should reuse by pattern matching. A `thm` gives an important `forall` fact a name and asks the user to call that name explicitly with `by thm name(args...)`; this is the right style for longer, classic, standard-library, or parameter-sensitive theorems. In short: use `claim` when the fact should behave like stored context, and use `thm` when the name is part of the proof interface.
+Named theorems still matter. A `claim` exports a proved fact into the current context, so it is a good fit for short, local, or common facts that later goals should reuse by pattern matching. A `thm` gives an important `forall` fact a name and asks the user to call that name explicitly with `by thm name(args...)`; this is the right style for longer, classic, standard-library, or parameter-sensitive theorems. A `lemma` is the middle path: it is named like a `thm`, but its proved `forall` is also stored for ordinary matching. In short: use `claim` for local stored context, `lemma` for reusable named facts that should also match automatically, and `thm` when the name is the explicit proof interface.
 
 This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
@@ -2270,6 +2270,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
+| `lemma name` | Name a verified `forall` theorem and store it for ordinary matching |
 | `alias thm` | Copy a theorem under a new name |
 | `know` | Add facts or axioms to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
@@ -2535,6 +2536,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | inject explicit assumptions | `know x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
 | copy a theorem under a new name | `alias thm eq_refl <=> self_eq` |
 | call a named theorem with arguments | `by thm self_eq(1)` |
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
@@ -2709,7 +2711,7 @@ The known fact says that every human is mortal. When the goal is
 `$mortal(Socrates)`, Litex matches `x` with `Socrates`, checks that
 `Socrates human` is known, and verifies the instantiated conclusion.
 
-This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `thm` for long, classic, or important theorems where the name and explicit arguments make the proof more readable.
+This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `lemma` when that fact should also have a stable theorem name; use `thm` for long, classic, or important theorems where the name and explicit arguments make the proof more readable.
 
 ---
 
