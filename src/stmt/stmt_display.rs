@@ -115,6 +115,7 @@ impl fmt::Display for ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(x) => write!(f, "{}", x),
             ProofBlockStmt::SketchStmt(x) => write!(f, "{}", x),
+            ProofBlockStmt::TryStmt(x) => write!(f, "{}", x),
         }
     }
 }

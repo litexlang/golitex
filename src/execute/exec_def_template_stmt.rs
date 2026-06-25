@@ -363,6 +363,11 @@ impl Runtime {
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(SketchStmt::new(proof, line_file.clone()).into())
             }
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => {
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(TryStmt::new(proof, line_file.clone()).into())
+            }
             Stmt::By(ByStmt::ByThmStmt(s)) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {

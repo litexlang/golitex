@@ -6,6 +6,12 @@ impl SketchStmt {
     }
 }
 
+impl TryStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "TryStmt".to_string()
+    }
+}
+
 impl ClaimStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClaimStmt".to_string()
@@ -300,6 +306,12 @@ impl HaveFnByForallExistUniqueStmt {
 impl SketchStmt {
     pub fn output_type_string() -> String {
         "proof sketch".to_string()
+    }
+}
+
+impl TryStmt {
+    pub fn output_type_string() -> String {
+        "try block".to_string()
     }
 }
 

@@ -288,6 +288,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             ProofBlockStmt::SketchStmt(stmt) => stmt.line_file.clone(),
+            ProofBlockStmt::TryStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -295,6 +296,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             ProofBlockStmt::SketchStmt(stmt) => stmt.stmt_type_name(),
+            ProofBlockStmt::TryStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
@@ -302,6 +304,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(_) => ClaimStmt::output_type_string(),
             ProofBlockStmt::SketchStmt(_) => SketchStmt::output_type_string(),
+            ProofBlockStmt::TryStmt(_) => TryStmt::output_type_string(),
         }
     }
 }

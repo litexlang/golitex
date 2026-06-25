@@ -1,1 +1,16 @@
--10 < 0
+10. 我发现litex的algo语句可以直接被翻译成Python函数。然后如果我让属于R的object对应成Python的const变量，那岂不是可以用litex先写一段数学 然后 自动机械化编译成Python(或者c)，然后就能“可信编程了”？(比如你可以先用litex证明好你写的算法精确到某个区间，然后直接编译成c，就能确保正确了)
+    1. 因为algo这个关键词本质上就是走一个递归，这可以用c或者py表达的。
+    2. litex甚至还有template 甚至翻译成cpp都还说不定行
+
+第一版先做三种语句翻译成litex
+
+# 1. have 语句，把 have xx R = yy 翻译成 Python 的 const 变量
+
+have a R = 1
+
+# a = 1
+
+## 2 have fn as algo ，翻译成Python函数
+
+## 把 algo 翻译成python 函数
+

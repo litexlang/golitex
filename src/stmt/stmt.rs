@@ -83,6 +83,7 @@ pub enum WitnessStmt {
 pub enum ProofBlockStmt {
     ClaimStmt(ClaimStmt),
     SketchStmt(SketchStmt),
+    TryStmt(TryStmt),
 }
 
 #[derive(Clone)]
