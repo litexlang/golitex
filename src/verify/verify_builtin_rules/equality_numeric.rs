@@ -556,6 +556,72 @@ impl Runtime {
         )))
     }
 
+    // Subtracting the Euclidean remainder leaves a multiple of the positive modulus.
+    // Example: `forall a Z, b N_pos: (a - a % b) % b = 0`.
+    pub(crate) fn try_verify_mod_dividend_minus_remainder_equals_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let target = if Self::obj_is_builtin_literal_zero(left) {
+            right
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            left
+        } else {
+            return Ok(None);
+        };
+        let Obj::Mod(outer_mod) = target else {
+            return Ok(None);
+        };
+        let Obj::Sub(sub) = outer_mod.left.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::Mod(inner_mod) = sub.right.as_ref() else {
+            return Ok(None);
+        };
+        if !objs_equal_by_display_string(sub.left.as_ref(), inner_mod.left.as_ref()) {
+            return Ok(None);
+        }
+        if !objs_equal_by_display_string(outer_mod.right.as_ref(), inner_mod.right.as_ref()) {
+            return Ok(None);
+        }
+
+        let dividend_in_z: AtomicFact = InFact::new(
+            sub.left.as_ref().clone(),
+            StandardSet::Z.into(),
+            line_file.clone(),
+        )
+        .into();
+        let dividend_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&dividend_in_z, verify_state)?;
+        if !dividend_result.is_true() {
+            return Ok(None);
+        }
+
+        let modulus_in_n_pos: AtomicFact = InFact::new(
+            outer_mod.right.as_ref().clone(),
+            StandardSet::NPos.into(),
+            line_file.clone(),
+        )
+        .into();
+        let modulus_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&modulus_in_n_pos, verify_state)?;
+        if !modulus_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: (a - a % b) % b = 0 for a in Z and b in N_pos".to_string(),
+                vec![dividend_result, modulus_result],
+            )
+            .into(),
+        ))
+    }
+
     // First power identity: `a^1 = a`.
     // Example: `forall a Z: a^1 = a`.
     pub(crate) fn try_verify_pow_one_identity(

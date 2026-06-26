@@ -1878,6 +1878,8 @@ impl Runtime {
     }
 
     // `N_pos` = positive integers: from `0 < x` and (`x $in Z` or `x $in N`).
+    // Also proves a nonzero natural is positive.
+    // Example: `forall n N: n != 0 =>: n $in N_pos`.
     fn verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(
         &mut self,
         in_fact: &InFact,
@@ -1885,6 +1887,24 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
+        let in_n: AtomicFact = InFact::new(elem.clone(), StandardSet::N.into(), lf.clone()).into();
+        if self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
+            .is_true()
+        {
+            let zero: Obj = Number::new("0".to_string()).into();
+            let nonzero: AtomicFact = NotEqualFact::new(elem.clone(), zero, lf.clone()).into();
+            if self
+                .verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?
+                .is_true()
+            {
+                return Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "N_pos: x in N and x != 0",
+                ));
+            }
+        }
+
         let zero: Obj = Number::new("0".to_string()).into();
         let zero_lt_elem = LessFact::new(zero, elem.clone(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
@@ -1905,7 +1925,6 @@ impl Runtime {
             ));
         }
 
-        let in_n = InFact::new(elem.clone(), StandardSet::N.into(), lf.clone()).into();
         if self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
             &in_n,
             verify_state,

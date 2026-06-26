@@ -31,7 +31,16 @@ A Litex file is not just a list of theorem declarations. It executes as a sequen
 
 Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
-Named theorems still matter. A `claim` exports a proved fact into the current context, so it is a good fit for short, local, or common facts that later goals should reuse by pattern matching. A `thm` gives an important `forall` fact a name and asks the user to call that name explicitly with `by thm name(args...)`; this is the right style for longer, classic, standard-library, or parameter-sensitive theorems. A `lemma` is the middle path: it is named like a `thm`, but its proved `forall` is also stored for ordinary matching. In short: use `claim` for local stored context, `lemma` for reusable named facts that should also match automatically, and `thm` when the name is the explicit proof interface.
+Named facts still matter, but there are only two storage choices to learn first:
+automatic context and explicit citation. A `claim` proves a fact and exports
+only that final fact into the current context; when the final fact is a
+`forall`, Litex can try to use it later by automatic matching. A `thm` gives an
+important `forall` fact a name and asks the user to cite that name explicitly
+with `by thm name(args...)`. A `lemma` is not a third proof style. It is the
+combination form: a named theorem whose proved `forall` is also stored for
+ordinary matching. In short: use `claim` by default for local stored facts, use
+`thm` when the name is the intended proof interface, and use `lemma` only when
+both the name and automatic matching are intentional.
 
 This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
@@ -1609,7 +1618,11 @@ g(3) = 3
 
 **`claim:`** states a goal and bundles a sub-proof (and optional lemmas) that establishes it.
 
-The point of `claim` is that the proof process does not enter the main environment. The temporary facts used inside the proof stay inside the claim; only the final fact you wanted to prove is added to the surrounding context.
+`claim` is the ordinary way to prove one fact before letting later lines use it.
+It is not mainly a public theorem declaration. The proof process does not enter
+the main environment: temporary facts used inside the proof stay inside the
+claim, and only the final fact you wanted to prove is added to the surrounding
+context.
 
 When the claimed goal is a `forall` fact, that verified `forall` is stored as
 ordinary context. Later proof lines can often just write the desired concrete
@@ -1619,7 +1632,9 @@ reusable facts whose parameters are visible from the goal shape.
 
 For an important theorem that readers should remember by name, especially one
 whose useful parameters are not all visible in the final conclusion, prefer
-`thm name:` and call it explicitly with `by thm name(args...)`.
+`thm name:` and call it explicitly with `by thm name(args...)`. If the theorem
+should have a name and should also be available for automatic `forall` matching,
+use `lemma name:`.
 
 ```litex
 claim:
@@ -1638,6 +1653,47 @@ claim 3 = 3:
 
 claim forall! x R => {x = x}:
     x = x
+```
+
+---
+
+### Named universal facts (`thm` / `lemma`)
+
+**`thm name:`** and **`lemma name:`** both define a named verified `forall`
+fact. Their `prove:` block must contain exactly one `forall` fact, followed by
+the proof steps that establish its conclusions.
+
+The difference is how the result is reused:
+
+| Form | Explicit `by thm` call | Automatic `forall` matching | Use when |
+|------|------------------------|-----------------------------|----------|
+| `claim forall ...` | No theorem name | Yes | A short or local fact should help later goals by shape |
+| `thm name:` | Yes | No | The name is the intended proof interface |
+| `lemma name:` | Yes | Yes | A named fact should also behave like known context |
+
+This means `lemma` is a convenience combination, not a separate kind of
+mathematical proof. If a fact should be remembered by readers and cited
+explicitly, use `thm`. If a fact is small enough that the final goal shape makes
+the intended substitution clear, use `claim forall ...`. Use `lemma` only when
+both behaviors are useful.
+
+```litex
+thm self_eq_named:
+    prove:
+        forall x R:
+            x = x
+    x = x
+
+by thm self_eq_named(1)
+
+lemma self_eq_named_auto:
+    prove:
+        forall x R:
+            x = x
+    x = x
+
+# This can use automatic matching from the proved lemma.
+2 = 2
 ```
 
 ---

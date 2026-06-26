@@ -46,6 +46,9 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, &vs)? {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
             return Ok(result);
         }
@@ -670,6 +673,82 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
                 Vec::new(),
+            ),
+        )))
+    }
+
+    /// Euclidean remainders modulo a positive integer lie in the standard interval.
+    /// Example: from `a $in Z` and `b $in N_pos`, prove `0 <= a % b < b`.
+    fn try_verify_mod_remainder_bounds(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let (mod_obj, line_file, strict_upper_bound) = match &norm {
+            AtomicFact::LessEqualFact(f) => {
+                let Some(zero) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_normalized_number_str_to_zero(&zero.normalized_value),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                let Obj::Mod(m) = &f.right else {
+                    return Ok(None);
+                };
+                (m, f.line_file.clone(), false)
+            }
+            AtomicFact::LessFact(f) => {
+                let Obj::Mod(m) = &f.left else {
+                    return Ok(None);
+                };
+                if m.right.to_string() != f.right.to_string() {
+                    return Ok(None);
+                }
+                (m, f.line_file.clone(), true)
+            }
+            _ => return Ok(None),
+        };
+
+        let dividend_in_z: AtomicFact = InFact::new(
+            mod_obj.left.as_ref().clone(),
+            StandardSet::Z.into(),
+            line_file.clone(),
+        )
+        .into();
+        let dividend_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&dividend_in_z, verify_state)?;
+        if !dividend_result.is_true() {
+            return Ok(None);
+        }
+
+        let modulus_in_n_pos: AtomicFact = InFact::new(
+            mod_obj.right.as_ref().clone(),
+            StandardSet::NPos.into(),
+            line_file,
+        )
+        .into();
+        let modulus_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&modulus_in_n_pos, verify_state)?;
+        if !modulus_result.is_true() {
+            return Ok(None);
+        }
+
+        let reason = if strict_upper_bound {
+            "mod remainder upper bound: a % b < b for a in Z and b in N_pos"
+        } else {
+            "mod remainder nonnegative: 0 <= a % b for a in Z and b in N_pos"
+        };
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                reason.to_string(),
+                vec![dividend_result, modulus_result],
             ),
         )))
     }
