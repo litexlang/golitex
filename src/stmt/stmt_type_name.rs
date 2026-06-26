@@ -189,6 +189,12 @@ impl ByAxiomOfChoiceStmt {
     }
 }
 
+impl ByRegularityAxiomStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByRegularityAxiomStmt".to_string()
+    }
+}
+
 impl ByThmStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByThmStmt".to_string()
@@ -489,6 +495,12 @@ impl ByZornLemmaStmt {
 impl ByAxiomOfChoiceStmt {
     pub fn output_type_string() -> String {
         "proof by axiom of choice".to_string()
+    }
+}
+
+impl ByRegularityAxiomStmt {
+    pub fn output_type_string() -> String {
+        "proof by regularity axiom".to_string()
     }
 }
 

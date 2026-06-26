@@ -70,6 +70,7 @@ pub enum ByStmt {
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
+    ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     ByThmStmt(ByThmStmt),
 }
 

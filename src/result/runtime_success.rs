@@ -37,6 +37,7 @@ pub enum ByVerificationResult {
     PropRegistration(ByPropRegistrationVerificationResult),
     AxiomOfChoice(ByChoiceVerificationResult),
     ZornLemma(ByChoiceVerificationResult),
+    RegularityAxiom(ByChoiceVerificationResult),
     Theorem(ByTheoremVerificationResult),
 }
 
@@ -956,6 +957,9 @@ impl fmt::Debug for ByVerificationResult {
                 f.debug_tuple("AxiomOfChoice").field(v).finish()
             }
             ByVerificationResult::ZornLemma(v) => f.debug_tuple("ZornLemma").field(v).finish(),
+            ByVerificationResult::RegularityAxiom(v) => {
+                f.debug_tuple("RegularityAxiom").field(v).finish()
+            }
             ByVerificationResult::Theorem(v) => f.debug_tuple("Theorem").field(v).finish(),
         }
     }

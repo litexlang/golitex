@@ -693,6 +693,7 @@ impl Runtime {
                 left.set.as_ref(),
                 given_arg,
             ),
+            Obj::Replacement(ref left) => self.match_arg_when_left_is_replacement(left, given_arg),
             Obj::Sum(ref left) => self.match_arg_when_left_is_sum(
                 left.start.as_ref(),
                 left.end.as_ref(),
@@ -2280,6 +2281,25 @@ impl Runtime {
                 given.function.as_ref(),
                 given.set.as_ref(),
             ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_replacement(
+        &mut self,
+        left: &Replacement,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Replacement(given) => {
+                if left.prop_name.to_string() != given.prop_name.to_string() {
+                    return Ok(None);
+                }
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left.source_set.as_ref(),
+                    given.source_set.as_ref(),
+                )
+            }
             _ => Ok(None),
         }
     }

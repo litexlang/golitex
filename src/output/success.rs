@@ -178,6 +178,12 @@ fn non_factual_verification_value(
             &x.inside_results,
             "trusted_conclusion",
         )),
+        ByVerificationResult::RegularityAxiom(verification) => Some(by_choice_verification_value(
+            runtime,
+            verification,
+            &x.inside_results,
+            "trusted_conclusion",
+        )),
         ByVerificationResult::Theorem(verification) => Some(by_theorem_verification_value(
             runtime,
             verification,

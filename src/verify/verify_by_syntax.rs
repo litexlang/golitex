@@ -190,6 +190,10 @@ impl Runtime {
                 Obj::FnRangeOn(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Replacement(a) => match right {
+                Obj::Replacement(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Sum(a) => match right {
                 Obj::Sum(b) => a.to_string() == b.to_string(),
                 _ => false,

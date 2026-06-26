@@ -574,7 +574,8 @@ claim:
 
 #[test]
 fn fn_range_intro_subset_and_preimage_work() {
-    let source_code = r#"
+    run_with_large_stack("fn_range_intro_subset_and_preimage_work", || {
+        let source_code = r#"
 sketch:
     have f fn(x R: x > 0) R
 
@@ -613,17 +614,18 @@ sketch:
     a(2) = a(k)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("fn_range_intro_subset_and_preimage_work");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("fn_range_intro_subset_and_preimage_work");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "fn_range intro/subset/preimage failed:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "fn_range intro/subset/preimage failed:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -654,54 +656,157 @@ sketch:
 
 #[test]
 fn have_by_preimage_rejects_non_range_source() {
-    let source_code = r#"
+    run_with_large_stack("have_by_preimage_rejects_non_range_source", || {
+        let source_code = r#"
 sketch:
     have f fn(x R) R
     have by preimage x from f(1) $in R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_by_preimage_rejects_non_range_source");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_by_preimage_rejects_non_range_source");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "preimage with non-range source should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("have by preimage expects `from z $in fn_range(f)`"),
-        "preimage non-range error should be explicit:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "preimage with non-range source should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("have by preimage expects `from z $in fn_range(f)`"),
+            "preimage non-range error should be explicit:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
 fn have_by_preimage_checks_witness_count() {
-    let source_code = r#"
+    run_with_large_stack("have_by_preimage_checks_witness_count", || {
+        let source_code = r#"
 sketch:
     have f fn(x R) R
     f(1) $in fn_range(f)
     have by preimage x, y from f(1) $in fn_range(f)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_by_preimage_checks_witness_count");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_by_preimage_checks_witness_count");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "preimage witness count mismatch should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("have by preimage: expected 1 preimage name(s), got 2"),
-        "preimage witness count error should be explicit:\n{}",
-        run_output
+        assert!(
+            !run_succeeded,
+            "preimage witness count mismatch should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("have by preimage: expected 1 preimage name(s), got 2"),
+            "preimage witness count error should be explicit:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn replacement_requires_binary_prop() {
+    run_with_large_stack("replacement_requires_binary_prop", || {
+        let source_code = r#"
+abstract_prop one_arg_relation(x)
+have B set = replacement(one_arg_relation, {1})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("replacement_requires_binary_prop");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "unary replacement relation should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("expects a binary prop"),
+            "replacement arity error should be explicit:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn replacement_requires_uniqueness_over_source_set() {
+    run_with_large_stack("replacement_requires_uniqueness_over_source_set", || {
+        let source_code = r#"
+abstract_prop rel(x, y)
+have B set = replacement(rel, {1})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "replacement_requires_uniqueness_over_source_set",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "replacement without uniqueness should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("needs uniqueness of `rel` over `{1}`"),
+            "replacement uniqueness error should be explicit:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn replacement_membership_infers_preimage_and_preimage_stmt_works() {
+    run_with_large_stack(
+        "replacement_membership_infers_preimage_and_preimage_stmt_works",
+        || {
+            let source_code = r#"
+abstract_prop rel(x, y)
+
+know forall x {3, 5, 9}, y, y2 set:
+    $rel(x, y)
+    $rel(x, y2)
+    =>:
+        y = y2
+
+have B set = replacement(rel, {3, 5, 9})
+
+forall y B:
+    exist x {3, 5, 9} st {$rel(x, y)}
+
+have y set
+know y $in replacement(rel, {3, 5, 9})
+have by preimage x from y $in replacement(rel, {3, 5, 9})
+x $in {3, 5, 9}
+$rel(x, y)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "replacement_membership_infers_preimage_and_preimage_stmt_works",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "replacement membership/preimage should work:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -1142,6 +1247,63 @@ fn run_axiom_of_choice_regression_source(source_code: &str, file_label: &str) ->
     runtime.new_file_path_new_env_new_name_scope(file_label);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+}
+
+#[test]
+fn by_regularity_axiom_stores_foundation_witness_exist_fact() {
+    run_with_large_stack(
+        "by_regularity_axiom_stores_foundation_witness_exist_fact",
+        || {
+            let source_code = r#"
+know $is_nonempty_set({1, 2})
+
+by regularity_axiom({1, 2})
+
+exist x {1, 2} st {intersect(x, {1, 2}) = {}}
+"#;
+
+            let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+                source_code,
+                "by_regularity_axiom_stores_foundation_witness_exist_fact",
+            );
+
+            assert!(
+                run_succeeded,
+                "by_regularity_axiom_stores_foundation_witness_exist_fact failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"by regularity_axiom proof\""),
+                "success output should identify the regularity axiom step:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn by_regularity_axiom_requires_nonempty_set() {
+    run_with_large_stack("by_regularity_axiom_requires_nonempty_set", || {
+        let source_code = r#"
+by regularity_axiom({})
+"#;
+
+        let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+            source_code,
+            "by_regularity_axiom_requires_nonempty_set",
+        );
+
+        assert!(
+            !run_succeeded,
+            "empty set should not satisfy by regularity_axiom:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("nonempty obligation"),
+            "failure should name the missing nonempty obligation:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

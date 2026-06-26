@@ -38,6 +38,7 @@ pub enum Obj {
     Count(Count),
     FnRange(FnRange),
     FnRangeOn(FnRangeOn),
+    Replacement(Replacement),
     Sum(Sum),
     SumOfFiniteSet(SumOfFiniteSet),
     Product(Product),
@@ -132,6 +133,7 @@ pub enum ObjKind {
     DefStructFieldFreeParam = 63,
     FnRange = 64,
     FnRangeOn = 65,
+    Replacement = 66,
 }
 
 impl ObjKind {
@@ -471,6 +473,12 @@ pub struct FnRange {
 pub struct FnRangeOn {
     pub function: Box<Obj>,
     pub set: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Replacement {
+    pub prop_name: AtomicName,
+    pub source_set: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -885,6 +893,15 @@ impl FnRangeOn {
     }
 }
 
+impl Replacement {
+    pub fn new(prop_name: AtomicName, source_set: Obj) -> Self {
+        Replacement {
+            prop_name,
+            source_set: Box::new(source_set),
+        }
+    }
+}
+
 impl Range {
     pub fn new(start: Obj, end: Obj) -> Self {
         Range {
@@ -1105,6 +1122,7 @@ impl Obj {
             Obj::Count(_) => ObjKind::Count,
             Obj::FnRange(_) => ObjKind::FnRange,
             Obj::FnRangeOn(_) => ObjKind::FnRangeOn,
+            Obj::Replacement(_) => ObjKind::Replacement,
             Obj::Sum(_) => ObjKind::Sum,
             Obj::SumOfFiniteSet(_) => ObjKind::SumOfFiniteSet,
             Obj::Product(_) => ObjKind::Product,
@@ -1169,6 +1187,7 @@ impl Obj {
             Obj::Count(_) => COUNT.to_string(),
             Obj::FnRange(_) => FN_RANGE.to_string(),
             Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
+            Obj::Replacement(_) => REPLACEMENT.to_string(),
             Obj::Sum(_) => SUM.to_string(),
             Obj::SumOfFiniteSet(_) => FINITE_SET_SUM.to_string(),
             Obj::Product(_) => PRODUCT.to_string(),
@@ -1311,6 +1330,7 @@ impl Obj {
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::FnRange(x) => write!(f, "{}", x)?,
             Obj::FnRangeOn(x) => write!(f, "{}", x)?,
+            Obj::Replacement(x) => write!(f, "{}", x)?,
             Obj::Sum(x) => write!(f, "{}", x)?,
             Obj::SumOfFiniteSet(x) => write!(f, "{}", x)?,
             Obj::Product(x) => write!(f, "{}", x)?,
@@ -1544,6 +1564,11 @@ impl Obj {
             Obj::FnRangeOn(x) => FnRangeOn::new(
                 Obj::replace_bound_identifier(*x.function, from, to),
                 Obj::replace_bound_identifier(*x.set, from, to),
+            )
+            .into(),
+            Obj::Replacement(x) => Replacement::new(
+                x.prop_name,
+                Obj::replace_bound_identifier(*x.source_set, from, to),
             )
             .into(),
             Obj::Sum(x) => Sum::new(
@@ -2083,6 +2108,16 @@ impl fmt::Display for FnRangeOn {
             "{}{}",
             FN_RANGE_ON,
             braced_vec_to_string(&vec![self.function.as_ref(), self.set.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for Replacement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}, {}{}",
+            REPLACEMENT, LEFT_BRACE, self.prop_name, self.source_set, RIGHT_BRACE
         )
     }
 }
@@ -2641,6 +2676,12 @@ impl From<FnRange> for Obj {
 impl From<FnRangeOn> for Obj {
     fn from(r: FnRangeOn) -> Self {
         Obj::FnRangeOn(r)
+    }
+}
+
+impl From<Replacement> for Obj {
+    fn from(r: Replacement) -> Self {
+        Obj::Replacement(r)
     }
 }
 

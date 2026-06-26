@@ -221,6 +221,34 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    fn infer_membership_in_equal_set_representatives_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        for equal_set in self
+            .get_all_obj_representatives_equal_to_given(&in_fact.set)
+            .into_iter()
+        {
+            let expanded_fact: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                equal_set,
+                in_fact.line_file.clone(),
+            )
+            .into();
+            if self
+                .cache_known_facts_contains(&expanded_fact.to_string())
+                .0
+            {
+                continue;
+            }
+            infer_result.new_infer_result_inside(
+                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?,
+            );
+        }
+        Ok(infer_result)
+    }
+
     // RHS is set-builder `{ x $in S | ... }`: emit `element $in S` and each defining fact with `x := element`.
     pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
@@ -290,6 +318,11 @@ impl Runtime {
             // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers `z $in R`.
             Obj::FnRangeOn(fn_range_on) => {
                 self.infer_membership_in_fn_range_on(in_fact, fn_range_on)
+            }
+            // Replacement elimination: `y $in replacement(P, A)` infers a preimage witness exists.
+            // Example: `y $in replacement(P, A)` infers `exist x A st {$P(x, y)}`.
+            Obj::Replacement(replacement) => {
+                self.infer_membership_in_replacement(in_fact, replacement)
             }
             // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
@@ -703,6 +736,11 @@ impl Runtime {
                 Ok(infer_result)
             }
             set_obj => {
+                let equal_set_infer =
+                    self.infer_membership_in_equal_set_representatives_from_in_fact(in_fact)?;
+                if !equal_set_infer.is_empty() {
+                    return Ok(equal_set_infer);
+                }
                 let alias_infer = self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
                 if !alias_infer.is_empty() {
                     return Ok(alias_infer);
@@ -765,6 +803,36 @@ impl Runtime {
         infer_result.push_atomic_fact(&codomain_fact);
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
+        );
+        Ok(infer_result)
+    }
+
+    fn infer_membership_in_replacement(
+        &mut self,
+        in_fact: &InFact,
+        replacement: &Replacement,
+    ) -> Result<InferResult, RuntimeError> {
+        let preimage_name = "x".to_string();
+        let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
+        let relation_fact: AtomicFact = NormalAtomicFact::new(
+            replacement.prop_name.clone(),
+            vec![preimage_obj, in_fact.element.clone()],
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![preimage_name],
+                ParamType::Obj(replacement.source_set.as_ref().clone()),
+            )]),
+            vec![relation_fact.into()],
+            in_fact.line_file.clone(),
+        )?;
+        let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&exist_fact);
+        infer_result.new_infer_result_inside(
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
         );
         Ok(infer_result)
     }

@@ -215,6 +215,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByZornLemmaStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.line_file.clone(),
+            ByStmt::ByRegularityAxiomStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByThmStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -235,6 +236,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByZornLemmaStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.stmt_type_name(),
+            ByStmt::ByRegularityAxiomStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -255,6 +257,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(_) => ByAntisymmetricPropStmt::output_type_string(),
             ByStmt::ByZornLemmaStmt(_) => ByZornLemmaStmt::output_type_string(),
             ByStmt::ByAxiomOfChoiceStmt(_) => ByAxiomOfChoiceStmt::output_type_string(),
+            ByStmt::ByRegularityAxiomStmt(_) => ByRegularityAxiomStmt::output_type_string(),
             ByStmt::ByThmStmt(_) => ByThmStmt::output_type_string(),
         }
     }

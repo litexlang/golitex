@@ -396,6 +396,15 @@ impl ByAxiomOfChoiceStmt {
     }
 }
 
+impl ByRegularityAxiomStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\text{{\textbf{{by regularity_axiom}}}}({})",
+            self.set.to_latex_string()
+        )
+    }
+}
+
 impl ByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let goals = self
@@ -559,6 +568,17 @@ impl FnRangeOn {
             FN_RANGE_ON,
             self.function.to_latex_string(),
             self.set.to_latex_string()
+        )
+    }
+}
+
+impl Replacement {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {} \right)",
+            REPLACEMENT,
+            self.prop_name,
+            self.source_set.to_latex_string()
         )
     }
 }
@@ -2101,6 +2121,7 @@ impl Obj {
             Obj::Count(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
             Obj::FnRangeOn(x) => x.to_latex_string(),
+            Obj::Replacement(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
             Obj::SumOfFiniteSet(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
@@ -2198,6 +2219,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByAntisymmetricPropStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByZornLemmaStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
         }
     }

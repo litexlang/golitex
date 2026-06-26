@@ -374,6 +374,9 @@ impl Runtime {
                 Self::obj_depends_on_given_exist_param(x.function.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
             }
+            Obj::Replacement(x) => {
+                Self::obj_depends_on_given_exist_param(x.source_set.as_ref(), names)
+            }
             Obj::SeqSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::Sum(x) => {
                 Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)

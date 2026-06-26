@@ -264,6 +264,12 @@ impl From<ByAxiomOfChoiceStmt> for Stmt {
     }
 }
 
+impl From<ByRegularityAxiomStmt> for Stmt {
+    fn from(v: ByRegularityAxiomStmt) -> Self {
+        ByStmt::ByRegularityAxiomStmt(v).into()
+    }
+}
+
 impl From<ByThmStmt> for Stmt {
     fn from(v: ByThmStmt) -> Self {
         ByStmt::ByThmStmt(v).into()

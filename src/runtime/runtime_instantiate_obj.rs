@@ -71,6 +71,9 @@ impl Runtime {
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
+            Obj::Replacement(inner) => {
+                self.inst_replacement(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
             Obj::SumOfFiniteSet(inner) => {
                 self.inst_finite_set_sum(inner, param_to_arg_map, param_obj_type)
@@ -791,6 +794,19 @@ impl Runtime {
         Ok(FnRangeOn::new(
             self.inst_obj(&fn_range_on.function, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&fn_range_on.set, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_replacement(
+        &self,
+        replacement: &Replacement,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Replacement::new(
+            replacement.prop_name.clone(),
+            self.inst_obj(&replacement.source_set, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
