@@ -62,9 +62,21 @@ The correlation between `tuple` and `cart` and `struct` is essential, because an
 
 ## What does "Litex is built on relationships between objects instead of meanings of them"
 
+
+
 Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `know` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
 
 When we were learning Euclidean geometry in middle school, our teachers would say that these so-called points, lines, planes, and circles are not actually the real ones we draw on paper. They are imagined constructs that possess specific properties. What they fundamentally are is not important; what matters is that there are certain axioms governing these objects, which form the relationships among them. Although they can be defined by using more abstract math concepts (using cartesian coordinate for example), we don't consider that since we only want to focus on properties like parallel and intersection, which those axioms already can process. Similarly, real numbers, rational numbers, and the like can also be defined using more abstract mathematical concepts—users can construct these definitions themselves using Litex code. In fact, however, what is even more important is the relationships between them, and this is precisely what Litex emphasizes.
+
+Read the content from Terrence Tao's Analysis One:
+
+```
+
+Remark 2.1.14. Note that our definition of the natural numbers is ax- iomatic rather than constructive. We have not told you what the natural numbers are (so we do not address such questions as what the numbers are made of, are they physical objects, what do they measure, etc.) - we have only listed some things you can do with them (in fact, the only operation we have defined on them right now is the increment one) and some of the properties that they have. This is how mathematics works - it treats its objects abstractly, caring only about what properties the objects have, not what the objects are or what they mean. If one wants to do mathematics, it does not matter whether a natural number means a certain arrangement of beads on an abacus, or a certain organization of bits in a computer’s memory, or some more abstract concept with no physical substance; as long as you can increment them, see if two of them are equal, and later on do other arithmetic operations such as add and multiply, they qualify as numbers for mathematical purposes (provided they obey the requisite axioms, of course). It is possible to construct the natural numbers from other mathematical objects - from sets, for instance - but there are multiple ways to construct a working model of the natural numbers, and it is pointless, at least from a mathematician’s standpoint, as to argue about which model is the “true” one - as long as it obeys all the axioms and does all the right things, that’s good enough to do maths.
+
+```
+
+As far as Litex is concerned, Litex contains and only contains standard math properties.
 
 ## Why does Litex have this particular menu of objects and statements?
 
