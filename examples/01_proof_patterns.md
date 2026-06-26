@@ -1529,3 +1529,16 @@ forall n N:
     =>:
         n $in N_pos
 ```
+
+## 41. `by_regularity_axiom`
+
+- Category: `proof pattern`
+- Purpose: Shows the trusted regularity/foundation step for a nonempty set.
+
+```litex
+know $is_nonempty_set({1, 2})
+
+by regularity_axiom({1, 2})
+
+exist x {1, 2} st {intersect(x, {1, 2}) = {}}
+```

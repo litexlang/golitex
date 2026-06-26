@@ -1234,6 +1234,7 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("proof by antisymmetry", "由反对称性证明"),
     ("proof by Zorn lemma", "由 Zorn 引理证明"),
     ("proof by axiom of choice", "由选择公理证明"),
+    ("proof by regularity axiom", "由正则性公理证明"),
     ("proof by theorem", "由定理证明"),
     ("theorem", "定理"),
     ("use strategy statement", "使用策略语句"),

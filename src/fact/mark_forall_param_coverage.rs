@@ -279,6 +279,12 @@ fn mark_forall_param_coverage_in_obj(
             );
             mark_forall_param_coverage_in_obj(fn_range_on.set.as_ref(), coverage_by_forall_param);
         }
+        Obj::Replacement(replacement) => {
+            mark_forall_param_coverage_in_obj(
+                replacement.source_set.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
         Obj::Sum(s) => {
             mark_forall_param_coverage_in_obj(s.start.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(s.end.as_ref(), coverage_by_forall_param);
@@ -724,6 +730,9 @@ impl ForallFact {
             let mut coverage_by_forall_param: HashMap<IdentifierName, bool> = HashMap::new();
             for param_name in forall_param_names.iter() {
                 coverage_by_forall_param.insert(param_name.clone(), false);
+            }
+            for dom_fact in self.dom_facts.iter() {
+                mark_forall_param_coverage_in_fact(dom_fact, &mut coverage_by_forall_param);
             }
             mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
                 then_fact,

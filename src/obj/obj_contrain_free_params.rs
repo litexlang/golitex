@@ -67,6 +67,7 @@ impl Obj {
                 x.function.contains_forall_free_param_obj()
                     || x.set.contains_forall_free_param_obj()
             }
+            Obj::Replacement(x) => x.source_set.contains_forall_free_param_obj(),
             Obj::Sum(x) => {
                 x.start.contains_forall_free_param_obj()
                     || x.end.contains_forall_free_param_obj()

@@ -62,6 +62,7 @@ pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const FN_RANGE: &str = "fn_range";
 pub const FN_RANGE_ON: &str = "fn_range_on";
+pub const REPLACEMENT: &str = "replacement";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
@@ -131,6 +132,7 @@ pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
 pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
+pub const REGULARITY_AXIOM: &str = "regularity_axiom";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -243,6 +245,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         COUNT,
         FN_RANGE,
         FN_RANGE_ON,
+        REPLACEMENT,
         SUM,
         FINITE_SET_SUM,
         PRODUCT,

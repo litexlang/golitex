@@ -5,24 +5,23 @@ impl Runtime {
         &mut self,
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let (function, fn_body) = self.preimage_function_and_body(stmt)?;
-
-        let source_atomic: AtomicFact = stmt.range_membership.clone().into();
-        let verify_state = VerifyState::new(0, false);
-        let source_result = self
-            .verify_atomic_fact(&source_atomic, &verify_state)
-            .map_err(|verify_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), verify_error)
-            })?;
-        if source_result.is_unknown() {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                "have by preimage: source range membership is not verified".to_string(),
-                None,
-                vec![],
-            ));
+        if let Obj::Replacement(replacement) = &stmt.range_membership.set {
+            if stmt.preimage_names.len() != 1 {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "have by preimage: expected 1 preimage name(s), got {}",
+                        stmt.preimage_names.len()
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+            let source_result = self.verify_preimage_source_membership(stmt)?;
+            return self.exec_have_by_replacement_preimage_stmt(stmt, replacement, source_result);
         }
 
+        let (function, fn_body) = self.preimage_function_and_body(stmt)?;
         let param_count = fn_body.params_def_with_set.number_of_params();
         if stmt.preimage_names.len() != param_count {
             return Err(short_exec_error(
@@ -36,6 +35,7 @@ impl Runtime {
                 vec![],
             ));
         }
+        let source_result = self.verify_preimage_source_membership(stmt)?;
 
         for name in stmt.preimage_names.iter() {
             self.store_free_param_or_identifier_name(name, ParamObjType::Exist)
@@ -64,6 +64,74 @@ impl Runtime {
             &function,
             &preimage_objs,
         )?);
+
+        Ok(
+            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![source_result])
+                .into(),
+        )
+    }
+
+    fn verify_preimage_source_membership(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let source_atomic: AtomicFact = stmt.range_membership.clone().into();
+        let verify_state = VerifyState::new(0, false);
+        let source_result = self
+            .verify_atomic_fact(&source_atomic, &verify_state)
+            .map_err(|verify_error| {
+                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), verify_error)
+            })?;
+        if source_result.is_unknown() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "have by preimage: source range membership is not verified".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        Ok(source_result)
+    }
+
+    fn exec_have_by_replacement_preimage_stmt(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+        replacement: &Replacement,
+        source_result: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        let preimage_name = &stmt.preimage_names[0];
+        self.store_free_param_or_identifier_name(preimage_name, ParamObjType::Exist)
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        let preimage_obj: Obj = Identifier::new(preimage_name.clone()).into();
+
+        let preimage_in_source: Fact = InFact::new(
+            preimage_obj.clone(),
+            replacement.source_set.as_ref().clone(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        let relation_fact: Fact = NormalAtomicFact::new(
+            replacement.prop_name.clone(),
+            vec![preimage_obj, stmt.range_membership.element.clone()],
+            stmt.line_file.clone(),
+        )
+        .into();
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_infer_result_inside(
+            self.verify_well_defined_and_store_and_infer(
+                preimage_in_source,
+                &VerifyState::new(0, false),
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
+        );
+        infer_result.new_infer_result_inside(
+            self.verify_well_defined_and_store_and_infer(
+                relation_fact,
+                &VerifyState::new(0, false),
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
+        );
 
         Ok(
             NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![source_result])
@@ -100,7 +168,7 @@ impl Runtime {
             }
             _ => Err(short_exec_error(
                 stmt.clone().into(),
-                "have by preimage expects `from z $in fn_range(f)` or `from z $in fn_range_on(f, S)`".to_string(),
+                "have by preimage expects `from z $in fn_range(f)`, `from z $in fn_range_on(f, S)`, or `from z $in replacement(P, A)`".to_string(),
                 None,
                 vec![],
             )),

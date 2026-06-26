@@ -743,6 +743,10 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(&x.function, module_names);
             collect_module_names_from_obj(&x.set, module_names);
         }
+        Obj::Replacement(x) => {
+            collect_module_name_from_atomic_name(&x.prop_name, module_names);
+            collect_module_names_from_obj(&x.source_set, module_names);
+        }
         Obj::TupleDim(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::CartDim(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::OneSideInfinityIntervalObj(x) => {

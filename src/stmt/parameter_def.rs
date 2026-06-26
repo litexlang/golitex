@@ -806,6 +806,12 @@ fn collect_cited_param_indices_from_obj(
                 out,
             );
         }
+        Obj::Replacement(x) => collect_cited_param_indices_from_obj(
+            &x.source_set,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Sum(x) => {
             collect_cited_param_indices_from_obj(
                 &x.start,

@@ -72,6 +72,7 @@ impl Runtime {
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
+            Obj::Replacement(x) => self.verify_replacement_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
@@ -1458,6 +1459,89 @@ impl Runtime {
                 )),
             ))),
         }
+    }
+
+    fn verify_replacement_well_defined(
+        &mut self,
+        x: &Replacement,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let prop_arity = self.replacement_prop_arity(x)?;
+        if prop_arity != 2 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "replacement({}, {}) expects a binary prop, but `{}` has arity {}",
+                    x.prop_name, x.source_set, x.prop_name, prop_arity
+                )),
+            )));
+        }
+
+        self.verify_obj_well_defined_and_store_cache(&x.source_set, verify_state)?;
+        let uniqueness_fact = self.replacement_uniqueness_fact(x)?;
+        if self
+            .verify_fact_from_cache_using_display_string(&uniqueness_fact.clone().into())
+            .is_none()
+        {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "replacement({}, {}) needs uniqueness of `{}` over `{}`: {}",
+                    x.prop_name, x.source_set, x.prop_name, x.source_set, uniqueness_fact
+                )),
+            )));
+        }
+        Ok(())
+    }
+
+    fn replacement_prop_arity(&self, x: &Replacement) -> Result<usize, RuntimeError> {
+        let prop_name = x.prop_name.to_string();
+        if let Some(definition) = self.get_prop_definition_by_name(&prop_name) {
+            return Ok(definition.params_def_with_type.number_of_params());
+        }
+        if let Some(definition) = self.get_abstract_prop_definition_by_name(&prop_name) {
+            return Ok(definition.params.len());
+        }
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "replacement({}, {}) expects `{}` to be a user-defined prop or abstract_prop",
+                x.prop_name, x.source_set, x.prop_name
+            )),
+        )))
+    }
+
+    fn replacement_uniqueness_fact(&self, x: &Replacement) -> Result<ForallFact, RuntimeError> {
+        let x_name = "x".to_string();
+        let y_name = "y".to_string();
+        let y2_name = "y2".to_string();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+        let y2_obj = obj_for_bound_param_in_scope(y2_name.clone(), ParamObjType::Forall);
+        let line_file = default_line_file();
+
+        ForallFact::new(
+            ParamDefWithType::new(vec![
+                ParamGroupWithParamType::new(
+                    vec![x_name],
+                    ParamType::Obj(x.source_set.as_ref().clone()),
+                ),
+                ParamGroupWithParamType::new(vec![y_name, y2_name], ParamType::Set(Set::new())),
+            ]),
+            vec![
+                NormalAtomicFact::new(
+                    x.prop_name.clone(),
+                    vec![x_obj.clone(), y_obj.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+                NormalAtomicFact::new(
+                    x.prop_name.clone(),
+                    vec![x_obj, y2_obj.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+            ],
+            vec![EqualFact::new(y_obj, y2_obj, line_file.clone()).into()],
+            line_file,
+        )
     }
 
     fn verify_sum_obj_well_defined(
