@@ -1517,3 +1517,15 @@ claim:
     witness $is_nonempty_set(s) from 1:
         1 $in s
 ```
+
+## 40. `nonzero_natural_is_positive`
+
+- Category: `fact`
+- Purpose: Shows that a nonzero natural number is a positive natural number.
+
+```litex
+forall n N:
+    n != 0
+    =>:
+        n $in N_pos
+```

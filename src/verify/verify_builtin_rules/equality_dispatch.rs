@@ -492,6 +492,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
             left,
             right,

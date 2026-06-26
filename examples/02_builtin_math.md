@@ -758,6 +758,14 @@ forall x Z:
 
 forall x Z:
     x % 1 = 0
+
+forall a Z, b N_pos:
+    0 <= a % b < b
+    (a - a % b) % b = 0
+
+forall a N, b N_pos:
+    0 <= a % b < b
+    (a - a % b) % b = 0
 ```
 
 ```litex
