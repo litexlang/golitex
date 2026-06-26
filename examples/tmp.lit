@@ -1,3 +1,12 @@
-forall s finite_set, s2 set:
-    $is_finite_set(set_minus(s, s2))
+have fn indexed_real_prefix_sum(n N_pos, f fn(x N_pos: x <= n) R, k N: k <= n) R by induc k from 0:
+    case k = 0: 0
+    case k > 0: indexed_real_prefix_sum(n, f, k - 1) + f(k)
 
+template<n N_pos, f fn(x N_pos: x <= n) R>:
+    have indexed_real_sum R = indexed_real_prefix_sum(n, f, n)
+
+indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 0) = 0
+indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 1) = indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 0) + '(i N_pos: i <= 3) R {i^2}(1) = 0 + 1 = 1
+indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 2) = indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 1) + '(i N_pos: i <= 3) R {i^2}(2) = 1 + 4 = 5
+indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 3) = indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 2) + '(i N_pos: i <= 3) R {i^2}(3) = 5 + 9 = 14
+\indexed_real_sum<3, '(i N_pos: i <= 3) R {i^2}> = indexed_real_prefix_sum(3, '(i N_pos: i <= 3) R {i^2}, 3) = 14

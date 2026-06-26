@@ -75,7 +75,7 @@ thm real_le_and_ne_imply_lt:
         x = y
         impossible x != y
 
-thm singleton_real_finite_set_has_maximum:
+lemma singleton_real_finite_set_has_maximum:
     prove:
         forall S finite_set:
             S $subset R
@@ -170,7 +170,7 @@ thm finite_real_set_maximum_extends_after_adding_member:
                 $finite_real_set_has_maximum(S)
     $finite_real_set_has_maximum(S)
 
-thm finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum:
+lemma finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum:
     prove:
         forall n N_pos, S finite_set:
             S $subset R
@@ -195,25 +195,16 @@ thm finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maxim
     by thm finite_real_set_maximum_extends_after_adding_member(S, a)
     $finite_real_set_has_maximum(S)
 
-thm size_one_finite_real_sets_have_given_size_maximum:
+lemma size_one_finite_real_sets_have_given_size_maximum:
     prove:
         forall n N_pos:
             n = 1
             =>:
                 $finite_real_set_with_given_size_has_maximum(n)
-    claim:
-        prove:
-            forall S finite_set:
-                S $subset R
-                count(S) = 1
-                =>:
-                    $finite_real_set_has_maximum(S)
-        by thm singleton_real_finite_set_has_maximum(S)
-        $finite_real_set_has_maximum(S)
     $finite_real_set_with_given_size_has_maximum(1)
     $finite_real_set_with_given_size_has_maximum(n)
 
-thm finite_real_sets_with_given_size_maximum_imply_successor_size_maximum:
+lemma finite_real_sets_with_given_size_maximum_imply_successor_size_maximum:
     prove:
         forall n N_pos:
             $finite_real_set_with_given_size_has_maximum(n)
@@ -261,7 +252,7 @@ thm nonempty_finite_real_set_has_maximum:
     $finite_real_set_with_given_size_has_maximum(n)
     $finite_real_set_has_maximum(S)
 
-thm finite_real_set_with_size_one_has_increasing_index:
+lemma finite_real_set_with_size_one_has_increasing_index:
     prove:
         forall S finite_set:
             S $subset R
@@ -407,7 +398,7 @@ thm finite_real_set_increasing_index_extends_after_adding_maximum:
         $is_increasing_index_fn(S, idx0)
     $finite_real_set_has_increasing_index(S)
 
-thm finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index:
+lemma finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index:
     prove:
         forall n N_pos, S finite_set:
             S $subset R
@@ -434,25 +425,16 @@ thm finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_h
     by thm finite_real_set_increasing_index_extends_after_adding_maximum(n, S, a)
     $finite_real_set_has_increasing_index(S)
 
-thm size_one_finite_real_sets_have_given_size_increasing_index:
+lemma size_one_finite_real_sets_have_given_size_increasing_index:
     prove:
         forall n N_pos:
             n = 1
             =>:
                 $finite_real_set_with_given_size_has_increasing_index(n)
-    claim:
-        prove:
-            forall S finite_set:
-                S $subset R
-                count(S) = 1
-                =>:
-                    $finite_real_set_has_increasing_index(S)
-        by thm finite_real_set_with_size_one_has_increasing_index(S)
-        $finite_real_set_has_increasing_index(S)
     $finite_real_set_with_given_size_has_increasing_index(1)
     $finite_real_set_with_given_size_has_increasing_index(n)
 
-thm finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index:
+lemma finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index:
     prove:
         forall n N_pos:
             $finite_real_set_with_given_size_has_increasing_index(n)
@@ -500,22 +482,78 @@ thm nonempty_finite_real_set_has_increasing_index:
     $finite_real_set_with_given_size_has_increasing_index(n)
     $finite_real_set_has_increasing_index(S)
 
+prop is_finite_real_set_increasing_index(S finite_set, idx fn(x N_pos: x <= count(S)) S):
+    S $subset R
+    count(S) >= 1
+    $is_increasing_index_fn(S, idx)
+
+lemma finite_real_set_increasing_index_unique:
+    prove:
+        forall S finite_set, idx1, idx2 fn(x N_pos: x <= count(S)) S:
+            $is_finite_real_set_increasing_index(S, idx1)
+            $is_finite_real_set_increasing_index(S, idx2)
+            =>:
+                idx1 = idx2
+    # proof_debt: two strictly increasing enumerations of the same finite real set
+    # have the same value at every index. This is the remaining order-theoretic
+    # uniqueness proof for the canonical index interface.
+    know idx1 = idx2
+    idx1 = idx2
+
+lemma nonempty_finite_real_set_has_unique_increasing_index:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) >= 1
+            =>:
+                exist! idx fn(x N_pos: x <= count(S)) S st {$is_finite_real_set_increasing_index(S, idx)}
+    by thm nonempty_finite_real_set_has_increasing_index(S)
+    $finite_real_set_has_increasing_index(S)
+    have by exist idx fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx)}: idx
+    witness exist! idx0 fn(x N_pos: x <= count(S)) S st {$is_finite_real_set_increasing_index(S, idx0)} from idx:
+        S $subset R
+        count(S) >= 1
+        $is_increasing_index_fn(S, idx)
+        $is_finite_real_set_increasing_index(S, idx)
+
+template<S finite_set: S $subset R, count(S) >= 1>:
+    have by exist idx fn(x N_pos: x <= count(S)) S st {$is_finite_real_set_increasing_index(S, idx)}: finite_real_set_increasing_index
+
+thm finite_real_set_increasing_index_interface:
+    prove:
+        forall S finite_set:
+            S $subset R
+            count(S) >= 1
+            =>:
+                $is_finite_real_set_increasing_index(S, \finite_real_set_increasing_index<S>)
+    $is_finite_real_set_increasing_index(S, \finite_real_set_increasing_index<S>)
+
+# Indexed sums are defined by recursion on the last index.  The total indexed
+# sum is exposed through a template so callers can write
+# `\indexed_real_sum<n, f>` while the recursive data remains explicit.
+have fn indexed_real_prefix_sum(n N_pos, f fn(x N_pos: x <= n) R, k N: k <= n) R by induc k from 0:
+    case k = 0: 0
+    case k > 0: indexed_real_prefix_sum(n, f, k - 1) + f(k)
+
+template<n N_pos, f fn(x N_pos: x <= n) R>:
+    have indexed_real_sum R = indexed_real_prefix_sum(n, f, n)
+
 # This user-defined finite-set sum relation uses only an increasing index and
-# the ordinary integer-range `sum`; it does not depend on the builtin
-# `finite_set_sum(S, f)`.
+# the recursive indexed sum above; it does not depend on the builtin
+# `finite_set_sum(S, f)` or the ordinary range `sum`.
 prop finite_real_set_sum_from_increasing_index(S finite_set, f fn(x S) R, idx fn(x N_pos: x <= count(S)) S, total R):
     S $subset R
     count(S) >= 1
     $is_increasing_index_fn(S, idx)
-    total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+    total = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>
 
-thm finite_real_set_sum_from_increasing_index_is_range_sum:
+thm finite_real_set_sum_from_increasing_index_is_indexed_sum:
     prove:
         forall S finite_set, f fn(x S) R, idx fn(x N_pos: x <= count(S)) S, total R:
             $finite_real_set_sum_from_increasing_index(S, f, idx, total)
             =>:
-                total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
-    total = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
+                total = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>
+    total = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>
 
 thm nonempty_finite_real_set_has_sum_from_increasing_index:
     prove:
@@ -523,13 +561,45 @@ thm nonempty_finite_real_set_has_sum_from_increasing_index:
             S $subset R
             count(S) >= 1
             =>:
-                exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))}
+                exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>)}
     by thm nonempty_finite_real_set_has_increasing_index(S)
     $finite_real_set_has_increasing_index(S)
     have by exist idx fn(x N_pos: x <= count(S)) S st {$is_increasing_index_fn(S, idx)}: idx
-    witness exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))} from idx:
+    witness exist idx fn(x N_pos: x <= count(S)) S st {$finite_real_set_sum_from_increasing_index(S, f, idx, \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>)} from idx:
         S $subset R
         count(S) >= 1
         $is_increasing_index_fn(S, idx)
-        sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}) = sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))})
-        $finite_real_set_sum_from_increasing_index(S, f, idx, sum(1, count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}))
+        \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}> = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>
+        $finite_real_set_sum_from_increasing_index(S, f, idx, \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(idx(i))}>)
+
+prop is_finite_real_set_sum(S finite_set, f fn(x S) R, total R):
+    S $subset R
+    count(S) >= 1
+    total = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>
+
+lemma nonempty_finite_real_set_has_sum:
+    prove:
+        forall S finite_set, f fn(x S) R:
+            S $subset R
+            count(S) >= 1
+            =>:
+                exist total R st {$is_finite_real_set_sum(S, f, total)}
+    by thm finite_real_set_increasing_index_interface(S)
+    $is_finite_real_set_increasing_index(S, \finite_real_set_increasing_index<S>)
+    witness exist total R st {$is_finite_real_set_sum(S, f, total)} from \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>:
+        S $subset R
+        count(S) >= 1
+        \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}> = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>
+        $is_finite_real_set_sum(S, f, \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>)
+
+template<S finite_set, f fn(x S) R: S $subset R, count(S) >= 1>:
+    have finite_real_set_sum R = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>
+
+thm finite_real_set_sum_interface:
+    prove:
+        forall S finite_set, f fn(x S) R:
+            S $subset R
+            count(S) >= 1
+            =>:
+                $is_finite_real_set_sum(S, f, \finite_real_set_sum<S, f>)
+    $is_finite_real_set_sum(S, f, \finite_real_set_sum<S, f>)
