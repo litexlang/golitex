@@ -115,6 +115,106 @@ and mathematical familiarity with as few first-class forms as possible, rather
 than starting from a maximally general programming language or proof-term
 calculus.
 
+## What are builtin objects, builtin facts, and builtin rules?
+
+Litex is easiest to understand through four related layers:
+
+- an `object` is a mathematical expression, such as `x`, `x + 1`, `R`,
+  `{1, 2}`, `abs(x)`, or `fn(n N_pos) R`;
+- a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
+  `1 + 2 = 3`, or `x = y or x < y or x > y`;
+- a `statement` is a line or block that acts on the mathematical context, such
+  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `know`;
+- a verification rule is a checker route for deciding whether a fact follows
+  from the current context.
+
+Each layer has builtin material.
+
+A **builtin object** is an object form or name that Litex understands directly.
+Not every builtin word is an object: `not`, `and`, `or`, `forall`, and `exist`
+are builtin logical or factual forms because they express the shape of facts
+and proofs. Builtin object heads are expressions such as standard sets,
+arithmetic operations, tuple and set forms, or `abs(x)`. Some of these are
+mainly for user convenience. The absolute value object `abs(x)` is a good
+example: users could define a similar function themselves from basic order and
+arithmetic, but the standard spelling is built in because ordinary mathematics
+uses it constantly.
+
+```litex
+have fn self_abs(x R) R by cases:
+    case x = 0: 0
+    case x < 0: -x
+    case x > 0: x
+```
+
+The point is not that `abs` is impossible to express without a builtin name.
+The point is that writing `abs(x)` lets the verifier connect the expression to
+the usual absolute-value rules without every file rebuilding that interface.
+
+A **builtin fact** is trusted background already present when a user file
+starts. Many of these are loaded as ordinary Litex statements inside the
+builtin environment, such as operator typing facts, common comparison facts,
+and standard relationships among familiar objects. For example, the usual
+trichotomy of real numbers is available as background:
+
+```litex
+forall x, y R:
+    x = y or x < y or x > y
+```
+
+This kind of fact is important because some ordinary mathematical axioms are
+not single equalities. They may be disjunctions, implications, existence
+facts, or universal facts. Litex needs those fact shapes to be first-class so
+the background axiom can actually be used in later checking.
+
+A **builtin statement** is a statement form that the executor understands as a
+primitive context action. For example, `have` introduces objects, `forall`
+checks universal facts, `claim` and `thm` prove reusable facts, `witness`
+proves existential facts, and `by cases` organizes case proofs. These are not
+ordinary mathematical objects. They are the proof-script actions that grow or
+inspect the current context.
+
+A **builtin verification rule** is different from a stored theorem. It is a
+small verifier pattern that can close the current goal, often by looking at
+equivalent forms or doing routine computation. For example, when the goal is
+`x > y`, Litex can use common equivalent forms such as `y < x` or
+`x - y > 0`:
+
+Some of these routes are Rust-level verifier rules, while some common
+equivalences are loaded as builtin `forall` facts in the initial environment.
+The user-facing effect is similar: the verifier can use common mathematical
+background without the current file proving a local lemma first.
+
+```litex
+forall x, y R:
+    x - y > 0
+    =>:
+        x > y
+
+forall x, y R:
+    y < x
+    =>:
+        x > y
+```
+
+Builtin verification rules also cover calculation-style facts:
+
+```litex
+1 + 2 = 3
+```
+
+These rules matter because ordinary mathematical writing silently uses many
+tiny equivalences and calculations. Without builtin rules, users would have to
+write every bridge by hand: convert `x > y` to `y < x`, convert that to
+`x - y > 0`, cite the arithmetic theorem for `1 + 2 = 3`, and so on. Litex
+instead lets the user write the meaningful step while the verifier handles a
+bounded amount of common background reasoning.
+
+This convenience is also part of the trust boundary. Builtin objects, builtin
+facts, builtin statement behavior, and builtin verification rules all deserve
+tests, examples, and audit-friendly output. They are not hidden magic; they are
+the built-in mathematical interface that makes short Litex proofs possible.
+
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 
 It can become slow if all ten thousand universal facts are active automatic

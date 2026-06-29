@@ -2743,6 +2743,12 @@ fn common_power_equalities_and_order_are_builtin() {
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
+forall x Q, n, m N:
+    (x^n)^m = x^(n * m)
+
+forall x R, n, m N:
+    x^(n * m) = (x^n)^m
+
 forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
@@ -2758,11 +2764,16 @@ forall x, y Q, n N_pos:
         x^n >= y^n
         y^n >= 0
 
-forall x Q, n N_pos:
+forall x R, n N:
     abs(x^n) = abs(x)^n
 
 forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
+
+forall x Q_nz, n, m Z:
+    x^n != 0
+    =>:
+        (x^n)^m = x^(n * m)
 
 8^(1/3) = 2
 "#;

@@ -85,6 +85,9 @@ forall x R:
     x ^ 2 = abs(x) ^ 2
     x ^ 4 = abs(x) ^ 4
 
+forall x R, n N:
+    abs(x^n) = abs(x)^n
+
 forall a, b R:
     0 <= a <= b
     =>:
@@ -900,6 +903,9 @@ forall a R:
 forall a R, m, n N:
     a^(m+n) = a^m * a^n
 
+forall a R, m, n N:
+    (a^m)^n = a^(m * n)
+
 forall a Z, m, n Z:
     m >= 1
     n >= 1
@@ -935,6 +941,12 @@ forall x, y R, m N_pos:
     x <= y
     =>:
         x^m <= y^m
+
+forall x, y R, m N_pos:
+    x > y
+    y >= 0
+    =>:
+        x^m > y^m
 
 forall x R:
     x < 0
@@ -987,6 +999,28 @@ forall x R_pos, q R:
     x^0 = 1
     x^q * x^(-q) = 1
     x^(-q) = 1 / x^q
+
+forall x R_nz, n Z:
+    x^n != 0
+    abs(x^n) = abs(x)^n
+
+forall x R_nz, n N_pos:
+    x^(-n) = 1 / x^n
+
+forall x, y R_nz, n Z:
+    (x * y)^n = x^n * y^n
+
+forall x, y R_pos, n Z:
+    x >= y
+    n < 0
+    =>:
+        x^n <= y^n
+
+forall x, y R_pos, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
 
 ```
 

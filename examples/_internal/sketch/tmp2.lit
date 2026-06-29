@@ -3,3 +3,16 @@
 
 # 对应的是 litex 的用 have fn as set 语句
 # 当然，litex还有非常多其他的定义函数的方式，然后你在这里都写一下。
+
+
+Lemma 3.3.12 (Composition is associative). Let f : Z → W , g : Y → Z,andh:X→Y befunctions. Thenf◦(g◦h)=(f◦g)◦h.
+Proof. Sinceg◦hisafunctionfromXtoZ,f◦(g◦h)isafunctionfrom X to W. Similarly f ◦g is a function from Y to W, and hence (f ◦g)◦h is a function from X to W. Thus f ◦(g◦h) and (f ◦g)◦h have the same domain and range. In order to check that they are equal, we see from Definition 3.3.7 that we have to verify that (f ◦(g◦h))(x) = ((f ◦g)◦h)(x) for all x ∈ X. But by Definition 3.3.10
+as desired.
+(f ◦ (g ◦ h))(x) = f((g ◦ h)(x)) = f(g(h(x))
+= (f ◦ g)(h(x)) = ((f ◦ g) ◦ h)(x)
+
+claim:
+    prove:
+        forall f fn(x Z) W, g fn(x Y)Z, h fn(x X) Y:
+            $fn_equal('(x X)W {f(g(h(x)))}, '(x X) W { '(u Y)W {f(g(u))} (h(x))})
+            $fn_equal('(x X)W {f(g(h(x)))}, f('(u X)Z {g(h(u))}(x)))

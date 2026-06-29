@@ -182,6 +182,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_positive_base_equal_from_equal_nonzero_integer_power(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_division_product_conversion(
             left,
             right,
@@ -239,6 +248,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_power_of_power_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_power_product_rule(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
@@ -255,6 +270,12 @@ impl Runtime {
 
         if let Some(done) =
             self.try_verify_abs_power_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_power_inverse_rule(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
         }

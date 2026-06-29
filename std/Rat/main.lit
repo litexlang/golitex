@@ -59,6 +59,16 @@ thm rational_equals_numerator_divided_by_denominator, num_div_den:
     den(q) != 0
     q = num(q) / den(q)
 
+# Every rational has an integer-over-nonzero-integer representation.
+thm rational_as_integer_ratio, exists_int_div:
+    prove:
+        forall q Q:
+            exist a Z, b Z_nz st {q = a / b}
+    den(q) != 0
+    q = num(q) / den(q)
+    witness exist a Z, b Z_nz st {q = a / b} from num(q), den(q):
+        q = num(q) / den(q)
+
 # A positive rational can be represented as a ratio of positive natural numbers.
 thm positive_rational_as_positive_natural_ratio, pos_nat_div:
     prove:

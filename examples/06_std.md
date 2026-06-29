@@ -145,6 +145,9 @@ Rat::den(3 / 2) != 0
 by thm Rat::num_div_den(3 / 2)
 3 / 2 = Rat::num(3 / 2) / Rat::den(3 / 2)
 
+by thm Rat::exists_int_div(3 / 2)
+exist a Z, b Z_nz st {3 / 2 = a / b}
+
 by thm Rat::exists_rat_between(1, 2)
 exist q Q st {1 < q < 2}
 

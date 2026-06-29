@@ -20,6 +20,9 @@ know:
     forall x Q:
         exist p, q Z st {q > 0, x = p / q}
 
+    forall x Q:
+        exist p Z, q Z_nz st {x = p / q}
+
     forall x, y R:
         x < y
         =>:
@@ -45,4 +48,12 @@ know:
         k >= 2 or k != 1
         =>:
             1 % k = 1
+
+# Rational representation by integer numerator and nonzero integer denominator.
+# Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.
+thm rational_as_integer_ratio:
+    prove:
+        forall x Q:
+            exist p Z, q Z_nz st {x = p / q}
+    exist p Z, q Z_nz st {x = p / q}
 "#;

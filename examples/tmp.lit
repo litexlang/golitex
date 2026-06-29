@@ -1,21 +1,15 @@
-abstract_prop plus_one_relation(x, y)
-
-know forall x {3, 5, 9}, y, y2 set:
-    $plus_one_relation(x, y)
-    $plus_one_relation(x, y2)
-    =>:
-        y = y2
-
-have B set = replacement(plus_one_relation, {3, 5, 9})
-
-forall y B:
-    exist x {3, 5, 9} st {$plus_one_relation(x, y)}
-
-have y set
-know y $in replacement(plus_one_relation, {3, 5, 9})
-have by preimage x from y $in replacement(plus_one_relation, {3, 5, 9})
-$plus_one_relation(x, y)
-
-know $is_nonempty_set({1, 2})
-by regularity_axiom({1, 2})
-exist x {1, 2} st {intersect(x, {1, 2}) = {}}
+claim:
+    prove:
+        forall x, y Q:
+            -y <= x
+            x <= y
+            =>:
+                y >= abs(x)
+    
+claim:
+    prove:
+        forall x, y Q:
+            y >= abs(x)
+            =>:
+                -y <= x
+                x <= y
