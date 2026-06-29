@@ -98,6 +98,12 @@ by cases 1 = 1:
         impossible 1 = 1
 ```
 
+```litex
+# Real-line trichotomy is available in the common equality-first order.
+forall x, y R:
+    x = y or x < y or x > y
+```
+
 ## 5. `by_contra`
 
 - Category: `proof pattern`
@@ -968,6 +974,9 @@ forall:
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)
 
+forall x Q, n, m N:
+    (x^n)^m = x^(n * m)
+
 forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
@@ -982,6 +991,12 @@ forall x, y Q, n N_pos:
     =>:
         x^n >= y^n
         y^n >= 0
+
+forall x, y R, n N_pos:
+    x > y
+    y >= 0
+    =>:
+        x^n > y^n
 
 forall x R:
     x < 0
@@ -1000,11 +1015,33 @@ forall x, y R, n N_pos:
     =>:
         x^n < y^n
 
-forall x Q, n N_pos:
+forall x R, n N:
     abs(x^n) = abs(x)^n
 
 forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
+
+forall x R_nz, n Z:
+    x^n != 0
+    abs(x^n) = abs(x)^n
+
+forall x R_nz, n N_pos:
+    x^(-n) = 1 / x^n
+
+forall x, y R_nz, n Z:
+    (x * y)^n = x^n * y^n
+
+forall x, y R_pos, n Z:
+    x >= y
+    n < 0
+    =>:
+        x^n <= y^n
+
+forall x, y R_pos, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
 
 forall a R_pos, x R:
     a^x $in R_pos

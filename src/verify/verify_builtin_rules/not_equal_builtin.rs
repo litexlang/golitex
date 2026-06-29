@@ -61,6 +61,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_abs_not_equal_zero_from_arg_nonzero(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -274,6 +280,46 @@ impl Runtime {
         }
 
         Ok(None)
+    }
+
+    // Absolute values are nonzero exactly when their argument is nonzero.
+    // Example: from `x != 0`, prove `abs(x) != 0`.
+    fn try_verify_abs_not_equal_zero_from_arg_nonzero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let abs = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Abs(abs), right)
+                if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
+            {
+                abs
+            }
+            (left, Obj::Abs(abs)) if self.obj_represents_zero_for_not_equal_builtin_rules(left) => {
+                abs
+            }
+            _ => return Ok(None),
+        };
+
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let arg_nonzero: AtomicFact =
+            NotEqualFact::new(abs.arg.as_ref().clone(), zero_obj, line_file.clone()).into();
+        let result =
+            self.verify_non_equational_known_then_builtin_rules_only(&arg_nonzero, verify_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                not_equal_fact.clone().into(),
+                InferResult::new(),
+                "abs_not_equal_zero_from_arg_nonzero".to_string(),
+                vec![result],
+            )
+            .into(),
+        ))
     }
 
     fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
@@ -612,7 +658,30 @@ impl Runtime {
         Ok(None)
     }
 
-    // a^n != 0 with literal integer exponent n, from a != 0 (known / full non-equational verify).
+    fn obj_is_verified_integer_exponent_for_not_equal_builtin(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if let Obj::Number(exp_num) = obj {
+            return Ok(is_integer_after_simplification(exp_num));
+        }
+
+        for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
+            let in_set: AtomicFact =
+                InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
+            let result =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?;
+            if result.is_true() {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    // a^n != 0 with integer exponent n, from a != 0.
+    // Example: from `x R_nz` and `n Z`, prove `x^n != 0`.
     fn try_verify_not_equal_pow_from_base_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -625,10 +694,11 @@ impl Runtime {
             (l, Obj::Pow(p)) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => p,
             _ => return Ok(None),
         };
-        let Obj::Number(exp_num) = pow.exponent.as_ref() else {
-            return Ok(None);
-        };
-        if !is_integer_after_simplification(exp_num) {
+        if !self.obj_is_verified_integer_exponent_for_not_equal_builtin(
+            pow.exponent.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(None);
         }
 
