@@ -629,6 +629,82 @@ sketch:
 }
 
 #[test]
+fn fn_range_membership_infers_preimage_existence() {
+    run_with_large_stack("fn_range_membership_infers_preimage_existence", || {
+        let source_code = r#"
+have f fn(x R) R
+
+claim:
+    prove:
+        forall y fn_range(f):
+            exist x R st {y = f(x)}
+    exist x R st {y = f(x)}
+
+claim:
+    prove:
+        forall y fn_range_on(f, R):
+            exist x R st {y = f(x)}
+    y $in fn_range_on(f, R)
+    exist x R st {y = f(x)}
+
+prop is_injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
+    have fn inverse_function as set:
+        prove:
+            forall y fn_range_on(f, X):
+                exist! x X st {y = f(x)}
+        y $in fn_range_on(f, X)
+        exist x X st {y = f(x)}
+        forall x1, x2 X:
+            y = f(x1)
+            y = f(x2)
+            =>:
+                f(x1) = y
+                f(x2) = y
+                f(x1) = f(x2)
+                x1 = x2
+        exist! x X st {y = f(x)}
+
+have fn id_R(x R) R = x
+
+claim:
+    prove:
+        $is_injective_fn(R, R, id_R)
+    forall x1, x2 R:
+        id_R(x1) = id_R(x2)
+        =>:
+            id_R(x1) = x1
+            id_R(x2) = x2
+            x1 = x2
+
+claim:
+    prove:
+        \inverse_function<R, R, id_R>(id_R(1)) = 1
+    1 = \inverse_function<R, R, id_R>(id_R(1))
+    \inverse_function<R, R, id_R>(id_R(1)) = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("fn_range_membership_infers_preimage_existence");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "fn_range membership should infer preimage existence:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn fn_range_on_rejects_non_unary_function() {
     let source_code = r#"
 sketch:
