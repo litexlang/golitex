@@ -311,11 +311,15 @@ impl Runtime {
             Obj::FnSet(fn_set_with_dom) => {
                 self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }
-            // Function range: `z $in fn_range(f)` implies `z` is in the codomain of `f`.
-            // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers `z $in T`.
+            // Function range: `z $in fn_range(f)` implies `z` is in the codomain of `f`
+            // and has a preimage in the function domain.
+            // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers
+            // `z $in T` and `exist x S st {z = f(x)}`.
             Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
-            // Restricted function range: `z $in fn_range_on(f, S)` implies `z` is in the codomain of `f`.
-            // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers `z $in R`.
+            // Restricted function range: `z $in fn_range_on(f, S)` implies `z` is in
+            // the codomain of `f` and has a preimage in the restricted domain `S`.
+            // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers
+            // `z $in R` and `exist k 1...3 st {z = a(k)}`.
             Obj::FnRangeOn(fn_range_on) => {
                 self.infer_membership_in_fn_range_on(in_fact, fn_range_on)
             }
@@ -782,6 +786,14 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
         );
+        if let Some(exist_fact) =
+            self.preimage_exist_fact_from_fn_body(in_fact, fn_range.function.as_ref(), &body)?
+        {
+            infer_result.new_fact(&exist_fact);
+            infer_result.new_infer_result_inside(
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+            );
+        }
         Ok(infer_result)
     }
 
@@ -793,9 +805,12 @@ impl Runtime {
         let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
             return Ok(InferResult::new());
         };
+        let Some(restricted_body) = self.fn_range_on_restricted_body(fn_range_on, &body) else {
+            return Ok(InferResult::new());
+        };
         let codomain_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
-            body.ret_set.as_ref().clone(),
+            restricted_body.ret_set.as_ref().clone(),
             in_fact.line_file.clone(),
         )
         .into();
@@ -804,7 +819,108 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
         );
+        if let Some(exist_fact) = self.preimage_exist_fact_from_fn_body(
+            in_fact,
+            fn_range_on.function.as_ref(),
+            &restricted_body,
+        )? {
+            infer_result.new_fact(&exist_fact);
+            infer_result.new_infer_result_inside(
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+            );
+        }
         Ok(infer_result)
+    }
+
+    fn fn_range_on_restricted_body(
+        &self,
+        fn_range_on: &FnRangeOn,
+        body: &FnSetBody,
+    ) -> Option<FnSetBody> {
+        if body.params_def_with_set.number_of_params() != 1 {
+            return None;
+        }
+        let param_name = body
+            .params_def_with_set
+            .collect_param_names()
+            .first()?
+            .clone();
+        Some(FnSetBody::new(
+            vec![ParamGroupWithSet::new(
+                vec![param_name],
+                fn_range_on.set.as_ref().clone(),
+            )],
+            vec![],
+            body.ret_set.as_ref().clone(),
+        ))
+    }
+
+    fn preimage_exist_fact_from_fn_body(
+        &self,
+        in_fact: &InFact,
+        function: &Obj,
+        body: &FnSetBody,
+    ) -> Result<Option<Fact>, RuntimeError> {
+        let param_names = body.params_def_with_set.collect_param_names();
+        if param_names.is_empty() {
+            return Ok(None);
+        }
+
+        let preimage_objs: Vec<Obj> = param_names
+            .iter()
+            .map(|name| obj_for_bound_param_in_scope(name.clone(), ParamObjType::Exist))
+            .collect();
+        let instantiated_param_sets = self.inst_param_def_with_set_one_by_one(
+            &body.params_def_with_set,
+            &preimage_objs,
+            ParamObjType::FnSet,
+        )?;
+
+        let mut param_groups = Vec::with_capacity(body.params_def_with_set.len());
+        for (param_def, param_set) in body
+            .params_def_with_set
+            .iter()
+            .zip(instantiated_param_sets.iter())
+        {
+            param_groups.push(ParamGroupWithParamType::new(
+                param_def.params.clone(),
+                ParamType::Obj(param_set.clone()),
+            ));
+        }
+
+        let param_to_obj_map = body
+            .params_def_with_set
+            .param_defs_and_args_to_param_to_arg_map(&preimage_objs);
+        let mut facts = Vec::with_capacity(body.dom_facts.len() + 1);
+        for dom_fact in body.dom_facts.iter() {
+            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &param_to_obj_map,
+                ParamObjType::FnSet,
+                Some(&in_fact.line_file),
+            )?;
+            facts.push(instantiated_dom_fact.into());
+        }
+
+        let Some(application) = preimage_application_obj_for_range_infer(function, &preimage_objs)
+        else {
+            return Ok(None);
+        };
+        facts.push(
+            EqualFact::new(
+                in_fact.element.clone(),
+                application,
+                in_fact.line_file.clone(),
+            )
+            .into(),
+        );
+
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(param_groups),
+            facts,
+            in_fact.line_file.clone(),
+        )?;
+        Ok(Some(ExistFactEnum::ExistFact(exist_body).into()))
     }
 
     fn infer_membership_in_replacement(
@@ -966,4 +1082,19 @@ impl Runtime {
         }
         None
     }
+}
+
+fn preimage_application_obj_for_range_infer(function: &Obj, args: &Vec<Obj>) -> Option<Obj> {
+    let head = match function {
+        Obj::AnonymousFn(anonymous_fn) => {
+            FnObjHead::AnonymousFnLiteral(Box::new(anonymous_fn.clone()))
+        }
+        Obj::FiniteSeqListObj(list) => FnObjHead::FiniteSeqListObj(list.clone()),
+        Obj::InstantiatedTemplateObj(template_obj) => {
+            FnObjHead::InstantiatedTemplateObj(template_obj.clone())
+        }
+        _ => FnObjHead::given_an_atom_return_a_fn_obj_head(function.clone())?,
+    };
+    let group = args.iter().cloned().map(Box::new).collect();
+    Some(FnObj::new(head, vec![group]).into())
 }

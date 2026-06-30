@@ -162,6 +162,7 @@ sketch:
     z = f(1)
     z $in fn_range(f)
     z $in R
+    exist x R st {x > 0, z = f(x)}
 
     have by preimage x from z $in fn_range(f)
     x $in R
@@ -175,6 +176,7 @@ sketch:
 
     shift(2) $in fn_range(shift)
     fn_range(shift) $subset R
+    exist x R st {shift(2) = shift(x)}
 
     have by preimage x from shift(2) $in fn_range(shift)
     x $in R
@@ -186,6 +188,7 @@ sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
+    exist x R st {x > 0, f(1) = f(x)}
     have by preimage x from f(1) $in fn_range(f)
     x $in R
     x > 0
@@ -199,6 +202,7 @@ sketch:
     g(0, 1) $in fn_range(g)
     fn_range(g) $subset R
     fn_range(g) $in power_set(R)
+    exist a, b R st {a < b, g(0, 1) = g(a, b)}
 
     have by preimage a, b from g(0, 1) $in fn_range(g)
     a $in R
@@ -217,6 +221,7 @@ sketch:
     fn_range_on(a, 1...3) $in power_set(R)
     $is_finite_set(fn_range_on(a, 1...3))
     count(fn_range_on(a, 1...3)) $in N
+    exist k 1...3 st {a(2) = a(k)}
 
     have by preimage k from a(2) $in fn_range_on(a, 1...3)
     k $in 1...3
