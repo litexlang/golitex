@@ -165,6 +165,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_power_set_count_equality(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_subtraction_from_known_addition(left, right, line_file.clone())?
         {
             return Ok(done);
@@ -839,6 +845,38 @@ impl Runtime {
         None
     }
 
+    fn try_verify_power_set_count_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Cardinality of a finite power set is `2` to the cardinality of the base set.
+        // Example: from `$is_finite_set(S)`, prove `count(power_set(S)) = 2^count(S)`.
+        let Some(base_set) = Self::power_set_count_shape(left, right)
+            .or_else(|| Self::power_set_count_shape(right, left))
+        else {
+            return Ok(None);
+        };
+
+        let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
+        let base_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&base_finite, verify_state)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "power_set_count_two_pow_count_base".to_string(),
+                vec![base_result],
+            )
+            .into(),
+        ))
+    }
+
     fn set_equality_success(
         left: &Obj,
         right: &Obj,
@@ -1011,6 +1049,23 @@ impl Runtime {
             return false;
         };
         verify_equality_by_they_are_the_same(&expected_product, product_side)
+    }
+
+    fn power_set_count_shape(count_side: &Obj, pow_side: &Obj) -> Option<Obj> {
+        let Obj::Count(count) = count_side else {
+            return None;
+        };
+        let Obj::PowerSet(power_set) = count.set.as_ref() else {
+            return None;
+        };
+        let two: Obj = Number::new("2".to_string()).into();
+        let base_count: Obj = Count::new(power_set.set.as_ref().clone()).into();
+        let expected_pow: Obj = Pow::new(two, base_count).into();
+        if verify_equality_by_they_are_the_same(&expected_pow, pow_side) {
+            Some(power_set.set.as_ref().clone())
+        } else {
+            None
+        }
     }
 
     fn count_product_for_cart_args(args: &[Box<Obj>]) -> Option<Obj> {

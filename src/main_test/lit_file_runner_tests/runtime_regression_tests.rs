@@ -67,6 +67,76 @@ fn builtin_rules_do_not_call_full_verifier_pipeline() {
 }
 
 #[test]
+fn cup_membership_has_builtin_intro_and_elim() {
+    run_with_large_stack("cup_membership_has_builtin_intro_and_elim", || {
+        let source_code = r#"
+thm tmp_cup_intro_from_member:
+    prove:
+        forall x set, F set, A set:
+            A $in F
+            x $in A
+            =>:
+                x $in cup(F)
+    x $in cup(F)
+
+thm tmp_cup_intro_from_exist:
+    prove:
+        forall x set, F set:
+            exist A F st {x $in A}
+            =>:
+                x $in cup(F)
+    x $in cup(F)
+
+thm tmp_cup_elim_to_exist:
+    prove:
+        forall x set, F set:
+            x $in cup(F)
+            =>:
+                exist A F st {x $in A}
+    exist A F st {x $in A}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("cup_membership_has_builtin_intro_and_elim");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "cup_membership_has_builtin_intro_and_elim failed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn finite_power_set_has_builtin_cardinality_rules() {
+    run_with_large_stack("finite_power_set_has_builtin_cardinality_rules", || {
+        let source_code = r#"
+$is_finite_set(power_set({1, 2, 3}))
+count(power_set({1, 2, 3})) = 2^count({1, 2, 3})
+count({1, 2, 3}) = 3
+2^count({1, 2, 3}) = 2^3 = 8
+count(power_set({1, 2, 3})) = 8
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("finite_power_set_has_builtin_cardinality_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite_power_set_has_builtin_cardinality_rules failed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn latex_output_is_fragment_without_default_packages() {
     let output = to_latex_from_source_after_builtins(
         "1 = 1",

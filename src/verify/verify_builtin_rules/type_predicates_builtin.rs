@@ -628,6 +628,31 @@ impl Runtime {
                     .into(),
                 )
             }
+            // Power set of a finite set is finite.
+            // Example: from `$is_finite_set(S)`, prove `$is_finite_set(power_set(S))`.
+            Obj::PowerSet(power_set) => {
+                let base_finite: AtomicFact = IsFiniteSetFact::new(
+                    power_set.set.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let base_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &base_finite,
+                    _verify_state,
+                )?;
+                if !base_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "power_set_is_finite_set_when_base_is_finite_set".to_string(),
+                        vec![base_result],
+                    ))
+                    .into(),
+                )
+            }
             // Finite Cartesian product: if each factor is finite, the product set is finite.
             // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
             // `$is_finite_set(cart(A, B))`.

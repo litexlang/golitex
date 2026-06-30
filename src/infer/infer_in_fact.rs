@@ -739,6 +739,9 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
+            // Family union elimination: `x $in cup(F)` means `x` lies in some member set of `F`.
+            // Example: from `x $in cup(F)`, infer `exist item F st {x $in item}`.
+            Obj::Cup(cup) => self.infer_membership_in_cup(in_fact, cup),
             set_obj => {
                 let equal_set_infer =
                     self.infer_membership_in_equal_set_representatives_from_in_fact(in_fact)?;
@@ -921,6 +924,36 @@ impl Runtime {
             in_fact.line_file.clone(),
         )?;
         Ok(Some(ExistFactEnum::ExistFact(exist_body).into()))
+    }
+
+    fn infer_membership_in_cup(
+        &mut self,
+        in_fact: &InFact,
+        cup: &Cup,
+    ) -> Result<InferResult, RuntimeError> {
+        let member_name = "item".to_string();
+        let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
+        let element_in_member: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            member_obj,
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![member_name],
+                ParamType::Obj(cup.left.as_ref().clone()),
+            )]),
+            vec![element_in_member.into()],
+            in_fact.line_file.clone(),
+        )?;
+        let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&exist_fact);
+        infer_result.new_infer_result_inside(
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+        );
+        Ok(infer_result)
     }
 
     fn infer_membership_in_replacement(
