@@ -279,6 +279,11 @@ have fn f as set:
 
 forall x A:
     f(x) = x
+
+forall x A, y B:
+    y = x
+    =>:
+        y = f(x)
 ```
 
 ## 12. `have_fn_by_induc`

@@ -6,6 +6,7 @@ use super::exec_have_fn_equal_shared::build_function_obj_with_param_names;
 struct HaveFnByForallExistUniqueShape {
     fn_set_clause: FnSetClause,
     witness_name: String,
+    witness_param_type: ParamType,
     exist_body_facts: Vec<ExistBodyFact>,
 }
 
@@ -168,6 +169,16 @@ impl Runtime {
             &property_fact,
         );
 
+        let uniqueness_forall =
+            self.have_fn_by_forall_exist_unique_uniqueness_forall(stmt, &shape)?;
+        let uniqueness_fact = self
+            .inst_have_fn_forall_fact_for_store(uniqueness_forall)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        // Derived from the same `exist!`: if a witness satisfies the body, it is the chosen value.
+        self.top_level_env()
+            .store_fact(uniqueness_fact)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+
         Ok(infer_result)
     }
 
@@ -208,12 +219,14 @@ impl Runtime {
         }
 
         let mut witness_name = String::new();
+        let mut witness_param_type: Option<ParamType> = None;
         let mut ret_set: Option<Obj> = None;
         for group in exist_body.params_def_with_type.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
                     if !group.params.is_empty() {
                         witness_name = group.params[0].clone();
+                        witness_param_type = Some(group.param_type.clone());
                         ret_set = Some(obj.clone());
                     }
                 }
@@ -228,6 +241,15 @@ impl Runtime {
 
         let ret_set = match ret_set {
             Some(obj) => obj,
+            None => {
+                return Err(Self::have_fn_by_forall_exist_unique_msg(
+                    stmt,
+                    "exist! must bind exactly one witness".to_string(),
+                ));
+            }
+        };
+        let witness_param_type = match witness_param_type {
+            Some(param_type) => param_type,
             None => {
                 return Err(Self::have_fn_by_forall_exist_unique_msg(
                     stmt,
@@ -253,6 +275,7 @@ impl Runtime {
         Ok(HaveFnByForallExistUniqueShape {
             fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
             witness_name,
+            witness_param_type,
             exist_body_facts: exist_body.facts.clone(),
         })
     }
@@ -284,6 +307,47 @@ impl Runtime {
             stmt.forall.params_def_with_type.clone(),
             stmt.forall.dom_facts.clone(),
             then_facts,
+            stmt.line_file.clone(),
+        )
+        .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))
+    }
+
+    fn have_fn_by_forall_exist_unique_uniqueness_forall(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: &HaveFnByForallExistUniqueShape,
+    ) -> Result<ForallFact, RuntimeError> {
+        let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
+        let function_obj = build_function_obj_with_param_names(&stmt.fn_name, &forall_param_names);
+        let witness_obj =
+            obj_for_bound_param_in_scope(shape.witness_name.clone(), ParamObjType::Forall);
+
+        let mut params = stmt.forall.params_def_with_type.groups.clone();
+        params.push(ParamGroupWithParamType::new(
+            vec![shape.witness_name.clone()],
+            shape.witness_param_type.clone(),
+        ));
+
+        let mut dom_facts = stmt.forall.dom_facts.clone();
+        let mut witness_map = HashMap::new();
+        witness_map.insert(shape.witness_name.clone(), witness_obj.clone());
+        for body_fact in shape.exist_body_facts.iter() {
+            let inst_body_fact = self
+                .inst_exist_body_fact(
+                    body_fact,
+                    &witness_map,
+                    ParamObjType::Exist,
+                    Some(&stmt.line_file),
+                )
+                .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+            dom_facts.push(inst_body_fact.to_fact());
+        }
+
+        let equal_fact = EqualFact::new(witness_obj, function_obj, stmt.line_file.clone());
+        ForallFact::new(
+            ParamDefWithType::new(params),
+            dom_facts,
+            vec![ExistOrAndChainAtomicFact::AtomicFact(equal_fact.into())],
             stmt.line_file.clone(),
         )
         .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))

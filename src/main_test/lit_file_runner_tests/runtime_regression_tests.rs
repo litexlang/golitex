@@ -3387,6 +3387,75 @@ forall x A:
 }
 
 #[test]
+fn have_fn_as_set_releases_unique_witness_direction() {
+    let source_code = r#"
+abstract_prop F(x, y)
+have A set
+have B set
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y)}
+    know exist! y B st {$F(x, y)}
+
+forall x A, y B:
+    $F(x, y)
+    =>:
+        y = f(x)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime
+        .new_file_path_new_env_new_name_scope("have_fn_as_set_releases_unique_witness_direction");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set should release the unique witness direction:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn have_fn_as_set_unique_witness_direction_keeps_all_body_facts() {
+    let source_code = r#"
+abstract_prop F(x, y)
+abstract_prop G(x, y)
+have A set
+have B set
+
+have fn f as set:
+    prove:
+        forall x A:
+            exist! y B st {$F(x, y), $G(x, y)}
+    know exist! y B st {$F(x, y), $G(x, y)}
+
+forall x A, y B:
+    $F(x, y)
+    $G(x, y)
+    =>:
+        y = f(x)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "have_fn_as_set_unique_witness_direction_keeps_all_body_facts",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "have fn as set uniqueness direction should keep every exist! body fact:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
     let source_code = r#"
 abstract_prop F(x, y)
