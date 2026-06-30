@@ -109,6 +109,9 @@ impl Runtime {
             return Ok(result);
         }
         match (&in_fact.element, &in_fact.set) {
+            (_, Obj::Cup(cup)) => {
+                return self.verify_in_fact_in_cup_by_member_witness(in_fact, cup, verify_state);
+            }
             (_, Obj::StructObj(struct_obj)) => {
                 return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
             }
@@ -605,6 +608,150 @@ impl Runtime {
 }
 
 impl Runtime {
+    // Family-union introduction: `x $in cup(F)` follows from a member set
+    // containing `x`, either as a known existential or as concrete facts.
+    // Example: `A $in F` and `x $in A` prove `x $in cup(F)`.
+    fn verify_in_fact_in_cup_by_member_witness(
+        &mut self,
+        in_fact: &InFact,
+        cup: &Cup,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let exist_fact = self.cup_membership_exist_fact(in_fact, cup)?;
+        let exist_result =
+            self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        if exist_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "cup membership: an element of a member set is in the family union".to_string(),
+                    vec![exist_result],
+                )
+                .into(),
+            );
+        }
+
+        for member_set in self.known_member_sets_for_cup_family(in_fact, cup.left.as_ref()) {
+            let member_set_in_family: AtomicFact = InFact::new(
+                member_set.clone(),
+                cup.left.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let member_set_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &member_set_in_family,
+                verify_state,
+            )?;
+            if !member_set_result.is_true() {
+                continue;
+            }
+
+            let element_in_member_set: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                member_set,
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let element_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &element_in_member_set,
+                verify_state,
+            )?;
+            if element_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "cup membership: an element of a member set is in the family union"
+                            .to_string(),
+                        vec![member_set_result, element_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
+    fn cup_membership_exist_fact(
+        &self,
+        in_fact: &InFact,
+        cup: &Cup,
+    ) -> Result<ExistFactEnum, RuntimeError> {
+        let member_name = "item".to_string();
+        let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
+        let element_in_member: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            member_obj,
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![member_name],
+                ParamType::Obj(cup.left.as_ref().clone()),
+            )]),
+            vec![element_in_member.into()],
+            in_fact.line_file.clone(),
+        )?;
+        Ok(ExistFactEnum::ExistFact(exist_body))
+    }
+
+    fn known_member_sets_for_cup_family(&self, in_fact: &InFact, family: &Obj) -> Vec<Obj> {
+        let atomic_fact: AtomicFact = in_fact.clone().into();
+        let module_names = self.atomic_fact_referenced_module_names(&atomic_fact);
+        let family_keys = self.all_objs_equal_to_arg_for_known_atomic_fact(family, &module_names);
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            Self::extend_known_member_sets_for_cup_family_from_environment(
+                environment,
+                &family_keys,
+                &mut candidates,
+            );
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                Self::extend_known_member_sets_for_cup_family_from_environment(
+                    environment.as_ref(),
+                    &family_keys,
+                    &mut candidates,
+                );
+            }
+        }
+
+        let mut seen = Vec::new();
+        candidates.retain(|candidate: &Obj| {
+            let key = candidate.to_string();
+            if seen.contains(&key) {
+                return false;
+            }
+            seen.push(key);
+            true
+        });
+        candidates
+    }
+
+    fn extend_known_member_sets_for_cup_family_from_environment(
+        environment: &Environment,
+        family_keys: &[String],
+        candidates: &mut Vec<Obj>,
+    ) {
+        let lookup_key = (IN.to_string(), true);
+        let Some(known_membership_facts) =
+            environment.known_atomic_facts_with_2_args.get(&lookup_key)
+        else {
+            return;
+        };
+        for ((_, known_family_key), known_fact) in known_membership_facts.iter() {
+            if !family_keys.contains(known_family_key) {
+                continue;
+            }
+            let AtomicFact::InFact(known_in_fact) = known_fact else {
+                continue;
+            };
+            candidates.push(known_in_fact.element.clone());
+        }
+    }
+
     // Function range introduction: if `f(a)` is well-defined, then it is in `fn_range(f)`.
     // Example: `have f fn(x R: x > 0) R`, `1 > 0` proves `f(1) $in fn_range(f)`.
     fn verify_in_fact_fn_application_in_fn_range(

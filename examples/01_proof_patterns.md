@@ -1579,3 +1579,27 @@ by regularity_axiom({1, 2})
 
 exist x {1, 2} st {intersect(x, {1, 2}) = {}}
 ```
+
+## 42. `cup_membership`
+
+- Category: `fact`
+- Purpose: Shows introduction and elimination for family-union membership.
+
+```litex
+thm cup_intro_from_member:
+    prove:
+        forall x set, F set, A set:
+            A $in F
+            x $in A
+            =>:
+                x $in cup(F)
+    x $in cup(F)
+
+thm cup_elim_to_exist:
+    prove:
+        forall x set, F set:
+            x $in cup(F)
+            =>:
+                exist A F st {x $in A}
+    exist A F st {x $in A}
+```
