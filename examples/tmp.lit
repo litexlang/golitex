@@ -1,5 +1,39 @@
-have n N_pos = 3
+import "chap6_sketch.lit" as chap6
 
-have tuple f by i <= n, f[i] = i
 
-have cart c by i <= n, proj(c, i) = f[i]
+原来
+
+claim:
+    prove:
+        forall a seq(R), L R:
+            $has_limit(a, L)
+            =>:
+                $is_cauchy_sequence(a)
+    ...
+
+现在
+
+claim:
+    ? forall a seq(R), L R:
+        $has_limit(a, L)
+        =>:
+            $has_limit(a, L)
+    ...
+
+原来
+
+thm has_limit_implies_cauchy:
+    prove:
+        forall a seq(R), L R:
+            $has_limit(a, L)
+            =>:
+                $is_cauchy_sequence(a)
+
+现在
+
+thm has_limit_implies_cauchy:
+    ? forall a seq(R), L R:
+        $has_limit(a, L)
+        =>:
+            $is_cauchy_sequence(a)
+
