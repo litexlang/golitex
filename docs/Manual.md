@@ -1883,6 +1883,8 @@ x = 1
 
 Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
 
+Use **`import "path/to/module" as M`** to load a local module directory whose entry file is `main.lit`. Use **`import "path/to/file.lit" as M`** to load a local `.lit` file as a module entry file. File imports require an explicit alias so later references have a stable namespace such as `M::some_theorem`.
+
 Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
 
 For textbook-style developments, treat imports as visible background, not as a
@@ -1896,6 +1898,7 @@ theorem.
 
 ```text
 import Nat
+import "./chap6_sketch.lit" as chap6
 stop import Nat
 run_file "./runfile2.lit"
 ```
@@ -2708,7 +2711,8 @@ code, evaluate an expression, or register a reusable proof pattern.
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
 | import a standard-library module | `import Nat` |
-| import a quoted file path, optionally as a module name | `import "local.lit" as L` |
+| import a local module directory | `import "local_module" as L` |
+| import a local `.lit` file with an explicit module name | `import "local.lit" as L` |
 | stop automatic use of an imported module | `stop import Nat` |
 | run a file in the current environment | `run_file "./sketch.lit"` |
 | explicit no-op | `do_nothing`, `...` |

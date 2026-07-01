@@ -841,6 +841,8 @@ sketch:
 
 **import Nat**
 
+**import "./chap6_sketch.lit" as chap6**
+
 **run_file "./runfile2.lit"**
 
 **do_nothing — trivial proof step**

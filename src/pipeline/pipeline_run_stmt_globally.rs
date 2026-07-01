@@ -305,27 +305,35 @@ fn imported_module_info(
 ) -> Result<ImportModuleInfo, RuntimeError> {
     match import_stmt {
         ImportStmt::ImportRelativePath(stmt) => {
+            let current_lit_path = runtime.module_manager.borrow().current_file_path_rc();
+            let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
+            let relative_entry = relative_import_entry(path.as_str(), import_stmt)?;
             let module_name = match stmt.as_mod_name.as_ref() {
                 Some(name) => {
                     let module_name = validate_import_module_name(name.clone(), import_stmt)?;
                     validate_relative_import_alias_not_std_module(&module_name, import_stmt)?;
                     module_name
                 }
-                None => validate_import_module_name(
-                    module_name_from_path(&stmt.path, import_stmt)?,
-                    import_stmt,
-                )?,
+                None => {
+                    if relative_entry.is_lit_file {
+                        return Err(import_stmt_error(
+                            import_stmt,
+                            format!(
+                                "importing a .lit file requires an explicit module alias, for example import \"{}\" as M",
+                                stmt.path
+                            ),
+                        ));
+                    }
+                    validate_import_module_name(
+                        module_name_from_path(&stmt.path, import_stmt)?,
+                        import_stmt,
+                    )?
+                }
             };
-            let current_lit_path = runtime.module_manager.borrow().current_file_path_rc();
-            let path = resolve_run_file_path(stmt.path.as_str(), current_lit_path.as_ref());
-            let module_root_path = absolute_path_string(PathBuf::from(path));
-            let module_root = Path::new(&module_root_path);
-            validate_import_module_root(module_root, import_stmt)?;
-            let main_lit_path = absolute_path_string(module_root.join("main.lit"));
             Ok(ImportModuleInfo::new(
                 module_name,
-                module_root_path,
-                main_lit_path,
+                relative_entry.module_root_path,
+                relative_entry.main_lit_path,
                 false,
             ))
         }
@@ -340,6 +348,55 @@ fn imported_module_info(
             ))
         }
     }
+}
+
+struct RelativeImportEntry {
+    module_root_path: String,
+    main_lit_path: String,
+    is_lit_file: bool,
+}
+
+impl RelativeImportEntry {
+    fn new(module_root_path: String, main_lit_path: String, is_lit_file: bool) -> Self {
+        RelativeImportEntry {
+            module_root_path,
+            main_lit_path,
+            is_lit_file,
+        }
+    }
+}
+
+fn relative_import_entry(
+    path: &str,
+    import_stmt: &ImportStmt,
+) -> Result<RelativeImportEntry, RuntimeError> {
+    let module_root_path = absolute_path_string(PathBuf::from(path));
+    let module_root = Path::new(&module_root_path);
+
+    if module_root.extension().and_then(|ext| ext.to_str()) == Some("lit") {
+        if !module_root.is_file() {
+            return Err(import_stmt_error(
+                import_stmt,
+                format!(
+                    "imported .lit file does not exist: {}",
+                    module_root.to_string_lossy()
+                ),
+            ));
+        }
+        return Ok(RelativeImportEntry::new(
+            module_root_path.clone(),
+            module_root_path,
+            true,
+        ));
+    }
+
+    validate_import_module_root(module_root, import_stmt)?;
+    let main_lit_path = absolute_path_string(module_root.join("main.lit"));
+    Ok(RelativeImportEntry::new(
+        module_root_path,
+        main_lit_path,
+        false,
+    ))
 }
 
 fn validate_import_module_name(
@@ -388,20 +445,11 @@ fn validate_import_module_root(
     module_root: &Path,
     import_stmt: &ImportStmt,
 ) -> Result<(), RuntimeError> {
-    if module_root.extension().and_then(|ext| ext.to_str()) == Some("lit") {
-        return Err(import_stmt_error(
-            import_stmt,
-            format!(
-                "import expects a module directory, not a .lit file: {}",
-                module_root.to_string_lossy()
-            ),
-        ));
-    }
     if module_root.is_file() {
         return Err(import_stmt_error(
             import_stmt,
             format!(
-                "import expects a module directory containing main.lit, not a file: {}",
+                "import expects a module directory containing main.lit or a .lit file, not a file: {}",
                 module_root.to_string_lossy()
             ),
         ));
@@ -512,6 +560,25 @@ mod tests {
         let dir = temp_test_dir(test_name);
         fs::write(dir.join("main.lit"), content).expect("write temp module");
         dir
+    }
+
+    fn write_temp_lit_file(test_name: &str, file_name: &str, content: &str) -> PathBuf {
+        let dir = temp_test_dir(test_name);
+        let file_path = dir.join(file_name);
+        fs::write(&file_path, content).expect("write temp .lit file");
+        file_path
+    }
+
+    const LARGE_IMPORT_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
+
+    fn run_import_test_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
+        std::thread::Builder::new()
+            .name(test_name.to_string())
+            .stack_size(LARGE_IMPORT_TEST_STACK_SIZE)
+            .spawn(f)
+            .expect("spawn large-stack import test")
+            .join()
+            .unwrap();
     }
 
     #[test]
@@ -986,25 +1053,185 @@ mod tests {
     }
 
     #[test]
-    fn import_lit_file_path_is_rejected() {
-        let module_dir = write_temp_module("lit-file-path-rejected", "abstract_prop p(x)");
-        let source_code = format!(
-            "import \"{}\" as Demo",
-            module_dir.join("main.lit").to_string_lossy()
+    fn import_lit_file_path_registers_module_info() {
+        run_import_test_with_large_stack("import_lit_file_path_registers_module_info", || {
+            let file_path = write_temp_lit_file(
+                "lit-file-path-registers-module",
+                "chap6_sketch.lit",
+                "abstract_prop loaded_prop(x)\nknow $loaded_prop(2)",
+            );
+            let source_code = format!(
+                "import \"{}\" as chap6\n$chap6::loaded_prop(2)",
+                file_path.to_string_lossy()
+            );
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime
+                .new_file_path_new_env_new_name_scope("import_lit_file_path_registers_module_info");
+            let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+            let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+                &runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+
+            assert!(run_succeeded, "file import should verify:\n{}", run_output);
+            let module_manager = runtime.module_manager.borrow();
+            let imported = module_manager.imported_modules.get("chap6").unwrap();
+            assert_eq!(
+                imported.absolute_path,
+                file_path.to_string_lossy().into_owned()
+            );
+            assert!(!imported.is_std);
+            assert!(imported
+                .environment
+                .defined_abstract_props
+                .contains_key("loaded_prop"));
+        });
+    }
+
+    #[test]
+    fn import_lit_file_without_alias_is_rejected() {
+        run_import_test_with_large_stack("import_lit_file_without_alias_is_rejected", || {
+            let file_path =
+                write_temp_lit_file("lit-file-without-alias-rejected", "chap6.lit", "1 = 1");
+            let source_code = format!("import \"{}\"", file_path.to_string_lossy());
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("repl");
+
+            let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+
+            let runtime_error = runtime_error.expect(".lit import without alias should fail");
+            let output = format!("{:?}", runtime_error);
+            assert!(
+                output.contains("importing a .lit file requires an explicit module alias"),
+                ".lit import without alias should report alias requirement, got: {}",
+                output
+            );
+        });
+    }
+
+    #[test]
+    fn import_equivalent_lit_file_paths_are_rejected() {
+        run_import_test_with_large_stack("import_equivalent_lit_file_paths_are_rejected", || {
+            let root = temp_test_dir("equivalent-lit-file-paths");
+            let entry_path = root.join("entry.lit");
+            let file_path = root.join("module.lit");
+            fs::write(&file_path, "abstract_prop loaded_prop(x)").expect("write temp .lit file");
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+
+            let (_, runtime_error) = run_source_code(
+                "import \"module.lit\" as demo\nimport \"./module.lit\" as other_demo",
+                &mut runtime,
+            );
+
+            let runtime_error = runtime_error.expect("equivalent relative .lit paths should fail");
+            match runtime_error {
+                RuntimeError::NameAlreadyUsedError(error) => {
+                    assert!(error
+                        .msg
+                        .contains("has already been imported as module name `demo`"));
+                }
+                other => panic!("expected NameAlreadyUsedError, got {:?}", other),
+            }
+            let module_manager = runtime.module_manager.borrow();
+            assert_eq!(module_manager.imported_modules.len(), 1);
+            assert!(module_manager.imported_modules.contains_key("demo"));
+        });
+    }
+
+    #[test]
+    fn nested_lit_file_import_uses_imported_file_relative_path() {
+        run_import_test_with_large_stack(
+            "nested_lit_file_import_uses_imported_file_relative_path",
+            || {
+                let root = temp_test_dir("nested-lit-file-relative-path");
+                let entry_path = root.join("entry.lit");
+                let module_dir = root.join("module");
+                fs::create_dir_all(&module_dir).expect("create temp module dir");
+                fs::write(
+                    module_dir.join("Nested.lit"),
+                    "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+                )
+                .expect("write nested .lit file");
+                fs::write(
+                    module_dir.join("Child.lit"),
+                    "import \"./Nested.lit\" as Nested\nabstract_prop child_prop(x)",
+                )
+                .expect("write child .lit file");
+
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(entry_path.to_string_lossy().as_ref());
+                let (stmt_results, runtime_error) = run_source_code(
+                    "import \"module/Child.lit\" as Child\n$Nested::nested_prop(2)",
+                    &mut runtime,
+                );
+                let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+                    &runtime,
+                    &stmt_results,
+                    &runtime_error,
+                    false,
+                );
+
+                assert!(
+                    run_succeeded,
+                    "nested .lit import should use the imported file path as context:\n{}",
+                    run_output
+                );
+                let module_manager = runtime.module_manager.borrow();
+                assert!(module_manager.imported_modules.contains_key("Child"));
+                assert!(module_manager.imported_modules.contains_key("Nested"));
+                let child = module_manager.imported_modules.get("Child").unwrap();
+                assert_eq!(child.import_dependencies, vec!["Nested".to_string()]);
+            },
         );
+    }
 
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("repl");
+    #[test]
+    fn cyclic_lit_file_import_is_rejected() {
+        run_import_test_with_large_stack("cyclic_lit_file_import_is_rejected", || {
+            let root = temp_test_dir("cyclic-lit-file-import");
+            fs::write(
+                root.join("A.lit"),
+                "import \"./B.lit\" as B\nabstract_prop a_prop(x)",
+            )
+            .expect("write A .lit file");
+            fs::write(
+                root.join("B.lit"),
+                "import \"./A.lit\" as A\nabstract_prop b_prop(x)",
+            )
+            .expect("write B .lit file");
 
-        let (_, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+            let source_code = format!("import \"{}\" as A", root.join("A.lit").to_string_lossy());
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let runtime_error = runtime_error.expect(".lit import should fail");
-        let output = format!("{:?}", runtime_error);
-        assert!(
-            output.contains("import expects a module directory, not a .lit file"),
-            ".lit import should report module-directory requirement, got: {}",
-            output
-        );
+            let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+            let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+                &runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+
+            assert!(
+                !run_succeeded,
+                "cyclic .lit import should fail:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("cyclic import: A -> B -> A"),
+                "cyclic .lit import should report the import chain:\n{}",
+                run_output
+            );
+            let module_manager = runtime.module_manager.borrow();
+            assert!(module_manager.imported_modules.is_empty());
+            assert!(module_manager.loading_import_stack.is_empty());
+        });
     }
 
     #[test]
