@@ -323,6 +323,12 @@ impl Runtime {
             Obj::Atom(AtomObj::DefStructField(a)) => {
                 matches!(right, Obj::Atom(AtomObj::DefStructField(b)) if a.to_string() == b.to_string())
             }
+            Obj::Atom(AtomObj::TupleIndex(a)) => {
+                matches!(right, Obj::Atom(AtomObj::TupleIndex(b)) if a.to_string() == b.to_string())
+            }
+            Obj::Atom(AtomObj::CartIndex(a)) => {
+                matches!(right, Obj::Atom(AtomObj::CartIndex(b)) if a.to_string() == b.to_string())
+            }
         }
     }
 }

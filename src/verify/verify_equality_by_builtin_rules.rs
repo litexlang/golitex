@@ -167,6 +167,8 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::Induc(p)) => p.name == id,
         Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
         Obj::Atom(AtomObj::DefStructField(p)) => p.name == id,
+        Obj::Atom(AtomObj::TupleIndex(p)) => p.name == id,
+        Obj::Atom(AtomObj::CartIndex(p)) => p.name == id,
     }
 }
 

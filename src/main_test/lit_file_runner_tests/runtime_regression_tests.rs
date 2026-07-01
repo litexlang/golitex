@@ -111,6 +111,147 @@ thm tmp_cup_elim_to_exist:
 }
 
 #[test]
+fn have_tuple_and_have_cart_define_symbolic_coordinates() {
+    run_with_large_stack(
+        "have_tuple_and_have_cart_define_symbolic_coordinates",
+        || {
+            let source_code = r#"
+have n N_pos = 3
+have tuple f by i <= n, f[i] = i
+$is_tuple(f)
+tuple_dim(f) = n
+forall i closed_range(1, n):
+    f[i] = i
+
+have cart c by i <= n, proj(c, i) = f[i]
+$is_set(c)
+$is_cart(c)
+cart_dim(c) = n
+forall i closed_range(1, n):
+    proj(c, i) = f[i]
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_tuple_and_have_cart_define_symbolic_coordinates",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have_tuple_and_have_cart_define_symbolic_coordinates failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"tuple definition\""));
+            assert!(run_output.contains("\"type\": \"cart definition\""));
+            assert!(run_output.contains("\"type\": \"universal fact\""));
+        },
+    );
+}
+
+#[test]
+fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
+    run_with_large_stack(
+        "have_tuple_and_have_cart_reject_bad_symbolic_definitions",
+        || {
+            let cases = [
+                (
+                    "undefined dimension",
+                    "have tuple f by i <= n, f[i] = i",
+                    "identifier `n` not defined",
+                ),
+                (
+                    "small dimension",
+                    r#"
+have n N_pos = 1
+have tuple f by i <= n, f[i] = i
+"#,
+                    "have tuple/cart needs 2 <= n",
+                ),
+                (
+                    "self reference",
+                    r#"
+have n N_pos = 3
+have tuple f by i <= n, f[i] = f[i]
+"#,
+                    "identifier `f` not defined",
+                ),
+                (
+                    "wrong tuple lhs",
+                    r#"
+have n N_pos = 3
+have tuple f by i <= n, g[i] = i
+"#,
+                    "have tuple left side must index the tuple being defined",
+                ),
+                (
+                    "wrong cart lhs",
+                    r#"
+have n N_pos = 3
+have cart c by i <= n, proj(d, i) = i
+"#,
+                    "have cart left side must project the cart being defined",
+                ),
+            ];
+
+            for (label, source_code, expected_message) in cases {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+                assert!(
+                    run_output.contains(expected_message),
+                    "{} had unexpected output, expected `{}`:\n{}",
+                    label,
+                    expected_message,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn template_can_define_symbolic_tuple_and_cart() {
+    run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
+        let source_code = r#"
+template<n N_pos: 2 <= n>:
+    have tuple tuple_by_dim by i <= n, tuple_by_dim[i] = i
+
+$is_tuple(\tuple_by_dim<3>)
+tuple_dim(\tuple_by_dim<3>) = 3
+forall i closed_range(1, 3):
+    \tuple_by_dim<3>[i] = i
+
+template<n N_pos: 2 <= n>:
+    have cart cart_by_dim by i <= n, proj(cart_by_dim, i) = R
+
+$is_cart(\cart_by_dim<3>)
+cart_dim(\cart_by_dim<3>) = 3
+forall i closed_range(1, 3):
+    proj(\cart_by_dim<3>, i) = R
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("template_can_define_symbolic_tuple_and_cart");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "template_can_define_symbolic_tuple_and_cart failed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn finite_power_set_has_builtin_cardinality_rules() {
     run_with_large_stack("finite_power_set_has_builtin_cardinality_rules", || {
         let source_code = r#"

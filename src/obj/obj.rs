@@ -134,6 +134,8 @@ pub enum ObjKind {
     FnRange = 64,
     FnRangeOn = 65,
     Replacement = 66,
+    TupleIndexFreeParam = 67,
+    CartIndexFreeParam = 68,
 }
 
 impl ObjKind {
@@ -1089,6 +1091,8 @@ impl Obj {
                 AtomObj::Induc(_) => ObjKind::ByInducFreeParam,
                 AtomObj::DefAlgo(_) => ObjKind::DefAlgoFreeParam,
                 AtomObj::DefStructField(_) => ObjKind::DefStructFieldFreeParam,
+                AtomObj::TupleIndex(_) => ObjKind::TupleIndexFreeParam,
+                AtomObj::CartIndex(_) => ObjKind::CartIndexFreeParam,
             },
             Obj::FnObj(_) => ObjKind::FnObj,
             Obj::Number(_) => ObjKind::Number,
@@ -1879,6 +1883,22 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             DefAlgoFreeParamObj::new(name).into()
+        }
+        FnObjHead::TupleIndex(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            TupleIndexFreeParamObj::new(name).into()
+        }
+        FnObjHead::CartIndex(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            CartIndexFreeParamObj::new(name).into()
         }
         FnObjHead::InstantiatedTemplateObj(t) => {
             let replaced = Obj::replace_bound_identifier(t.into(), from, to);

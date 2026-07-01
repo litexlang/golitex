@@ -858,7 +858,9 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
         | FnObjHead::Induc(_)
-        | FnObjHead::DefAlgo(_) => {}
+        | FnObjHead::DefAlgo(_)
+        | FnObjHead::TupleIndex(_)
+        | FnObjHead::CartIndex(_) => {}
     }
 }
 

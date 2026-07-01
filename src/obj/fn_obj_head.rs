@@ -19,6 +19,8 @@ pub enum FnObjHead {
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
+    TupleIndex(TupleIndexFreeParamObj),
+    CartIndex(CartIndexFreeParamObj),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
@@ -38,6 +40,8 @@ impl fmt::Display for FnObjHead {
             FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => write!(f, "{}", v),
             FnObjHead::Induc(p) => write!(f, "{}", p),
             FnObjHead::DefAlgo(p) => write!(f, "{}", p),
+            FnObjHead::TupleIndex(p) => write!(f, "{}", p),
+            FnObjHead::CartIndex(p) => write!(f, "{}", p),
             FnObjHead::InstantiatedTemplateObj(t) => write!(f, "{}", t),
         }
     }
@@ -57,6 +61,8 @@ impl FnObjHead {
                 AtomObj::FnSet(p) => Some(FnObjHead::FnSet(p)),
                 AtomObj::Induc(p) => Some(FnObjHead::Induc(p)),
                 AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
+                AtomObj::TupleIndex(p) => Some(FnObjHead::TupleIndex(p)),
+                AtomObj::CartIndex(p) => Some(FnObjHead::CartIndex(p)),
                 AtomObj::DefStructField(_) => None,
             },
             _ => None,
@@ -121,6 +127,18 @@ impl From<DefAlgoFreeParamObj> for FnObjHead {
     }
 }
 
+impl From<TupleIndexFreeParamObj> for FnObjHead {
+    fn from(p: TupleIndexFreeParamObj) -> Self {
+        FnObjHead::TupleIndex(p)
+    }
+}
+
+impl From<CartIndexFreeParamObj> for FnObjHead {
+    fn from(p: CartIndexFreeParamObj) -> Self {
+        FnObjHead::CartIndex(p)
+    }
+}
+
 impl From<FnObjHead> for Obj {
     fn from(h: FnObjHead) -> Self {
         match h {
@@ -137,6 +155,8 @@ impl From<FnObjHead> for Obj {
             FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.into(),
             FnObjHead::Induc(p) => p.into(),
             FnObjHead::DefAlgo(p) => p.into(),
+            FnObjHead::TupleIndex(p) => p.into(),
+            FnObjHead::CartIndex(p) => p.into(),
             FnObjHead::InstantiatedTemplateObj(t) => t.into(),
         }
     }

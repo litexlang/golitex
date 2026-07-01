@@ -91,6 +91,8 @@ impl DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveTupleStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveCartStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -105,6 +107,8 @@ impl DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveTupleStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveCartStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
@@ -125,6 +129,8 @@ impl DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(_) => {
                 HaveFnByForallExistUniqueStmt::output_type_string()
             }
+            DefObjStmt::HaveTupleStmt(_) => HaveTupleStmt::output_type_string(),
+            DefObjStmt::HaveCartStmt(_) => HaveCartStmt::output_type_string(),
         }
     }
 }
