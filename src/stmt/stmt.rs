@@ -36,6 +36,9 @@ pub enum DefObjStmt {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
     HaveTupleStmt(HaveTupleStmt),
     HaveCartStmt(HaveCartStmt),
+    HaveSeqStmt(HaveSeqStmt),
+    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
+    HaveMatrixStmt(HaveMatrixStmt),
 }
 
 #[derive(Clone)]

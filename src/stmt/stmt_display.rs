@@ -50,6 +50,9 @@ impl fmt::Display for DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveTupleStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveCartStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveSeqStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveFiniteSeqStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveMatrixStmt(x) => write!(f, "{}", x),
         }
     }
 }

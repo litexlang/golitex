@@ -46,7 +46,11 @@ impl Runtime {
             Entry::Occupied(mut o) => {
                 let info = o.get_mut();
                 if let Some((b, lf)) = body {
-                    info.fn_set = Some((b, lf));
+                    // A later type-only membership must not detach an existing definition body
+                    // from the signature whose parameters it cites.
+                    if equal_to.is_some() || info.equal_to.is_none() || info.fn_set.is_none() {
+                        info.fn_set = Some((b, lf));
+                    }
                 }
                 if let Some((eq, lf)) = equal_to {
                     info.equal_to = Some((eq, lf));

@@ -13,6 +13,9 @@ pub enum DefObjStmtResult {
     HaveFnByForallExistUniqueStmt(NonFactualStmtSuccess),
     HaveTupleStmt(NonFactualStmtSuccess),
     HaveCartStmt(NonFactualStmtSuccess),
+    HaveSeqStmt(NonFactualStmtSuccess),
+    HaveFiniteSeqStmt(NonFactualStmtSuccess),
+    HaveMatrixStmt(NonFactualStmtSuccess),
 }
 
 impl DefObjStmtResult {
@@ -51,6 +54,13 @@ impl DefObjStmtResult {
             Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(_)) => {
                 DefObjStmtResult::HaveCartStmt(success)
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(_)) => DefObjStmtResult::HaveSeqStmt(success),
+            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(_)) => {
+                DefObjStmtResult::HaveFiniteSeqStmt(success)
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(_)) => {
+                DefObjStmtResult::HaveMatrixStmt(success)
+            }
             _ => panic!("expected def obj stmt result"),
         }
     }
@@ -67,7 +77,10 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveFnByInducStmt(success)
             | DefObjStmtResult::HaveFnByForallExistUniqueStmt(success)
             | DefObjStmtResult::HaveTupleStmt(success)
-            | DefObjStmtResult::HaveCartStmt(success) => success,
+            | DefObjStmtResult::HaveCartStmt(success)
+            | DefObjStmtResult::HaveSeqStmt(success)
+            | DefObjStmtResult::HaveFiniteSeqStmt(success)
+            | DefObjStmtResult::HaveMatrixStmt(success) => success,
         }
     }
 
@@ -83,7 +96,10 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveFnByInducStmt(success)
             | DefObjStmtResult::HaveFnByForallExistUniqueStmt(success)
             | DefObjStmtResult::HaveTupleStmt(success)
-            | DefObjStmtResult::HaveCartStmt(success) => success,
+            | DefObjStmtResult::HaveCartStmt(success)
+            | DefObjStmtResult::HaveSeqStmt(success)
+            | DefObjStmtResult::HaveFiniteSeqStmt(success)
+            | DefObjStmtResult::HaveMatrixStmt(success) => success,
         }
     }
 
@@ -99,7 +115,10 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveFnByInducStmt(success)
             | DefObjStmtResult::HaveFnByForallExistUniqueStmt(success)
             | DefObjStmtResult::HaveTupleStmt(success)
-            | DefObjStmtResult::HaveCartStmt(success) => success,
+            | DefObjStmtResult::HaveCartStmt(success)
+            | DefObjStmtResult::HaveSeqStmt(success)
+            | DefObjStmtResult::HaveFiniteSeqStmt(success)
+            | DefObjStmtResult::HaveMatrixStmt(success) => success,
         }
     }
 }

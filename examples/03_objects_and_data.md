@@ -665,6 +665,54 @@ sketch:
     count({1, 2, 3}) = 3
 ```
 
+**replacement sets from functional relations**
+
+```litex
+sketch:
+    abstract_prop real_iterated_power_set(n, y)
+
+    # Recursion theorem interface: each index determines one iterated set.
+    know forall x N, y, y2 set:
+        $real_iterated_power_set(x, y)
+        $real_iterated_power_set(x, y2)
+        =>:
+            y = y2
+
+    know:
+        $real_iterated_power_set(0, R)
+        forall n N, y set:
+            $real_iterated_power_set(n, y)
+            =>:
+                $real_iterated_power_set(n + 1, power_set(y))
+
+    have real_power_set_tower set = replacement(real_iterated_power_set, N)
+
+    $real_iterated_power_set(1, power_set(R))
+    $real_iterated_power_set(2, power_set(power_set(R)))
+    $real_iterated_power_set(3, power_set(power_set(power_set(R))))
+
+    R $in replacement(real_iterated_power_set, N)
+    power_set(R) $in replacement(real_iterated_power_set, N)
+    power_set(power_set(R)) $in replacement(real_iterated_power_set, N)
+    power_set(power_set(power_set(R))) $in replacement(real_iterated_power_set, N)
+
+    R $in real_power_set_tower
+    power_set(R) $in real_power_set_tower
+    power_set(power_set(R)) $in real_power_set_tower
+    power_set(power_set(power_set(R))) $in real_power_set_tower
+
+    forall y replacement(real_iterated_power_set, N):
+        exist n N st {$real_iterated_power_set(n, y)}
+
+    claim:
+        prove:
+            exist S set st {R $in S, power_set(R) $in S, power_set(power_set(R)) $in S}
+        witness exist S set st {R $in S, power_set(R) $in S, power_set(power_set(R)) $in S} from real_power_set_tower:
+            R $in real_power_set_tower
+            power_set(R) $in real_power_set_tower
+            power_set(power_set(R)) $in real_power_set_tower
+```
+
 **unions and intersections over families**
 
 **Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).**
@@ -1285,4 +1333,11 @@ template<s set, z s>:
 (1, 2) = (1, 2)
 cart_dim(cart(R, Q)) = 2
 proj(cart(R, Q), 1) = R
+
+have n N_pos = 3
+have cart R3 by i <= n, proj(R3, i) = R
+R3 = cart(R, R, R)
+
+have tuple real_tuple by i <= n, real_tuple[i] = R
+(R, R, R) = real_tuple
 ```

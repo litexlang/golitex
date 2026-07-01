@@ -604,6 +604,176 @@ impl Runtime {
         Ok(HaveCartStmt::new(name, index_name, dimension, value, tb.line_file.clone()).into())
     }
 
+    pub fn parse_have_seq_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(SEQ)?;
+        let name = parse_have_tuple_or_cart_name(tb)?;
+        let seq_set = match self.parse_obj(tb)? {
+            Obj::SeqSet(seq_set) => seq_set,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have seq expects typed header `seq(S)`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip_token(BY)?;
+        let index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(COMMA)?;
+
+        let index_names = vec![index_name.clone()];
+        let (lhs, value) = self.parse_in_local_free_param_scope(
+            ParamObjType::FnSet,
+            &index_names,
+            tb.line_file.clone(),
+            |this| {
+                let lhs = this.parse_obj(tb)?;
+                tb.skip_token(EQUAL)?;
+                let value = this.parse_obj(tb)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after have seq value expression".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                Ok((lhs, value))
+            },
+        )?;
+        validate_have_seq_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
+
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(HaveSeqStmt::new(name, seq_set, index_name, value, tb.line_file.clone()).into())
+    }
+
+    pub fn parse_have_finite_seq_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(FINITE_SEQ)?;
+        let name = parse_have_tuple_or_cart_name(tb)?;
+        let finite_seq_set = match self.parse_obj(tb)? {
+            Obj::FiniteSeqSet(finite_seq_set) => finite_seq_set,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have finite_seq expects typed header `finite_seq(S, n)`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip_token(BY)?;
+        let index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(LESS_EQUAL)?;
+        let bound = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+
+        let index_names = vec![index_name.clone()];
+        let (lhs, value) = self.parse_in_local_free_param_scope(
+            ParamObjType::FnSet,
+            &index_names,
+            tb.line_file.clone(),
+            |this| {
+                let lhs = this.parse_obj(tb)?;
+                tb.skip_token(EQUAL)?;
+                let value = this.parse_obj(tb)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after have finite_seq value expression".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                Ok((lhs, value))
+            },
+        )?;
+        validate_have_seq_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
+
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(HaveFiniteSeqStmt::new(
+            name,
+            finite_seq_set,
+            index_name,
+            bound,
+            value,
+            tb.line_file.clone(),
+        )
+        .into())
+    }
+
+    pub fn parse_have_matrix_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(MATRIX)?;
+        let name = parse_have_tuple_or_cart_name(tb)?;
+        let matrix_set = match self.parse_obj(tb)? {
+            Obj::MatrixSet(matrix_set) => matrix_set,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have matrix expects typed header `matrix(S, rows, cols)`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip_token(BY)?;
+        let row_index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(LESS_EQUAL)?;
+        let row_bound = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let col_index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(LESS_EQUAL)?;
+        let col_bound = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+
+        let index_names = vec![row_index_name.clone(), col_index_name.clone()];
+        let (lhs, value) = self.parse_in_local_free_param_scope(
+            ParamObjType::FnSet,
+            &index_names,
+            tb.line_file.clone(),
+            |this| {
+                let lhs = this.parse_obj(tb)?;
+                tb.skip_token(EQUAL)?;
+                let value = this.parse_obj(tb)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after have matrix value expression".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                Ok((lhs, value))
+            },
+        )?;
+        validate_have_matrix_lhs(
+            &lhs,
+            &name,
+            &row_index_name,
+            &col_index_name,
+            tb.line_file.clone(),
+        )?;
+
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(HaveMatrixStmt::new(
+            name,
+            matrix_set,
+            row_index_name,
+            row_bound,
+            col_index_name,
+            col_bound,
+            value,
+            tb.line_file.clone(),
+        )
+        .into())
+    }
+
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
@@ -1335,6 +1505,15 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveCartStmt(stmt))
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveSeqStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveFiniteSeqStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveMatrixStmt(stmt))
+            }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "template body only supports `have` and `let` definition statements"
@@ -1410,6 +1589,79 @@ fn validate_have_cart_lhs(
     Ok(())
 }
 
+fn validate_have_seq_lhs(
+    lhs: &Obj,
+    name: &str,
+    index_name: &str,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    let Obj::FnObj(fn_obj) = lhs else {
+        return Err(have_tuple_or_cart_parse_error(
+            "have seq expects left side `name(index)`",
+            line_file,
+        ));
+    };
+    if !is_fn_head_identifier_named(fn_obj.head.as_ref(), name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have seq left side must apply the sequence being defined",
+            line_file,
+        ));
+    }
+    if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+        return Err(have_tuple_or_cart_parse_error(
+            "have seq left side must use exactly one index",
+            line_file,
+        ));
+    }
+    if !is_fn_set_index_named(fn_obj.body[0][0].as_ref(), index_name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have seq left side must use the bound index",
+            line_file,
+        ));
+    }
+    Ok(())
+}
+
+fn validate_have_matrix_lhs(
+    lhs: &Obj,
+    name: &str,
+    row_index_name: &str,
+    col_index_name: &str,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    let Obj::FnObj(fn_obj) = lhs else {
+        return Err(have_tuple_or_cart_parse_error(
+            "have matrix expects left side `name(row, col)`",
+            line_file,
+        ));
+    };
+    if !is_fn_head_identifier_named(fn_obj.head.as_ref(), name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have matrix left side must apply the matrix being defined",
+            line_file,
+        ));
+    }
+    if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 2 {
+        return Err(have_tuple_or_cart_parse_error(
+            "have matrix left side must use exactly two indices",
+            line_file,
+        ));
+    }
+    if !is_fn_set_index_named(fn_obj.body[0][0].as_ref(), row_index_name)
+        || !is_fn_set_index_named(fn_obj.body[0][1].as_ref(), col_index_name)
+    {
+        return Err(have_tuple_or_cart_parse_error(
+            "have matrix left side must use the bound row and column indices",
+            line_file,
+        ));
+    }
+    Ok(())
+}
+
+fn is_fn_head_identifier_named(head: &FnObjHead, name: &str) -> bool {
+    matches!(head, FnObjHead::Identifier(identifier) if identifier.name == name)
+}
+
 fn is_identifier_named(obj: &Obj, name: &str) -> bool {
     matches!(obj, Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == name)
 }
@@ -1420,6 +1672,10 @@ fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {
 
 fn is_cart_index_named(obj: &Obj, name: &str) -> bool {
     matches!(obj, Obj::Atom(AtomObj::CartIndex(index)) if index.name == name)
+}
+
+fn is_fn_set_index_named(obj: &Obj, name: &str) -> bool {
+    matches!(obj, Obj::Atom(AtomObj::FnSet(index)) if index.name == name)
 }
 
 fn have_tuple_or_cart_parse_error(msg: &str, line_file: LineFile) -> RuntimeError {

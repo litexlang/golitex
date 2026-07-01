@@ -2180,6 +2180,11 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(x)) => x.to_latex_string(),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
             Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(x)) => {

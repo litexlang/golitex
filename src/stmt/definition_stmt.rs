@@ -130,6 +130,37 @@ pub struct HaveCartStmt {
 }
 
 #[derive(Clone)]
+pub struct HaveSeqStmt {
+    pub name: String,
+    pub seq_set: SeqSet,
+    pub index_name: String,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct HaveFiniteSeqStmt {
+    pub name: String,
+    pub finite_seq_set: FiniteSeqSet,
+    pub index_name: String,
+    pub bound: Obj,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct HaveMatrixStmt {
+    pub name: String,
+    pub matrix_set: MatrixSet,
+    pub row_index_name: String,
+    pub row_bound: Obj,
+    pub col_index_name: String,
+    pub col_bound: Obj,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
 pub struct DefTemplateStmt {
     pub template_name: String,
     pub template_arg_def: ParamDefWithType,
@@ -151,6 +182,9 @@ pub enum TemplateDefEnum {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
     HaveTupleStmt(HaveTupleStmt),
     HaveCartStmt(HaveCartStmt),
+    HaveSeqStmt(HaveSeqStmt),
+    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
+    HaveMatrixStmt(HaveMatrixStmt),
 }
 
 // have by exist a R st {$p(a)}: a
@@ -454,6 +488,145 @@ impl fmt::Display for HaveCartStmt {
     }
 }
 
+impl HaveSeqStmt {
+    pub fn new(
+        name: String,
+        seq_set: SeqSet,
+        index_name: String,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        HaveSeqStmt {
+            name,
+            seq_set,
+            index_name,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "sequence definition"
+    }
+}
+
+impl fmt::Display for HaveSeqStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {}, {}({}) {} {}",
+            HAVE,
+            SEQ,
+            self.name,
+            self.seq_set,
+            BY,
+            self.index_name,
+            self.name,
+            self.index_name,
+            EQUAL,
+            self.value
+        )
+    }
+}
+
+impl HaveFiniteSeqStmt {
+    pub fn new(
+        name: String,
+        finite_seq_set: FiniteSeqSet,
+        index_name: String,
+        bound: Obj,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        HaveFiniteSeqStmt {
+            name,
+            finite_seq_set,
+            index_name,
+            bound,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "finite sequence definition"
+    }
+}
+
+impl fmt::Display for HaveFiniteSeqStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {} {} {}, {}({}) {} {}",
+            HAVE,
+            FINITE_SEQ,
+            self.name,
+            self.finite_seq_set,
+            BY,
+            self.index_name,
+            LESS_EQUAL,
+            self.bound,
+            self.name,
+            self.index_name,
+            EQUAL,
+            self.value
+        )
+    }
+}
+
+impl HaveMatrixStmt {
+    pub fn new(
+        name: String,
+        matrix_set: MatrixSet,
+        row_index_name: String,
+        row_bound: Obj,
+        col_index_name: String,
+        col_bound: Obj,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        HaveMatrixStmt {
+            name,
+            matrix_set,
+            row_index_name,
+            row_bound,
+            col_index_name,
+            col_bound,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "matrix definition"
+    }
+}
+
+impl fmt::Display for HaveMatrixStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {} {} {}, {} {} {}, {}({}, {}) {} {}",
+            HAVE,
+            MATRIX,
+            self.name,
+            self.matrix_set,
+            BY,
+            self.row_index_name,
+            LESS_EQUAL,
+            self.row_bound,
+            self.col_index_name,
+            LESS_EQUAL,
+            self.col_bound,
+            self.name,
+            self.row_index_name,
+            self.col_index_name,
+            EQUAL,
+            self.value
+        )
+    }
+}
+
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn single_defined_name(&self) -> Option<String> {
         let names = self.param_def.collect_param_names();
@@ -684,6 +857,9 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.fn_name.clone()),
             TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name.clone()),
             TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveMatrixStmt(stmt) => Some(stmt.name.clone()),
         }
     }
 
@@ -700,6 +876,9 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveTupleStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveCartStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveSeqStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveMatrixStmt(stmt) => stmt.clone().into(),
         }
     }
 }
@@ -718,6 +897,9 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveTupleStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveCartStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveSeqStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveMatrixStmt(stmt) => write!(f, "{}", stmt),
         }
     }
 }
