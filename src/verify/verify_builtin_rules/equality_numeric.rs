@@ -15,6 +15,10 @@ impl Runtime {
         Obj::Number(Number::new("-1".to_string()))
     }
 
+    fn literal_neg_one_obj_for_abs_builtin() -> Obj {
+        Obj::Number(Number::new("-1".to_string()))
+    }
+
     fn literal_zero_obj_for_abs_builtin() -> Obj {
         Obj::Number(Number::new("0".to_string()))
     }
@@ -49,6 +53,10 @@ impl Runtime {
             }
             _ => false,
         }
+    }
+
+    fn neg_obj_for_abs_builtin(obj: &Obj) -> Obj {
+        Mul::new(Self::literal_neg_one_obj_for_abs_builtin(), obj.clone()).into()
     }
 
     fn try_verify_abs_nonnegative_identity(
@@ -154,6 +162,36 @@ impl Runtime {
         )))
     }
 
+    // Absolute value is invariant under sign change.
+    // Examples: `abs(x) = abs(-x)` and `abs(x - y) = abs(y - x)`.
+    fn try_verify_abs_sign_invariance(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (left, right) else {
+            return Ok(None);
+        };
+        let left_arg = left_abs.arg.as_ref();
+        let right_arg = right_abs.arg.as_ref();
+        let left_neg_right = Self::neg_obj_for_abs_builtin(right_arg);
+        let right_neg_left = Self::neg_obj_for_abs_builtin(left_arg);
+        if !Self::obj_is_negation_of_for_abs_builtin(left_arg, right_arg)
+            && !Self::obj_is_negation_of_for_abs_builtin(right_arg, left_arg)
+            && !objs_equal_by_rational_expression_evaluation(left_arg, &left_neg_right)
+            && !objs_equal_by_rational_expression_evaluation(right_arg, &right_neg_left)
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: abs(x) = abs(-x)",
+        )))
+    }
+
     // Even powers ignore sign, so `x^2 = abs(x)^2`.
     // Example: `forall x R: x ^ 4 = abs(x) ^ 4`.
     fn try_verify_abs_even_power(
@@ -236,6 +274,9 @@ impl Runtime {
             return Ok(Some(done));
         }
         if let Some(done) = self.try_verify_abs_product(left, right, line_file.clone())? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_sign_invariance(left, right, line_file.clone())? {
             return Ok(Some(done));
         }
         if let Some(done) = self.try_verify_abs_even_power(left, right, line_file.clone())? {

@@ -32,6 +32,18 @@ forall a R:
     =>:
         a = 0
 
+forall a R:
+    a != 0
+    =>:
+        abs(a) > 0
+
+forall a R:
+    abs(a) = abs(-a)
+    abs(-a) = abs(a)
+
+forall x, y R:
+    abs(x - y) = abs(y - x)
+
 forall x, y R:
     abs(x * y) = abs(x) * abs(y)
 
