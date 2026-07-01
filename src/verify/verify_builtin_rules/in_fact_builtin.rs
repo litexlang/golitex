@@ -112,6 +112,13 @@ impl Runtime {
             (_, Obj::Cup(cup)) => {
                 return self.verify_in_fact_in_cup_by_member_witness(in_fact, cup, verify_state);
             }
+            (_, Obj::Replacement(replacement)) => {
+                return self.verify_in_fact_in_replacement_by_relation_witness(
+                    in_fact,
+                    replacement,
+                    verify_state,
+                );
+            }
             (_, Obj::StructObj(struct_obj)) => {
                 return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
             }
@@ -694,6 +701,161 @@ impl Runtime {
             in_fact.line_file.clone(),
         )?;
         Ok(ExistFactEnum::ExistFact(exist_body))
+    }
+
+    // Replacement introduction: `z $in replacement(P, A)` follows from a
+    // relation witness in the source set.
+    // Example: `x $in A` and `$P(x, z)` prove `z $in replacement(P, A)`.
+    fn verify_in_fact_in_replacement_by_relation_witness(
+        &mut self,
+        in_fact: &InFact,
+        replacement: &Replacement,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
+        let exist_result =
+            self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        if exist_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "replacement membership: a relation witness is in the replacement set"
+                        .to_string(),
+                    vec![exist_result],
+                )
+                .into(),
+            );
+        }
+
+        for preimage in self.known_preimages_for_replacement_target(in_fact, replacement) {
+            let preimage_in_source: AtomicFact = InFact::new(
+                preimage.clone(),
+                replacement.source_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let preimage_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &preimage_in_source,
+                verify_state,
+            )?;
+            if !preimage_result.is_true() {
+                continue;
+            }
+
+            let relation_fact: AtomicFact = NormalAtomicFact::new(
+                replacement.prop_name.clone(),
+                vec![preimage, in_fact.element.clone()],
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let relation_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &relation_fact,
+                verify_state,
+            )?;
+            if relation_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "replacement membership: a relation witness is in the replacement set"
+                            .to_string(),
+                        vec![preimage_result, relation_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
+    fn replacement_membership_exist_fact(
+        &self,
+        in_fact: &InFact,
+        replacement: &Replacement,
+    ) -> Result<ExistFactEnum, RuntimeError> {
+        let preimage_name = "x".to_string();
+        let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
+        let relation_fact: AtomicFact = NormalAtomicFact::new(
+            replacement.prop_name.clone(),
+            vec![preimage_obj, in_fact.element.clone()],
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![preimage_name],
+                ParamType::Obj(replacement.source_set.as_ref().clone()),
+            )]),
+            vec![relation_fact.into()],
+            in_fact.line_file.clone(),
+        )?;
+        Ok(ExistFactEnum::ExistFact(exist_body))
+    }
+
+    fn known_preimages_for_replacement_target(
+        &self,
+        in_fact: &InFact,
+        replacement: &Replacement,
+    ) -> Vec<Obj> {
+        let atomic_fact: AtomicFact = in_fact.clone().into();
+        let module_names = self.atomic_fact_referenced_module_names(&atomic_fact);
+        let target_keys =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&in_fact.element, &module_names);
+        let lookup_key = (replacement.prop_name.to_string(), true);
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            Self::extend_known_preimages_for_replacement_target_from_environment(
+                environment,
+                &lookup_key,
+                &target_keys,
+                &mut candidates,
+            );
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                Self::extend_known_preimages_for_replacement_target_from_environment(
+                    environment.as_ref(),
+                    &lookup_key,
+                    &target_keys,
+                    &mut candidates,
+                );
+            }
+        }
+
+        let mut seen = Vec::new();
+        candidates.retain(|candidate: &Obj| {
+            let key = candidate.to_string();
+            if seen.contains(&key) {
+                return false;
+            }
+            seen.push(key);
+            true
+        });
+        candidates
+    }
+
+    fn extend_known_preimages_for_replacement_target_from_environment(
+        environment: &Environment,
+        lookup_key: &(String, bool),
+        target_keys: &[String],
+        candidates: &mut Vec<Obj>,
+    ) {
+        let Some(known_relation_facts) = environment.known_atomic_facts_with_2_args.get(lookup_key)
+        else {
+            return;
+        };
+        for ((_, known_target_key), known_fact) in known_relation_facts.iter() {
+            if !target_keys.contains(known_target_key) {
+                continue;
+            }
+            let AtomicFact::NormalAtomicFact(known_relation) = known_fact else {
+                continue;
+            };
+            let Some(preimage) = known_relation.body.first() else {
+                continue;
+            };
+            candidates.push(preimage.clone());
+        }
     }
 
     fn known_member_sets_for_cup_family(&self, in_fact: &InFact, family: &Obj) -> Vec<Obj> {

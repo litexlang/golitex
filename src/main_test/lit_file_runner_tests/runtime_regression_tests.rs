@@ -152,6 +152,172 @@ forall i closed_range(1, n):
 }
 
 #[test]
+fn have_seq_finite_seq_and_matrix_define_indexed_entries() {
+    run_with_large_stack(
+        "have_seq_finite_seq_and_matrix_define_indexed_entries",
+        || {
+            let source_code = r#"
+have seq s seq(N_pos) by i, s(i) = i
+s $in seq(N_pos)
+s(3) = 3
+
+have n N_pos = 3
+have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i
+f $in finite_seq(N_pos, n)
+f(2) = 2
+
+have r N_pos = 2
+have c N_pos = 3
+have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j
+M $in matrix(N_pos, r, c)
+M(2, 3) = 3
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_seq_finite_seq_and_matrix_define_indexed_entries",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have_seq_finite_seq_and_matrix_define_indexed_entries failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"sequence definition\""));
+            assert!(run_output.contains("\"type\": \"finite sequence definition\""));
+            assert!(run_output.contains("\"type\": \"matrix definition\""));
+        },
+    );
+}
+
+#[test]
+fn have_seq_finite_seq_and_matrix_reject_bad_by_forms() {
+    run_with_large_stack("have_seq_finite_seq_and_matrix_reject_bad_by_forms", || {
+        let cases = [
+            (
+                "bad seq lhs",
+                r#"
+have seq s seq(N_pos) by i, t(i) = i
+"#,
+                "have seq left side must apply the sequence being defined",
+            ),
+            (
+                "bad matrix lhs arity",
+                r#"
+have r N_pos = 2
+have c N_pos = 3
+have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i) = i
+"#,
+                "have matrix left side must use exactly two indices",
+            ),
+            (
+                "bad finite_seq bound",
+                r#"
+have n N_pos = 3
+have m N_pos = 4
+have finite_seq f finite_seq(N_pos, n) by i <= m, f(i) = i
+"#,
+                "have finite_seq by-bound must match finite_seq length",
+            ),
+        ];
+
+        for (case_name, source_code, expected_error) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(case_name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(!run_succeeded, "{} should fail:\n{}", case_name, run_output);
+            assert!(
+                run_output.contains(expected_error),
+                "{} should report `{}`:\n{}",
+                case_name,
+                expected_error,
+                run_output
+            );
+        }
+    });
+}
+
+#[test]
+fn have_cart_can_equal_literal_cart_by_dimension_and_projections() {
+    run_with_large_stack(
+        "have_cart_can_equal_literal_cart_by_dimension_and_projections",
+        || {
+            let source_code = r#"
+have n N_pos = 3
+
+have cart real_cart by i <= n, proj(real_cart, i) = R
+real_cart = cart(R, R, R)
+
+have cart rational_cart by i <= n, proj(rational_cart, i) = Q
+cart(Q, Q, Q) = rational_cart
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_cart_can_equal_literal_cart_by_dimension_and_projections",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have_cart_can_equal_literal_cart_by_dimension_and_projections failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("cart equality from dimension and projections"),
+                "cart extensionality rule should appear in verifier output:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
+    run_with_large_stack(
+        "have_tuple_can_equal_literal_tuple_by_dimension_and_projections",
+        || {
+            let source_code = r#"
+have n N_pos = 3
+
+have tuple index_tuple by i <= n, index_tuple[i] = i
+index_tuple = (1, 2, 3)
+
+have tuple real_tuple by i <= n, real_tuple[i] = R
+(R, R, R) = real_tuple
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_tuple_can_equal_literal_tuple_by_dimension_and_projections",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have_tuple_can_equal_literal_tuple_by_dimension_and_projections failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("tuple equality from dimension and projections"),
+                "tuple extensionality rule should appear in verifier output:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
     run_with_large_stack(
         "have_tuple_and_have_cart_reject_bad_symbolic_definitions",
@@ -1261,6 +1427,46 @@ $rel(x, y)
             );
         },
     );
+}
+
+#[test]
+fn replacement_membership_intro_from_relation_witness() {
+    run_with_large_stack("replacement_membership_intro_from_relation_witness", || {
+        let source_code = r#"
+abstract_prop rel(x, y)
+
+know forall x {1, 2}, y, y2 set:
+    $rel(x, y)
+    $rel(x, y2)
+    =>:
+        y = y2
+
+have y set
+know $rel(1, y)
+
+y $in replacement(rel, {1, 2})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "replacement_membership_intro_from_relation_witness",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "replacement membership intro should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output
+                .contains("replacement membership: a relation witness is in the replacement set"),
+            "replacement membership intro rule should appear in verifier output:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

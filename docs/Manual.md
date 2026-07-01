@@ -316,7 +316,9 @@ know forall x {1, 2}, y, y2 set:
         y = y2
 ```
 
-Membership currently gives the elimination direction:
+Membership uses the two directions from the replacement axiom. A relation
+witness proves membership in the replacement set, and membership gives a
+preimage witness back:
 
 ```litex
 abstract_prop P(x, y)
@@ -326,6 +328,10 @@ know forall x {1, 2}, y, y2 set:
     $P(x, y2)
     =>:
         y = y2
+
+have a set
+know $P(1, a)
+a $in replacement(P, {1, 2})
 
 forall y replacement(P, {1, 2}):
     exist x {1, 2} st {$P(x, y)}
@@ -1380,12 +1386,42 @@ object rather than a literal tuple or product length.
 have n N_pos = 3
 have tuple f by i <= n, f[i] = i
 have cart C by i <= n, proj(C, i) = f[i]
+have cart R3 by i <= n, proj(R3, i) = R
+R3 = cart(R, R, R)
 ```
 
 Here `n` must already be introduced, and Litex must be able to prove
 `n $in N_pos` and `2 <= n`. The binder `i <= n` means `i closed_range(1, n)`.
 The right side is checked before the new name is registered, so the definition
-cannot depend on the tuple or cart currently being defined.
+cannot depend on the tuple or cart currently being defined. A cart made this
+way is equal to a literal `cart(...)` when Litex can verify the cart fact,
+dimension, and each projection.
+
+### Symbolic sequence and matrix definitions (`have seq`, `have finite_seq`, `have matrix`)
+
+Use **`have seq s seq(S) by i, s(i) = expr`**,
+**`have finite_seq f finite_seq(S, n) by i <= n, f(i) = expr`**, or
+**`have matrix M matrix(S, r, c) by i <= r, j <= c, M(i, j) = expr`**
+to introduce indexed data by a coordinate formula.
+
+```litex
+have seq s seq(N_pos) by i, s(i) = i
+s(3) = 3
+
+have n N_pos = 3
+have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i
+f(2) = 2
+
+have r N_pos = 2
+have c N_pos = 3
+have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j
+M(2, 3) = 3
+```
+
+These forms are function-like definitions: Litex stores the surface type
+membership and also remembers the coordinate formula for later applications.
+For `finite_seq` and `matrix`, the `by` bounds must match the dimensions in
+the typed header.
 
 ---
 
@@ -2436,6 +2472,9 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have x S = expr` | Introduce a named value |
 | `have tuple f by i <= n, f[i] = expr` | Define a symbolic-length tuple by coordinates |
 | `have cart C by i <= n, proj(C, i) = expr` | Define a symbolic-dimension Cartesian product by factors |
+| `have seq s seq(S) by i, s(i) = expr` | Define a sequence by its entries |
+| `have finite_seq f finite_seq(S, n) by i <= n, f(i) = expr` | Define a finite sequence by its entries |
+| `have matrix M matrix(S, r, c) by i <= r, j <= c, M(i, j) = expr` | Define a matrix by its entries |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
@@ -2696,6 +2735,9 @@ code, evaluate an expression, or register a reusable proof pattern.
 | introduce object parameters equal to expressions | `have x R = 1` |
 | define a symbolic-length tuple by coordinates | `have tuple f by i <= n, f[i] = i` |
 | define a symbolic-dimension Cartesian product by factors | `have cart C by i <= n, proj(C, i) = R` |
+| define a sequence by entries | `have seq s seq(N_pos) by i, s(i) = i` |
+| define a finite sequence by entries | `have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i` |
+| define a matrix by entries | `have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j` |
 | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
 | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
 | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |

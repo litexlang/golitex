@@ -330,6 +330,72 @@ impl Runtime {
                 )
                 .into())
             }
+            TemplateDefEnum::HaveSeqStmt(s) => {
+                let set =
+                    self.inst_obj(&s.seq_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                Ok(HaveSeqStmt::new(
+                    instance_name.to_string(),
+                    SeqSet::new(set),
+                    s.index_name.clone(),
+                    value,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            TemplateDefEnum::HaveFiniteSeqStmt(s) => {
+                let set = self.inst_obj(
+                    &s.finite_seq_set.set,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
+                let n = self.inst_obj(
+                    &s.finite_seq_set.n,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
+                let bound = self.inst_obj(&s.bound, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                Ok(HaveFiniteSeqStmt::new(
+                    instance_name.to_string(),
+                    FiniteSeqSet::new(set, n),
+                    s.index_name.clone(),
+                    bound,
+                    value,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            TemplateDefEnum::HaveMatrixStmt(s) => {
+                let set =
+                    self.inst_obj(&s.matrix_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
+                let row_len = self.inst_obj(
+                    &s.matrix_set.row_len,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
+                let col_len = self.inst_obj(
+                    &s.matrix_set.col_len,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
+                let row_bound =
+                    self.inst_obj(&s.row_bound, param_to_arg_map, ParamObjType::DefHeader)?;
+                let col_bound =
+                    self.inst_obj(&s.col_bound, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                Ok(HaveMatrixStmt::new(
+                    instance_name.to_string(),
+                    MatrixSet::new(set, row_len, col_len),
+                    s.row_index_name.clone(),
+                    row_bound,
+                    s.col_index_name.clone(),
+                    col_bound,
+                    value,
+                    line_file.clone(),
+                )
+                .into())
+            }
         }
     }
 

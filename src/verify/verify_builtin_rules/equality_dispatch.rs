@@ -555,6 +555,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_cart_equality_from_dim_and_projections(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_projection_from_known_tuple_equality(left, right, line_file.clone())?
         {
@@ -1292,8 +1301,7 @@ impl Runtime {
             let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
             let component_fact: AtomicFact =
                 EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
-            let component_result = self
-                .verify_atomic_fact_known_then_builtin_rules_only(&component_fact, verify_state)?;
+            let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
             if !component_result.is_true() {
                 return Ok(None);
             }
@@ -1304,6 +1312,69 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "tuple equality from dimension and projections".to_string(),
+                steps,
+            )
+            .into(),
+        ))
+    }
+
+    // Cart extensionality: a cart object is equal to `cart(A, B, ...)` when it is a cart,
+    // its dimension matches, and each factor projection matches the corresponding literal cart
+    // factor.
+    // Example: from `$is_cart(c)`, `cart_dim(c) = 3`, and `proj(c, i) = R`, prove
+    // `c = cart(R, R, R)`.
+    fn try_verify_cart_equality_from_dim_and_projections(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (cart_obj, target_obj) = match (left, right) {
+            (target_obj, Obj::Cart(cart_obj)) => (cart_obj, target_obj),
+            (Obj::Cart(cart_obj), target_obj) => (cart_obj, target_obj),
+            _ => return Ok(None),
+        };
+
+        if matches!(target_obj, Obj::Cart(_)) {
+            return Ok(None);
+        }
+
+        let is_cart_fact: AtomicFact =
+            IsCartFact::new(target_obj.clone(), line_file.clone()).into();
+        let is_cart_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&is_cart_fact, verify_state)?;
+        if !is_cart_result.is_true() {
+            return Ok(None);
+        }
+
+        let cart_dim_obj: Obj = CartDim::new(target_obj.clone()).into();
+        let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
+        let cart_dim_fact: AtomicFact =
+            EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
+        let cart_dim_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&cart_dim_fact, verify_state)?;
+        if !cart_dim_result.is_true() {
+            return Ok(None);
+        }
+
+        let mut steps = vec![is_cart_result, cart_dim_result];
+        for (index, arg) in cart_obj.args.iter().enumerate() {
+            let index_obj: Obj = Number::new((index + 1).to_string()).into();
+            let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
+            let projection_fact: AtomicFact =
+                EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
+            let projection_result = self.verify_atomic_fact(&projection_fact, verify_state)?;
+            if !projection_result.is_true() {
+                return Ok(None);
+            }
+            steps.push(projection_result);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "cart equality from dimension and projections".to_string(),
                 steps,
             )
             .into(),

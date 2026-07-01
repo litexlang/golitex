@@ -93,6 +93,9 @@ impl DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveTupleStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveCartStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveSeqStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveMatrixStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -109,6 +112,9 @@ impl DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveTupleStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveCartStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveMatrixStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
@@ -131,6 +137,9 @@ impl DefObjStmt {
             }
             DefObjStmt::HaveTupleStmt(_) => HaveTupleStmt::output_type_string(),
             DefObjStmt::HaveCartStmt(_) => HaveCartStmt::output_type_string(),
+            DefObjStmt::HaveSeqStmt(_) => HaveSeqStmt::output_type_string(),
+            DefObjStmt::HaveFiniteSeqStmt(_) => HaveFiniteSeqStmt::output_type_string(),
+            DefObjStmt::HaveMatrixStmt(_) => HaveMatrixStmt::output_type_string(),
         }
     }
 }

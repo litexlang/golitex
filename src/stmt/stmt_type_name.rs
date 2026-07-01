@@ -321,6 +321,24 @@ impl HaveCartStmt {
     }
 }
 
+impl HaveSeqStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveSeqStmt".to_string()
+    }
+}
+
+impl HaveFiniteSeqStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFiniteSeqStmt".to_string()
+    }
+}
+
+impl HaveMatrixStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveMatrixStmt".to_string()
+    }
+}
+
 impl SketchStmt {
     pub fn output_type_string() -> String {
         "proof sketch".to_string()
@@ -639,5 +657,23 @@ impl HaveTupleStmt {
 impl HaveCartStmt {
     pub fn output_type_string() -> String {
         "cart definition".to_string()
+    }
+}
+
+impl HaveSeqStmt {
+    pub fn output_type_string() -> String {
+        "sequence definition".to_string()
+    }
+}
+
+impl HaveFiniteSeqStmt {
+    pub fn output_type_string() -> String {
+        "finite sequence definition".to_string()
+    }
+}
+
+impl HaveMatrixStmt {
+    pub fn output_type_string() -> String {
+        "matrix definition".to_string()
     }
 }

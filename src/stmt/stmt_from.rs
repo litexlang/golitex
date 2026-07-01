@@ -102,6 +102,24 @@ impl From<HaveCartStmt> for Stmt {
     }
 }
 
+impl From<HaveSeqStmt> for Stmt {
+    fn from(v: HaveSeqStmt) -> Self {
+        DefObjStmt::HaveSeqStmt(v).into()
+    }
+}
+
+impl From<HaveFiniteSeqStmt> for Stmt {
+    fn from(v: HaveFiniteSeqStmt) -> Self {
+        DefObjStmt::HaveFiniteSeqStmt(v).into()
+    }
+}
+
+impl From<HaveMatrixStmt> for Stmt {
+    fn from(v: HaveMatrixStmt) -> Self {
+        DefObjStmt::HaveMatrixStmt(v).into()
+    }
+}
+
 impl From<DefTemplateStmt> for Stmt {
     fn from(v: DefTemplateStmt) -> Self {
         DefInterfaceStmt::DefTemplateStmt(v).into()
