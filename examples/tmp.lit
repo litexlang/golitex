@@ -1,2 +1,5 @@
-forall s set:
-    cart(s, s) = cart(s, s)
+have n N_pos = 3
+
+have tuple f by i <= n, f[i] = i
+
+have cart c by i <= n, proj(c, i) = f[i]

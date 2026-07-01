@@ -90,6 +90,18 @@ impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     }
 }
 
+impl From<HaveTupleStmt> for Stmt {
+    fn from(v: HaveTupleStmt) -> Self {
+        DefObjStmt::HaveTupleStmt(v).into()
+    }
+}
+
+impl From<HaveCartStmt> for Stmt {
+    fn from(v: HaveCartStmt) -> Self {
+        DefObjStmt::HaveCartStmt(v).into()
+    }
+}
+
 impl From<DefTemplateStmt> for Stmt {
     fn from(v: DefTemplateStmt) -> Self {
         DefInterfaceStmt::DefTemplateStmt(v).into()

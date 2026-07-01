@@ -304,6 +304,32 @@ impl Runtime {
                 )
                 .into())
             }
+            TemplateDefEnum::HaveTupleStmt(s) => {
+                let dimension =
+                    self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                Ok(HaveTupleStmt::new(
+                    instance_name.to_string(),
+                    s.index_name.clone(),
+                    dimension,
+                    value,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            TemplateDefEnum::HaveCartStmt(s) => {
+                let dimension =
+                    self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                Ok(HaveCartStmt::new(
+                    instance_name.to_string(),
+                    s.index_name.clone(),
+                    dimension,
+                    value,
+                    line_file.clone(),
+                )
+                .into())
+            }
         }
     }
 

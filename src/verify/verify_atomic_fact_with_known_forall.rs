@@ -855,6 +855,16 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
+            Obj::Atom(AtomObj::TupleIndex(ref p)) => {
+                let mut map = HashMap::new();
+                map.insert(p.name.clone(), given_arg.clone());
+                Ok(Some(map))
+            }
+            Obj::Atom(AtomObj::CartIndex(ref p)) => {
+                let mut map = HashMap::new();
+                map.insert(p.name.clone(), given_arg.clone());
+                Ok(Some(map))
+            }
         }
     }
 

@@ -53,7 +53,9 @@ fn mark_forall_param_coverage_in_fn_obj_head(
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
         | FnObjHead::Induc(_)
-        | FnObjHead::DefAlgo(_) => {}
+        | FnObjHead::DefAlgo(_)
+        | FnObjHead::TupleIndex(_)
+        | FnObjHead::CartIndex(_) => {}
         FnObjHead::FiniteSeqListObj(v) => {
             mark_forall_param_coverage_in_obj(
                 &Obj::FiniteSeqListObj(v.clone()),
@@ -389,7 +391,9 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Atom(AtomObj::DefAlgo(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::Atom(AtomObj::DefStructField(_)) => {}
+        Obj::Atom(AtomObj::DefStructField(_))
+        | Obj::Atom(AtomObj::TupleIndex(_))
+        | Obj::Atom(AtomObj::CartIndex(_)) => {}
     }
 }
 

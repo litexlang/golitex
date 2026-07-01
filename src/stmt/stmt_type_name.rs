@@ -309,6 +309,18 @@ impl HaveFnByForallExistUniqueStmt {
     }
 }
 
+impl HaveTupleStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveTupleStmt".to_string()
+    }
+}
+
+impl HaveCartStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveCartStmt".to_string()
+    }
+}
+
 impl SketchStmt {
     pub fn output_type_string() -> String {
         "proof sketch".to_string()
@@ -615,5 +627,17 @@ impl HaveFnByInducStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn output_type_string() -> String {
         "function definition by unique existence".to_string()
+    }
+}
+
+impl HaveTupleStmt {
+    pub fn output_type_string() -> String {
+        "tuple definition".to_string()
+    }
+}
+
+impl HaveCartStmt {
+    pub fn output_type_string() -> String {
+        "cart definition".to_string()
     }
 }

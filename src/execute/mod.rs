@@ -20,6 +20,7 @@ pub(crate) mod exec_have_fn_equal_shared;
 mod exec_have_fn_equal_stmt;
 mod exec_have_obj_equal_stmt;
 mod exec_have_obj_in_nonempty_set_or_param_type_stmt;
+mod exec_have_tuple_cart_stmt;
 mod exec_know_stmt;
 mod exec_let_stmt;
 mod exec_object_introduction_helper;

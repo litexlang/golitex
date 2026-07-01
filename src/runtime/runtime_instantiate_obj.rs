@@ -212,6 +212,22 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
+            Obj::Atom(AtomObj::TupleIndex(p)) => {
+                if param_obj_type == ParamObjType::TupleIndex {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
+            Obj::Atom(AtomObj::CartIndex(p)) => {
+                if param_obj_type == ParamObjType::CartIndex {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
         }
     }
 
@@ -267,6 +283,8 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::TupleIndex(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::CartIndex(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefStructField(_)) => {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(

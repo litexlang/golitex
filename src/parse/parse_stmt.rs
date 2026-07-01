@@ -8,6 +8,8 @@ impl Runtime {
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => match tb.token_at_add_index(1) {
+                TUPLE => self.parse_have_tuple_stmt(tb),
+                CART => self.parse_have_cart_stmt(tb),
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),

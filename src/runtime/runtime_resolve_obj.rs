@@ -304,7 +304,18 @@ impl Runtime {
                     FnObj::new(*fn_obj.head.clone(), resolved_body).into()
                 }
             }
-            Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
+            Obj::Atom(AtomObj::Identifier(_))
+            | Obj::Atom(AtomObj::IdentifierWithMod(_))
+            | Obj::Atom(AtomObj::Forall(_))
+            | Obj::Atom(AtomObj::Def(_))
+            | Obj::Atom(AtomObj::Exist(_))
+            | Obj::Atom(AtomObj::SetBuilder(_))
+            | Obj::Atom(AtomObj::FnSet(_))
+            | Obj::Atom(AtomObj::Induc(_))
+            | Obj::Atom(AtomObj::DefAlgo(_))
+            | Obj::Atom(AtomObj::DefStructField(_))
+            | Obj::Atom(AtomObj::TupleIndex(_))
+            | Obj::Atom(AtomObj::CartIndex(_)) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
                     number.into()
                 } else {

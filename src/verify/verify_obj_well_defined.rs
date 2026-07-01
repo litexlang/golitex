@@ -126,6 +126,8 @@ impl Runtime {
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
             Obj::Atom(AtomObj::DefStructField(_)) => Ok(()),
+            Obj::Atom(AtomObj::TupleIndex(_)) => Ok(()),
+            Obj::Atom(AtomObj::CartIndex(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -1305,16 +1307,12 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
-        let projection_dimension_number = self.resolve_obj_to_number(&x.dim).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "projection dimension {} is not a number",
-                    x.dim
-                )),
-            ))
-        })?;
         let projection_dimension_obj: Obj =
-            Number::new(projection_dimension_number.normalized_value).into();
+            if let Some(projection_dimension_number) = self.resolve_obj_to_number(&x.dim) {
+                Number::new(projection_dimension_number.normalized_value).into()
+            } else {
+                (*x.dim).clone()
+            };
 
         let projection_dimension_is_positive_integer_fact = InFact::new(
             projection_dimension_obj.clone(),
@@ -2582,16 +2580,12 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
-        let index_calculated_number = self.resolve_obj_to_number(&x.index).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "index {} is not a number",
-                    x.index.to_string()
-                )),
-            ))
-        })?;
         let index_calculated_obj: Obj =
-            Number::new(index_calculated_number.normalized_value).into();
+            if let Some(index_calculated_number) = self.resolve_obj_to_number(&x.index) {
+                Number::new(index_calculated_number.normalized_value).into()
+            } else {
+                (*x.index).clone()
+            };
 
         let index_is_positive_integer_in_z_pos_fact = InFact::new(
             index_calculated_obj.clone(),

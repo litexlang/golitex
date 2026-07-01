@@ -1089,6 +1089,12 @@ fn collect_cited_param_indices_from_atom(
         AtomObj::DefStructField(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
+        AtomObj::TupleIndex(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
+        AtomObj::CartIndex(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
     }
 }
 
@@ -1168,6 +1174,12 @@ fn collect_cited_param_indices_from_fn_head(
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         FnObjHead::DefAlgo(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
+        FnObjHead::TupleIndex(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
+        FnObjHead::CartIndex(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         FnObjHead::InstantiatedTemplateObj(x) => {

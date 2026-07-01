@@ -409,6 +409,21 @@ tuple_dim((2, 3)) = 2
 (2, 3)[1] = 2
 ```
 
+When the length is already known as an object `n`, use `have tuple` or
+`have cart` to define all coordinates at once. The header `i <= n` binds `i`
+over `closed_range(1, n)`. Litex checks that `n $in N_pos`, that `2 <= n`, and
+that the right side is well-defined before the new name is registered.
+
+```litex
+have n N_pos = 3
+have tuple f by i <= n, f[i] = i
+have cart C by i <= n, proj(C, i) = f[i]
+
+forall i closed_range(1, n):
+    f[i] = i
+    proj(C, i) = f[i]
+```
+
 #### Struct objects and explicit field access
 
 `&Name<args>` is a preview object form for parameterized structs. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
@@ -699,9 +714,9 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Finite sequence literal `[a, b, ...]` | Each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. |
 | Cartesian product `cart(A, B, ...)` and tuple `(a, b, ...)` | Each component must be well-defined. |
 | `cart_dim(C)` | `C` must be well-defined and Litex must prove `$is_cart(C)`. |
-| `proj(C, i)` | `C` must be a Cartesian product, `i` must resolve to a positive integer, and Litex must prove `i <= cart_dim(C)`. |
+| `proj(C, i)` | `C` must be a Cartesian product, `i` must be provably in `N_pos`, and Litex must prove `i <= cart_dim(C)`. Concrete numeric indices are normalized before this check. |
 | `tuple_dim(t)` | `t` must be well-defined and Litex must prove `$is_tuple(t)`. |
-| Indexing `t[i]` | The target must be a tuple, `i` must resolve to a positive integer, and Litex must prove `i <= tuple_dim(t)`. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
+| Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `count(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
 | `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` restricts to a unary function on `S`. |
@@ -1352,6 +1367,25 @@ a = 1
 ```
 
 > Hint: use this for constants. A function should normally be introduced with `have fn`.
+
+---
+
+### Symbolic tuple and cart definitions (`have tuple`, `have cart`)
+
+Use **`have tuple f by i <= n, f[i] = expr`** or
+**`have cart C by i <= n, proj(C, i) = expr`** when the dimension is a known
+object rather than a literal tuple or product length.
+
+```litex
+have n N_pos = 3
+have tuple f by i <= n, f[i] = i
+have cart C by i <= n, proj(C, i) = f[i]
+```
+
+Here `n` must already be introduced, and Litex must be able to prove
+`n $in N_pos` and `2 <= n`. The binder `i <= n` means `i closed_range(1, n)`.
+The right side is checked before the new name is registered, so the definition
+cannot depend on the tuple or cart currently being defined.
 
 ---
 
@@ -2385,6 +2419,8 @@ The sections above explain the common use cases. This table is a quick map of th
 | `abstract_prop` | Declare a predicate symbol without defining it |
 | `have x S` | Introduce an object with a type or set |
 | `have x S = expr` | Introduce a named value |
+| `have tuple f by i <= n, f[i] = expr` | Define a symbolic-length tuple by coordinates |
+| `have cart C by i <= n, proj(C, i) = expr` | Define a symbolic-dimension Cartesian product by factors |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
@@ -2643,6 +2679,8 @@ code, evaluate an expression, or register a reusable proof pattern.
 | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
 | introduce object parameters by type/set | `have x R` |
 | introduce object parameters equal to expressions | `have x R = 1` |
+| define a symbolic-length tuple by coordinates | `have tuple f by i <= n, f[i] = i` |
+| define a symbolic-dimension Cartesian product by factors | `have cart C by i <= n, proj(C, i) = R` |
 | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
 | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
 | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |

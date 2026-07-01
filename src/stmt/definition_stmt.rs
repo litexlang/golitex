@@ -112,6 +112,24 @@ pub struct HaveFnByForallExistUniqueStmt {
 }
 
 #[derive(Clone)]
+pub struct HaveTupleStmt {
+    pub name: String,
+    pub index_name: String,
+    pub dimension: Obj,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct HaveCartStmt {
+    pub name: String,
+    pub index_name: String,
+    pub dimension: Obj,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
 pub struct DefTemplateStmt {
     pub template_name: String,
     pub template_arg_def: ParamDefWithType,
@@ -131,6 +149,8 @@ pub enum TemplateDefEnum {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    HaveTupleStmt(HaveTupleStmt),
+    HaveCartStmt(HaveCartStmt),
 }
 
 // have by exist a R st {$p(a)}: a
@@ -345,6 +365,91 @@ impl fmt::Display for HaveObjEqualStmt {
             self.param_def.to_string(),
             EQUAL,
             vec_to_string_join_by_comma(&self.objs_equal_to)
+        )
+    }
+}
+
+impl HaveTupleStmt {
+    pub fn new(
+        name: String,
+        index_name: String,
+        dimension: Obj,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        HaveTupleStmt {
+            name,
+            index_name,
+            dimension,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "tuple definition"
+    }
+}
+
+impl fmt::Display for HaveTupleStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {} {}, {}[{}] {} {}",
+            HAVE,
+            TUPLE,
+            self.name,
+            BY,
+            self.index_name,
+            LESS_EQUAL,
+            self.dimension,
+            self.name,
+            self.index_name,
+            EQUAL,
+            self.value
+        )
+    }
+}
+
+impl HaveCartStmt {
+    pub fn new(
+        name: String,
+        index_name: String,
+        dimension: Obj,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        HaveCartStmt {
+            name,
+            index_name,
+            dimension,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "cart definition"
+    }
+}
+
+impl fmt::Display for HaveCartStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {} {} {} {}, {}({}, {}) {} {}",
+            HAVE,
+            CART,
+            self.name,
+            BY,
+            self.index_name,
+            LESS_EQUAL,
+            self.dimension,
+            PROJ,
+            self.name,
+            self.index_name,
+            EQUAL,
+            self.value
         )
     }
 }
@@ -577,6 +682,8 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.fn_name.clone()),
+            TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name.clone()),
         }
     }
 
@@ -591,6 +698,8 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveTupleStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::HaveCartStmt(stmt) => stmt.clone().into(),
         }
     }
 }
@@ -607,6 +716,8 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveTupleStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::HaveCartStmt(stmt) => write!(f, "{}", stmt),
         }
     }
 }

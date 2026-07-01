@@ -34,6 +34,8 @@ pub enum DefObjStmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    HaveTupleStmt(HaveTupleStmt),
+    HaveCartStmt(HaveCartStmt),
 }
 
 #[derive(Clone)]

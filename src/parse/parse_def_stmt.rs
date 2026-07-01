@@ -532,6 +532,78 @@ impl Runtime {
         Ok(param_defs)
     }
 
+    pub fn parse_have_tuple_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(TUPLE)?;
+        let name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(BY)?;
+        let index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(LESS_EQUAL)?;
+        let dimension = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+
+        let index_names = vec![index_name.clone()];
+        let (lhs, value) = self.parse_in_local_free_param_scope(
+            ParamObjType::TupleIndex,
+            &index_names,
+            tb.line_file.clone(),
+            |this| {
+                let lhs = this.parse_obj(tb)?;
+                tb.skip_token(EQUAL)?;
+                let value = this.parse_obj(tb)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after have tuple value expression".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                Ok((lhs, value))
+            },
+        )?;
+        validate_have_tuple_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
+
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(HaveTupleStmt::new(name, index_name, dimension, value, tb.line_file.clone()).into())
+    }
+
+    pub fn parse_have_cart_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
+        tb.skip_token(CART)?;
+        let name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(BY)?;
+        let index_name = parse_have_tuple_or_cart_name(tb)?;
+        tb.skip_token(LESS_EQUAL)?;
+        let dimension = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+
+        let index_names = vec![index_name.clone()];
+        let (lhs, value) = self.parse_in_local_free_param_scope(
+            ParamObjType::CartIndex,
+            &index_names,
+            tb.line_file.clone(),
+            |this| {
+                let lhs = this.parse_obj(tb)?;
+                tb.skip_token(EQUAL)?;
+                let value = this.parse_obj(tb)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after have cart value expression".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                Ok((lhs, value))
+            },
+        )?;
+        validate_have_cart_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
+
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(HaveCartStmt::new(name, index_name, dimension, value, tb.line_file.clone()).into())
+    }
+
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
@@ -1282,6 +1354,12 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveTupleStmt(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(stmt)) => {
+                Ok(TemplateDefEnum::HaveCartStmt(stmt))
+            }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "template body only supports `have` and `let` definition statements"
@@ -1291,4 +1369,86 @@ impl Runtime {
             ))),
         }
     }
+}
+
+fn parse_have_tuple_or_cart_name(tb: &mut TokenBlock) -> Result<String, RuntimeError> {
+    let name = tb.advance()?;
+    is_valid_litex_name(&name).map_err(|msg| {
+        RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+        ))
+    })?;
+    Ok(name)
+}
+
+fn validate_have_tuple_lhs(
+    lhs: &Obj,
+    name: &str,
+    index_name: &str,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    let Obj::ObjAtIndex(indexed) = lhs else {
+        return Err(have_tuple_or_cart_parse_error(
+            "have tuple expects left side `name[index]`",
+            line_file,
+        ));
+    };
+    if !is_identifier_named(indexed.obj.as_ref(), name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have tuple left side must index the tuple being defined",
+            line_file,
+        ));
+    }
+    if !is_tuple_index_named(indexed.index.as_ref(), index_name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have tuple left side must use the bound index",
+            line_file,
+        ));
+    }
+    Ok(())
+}
+
+fn validate_have_cart_lhs(
+    lhs: &Obj,
+    name: &str,
+    index_name: &str,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    let Obj::Proj(proj) = lhs else {
+        return Err(have_tuple_or_cart_parse_error(
+            "have cart expects left side `proj(name, index)`",
+            line_file,
+        ));
+    };
+    if !is_identifier_named(proj.set.as_ref(), name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have cart left side must project the cart being defined",
+            line_file,
+        ));
+    }
+    if !is_cart_index_named(proj.dim.as_ref(), index_name) {
+        return Err(have_tuple_or_cart_parse_error(
+            "have cart left side must use the bound index",
+            line_file,
+        ));
+    }
+    Ok(())
+}
+
+fn is_identifier_named(obj: &Obj, name: &str) -> bool {
+    matches!(obj, Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == name)
+}
+
+fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {
+    matches!(obj, Obj::Atom(AtomObj::TupleIndex(index)) if index.name == name)
+}
+
+fn is_cart_index_named(obj: &Obj, name: &str) -> bool {
+    matches!(obj, Obj::Atom(AtomObj::CartIndex(index)) if index.name == name)
+}
+
+fn have_tuple_or_cart_parse_error(msg: &str, line_file: LineFile) -> RuntimeError {
+    RuntimeError::from(ParseRuntimeError(
+        RuntimeErrorStruct::new_with_msg_and_line_file(msg.to_string(), line_file),
+    ))
 }

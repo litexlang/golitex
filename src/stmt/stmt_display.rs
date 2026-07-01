@@ -48,6 +48,8 @@ impl fmt::Display for DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveTupleStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveCartStmt(x) => write!(f, "{}", x),
         }
     }
 }
