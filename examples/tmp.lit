@@ -1,39 +1,8 @@
-import "chap6_sketch.lit" as chap6
-
-
-原来
-
 claim:
-    prove:
-        forall a seq(R), L R:
-            $has_limit(a, L)
-            =>:
-                $is_cauchy_sequence(a)
-    ...
-
-现在
-
-claim:
-    ? forall a seq(R), L R:
-        $has_limit(a, L)
+    ? forall a Z:
+        a % 4 = 0
         =>:
-            $has_limit(a, L)
-    ...
+            a % 2 = 0
 
-原来
-
-thm has_limit_implies_cauchy:
-    prove:
-        forall a seq(R), L R:
-            $has_limit(a, L)
-            =>:
-                $is_cauchy_sequence(a)
-
-现在
-
-thm has_limit_implies_cauchy:
-    ? forall a seq(R), L R:
-        $has_limit(a, L)
-        =>:
-            $is_cauchy_sequence(a)
-
+    have by exist k Z st {a = 4 * k}: k
+    a % 2 = (4 * k) % 2 = ((4 % 2) * (k % 2)) % 2 = 0 * (k % 2) = 0

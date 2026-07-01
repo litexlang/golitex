@@ -32,6 +32,7 @@ pub const LESS_EQUAL: &str = "<=";
 pub const GREATER_EQUAL: &str = ">=";
 pub const RIGHT_ARROW: &str = "=>";
 pub const EQUIVALENT_SIGN: &str = "<=>";
+pub const QUESTION_GOAL: &str = "?";
 pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
@@ -184,6 +185,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         LESS_EQUAL,
         GREATER_EQUAL,
         RIGHT_ARROW,
+        QUESTION_GOAL,
         FACT_PREFIX,
         DOT_AKA_FIELD_ACCESS_SIGN,
         MOD_SIGN,

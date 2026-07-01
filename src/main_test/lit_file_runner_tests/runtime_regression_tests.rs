@@ -784,6 +784,172 @@ claim:
 }
 
 #[test]
+fn internal_claim_prove_block_allows_inline_proof_body() {
+    run_with_large_stack(
+        "internal_claim_prove_block_allows_inline_proof_body",
+        || {
+            let source_code = r#"
+claim:
+    prove:
+        forall x R:
+            x = 1
+            =>:
+                x = 1
+        know x = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "internal_claim_prove_block_allows_inline_proof_body",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "claim prove block with inline proof body should still run:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn question_goal_shorthand_parses_like_prove_goal_blocks() {
+    run_with_large_stack(
+        "question_goal_shorthand_parses_like_prove_goal_blocks",
+        || {
+            let source_code = r#"
+claim:
+    ? 1 = 1
+    1 = 1
+
+thm qgoal_self_eq_thm:
+    ? forall x R:
+        x = x
+    x = x
+
+lemma qgoal_self_eq_lemma:
+    ? forall x R:
+        x = x
+    x = x
+
+have fn qgoal_identity as set:
+    ? forall x R:
+        exist! y R st {y = x}
+    know exist! y R st {y = x}
+    exist! y R st {y = x}
+
+abstract_prop qgoal_p(x)
+know forall x R:
+    $qgoal_p(x)
+
+strategy qgoal_strategy:
+    ? forall x R:
+        $qgoal_p(x)
+    $qgoal_p(x)
+
+by contra:
+    ? 1 = 1
+    1 != 1
+    impossible 1 = 1
+
+by cases:
+    ? 1 = 1
+    ? 2 = 2
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+by extension:
+    ? {1} = {1}
+
+by for:
+    ? forall! n range(0, 3): n < 3
+
+by enumerate finite_set:
+    ? forall! z {1, 2}: z $in {1, 2}
+
+prop qgoal_same_obj(x set, y set):
+    x = y
+
+by symmetric_prop:
+    ? forall x, y set:
+        $qgoal_same_obj(x, y)
+        =>:
+            $qgoal_same_obj(y, x)
+    x = y
+    y = x
+
+abstract_prop qgoal_induc_p(a)
+know $qgoal_induc_p(0)
+know forall m N:
+    $qgoal_induc_p(m)
+    =>:
+        $qgoal_induc_p(m + 1)
+
+by induc n from 0:
+    ? $qgoal_induc_p(n)
+    prove from n = 0:
+        $qgoal_induc_p(0)
+    prove induc:
+        $qgoal_induc_p(n)
+        $qgoal_induc_p(n + 1)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime
+                .new_file_path_new_env_new_name_scope("question_goal_shorthand_parses_like_prove");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "question goal shorthand fixture failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("prove:"),
+                "Display output should still canonicalize goal blocks to prove:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn top_level_question_goal_is_rejected_with_goal_block_hint() {
+    run_with_large_stack(
+        "top_level_question_goal_is_rejected_with_goal_block_hint",
+        || {
+            let source_code = r#"
+? 1 = 1
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("top_level_question_goal_is_rejected");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "top-level question goal should be rejected:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("top-level `?` is not supported"),
+                "top-level question goal should explain supported usage:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn fn_range_intro_subset_and_preimage_work() {
     run_with_large_stack("fn_range_intro_subset_and_preimage_work", || {
         let source_code = r#"

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by extension:` then `prove:` with exactly one equality, plus proof blocks.
+    /// `by extension:` then a `prove:` or `?` goal with exactly one equality, plus proof blocks.
     ///
     /// Shorthand: `by extension A = B:` puts the goal on the header line; body is only proof blocks.
     /// If no proof blocks are needed, `by extension A = B` may omit the trailing colon.
@@ -88,35 +88,15 @@ impl Runtime {
                 )));
             }
 
-            tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-
-            if tb.body[0].body.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by extension: prove: expects exactly one atomic fact block".to_string(),
-                        tb.body[0].line_file.clone(),
-                    ),
-                )));
-            }
-
-            let to_prove_equal_fact = self.parse_atomic_fact(
-                tb.body[0].body.get_mut(0).ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    ))
-                })?,
-                true,
-            )?;
+            let to_prove_equal_fact =
+                self.parse_goal_atomic_fact_block(&mut tb.body[0], "by extension")?;
 
             let (left, right) = match to_prove_equal_fact {
                 AtomicFact::EqualFact(equal_fact) => (equal_fact.left, equal_fact.right),
                 _ => {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "by extension: prove: expects equal fact".to_string(),
+                            "by extension: goal expects equal fact".to_string(),
                             tb.line_file.clone(),
                         ),
                     )));
