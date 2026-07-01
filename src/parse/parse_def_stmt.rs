@@ -641,64 +641,30 @@ impl Runtime {
                 if tb.body.is_empty() {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> as set:` expects a direct `forall` fact or a `prove:` block"
+                            "`have fn <name> as set:` expects a direct `forall` fact, a `prove:` block, or a `?` goal block"
                                 .to_string(),
                             lf,
                         ),
                     )));
                 }
 
-                if tb.body[0].current_token_is_equal_to(PROVE) {
-                    let forall = {
-                        let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+                if tb.body[0].current_token_is_equal_to(PROVE)
+                    || tb.body[0].current_token_is_equal_to(QUESTION_GOAL)
+                {
+                    let (forall, inline_proof_start) = {
+                        let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                             RuntimeError::from(ParseRuntimeError(
                                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "`have fn <name> as set:` expects a `prove:` block".to_string(),
+                                    "`have fn <name> as set:` expects a `prove:` or `?` goal block"
+                                        .to_string(),
                                     lf.clone(),
                                 ),
                             ))
                         })?;
-                        prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-                        if prove_block.body.len() != 1 {
-                            return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "`have fn <name> as set:` `prove:` must contain exactly one `forall` fact"
-                                        .to_string(),
-                                    prove_block.line_file.clone(),
-                                ),
-                            )));
-                        }
-                        let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
-                            RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "`have fn <name> as set:` `prove:` is missing its `forall` fact"
-                                        .to_string(),
-                                    prove_block.line_file.clone(),
-                                ),
-                            ))
-                        })?;
-                        let fact = self.parse_fact(forall_block)?;
-                        match fact {
-                            Fact::ForallFact(ff) => ff,
-                            Fact::ForallFactWithIff(_) => {
-                                return Err(RuntimeError::from(ParseRuntimeError(
-                                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                                        "`have fn <name> as set:` `prove:` does not support `forall ... <=>:`"
-                                            .to_string(),
-                                        forall_block.line_file.clone(),
-                                    ),
-                                )));
-                            }
-                            _ => {
-                                return Err(RuntimeError::from(ParseRuntimeError(
-                                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                                        "`have fn <name> as set:` `prove:` must contain a single `forall` fact"
-                                            .to_string(),
-                                        forall_block.line_file.clone(),
-                                    ),
-                                )));
-                            }
-                        }
+                        self.parse_goal_forall_fact_block_with_inline_proof(
+                            goal_block,
+                            "`have fn <name> as set:`",
+                        )?
                     };
                     let names = forall.params_def_with_type.collect_param_names();
                     let prove_process: Vec<Stmt> = self
@@ -707,11 +673,20 @@ impl Runtime {
                             &names,
                             lf.clone(),
                             |this| {
-                                tb.body
-                                    .iter_mut()
-                                    .skip(1)
-                                    .map(|b| this.parse_stmt(b))
-                                    .collect::<Result<_, _>>()
+                                let mut proof = Vec::new();
+                                if inline_proof_start > 0 {
+                                    if let Some(goal_block) = tb.body.get_mut(0) {
+                                        for block in
+                                            goal_block.body.iter_mut().skip(inline_proof_start)
+                                        {
+                                            proof.push(this.parse_stmt(block)?);
+                                        }
+                                    }
+                                }
+                                for block in tb.body.iter_mut().skip(1) {
+                                    proof.push(this.parse_stmt(block)?);
+                                }
+                                Ok(proof)
                             },
                         )?;
                     return Ok(
@@ -722,7 +697,7 @@ impl Runtime {
                 if tb.body.len() != 1 {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> as set:` expects one direct `forall` fact, or `prove:` followed by one `forall` fact and optional proof body"
+                            "`have fn <name> as set:` expects one direct `forall` fact, or a `prove:`/`?` goal followed by optional proof body"
                                 .to_string(),
                             lf,
                         ),

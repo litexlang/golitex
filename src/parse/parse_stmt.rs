@@ -48,6 +48,12 @@ impl Runtime {
                     tb.line_file.clone(),
                 ),
             ))),
+            QUESTION_GOAL => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "top-level `?` is not supported; use it as a goal block inside claim/thm/by/strategy statements".to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
             IMPORT => self.parse_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),

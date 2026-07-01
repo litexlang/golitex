@@ -501,6 +501,17 @@ claim 1 = 1:
     do_nothing
 ```
 
+```litex
+claim:
+    ? 2 = 2
+    2 = 2
+
+thm question_goal_example:
+    ? forall x R:
+        x = x
+    x = x
+```
+
 ## 17. `exist`
 
 - Category: `fact`

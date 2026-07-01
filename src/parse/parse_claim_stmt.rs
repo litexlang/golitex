@@ -51,7 +51,7 @@ impl Runtime {
                 ),
             )));
         }
-        let fact = {
+        let (fact, inline_proof_start) = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -61,18 +61,8 @@ impl Runtime {
                 ))
             })?;
 
-            first.skip_token(PROVE)?;
-            first.skip_token(COLON)?;
-
-            let body_block = first.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "claim: `prove:` expects exactly one body block (the fact)".to_string(),
-                        first.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let f = self.parse_fact(body_block)?;
+            let (f, inline_proof_start) =
+                self.parse_goal_fact_block_with_inline_proof(first, "claim")?;
             if matches!(&f, Fact::ForallFactWithIff(_)) {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -81,7 +71,7 @@ impl Runtime {
                     ),
                 )));
             }
-            Ok::<Fact, RuntimeError>(f)
+            Ok::<(Fact, usize), RuntimeError>((f, inline_proof_start))
         }?;
 
         let names = collect_forall_param_names_from_facts(std::slice::from_ref(&fact));
@@ -91,11 +81,18 @@ impl Runtime {
             &names,
             lf,
             |this| {
-                tb.body
-                    .iter_mut()
-                    .skip(1)
-                    .map(|b| this.parse_stmt(b))
-                    .collect::<Result<_, _>>()
+                let mut proof = Vec::new();
+                if inline_proof_start > 0 {
+                    if let Some(first) = tb.body.get_mut(0) {
+                        for block in first.body.iter_mut().skip(inline_proof_start) {
+                            proof.push(this.parse_stmt(block)?);
+                        }
+                    }
+                }
+                for block in tb.body.iter_mut().skip(1) {
+                    proof.push(this.parse_stmt(block)?);
+                }
+                Ok(proof)
             },
         )?;
         Ok(ClaimStmt::new(fact, proof, tb.line_file.clone()))

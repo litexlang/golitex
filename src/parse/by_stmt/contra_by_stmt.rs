@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by contra:` then `prove:` block with exactly one fact, optional proof statements, then `impossible` atomic fact.
+    /// `by contra:` then a `prove:` or `?` goal block, optional proof statements, then `impossible` atomic fact.
     ///
     /// Shorthand: `by contra goal:` embeds the goal on the header line; body is optional proof
     /// statement blocks followed by `impossible ...` as the last block.
@@ -71,13 +71,14 @@ impl Runtime {
             if tb.body.len() < 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra: expects prove: block and impossible ... tail".to_string(),
+                        "by contra: expects `prove:` or `?` goal block and impossible ... tail"
+                            .to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
             }
             let to_prove = {
-                let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+                let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                     RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "Expected body".to_string(),
@@ -85,24 +86,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-                prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-                if prove_block.body.len() != 1 {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "by contra: prove: expects exactly one fact block".to_string(),
-                            prove_block.line_file.clone(),
-                        ),
-                    )));
-                }
-                let fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "Expected body".to_string(),
-                            prove_block.line_file.clone(),
-                        ),
-                    ))
-                })?;
-                self.parse_fact(fact_block)?
+                self.parse_goal_fact_block(goal_block, "by contra")?
             };
             (to_prove, false)
         };
@@ -121,7 +105,8 @@ impl Runtime {
         } else if n < 2 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra: expects prove: block and impossible ... tail".to_string(),
+                    "by contra: expects `prove:` or `?` goal block and impossible ... tail"
+                        .to_string(),
                     tb.line_file.clone(),
                 ),
             )));

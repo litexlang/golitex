@@ -24,60 +24,15 @@ impl Runtime {
             )));
         }
 
-        let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+        let goal_block = tb.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by reflexive_prop: expected prove block".to_string(),
+                    "by reflexive_prop: expected `prove:` or `?` goal block".to_string(),
                     tb.line_file.clone(),
                 ),
             ))
         })?;
-        if prove_block.header.get(0).map(|s| s.as_str()) != Some(PROVE) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by reflexive_prop: first block must be `prove:`".to_string(),
-                    prove_block.line_file.clone(),
-                ),
-            )));
-        }
-        prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-        if prove_block.body.len() != 1 {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by reflexive_prop: `prove:` must contain exactly one forall fact".to_string(),
-                    prove_block.line_file.clone(),
-                ),
-            )));
-        }
-
-        let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by reflexive_prop: missing forall block".to_string(),
-                    tb.line_file.clone(),
-                ),
-            ))
-        })?;
-        let fact = self.parse_fact(forall_block)?;
-        let forall_fact = match fact {
-            Fact::ForallFact(ff) => ff,
-            Fact::ForallFactWithIff(_) => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by reflexive_prop: forall with `<=>` is not allowed here".to_string(),
-                        forall_block.line_file.clone(),
-                    ),
-                )));
-            }
-            _ => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by reflexive_prop: `prove:` must be a single `forall` fact".to_string(),
-                        forall_block.line_file.clone(),
-                    ),
-                )));
-            }
-        };
+        let forall_fact = self.parse_goal_forall_fact_block(goal_block, "by reflexive_prop")?;
 
         let shape_check =
             ByReflexivePropStmt::new(forall_fact.clone(), Vec::new(), tb.line_file.clone())

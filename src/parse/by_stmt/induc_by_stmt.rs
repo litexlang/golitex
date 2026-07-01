@@ -33,23 +33,25 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "induc: expects prove: block".to_string(),
+                    "induc: expects `prove:` or `?` goal block".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
 
-        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-
-        if tb.body[0].body.is_empty() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "induc prove: expects at least one fact to prove".to_string(),
-                    tb.body[0].line_file.clone(),
-                ),
-            )));
-        }
-
+        let question_goal_count = if tb.body[0].current_token_is_equal_to(QUESTION_GOAL) {
+            tb.body
+                .iter()
+                .take_while(|block| block.current_token_is_equal_to(QUESTION_GOAL))
+                .count()
+        } else {
+            0
+        };
+        let goal_body_skip = if question_goal_count > 0 {
+            question_goal_count
+        } else {
+            1
+        };
         let prove_line = tb.body[0].line_file.clone();
         let induc_param = [param.clone()];
         let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
@@ -58,6 +60,26 @@ impl Runtime {
             &induc_param,
             prove_line,
             |this| {
+                if question_goal_count > 0 {
+                    for block in tb.body.iter_mut().take(question_goal_count) {
+                        to_prove.push(
+                            this.parse_question_goal_exist_or_and_chain_atomic_fact(
+                                block, "induc",
+                            )?,
+                        );
+                    }
+                    return Ok(());
+                }
+
+                tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+                if tb.body[0].body.is_empty() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "induc prove: expects at least one fact to prove".to_string(),
+                            tb.body[0].line_file.clone(),
+                        ),
+                    )));
+                }
                 for block in tb.body[0].body.iter_mut() {
                     to_prove.push(this.parse_exist_or_and_chain_atomic_fact(block)?);
                 }
@@ -70,7 +92,7 @@ impl Runtime {
             ParamObjType::Induc,
             &induc_param,
             proof_line,
-            |this| this.parse_induc_proof_blocks(tb, &param, &induc_from, strong),
+            |this| this.parse_induc_proof_blocks(tb, &param, &induc_from, strong, goal_body_skip),
         )?;
 
         Ok(ByInducStmt::new(
@@ -92,6 +114,7 @@ impl Runtime {
         param: &str,
         induc_from: &Obj,
         strong: bool,
+        goal_body_skip: usize,
     ) -> Result<(Vec<Stmt>, Option<Vec<Stmt>>, Option<Vec<Stmt>>), RuntimeError> {
         let mut proof: Vec<Stmt> = Vec::new();
         let mut base_proof: Option<Vec<Stmt>> = None;
@@ -99,7 +122,7 @@ impl Runtime {
         let mut structured_proof_seen = false;
         let step_keyword = Self::induc_step_proof_keyword(strong);
 
-        for block in tb.body.iter_mut().skip(1) {
+        for block in tb.body.iter_mut().skip(goal_body_skip) {
             if Self::is_induc_base_proof_block(block) {
                 structured_proof_seen = true;
                 if !proof.is_empty() {

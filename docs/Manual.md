@@ -1599,7 +1599,7 @@ forall x A:
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The older direct form `have fn f as set: forall ...` is still accepted for compatibility.
+> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block. The older direct form `have fn f as set: forall ...` is still accepted for compatibility.
 
 > Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
@@ -1734,6 +1734,11 @@ claim:
         2 = 2
     2 = 2
 
+# shorthand for an ordinary single-goal prove block
+claim:
+    ? 2 = 2
+    2 = 2
+
 # inline claim: put the goal on the header line
 claim 3 = 3:
     3 = 3
@@ -1748,7 +1753,9 @@ claim forall! x R => {x = x}:
 
 **`thm name:`** and **`lemma name:`** both define a named verified `forall`
 fact. Their `prove:` block must contain exactly one `forall` fact, followed by
-the proof steps that establish its conclusions.
+the proof steps that establish its conclusions. For ordinary single-goal
+blocks, `? forall ...` is accepted as shorthand for that `prove:` block; Litex
+still displays the canonical form as `prove:`.
 
 The difference is how the result is reused:
 
@@ -1772,6 +1779,11 @@ thm self_eq_named:
     x = x
 
 by thm self_eq_named(1)
+
+thm self_eq_question_goal:
+    ? forall x R:
+        x = x
+    x = x
 
 lemma self_eq_named_auto:
     prove:
@@ -1836,7 +1848,7 @@ know:
 
 **`sketch:`** opens a checked local block: a nested list of statements closed before the outer environment continues.
 
-It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`.
+It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
 
 `sketch:` is the canonical top-level spelling for this checked sandbox. Older
 notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
@@ -2203,7 +2215,7 @@ by extension {1, 2} = {2, 1}:
 by extension {1} = {1}
 ```
 
-Long form (still supported):
+Long form (still supported; the first body block may also be written as `? {1, 2} = {2, 1}`):
 
 ```litex
 by extension:
@@ -2226,7 +2238,7 @@ by extension:
 
 ### Register a reflexive predicate (`by reflexive_prop`)
 
-Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The `prove:` block must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
+Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
 
 After the proof succeeds, Litex records that predicate as reflexive in the current environment. Later, if a positive goal `$p(a, a)` is still unproved after the usual steps, Litex can close it from the reflexive registration.
 
@@ -2248,7 +2260,7 @@ $same_obj(a, a)
 
 ### Register a transitive predicate (`by transitive_prop`)
 
-Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
 After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
 
@@ -2333,7 +2345,7 @@ See the `by_axiom_of_choice` section of `examples/01_proof_patterns/README.md`.
 
 ### Register a symmetric predicate (`by symmetric_prop`)
 
-Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
+Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the ordinary goal block (`prove:` or `?`) is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
@@ -2363,7 +2375,7 @@ forall a, b set:
 
 ### Register an antisymmetric predicate (`by antisymmetric_prop`)
 
-Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The `prove:` block must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
+Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
 
 After the proof succeeds, Litex records that predicate as antisymmetric in the current environment. Later, if an equality goal `a = b` is still unproved after the usual equality rules, Litex can close it from the two verified facts `$p(a, b)` and `$p(b, a)`.
 
