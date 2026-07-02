@@ -12,6 +12,9 @@ use super::helper::{
     spawn_with_large_stack, CITE_STD_EXAMPLES_SUBDIR,
 };
 use super::mechanics_markdown_runner::run_the_mechanics_markdown_files_impl;
+use super::runtime_regression_tests::run_runtime_contract_suite_impl;
+
+const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "scripts/analysis-one/chapters_in_litex";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -114,7 +117,7 @@ fn run_all_include_std() {
 }
 
 fn run_all_impl() {
-    run_all_parallel_impl(false);
+    run_all_parallel_impl(true);
 }
 
 fn run_all_include_std_impl() {
@@ -129,10 +132,14 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         );
         run_examples_impl(include_std_examples);
         run_the_mechanics_markdown_files_impl();
+        run_analysis_one_chapters_impl();
+        run_runtime_contract_suite_impl();
         return;
     }
 
-    println!("--- run_all: running examples, docs, and Mechanics markdown in parallel ---");
+    println!(
+        "--- run_all: running examples, docs, Mechanics markdown, Analysis I chapters, and runtime contracts in parallel ---"
+    );
     let wall_start = Instant::now();
     let mut handles = Vec::new();
     handles.push((
@@ -150,6 +157,20 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         spawn_with_large_stack(
             "run_all_mechanics_large_stack",
             run_the_mechanics_markdown_files_impl,
+        ),
+    ));
+    handles.push((
+        "Analysis I chapters",
+        spawn_with_large_stack(
+            "run_all_analysis_one_chapters_large_stack",
+            run_analysis_one_chapters_impl,
+        ),
+    ));
+    handles.push((
+        "runtime contracts",
+        spawn_with_large_stack(
+            "run_all_runtime_contracts_large_stack",
+            run_runtime_contract_suite_impl,
         ),
     ));
 
@@ -191,6 +212,120 @@ fn run_the_mechanics_of_litex_proof() {
 
 fn run_the_mechanics_of_litex_proof_impl() {
     run_the_mechanics_markdown_files_impl();
+}
+
+#[test]
+fn run_analysis_one_chapters() {
+    run_with_large_stack(
+        "run_analysis_one_chapters_large_stack",
+        run_analysis_one_chapters_impl,
+    );
+}
+
+fn run_analysis_one_chapters_impl() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let lit_file_paths =
+        collect_lit_files_recursive_under(&manifest_dir, ANALYSIS_ONE_CHAPTERS_SUBDIR);
+    assert!(
+        !lit_file_paths.is_empty(),
+        "{} must contain at least one .lit file",
+        ANALYSIS_ONE_CHAPTERS_SUBDIR
+    );
+
+    let mut groups = Vec::new();
+    for lit_file_path in lit_file_paths.iter() {
+        let lit_file_path_str = match lit_file_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", lit_file_path),
+        };
+        let file_label_for_report = match lit_file_path.strip_prefix(&manifest_dir) {
+            Ok(rel) => rel.display().to_string(),
+            Err(_) => lit_file_path.display().to_string(),
+        };
+        let source_code = match fs::read_to_string(lit_file_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
+        };
+        let group_index = groups.len();
+        groups.push(LitexRunGroup {
+            group_index,
+            group_label: file_label_for_report.clone(),
+            items: vec![LitexRunItem {
+                report_label: file_label_for_report,
+                source: source_code,
+                path_for_runtime: lit_file_path_str.to_string(),
+            }],
+        });
+    }
+
+    let group_count = groups.len();
+    println!(
+        "--- Analysis I chapters: running {} .lit file(s) in parallel ---",
+        group_count
+    );
+    let wall_start = Instant::now();
+    let mut handles = Vec::new();
+    for group in groups {
+        let thread_name = format!("run_analysis_one_chapter_group_{}", group.group_index);
+        handles.push(spawn_with_large_stack(thread_name.as_str(), move || {
+            run_litex_run_group(group)
+        }));
+    }
+
+    let mut group_summaries = Vec::new();
+    for handle in handles {
+        match handle.join() {
+            Ok(summary) => group_summaries.push(summary),
+            Err(panic_payload) => {
+                let panic_message = panic_payload_to_string(panic_payload);
+                group_summaries.push(LitexRunGroupSummary {
+                    group_index: usize::MAX,
+                    run_durations_ms: Vec::new(),
+                    failed_labels: vec!["Analysis I chapters worker panic".to_string()],
+                    failure_outputs: vec![format!(
+                        "=== [PANICKED] Analysis I chapters worker ===\n{}",
+                        panic_message
+                    )],
+                });
+            }
+        }
+    }
+
+    group_summaries.sort_by_key(|summary| summary.group_index);
+    let mut run_durations_ms: Vec<(String, f64)> = Vec::new();
+    let mut failed_labels: Vec<String> = Vec::new();
+    let mut failure_outputs: Vec<String> = Vec::new();
+    for summary in group_summaries {
+        run_durations_ms.extend(summary.run_durations_ms);
+        failed_labels.extend(summary.failed_labels);
+        failure_outputs.extend(summary.failure_outputs);
+    }
+
+    if failed_labels.is_empty() {
+        println!(
+            "--- Analysis I chapters: {} .lit file(s), all OK ({:.2} ms wall) ---",
+            run_durations_ms.len(),
+            wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        print_slowest_run_labels("Analysis I chapter runs", run_durations_ms.as_slice());
+        for (label, duration_ms) in run_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    } else {
+        print_slowest_run_labels(
+            "Analysis I chapter runs before failure",
+            run_durations_ms.as_slice(),
+        );
+        for output in failure_outputs.iter() {
+            println!("{}", output);
+        }
+    }
+
+    assert!(
+        failed_labels.is_empty(),
+        "Analysis I chapter run(s) failed: {}",
+        failed_labels.join(", ")
+    );
 }
 
 fn run_examples_impl(include_std_examples: bool) {
