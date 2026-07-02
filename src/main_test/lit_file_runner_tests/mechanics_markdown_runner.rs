@@ -6,9 +6,9 @@ use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
 use super::helper::{
-    collect_markdown_files_under_dir_sorted, litex_snippets_from_markdown_files,
-    run_single_the_mechanics_chapter_markdown_file_impl, run_with_large_stack,
-    spawn_with_large_stack, the_mechanics_dir, THE_MECHANICS_SUBDIR,
+    collect_markdown_files_under_dir_sorted, format_litex_failure_location,
+    litex_snippets_from_markdown_files, run_single_the_mechanics_chapter_markdown_file_impl,
+    run_with_large_stack, spawn_with_large_stack, the_mechanics_dir, THE_MECHANICS_SUBDIR,
 };
 
 #[derive(Debug)]
@@ -320,11 +320,17 @@ fn run_the_mechanics_markdown_file_snippets(
             } else {
                 "FAILED"
             };
+            let failure_location = format_litex_failure_location(label, &runtime_error);
             failure_outputs.push(format!(
-                "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
-                status_label, THE_MECHANICS_SUBDIR, duration_ms, run_output, status_label, label
+                "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} location: {}\n",
+                status_label,
+                THE_MECHANICS_SUBDIR,
+                duration_ms,
+                run_output,
+                status_label,
+                failure_location
             ));
-            failed_labels.push(label.clone());
+            failed_labels.push(failure_location);
             break;
         }
         snippet_durations_ms.push((label.clone(), duration_ms));
