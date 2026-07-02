@@ -60,11 +60,7 @@ attempts. The goal is to make ordinary mathematical reasoning precise enough
 for machine feedback while preserving the structure and appearance of
 mathematical reasoning itself.
 
-*We want Litex to become a first language for learning formalization: readable enough that even a curious ten-year-old can follow the core idea*. Before
-learning a mature formal system such as Lean, Coq, or Isabelle, a learner can
-use Litex to get the basic feeling of formalization: state a mathematical fact,
-ask the checker whether it follows, read the output, and grow a verified
-context one line at a time.
+*We want Litex to become a first language for learning formalization: readable enough that even a curious ten-year-old can follow the core idea. Since a 10-year-old can verify his math homework, and a formal language is used for math verification, it is reasonable to expect that we can develop a formal language that is readable enough that even a curious ten-year-old can follow the core idea.*
 
 Because Litex output supports multiple languages (简体中文, 繁體中文, 日本語,
 English, 한국어, Español, Français, Deutsch, Português, Русский, العربية,
@@ -404,5 +400,11 @@ The path of Litex is a deliberate trade-off. Litex accepts a larger trusted
 implementation than small-kernel systems in order to make the proof surface
 lighter. The system tries to do more routine checking in the verifier so users
 can spend more of their attention on the mathematical sequence of facts. This uniqueness is the core value of Litex as a proof assistant, but it also makes contribution to Litex more difficult and demanding. We welcome young talents to try Litex and contribute to it.
+
+Before
+learning a mature formal system such as Lean, Coq, or Isabelle, a learner can
+use Litex to get the basic feeling of formalization: state a mathematical fact,
+ask the checker whether it follows, read the output, and grow a verified
+context one line at a time.
 
 Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their support and advice. I am sure this list will keep growing.
