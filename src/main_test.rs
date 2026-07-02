@@ -2,6 +2,7 @@
 // cargo test run_examples_include_std -- --ignored --nocapture
 // cargo test run_docs_markdown_files -- --nocapture
 // cargo test run_the_mechanics_markdown_files -- --nocapture
+// cargo test run_analysis_one_chapters -- --nocapture
 // cargo test run_minif2f_litex_finished -- --nocapture
 // cargo test run_math500_litex_finished -- --nocapture
 // cargo test run_all -- --nocapture

@@ -23,6 +23,98 @@ fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
     );
 }
 
+pub(super) fn run_runtime_contract_suite_impl() {
+    println!("--- runtime contracts: running selected runtime/output smoke tests ---");
+    runtime_contract_import_run_file_and_clear();
+    unquoted_run_file_is_rejected();
+    unknown_fact_failure_has_structured_output_fields();
+    latex_output_is_fragment_without_default_packages();
+    python_extractor_outputs_supported_have_subset();
+    detail_output_keeps_composite_fact_step_metadata();
+    println!("--- runtime contracts: all selected smoke tests OK ---");
+}
+
+fn runtime_contract_import_run_file_and_clear() {
+    let suffix = std::process::id();
+
+    let module_dir = std::env::temp_dir().join(format!("litex-run-all-contract-import-{}", suffix));
+    fs::create_dir_all(&module_dir).expect("create runtime contract import module");
+    fs::write(
+        module_dir.join("main.lit"),
+        "abstract_prop imported_prop(x)\nknow forall x R:\n    $imported_prop(x)\n",
+    )
+    .expect("write runtime contract import module");
+    let import_source_code = format!(
+        "import \"{}\" as Trusted\n$Trusted::imported_prop(2)",
+        module_dir.to_string_lossy()
+    );
+
+    let mut import_runtime = Runtime::new_with_builtin_code();
+    import_runtime.new_file_path_new_env_new_name_scope("runtime_contract_import");
+    import_runtime.strict_mode = true;
+    let (import_stmt_results, import_runtime_error) =
+        run_source_code(import_source_code.as_str(), &mut import_runtime);
+    let (import_run_succeeded, import_run_output) = render_run_source_code_output(
+        &import_runtime,
+        &import_stmt_results,
+        &import_runtime_error,
+        false,
+    );
+    let _ = fs::remove_dir_all(&module_dir);
+    assert!(
+        import_run_succeeded,
+        "runtime contract import fixture failed:\n{}",
+        import_run_output
+    );
+
+    let run_file_path =
+        std::env::temp_dir().join(format!("litex-run-all-contract-run-file-{}.lit", suffix));
+    fs::write(
+        &run_file_path,
+        "abstract_prop run_file_prop(x)\nknow forall x R:\n    $run_file_prop(x)\n",
+    )
+    .expect("write runtime contract run_file fixture");
+    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+    let run_file_source_code = format!("run_file \"{}\"\n$run_file_prop(2)", run_file_path_string);
+
+    let mut run_file_runtime = Runtime::new_with_builtin_code();
+    run_file_runtime.new_file_path_new_env_new_name_scope("runtime_contract_run_file");
+    let (run_file_stmt_results, run_file_runtime_error) =
+        run_source_code(run_file_source_code.as_str(), &mut run_file_runtime);
+    let (run_file_succeeded, run_file_output) = render_run_source_code_output(
+        &run_file_runtime,
+        &run_file_stmt_results,
+        &run_file_runtime_error,
+        false,
+    );
+    assert!(
+        run_file_succeeded,
+        "runtime contract run_file fixture failed:\n{}",
+        run_file_output
+    );
+
+    let clear_source_code = format!(
+        "run_file \"{}\"\nclear\n$run_file_prop(2)",
+        run_file_path_string
+    );
+    let mut clear_runtime = Runtime::new_with_builtin_code();
+    clear_runtime.new_file_path_new_env_new_name_scope("runtime_contract_clear");
+    let (clear_stmt_results, clear_runtime_error) =
+        run_source_code(clear_source_code.as_str(), &mut clear_runtime);
+    let (clear_succeeded, clear_output) = render_run_source_code_output(
+        &clear_runtime,
+        &clear_stmt_results,
+        &clear_runtime_error,
+        false,
+    );
+    let _ = fs::remove_file(&run_file_path);
+    assert!(
+        !clear_succeeded,
+        "runtime contract clear fixture should drop run_file facts:\n{}",
+        clear_output
+    );
+}
+
 #[test]
 fn builtin_rules_do_not_call_full_verifier_pipeline() {
     let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

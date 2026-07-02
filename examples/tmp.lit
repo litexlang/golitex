@@ -1,19 +1,9 @@
-claim:
-    prove:
-        forall n N:
-            2 * n $in even_N
-    witness exist k N st {2 * n = 2 * k} from n:
-        2 * n = 2 * n
-    $is_even_nat(2 * n)
-    2 * n $in {m N: $is_even_nat(m)}
-    2 * n $in even_N
+abstract_prop p(x, y)
 
-claim:
-    ? forall n N:
-        2 * n $in even_N
+thm xxx:
+    ? forall x, y set:
+        $p(x, y)
 
-    witness exist k N st {2 * n = 2 * k} from n:
-        2 * n = 2 * n
-    $is_even_nat(2 * n)
-    2 * n $in {m N: $is_even_nat(m)}
-    2 * n $in even_N
+    know $p(x, y)
+
+$p(1, 2)
