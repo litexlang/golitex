@@ -7,9 +7,10 @@ use crate::prelude::*;
 
 use super::helper::{
     collect_lit_files_recursive_under, collect_lit_files_recursive_under_excluding,
-    collect_markdown_files_under_dir_sorted, litex_snippets_from_markdown_files,
-    print_known_forall_profile_summary, print_slowest_run_labels, run_with_large_stack,
-    spawn_with_large_stack, CITE_STD_EXAMPLES_SUBDIR,
+    collect_markdown_files_under_dir_sorted, format_litex_failure_location,
+    litex_snippets_from_markdown_files, print_known_forall_profile_summary,
+    print_slowest_run_labels, run_with_large_stack, spawn_with_large_stack,
+    CITE_STD_EXAMPLES_SUBDIR,
 };
 use super::mechanics_markdown_runner::run_the_mechanics_markdown_files_impl;
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
@@ -528,14 +529,16 @@ fn run_examples_phase1_sequential_with_runtime(
                 every_file_run_ok = false;
                 file_label_and_duration_ms_list
                     .push((item.report_label.clone(), duration_ms_for_one_file));
+                let failure_location =
+                    format_litex_failure_location(&item.report_label, &runtime_error);
                 let slowest_title = format!("{} runs before failure", phase_label);
                 print_slowest_run_labels(
                     slowest_title.as_str(),
                     file_label_and_duration_ms_list.as_slice(),
                 );
                 println!(
-                    "=== [{}] {} ===\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                    "FAILED", item.report_label, run_output, item.report_label
+                    "=== [{}] {} ===\n{}\n>>> FAILED location: {}\n",
+                    "FAILED", failure_location, run_output, failure_location
                 );
                 break;
             }
@@ -657,11 +660,12 @@ fn run_docs_markdown_with_runtime(
         doc_durations_ms.push((label.clone(), duration_ms));
 
         if !run_succeeded {
+            let failure_location = format_litex_failure_location(label, &runtime_error);
             let slowest_title = format!("{} snippets before failure", docs_label);
             print_slowest_run_labels(slowest_title.as_str(), doc_durations_ms.as_slice());
             panic!(
-                "{} litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                docs_label, run_output, label
+                "{} litex snippet FAILED at {}:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                docs_label, failure_location, run_output, failure_location
             );
         }
     }
@@ -846,11 +850,13 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         run_durations_ms.push((item.report_label.clone(), duration_ms));
 
         if !run_succeeded {
+            let failure_location =
+                format_litex_failure_location(&item.report_label, &runtime_error);
             failure_outputs.push(format!(
-                "=== [FAILED] {} ({:.2} ms) ===\n{}\n>>> FAILED snippet (open here): {}\n",
-                group.group_label, duration_ms, run_output, item.report_label
+                "=== [FAILED] {} ({:.2} ms) ===\n{}\n>>> FAILED location: {}\n",
+                failure_location, duration_ms, run_output, failure_location
             ));
-            failed_labels.push(item.report_label.clone());
+            failed_labels.push(failure_location);
             break;
         }
     }

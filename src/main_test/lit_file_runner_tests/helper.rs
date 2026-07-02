@@ -48,6 +48,70 @@ pub(super) fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 's
     spawn_with_large_stack(test_name, f).join().unwrap();
 }
 
+pub(super) fn format_litex_failure_location(
+    report_label: &str,
+    runtime_error: &Option<RuntimeError>,
+) -> String {
+    let Some(error) = runtime_error.as_ref() else {
+        return report_label.to_string();
+    };
+
+    let outer_line_number = error.line_file().0;
+    let line_number = deepest_runtime_error_line(error);
+    if line_number == 0 {
+        return report_label.to_string();
+    }
+
+    let outer_line_suffix = if outer_line_number > 0 && outer_line_number != line_number {
+        format!(" (outer line {})", outer_line_number)
+    } else {
+        String::new()
+    };
+
+    if report_label.contains("```litex```") {
+        format!(
+            "{}; snippet line {}{}",
+            report_label, line_number, outer_line_suffix
+        )
+    } else {
+        format!("{}:{}{}", report_label, line_number, outer_line_suffix)
+    }
+}
+
+fn deepest_runtime_error_line(error: &RuntimeError) -> usize {
+    let (line_number, previous_error) = runtime_error_line_and_previous(error);
+    match previous_error {
+        Some(previous_error) => {
+            let previous_line_number = deepest_runtime_error_line(previous_error);
+            if previous_line_number > 0 {
+                previous_line_number
+            } else {
+                line_number
+            }
+        }
+        None => line_number,
+    }
+}
+
+fn runtime_error_line_and_previous(error: &RuntimeError) -> (usize, Option<&RuntimeError>) {
+    match error {
+        RuntimeError::ArithmeticError(error)
+        | RuntimeError::NewFactError(error)
+        | RuntimeError::StoreFactError(error)
+        | RuntimeError::ParseError(error)
+        | RuntimeError::ExecStmtError(error)
+        | RuntimeError::WellDefinedError(error)
+        | RuntimeError::VerifyError(error)
+        | RuntimeError::UnknownError(error)
+        | RuntimeError::InferError(error)
+        | RuntimeError::NameAlreadyUsedError(error)
+        | RuntimeError::DefineParamsError(error)
+        | RuntimeError::InstantiateError(error) => {
+            (error.line_file.0, error.previous_error.as_deref())
+        }
+    }
+}
+
 pub(super) fn the_mechanics_dir(manifest_dir: &Path) -> PathBuf {
     manifest_dir.join(THE_MECHANICS_SUBDIR)
 }
@@ -204,9 +268,10 @@ pub(super) fn run_single_the_mechanics_chapter_markdown_file_impl(
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         if !run_succeeded {
+            let failure_location = format_litex_failure_location(label, &runtime_error);
             panic!(
-                "{} markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                chapter_label, run_output, label
+                "{} markdown litex snippet FAILED at {}:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                chapter_label, failure_location, run_output, failure_location
             );
         }
 
