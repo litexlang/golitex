@@ -2,9 +2,13 @@
 // transitivity theorems, and difference characterization (`a - b` vs `0`).
 // Order closure under +, -, *, / on general inequalities is in `order_algebra_builtin.rs`.
 
+// Real-line trichotomy in common display orders.
+// Example: `forall x, y R: x = y or x < y or x > y`.
 pub const KNOW_REAL_LINE_TRICHOTOMY: &str = r#"
 know:
     forall a, b R:
+        a = b or a < b or a > b
+        a = b or a > b or a < b
         a < b or a = b or a > b
         a > b or a = b or a < b
         a < b or a >= b

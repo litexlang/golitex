@@ -48,6 +48,9 @@ impl Runtime {
         let AtomicFact::LessFact(f) = &norm else {
             return Ok(None);
         };
+        if let Some(result) = self.try_verify_abs_positive_from_arg_nonzero(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
         if let Some(result) =
             self.try_verify_abs_upper_bound(&f.left, &f.right, &f.line_file, atomic_fact, true)?
         {
@@ -68,6 +71,17 @@ impl Runtime {
 
 fn literal_neg_one_obj() -> Obj {
     Obj::Number(Number::new("-1".to_string()))
+}
+
+fn literal_zero_obj() -> Obj {
+    Obj::Number(Number::new("0".to_string()))
+}
+
+fn obj_is_literal_zero(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(n) => n.normalized_value == "0",
+        _ => false,
+    }
 }
 
 fn obj_is_literal_neg_one(obj: &Obj) -> bool {
@@ -190,6 +204,38 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "abs: x <= abs(x) and -x <= abs(x)".to_string(),
                 Vec::new(),
+            ),
+        )))
+    }
+
+    // Absolute values of nonzero real expressions are strictly positive.
+    // Example: `forall x R: x != 0 => abs(x) > 0`.
+    fn try_verify_abs_positive_from_arg_nonzero(
+        &mut self,
+        f: &LessFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !obj_is_literal_zero(&f.left) {
+            return Ok(None);
+        }
+        let Obj::Abs(abs) = &f.right else {
+            return Ok(None);
+        };
+        let arg_nonzero: AtomicFact = NotEqualFact::new(
+            abs.arg.as_ref().clone(),
+            literal_zero_obj(),
+            f.line_file.clone(),
+        )
+        .into();
+        let nonzero_result = self.verify_abs_order_subgoal(arg_nonzero)?;
+        if !nonzero_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "abs: 0 < abs(x) from x != 0".to_string(),
+                vec![nonzero_result],
             ),
         )))
     }

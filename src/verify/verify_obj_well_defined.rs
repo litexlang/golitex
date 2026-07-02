@@ -72,6 +72,7 @@ impl Runtime {
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
+            Obj::Replacement(x) => self.verify_replacement_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
@@ -125,6 +126,8 @@ impl Runtime {
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
             Obj::Atom(AtomObj::DefStructField(_)) => Ok(()),
+            Obj::Atom(AtomObj::TupleIndex(_)) => Ok(()),
+            Obj::Atom(AtomObj::CartIndex(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -1304,16 +1307,12 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
-        let projection_dimension_number = self.resolve_obj_to_number(&x.dim).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "projection dimension {} is not a number",
-                    x.dim
-                )),
-            ))
-        })?;
         let projection_dimension_obj: Obj =
-            Number::new(projection_dimension_number.normalized_value).into();
+            if let Some(projection_dimension_number) = self.resolve_obj_to_number(&x.dim) {
+                Number::new(projection_dimension_number.normalized_value).into()
+            } else {
+                (*x.dim).clone()
+            };
 
         let projection_dimension_is_positive_integer_fact = InFact::new(
             projection_dimension_obj.clone(),
@@ -1460,6 +1459,89 @@ impl Runtime {
         }
     }
 
+    fn verify_replacement_well_defined(
+        &mut self,
+        x: &Replacement,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let prop_arity = self.replacement_prop_arity(x)?;
+        if prop_arity != 2 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "replacement({}, {}) expects a binary prop, but `{}` has arity {}",
+                    x.prop_name, x.source_set, x.prop_name, prop_arity
+                )),
+            )));
+        }
+
+        self.verify_obj_well_defined_and_store_cache(&x.source_set, verify_state)?;
+        let uniqueness_fact = self.replacement_uniqueness_fact(x)?;
+        if self
+            .verify_fact_from_cache_using_display_string(&uniqueness_fact.clone().into())
+            .is_none()
+        {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "replacement({}, {}) needs uniqueness of `{}` over `{}`: {}",
+                    x.prop_name, x.source_set, x.prop_name, x.source_set, uniqueness_fact
+                )),
+            )));
+        }
+        Ok(())
+    }
+
+    fn replacement_prop_arity(&self, x: &Replacement) -> Result<usize, RuntimeError> {
+        let prop_name = x.prop_name.to_string();
+        if let Some(definition) = self.get_prop_definition_by_name(&prop_name) {
+            return Ok(definition.params_def_with_type.number_of_params());
+        }
+        if let Some(definition) = self.get_abstract_prop_definition_by_name(&prop_name) {
+            return Ok(definition.params.len());
+        }
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "replacement({}, {}) expects `{}` to be a user-defined prop or abstract_prop",
+                x.prop_name, x.source_set, x.prop_name
+            )),
+        )))
+    }
+
+    fn replacement_uniqueness_fact(&self, x: &Replacement) -> Result<ForallFact, RuntimeError> {
+        let x_name = "x".to_string();
+        let y_name = "y".to_string();
+        let y2_name = "y2".to_string();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+        let y2_obj = obj_for_bound_param_in_scope(y2_name.clone(), ParamObjType::Forall);
+        let line_file = default_line_file();
+
+        ForallFact::new(
+            ParamDefWithType::new(vec![
+                ParamGroupWithParamType::new(
+                    vec![x_name],
+                    ParamType::Obj(x.source_set.as_ref().clone()),
+                ),
+                ParamGroupWithParamType::new(vec![y_name, y2_name], ParamType::Set(Set::new())),
+            ]),
+            vec![
+                NormalAtomicFact::new(
+                    x.prop_name.clone(),
+                    vec![x_obj.clone(), y_obj.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+                NormalAtomicFact::new(
+                    x.prop_name.clone(),
+                    vec![x_obj, y2_obj.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+            ],
+            vec![EqualFact::new(y_obj, y2_obj, line_file.clone()).into()],
+            line_file,
+        )
+    }
+
     fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
@@ -1469,14 +1551,14 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                "sum: cannot verify start <= end for the summation range".to_string(),
-            )?;
-        }
+        // A finite range sum is only well-defined on a nonempty integer interval.
+        // Example: `sum(1, 3, 'Z(i){i})` is valid, but `sum(m, m - 1, f)` is not.
+        self.require_less_equal_verified(
+            &x.start,
+            &x.end,
+            verify_state,
+            "sum: cannot verify start <= end for the summation range".to_string(),
+        )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -1718,14 +1800,14 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                "product: cannot verify start <= end for the product range".to_string(),
-            )?;
-        }
+        // A finite range product is only well-defined on a nonempty integer interval.
+        // Example: `product(1, 3, 'Z(i){i})` is valid, but `product(m, m - 1, f)` is not.
+        self.require_less_equal_verified(
+            &x.start,
+            &x.end,
+            verify_state,
+            "product: cannot verify start <= end for the product range".to_string(),
+        )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -1847,7 +1929,7 @@ impl Runtime {
                         ))
                     })?;
             }
-            let k: Obj = Identifier::new(pname).into();
+            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
             );
@@ -2013,7 +2095,7 @@ impl Runtime {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
                     })?;
             }
-            let k: Obj = Identifier::new(pname).into();
+            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
             );
@@ -2498,16 +2580,12 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
-        let index_calculated_number = self.resolve_obj_to_number(&x.index).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "index {} is not a number",
-                    x.index.to_string()
-                )),
-            ))
-        })?;
         let index_calculated_obj: Obj =
-            Number::new(index_calculated_number.normalized_value).into();
+            if let Some(index_calculated_number) = self.resolve_obj_to_number(&x.index) {
+                Number::new(index_calculated_number.normalized_value).into()
+            } else {
+                (*x.index).clone()
+            };
 
         let index_is_positive_integer_in_z_pos_fact = InFact::new(
             index_calculated_obj.clone(),

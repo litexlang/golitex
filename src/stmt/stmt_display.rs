@@ -48,6 +48,11 @@ impl fmt::Display for DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveTupleStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveCartStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveSeqStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveFiniteSeqStmt(x) => write!(f, "{}", x),
+            DefObjStmt::HaveMatrixStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -96,6 +101,7 @@ impl fmt::Display for ByStmt {
             ByStmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             ByStmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
             ByStmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
+            ByStmt::ByRegularityAxiomStmt(x) => write!(f, "{}", x),
             ByStmt::ByThmStmt(x) => write!(f, "{}", x),
         }
     }
@@ -115,6 +121,7 @@ impl fmt::Display for ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(x) => write!(f, "{}", x),
             ProofBlockStmt::SketchStmt(x) => write!(f, "{}", x),
+            ProofBlockStmt::TryStmt(x) => write!(f, "{}", x),
         }
     }
 }

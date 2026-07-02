@@ -55,6 +55,18 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_not_equal_from_membership_contradiction(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
+            self.try_verify_abs_not_equal_zero_from_arg_nonzero(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -222,6 +234,151 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    // Membership contradiction: if `x $in S` and `not y $in S`, then `x != y`.
+    // Example: from `x $in A` and `not y $in A`, prove `x != y` so `{x, y}` is well-defined.
+    fn try_verify_not_equal_from_membership_contradiction(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if self.loading_builtin_code {
+            return Ok(None);
+        }
+
+        let line_file = not_equal_fact.line_file.clone();
+        let candidates = [
+            (not_equal_fact.left.clone(), not_equal_fact.right.clone()),
+            (not_equal_fact.right.clone(), not_equal_fact.left.clone()),
+        ];
+
+        for (member_obj, non_member_obj) in candidates {
+            for set in self.known_sets_containing_obj(&member_obj) {
+                let not_in_set: AtomicFact =
+                    NotInFact::new(non_member_obj.clone(), set.clone(), line_file.clone()).into();
+                let not_in_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_in_set)?;
+                if !not_in_result.is_true() {
+                    continue;
+                }
+
+                let in_set: AtomicFact =
+                    InFact::new(member_obj.clone(), set, line_file.clone()).into();
+                let in_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_set)?;
+
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_membership_contradiction".to_string(),
+                        vec![in_result, not_in_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    // Absolute values are nonzero exactly when their argument is nonzero.
+    // Example: from `x != 0`, prove `abs(x) != 0`.
+    fn try_verify_abs_not_equal_zero_from_arg_nonzero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let abs = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Abs(abs), right)
+                if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
+            {
+                abs
+            }
+            (left, Obj::Abs(abs)) if self.obj_represents_zero_for_not_equal_builtin_rules(left) => {
+                abs
+            }
+            _ => return Ok(None),
+        };
+
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let arg_nonzero: AtomicFact =
+            NotEqualFact::new(abs.arg.as_ref().clone(), zero_obj, line_file.clone()).into();
+        let result =
+            self.verify_non_equational_known_then_builtin_rules_only(&arg_nonzero, verify_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                not_equal_fact.clone().into(),
+                InferResult::new(),
+                "abs_not_equal_zero_from_arg_nonzero".to_string(),
+                vec![result],
+            )
+            .into(),
+        ))
+    }
+
+    fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
+        let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
+        let lookup_key = (probe.key(), true);
+        let module_names = self.atomic_fact_referenced_module_names(&probe);
+        let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
+        let mut sets = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+
+        for environment in self.iter_environments_from_top() {
+            Self::collect_known_sets_containing_obj_in_environment(
+                environment,
+                &lookup_key,
+                &obj_strings,
+                &mut sets,
+                &mut seen,
+            );
+        }
+        for module_name in module_names.iter() {
+            if let Some(environment) = self.active_imported_module_environment(module_name) {
+                Self::collect_known_sets_containing_obj_in_environment(
+                    environment.as_ref(),
+                    &lookup_key,
+                    &obj_strings,
+                    &mut sets,
+                    &mut seen,
+                );
+            }
+        }
+
+        sets
+    }
+
+    fn collect_known_sets_containing_obj_in_environment(
+        environment: &Environment,
+        lookup_key: &(AtomicFactKey, bool),
+        obj_strings: &[String],
+        sets: &mut Vec<Obj>,
+        seen: &mut std::collections::HashSet<String>,
+    ) {
+        let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(lookup_key)
+        else {
+            return;
+        };
+        for obj_string in obj_strings {
+            for ((member_string, _), known_fact) in known_facts_map.iter() {
+                if member_string != obj_string {
+                    continue;
+                }
+                let AtomicFact::InFact(in_fact) = known_fact else {
+                    continue;
+                };
+                let set_string = in_fact.set.to_string();
+                if seen.insert(set_string) {
+                    sets.push(in_fact.set.clone());
+                }
+            }
+        }
     }
 
     // Difference nonzero rule: if `a != b` is known, then `a - b != 0`.
@@ -501,7 +658,30 @@ impl Runtime {
         Ok(None)
     }
 
-    // a^n != 0 with literal integer exponent n, from a != 0 (known / full non-equational verify).
+    fn obj_is_verified_integer_exponent_for_not_equal_builtin(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if let Obj::Number(exp_num) = obj {
+            return Ok(is_integer_after_simplification(exp_num));
+        }
+
+        for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
+            let in_set: AtomicFact =
+                InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
+            let result =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?;
+            if result.is_true() {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    // a^n != 0 with integer exponent n, from a != 0.
+    // Example: from `x R_nz` and `n Z`, prove `x^n != 0`.
     fn try_verify_not_equal_pow_from_base_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -514,10 +694,11 @@ impl Runtime {
             (l, Obj::Pow(p)) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => p,
             _ => return Ok(None),
         };
-        let Obj::Number(exp_num) = pow.exponent.as_ref() else {
-            return Ok(None);
-        };
-        if !is_integer_after_simplification(exp_num) {
+        if !self.obj_is_verified_integer_exponent_for_not_equal_builtin(
+            pow.exponent.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(None);
         }
 

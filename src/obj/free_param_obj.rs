@@ -12,6 +12,8 @@ pub enum ParamObjType {
     Induc,
     DefAlgo,
     DefStructField,
+    TupleIndex,
+    CartIndex,
 }
 
 impl ParamObjType {
@@ -26,6 +28,8 @@ impl ParamObjType {
             ParamObjType::Induc => 6,
             ParamObjType::DefAlgo => 7,
             ParamObjType::DefStructField => 8,
+            ParamObjType::TupleIndex => 9,
+            ParamObjType::CartIndex => 10,
         }
     }
 }
@@ -122,6 +126,16 @@ pub struct DefStructFieldFreeParamObj {
     pub name: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TupleIndexFreeParamObj {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CartIndexFreeParamObj {
+    pub name: String,
+}
+
 impl ForallFreeParamObj {
     pub fn new(name: String) -> Self {
         ForallFreeParamObj { name }
@@ -167,6 +181,18 @@ impl DefAlgoFreeParamObj {
 impl DefStructFieldFreeParamObj {
     pub fn new(name: String) -> Self {
         DefStructFieldFreeParamObj { name }
+    }
+}
+
+impl TupleIndexFreeParamObj {
+    pub fn new(name: String) -> Self {
+        TupleIndexFreeParamObj { name }
+    }
+}
+
+impl CartIndexFreeParamObj {
+    pub fn new(name: String) -> Self {
+        CartIndexFreeParamObj { name }
     }
 }
 
@@ -218,6 +244,18 @@ impl fmt::Display for DefStructFieldFreeParamObj {
     }
 }
 
+impl fmt::Display for TupleIndexFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_parsing_free_param_tagged_spine(f, ParamObjType::TupleIndex, &self.name)
+    }
+}
+
+impl fmt::Display for CartIndexFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_parsing_free_param_tagged_spine(f, ParamObjType::CartIndex, &self.name)
+    }
+}
+
 impl From<ForallFreeParamObj> for Obj {
     fn from(v: ForallFreeParamObj) -> Self {
         Obj::Atom(AtomObj::Forall(v))
@@ -266,6 +304,18 @@ impl From<DefStructFieldFreeParamObj> for Obj {
     }
 }
 
+impl From<TupleIndexFreeParamObj> for Obj {
+    fn from(v: TupleIndexFreeParamObj) -> Self {
+        Obj::Atom(AtomObj::TupleIndex(v))
+    }
+}
+
+impl From<CartIndexFreeParamObj> for Obj {
+    fn from(v: CartIndexFreeParamObj) -> Self {
+        Obj::Atom(AtomObj::CartIndex(v))
+    }
+}
+
 /// Bound-parameter [`Obj`] for runtime-synthesized facts (`by` stmts, coverage, etc.), matching parse-time `~kind` tagging and [`Runtime::inst_obj`] substitution rules.
 pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
     match scope {
@@ -277,6 +327,8 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
         ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name).into(),
         ParamObjType::DefStructField => DefStructFieldFreeParamObj::new(name).into(),
+        ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name).into(),
+        ParamObjType::CartIndex => CartIndexFreeParamObj::new(name).into(),
         ParamObjType::Identifier => {
             unreachable!(
                 "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
@@ -297,7 +349,9 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         | ParamObjType::FnSet
         | ParamObjType::Induc
         | ParamObjType::DefAlgo
-        | ParamObjType::DefStructField => obj_for_bound_param_in_scope(name, binding_kind),
+        | ParamObjType::DefStructField
+        | ParamObjType::TupleIndex
+        | ParamObjType::CartIndex => obj_for_bound_param_in_scope(name, binding_kind),
     }
 }
 

@@ -15,23 +15,7 @@ impl Runtime {
                     ),
                 )));
             }
-            let then_facts: Vec<Fact> = {
-                let first = tb.body.get_mut(0).ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    ))
-                })?;
-                first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-                first
-                    .body
-                    .iter_mut()
-                    .map(|b| self.parse_fact(b))
-                    .collect::<Result<_, _>>()?
-            };
-            (then_facts, 1)
+            self.parse_goal_fact_list_blocks(&mut tb.body, "by cases", tb.line_file.clone())?
         } else {
             let fact = self.parse_header_fact_before_trailing_colon(
                 tb,

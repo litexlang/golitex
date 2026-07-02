@@ -6,6 +6,12 @@ impl SketchStmt {
     }
 }
 
+impl TryStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "TryStmt".to_string()
+    }
+}
+
 impl ClaimStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClaimStmt".to_string()
@@ -183,6 +189,12 @@ impl ByAxiomOfChoiceStmt {
     }
 }
 
+impl ByRegularityAxiomStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByRegularityAxiomStmt".to_string()
+    }
+}
+
 impl ByThmStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByThmStmt".to_string()
@@ -297,9 +309,45 @@ impl HaveFnByForallExistUniqueStmt {
     }
 }
 
+impl HaveTupleStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveTupleStmt".to_string()
+    }
+}
+
+impl HaveCartStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveCartStmt".to_string()
+    }
+}
+
+impl HaveSeqStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveSeqStmt".to_string()
+    }
+}
+
+impl HaveFiniteSeqStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFiniteSeqStmt".to_string()
+    }
+}
+
+impl HaveMatrixStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveMatrixStmt".to_string()
+    }
+}
+
 impl SketchStmt {
     pub fn output_type_string() -> String {
         "proof sketch".to_string()
+    }
+}
+
+impl TryStmt {
+    pub fn output_type_string() -> String {
+        "try block".to_string()
     }
 }
 
@@ -480,6 +528,12 @@ impl ByAxiomOfChoiceStmt {
     }
 }
 
+impl ByRegularityAxiomStmt {
+    pub fn output_type_string() -> String {
+        "proof by regularity axiom".to_string()
+    }
+}
+
 impl ByThmStmt {
     pub fn output_type_string() -> String {
         "proof by theorem".to_string()
@@ -591,5 +645,35 @@ impl HaveFnByInducStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn output_type_string() -> String {
         "function definition by unique existence".to_string()
+    }
+}
+
+impl HaveTupleStmt {
+    pub fn output_type_string() -> String {
+        "tuple definition".to_string()
+    }
+}
+
+impl HaveCartStmt {
+    pub fn output_type_string() -> String {
+        "cart definition".to_string()
+    }
+}
+
+impl HaveSeqStmt {
+    pub fn output_type_string() -> String {
+        "sequence definition".to_string()
+    }
+}
+
+impl HaveFiniteSeqStmt {
+    pub fn output_type_string() -> String {
+        "finite sequence definition".to_string()
+    }
+}
+
+impl HaveMatrixStmt {
+    pub fn output_type_string() -> String {
+        "matrix definition".to_string()
     }
 }

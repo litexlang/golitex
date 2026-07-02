@@ -370,6 +370,51 @@ impl Runtime {
         )))
     }
 
+    // Negative integer powers reverse order on positive bases.
+    // Example: from `0 < b <= a` and `n < 0`, prove `a^n <= b^n`.
+    fn try_pow_le_same_negative_integer_exponent_positive_base_reverses_order(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+
+        let exponent = left_pow.exponent.as_ref();
+        let zero = Self::literal_zero_obj();
+        let subgoals: [AtomicFact; 4] = [
+            InFact::new(exponent.clone(), StandardSet::Z.into(), lf.clone()).into(),
+            LessFact::new(exponent.clone(), zero.clone(), lf.clone()).into(),
+            LessFact::new(zero, right_pow.base.as_ref().clone(), lf.clone()).into(),
+            LessEqualFact::new(
+                right_pow.base.as_ref().clone(),
+                left_pow.base.as_ref().clone(),
+                lf.clone(),
+            )
+            .into(),
+        ];
+
+        let mut step_results = Vec::with_capacity(subgoals.len());
+        for subgoal in subgoals {
+            let result = self.verify_order_subgoal(subgoal)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            step_results.push(result);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n <= b^n from 0 < b <= a and negative integer n".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
     // a^k <= b^k from abs(a) <= abs(b) when k in N_pos and k % 2 = 0.
     // Example: `forall x, y R: abs(x) <= abs(y) => x^2 <= y^2`.
     fn try_pow_le_even_exponent_from_abs_le(
@@ -601,8 +646,9 @@ impl Runtime {
         )))
     }
 
-    // a^n < b^n from 0 <= a, 0 <= b, a < b, and positive integer n.
-    // Example: from `0 <= a < b`, prove `a^2 < b^2`.
+    // a^n < b^n from 0 <= a, a < b, and positive integer n.
+    // Example: from `0 <= a < b`, prove `a^2 < b^2`; equivalently,
+    // from `b > a` and `a >= 0`, prove `b^n > a^n`.
     fn try_pow_lt_same_positive_integer_exponent_nonnegative_base(
         &mut self,
         left_pow: &Pow,
@@ -626,9 +672,8 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        let subgoals: [AtomicFact; 3] = [
+        let subgoals: [AtomicFact; 2] = [
             LessEqualFact::new(z.clone(), left_base.clone(), lf.clone()).into(),
-            LessEqualFact::new(z, right_base.clone(), lf.clone()).into(),
             LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into(),
         ];
         for subgoal in subgoals {
@@ -642,7 +687,7 @@ impl Runtime {
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "a^n < b^n from 0 <= a, 0 <= b, a < b, and positive integer n".to_string(),
+                "a^n < b^n from 0 <= a, a < b, and positive integer n".to_string(),
                 step_results,
             ),
         )))
@@ -944,6 +989,16 @@ impl Runtime {
                 lf,
                 atomic_fact,
             )? {
+                return Ok(Some(r));
+            }
+            if let Some(r) = self
+                .try_pow_le_same_negative_integer_exponent_positive_base_reverses_order(
+                    left_pow,
+                    right_pow,
+                    lf,
+                    atomic_fact,
+                )?
+            {
                 return Ok(Some(r));
             }
             if let Some(r) =

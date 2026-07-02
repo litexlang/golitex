@@ -8,6 +8,7 @@ pub mod know_stmt;
 pub mod parameter_def;
 pub mod sketch_stmt;
 pub mod tooling_stmt;
+pub mod try_stmt;
 pub mod witness_stmt;
 
 mod stmt;

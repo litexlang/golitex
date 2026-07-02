@@ -581,6 +581,18 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::Replacement(l), Obj::Replacement(r)) => {
+                if l.prop_name.to_string() == r.prop_name.to_string()
+                    && self
+                        .objs_have_same_known_equality_rc_in_some_env(&l.source_set, &r.source_set)
+                {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Sum(l), Obj::Sum(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.start, &r.start),

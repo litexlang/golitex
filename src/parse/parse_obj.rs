@@ -1288,6 +1288,10 @@ impl Runtime {
             })?;
             return Ok(FnRangeOn::new(function, set).into());
         }
+        if tok == REPLACEMENT {
+            tb.skip()?;
+            return self.parse_replacement_obj(tb);
+        }
         if tok == SUM {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1548,6 +1552,55 @@ impl Runtime {
         }
         let parsed_obj = parsed_args.remove(0);
         Ok(parsed_obj)
+    }
+
+    fn parse_replacement_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        tb.skip_token(LEFT_BRACE)?;
+        if tb.current_token_is_equal_to(RIGHT_BRACE) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "replacement expects 2 arguments (prop name, source set)".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let prop_name = self.parse_valid_replacement_prop_name(tb)?;
+        tb.skip_token(COMMA)?;
+        let source_set = self.parse_obj(tb)?;
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok(Replacement::new(prop_name, source_set).into())
+    }
+
+    fn parse_valid_replacement_prop_name(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<AtomicName, RuntimeError> {
+        let left = tb.advance()?;
+        validate_litex_name_for_parse(&left, tb.line_file.clone()).map_err(|e| {
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "replacement expects its first argument to be a prop name".to_string(),
+                tb.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        })?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip()?;
+            let right = tb.advance()?;
+            validate_litex_name_for_parse(&right, tb.line_file.clone()).map_err(|e| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "replacement expects its first argument to be a prop name".to_string(),
+                    tb.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
+            Ok(AtomicName::WithMod(left, right))
+        } else {
+            Ok(self.qualify_bare_atomic_name_if_needed(left))
+        }
     }
 
     /// Parses a comma-separated object list until the next token is not a comma.
@@ -2024,6 +2077,48 @@ mod module_qualification_parse_tests {
             panic!("expected abstract prop definition");
         };
         assert_eq!(stmt.name, "some_prop");
+    }
+
+    #[test]
+    fn parses_replacement_object_prop_name_arguments() {
+        let mut rt = Runtime::new();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "replacement(P, A)");
+        let Obj::Replacement(replacement) = obj else {
+            panic!("expected replacement object");
+        };
+        assert_without_mod(&replacement.prop_name, "P");
+        assert_eq!(format!("{}", replacement), "replacement(P, A)");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "replacement(M::P, A)");
+        let Obj::Replacement(replacement) = obj else {
+            panic!("expected replacement object");
+        };
+        assert_with_mod(&replacement.prop_name, "M", "P");
+        assert_eq!(format!("{}", replacement), "replacement(M::P, A)");
+    }
+
+    #[test]
+    fn replacement_rejects_non_name_first_argument() {
+        let mut rt = Runtime::new();
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks("replacement(1, A)", Rc::from("test.lit"))
+            .expect("tokenize object line");
+        assert_eq!(blocks.len(), 1);
+        let err = match rt.parse_obj(&mut blocks[0]) {
+            Ok(obj) => panic!("replacement should reject numbers, parsed {}", obj),
+            Err(err) => err,
+        };
+        let RuntimeError::ParseError(err) = err else {
+            panic!("expected parse error");
+        };
+        assert!(
+            err.msg
+                .contains("replacement expects its first argument to be a prop name"),
+            "unexpected error: {}",
+            err.msg
+        );
     }
 
     #[test]

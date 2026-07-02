@@ -1,41 +1,155 @@
-abstract_prop exist_riemann_sum(f, s)
+# Output demo for claim and by-statement verification traces.
 
-prop integrable(f set, s set):
-    $restricts_to(f, s)
-    $exist_riemann_sum(f, s)
-
-strategy sum_of_integrable_fn_integrable:
-    prove:
-        forall f, g set, s set:
-            $integrable(f, s)
-            $integrable(g, s)
-            =>:
-                $integrable('(x s)R{f(x) + g(x)}, s)
-    know $integrable('(x s)R{f(x) + g(x)}, s)
-
-strategy minus_of_integrable_fn_integrable:
-    prove:
-        forall f, g set, s set:
-            $integrable(f, s)
-            $integrable(g, s)
-            =>:
-                $integrable('(x s)R{f(x) - g(x)}, s)
-    know $integrable('(x s)R{f(x) - g(x)}, s)
-
-strategy product_of_integrable_fn_integrable:
-    prove:
-        forall f, g set, s set:
-            $integrable(f, s)
-            $integrable(g, s)
-            =>:
-                $integrable('(x s)R{f(x) * g(x)}, s)
-    know $integrable('(x s)R{f(x) * g(x)}, s)
-
+# Claim forall: parameters, stored assumptions, proof steps, and conclusions.
 claim:
     prove:
-        forall f, g set, s set:
-            $integrable(f, s)
-            $integrable(g, s)
+        forall x {x R: x > 0}:
+            x = 1
             =>:
-                $integrable('(x s)R{f(x) + g(x)}, s)
-    use strategy sum_of_integrable_fn_integrable
+                x = 1
+    x = x
+
+# Ordinary claim: proof steps and the final goal verification.
+claim 1 = 1:
+    1 = 1
+
+# By cases: coverage, each case assumption, conclusions, and impossible checks.
+by cases:
+    prove:
+        1 = 1
+        2 = 2
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+# By contra: reversed assumption, proof steps, and impossible checks.
+by contra 1 = 1:
+    do_nothing
+    impossible 1 != 1
+
+# By thm: theorem arguments, parameter/domain checks, and stored then facts.
+thm tmp_one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm tmp_one_eq_one()
+
+# By enumerate finite_set: each finite assignment is checked separately.
+by enumerate finite_set:
+    prove:
+        forall a {1, 2}:
+            a < 3
+    do_nothing
+
+# By for: each integer assignment is checked separately.
+by for:
+    prove:
+        forall n range(0, 3):
+            n < 3
+    do_nothing
+
+# By enumerate range: membership expands into equality cases.
+claim:
+    prove:
+        forall x range(1, 3):
+            x = 1 or x = 2
+    by enumerate range: x $in range(1, 3)
+
+# By closed_range as cases: equivalent closed-range case expansion.
+claim:
+    prove:
+        forall y closed_range(1, 2):
+            y = 1 or y = 2
+    by closed_range as cases: y $in 1...2
+
+# By extension: checks both subset directions before storing set equality.
+by extension {1} = {1}
+
+# By induc: structured base and induction-step proof trace.
+abstract_prop tmp_induc_p(a)
+know $tmp_induc_p(0)
+know forall m Z:
+    m >= 0
+    $tmp_induc_p(m)
+    =>:
+        $tmp_induc_p(m + 1)
+by induc n from 0:
+    prove:
+        $tmp_induc_p(n)
+
+    prove from n = 0:
+        $tmp_induc_p(0)
+
+    prove induc:
+        $tmp_induc_p(n + 1)
+
+# Prop registration: parameters, assumptions, proof steps, conclusion, registration.
+prop tmp_same_obj(x set, y set):
+    x = y
+
+by reflexive_prop:
+    prove:
+        forall x set:
+            $tmp_same_obj(x, x)
+    x = x
+
+by transitive_prop:
+    prove:
+        forall x, y, z set:
+            $tmp_same_obj(x, y)
+            $tmp_same_obj(y, z)
+            =>:
+                $tmp_same_obj(x, z)
+    x = y
+    y = z
+    x = z
+
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $tmp_same_obj(x, y)
+            =>:
+                $tmp_same_obj(y, x)
+    x = y
+    y = x
+
+by antisymmetric_prop:
+    prove:
+        forall x, y set:
+            $tmp_same_obj(x, y)
+            $tmp_same_obj(y, x)
+            =>:
+                x = y
+    x = y
+
+# Trusted preview: obligations are checked before the trusted conclusion.
+have tmp_family set
+by axiom_of_choice: set tmp_family:
+    know forall A tmp_family:
+        $is_nonempty_set(A)
+
+have tmp_ordered_set set
+abstract_prop tmp_leq(x, y)
+by zorn_lemma: set tmp_ordered_set, prop tmp_leq:
+    know $is_nonempty_set(tmp_ordered_set)
+    know:
+        forall x tmp_ordered_set:
+            $tmp_leq(x, x)
+        forall x, y, z tmp_ordered_set:
+            $tmp_leq(x, y)
+            $tmp_leq(y, z)
+            =>:
+                $tmp_leq(x, z)
+        forall x, y tmp_ordered_set:
+            $tmp_leq(x, y)
+            $tmp_leq(y, x)
+            =>:
+                x = y
+        forall C power_set(tmp_ordered_set):
+            forall x, y C:
+                $tmp_leq(x, y) or $tmp_leq(y, x)
+            =>:
+                exist u tmp_ordered_set st {forall! x C: {$tmp_leq(x, u)}}

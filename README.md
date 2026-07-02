@@ -26,7 +26,7 @@ _Truth is ever to be found in simplicity, and not in the multiplicity and confus
 
 _– Isaac Newton_
 
-Litex is an open-source formal mathematical language for writing checked mathematical proof code.
+Litex is an open-source formal mathematical language for writing checked mathematical proof code. The website is https://litexlang.com.
 The basic loop is small:
 
 1. Write the next mathematical fact.
@@ -68,12 +68,10 @@ context one line at a time.
 
 Because Litex output supports multiple languages (简体中文, 繁體中文, 日本語,
 English, 한국어, Español, Français, Deutsch, Português, Русский, العربية,
-हिन्दी, Tiếng Việt, and Bahasa Indonesia), learners can write the same Litex
-code while reading what each line does in a language they are comfortable with,
+हिन्दी, Tiếng Việt, and Bahasa Indonesia), anyone from anywhere can pick up Litex quickly,
 and gradually feel the appeal of mathematics and formalization.
-Aliases can also give local-language names to English or standard-library-facing
-theorem names, for example `alias thm 自反等式 <=> self_eq_en`, so a learner can
-try the formal shape before moving on to Lean-style library names.
+
+On [Hacker news front page](https://news.ycombinator.com/item?id=45369629) in 2025.9
 
 ## The First Mental Model
 
@@ -205,36 +203,6 @@ _– G. H. Hardy_
 
 Litex supports two complementary ways to verify a fact.
 
-The explicit route is `by thm`: give a theorem a name, remember that name, and
-cite it with the required arguments. This is closer to the named-theorem style
-used by Lean and other formal proof systems.
-
-```litex
-thm add_one_after_two:
-    prove:
-        forall x R:
-            x = 2
-            =>:
-                x + 1 = 3
-    x + 1 = 2 + 1 = 3
-
-by thm add_one_after_two(2)
-2 + 1 = 3
-```
-
-The Lean shape is similar: keep a universal fact under a name, then apply that
-name to the object you need.
-
-```lean
-variable (Human : Type)
-variable (Socrates : Human)
-variable (mortal : Human -> Prop)
-variable (all_humans_are_mortal : forall x : Human, mortal x)
-
-example : mortal Socrates := by
-  exact all_humans_are_mortal Socrates
-```
-
 *The Litex-native route is pattern matching against the verified context.* Instead
 of naming and citing the theorem, you can leave the universal fact in context
 and write the conclusion directly:
@@ -255,6 +223,24 @@ Here Litex matches `$mortal(Socrates)` against the known `forall`, checks that
 verifies the conclusion. This is the core difference in proof style: Litex can
 use named theorem calls when names make the proof clearer, but it also lets
 ordinary factual lines drive verification by their mathematical shape.
+
+
+The explicit route is `by thm`: give a theorem a name, remember that name, and
+cite it with the required arguments. This is closer to the named-theorem style
+used by Lean and other formal proof systems.
+
+```litex
+thm add_one_after_two:
+    prove:
+        forall x R:
+            x = 2
+            =>:
+                x + 1 = 3
+    x + 1 = 2 + 1 = 3
+
+by thm add_one_after_two(2)
+2 + 1 = 3
+```
 
 ## A Quick Gallery
 
@@ -419,4 +405,4 @@ implementation than small-kernel systems in order to make the proof surface
 lighter. The system tries to do more routine checking in the verifier so users
 can spend more of their attention on the mathematical sequence of facts. This uniqueness is the core value of Litex as a proof assistant, but it also makes contribution to Litex more difficult and demanding. We welcome young talents to try Litex and contribute to it.
 
-Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, and Yunwen Guo for their support and advice. I am sure this list will keep growing.
+Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their support and advice. I am sure this list will keep growing.

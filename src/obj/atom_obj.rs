@@ -15,6 +15,8 @@ pub enum AtomObj {
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
     DefStructField(DefStructFieldFreeParamObj),
+    TupleIndex(TupleIndexFreeParamObj),
+    CartIndex(CartIndexFreeParamObj),
 }
 
 impl fmt::Display for AtomObj {
@@ -30,6 +32,8 @@ impl fmt::Display for AtomObj {
             AtomObj::Induc(x) => write!(f, "{}", x),
             AtomObj::DefAlgo(x) => write!(f, "{}", x),
             AtomObj::DefStructField(x) => write!(f, "{}", x),
+            AtomObj::TupleIndex(x) => write!(f, "{}", x),
+            AtomObj::CartIndex(x) => write!(f, "{}", x),
         }
     }
 }
@@ -118,6 +122,22 @@ impl AtomObj {
                     p.name
                 };
                 AtomObj::DefStructField(DefStructFieldFreeParamObj::new(name))
+            }
+            AtomObj::TupleIndex(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                AtomObj::TupleIndex(TupleIndexFreeParamObj::new(name))
+            }
+            AtomObj::CartIndex(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                AtomObj::CartIndex(CartIndexFreeParamObj::new(name))
             }
         }
     }

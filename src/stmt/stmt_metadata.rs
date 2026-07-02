@@ -46,7 +46,7 @@ impl Stmt {
             Stmt::DefAliasStmt(stmt) => stmt.output_type_string(),
             Stmt::DefInterfaceStmt(stmt) => stmt.output_type_string(),
             Stmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
-            Stmt::DefThmStmt(_) => DefThmStmt::output_type_string(),
+            Stmt::DefThmStmt(stmt) => stmt.output_type_string_for_stmt(),
             Stmt::DefStrategyStmt(_) => DefStrategyStmt::output_type_string(),
             Stmt::By(stmt) => stmt.output_type_string(),
             Stmt::Witness(stmt) => stmt.output_type_string(),
@@ -91,6 +91,11 @@ impl DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveTupleStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveCartStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveSeqStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.line_file.clone(),
+            DefObjStmt::HaveMatrixStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -105,6 +110,11 @@ impl DefObjStmt {
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveTupleStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveCartStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::HaveMatrixStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
@@ -125,6 +135,11 @@ impl DefObjStmt {
             DefObjStmt::HaveFnByForallExistUniqueStmt(_) => {
                 HaveFnByForallExistUniqueStmt::output_type_string()
             }
+            DefObjStmt::HaveTupleStmt(_) => HaveTupleStmt::output_type_string(),
+            DefObjStmt::HaveCartStmt(_) => HaveCartStmt::output_type_string(),
+            DefObjStmt::HaveSeqStmt(_) => HaveSeqStmt::output_type_string(),
+            DefObjStmt::HaveFiniteSeqStmt(_) => HaveFiniteSeqStmt::output_type_string(),
+            DefObjStmt::HaveMatrixStmt(_) => HaveMatrixStmt::output_type_string(),
         }
     }
 }
@@ -215,6 +230,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByZornLemmaStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.line_file.clone(),
+            ByStmt::ByRegularityAxiomStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByThmStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -235,6 +251,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByZornLemmaStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.stmt_type_name(),
+            ByStmt::ByRegularityAxiomStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -255,6 +272,7 @@ impl ByStmt {
             ByStmt::ByAntisymmetricPropStmt(_) => ByAntisymmetricPropStmt::output_type_string(),
             ByStmt::ByZornLemmaStmt(_) => ByZornLemmaStmt::output_type_string(),
             ByStmt::ByAxiomOfChoiceStmt(_) => ByAxiomOfChoiceStmt::output_type_string(),
+            ByStmt::ByRegularityAxiomStmt(_) => ByRegularityAxiomStmt::output_type_string(),
             ByStmt::ByThmStmt(_) => ByThmStmt::output_type_string(),
         }
     }
@@ -288,6 +306,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             ProofBlockStmt::SketchStmt(stmt) => stmt.line_file.clone(),
+            ProofBlockStmt::TryStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -295,6 +314,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             ProofBlockStmt::SketchStmt(stmt) => stmt.stmt_type_name(),
+            ProofBlockStmt::TryStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
@@ -302,6 +322,7 @@ impl ProofBlockStmt {
         match self {
             ProofBlockStmt::ClaimStmt(_) => ClaimStmt::output_type_string(),
             ProofBlockStmt::SketchStmt(_) => SketchStmt::output_type_string(),
+            ProofBlockStmt::TryStmt(_) => TryStmt::output_type_string(),
         }
     }
 }

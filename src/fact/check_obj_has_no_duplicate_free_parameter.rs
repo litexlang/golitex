@@ -195,6 +195,11 @@ fn check_obj_has_no_duplicate_free_parameter(
                 params_already_used,
             )
         }
+        Obj::Replacement(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.source_set,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Sum(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.start,

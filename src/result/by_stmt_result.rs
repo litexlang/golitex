@@ -16,6 +16,7 @@ pub enum ByStmtResult {
     ByAntisymmetricPropStmt(NonFactualStmtSuccess),
     ByZornLemmaStmt(NonFactualStmtSuccess),
     ByAxiomOfChoiceStmt(NonFactualStmtSuccess),
+    ByRegularityAxiomStmt(NonFactualStmtSuccess),
     ByThmStmt(NonFactualStmtSuccess),
 }
 
@@ -46,6 +47,9 @@ impl ByStmtResult {
             }
             Stmt::By(ByStmt::ByZornLemmaStmt(_)) => ByStmtResult::ByZornLemmaStmt(success),
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(_)) => ByStmtResult::ByAxiomOfChoiceStmt(success),
+            Stmt::By(ByStmt::ByRegularityAxiomStmt(_)) => {
+                ByStmtResult::ByRegularityAxiomStmt(success)
+            }
             Stmt::By(ByStmt::ByThmStmt(_)) => ByStmtResult::ByThmStmt(success),
             _ => panic!("expected by stmt result"),
         }
@@ -67,6 +71,7 @@ impl ByStmtResult {
             | ByStmtResult::ByAntisymmetricPropStmt(success)
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
+            | ByStmtResult::ByRegularityAxiomStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }
@@ -87,6 +92,7 @@ impl ByStmtResult {
             | ByStmtResult::ByAntisymmetricPropStmt(success)
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
+            | ByStmtResult::ByRegularityAxiomStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }
@@ -107,6 +113,7 @@ impl ByStmtResult {
             | ByStmtResult::ByAntisymmetricPropStmt(success)
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
+            | ByStmtResult::ByRegularityAxiomStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }

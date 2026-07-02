@@ -129,12 +129,43 @@ impl Runtime {
             return Ok(done);
         }
 
+        if Self::intersection_has_literal_set_operand(left) {
+            if let Some(done) = self.try_verify_literal_set_intersection_filter(
+                left,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(done);
+            }
+        }
+        if Self::intersection_has_literal_set_operand(right) {
+            if let Some(done) = self.try_verify_literal_set_intersection_filter(
+                left,
+                right,
+                right,
+                left,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(done);
+            }
+        }
+
         if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
             return Ok(done);
         }
 
         if let Some(done) =
             self.try_verify_cart_count_product_equality(left, right, line_file.clone())
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_power_set_count_equality(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
         }
@@ -154,6 +185,15 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_equality_from_known_antisymmetric_props(left, right, line_file.clone())?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_positive_base_equal_from_equal_nonzero_integer_power(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -214,6 +254,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_power_of_power_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_power_product_rule(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
@@ -231,6 +277,21 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_abs_power_rule(left, right, line_file.clone(), verify_state)?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_power_inverse_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_pow_reciprocal_exponent_equals_root_by_power(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -458,6 +519,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
             left,
             right,
@@ -477,6 +547,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_tuple_equality_from_dim_and_projections(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_cart_equality_from_dim_and_projections(
             left,
             right,
             line_file.clone(),
@@ -775,6 +854,38 @@ impl Runtime {
         None
     }
 
+    fn try_verify_power_set_count_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Cardinality of a finite power set is `2` to the cardinality of the base set.
+        // Example: from `$is_finite_set(S)`, prove `count(power_set(S)) = 2^count(S)`.
+        let Some(base_set) = Self::power_set_count_shape(left, right)
+            .or_else(|| Self::power_set_count_shape(right, left))
+        else {
+            return Ok(None);
+        };
+
+        let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
+        let base_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&base_finite, verify_state)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "power_set_count_two_pow_count_base".to_string(),
+                vec![base_result],
+            )
+            .into(),
+        ))
+    }
+
     fn set_equality_success(
         left: &Obj,
         right: &Obj,
@@ -949,6 +1060,23 @@ impl Runtime {
         verify_equality_by_they_are_the_same(&expected_product, product_side)
     }
 
+    fn power_set_count_shape(count_side: &Obj, pow_side: &Obj) -> Option<Obj> {
+        let Obj::Count(count) = count_side else {
+            return None;
+        };
+        let Obj::PowerSet(power_set) = count.set.as_ref() else {
+            return None;
+        };
+        let two: Obj = Number::new("2".to_string()).into();
+        let base_count: Obj = Count::new(power_set.set.as_ref().clone()).into();
+        let expected_pow: Obj = Pow::new(two, base_count).into();
+        if verify_equality_by_they_are_the_same(&expected_pow, pow_side) {
+            Some(power_set.set.as_ref().clone())
+        } else {
+            None
+        }
+    }
+
     fn count_product_for_cart_args(args: &[Box<Obj>]) -> Option<Obj> {
         let mut iter = args.iter();
         let first = iter.next()?;
@@ -980,6 +1108,80 @@ impl Runtime {
 
     fn is_empty_list_set(obj: &Obj) -> bool {
         matches!(obj, Obj::ListSet(list_set) if list_set.list.is_empty())
+    }
+
+    fn intersection_has_literal_set_operand(obj: &Obj) -> bool {
+        let Obj::Intersect(intersection) = obj else {
+            return false;
+        };
+        matches!(intersection.left.as_ref(), Obj::ListSet(_))
+            || matches!(intersection.right.as_ref(), Obj::ListSet(_))
+    }
+
+    // Filters a literal set through an intersection using known membership facts.
+    // Example: from `x $in S` and `not y $in S`, prove `intersect(S, {x, y}) = {x}`.
+    fn try_verify_literal_set_intersection_filter(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        intersection_side: &Obj,
+        target_side: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if self.loading_builtin_code {
+            return Ok(None);
+        }
+
+        let Obj::Intersect(intersection) = intersection_side else {
+            return Ok(None);
+        };
+
+        let (set, literal_set) = match (intersection.left.as_ref(), intersection.right.as_ref()) {
+            (set, Obj::ListSet(literal_set)) => (set, literal_set),
+            (Obj::ListSet(literal_set), set) => (set, literal_set),
+            _ => return Ok(None),
+        };
+
+        let mut kept = Vec::new();
+        let mut steps = Vec::new();
+        for element in literal_set.list.iter() {
+            let element_obj = element.as_ref().clone();
+            let in_set: AtomicFact =
+                InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
+            let in_result =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?;
+            if in_result.is_true() {
+                kept.push(element_obj);
+                steps.push(in_result);
+                continue;
+            }
+
+            let not_in_set: AtomicFact =
+                NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
+            let not_in_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&not_in_set, verify_state)?;
+            if not_in_result.is_true() {
+                steps.push(not_in_result);
+                continue;
+            }
+
+            return Ok(None);
+        }
+
+        let filtered_set: Obj = ListSet::new(kept).into();
+        if !verify_equality_by_they_are_the_same(&filtered_set, target_side) {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into(),
+                "intersect_literal_set_filter".to_string(),
+                steps,
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_subtraction_from_known_addition(
@@ -1099,8 +1301,7 @@ impl Runtime {
             let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
             let component_fact: AtomicFact =
                 EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
-            let component_result = self
-                .verify_atomic_fact_known_then_builtin_rules_only(&component_fact, verify_state)?;
+            let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
             if !component_result.is_true() {
                 return Ok(None);
             }
@@ -1111,6 +1312,69 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "tuple equality from dimension and projections".to_string(),
+                steps,
+            )
+            .into(),
+        ))
+    }
+
+    // Cart extensionality: a cart object is equal to `cart(A, B, ...)` when it is a cart,
+    // its dimension matches, and each factor projection matches the corresponding literal cart
+    // factor.
+    // Example: from `$is_cart(c)`, `cart_dim(c) = 3`, and `proj(c, i) = R`, prove
+    // `c = cart(R, R, R)`.
+    fn try_verify_cart_equality_from_dim_and_projections(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (cart_obj, target_obj) = match (left, right) {
+            (target_obj, Obj::Cart(cart_obj)) => (cart_obj, target_obj),
+            (Obj::Cart(cart_obj), target_obj) => (cart_obj, target_obj),
+            _ => return Ok(None),
+        };
+
+        if matches!(target_obj, Obj::Cart(_)) {
+            return Ok(None);
+        }
+
+        let is_cart_fact: AtomicFact =
+            IsCartFact::new(target_obj.clone(), line_file.clone()).into();
+        let is_cart_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&is_cart_fact, verify_state)?;
+        if !is_cart_result.is_true() {
+            return Ok(None);
+        }
+
+        let cart_dim_obj: Obj = CartDim::new(target_obj.clone()).into();
+        let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
+        let cart_dim_fact: AtomicFact =
+            EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
+        let cart_dim_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&cart_dim_fact, verify_state)?;
+        if !cart_dim_result.is_true() {
+            return Ok(None);
+        }
+
+        let mut steps = vec![is_cart_result, cart_dim_result];
+        for (index, arg) in cart_obj.args.iter().enumerate() {
+            let index_obj: Obj = Number::new((index + 1).to_string()).into();
+            let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
+            let projection_fact: AtomicFact =
+                EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
+            let projection_result = self.verify_atomic_fact(&projection_fact, verify_state)?;
+            if !projection_result.is_true() {
+                return Ok(None);
+            }
+            steps.push(projection_result);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "cart equality from dimension and projections".to_string(),
                 steps,
             )
             .into(),
