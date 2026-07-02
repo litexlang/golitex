@@ -122,8 +122,9 @@ Lemma 4.1.5 (Trichotomy of integers). Every integer is positive, zero, or
 negative, and exactly one of these cases holds.
 """
 
-# Tao's proof splits a representative `a-b` into the cases `a>b`, `a=b`, and
-# `a<b`; the conclusions are positive, zero, and negative respectively.
+# The representative proof splits an integer written as `a-b` into the cases
+# `a>b`, `a=b`, and `a<b`; the conclusions are positive, zero, and negative
+# respectively.
 
 forall x Z:
     x > 0 or x = 0 or x < 0
@@ -153,8 +154,8 @@ commutative ring.
 
 # Proposition 4.1.6 lists the commutative-ring laws for integer arithmetic.
 
-# Tao proves these laws by expanding representatives `a-b`, `c-d`, `e-f` and
-# reducing the identities to natural-number algebra.
+# These laws can be proved by expanding representatives `a-b`, `c-d`, `e-f`
+# and reducing the identities to natural-number algebra.
 
 forall x, y, z Z:
     x + y = y + x
@@ -172,8 +173,8 @@ forall x, y, z Z:
 
 """
 Remark 4.1.7. These identities say that the integers form a commutative ring.
-The source proof can either split into sign cases or expand representatives
-a-b, c-d, e-f and reduce to natural-number algebra.
+A proof can either split into sign cases or expand representatives a-b, c-d,
+e-f and reduce to natural-number algebra.
 """
 
 """
@@ -666,7 +667,9 @@ ordered field. Multiplication preserves order only by a positive factor.
 """
 
 """
-Definition 4.3.1 (Absolute value). |x| is x, -x, or 0 depending on sign.
+Definition 4.3.1 (Absolute value on Q). For a rational number x, |x| is x if
+x is positive, -x if x is negative, and 0 if x=0. Thus |x| measures the
+distance of x from 0 and is always non-negative.
 """
 
 # Definition 4.3.1 is piecewise: positive numbers keep their value, negative
@@ -714,7 +717,9 @@ forall x Q:
         abs(x) = 0
 
 """
-Definition 4.3.2 (Distance). d(x,y) := |x-y|.
+Definition 4.3.2 (Distance on Q). For rational numbers x and y, define
+d(x,y) := |x-y|. This distance is non-negative, symmetric, and is zero
+exactly when x=y.
 """
 
 # Definition 4.3.2 names `abs(x-y)` as the distance between two rationals.
@@ -908,14 +913,15 @@ forall x, y, z Q:
     dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
 
 """
-Definition 4.3.4 (epsilon-closeness). y is epsilon-close to x iff
-d(y,x) <= epsilon.
+Definition 4.3.4 (epsilon-closeness). Let epsilon be a positive rational
+number. A rational y is epsilon-close to a rational x iff d(y,x) <= epsilon;
+that is, their rational distance is bounded by the chosen tolerance.
 """
 
 # Epsilon-closeness is approximate equality: the distance is bounded by a
 # positive tolerance.
 
-# The source wording is: `y` is epsilon-close to `x` iff `d(y,x) <= epsilon`.
+# The definition wording is: `y` is epsilon-close to `x` iff `d(y,x) <= epsilon`.
 # Distance symmetry lets this predicate be used with either argument order.
 
 prop is_close_in_Q(epsilon Q_pos, x, y Q):
@@ -1184,7 +1190,7 @@ forall epsilon Q_pos, x, y, z Q:
         epsilon * abs(z) $in Q_pos
         $is_close_in_Q(epsilon * abs(z), x * z, y * z)
 
-# For two moving products, Tao's estimate rewrites
+# For two moving products, the useful estimate rewrites
 # `xz-yw` as `(x-y)z + x(z-w) - (x-y)(z-w)` and bounds the three terms.
 
 forall epsilon, delta Q_pos, x, y, z, w Q:
@@ -1582,7 +1588,7 @@ claim:
             x^2 != 2
     by contra x^2 != 2:
         x^2 = 2
-        # Following Tao's proof, write `x` as a reduced fraction `p/q`.
+        # In the reduced-fraction proof, write `x` as `p/q`.
         # The only reducedness property needed here is that `p` and `q` are
         # not both even, i.e. `p % 2 != 0 or q % 2 != 0`.
         know exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
@@ -1698,7 +1704,7 @@ claim:
         (2 * epsilon)^2 = (epsilon + epsilon)^2
         (2 * epsilon)^2 < 2
         # Starting from 0 and repeatedly adding epsilon gives the induction
-        # conclusion used in Tao's proof.
+        # conclusion used in the induction proof.
         by induc n from 0:
             prove:
                 (n * epsilon)^2 < 2

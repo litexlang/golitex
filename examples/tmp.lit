@@ -1,8 +1,19 @@
 claim:
-    ? forall a Z:
-        a % 4 = 0
-        =>:
-            a % 2 = 0
+    prove:
+        forall n N:
+            2 * n $in even_N
+    witness exist k N st {2 * n = 2 * k} from n:
+        2 * n = 2 * n
+    $is_even_nat(2 * n)
+    2 * n $in {m N: $is_even_nat(m)}
+    2 * n $in even_N
 
-    have by exist k Z st {a = 4 * k}: k
-    a % 2 = (4 * k) % 2 = ((4 % 2) * (k % 2)) % 2 = 0 * (k % 2) = 0
+claim:
+    ? forall n N:
+        2 * n $in even_N
+
+    witness exist k N st {2 * n = 2 * k} from n:
+        2 * n = 2 * n
+    $is_even_nat(2 * n)
+    2 * n $in {m N: $is_even_nat(m)}
+    2 * n $in even_N

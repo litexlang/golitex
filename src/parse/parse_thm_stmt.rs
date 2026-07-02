@@ -2,22 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_def_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.parse_def_thm_or_lemma_stmt(tb, DefThmKind::Thm)
-    }
-
-    pub fn parse_def_lemma_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.parse_def_thm_or_lemma_stmt(tb, DefThmKind::Lemma)
-    }
-
-    fn parse_def_thm_or_lemma_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        kind: DefThmKind,
-    ) -> Result<Stmt, RuntimeError> {
-        let keyword = match kind {
-            DefThmKind::Thm => THM,
-            DefThmKind::Lemma => LEMMA,
-        };
+        let keyword = THM;
         tb.skip_token(keyword)?;
         let mut thm_names = Vec::new();
         loop {
@@ -89,14 +74,7 @@ impl Runtime {
             },
         )?;
 
-        let stmt = match kind {
-            DefThmKind::Thm => {
-                DefThmStmt::new_thm(thm_names, forall_fact, prove_process, tb.line_file.clone())
-            }
-            DefThmKind::Lemma => {
-                DefThmStmt::new_lemma(thm_names, forall_fact, prove_process, tb.line_file.clone())
-            }
-        };
+        let stmt = DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone());
         Ok(stmt.into())
     }
 }

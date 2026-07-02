@@ -112,7 +112,6 @@ pub const TRY: &str = "try";
 pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
-pub const LEMMA: &str = "lemma";
 pub const STOP: &str = "stop";
 pub const USE: &str = "use";
 
@@ -291,7 +290,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SCRATCH,
         PROVE,
         THM,
-        LEMMA,
         STOP,
         USE,
         BY,

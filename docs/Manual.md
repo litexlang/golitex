@@ -31,16 +31,14 @@ A Litex file is not just a list of theorem declarations. It executes as a sequen
 
 Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
-Named facts still matter, but there are only two storage choices to learn first:
-automatic context and explicit citation. A `claim` proves a fact and exports
-only that final fact into the current context; when the final fact is a
+Named facts still matter, but there are two citation surfaces to learn first:
+automatic context and explicit theorem calls. A `claim` proves a fact and
+exports only that final fact into the current context; when the final fact is a
 `forall`, Litex can try to use it later by automatic matching. A `thm` gives an
-important `forall` fact a name and asks the user to cite that name explicitly
-with `by thm name(args...)`. A `lemma` is not a third proof style. It is the
-combination form: a named theorem whose proved `forall` is also stored for
-ordinary matching. In short: use `claim` by default for local stored facts, use
-`thm` when the name is the intended proof interface, and use `lemma` only when
-both the name and automatic matching are intentional.
+important `forall` fact a name, stores that proved `forall` for ordinary
+matching, and also lets the user cite it explicitly with `by thm
+name(args...)`. In short: use `claim` by default for local stored facts, and
+use `thm` when the fact should also have a stable theorem name.
 
 This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
 
@@ -422,8 +420,8 @@ that the right side is well-defined before the new name is registered.
 
 ```litex
 have n N_pos = 3
-have tuple f by i <= n, f[i] = i
-have cart C by i <= n, proj(C, i) = f[i]
+have tuple f for i <= n, f[i] = i
+have cart C for i <= n, proj(C, i) = f[i]
 
 forall i closed_range(1, n):
     f[i] = i
@@ -1378,15 +1376,15 @@ a = 1
 
 ### Symbolic tuple and cart definitions (`have tuple`, `have cart`)
 
-Use **`have tuple f by i <= n, f[i] = expr`** or
-**`have cart C by i <= n, proj(C, i) = expr`** when the dimension is a known
+Use **`have tuple f for i <= n, f[i] = expr`** or
+**`have cart C for i <= n, proj(C, i) = expr`** when the dimension is a known
 object rather than a literal tuple or product length.
 
 ```litex
 have n N_pos = 3
-have tuple f by i <= n, f[i] = i
-have cart C by i <= n, proj(C, i) = f[i]
-have cart R3 by i <= n, proj(R3, i) = R
+have tuple f for i <= n, f[i] = i
+have cart C for i <= n, proj(C, i) = f[i]
+have cart R3 for i <= n, proj(R3, i) = R
 R3 = cart(R, R, R)
 ```
 
@@ -1399,28 +1397,28 @@ dimension, and each projection.
 
 ### Symbolic sequence and matrix definitions (`have seq`, `have finite_seq`, `have matrix`)
 
-Use **`have seq s seq(S) by i, s(i) = expr`**,
-**`have finite_seq f finite_seq(S, n) by i <= n, f(i) = expr`**, or
-**`have matrix M matrix(S, r, c) by i <= r, j <= c, M(i, j) = expr`**
+Use **`have seq s seq(S) for i, s(i) = expr`**,
+**`have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr`**, or
+**`have matrix M matrix(S, r, c) for i <= r, j <= c, M(i, j) = expr`**
 to introduce indexed data by a coordinate formula.
 
 ```litex
-have seq s seq(N_pos) by i, s(i) = i
+have seq s seq(N_pos) for i, s(i) = i
 s(3) = 3
 
 have n N_pos = 3
-have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i
+have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i
 f(2) = 2
 
 have r N_pos = 2
 have c N_pos = 3
-have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j
+have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j
 M(2, 3) = 3
 ```
 
 These forms are function-like definitions: Litex stores the surface type
 membership and also remembers the coordinate formula for later applications.
-For `finite_seq` and `matrix`, the `by` bounds must match the dimensions in
+For `finite_seq` and `matrix`, the `for` bounds must match the dimensions in
 the typed header.
 
 ---
@@ -1753,11 +1751,9 @@ conclusion, and Litex will try to match it against the stored pattern. This is
 why `claim forall ...` is common for short helper facts, local rules, and
 reusable facts whose parameters are visible from the goal shape.
 
-For an important theorem that readers should remember by name, especially one
-whose useful parameters are not all visible in the final conclusion, prefer
-`thm name:` and call it explicitly with `by thm name(args...)`. If the theorem
-should have a name and should also be available for automatic `forall` matching,
-use `lemma name:`.
+For an important theorem that readers should remember by name, use `thm name:`.
+The proved theorem is available both for automatic `forall` matching and for
+explicit calls with `by thm name(args...)`.
 
 ```litex
 claim:
@@ -1785,27 +1781,25 @@ claim forall! x R => {x = x}:
 
 ---
 
-### Named universal facts (`thm` / `lemma`)
+### Named universal facts (`thm`)
 
-**`thm name:`** and **`lemma name:`** both define a named verified `forall`
-fact. Their `prove:` block must contain exactly one `forall` fact, followed by
-the proof steps that establish its conclusions. For ordinary single-goal
-blocks, `? forall ...` is accepted as shorthand for that `prove:` block; Litex
-still displays the canonical form as `prove:`.
+**`thm name:`** defines a named verified `forall` fact. Its `prove:` block must
+contain exactly one `forall` fact, followed by the proof steps that establish
+its conclusions. For ordinary single-goal blocks, `? forall ...` is accepted as
+shorthand for that `prove:` block; Litex still displays the canonical form as
+`prove:`.
 
-The difference is how the result is reused:
+The result is reused in two ways:
 
 | Form | Explicit `by thm` call | Automatic `forall` matching | Use when |
 |------|------------------------|-----------------------------|----------|
 | `claim forall ...` | No theorem name | Yes | A short or local fact should help later goals by shape |
-| `thm name:` | Yes | No | The name is the intended proof interface |
-| `lemma name:` | Yes | Yes | A named fact should also behave like known context |
+| `thm name:` | Yes | Yes | A named fact should also behave like known context |
 
-This means `lemma` is a convenience combination, not a separate kind of
-mathematical proof. If a fact should be remembered by readers and cited
-explicitly, use `thm`. If a fact is small enough that the final goal shape makes
-the intended substitution clear, use `claim forall ...`. Use `lemma` only when
-both behaviors are useful.
+This means a proved theorem is both a stable named interface and an ordinary
+known `forall` fact. If a fact is small enough that the final goal shape makes
+the intended substitution clear and no theorem name is useful, use `claim
+forall ...`.
 
 ```litex
 thm self_eq_named:
@@ -1821,13 +1815,13 @@ thm self_eq_question_goal:
         x = x
     x = x
 
-lemma self_eq_named_auto:
+thm self_eq_named_auto:
     prove:
         forall x R:
             x = x
     x = x
 
-# This can use automatic matching from the proved lemma.
+# This can use automatic matching from the proved theorem.
 2 = 2
 ```
 
@@ -2470,11 +2464,11 @@ The sections above explain the common use cases. This table is a quick map of th
 | `abstract_prop` | Declare a predicate symbol without defining it |
 | `have x S` | Introduce an object with a type or set |
 | `have x S = expr` | Introduce a named value |
-| `have tuple f by i <= n, f[i] = expr` | Define a symbolic-length tuple by coordinates |
-| `have cart C by i <= n, proj(C, i) = expr` | Define a symbolic-dimension Cartesian product by factors |
-| `have seq s seq(S) by i, s(i) = expr` | Define a sequence by its entries |
-| `have finite_seq f finite_seq(S, n) by i <= n, f(i) = expr` | Define a finite sequence by its entries |
-| `have matrix M matrix(S, r, c) by i <= r, j <= c, M(i, j) = expr` | Define a matrix by its entries |
+| `have tuple f for i <= n, f[i] = expr` | Define a symbolic-length tuple by coordinates |
+| `have cart C for i <= n, proj(C, i) = expr` | Define a symbolic-dimension Cartesian product by factors |
+| `have seq s seq(S) for i, s(i) = expr` | Define a sequence by its entries |
+| `have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr` | Define a finite sequence by its entries |
+| `have matrix M matrix(S, r, c) for i <= r, j <= c, M(i, j) = expr` | Define a matrix by its entries |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
@@ -2484,8 +2478,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `let` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
-| `thm name` | Name a verified `forall` theorem for explicit `by thm` calls |
-| `lemma name` | Name a verified `forall` theorem and store it for ordinary matching |
+| `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
 | `alias thm` | Copy a theorem under a new name |
 | `know` | Add facts or axioms to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
@@ -2733,11 +2726,11 @@ code, evaluate an expression, or register a reusable proof pattern.
 | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
 | introduce object parameters by type/set | `have x R` |
 | introduce object parameters equal to expressions | `have x R = 1` |
-| define a symbolic-length tuple by coordinates | `have tuple f by i <= n, f[i] = i` |
-| define a symbolic-dimension Cartesian product by factors | `have cart C by i <= n, proj(C, i) = R` |
-| define a sequence by entries | `have seq s seq(N_pos) by i, s(i) = i` |
-| define a finite sequence by entries | `have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i` |
-| define a matrix by entries | `have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j` |
+| define a symbolic-length tuple by coordinates | `have tuple f for i <= n, f[i] = i` |
+| define a symbolic-dimension Cartesian product by factors | `have cart C for i <= n, proj(C, i) = R` |
+| define a sequence by entries | `have seq s seq(N_pos) for i, s(i) = i` |
+| define a finite sequence by entries | `have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i` |
+| define a matrix by entries | `have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j` |
 | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
 | name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
 | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
@@ -2935,7 +2928,7 @@ The known fact says that every human is mortal. When the goal is
 `$mortal(Socrates)`, Litex matches `x` with `Socrates`, checks that
 `Socrates human` is known, and verifies the instantiated conclusion.
 
-This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `lemma` when that fact should also have a stable theorem name; use `thm` for long, classic, or important theorems where the name and explicit arguments make the proof more readable.
+This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `thm` when that fact should also have a stable theorem name or when the name and explicit arguments make the proof more readable.
 
 ---
 

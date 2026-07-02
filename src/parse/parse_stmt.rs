@@ -29,7 +29,6 @@ impl Runtime {
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
-            LEMMA => self.parse_def_lemma_stmt(tb),
             STRATEGY => self.parse_def_strategy_stmt(tb),
             USE => self.parse_use_strategy_stmt(tb),
             STOP => match tb.token_at_add_index(1) {

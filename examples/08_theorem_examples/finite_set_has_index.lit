@@ -111,7 +111,7 @@ thm finite_sets_with_size_n_have_index_implies_size_n_plus_one_have_index:
         $is_index_fn(s, idx0)
     $finite_set_has_index(s)
 
-lemma finite_set_with_size_one_has_index:
+thm finite_set_with_size_one_has_index:
     prove:
         forall s finite_set:
             count(s) = 1
@@ -120,7 +120,7 @@ lemma finite_set_with_size_one_has_index:
     by thm singleton_sized_finite_set_has_index(s)
     $finite_set_has_index(s)
 
-lemma finite_set_with_successor_size_has_index:
+thm finite_set_with_successor_size_has_index:
     prove:
         forall n N_pos, s finite_set:
             $finite_set_with_given_size_has_index(n)

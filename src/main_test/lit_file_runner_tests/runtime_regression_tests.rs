@@ -117,13 +117,13 @@ fn have_tuple_and_have_cart_define_symbolic_coordinates() {
         || {
             let source_code = r#"
 have n N_pos = 3
-have tuple f by i <= n, f[i] = i
+have tuple f for i <= n, f[i] = i
 $is_tuple(f)
 tuple_dim(f) = n
 forall i closed_range(1, n):
     f[i] = i
 
-have cart c by i <= n, proj(c, i) = f[i]
+have cart c for i <= n, proj(c, i) = f[i]
 $is_set(c)
 $is_cart(c)
 cart_dim(c) = n
@@ -157,18 +157,18 @@ fn have_seq_finite_seq_and_matrix_define_indexed_entries() {
         "have_seq_finite_seq_and_matrix_define_indexed_entries",
         || {
             let source_code = r#"
-have seq s seq(N_pos) by i, s(i) = i
+have seq s seq(N_pos) for i, s(i) = i
 s $in seq(N_pos)
 s(3) = 3
 
 have n N_pos = 3
-have finite_seq f finite_seq(N_pos, n) by i <= n, f(i) = i
+have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i
 f $in finite_seq(N_pos, n)
 f(2) = 2
 
 have r N_pos = 2
 have c N_pos = 3
-have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i, j) = j
+have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j
 M $in matrix(N_pos, r, c)
 M(2, 3) = 3
 "#;
@@ -194,53 +194,97 @@ M(2, 3) = 3
 }
 
 #[test]
-fn have_seq_finite_seq_and_matrix_reject_bad_by_forms() {
-    run_with_large_stack("have_seq_finite_seq_and_matrix_reject_bad_by_forms", || {
-        let cases = [
-            (
-                "bad seq lhs",
-                r#"
-have seq s seq(N_pos) by i, t(i) = i
-"#,
-                "have seq left side must apply the sequence being defined",
-            ),
-            (
-                "bad matrix lhs arity",
-                r#"
-have r N_pos = 2
-have c N_pos = 3
-have matrix M matrix(N_pos, r, c) by i <= r, j <= c, M(i) = i
-"#,
-                "have matrix left side must use exactly two indices",
-            ),
-            (
-                "bad finite_seq bound",
-                r#"
+fn have_indexed_definitions_accept_legacy_by_keyword_but_render_for() {
+    run_with_large_stack(
+        "have_indexed_definitions_accept_legacy_by_keyword_but_render_for",
+        || {
+            let source_code = r#"
 have n N_pos = 3
-have m N_pos = 4
-have finite_seq f finite_seq(N_pos, n) by i <= m, f(i) = i
-"#,
-                "have finite_seq by-bound must match finite_seq length",
-            ),
-        ];
+have tuple t by i <= n, t[i] = i
+t[2] = 2
 
-        for (case_name, source_code, expected_error) in cases {
+have seq s seq(N_pos) by i, s(i) = i
+s(3) = 3
+"#;
+
             let mut runtime = Runtime::new_with_builtin_code();
-            runtime.new_file_path_new_env_new_name_scope(case_name);
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_indexed_definitions_accept_legacy_by_keyword_but_render_for",
+            );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(!run_succeeded, "{} should fail:\n{}", case_name, run_output);
             assert!(
-                run_output.contains(expected_error),
-                "{} should report `{}`:\n{}",
-                case_name,
-                expected_error,
+                run_succeeded,
+                "legacy by indexed definitions should still work:\n{}",
                 run_output
             );
-        }
-    });
+            assert!(
+                run_output.contains("have tuple t for i <= n,"),
+                "legacy tuple definition should render with `for`:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("have seq s seq(N_pos) for i,"),
+                "legacy sequence definition should render with `for`:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn have_seq_finite_seq_and_matrix_reject_bad_for_forms() {
+    run_with_large_stack(
+        "have_seq_finite_seq_and_matrix_reject_bad_for_forms",
+        || {
+            let cases = [
+                (
+                    "bad seq lhs",
+                    r#"
+have seq s seq(N_pos) for i, t(i) = i
+"#,
+                    "have seq left side must apply the sequence being defined",
+                ),
+                (
+                    "bad matrix lhs arity",
+                    r#"
+have r N_pos = 2
+have c N_pos = 3
+have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i) = i
+"#,
+                    "have matrix left side must use exactly two indices",
+                ),
+                (
+                    "bad finite_seq bound",
+                    r#"
+have n N_pos = 3
+have m N_pos = 4
+have finite_seq f finite_seq(N_pos, n) for i <= m, f(i) = i
+"#,
+                    "have finite_seq for-bound must match finite_seq length",
+                ),
+            ];
+
+            for (case_name, source_code, expected_error) in cases {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(case_name);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(!run_succeeded, "{} should fail:\n{}", case_name, run_output);
+                assert!(
+                    run_output.contains(expected_error),
+                    "{} should report `{}`:\n{}",
+                    case_name,
+                    expected_error,
+                    run_output
+                );
+            }
+        },
+    );
 }
 
 #[test]
@@ -251,10 +295,10 @@ fn have_cart_can_equal_literal_cart_by_dimension_and_projections() {
             let source_code = r#"
 have n N_pos = 3
 
-have cart real_cart by i <= n, proj(real_cart, i) = R
+have cart real_cart for i <= n, proj(real_cart, i) = R
 real_cart = cart(R, R, R)
 
-have cart rational_cart by i <= n, proj(rational_cart, i) = Q
+have cart rational_cart for i <= n, proj(rational_cart, i) = Q
 cart(Q, Q, Q) = rational_cart
 "#;
 
@@ -288,10 +332,10 @@ fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
             let source_code = r#"
 have n N_pos = 3
 
-have tuple index_tuple by i <= n, index_tuple[i] = i
+have tuple index_tuple for i <= n, index_tuple[i] = i
 index_tuple = (1, 2, 3)
 
-have tuple real_tuple by i <= n, real_tuple[i] = R
+have tuple real_tuple for i <= n, real_tuple[i] = R
 (R, R, R) = real_tuple
 "#;
 
@@ -325,14 +369,14 @@ fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
             let cases = [
                 (
                     "undefined dimension",
-                    "have tuple f by i <= n, f[i] = i",
+                    "have tuple f for i <= n, f[i] = i",
                     "identifier `n` not defined",
                 ),
                 (
                     "small dimension",
                     r#"
 have n N_pos = 1
-have tuple f by i <= n, f[i] = i
+have tuple f for i <= n, f[i] = i
 "#,
                     "have tuple/cart needs 2 <= n",
                 ),
@@ -340,7 +384,7 @@ have tuple f by i <= n, f[i] = i
                     "self reference",
                     r#"
 have n N_pos = 3
-have tuple f by i <= n, f[i] = f[i]
+have tuple f for i <= n, f[i] = f[i]
 "#,
                     "identifier `f` not defined",
                 ),
@@ -348,7 +392,7 @@ have tuple f by i <= n, f[i] = f[i]
                     "wrong tuple lhs",
                     r#"
 have n N_pos = 3
-have tuple f by i <= n, g[i] = i
+have tuple f for i <= n, g[i] = i
 "#,
                     "have tuple left side must index the tuple being defined",
                 ),
@@ -356,7 +400,7 @@ have tuple f by i <= n, g[i] = i
                     "wrong cart lhs",
                     r#"
 have n N_pos = 3
-have cart c by i <= n, proj(d, i) = i
+have cart c for i <= n, proj(d, i) = i
 "#,
                     "have cart left side must project the cart being defined",
                 ),
@@ -387,7 +431,7 @@ fn template_can_define_symbolic_tuple_and_cart() {
     run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
         let source_code = r#"
 template<n N_pos: 2 <= n>:
-    have tuple tuple_by_dim by i <= n, tuple_by_dim[i] = i
+    have tuple tuple_by_dim for i <= n, tuple_by_dim[i] = i
 
 $is_tuple(\tuple_by_dim<3>)
 tuple_dim(\tuple_by_dim<3>) = 3
@@ -395,7 +439,7 @@ forall i closed_range(1, 3):
     \tuple_by_dim<3>[i] = i
 
 template<n N_pos: 2 <= n>:
-    have cart cart_by_dim by i <= n, proj(cart_by_dim, i) = R
+    have cart cart_by_dim for i <= n, proj(cart_by_dim, i) = R
 
 $is_cart(\cart_by_dim<3>)
 cart_dim(\cart_by_dim<3>) = 3
@@ -996,7 +1040,7 @@ thm qgoal_self_eq_thm:
         x = x
     x = x
 
-lemma qgoal_self_eq_lemma:
+thm qgoal_self_eq_extra:
     ? forall x R:
         x = x
     x = x
@@ -6785,8 +6829,11 @@ alias prop concrete_alias <=> abstract_target
 }
 
 #[test]
-fn thm_definition_does_not_store_forall_fact_for_known_forall_use() {
-    let source_code = r#"
+fn thm_definition_stores_forall_fact_for_known_forall_use() {
+    run_with_large_stack(
+        "thm_definition_stores_forall_fact_for_known_forall_use",
+        || {
+            let source_code = r#"
 abstract_prop target_thm_prop(x)
 
 thm use_target_thm:
@@ -6801,97 +6848,64 @@ thm use_target_thm:
 $target_thm_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "thm_definition_does_not_store_forall_fact_for_known_forall_use",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "thm_definition_stores_forall_fact_for_known_forall_use",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "thm definition should not enable ordinary forall matching:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("Unknown"),
-        "thm named-only failure should be reported as unknown:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "thm definition should store ordinary forall matching facts:\n{}",
+                run_output
+            );
+            assert!(runtime
+                .get_thm_definition_by_name("use_target_thm")
+                .is_some());
+        },
     );
 }
 
 #[test]
-fn lemma_definition_stores_forall_fact_for_known_forall_use() {
-    let source_code = r#"
-prop target_lemma_prop(x R):
+fn thm_definition_can_still_be_used_by_thm() {
+    run_with_large_stack("thm_definition_can_still_be_used_by_thm", || {
+        let source_code = r#"
+prop target_thm_prop(x R):
     x = 1
 
-lemma use_target_lemma:
+thm use_target_thm:
     prove:
         forall x R:
             x = 1
             =>:
-                $target_lemma_prop(x)
+                $target_thm_prop(x)
 
     x = 1
 
-$target_lemma_prop(1)
+by thm use_target_thm(1)
+$target_thm_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "lemma_definition_stores_forall_fact_for_known_forall_use",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("thm_definition_can_still_be_used_by_thm");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "lemma definition should store ordinary forall matching facts:\n{}",
-        run_output
-    );
-    assert!(runtime
-        .get_thm_definition_by_name("use_target_lemma")
-        .is_some());
-}
-
-#[test]
-fn lemma_definition_can_still_be_used_by_thm() {
-    let source_code = r#"
-prop target_lemma_prop(x R):
-    x = 1
-
-lemma use_target_lemma:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_lemma_prop(x)
-
-    x = 1
-
-by thm use_target_lemma(1)
-$target_lemma_prop(1)
-"#;
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("lemma_definition_can_still_be_used_by_thm");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "lemma should remain available through explicit by thm calls:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "thm should remain available through explicit by thm calls:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
 fn by_thm_releases_instantiated_then_facts() {
-    let source_code = r#"
+    run_with_large_stack("by_thm_releases_instantiated_then_facts", || {
+        let source_code = r#"
 abstract_prop target_thm_prop(x)
 
 thm use_target_thm:
@@ -6907,17 +6921,18 @@ by thm use_target_thm(1)
 $target_thm_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("by_thm_releases_instantiated_then_facts");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("by_thm_releases_instantiated_then_facts");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "explicit by thm should release the instantiated then-fact:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "explicit by thm should release the instantiated then-fact:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

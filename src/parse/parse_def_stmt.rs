@@ -536,7 +536,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(TUPLE)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        tb.skip_token(BY)?;
+        skip_have_indexed_definition_keyword(tb, "have tuple")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
         let dimension = self.parse_obj(tb)?;
@@ -572,7 +572,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(CART)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        tb.skip_token(BY)?;
+        skip_have_indexed_definition_keyword(tb, "have cart")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
         let dimension = self.parse_obj(tb)?;
@@ -619,7 +619,7 @@ impl Runtime {
                 )));
             }
         };
-        tb.skip_token(BY)?;
+        skip_have_indexed_definition_keyword(tb, "have seq")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(COMMA)?;
 
@@ -667,7 +667,7 @@ impl Runtime {
                 )));
             }
         };
-        tb.skip_token(BY)?;
+        skip_have_indexed_definition_keyword(tb, "have finite_seq")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
         let bound = self.parse_obj(tb)?;
@@ -722,7 +722,7 @@ impl Runtime {
                 )));
             }
         };
-        tb.skip_token(BY)?;
+        skip_have_indexed_definition_keyword(tb, "have matrix")?;
         let row_index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
         let row_bound = self.parse_obj(tb)?;
@@ -1533,6 +1533,24 @@ fn parse_have_tuple_or_cart_name(tb: &mut TokenBlock) -> Result<String, RuntimeE
         ))
     })?;
     Ok(name)
+}
+
+fn skip_have_indexed_definition_keyword(
+    tb: &mut TokenBlock,
+    stmt_name: &str,
+) -> Result<(), RuntimeError> {
+    if tb.current_token_is_equal_to(FOR) {
+        return tb.skip_token(FOR);
+    }
+    if tb.current_token_is_equal_to(BY) {
+        return tb.skip_token(BY);
+    }
+    Err(RuntimeError::from(ParseRuntimeError(
+        RuntimeErrorStruct::new_with_msg_and_line_file(
+            format!("{} expects `for` before the index binder", stmt_name),
+            tb.line_file.clone(),
+        ),
+    )))
 }
 
 fn validate_have_tuple_lhs(
