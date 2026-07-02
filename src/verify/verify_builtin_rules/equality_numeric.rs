@@ -2859,7 +2859,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn instantiate_unary_anonymous_summand_at(
+    pub(crate) fn instantiate_unary_anonymous_summand_at(
         &mut self,
         func: &Obj,
         x: &Obj,
@@ -2891,7 +2891,7 @@ impl Runtime {
         )?))
     }
 
-    fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         param_name: String,
         dom_facts: Vec<Fact>,
@@ -3948,6 +3948,123 @@ impl Runtime {
         Ok(None)
     }
 
+    // Range sums over two bijective enumerations of the same finite set are equal.
+    // Example: from `forall x X: exist! i 1...count(X) st {g(i) = x}` and the
+    // analogous fact for `h`, prove `sum(1, count(X), '(i 1...count(X)) R {f(g(i))})
+    // = sum(1, count(X), '(i 1...count(X)) R {f(h(i))})`.
+    pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (left_sum, right_sum) = match (left, right) {
+            (Obj::Sum(l), Obj::Sum(r)) => (l, r),
+            _ => return Ok(None),
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.start.as_ref(),
+                right_sum.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.end.as_ref(),
+                right_sum.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let Some(left_shape) =
+            self.finite_set_enumeration_summand_shape(left_sum, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_shape) =
+            self.finite_set_enumeration_summand_shape(right_sum, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.outer_function,
+                &right_shape.outer_function,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.index_set,
+                &right_shape.index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.target_set,
+                &right_shape.target_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let finite_target: AtomicFact =
+            IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&finite_target, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self.verify_unique_preimage_enumerator_fact(
+            &left_shape,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+        if !self.verify_unique_preimage_enumerator_fact(
+            &right_shape,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: sums over bijective enumerations of the same finite set",
+        )))
+    }
+
     // A finite-set product over the empty set is one.
     // Example: `finite_set_product({}, 'Z(x){x}) = 1`.
     pub(crate) fn try_verify_finite_set_product_empty(
@@ -4288,6 +4405,175 @@ impl Runtime {
         })
     }
 
+    fn finite_set_enumeration_summand_shape(
+        &mut self,
+        sum: &Sum,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FiniteSetEnumerationSummand>, RuntimeError> {
+        let af = match sum.func.as_ref() {
+            Obj::AnonymousFn(af) => af,
+            Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                _ => return Ok(None),
+            },
+            _ => return Ok(None),
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let Some(param_name) = param_names.first() else {
+            return Ok(None);
+        };
+        let Some(index_set) =
+            Self::set_for_unary_param(&af.body.params_def_with_set, param_name.as_str())
+        else {
+            return Ok(None);
+        };
+        let sum_index_set: Obj =
+            ClosedRange::new(sum.start.as_ref().clone(), sum.end.as_ref().clone()).into();
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &index_set,
+                &sum_index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let Obj::FnObj(outer_call) = af.equal_to.as_ref() else {
+            return Ok(None);
+        };
+        if outer_call.body.len() != 1 || outer_call.body[0].len() != 1 {
+            return Ok(None);
+        }
+        let Obj::FnObj(enumerator_call) = outer_call.body[0][0].as_ref() else {
+            return Ok(None);
+        };
+        if enumerator_call.body.len() != 1 || enumerator_call.body[0].len() != 1 {
+            return Ok(None);
+        }
+        let index_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::FnSet);
+        if !verify_equality_by_they_are_the_same(enumerator_call.body[0][0].as_ref(), &index_obj) {
+            return Ok(None);
+        }
+
+        let outer_function: Obj = outer_call.head.as_ref().clone().into();
+        let enumerator: Obj = enumerator_call.head.as_ref().clone().into();
+        let Some(outer_body) = self.get_fn_range_on_function_body(&outer_function) else {
+            return Ok(None);
+        };
+        if ParamGroupWithSet::number_of_params(&outer_body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let outer_param_names =
+            ParamGroupWithSet::collect_param_names(&outer_body.params_def_with_set);
+        let Some(outer_param_name) = outer_param_names.first() else {
+            return Ok(None);
+        };
+        let Some(target_set) =
+            Self::set_for_unary_param(&outer_body.params_def_with_set, outer_param_name.as_str())
+        else {
+            return Ok(None);
+        };
+
+        let Some(enumerator_body) = self.get_fn_range_on_function_body(&enumerator) else {
+            return Ok(None);
+        };
+        if ParamGroupWithSet::number_of_params(&enumerator_body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let enumerator_param_names =
+            ParamGroupWithSet::collect_param_names(&enumerator_body.params_def_with_set);
+        let Some(enumerator_param_name) = enumerator_param_names.first() else {
+            return Ok(None);
+        };
+        let Some(enumerator_index_set) = Self::set_for_unary_param(
+            &enumerator_body.params_def_with_set,
+            enumerator_param_name.as_str(),
+        ) else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &enumerator_index_set,
+                &index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                enumerator_body.ret_set.as_ref(),
+                &target_set,
+                line_file,
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        Ok(Some(FiniteSetEnumerationSummand {
+            outer_function,
+            enumerator_head: enumerator_call.head.as_ref().clone(),
+            index_set,
+            target_set,
+        }))
+    }
+
+    fn verify_unique_preimage_enumerator_fact(
+        &mut self,
+        shape: &FiniteSetEnumerationSummand,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let x_name = self.generate_random_unused_name();
+        let i_name = format!("{}_idx", x_name);
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let i_obj = obj_for_bound_param_in_scope(i_name.clone(), ParamObjType::Exist);
+        let enumerator_at_i: Obj =
+            FnObj::new(shape.enumerator_head.clone(), vec![vec![Box::new(i_obj)]]).into();
+        let body_fact: AtomicFact =
+            EqualFact::new(enumerator_at_i, x_obj, line_file.clone()).into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![i_name],
+                ParamType::Obj(shape.index_set.clone()),
+            )]),
+            vec![ExistBodyFact::AtomicFact(body_fact)],
+            line_file.clone(),
+        )?;
+        let forall_fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(shape.target_set.clone()),
+            )]),
+            vec![],
+            vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
+            line_file,
+        )?;
+        let fact: Fact = forall_fact.into();
+        let result = self.verify_fact_full(&fact, verify_state)?;
+        Ok(result.is_true())
+    }
+
+    fn set_for_unary_param(params_def: &ParamDefWithSet, param_name: &str) -> Option<Obj> {
+        for group in params_def.iter() {
+            if group.params.iter().any(|p| p == param_name) {
+                return Some(group.set_obj().clone());
+            }
+        }
+        None
+    }
+
     /// `(x mod m) mod m = x mod m` when the nested `%` uses the same modulus as the outer `%`.
     ///
     /// Used to match residues after reducing summands: e.g. prove `X % Z = (X % Z) % Z` so
@@ -4498,4 +4784,11 @@ impl Runtime {
             "equality: integer congruence — same modulus, residues for matching + / - / *",
         )))
     }
+}
+
+struct FiniteSetEnumerationSummand {
+    outer_function: Obj,
+    enumerator_head: FnObjHead,
+    index_set: Obj,
+    target_set: Obj,
 }

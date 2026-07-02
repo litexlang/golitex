@@ -2457,6 +2457,47 @@ product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 }
 
 #[test]
+fn finite_sum_order_uses_pointwise_bounds() {
+    run_with_large_stack("finite_sum_order_uses_pointwise_bounds_large_stack", || {
+        let source_code = r#"
+thm finite_series_comparison_test:
+    prove:
+        forall a, b fn(i Z) R, m, n Z:
+            m <= n
+            forall i Z:
+                m <= i <= n
+                =>:
+                    a(i) <= b(i)
+            =>:
+                sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+
+    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+
+thm finite_series_triangle_test:
+    prove:
+        forall a fn(i Z) R, m, n Z:
+            m <= n
+            =>:
+                abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+
+    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_sum_order_uses_pointwise_bounds");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite sum order should use pointwise bounds:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
     run_with_large_stack(
         "iterated_operator_range_order_is_required_for_symbolic_bounds_large_stack",
@@ -2569,6 +2610,57 @@ sketch:
         run_succeeded,
         "finite_set_sum core rules should verify:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn finite_set_sum_bijective_enumerations_are_well_defined() {
+    run_with_large_stack(
+        "finite_set_sum_bijective_enumerations_are_well_defined",
+        || {
+            let source_code = r#"
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+    forall x X:
+        exist! i closed_range(1, count(X)) st {g(i) = x}
+
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
+thm finite_set_sum_raw_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+    sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+
+thm finite_set_sum_template_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_sum_bijective_enumerations_are_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "finite_set_sum bijective enumeration rules should verify:\n{}",
+                run_output
+            );
+        },
     );
 }
 
