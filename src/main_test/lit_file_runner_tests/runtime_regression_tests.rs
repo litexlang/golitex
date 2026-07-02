@@ -2401,7 +2401,10 @@ forall x, y R:
 
 #[test]
 fn iterated_operator_equality_uses_fn_eq_for_function_arg() {
-    let positive_source_code = r#"
+    run_with_large_stack(
+        "iterated_operator_equality_uses_fn_eq_for_function_arg_large_stack",
+        || {
+            let positive_source_code = r#"
 sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
 product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
 
@@ -2412,42 +2415,127 @@ forall f, g fn(x Z) Z:
     product(1, 3, 'Z(x){f(x) * g(x)}) = product(1, 3, 'Z(y){g(y) * f(y)})
 "#;
 
-    let mut positive_runtime = Runtime::new_with_builtin_code();
-    positive_runtime
-        .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_positive");
-    let (positive_stmt_results, positive_runtime_error) =
-        run_source_code(positive_source_code, &mut positive_runtime);
-    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
-        &positive_runtime,
-        &positive_stmt_results,
-        &positive_runtime_error,
-        false,
-    );
-    assert!(
-        positive_run_succeeded,
-        "sum/product equality should compare function args by fn_eq:\n{}",
-        positive_run_output
-    );
+            let mut positive_runtime = Runtime::new_with_builtin_code();
+            positive_runtime
+                .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_positive");
+            let (positive_stmt_results, positive_runtime_error) =
+                run_source_code(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_stmt_results,
+                &positive_runtime_error,
+                false,
+            );
+            assert!(
+                positive_run_succeeded,
+                "sum/product equality should compare function args by fn_eq:\n{}",
+                positive_run_output
+            );
 
-    let negative_source_code = r#"
+            let negative_source_code = r#"
 product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 "#;
 
-    let mut negative_runtime = Runtime::new_with_builtin_code();
-    negative_runtime
-        .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_negative");
-    let (negative_stmt_results, negative_runtime_error) =
-        run_source_code(negative_source_code, &mut negative_runtime);
-    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
-        &negative_runtime,
-        &negative_stmt_results,
-        &negative_runtime_error,
-        false,
+            let mut negative_runtime = Runtime::new_with_builtin_code();
+            negative_runtime
+                .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_negative");
+            let (negative_stmt_results, negative_runtime_error) =
+                run_source_code(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_stmt_results,
+                &negative_runtime_error,
+                false,
+            );
+            assert!(
+                !negative_run_succeeded,
+                "product equality should still require equal ranges:\n{}",
+                negative_run_output
+            );
+        },
     );
-    assert!(
-        !negative_run_succeeded,
-        "product equality should still require equal ranges:\n{}",
-        negative_run_output
+}
+
+#[test]
+fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
+    run_with_large_stack(
+        "iterated_operator_range_order_is_required_for_symbolic_bounds_large_stack",
+        || {
+            let cases = [
+                (
+                    "sum_symbolic_empty_range",
+                    r#"
+thm bad_symbolic_empty_sum:
+    prove:
+        forall a fn(i Z) R, m Z:
+            sum(m, m - 1, '(i Z) R {a(i)}) = 0
+
+    know:
+        sum(m, m - 1, '(i Z) R {a(i)}) = 0
+"#,
+                    "sum: cannot verify start <= end for the summation range",
+                ),
+                (
+                    "product_symbolic_empty_range",
+                    r#"
+thm bad_symbolic_empty_product:
+    prove:
+        forall a fn(i Z) R, m Z:
+            product(m, m - 1, '(i Z) R {a(i)}) = 1
+
+    know:
+        product(m, m - 1, '(i Z) R {a(i)}) = 1
+"#,
+                    "product: cannot verify start <= end for the product range",
+                ),
+            ];
+
+            for (name, source_code, expected_message) in cases {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(name);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    !run_succeeded,
+                    "{} should reject reversed symbolic bounds:\n{}",
+                    name, run_output
+                );
+                assert!(
+                    run_output.contains(expected_message),
+                    "{} should report the range-order well-definedness failure:\n{}",
+                    name,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn nested_iterated_operator_with_positive_index_is_well_defined() {
+    run_with_large_stack(
+        "nested_iterated_operator_with_positive_index_is_well_defined_large_stack",
+        || {
+            let source_code = r#"
+eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "nested_iterated_operator_with_positive_index_is_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "nested range sum should be well-defined for positive integer indices:\n{}",
+                run_output
+            );
+        },
     );
 }
 

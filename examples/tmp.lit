@@ -1,9 +1,24 @@
-abstract_prop p(x, y)
+sketch:
+    abstract_prop induction_demo(n)
 
-thm xxx:
-    ? forall x, y set:
-        $p(x, y)
+    claim:
+        ? forall:
+            $induction_demo(0)
+            forall m Z:
+                m >= 0
+                $induction_demo(m)
+                =>:
+                    $induction_demo(m + 1)   
 
-    know $p(x, y)
+        claim:
+            ? forall n N:
+                $induction_demo(n)
+            by induc n from 0:
+                prove:
+                    $induction_demo(n)
 
-$p(1, 2)
+                prove from n = 0:
+                    $induction_demo(0)
+
+                prove induc:
+                    $induction_demo(n + 1)

@@ -1551,14 +1551,14 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                "sum: cannot verify start <= end for the summation range".to_string(),
-            )?;
-        }
+        // A finite range sum is only well-defined on a nonempty integer interval.
+        // Example: `sum(1, 3, 'Z(i){i})` is valid, but `sum(m, m - 1, f)` is not.
+        self.require_less_equal_verified(
+            &x.start,
+            &x.end,
+            verify_state,
+            "sum: cannot verify start <= end for the summation range".to_string(),
+        )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -1800,14 +1800,14 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                "product: cannot verify start <= end for the product range".to_string(),
-            )?;
-        }
+        // A finite range product is only well-defined on a nonempty integer interval.
+        // Example: `product(1, 3, 'Z(i){i})` is valid, but `product(m, m - 1, f)` is not.
+        self.require_less_equal_verified(
+            &x.start,
+            &x.end,
+            verify_state,
+            "product: cannot verify start <= end for the product range".to_string(),
+        )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -1929,7 +1929,7 @@ impl Runtime {
                         ))
                     })?;
             }
-            let k: Obj = Identifier::new(pname).into();
+            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
             );
@@ -2095,7 +2095,7 @@ impl Runtime {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
                     })?;
             }
-            let k: Obj = Identifier::new(pname).into();
+            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
             );
