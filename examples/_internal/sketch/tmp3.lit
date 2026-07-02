@@ -26,3 +26,4 @@ by thm tmp_one_eq_one()
 
 abstract_prop tmp_rel(u, v)
 know exist! m, n R st {$tmp_rel(m, n)}
+

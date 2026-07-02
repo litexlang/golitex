@@ -731,6 +731,19 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Replacement(left_replacement), Obj::Replacement(right_replacement)) => {
+                if left_replacement.prop_name.to_string() != right_replacement.prop_name.to_string()
+                {
+                    Ok(false)
+                } else {
+                    self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                        &left_replacement.source_set,
+                        &right_replacement.source_set,
+                        verify_state,
+                        equality_line_file,
+                    )
+                }
+            }
             (Obj::Range(left_range), Obj::Range(right_range)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_range.start,

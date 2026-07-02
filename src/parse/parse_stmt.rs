@@ -8,6 +8,11 @@ impl Runtime {
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => match tb.token_at_add_index(1) {
+                TUPLE => self.parse_have_tuple_stmt(tb),
+                CART => self.parse_have_cart_stmt(tb),
+                SEQ => self.parse_have_seq_stmt(tb),
+                FINITE_SEQ => self.parse_have_finite_seq_stmt(tb),
+                MATRIX => self.parse_have_matrix_stmt(tb),
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),
@@ -32,6 +37,7 @@ impl Runtime {
                 _ => Err(parse_stmt_error(tb, "stop: expected `import` or `strategy`")),
             },
             SKETCH => self.parse_sketch_stmt(tb),
+            TRY => self.parse_try_stmt(tb),
             SCRATCH => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "top-level `scratch:` has been replaced by `sketch:`".to_string(),
@@ -41,6 +47,12 @@ impl Runtime {
             PROVE => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "top-level `prove:` is not supported; use `sketch:` for a local checked block, or use `prove:` inside claim/thm/by/strategy statements".to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
+            QUESTION_GOAL => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "top-level `?` is not supported; use it as a goal block inside claim/thm/by/strategy statements".to_string(),
                     tb.line_file.clone(),
                 ),
             ))),

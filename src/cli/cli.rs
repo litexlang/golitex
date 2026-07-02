@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use crate::to_latex::to_latex_from_source_after_builtins;
+use crate::to_python::to_python_from_source_after_builtins;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -200,6 +201,72 @@ pub fn run_cli() {
                     }
                 };
                 println!("{}", latex_output_result);
+                return;
+            }
+            "-python" => {
+                index += 1;
+                let python_target_flag =
+                    match read_any_value_after_flag(&args, &mut index, "-python") {
+                        Ok(value) => value,
+                        Err(message) => {
+                            eprintln!("{}", message);
+                            print_help_message();
+                            process::exit(2);
+                        }
+                    };
+                let python_output_result = match python_target_flag.as_str() {
+                    "-f" => {
+                        let file_path =
+                            match read_non_flag_value_after_flag(&args, &mut index, "-f") {
+                                Ok(value) => value,
+                                Err(message) => {
+                                    eprintln!("{}", message);
+                                    print_help_message();
+                                    process::exit(2);
+                                }
+                            };
+                        compile_file_to_python(file_path.as_str(), output_language)
+                    }
+                    "-e" => {
+                        let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
+                            Ok(value) => value,
+                            Err(message) => {
+                                eprintln!("{}", message);
+                                print_help_message();
+                                process::exit(2);
+                            }
+                        };
+                        compile_code_to_python(code.as_str(), output_language)
+                    }
+                    "-r" => {
+                        let repo_path =
+                            match read_non_flag_value_after_flag(&args, &mut index, "-r") {
+                                Ok(value) => value,
+                                Err(message) => {
+                                    eprintln!("{}", message);
+                                    print_help_message();
+                                    process::exit(2);
+                                }
+                            };
+                        let joined = Path::new(repo_path.as_str()).join(MAIN_DOT_LIT);
+                        let joined_string = match joined.to_str() {
+                            Some(path_string) => path_string.to_string(),
+                            None => {
+                                eprintln!("Error: repo path is not valid UTF-8");
+                                process::exit(1);
+                            }
+                        };
+                        compile_file_to_python(joined_string.as_str(), output_language)
+                    }
+                    _ => {
+                        eprintln!(
+                            "-python must be followed by one of: -f <file>, -e <code>, -r <repo>"
+                        );
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                println!("{}", python_output_result);
                 return;
             }
             "-fmt" => {
@@ -469,6 +536,33 @@ fn compile_file_to_latex(file_path: &str, output_language: OutputLanguage) -> St
     }
 }
 
+fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String {
+    let code = remove_windows_carriage_return(code);
+    match to_python_from_source_after_builtins(code.as_str(), "-python -e") {
+        Ok(s) => s,
+        Err(e) => {
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
+            display_runtime_error_json(&runtime, &e, true)
+        }
+    }
+}
+
+fn compile_file_to_python(file_path: &str, output_language: OutputLanguage) -> String {
+    let source = match fs::read_to_string(file_path) {
+        Ok(content) => remove_windows_carriage_return(&content),
+        Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
+    };
+    match to_python_from_source_after_builtins(source.as_str(), file_path) {
+        Ok(s) => s,
+        Err(e) => {
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
+            display_runtime_error_json(&runtime, &e, true)
+        }
+    }
+}
+
 fn format_code(_code: &str) -> String {
     return "-fmt: format code is not implemented in the Rust kernel yet".to_string();
 }
@@ -542,6 +636,9 @@ litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <repo> : compile the given repository to LaTeX
+litex -python -f <file> : compile supported verified Litex definitions to Python
+litex -python -e <code> : compile supported verified Litex code to Python
+litex -python -r <repo> : compile supported definitions in the repository main.lit to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
@@ -572,6 +669,12 @@ mod tests {
     fn help_lists_strict_command() {
         let message = help_message();
         assert!(message.contains("litex -strict"));
+    }
+
+    #[test]
+    fn help_lists_python_command() {
+        let message = help_message();
+        assert!(message.contains("litex -python -f <file>"));
     }
 
     #[test]

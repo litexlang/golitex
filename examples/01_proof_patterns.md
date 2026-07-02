@@ -98,6 +98,12 @@ by cases 1 = 1:
         impossible 1 = 1
 ```
 
+```litex
+# Real-line trichotomy is available in the common equality-first order.
+forall x, y R:
+    x = y or x < y or x > y
+```
+
 ## 5. `by_contra`
 
 - Category: `proof pattern`
@@ -493,6 +499,17 @@ claim:
 
 claim 1 = 1:
     do_nothing
+```
+
+```litex
+claim:
+    ? 2 = 2
+    2 = 2
+
+thm question_goal_example:
+    ? forall x R:
+        x = x
+    x = x
 ```
 
 ## 17. `exist`
@@ -963,9 +980,13 @@ forall:
 # Example shape: use the equality or order relation directly.
 
 0^0 = 1
+8^(1/3) = 2
 
 forall x Q, n, m N:
     x^n * x^m = x^(n + m)
+
+forall x Q, n, m N:
+    (x^n)^m = x^(n * m)
 
 forall x, y Q, n N:
     (x * y)^n = x^n * y^n
@@ -981,6 +1002,12 @@ forall x, y Q, n N_pos:
     =>:
         x^n >= y^n
         y^n >= 0
+
+forall x, y R, n N_pos:
+    x > y
+    y >= 0
+    =>:
+        x^n > y^n
 
 forall x R:
     x < 0
@@ -999,11 +1026,33 @@ forall x, y R, n N_pos:
     =>:
         x^n < y^n
 
-forall x Q, n N_pos:
+forall x R, n N:
     abs(x^n) = abs(x)^n
 
 forall x Q_nz, n, m Z:
     x^n * x^m = x^(n + m)
+
+forall x R_nz, n Z:
+    x^n != 0
+    abs(x^n) = abs(x)^n
+
+forall x R_nz, n N_pos:
+    x^(-n) = 1 / x^n
+
+forall x, y R_nz, n Z:
+    (x * y)^n = x^n * y^n
+
+forall x, y R_pos, n Z:
+    x >= y
+    n < 0
+    =>:
+        x^n <= y^n
+
+forall x, y R_pos, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
 
 forall a R_pos, x R:
     a^x $in R_pos
@@ -1040,6 +1089,12 @@ forall A, B, C set:
 
 forall A, B, C set:
     set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+
+forall S set, x set, y set:
+    x $in S
+    not y $in S
+    =>:
+        intersect(S, {x, y}) = {x}
 
 have A, B, C set
 intersect(A, B) = intersect(B, A)
@@ -1295,14 +1350,14 @@ thm thm_nat_refl:
 by thm thm_nat_refl(1)
 1 = 1
 
-# A proved theorem is named-only. Use an explicit theorem call when you want
-# to release its instantiated then-facts into the current context.
+# A proved theorem is also stored as a forall fact. After the domain fact is
+# known, ordinary fact checking can use the theorem without an explicit call.
 prop thm_match_p(x R):
     x = 1
 prop thm_match_q(x R):
     x = 1
 
-thm thm_named_only:
+thm thm_stored_forall:
     prove:
         forall x R:
             $thm_match_p(x)
@@ -1311,8 +1366,11 @@ thm thm_named_only:
     x = 1
 
 $thm_match_p(1)
-by thm thm_named_only(1)
 $thm_match_q(1)
+
+# The explicit theorem call remains available when theorem-instantiation
+# output is useful.
+by thm thm_stored_forall(1)
 ```
 
 ## 34. `use_builtin_code_to_verify`
@@ -1509,4 +1567,53 @@ claim:
                 $is_nonempty_set(s)
     witness $is_nonempty_set(s) from 1:
         1 $in s
+```
+
+## 40. `nonzero_natural_is_positive`
+
+- Category: `fact`
+- Purpose: Shows that a nonzero natural number is a positive natural number.
+
+```litex
+forall n N:
+    n != 0
+    =>:
+        n $in N_pos
+```
+
+## 41. `by_regularity_axiom`
+
+- Category: `proof pattern`
+- Purpose: Shows the trusted regularity/foundation step for a nonempty set.
+
+```litex
+know $is_nonempty_set({1, 2})
+
+by regularity_axiom({1, 2})
+
+exist x {1, 2} st {intersect(x, {1, 2}) = {}}
+```
+
+## 42. `cup_membership`
+
+- Category: `fact`
+- Purpose: Shows introduction and elimination for family-union membership.
+
+```litex
+thm cup_intro_from_member:
+    prove:
+        forall x set, F set, A set:
+            A $in F
+            x $in A
+            =>:
+                x $in cup(F)
+    x $in cup(F)
+
+thm cup_elim_to_exist:
+    prove:
+        forall x set, F set:
+            x $in cup(F)
+            =>:
+                exist A F st {x $in A}
+    exist A F st {x $in A}
 ```

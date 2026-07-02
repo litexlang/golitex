@@ -46,7 +46,7 @@ The features of Litex come from the author's experience in writing mathematics. 
 
 Most of the features of Litex come from the author's experience in writing mathematics and code. The core verification process `match and substitute` is inspired by how people verify a fact: When he sees a fact not yet proven, he will try to match the fact with a known fact, and if the match is successful, he will substitute the arguments of the known fact into the fact to be proven. If it's ok to substitute, then the fact is proven.
 
-`template` of Litex is inspired by the `template` of C++.
+`template` of Litex is inspired by the `template` of C++ (some math object can be defined on different sets)and `interface` of Go (The parameters of template must satisfy certain properties)
 
 `struct` of Litex is inspired by the `struct` of C.
 
@@ -59,6 +59,24 @@ Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired
 Anonymous function syntax like`'(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
 
 The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
+
+## What does "Litex is built on relationships between objects instead of meanings of them"
+
+
+
+Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `know` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
+
+When we were learning Euclidean geometry in middle school, our teachers would say that these so-called points, lines, planes, and circles are not actually the real ones we draw on paper. They are imagined constructs that possess specific properties. What they fundamentally are is not important; what matters is that there are certain axioms governing these objects, which form the relationships among them. Although they can be defined by using more abstract math concepts (using cartesian coordinate for example), we don't consider that since we only want to focus on properties like parallel and intersection, which those axioms already can process. Similarly, real numbers, rational numbers, and the like can also be defined using more abstract mathematical concepts—users can construct these definitions themselves using Litex code. In fact, however, what is even more important is the relationships between them, and this is precisely what Litex emphasizes.
+
+Read the content from Terrence Tao's Analysis One:
+
+```
+
+Remark 2.1.14. Note that our definition of the natural numbers is ax- iomatic rather than constructive. We have not told you what the natural numbers are (so we do not address such questions as what the numbers are made of, are they physical objects, what do they measure, etc.) - we have only listed some things you can do with them (in fact, the only operation we have defined on them right now is the increment one) and some of the properties that they have. This is how mathematics works - it treats its objects abstractly, caring only about what properties the objects have, not what the objects are or what they mean. If one wants to do mathematics, it does not matter whether a natural number means a certain arrangement of beads on an abacus, or a certain organization of bits in a computer’s memory, or some more abstract concept with no physical substance; as long as you can increment them, see if two of them are equal, and later on do other arithmetic operations such as add and multiply, they qualify as numbers for mathematical purposes (provided they obey the requisite axioms, of course). It is possible to construct the natural numbers from other mathematical objects - from sets, for instance - but there are multiple ways to construct a working model of the natural numbers, and it is pointless, at least from a mathematician’s standpoint, as to argue about which model is the “true” one - as long as it obeys all the axioms and does all the right things, that’s good enough to do maths.
+
+```
+
+As far as Litex is concerned, Litex contains and only contains standard math properties.
 
 ## Why does Litex have this particular menu of objects and statements?
 
@@ -96,6 +114,106 @@ This is one of Litex's unusual design choices. It optimizes for user comfort
 and mathematical familiarity with as few first-class forms as possible, rather
 than starting from a maximally general programming language or proof-term
 calculus.
+
+## What are builtin objects, builtin facts, and builtin rules?
+
+Litex is easiest to understand through four related layers:
+
+- an `object` is a mathematical expression, such as `x`, `x + 1`, `R`,
+  `{1, 2}`, `abs(x)`, or `fn(n N_pos) R`;
+- a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
+  `1 + 2 = 3`, or `x = y or x < y or x > y`;
+- a `statement` is a line or block that acts on the mathematical context, such
+  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `know`;
+- a verification rule is a checker route for deciding whether a fact follows
+  from the current context.
+
+Each layer has builtin material.
+
+A **builtin object** is an object form or name that Litex understands directly.
+Not every builtin word is an object: `not`, `and`, `or`, `forall`, and `exist`
+are builtin logical or factual forms because they express the shape of facts
+and proofs. Builtin object heads are expressions such as standard sets,
+arithmetic operations, tuple and set forms, or `abs(x)`. Some of these are
+mainly for user convenience. The absolute value object `abs(x)` is a good
+example: users could define a similar function themselves from basic order and
+arithmetic, but the standard spelling is built in because ordinary mathematics
+uses it constantly.
+
+```litex
+have fn self_abs(x R) R by cases:
+    case x = 0: 0
+    case x < 0: -x
+    case x > 0: x
+```
+
+The point is not that `abs` is impossible to express without a builtin name.
+The point is that writing `abs(x)` lets the verifier connect the expression to
+the usual absolute-value rules without every file rebuilding that interface.
+
+A **builtin fact** is trusted background already present when a user file
+starts. Many of these are loaded as ordinary Litex statements inside the
+builtin environment, such as operator typing facts, common comparison facts,
+and standard relationships among familiar objects. For example, the usual
+trichotomy of real numbers is available as background:
+
+```litex
+forall x, y R:
+    x = y or x < y or x > y
+```
+
+This kind of fact is important because some ordinary mathematical axioms are
+not single equalities. They may be disjunctions, implications, existence
+facts, or universal facts. Litex needs those fact shapes to be first-class so
+the background axiom can actually be used in later checking.
+
+A **builtin statement** is a statement form that the executor understands as a
+primitive context action. For example, `have` introduces objects, `forall`
+checks universal facts, `claim` and `thm` prove reusable facts, `witness`
+proves existential facts, and `by cases` organizes case proofs. These are not
+ordinary mathematical objects. They are the proof-script actions that grow or
+inspect the current context.
+
+A **builtin verification rule** is different from a stored theorem. It is a
+small verifier pattern that can close the current goal, often by looking at
+equivalent forms or doing routine computation. For example, when the goal is
+`x > y`, Litex can use common equivalent forms such as `y < x` or
+`x - y > 0`:
+
+Some of these routes are Rust-level verifier rules, while some common
+equivalences are loaded as builtin `forall` facts in the initial environment.
+The user-facing effect is similar: the verifier can use common mathematical
+background without the current file proving a local lemma first.
+
+```litex
+forall x, y R:
+    x - y > 0
+    =>:
+        x > y
+
+forall x, y R:
+    y < x
+    =>:
+        x > y
+```
+
+Builtin verification rules also cover calculation-style facts:
+
+```litex
+1 + 2 = 3
+```
+
+These rules matter because ordinary mathematical writing silently uses many
+tiny equivalences and calculations. Without builtin rules, users would have to
+write every bridge by hand: convert `x > y` to `y < x`, convert that to
+`x - y > 0`, cite the arithmetic theorem for `1 + 2 = 3`, and so on. Litex
+instead lets the user write the meaningful step while the verifier handles a
+bounded amount of common background reasoning.
+
+This convenience is also part of the trust boundary. Builtin objects, builtin
+facts, builtin statement behavior, and builtin verification rules all deserve
+tests, examples, and audit-friendly output. They are not hidden magic; they are
+the built-in mathematical interface that makes short Litex proofs possible.
 
 ## If there are ten thousand `forall` facts, will proving one proposition become slow?
 

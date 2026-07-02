@@ -396,6 +396,15 @@ impl ByAxiomOfChoiceStmt {
     }
 }
 
+impl ByRegularityAxiomStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\text{{\textbf{{by regularity_axiom}}}}({})",
+            self.set.to_latex_string()
+        )
+    }
+}
+
 impl ByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let goals = self
@@ -559,6 +568,17 @@ impl FnRangeOn {
             FN_RANGE_ON,
             self.function.to_latex_string(),
             self.set.to_latex_string()
+        )
+    }
+}
+
+impl Replacement {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {} \right)",
+            REPLACEMENT,
+            self.prop_name,
+            self.source_set.to_latex_string()
         )
     }
 }
@@ -875,6 +895,8 @@ impl FnObj {
             FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => latex_texttt_escape(&v.to_string()),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
+            FnObjHead::TupleIndex(p) => latex_local_ident(&p.name),
+            FnObjHead::CartIndex(p) => latex_local_ident(&p.name),
             FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
         };
         let mut s = head;
@@ -1728,6 +1750,23 @@ impl SketchStmt {
     }
 }
 
+impl TryStmt {
+    pub fn to_latex_string(&self) -> String {
+        if self.proof.is_empty() {
+            return r"\text{\texttt{(empty proof)}}".to_string();
+        }
+        let rows: Vec<String> = self
+            .proof
+            .iter()
+            .map(|st| format!(r"& \quad {}", st.to_latex_string()))
+            .collect();
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
 impl Range {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2084,6 +2123,7 @@ impl Obj {
             Obj::Count(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
             Obj::FnRangeOn(x) => x.to_latex_string(),
+            Obj::Replacement(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
             Obj::SumOfFiniteSet(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
@@ -2108,6 +2148,8 @@ impl Obj {
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefStructField(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::TupleIndex(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::CartIndex(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
@@ -2136,6 +2178,13 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(x)) => x.to_latex_string(),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
             Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(x)) => {
@@ -2155,6 +2204,7 @@ impl Stmt {
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
@@ -2180,6 +2230,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByAntisymmetricPropStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByZornLemmaStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
         }
     }

@@ -100,6 +100,8 @@ impl FreeParamCollection {
             ParamObjType::DefStructField => {
                 DefStructFieldFreeParamObj::new(name.to_string()).into()
             }
+            ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::CartIndex => CartIndexFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
         }
     }

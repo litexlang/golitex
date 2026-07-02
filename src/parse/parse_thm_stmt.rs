@@ -2,7 +2,8 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_def_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(THM)?;
+        let keyword = THM;
+        tb.skip_token(keyword)?;
         let mut thm_names = Vec::new();
         loop {
             let name = tb.advance()?;
@@ -22,7 +23,7 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "thm: unexpected token after theorem name list".to_string(),
+                    format!("{}: unexpected token after theorem name list", keyword),
                     tb.line_file.clone(),
                 ),
             )));
@@ -30,58 +31,25 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "thm: expects a `prove:` block and optional proof body".to_string(),
+                    format!(
+                        "{}: expects a `prove:` block and optional proof body",
+                        keyword
+                    ),
                     tb.line_file.clone(),
                 ),
             )));
         }
 
-        let forall_fact = {
-            let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+        let (forall_fact, inline_proof_start) = {
+            let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "thm: expected prove block".to_string(),
+                        format!("{}: expected `prove:` or `?` goal block", keyword),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-            if prove_block.body.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "thm: `prove:` must contain exactly one forall fact".to_string(),
-                        prove_block.line_file.clone(),
-                    ),
-                )));
-            }
-            let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "thm: missing forall block".to_string(),
-                        prove_block.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let fact = self.parse_fact(forall_block)?;
-            match fact {
-                Fact::ForallFact(forall_fact) => forall_fact,
-                Fact::ForallFactWithIff(_) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "thm: forall with `<=>` is not allowed here".to_string(),
-                            forall_block.line_file.clone(),
-                        ),
-                    )));
-                }
-                _ => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "thm: `prove:` must be a single `forall` fact".to_string(),
-                            forall_block.line_file.clone(),
-                        ),
-                    )));
-                }
-            }
+            self.parse_goal_forall_fact_block_with_inline_proof(goal_block, keyword)?
         };
 
         let names = forall_fact.params_def_with_type.collect_param_names();
@@ -91,14 +59,22 @@ impl Runtime {
             &names,
             lf,
             |this| {
-                tb.body
-                    .iter_mut()
-                    .skip(1)
-                    .map(|b| this.parse_stmt(b))
-                    .collect::<Result<_, _>>()
+                let mut proof = Vec::new();
+                if inline_proof_start > 0 {
+                    if let Some(goal_block) = tb.body.get_mut(0) {
+                        for block in goal_block.body.iter_mut().skip(inline_proof_start) {
+                            proof.push(this.parse_stmt(block)?);
+                        }
+                    }
+                }
+                for block in tb.body.iter_mut().skip(1) {
+                    proof.push(this.parse_stmt(block)?);
+                }
+                Ok(proof)
             },
         )?;
 
-        Ok(DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone()).into())
+        let stmt = DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone());
+        Ok(stmt.into())
     }
 }

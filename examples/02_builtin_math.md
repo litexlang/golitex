@@ -32,6 +32,18 @@ forall a R:
     =>:
         a = 0
 
+forall a R:
+    a != 0
+    =>:
+        abs(a) > 0
+
+forall a R:
+    abs(a) = abs(-a)
+    abs(-a) = abs(a)
+
+forall x, y R:
+    abs(x - y) = abs(y - x)
+
 forall x, y R:
     abs(x * y) = abs(x) * abs(y)
 
@@ -84,6 +96,9 @@ forall x, y R:
 forall x R:
     x ^ 2 = abs(x) ^ 2
     x ^ 4 = abs(x) ^ 4
+
+forall x R, n N:
+    abs(x^n) = abs(x)^n
 
 forall a, b R:
     0 <= a <= b
@@ -521,6 +536,11 @@ count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({
 count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
 count(set_diff({1, 2}, {2, 3})) = count(set_minus({1, 2}, {2, 3})) + count(set_minus({2, 3}, {1, 2}))
 
+forall X finite_set:
+    count(X) >= 1
+    =>:
+        $is_nonempty_set(X)
+
 claim:
     prove:
         forall X, Y set:
@@ -753,6 +773,14 @@ forall x Z:
 
 forall x Z:
     x % 1 = 0
+
+forall a Z, b N_pos:
+    0 <= a % b < b
+    (a - a % b) % b = 0
+
+forall a N, b N_pos:
+    0 <= a % b < b
+    (a - a % b) % b = 0
 ```
 
 ```litex
@@ -879,12 +907,16 @@ sketch:
 
 ```litex
 0^0 = 1
+8^(1/3) = 2
 
 forall a R:
     a^0 = 1
 
 forall a R, m, n N:
     a^(m+n) = a^m * a^n
+
+forall a R, m, n N:
+    (a^m)^n = a^(m * n)
 
 forall a Z, m, n Z:
     m >= 1
@@ -921,6 +953,12 @@ forall x, y R, m N_pos:
     x <= y
     =>:
         x^m <= y^m
+
+forall x, y R, m N_pos:
+    x > y
+    y >= 0
+    =>:
+        x^m > y^m
 
 forall x R:
     x < 0
@@ -973,6 +1011,28 @@ forall x R_pos, q R:
     x^0 = 1
     x^q * x^(-q) = 1
     x^(-q) = 1 / x^q
+
+forall x R_nz, n Z:
+    x^n != 0
+    abs(x^n) = abs(x)^n
+
+forall x R_nz, n N_pos:
+    x^(-n) = 1 / x^n
+
+forall x, y R_nz, n Z:
+    (x * y)^n = x^n * y^n
+
+forall x, y R_pos, n Z:
+    x >= y
+    n < 0
+    =>:
+        x^n <= y^n
+
+forall x, y R_pos, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
 
 ```
 

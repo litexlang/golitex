@@ -23,6 +23,18 @@ impl DefThmStmt {
             line_file,
         }
     }
+
+    pub fn keyword(&self) -> &'static str {
+        THM
+    }
+
+    pub fn store_reason() -> &'static str {
+        "proved theorem"
+    }
+
+    pub fn output_type_string_for_stmt(&self) -> String {
+        "theorem".to_string()
+    }
 }
 
 impl fmt::Display for DefThmStmt {
@@ -30,7 +42,7 @@ impl fmt::Display for DefThmStmt {
         write!(
             f,
             "{} {}{}\n{}{}\n{}",
-            THM,
+            self.keyword(),
             vec_to_string_with_sep(&self.names, ", ".to_string()),
             COLON,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),

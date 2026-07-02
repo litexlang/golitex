@@ -13,6 +13,7 @@ pub struct Runtime {
     pub detail_output: bool,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
+    pub loading_builtin_code: bool,
 }
 
 impl Runtime {
@@ -29,12 +30,14 @@ impl Runtime {
             detail_output: false,
             strict_mode: false,
             output_language: OutputLanguage::English,
+            loading_builtin_code: false,
         }
     }
 
     // Same empty runtime as `new`, then runs builtin definitions; panics if that fails.
     pub fn new_with_builtin_code() -> Self {
         let mut runtime = Self::new();
+        runtime.loading_builtin_code = true;
         let (stmt_results, runtime_error) =
             crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
         let (ok, msg) = crate::pipeline::render_run_source_code_output(
@@ -43,6 +46,7 @@ impl Runtime {
             &runtime_error,
             true,
         );
+        runtime.loading_builtin_code = false;
         if !ok {
             panic!("builtin code execution failed: {}", msg);
         }
@@ -61,6 +65,7 @@ impl Runtime {
             detail_output: parent_runtime.detail_output,
             strict_mode: false,
             output_language: parent_runtime.output_language,
+            loading_builtin_code: false,
         }
     }
 }
@@ -200,6 +205,34 @@ impl Runtime {
         let result = f(self);
         self.pop_env();
         result
+    }
+
+    /// Runs a closure in a temporary child environment. On success, commits the child environment
+    /// into the parent with environment merge semantics; on failure, discards it.
+    pub fn run_in_local_env_and_commit<T, F>(&mut self, f: F) -> Result<T, RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
+    {
+        let module_manager_before = self.module_manager.borrow().clone();
+        let parsing_free_params_before = self.parsing_free_param_collection.clone();
+
+        self.push_env();
+        let result = f(self);
+        let child = self
+            .environment_stack
+            .pop()
+            .expect("local environment should exist after push_env");
+
+        self.parsing_free_param_collection = parsing_free_params_before;
+        *self.module_manager.borrow_mut() = module_manager_before;
+
+        let value = result?;
+        let parent = self
+            .environment_stack
+            .last_mut()
+            .expect("parent environment should exist when committing child env");
+        parent.merge_committed_child(*child)?;
+        Ok(value)
     }
 
     /// Restores [`Runtime::parsing_free_param_collection`] after `f` so parse-time bindings (e.g.

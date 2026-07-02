@@ -1,74 +1,17 @@
-import Real
+# Definition 3.3.1 (Functions). Let X,Y be sets, and let P(x,y) be a property pertaining to an object x ∈ X and an object y ∈ Y , such that for every x ∈ X, there is exactly one y ∈ Y for which P(x,y) is true (this is sometimes known as the vertical line test). Then we define the function f : X → Y defined by P on the domain X and range Y to be the object which, given any input x ∈ X, assigns an output f(x) ∈ Y , defined to be the unique object f(x) for which P(x,f(x)) is true. Thus, for any x ∈ X and y ∈ Y ,
+# y=f(x) ⇐⇒ P(x,y)istrue.
 
-prop seq_tail_within(a seq(R), L R, epsilon R_pos, n0 N_pos):
-    forall n N_pos:
-        n >= n0
-        =>:
-            abs(a(n) - L) < epsilon
+# 对应的是 litex 的用 have fn as set 语句
+# 当然，litex还有非常多其他的定义函数的方式，然后你在这里都写一下。
 
-prop seq_converges_to(a seq(R), L R):
-    forall epsilon R_pos:
-        exist n0 N_pos st {$seq_tail_within(a, L, epsilon, n0)}
 
-prop seq_sandwiched_between(a, b, c seq(R)):
-    forall n N_pos:
-        a(n) <= b(n) <= c(n)
+"""
+Lemma 3.3.12 (Composition is associative). Let f : Z -> W, g : Y -> Z,
+and h : X -> Y be functions. Then f o (g o h) = (f o g) o h.
+"""
 
-thm squeeze_abs_bound:
+claim:
     prove:
-        forall x, y, z, L R, epsilon R_pos:
-            x <= y <= z
-            abs(x - L) < epsilon
-            abs(z - L) < epsilon
-            =>:
-                abs(y - L) < epsilon
-    0 < epsilon
-    abs(epsilon) = epsilon
-    abs(x - L) < abs(epsilon)
-    -abs(epsilon) < x - L < abs(epsilon)
-    -epsilon < x - L < epsilon
-    abs(z - L) < abs(epsilon)
-    -abs(epsilon) < z - L < abs(epsilon)
-    -epsilon < z - L < epsilon
-    x - L <= y - L
-    -epsilon < x - L <= y - L
-    -epsilon < y - L
-    y - L <= z - L
-    y - L <= z - L < epsilon
-    y - L < epsilon
-    y - L > -epsilon
-    -(y - L) < -(-epsilon)
-    -(-epsilon) = epsilon
-    -(y - L) < epsilon
-    abs(y - L) < epsilon
-
-thm sequence_squeeze_theorem:
-    prove:
-        forall a, b, c seq(R), L R:
-            $seq_sandwiched_between(a, b, c)
-            $seq_converges_to(a, L)
-            $seq_converges_to(c, L)
-            =>:
-                $seq_converges_to(b, L)
-    claim:
-        prove:
-            forall epsilon R_pos:
-                exist n0 N_pos st {$seq_tail_within(b, L, epsilon, n0)}
-        exist n_a N_pos st {$seq_tail_within(a, L, epsilon, n_a)}
-        have by exist n_a N_pos st {$seq_tail_within(a, L, epsilon, n_a)}: n_a
-        exist n_c N_pos st {$seq_tail_within(c, L, epsilon, n_c)}
-        have by exist n_c N_pos st {$seq_tail_within(c, L, epsilon, n_c)}: n_c
-        max(n_a, n_c) $in N_pos
-        witness exist n0 N_pos st {$seq_tail_within(b, L, epsilon, n0)} from max(n_a, n_c):
-            forall n N_pos:
-                n >= max(n_a, n_c)
-                =>:
-                    n_a <= max(n_a, n_c) <= n
-                    n_c <= max(n_a, n_c) <= n
-                    abs(a(n) - L) < epsilon
-                    abs(c(n) - L) < epsilon
-                    a(n) <= b(n) <= c(n)
-                    abs(b(n) - L) < epsilon
-            $seq_tail_within(b, L, epsilon, max(n_a, n_c))
-        exist n0 N_pos st {$seq_tail_within(b, L, epsilon, n0)}
-    $seq_converges_to(b, L)
+        forall f fn(z N) N, g fn(y N) N, h fn(x N) N, x N:
+            f(g(h(x))) = f(g(h(x)))
+    f(g(h(x))) = f(g(h(x)))

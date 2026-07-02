@@ -162,6 +162,7 @@ sketch:
     z = f(1)
     z $in fn_range(f)
     z $in R
+    exist x R st {x > 0, z = f(x)}
 
     have by preimage x from z $in fn_range(f)
     x $in R
@@ -175,6 +176,7 @@ sketch:
 
     shift(2) $in fn_range(shift)
     fn_range(shift) $subset R
+    exist x R st {shift(2) = shift(x)}
 
     have by preimage x from shift(2) $in fn_range(shift)
     x $in R
@@ -186,6 +188,7 @@ sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
+    exist x R st {x > 0, f(1) = f(x)}
     have by preimage x from f(1) $in fn_range(f)
     x $in R
     x > 0
@@ -199,6 +202,7 @@ sketch:
     g(0, 1) $in fn_range(g)
     fn_range(g) $subset R
     fn_range(g) $in power_set(R)
+    exist a, b R st {a < b, g(0, 1) = g(a, b)}
 
     have by preimage a, b from g(0, 1) $in fn_range(g)
     a $in R
@@ -217,6 +221,7 @@ sketch:
     fn_range_on(a, 1...3) $in power_set(R)
     $is_finite_set(fn_range_on(a, 1...3))
     count(fn_range_on(a, 1...3)) $in N
+    exist k 1...3 st {a(2) = a(k)}
 
     have by preimage k from a(2) $in fn_range_on(a, 1...3)
     k $in 1...3
@@ -279,6 +284,11 @@ have fn f as set:
 
 forall x A:
     f(x) = x
+
+forall x A, y B:
+    y = x
+    =>:
+        y = f(x)
 ```
 
 ## 12. `have_fn_by_induc`
@@ -655,6 +665,54 @@ sketch:
     count({1, 2, 3}) = 3
 ```
 
+**replacement sets from functional relations**
+
+```litex
+sketch:
+    abstract_prop real_iterated_power_set(n, y)
+
+    # Recursion theorem interface: each index determines one iterated set.
+    know forall x N, y, y2 set:
+        $real_iterated_power_set(x, y)
+        $real_iterated_power_set(x, y2)
+        =>:
+            y = y2
+
+    know:
+        $real_iterated_power_set(0, R)
+        forall n N, y set:
+            $real_iterated_power_set(n, y)
+            =>:
+                $real_iterated_power_set(n + 1, power_set(y))
+
+    have real_power_set_tower set = replacement(real_iterated_power_set, N)
+
+    $real_iterated_power_set(1, power_set(R))
+    $real_iterated_power_set(2, power_set(power_set(R)))
+    $real_iterated_power_set(3, power_set(power_set(power_set(R))))
+
+    R $in replacement(real_iterated_power_set, N)
+    power_set(R) $in replacement(real_iterated_power_set, N)
+    power_set(power_set(R)) $in replacement(real_iterated_power_set, N)
+    power_set(power_set(power_set(R))) $in replacement(real_iterated_power_set, N)
+
+    R $in real_power_set_tower
+    power_set(R) $in real_power_set_tower
+    power_set(power_set(R)) $in real_power_set_tower
+    power_set(power_set(power_set(R))) $in real_power_set_tower
+
+    forall y replacement(real_iterated_power_set, N):
+        exist n N st {$real_iterated_power_set(n, y)}
+
+    claim:
+        prove:
+            exist S set st {R $in S, power_set(R) $in S, power_set(power_set(R)) $in S}
+        witness exist S set st {R $in S, power_set(R) $in S, power_set(power_set(R)) $in S} from real_power_set_tower:
+            R $in real_power_set_tower
+            power_set(R) $in real_power_set_tower
+            power_set(power_set(R)) $in real_power_set_tower
+```
+
 **unions and intersections over families**
 
 **Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).**
@@ -830,6 +888,8 @@ sketch:
 **imports and run_file — module or file inclusion (syntax only here)**
 
 **import Nat**
+
+**import "./chap6_sketch.lit" as chap6**
 
 **run_file "./runfile2.lit"**
 
@@ -1273,4 +1333,11 @@ template<s set, z s>:
 (1, 2) = (1, 2)
 cart_dim(cart(R, Q)) = 2
 proj(cart(R, Q), 1) = R
+
+have n N_pos = 3
+have cart R3 for i <= n, proj(R3, i) = R
+R3 = cart(R, R, R)
+
+have tuple real_tuple for i <= n, real_tuple[i] = R
+(R, R, R) = real_tuple
 ```

@@ -34,6 +34,11 @@ pub enum DefObjStmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    HaveTupleStmt(HaveTupleStmt),
+    HaveCartStmt(HaveCartStmt),
+    HaveSeqStmt(HaveSeqStmt),
+    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
+    HaveMatrixStmt(HaveMatrixStmt),
 }
 
 #[derive(Clone)]
@@ -70,6 +75,7 @@ pub enum ByStmt {
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
+    ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     ByThmStmt(ByThmStmt),
 }
 
@@ -83,6 +89,7 @@ pub enum WitnessStmt {
 pub enum ProofBlockStmt {
     ClaimStmt(ClaimStmt),
     SketchStmt(SketchStmt),
+    TryStmt(TryStmt),
 }
 
 #[derive(Clone)]

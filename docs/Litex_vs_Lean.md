@@ -391,7 +391,7 @@ Litex treats anonymous functions as ordinary objects. You can pass them directly
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})</code></pre>
+<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>def inner (x : ℤ) : ℤ :=
@@ -405,7 +405,7 @@ def total : ℤ :=
 **What differs.** Litex can pass an anonymous function object directly to a repeated sum or product. Lean can do the same mathematics, but users often introduce `fun` expressions, named definitions, ranges, coercions, or library conventions around finite sums.
 
 ```litex
-eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
+eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
 ```
 
 ### Set Expressions Are Ordinary Objects

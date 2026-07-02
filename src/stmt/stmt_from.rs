@@ -90,6 +90,36 @@ impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     }
 }
 
+impl From<HaveTupleStmt> for Stmt {
+    fn from(v: HaveTupleStmt) -> Self {
+        DefObjStmt::HaveTupleStmt(v).into()
+    }
+}
+
+impl From<HaveCartStmt> for Stmt {
+    fn from(v: HaveCartStmt) -> Self {
+        DefObjStmt::HaveCartStmt(v).into()
+    }
+}
+
+impl From<HaveSeqStmt> for Stmt {
+    fn from(v: HaveSeqStmt) -> Self {
+        DefObjStmt::HaveSeqStmt(v).into()
+    }
+}
+
+impl From<HaveFiniteSeqStmt> for Stmt {
+    fn from(v: HaveFiniteSeqStmt) -> Self {
+        DefObjStmt::HaveFiniteSeqStmt(v).into()
+    }
+}
+
+impl From<HaveMatrixStmt> for Stmt {
+    fn from(v: HaveMatrixStmt) -> Self {
+        DefObjStmt::HaveMatrixStmt(v).into()
+    }
+}
+
 impl From<DefTemplateStmt> for Stmt {
     fn from(v: DefTemplateStmt) -> Self {
         DefInterfaceStmt::DefTemplateStmt(v).into()
@@ -117,6 +147,12 @@ impl From<KnowStmt> for Stmt {
 impl From<SketchStmt> for Stmt {
     fn from(v: SketchStmt) -> Self {
         ProofBlockStmt::SketchStmt(v).into()
+    }
+}
+
+impl From<TryStmt> for Stmt {
+    fn from(v: TryStmt) -> Self {
+        ProofBlockStmt::TryStmt(v).into()
     }
 }
 
@@ -255,6 +291,12 @@ impl From<ByZornLemmaStmt> for Stmt {
 impl From<ByAxiomOfChoiceStmt> for Stmt {
     fn from(v: ByAxiomOfChoiceStmt) -> Self {
         ByStmt::ByAxiomOfChoiceStmt(v).into()
+    }
+}
+
+impl From<ByRegularityAxiomStmt> for Stmt {
+    fn from(v: ByRegularityAxiomStmt) -> Self {
+        ByStmt::ByRegularityAxiomStmt(v).into()
     }
 }
 

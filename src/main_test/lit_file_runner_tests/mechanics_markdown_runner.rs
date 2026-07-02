@@ -1,14 +1,23 @@
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
 use super::helper::{
-    collect_markdown_files_under_dir_sorted, litex_snippets_from_markdown_files,
-    run_single_the_mechanics_chapter_markdown_file_impl, run_with_large_stack, the_mechanics_dir,
-    THE_MECHANICS_SUBDIR,
+    collect_markdown_files_under_dir_sorted, format_litex_failure_location,
+    litex_snippets_from_markdown_files, run_single_the_mechanics_chapter_markdown_file_impl,
+    run_with_large_stack, spawn_with_large_stack, the_mechanics_dir, THE_MECHANICS_SUBDIR,
 };
+
+#[derive(Debug)]
+struct MechanicsFileRunSummary {
+    file_index: usize,
+    snippet_durations_ms: Vec<(String, f64)>,
+    failed_labels: Vec<String>,
+    failure_outputs: Vec<String>,
+}
 
 #[test]
 fn run_the_mechanics_markdown_files() {
@@ -180,73 +189,44 @@ pub(super) fn run_the_mechanics_markdown_files_impl() {
         THE_MECHANICS_SUBDIR
     );
 
-    let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
-    let mut failed_labels: Vec<String> = Vec::new();
     let wall_start = Instant::now();
     let mut file_count_with_snippets: usize = 0;
-    for snippets in snippets_by_file.iter() {
+    let summaries_by_file = Arc::new(Mutex::new(Vec::new()));
+    let mut handles = Vec::new();
+
+    for (file_index, snippets) in snippets_by_file.into_iter().enumerate() {
         if snippets.is_empty() {
             continue;
         }
 
         file_count_with_snippets += 1;
-        let mut runtime = Runtime::new_with_builtin_code();
+        let summaries_by_file_for_thread = Arc::clone(&summaries_by_file);
+        handles.push(spawn_with_large_stack(
+            format!("run_the_mechanics_markdown_file_{}", file_index).as_str(),
+            move || {
+                let summary = run_the_mechanics_markdown_file_snippets(file_index, &snippets);
+                summaries_by_file_for_thread.lock().unwrap().push(summary);
+            },
+        ));
+    }
 
-        for (snippet_index, (label, source_code, md_path_for_run_file)) in
-            snippets.iter().enumerate()
-        {
-            if snippet_index == 0 {
-                runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
-            } else {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
-            }
+    for handle in handles {
+        handle.join().unwrap();
+    }
 
-            let normalized_source = remove_windows_carriage_return(source_code);
-            let start_snippet = Instant::now();
-            let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                run_source_code(normalized_source.as_str(), &mut runtime)
-            }));
-            let (stmt_results, runtime_error) = match run_result {
-                Ok(result) => result,
-                Err(panic_payload) => {
-                    let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
-                    let panic_message = if let Some(message) = panic_payload.downcast_ref::<&str>()
-                    {
-                        message.to_string()
-                    } else if let Some(message) = panic_payload.downcast_ref::<String>() {
-                        message.clone()
-                    } else {
-                        "non-string panic payload".to_string()
-                    };
-                    println!(
-                        "=== [PANICKED] {} markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
-                        THE_MECHANICS_SUBDIR, duration_ms, panic_message, label
-                    );
-                    failed_labels.push(label.clone());
-                    break;
-                }
-            };
-            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+    let mut summaries = Arc::try_unwrap(summaries_by_file)
+        .unwrap()
+        .into_inner()
+        .unwrap();
+    summaries.sort_by_key(|summary| summary.file_index);
 
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                let status_label = if run_output.contains("\"error_type\": \"UnknownError\"") {
-                    "UNKNOWN"
-                } else {
-                    "FAILED"
-                };
-                println!(
-                    "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
-                    status_label, THE_MECHANICS_SUBDIR, duration_ms, run_output, status_label, label
-                );
-                failed_labels.push(label.clone());
-                break;
-            }
-            snippet_durations_ms.push((label.clone(), duration_ms));
-        }
+    let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+    let mut failed_labels: Vec<String> = Vec::new();
+    let mut failure_outputs: Vec<String> = Vec::new();
+    for summary in summaries {
+        snippet_durations_ms.extend(summary.snippet_durations_ms);
+        failed_labels.extend(summary.failed_labels);
+        failure_outputs.extend(summary.failure_outputs);
     }
 
     let status_text = if failed_labels.is_empty() {
@@ -262,8 +242,16 @@ pub(super) fn run_the_mechanics_markdown_files_impl() {
         status_text,
         wall_start.elapsed().as_secs_f64() * 1000.0
     );
+    println!(
+        "--- {} markdown: ran {} markdown file(s) in parallel ---",
+        THE_MECHANICS_SUBDIR, file_count_with_snippets
+    );
     for (label, duration_ms) in snippet_durations_ms.iter() {
         println!("  OK  {:.2} ms  {}", duration_ms, label);
+    }
+
+    for output in failure_outputs.iter() {
+        println!("{}", output);
     }
 
     if !failed_labels.is_empty() {
@@ -278,4 +266,80 @@ pub(super) fn run_the_mechanics_markdown_files_impl() {
         THE_MECHANICS_SUBDIR,
         failed_labels.len()
     );
+}
+
+fn run_the_mechanics_markdown_file_snippets(
+    file_index: usize,
+    snippets: &[(String, String, String)],
+) -> MechanicsFileRunSummary {
+    let mut runtime = Runtime::new_with_builtin_code();
+    let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+    let mut failed_labels: Vec<String> = Vec::new();
+    let mut failure_outputs: Vec<String> = Vec::new();
+
+    for (snippet_index, (label, source_code, md_path_for_run_file)) in snippets.iter().enumerate() {
+        if snippet_index == 0 {
+            runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
+        } else {
+            runtime.clear_current_env_and_parse_name_scope();
+            runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+        }
+
+        let normalized_source = remove_windows_carriage_return(source_code);
+        let start_snippet = Instant::now();
+        let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            run_source_code(normalized_source.as_str(), &mut runtime)
+        }));
+        let (stmt_results, runtime_error) = match run_result {
+            Ok(result) => result,
+            Err(panic_payload) => {
+                let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+                let panic_message = if let Some(message) = panic_payload.downcast_ref::<&str>() {
+                    message.to_string()
+                } else if let Some(message) = panic_payload.downcast_ref::<String>() {
+                    message.clone()
+                } else {
+                    "non-string panic payload".to_string()
+                };
+                failure_outputs.push(format!(
+                    "=== [PANICKED] {} markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
+                    THE_MECHANICS_SUBDIR, duration_ms, panic_message, label
+                ));
+                failed_labels.push(label.clone());
+                break;
+            }
+        };
+        let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        if !run_succeeded {
+            let status_label = if run_output.contains("\"error_type\": \"UnknownError\"") {
+                "UNKNOWN"
+            } else {
+                "FAILED"
+            };
+            let failure_location = format_litex_failure_location(label, &runtime_error);
+            failure_outputs.push(format!(
+                "=== [{}] {} markdown snippet ({:.2} ms) ===\n{}\n>>> {} location: {}\n",
+                status_label,
+                THE_MECHANICS_SUBDIR,
+                duration_ms,
+                run_output,
+                status_label,
+                failure_location
+            ));
+            failed_labels.push(failure_location);
+            break;
+        }
+        snippet_durations_ms.push((label.clone(), duration_ms));
+    }
+
+    MechanicsFileRunSummary {
+        file_index,
+        snippet_durations_ms,
+        failed_labels,
+        failure_outputs,
+    }
 }
