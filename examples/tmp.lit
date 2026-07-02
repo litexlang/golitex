@@ -1,0 +1,3 @@
+template<X finite_set, f fn(x X) R, g fn(x X) closed_range(1, count(X)): $is_bijective_fn(X, closed_range(1, count(X)), g)>:
+    have fn self_finite_set_sum_by_index(X, f) R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
