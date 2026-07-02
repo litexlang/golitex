@@ -1138,6 +1138,19 @@ eval sum(0, 0, '(x Z) Z {sum(0, x, '(y Z) Z {x + y})})
 # Point-wise: sum f = sum g + sum h on the same range.
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
 
+# Point-wise order on the same range gives order between finite sums.
+forall f, g fn(x Z) R:
+    forall i Z:
+        1 <= i <= 3
+        =>:
+            f(i) <= g(i)
+    =>:
+        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+
+# Finite-sum triangle inequality.
+forall f fn(x Z) R:
+    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+
 # Merge adjacent index ranges: sum(a..b) + sum((b+1)..c) = sum(a..c), same summand.
 sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
 
@@ -1169,6 +1182,24 @@ forall X power_set(Z):
     $is_finite_set(X)
     =>:
         finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+
+# A finite-set sum defined by a bijective enumeration is independent of the enumeration.
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+    forall x X:
+        exist! i closed_range(1, count(X)) st {g(i) = x}
+
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
+thm finite_set_sum_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 
 # Finite-set product: multiply the function value over each element of a finite set.
 finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4

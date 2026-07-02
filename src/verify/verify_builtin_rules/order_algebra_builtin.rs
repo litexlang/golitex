@@ -965,6 +965,84 @@ impl Runtime {
         Ok(None)
     }
 
+    // Finite sum monotonicity on a shared integer range.
+    // Example: from `forall i Z: m <= i <= n => f(i) <= g(i)`, prove
+    // `sum(m, n, '(i Z) R {f(i)}) <= sum(m, n, '(i Z) R {g(i)})`.
+    fn try_less_equal_sum_pointwise_on_same_integer_range(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (&f.left, &f.right) else {
+            return Ok(None);
+        };
+
+        let verify_state = VerifyState::new(0, true);
+        let start_result = self.verify_objs_are_equal_in_equality_builtin(
+            left_sum.start.as_ref(),
+            right_sum.start.as_ref(),
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !start_result.is_true() {
+            return Ok(None);
+        }
+        let end_result = self.verify_objs_are_equal_in_equality_builtin(
+            left_sum.end.as_ref(),
+            right_sum.end.as_ref(),
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !end_result.is_true() {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) =
+            self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_inst) =
+            self.instantiate_unary_anonymous_summand_at(right_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+
+        let pointwise_fact: AtomicFact =
+            LessEqualFact::new(left_inst, right_inst, f.line_file.clone()).into();
+        let dom_lo: Fact = LessEqualFact::new(
+            (*left_sum.start).clone(),
+            x_obj.clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let dom_hi: Fact =
+            LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
+        let pointwise_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
+            rt.verify_atomic_fact(&pointwise_fact, &verify_state)
+        })?;
+        if !pointwise_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "finite sum monotonicity from pointwise order on the integer range".to_string(),
+                vec![start_result, end_result, pointwise_result],
+            ),
+        )))
+    }
+
     fn try_less_equal_algebra(
         &mut self,
         f: &LessEqualFact,
@@ -1014,6 +1092,10 @@ impl Runtime {
                 atomic_fact,
             )?
         {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_less_equal_sum_pointwise_on_same_integer_range(f, atomic_fact)? {
             return Ok(Some(r));
         }
 

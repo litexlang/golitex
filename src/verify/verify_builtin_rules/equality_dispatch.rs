@@ -60,6 +60,15 @@ impl Runtime {
             }
         }
 
+        if let Some(done) = self.try_verify_instantiated_template_obj_equality_by_resolved_values(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
         {
@@ -443,6 +452,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_pointwise_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
             left,
             right,
             line_file.clone(),
@@ -1644,6 +1662,98 @@ impl Runtime {
         )
         .into();
         self.verify_non_equational_known_then_builtin_rules_only(&fact, &VerifyState::new(0, true))
+    }
+
+    // Instantiated template objects materialize to ordinary Litex objects; compare those
+    // materialized values when a template instance appears in an equality.
+    // Example: if `\T<a>` resolves to `sum(1, n, f)` and `\T<b>` resolves to `sum(1, n, g)`,
+    // prove `\T<a> = \T<b>` by proving the resolved sums equal.
+    fn try_verify_instantiated_template_obj_equality_by_resolved_values(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !matches!(left, Obj::InstantiatedTemplateObj(_))
+            && !matches!(right, Obj::InstantiatedTemplateObj(_))
+        {
+            return Ok(None);
+        }
+
+        self.materialize_instantiated_template_obj_if_needed(left, verify_state)?;
+        self.materialize_instantiated_template_obj_if_needed(right, verify_state)?;
+
+        let mut left_candidates = self.known_equal_objs_for_template_candidate(left);
+        if left_candidates.is_empty() {
+            left_candidates.push(left.clone());
+        }
+        let mut right_candidates = self.known_equal_objs_for_template_candidate(right);
+        if right_candidates.is_empty() {
+            right_candidates.push(right.clone());
+        }
+
+        for left_candidate in left_candidates.iter() {
+            for right_candidate in right_candidates.iter() {
+                if verify_equality_by_they_are_the_same(left_candidate, left)
+                    && verify_equality_by_they_are_the_same(right_candidate, right)
+                {
+                    continue;
+                }
+                let resolved_result = self.verify_objs_are_equal_in_equality_builtin(
+                    left_candidate,
+                    right_candidate,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if resolved_result.is_true() {
+                    return Ok(Some(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                            "equality: instantiated template objects resolve to equal objects"
+                                .to_string(),
+                            vec![resolved_result],
+                        )
+                        .into(),
+                    ));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn materialize_instantiated_template_obj_if_needed(
+        &mut self,
+        obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Obj::InstantiatedTemplateObj(template_obj) = obj else {
+            return Ok(());
+        };
+        if !self.known_equal_objs_for_template_candidate(obj).is_empty() {
+            return Ok(());
+        }
+        self.materialize_instantiated_template_obj(template_obj, verify_state)
+    }
+
+    fn known_equal_objs_for_template_candidate(&self, obj: &Obj) -> Vec<Obj> {
+        let key = obj.to_string();
+        let mut result: Vec<Obj> = Vec::new();
+        for env in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = env.known_equality.get(&key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                if !result
+                    .iter()
+                    .any(|seen| verify_equality_by_they_are_the_same(seen, equal_obj))
+                {
+                    result.push(equal_obj.clone());
+                }
+            }
+        }
+        result
     }
 
     // Antisymmetry rule for registered user-defined props.

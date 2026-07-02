@@ -1,3 +1,19 @@
-template<X finite_set, f fn(x X) R, g fn(x X) closed_range(1, count(X)): $is_bijective_fn(X, closed_range(1, count(X)), g)>:
-    have fn self_finite_set_sum_by_index(X, f) R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+thm finite_series_comparison_tmp:
+    ? forall a, b fn(i Z) R, m, n Z:
+        m <= n
+        forall i Z:
+            m <= i <= n
+            =>:
+                a(i) <= b(i)
+        =>:
+            sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
 
+    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+
+thm finite_series_triangle_tmp:
+    ? forall a fn(i Z) R, m, n Z:
+        m <= n
+        =>:
+            abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+
+    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})

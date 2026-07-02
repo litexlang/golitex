@@ -518,6 +518,17 @@ the function `'(x Z) Z {x}`; mathematically it is
 
 ```litex
 sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
+
+forall f, g fn(x Z) R:
+    forall i Z:
+        1 <= i <= 3
+        =>:
+            f(i) <= g(i)
+    =>:
+        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+
+forall f fn(x Z) R:
+    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
 ```
 
 `finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, and closed integer ranges bridge to the existing `sum(start, end, f)` object.
@@ -526,6 +537,27 @@ sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
 finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
 finite_set_sum({}, 'Z(x){x}) = 0
 finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+```
+
+For a nonempty finite set, an enumeration by a bijection from `1...count(X)` gives the same sum for any bijective ordering.
+
+```litex
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+    forall x X:
+        exist! i closed_range(1, count(X)) st {g(i) = x}
+
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
+thm finite_set_sum_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 ```
 
 `finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
@@ -3707,6 +3739,19 @@ product(1, 1, 'N_pos(x){x}) = 1
 
 ```litex
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
+```
+
+```litex
+forall f, g fn(x Z) R:
+    forall i Z:
+        1 <= i <= 3
+        =>:
+            f(i) <= g(i)
+    =>:
+        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+
+forall f fn(x Z) R:
+    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
 ```
 
 ```litex
