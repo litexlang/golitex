@@ -5,7 +5,6 @@
 # 对应到 Litex；`sketch:` 用来放教学例子、局部证明骨架和 follow-up notes。
 
 
-# ---------------------------------------------------------------------------
 
 """
 Definition 3.3.1 (Functions). Let X,Y be sets, and let P(x,y) be a property
@@ -65,6 +64,13 @@ sketch:
         forall x X:
             exist! y Y st {$P(x, y)}
 
+    # `have fn ... as set` creates one function only after the domain X and
+    # codomain Y have been fixed. `template` packages the same construction as
+    # a family: for any X,Y satisfying the vertical line test, Litex can build
+    # the corresponding function. This is the same reason that a sequence type
+    # such as `fn(x N_pos) s` is useful uniformly for every target set s: after
+    # s is supplied, it becomes an ordinary function type, but the pattern is a
+    # family indexed by s.
     template<X set, Y set: $relation_has_unique_output(X, Y)>:
         have fn f_from_P as set:
             prove:
@@ -374,7 +380,6 @@ represented by its graph later.
 # graph `{(x,f(x)): x in X}`，但这里先保留“函数不是集合”的 source distinction。
 
 
-# ---------------------------------------------------------------------------
 
 """
 Definition 3.3.7. Two functions with the same domain and codomain are equal
@@ -448,7 +453,6 @@ sketch:
     $fn_eq(empty_to_N, empty_to_N_alt)
 
 
-# ---------------------------------------------------------------------------
 
 """
 Definition 3.3.10. Composition is defined by (g o f)(x) := g(f(x)). It is
@@ -505,7 +509,6 @@ Remark 3.3.13. In g o f, the right-hand function f is applied first.
 # application first, outer application second.
 
 
-# ---------------------------------------------------------------------------
 
 """
 Definition 3.3.14. A function is one-to-one, or injective, when equal outputs

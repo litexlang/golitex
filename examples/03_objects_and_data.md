@@ -1335,9 +1335,9 @@ cart_dim(cart(R, Q)) = 2
 proj(cart(R, Q), 1) = R
 
 have n N_pos = 3
-have cart R3 by i <= n, proj(R3, i) = R
+have cart R3 for i <= n, proj(R3, i) = R
 R3 = cart(R, R, R)
 
-have tuple real_tuple by i <= n, real_tuple[i] = R
+have tuple real_tuple for i <= n, real_tuple[i] = R
 (R, R, R) = real_tuple
 ```

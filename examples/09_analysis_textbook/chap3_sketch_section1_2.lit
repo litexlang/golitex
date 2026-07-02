@@ -308,76 +308,80 @@ operation, not numerical addition.
 # union(A', B)。Remark 3.1.14 则提醒不要把 `{2} union {3}` 和 `2 + 3` 混起来；
 # Litex 的类型 surface 会把这两种操作分开。
 
-by extension:
-    prove:
-        union({1, 2}, {2, 3}) = {1, 2, 3}
+sketch:
+    by extension:
+        prove:
+            union({1, 2}, {2, 3}) = {1, 2, 3}
+        claim:
+            prove:
+                forall x union({1, 2}, {2, 3}):
+                    x $in {1, 2, 3}
+            x $in union({1, 2}, {2, 3})
+            x $in {1, 2} or x $in {2, 3}
+            by cases:
+                prove:
+                    x $in {1, 2, 3}
+                case x $in {1, 2}:
+                    x = 1 or x = 2
+                    by cases:
+                        prove:
+                            x $in {1, 2, 3}
+                        case x = 1:
+                            x $in {1, 2, 3}
+                        case x = 2:
+                            x $in {1, 2, 3}
+                case x $in {2, 3}:
+                    x = 2 or x = 3
+                    by cases:
+                        prove:
+                            x $in {1, 2, 3}
+                        case x = 2:
+                            x $in {1, 2, 3}
+                        case x = 3:
+                            x $in {1, 2, 3}
+        by enumerate finite_set:
+            prove:
+                forall y {1, 2, 3}:
+                    y $in union({1, 2}, {2, 3})
+
     claim:
         prove:
-            forall x union({1, 2}, {2, 3}):
-                x $in {1, 2, 3}
-        x $in union({1, 2}, {2, 3})
-        x $in {1, 2} or x $in {2, 3}
-        by cases:
-            prove:
-                x $in {1, 2, 3}
-            case x $in {1, 2}:
-                x = 1 or x = 2
-                by cases:
-                    prove:
-                        x $in {1, 2, 3}
-                    case x = 1:
-                        x $in {1, 2, 3}
-                    case x = 2:
-                        x $in {1, 2, 3}
-            case x $in {2, 3}:
-                x = 2 or x = 3
-                by cases:
-                    prove:
-                        x $in {1, 2, 3}
-                    case x = 2:
-                        x $in {1, 2, 3}
-                    case x = 3:
-                        x $in {1, 2, 3}
-    by enumerate finite_set:
-        prove:
-            forall y {1, 2, 3}:
-                y $in union({1, 2}, {2, 3})
+            forall A, A1, B, B1 set:
+                A = A1
+                B = B1
+                =>:
+                    union(A, B) = union(A1, B1)
+        union(A, B) = union(A1, B1)
 
-claim:
-    prove:
-        forall A, A1, B, B1 set:
-            A = A1
-            B = B1
-            =>:
-                union(A, B) = union(A1, B1)
-    union(A, B) = union(A1, B1)
-
-by extension:
-    prove:
-        union({2}, {3}) = {2, 3}
-    claim:
+    by extension:
         prove:
-            forall x union({2}, {3}):
-                x $in {2, 3}
-        x $in union({2}, {3})
-        x $in {2} or x $in {3}
-        by cases:
+            union({2}, {3}) = {2, 3}
+        claim:
             prove:
-                x $in {2, 3}
-            case x $in {2}:
-                x = 2
-                x $in {2, 3}
-            case x $in {3}:
-                x = 3
-                x $in {2, 3}
-    by enumerate finite_set:
-        prove:
-            forall y {2, 3}:
-                y $in union({2}, {3})
+                forall x union({2}, {3}):
+                    x $in {2, 3}
+            x $in union({2}, {3})
+            x $in {2} or x $in {3}
+            by cases:
+                prove:
+                    x $in {2, 3}
+                case x $in {2}:
+                    x = 2
+                    x $in {2, 3}
+                case x $in {3}:
+                    x = 3
+                    x $in {2, 3}
+        by enumerate finite_set:
+            prove:
+                forall y {2, 3}:
+                    y $in union({2}, {3})
 
     count(union({2}, {3})) = count({2, 3}) = 2
     2 + 3 = 5
 
+    # Tao 的完整句子是 “if a and b are objects, {a,b} = {a} union {b}”，允许
+    # a = b 时退化成 `{a} = union({a}, {a})`。当前 Litex 的 `{a,b}` literal
+    # 要求能证明 `a != b`，所以 unrestricted pair-set constructor 仍是 proof_debt。
     claim:
         prove:
             forall a, b set:
@@ -417,20 +421,16 @@ by extension:
                         y = b
                         y $in {a, b}
 
-# Tao 的完整句子是 “if a and b are objects, {a,b} = {a} union {b}”，允许
-# a = b 时退化成 `{a} = union({a}, {a})`。当前 Litex 的 `{a,b}` literal
-# 要求能证明 `a != b`，所以 unrestricted pair-set constructor 仍是 proof_debt。
+    forall A, B set:
+        union(A, B) = union(B, A)
 
-forall A, B set:
-    union(A, B) = union(B, A)
+    forall A, B, C set:
+        union(union(A, B), C) = union(A, union(B, C))
 
-forall A, B, C set:
-    union(union(A, B), C) = union(A, union(B, C))
-
-forall A set:
-    union(A, A) = A
-    union(A, {}) = A
-    union({}, A) = A
+    forall A set:
+        union(A, A) = A
+        union(A, {}) = A
+        union({}, A) = A
 
 """
 Definition 3.1.15 (Subsets). A subset of B iff every element of A is also an
@@ -689,7 +689,6 @@ Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 # 这正是 Litex set comprehension 的用途：先指定 ambient set/type，再写筛选条件。
 
 sketch:
-
     1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
     2 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
     3 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
@@ -750,16 +749,6 @@ forall A, B set, x set:
     =>:
         x $in intersect(A, B)
 
-sketch:
-    2 $in intersect({1, 2, 4}, {2, 3, 4})
-    4 $in intersect({1, 2, 4}, {2, 3, 4})
-    $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
-    count(intersect({1, 2, 4}, {2, 3, 4})) <= count({1, 2, 4})
-    intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
-    count(intersect({1, 2, 4}, {2, 3, 4})) = count({2, 4}) = 2
-    not 1 $in intersect({1, 2, 4}, {2, 3, 4})
-    intersect({1}, {2}) = {}
-
 """
 Remark 3.1.24. Intersection is well-defined because it is defined by
 membership and equality.
@@ -772,7 +761,15 @@ addition depending on context; mathematical symbols remove that ambiguity.
 # 这些 examples/remarks 对应 Litex 的 `intersect`、`union`、`+` 三个不同符号。
 # 使用符号的好处就是不会把“boys and girls”的 union 和“single and male”的 intersection 混掉。
 
-# TODO: example 3.1.25 可以sketch一下
+sketch:
+    2 $in intersect({1, 2, 4}, {2, 3, 4})
+    4 $in intersect({1, 2, 4}, {2, 3, 4})
+    $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
+    count(intersect({1, 2, 4}, {2, 3, 4})) <= count({1, 2, 4})
+    intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
+    count(intersect({1, 2, 4}, {2, 3, 4})) = count({2, 4}) = 2
+    not 1 $in intersect({1, 2, 4}, {2, 3, 4})
+    intersect({1}, {2}) = {}
 
 """
 Definition 3.1.27 (Difference sets). An element is in A minus B iff it is in A
@@ -859,8 +856,6 @@ set even when their displayed element formulas differ pointwise.
 # written directly as `replacement(P, A)` when `P` is a binary relation that is
 # functional on A. Membership in the replacement set gives a preimage witness.
 
-# TODO：用litex的 replacement object 来表示这个。然后写一下例子
-
 sketch:
     abstract_prop plus_one_relation(x, y)
 
@@ -873,69 +868,152 @@ sketch:
 
     have replacement_plus_one_image set = replacement(plus_one_relation, {3, 5, 9})
 
+# 一个更接近后面 Cartesian product 语言的例子是：取
+# `A = closed_range(1, n)`，`c` 是 n 维 cart。若想得到
+# `{y: exist x A st {y $in proj(c, x)}}`，直接令 `P(x,y)` 为
+# `y $in proj(c,x)` 一般不满足 Replacement 的 uniqueness 条件：固定一个
+# coordinate x 后，第 x 个 factor 里通常有很多 y。
+#
+# 正确的 set-theoretic route 是两步：先用 Replacement 收集每个 projection
+# factor set，再对这个 set of factor sets 取 `cup`。也就是说，Replacement
+# 应用于 functional relation `Q(x, S)`，它表示 `S = proj(c, x)`；然后
+# `y $in cup(replacement(Q, A))` 表示存在某个 x in A，使得 y 属于第 x 个
+# projection factor。
+#
+# 目前 Litex 的 `proj(c, x)` 要求 projection dimension 是具体数字，所以泛型
+# variable-index 版本先保留为 relation-level sketch；下面的 3 维例子用具体
+# projection、`fn_range_on` 和 `cup` 给出同一个想法的可检查 surface。
+sketch:
+    have n N_pos
+    have c set
+    know $is_cart(c)
+    know cart_dim(c) = n
+
+    abstract_prop cart_projection_factor_relation(x, y)
+
+    # Intended meaning: for x in closed_range(1, n),
+    # `$cart_projection_factor_relation(x, y)` means `y = proj(c, x)`.
+    know forall x closed_range(1, n), y, y2 set:
+        $cart_projection_factor_relation(x, y)
+        $cart_projection_factor_relation(x, y2)
+        =>:
+            y = y2
+
+    have factor_family set = replacement(cart_projection_factor_relation, closed_range(1, n))
+
+    forall S factor_family:
+        exist x closed_range(1, n) st {$cart_projection_factor_relation(x, S)}
+
+    # Every member of the replacement family is intended to be a projection
+    # factor set, so `cup(factor_family)` contains exactly the elements lying
+    # in some projected factor.
+    know forall S factor_family:
+        $is_set(S)
+
+    have factor_union set = cup(factor_family)
+
+    forall y factor_union:
+        exist S factor_family st {y $in S}
+
+sketch:
+    have C set = cart({1, 2}, {3, 4}, {5, 6})
+    $is_cart(C)
+    cart_dim(C) = 3
+    proj(C, 1) = {1, 2}
+    proj(C, 2) = {3, 4}
+    proj(C, 3) = {5, 6}
+
+    have fn projection_factor_on_three(k {1, 2, 3}) {{1, 2}, {3, 4}, {5, 6}} by cases:
+        case k = 1: proj(C, 1)
+        case k = 2: proj(C, 2)
+        case k = 3: proj(C, 3)
+
+    projection_factor_on_three(1) = proj(C, 1) = {1, 2}
+    projection_factor_on_three(2) = proj(C, 2) = {3, 4}
+    projection_factor_on_three(3) = proj(C, 3) = {5, 6}
+    projection_factor_on_three(1) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    projection_factor_on_three(2) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    projection_factor_on_three(3) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    {1, 2} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    {3, 4} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    {5, 6} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+
+    1 $in {1, 2}
+    3 $in {3, 4}
+    5 $in {5, 6}
+    1 $in projection_factor_on_three(1)
+    3 $in projection_factor_on_three(2)
+    5 $in projection_factor_on_three(3)
+    witness exist k {1, 2, 3} st {1 $in projection_factor_on_three(k)} from 1:
+        1 $in projection_factor_on_three(1)
+    witness exist k {1, 2, 3} st {3 $in projection_factor_on_three(k)} from 2:
+        3 $in projection_factor_on_three(2)
+    1 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+    3 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+    5 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+    fn_range_on(projection_factor_on_three, {1, 2, 3}) $subset {{1, 2}, {3, 4}, {5, 6}}
+    $is_finite_set(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+
 # For ordinary function images, Litex also has the convenient `fn_range_on(f, A)`
 # interface. This is the common checked route when the relation is already represented
 # by a function.
 sketch:
+    have fn plus_one_on_three(n {3, 5, 9}) {4, 6, 10} by cases:
+        case n = 3: 4
+        case n = 5: 6
+        case n = 9: 10
 
-    have fn plus_one_on_N(n N) N = n + 1
+    plus_one_on_three(3) = 4
+    plus_one_on_three(5) = 6
+    plus_one_on_three(9) = 10
 
-    by enumerate finite_set:
-        prove:
-            forall x {3, 5, 9}:
-                x $in N
+    plus_one_on_three(3) $in fn_range_on(plus_one_on_three, {3, 5, 9})
+    plus_one_on_three(5) $in fn_range_on(plus_one_on_three, {3, 5, 9})
+    plus_one_on_three(9) $in fn_range_on(plus_one_on_three, {3, 5, 9})
+    fn_range_on(plus_one_on_three, {3, 5, 9}) $subset {4, 6, 10}
+    $is_finite_set(fn_range_on(plus_one_on_three, {3, 5, 9}))
 
-    {3, 5, 9} $subset N
+    have fn constant1_on_three(n {3, 5, 9}) {1} by cases:
+        case n = 3: 1
+        case n = 5: 1
+        case n = 9: 1
 
-    plus_one_on_N(3) = 4
-    plus_one_on_N(5) = 6
-    plus_one_on_N(9) = 10
-
-    plus_one_on_N(3) $in fn_range_on(plus_one_on_N, {3, 5, 9})
-    plus_one_on_N(5) $in fn_range_on(plus_one_on_N, {3, 5, 9})
-    plus_one_on_N(9) $in fn_range_on(plus_one_on_N, {3, 5, 9})
-    fn_range_on(plus_one_on_N, {3, 5, 9}) $subset N
-    $is_finite_set(fn_range_on(plus_one_on_N, {3, 5, 9}))
-
-    have fn constant1_on_N(n N) N = 1
-
-    constant1_on_N(3) = 1
-    constant1_on_N(5) = 1
-    constant1_on_N(9) = 1
-    constant1_on_N(3) $in fn_range_on(constant1_on_N, {3, 5, 9})
-    1 $in fn_range_on(constant1_on_N, {3, 5, 9})
+    constant1_on_three(3) = 1
+    constant1_on_three(5) = 1
+    constant1_on_three(9) = 1
+    constant1_on_three(3) $in fn_range_on(constant1_on_three, {3, 5, 9})
+    1 $in fn_range_on(constant1_on_three, {3, 5, 9})
 
     claim:
         prove:
-            forall y fn_range_on(constant1_on_N, {3, 5, 9}):
+            forall y fn_range_on(constant1_on_three, {3, 5, 9}):
                 y $in {1}
-        y $in fn_range_on(constant1_on_N, {3, 5, 9})
-        have by preimage k from y $in fn_range_on(constant1_on_N, {3, 5, 9})
+        y $in fn_range_on(constant1_on_three, {3, 5, 9})
+        have by preimage k from y $in fn_range_on(constant1_on_three, {3, 5, 9})
         k $in {3, 5, 9}
-        k $in N
-        y = constant1_on_N(k)
-        constant1_on_N(k) = 1
+        y = constant1_on_three(k)
+        constant1_on_three(k) $in {1}
+        constant1_on_three(k) = 1
         y = 1
         y $in {1}
 
-    fn_range_on(constant1_on_N, {3, 5, 9}) $subset {1}
+    fn_range_on(constant1_on_three, {3, 5, 9}) $subset {1}
 
     claim:
         prove:
             forall y {1}:
-                y $in fn_range_on(constant1_on_N, {3, 5, 9})
+                y $in fn_range_on(constant1_on_three, {3, 5, 9})
         y = 1
-        1 $in fn_range_on(constant1_on_N, {3, 5, 9})
-        y $in fn_range_on(constant1_on_N, {3, 5, 9})
+        1 $in fn_range_on(constant1_on_three, {3, 5, 9})
+        y $in fn_range_on(constant1_on_three, {3, 5, 9})
 
-    {1} $subset fn_range_on(constant1_on_N, {3, 5, 9})
+    {1} $subset fn_range_on(constant1_on_three, {3, 5, 9})
 
     by extension:
         prove:
-            fn_range_on(constant1_on_N, {3, 5, 9}) = {1}
+            fn_range_on(constant1_on_three, {3, 5, 9}) = {1}
 
-    fn_range_on(constant1_on_N, {3, 5, 9}) = {1}
-    count(fn_range_on(constant1_on_N, {3, 5, 9})) = count({1}) = 1
+    count(fn_range_on(constant1_on_three, {3, 5, 9})) = count({1}) = 1
 
 """
 Axiom 3.7 (Infinity). There is a set N of natural numbers containing 0 and
@@ -996,4 +1074,3 @@ sketch:
             5 + 1 < 5
             not 5 + 1 < 5
             impossible not 5 + 1 < 5
-

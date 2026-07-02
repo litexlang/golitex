@@ -75,7 +75,7 @@ thm real_le_and_ne_imply_lt:
         x = y
         impossible x != y
 
-lemma singleton_real_finite_set_has_maximum:
+thm singleton_real_finite_set_has_maximum:
     prove:
         forall S finite_set:
             S $subset R
@@ -170,7 +170,7 @@ thm finite_real_set_maximum_extends_after_adding_member:
                 $finite_real_set_has_maximum(S)
     $finite_real_set_has_maximum(S)
 
-lemma finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum:
+thm finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_maximum:
     prove:
         forall n N_pos, S finite_set:
             S $subset R
@@ -195,7 +195,7 @@ lemma finite_real_sets_with_size_n_have_maximum_implies_size_n_plus_one_have_max
     by thm finite_real_set_maximum_extends_after_adding_member(S, a)
     $finite_real_set_has_maximum(S)
 
-lemma size_one_finite_real_sets_have_given_size_maximum:
+thm size_one_finite_real_sets_have_given_size_maximum:
     prove:
         forall n N_pos:
             n = 1
@@ -204,7 +204,7 @@ lemma size_one_finite_real_sets_have_given_size_maximum:
     $finite_real_set_with_given_size_has_maximum(1)
     $finite_real_set_with_given_size_has_maximum(n)
 
-lemma finite_real_sets_with_given_size_maximum_imply_successor_size_maximum:
+thm finite_real_sets_with_given_size_maximum_imply_successor_size_maximum:
     prove:
         forall n N_pos:
             $finite_real_set_with_given_size_has_maximum(n)
@@ -252,7 +252,7 @@ thm nonempty_finite_real_set_has_maximum:
     $finite_real_set_with_given_size_has_maximum(n)
     $finite_real_set_has_maximum(S)
 
-lemma finite_real_set_with_size_one_has_increasing_index:
+thm finite_real_set_with_size_one_has_increasing_index:
     prove:
         forall S finite_set:
             S $subset R
@@ -398,7 +398,7 @@ thm finite_real_set_increasing_index_extends_after_adding_maximum:
         $is_increasing_index_fn(S, idx0)
     $finite_real_set_has_increasing_index(S)
 
-lemma finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index:
+thm finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one_have_increasing_index:
     prove:
         forall n N_pos, S finite_set:
             S $subset R
@@ -425,7 +425,7 @@ lemma finite_real_sets_with_size_n_have_increasing_index_implies_size_n_plus_one
     by thm finite_real_set_increasing_index_extends_after_adding_maximum(n, S, a)
     $finite_real_set_has_increasing_index(S)
 
-lemma size_one_finite_real_sets_have_given_size_increasing_index:
+thm size_one_finite_real_sets_have_given_size_increasing_index:
     prove:
         forall n N_pos:
             n = 1
@@ -434,7 +434,7 @@ lemma size_one_finite_real_sets_have_given_size_increasing_index:
     $finite_real_set_with_given_size_has_increasing_index(1)
     $finite_real_set_with_given_size_has_increasing_index(n)
 
-lemma finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index:
+thm finite_real_sets_with_given_size_increasing_index_imply_successor_size_increasing_index:
     prove:
         forall n N_pos:
             $finite_real_set_with_given_size_has_increasing_index(n)
@@ -487,7 +487,7 @@ prop is_finite_real_set_increasing_index(S finite_set, idx fn(x N_pos: x <= coun
     count(S) >= 1
     $is_increasing_index_fn(S, idx)
 
-lemma finite_real_set_increasing_index_unique:
+thm finite_real_set_increasing_index_unique:
     prove:
         forall S finite_set, idx1, idx2 fn(x N_pos: x <= count(S)) S:
             $is_finite_real_set_increasing_index(S, idx1)
@@ -500,7 +500,7 @@ lemma finite_real_set_increasing_index_unique:
     know idx1 = idx2
     idx1 = idx2
 
-lemma nonempty_finite_real_set_has_unique_increasing_index:
+thm nonempty_finite_real_set_has_unique_increasing_index:
     prove:
         forall S finite_set:
             S $subset R
@@ -577,7 +577,7 @@ prop is_finite_real_set_sum(S finite_set, f fn(x S) R, total R):
     count(S) >= 1
     total = \indexed_real_sum<count(S), '(i N_pos: i <= count(S)) R {f(\finite_real_set_increasing_index<S>(i))}>
 
-lemma nonempty_finite_real_set_has_sum:
+thm nonempty_finite_real_set_has_sum:
     prove:
         forall S finite_set, f fn(x S) R:
             S $subset R

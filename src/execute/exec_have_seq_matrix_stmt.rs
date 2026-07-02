@@ -24,7 +24,7 @@ impl Runtime {
             stmt.clone().into(),
             &stmt.bound,
             stmt.finite_seq_set.n.as_ref(),
-            "have finite_seq by-bound must match finite_seq length",
+            "have finite_seq for-bound must match finite_seq length",
             stmt.line_file.clone(),
         )?);
 
@@ -50,14 +50,14 @@ impl Runtime {
             stmt.clone().into(),
             &stmt.row_bound,
             stmt.matrix_set.row_len.as_ref(),
-            "have matrix row by-bound must match matrix row count",
+            "have matrix row for-bound must match matrix row count",
             stmt.line_file.clone(),
         )?);
         check_results.extend(self.verify_have_indexed_fn_bound(
             stmt.clone().into(),
             &stmt.col_bound,
             stmt.matrix_set.col_len.as_ref(),
-            "have matrix column by-bound must match matrix column count",
+            "have matrix column for-bound must match matrix column count",
             stmt.line_file.clone(),
         )?);
 

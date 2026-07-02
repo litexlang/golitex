@@ -1350,14 +1350,14 @@ thm thm_nat_refl:
 by thm thm_nat_refl(1)
 1 = 1
 
-# A proved theorem is named-only. Use an explicit theorem call when you want
-# to release its instantiated then-facts into the current context.
+# A proved theorem is also stored as a forall fact. After the domain fact is
+# known, ordinary fact checking can use the theorem without an explicit call.
 prop thm_match_p(x R):
     x = 1
 prop thm_match_q(x R):
     x = 1
 
-thm thm_named_only:
+thm thm_stored_forall:
     prove:
         forall x R:
             $thm_match_p(x)
@@ -1366,8 +1366,11 @@ thm thm_named_only:
     x = 1
 
 $thm_match_p(1)
-by thm thm_named_only(1)
 $thm_match_q(1)
+
+# The explicit theorem call remains available when theorem-instantiation
+# output is useful.
+by thm thm_stored_forall(1)
 ```
 
 ## 34. `use_builtin_code_to_verify`
