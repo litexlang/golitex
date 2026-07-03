@@ -1,0 +1,9 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+have ratio_terms_concrete fn(c seq(R): $is_positive_sequence(c)) fn(i N_pos) R = '(j N_pos) R {c(j + 1) / c(j)}
+
+prop scratch_has_no_zero_terms(a seq(R)):
+    forall n N_pos:
+        a(n) != 0
+
+have absolute_ratio_terms_concrete fn(a seq(R): $has_no_zero_terms(a)) fn(i N_pos) R = '(j N_pos) R {abs(a(j + 1)) / abs(a(j))}

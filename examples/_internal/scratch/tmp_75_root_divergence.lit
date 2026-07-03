@@ -1,0 +1,27 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+thm scratch_root_test_divergence:
+    ? forall a seq(R), alpha R:
+        $has_finite_limit_superior(root_test_terms(a), alpha)
+        alpha > 1
+        =>:
+            not $is_convergent_series(a)
+    by contra:
+        ? not $is_convergent_series(a)
+        $is_convergent_series(a)
+        by thm series_zero_test(a)
+        $has_limit(a, 0)
+        1 < alpha
+        $exceeds_infinitely_often(root_test_terms(a), 1)
+        have by exist n0 N_pos st {$is_tail_close_to(a, 0, 1, n0)}: n0
+        have by exist n N_pos st {n >= n0 and root_test_terms(a)(n) > 1}: n
+        n >= n0 and root_test_terms(a)(n) > 1
+        n >= n0
+        root_test_terms(a)(n) > 1
+        abs(a(n) - 0) <= 1
+        root_test_terms(a)(n) = abs(a(n))^(1 / n)
+        abs(a(n) - 0) = abs(a(n))
+        abs(a(n)) <= 1
+        abs(a(n))^(1 / n) <= 1
+        root_test_terms(a)(n) <= 1
+        impossible root_test_terms(a)(n) > 1

@@ -1,0 +1,157 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+prop is_eventually_abs_bounded_by(a, b seq(R), n0 N_pos):
+    forall n N_pos:
+        n >= n0
+        =>:
+            abs(a(n)) <= b(n)
+
+thm scratch_nth_root_nonnegative:
+    ? forall x R, n N_pos:
+        x >= 0
+        =>:
+            x^(1 / n) >= 0
+    x = 0 or x > 0
+    by cases:
+        ? x^(1 / n) >= 0
+        case x = 0:
+            x^(1 / n) = 0^(1 / n) = 0
+            x^(1 / n) >= 0
+        case x > 0:
+            x^(1 / n) > 0
+            x^(1 / n) >= 0
+
+thm scratch_nth_root_power_identity_nonnegative:
+    ? forall x R, n N_pos:
+        x >= 0
+        =>:
+            (x^(1 / n))^n = x
+    x = 0 or x > 0
+    by cases:
+        ? (x^(1 / n))^n = x
+        case x = 0:
+            x^(1 / n) = 0^(1 / n) = 0
+            (x^(1 / n))^n = 0^n = 0 = x
+        case x > 0:
+            (x^(1 / n))^n = x
+
+thm scratch_absolute_series_tail_convergence_reverse:
+    ? forall a seq(R), k N:
+        $is_absolutely_convergent_series(series_shift(a, k))
+        =>:
+            $is_absolutely_convergent_series(a)
+    # finite-prefix addition for absolute series
+    know $is_absolutely_convergent_series(a)
+
+thm scratch_eventual_comparison_test_for_series:
+    ? forall a, b seq(R), n0 N_pos:
+        $is_convergent_series(b)
+        forall n N_pos:
+            n >= n0
+            =>:
+                abs(a(n)) <= b(n)
+        =>:
+            $is_absolutely_convergent_series(a)
+    have h N = n0 - 1
+    by thm series_laws_tail_convergence(b, h)
+    $is_convergent_series(series_shift(b, h))
+    claim:
+        ? forall n N_pos:
+            abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
+        h = n0 - 1
+        n >= 1
+        n - 1 >= 0
+        n + h = n + (n0 - 1)
+        n + (n0 - 1) = n0 + (n - 1)
+        n0 + (n - 1) >= n0
+        n + h >= n0
+        abs(a(n + h)) <= b(n + h)
+        series_shift(a, h)(n) = a(n + h)
+        series_shift(b, h)(n) = b(n + h)
+        abs(series_shift(a, h)(n)) = abs(a(n + h))
+        abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
+    by thm comparison_test_for_series(series_shift(a, h), series_shift(b, h))
+    $is_absolutely_convergent_series(series_shift(a, h))
+    by thm scratch_absolute_series_tail_convergence_reverse(a, h)
+    $is_absolutely_convergent_series(a)
+
+thm scratch_exists_positive_between_limsup_and_one:
+    ? forall alpha R:
+        alpha < 1
+        =>:
+            exist r R_pos st {alpha < r and r < 1}
+    alpha < 1 / 2 or alpha >= 1 / 2
+    by cases:
+        ? exist r R_pos st {alpha < r and r < 1}
+        case alpha < 1 / 2:
+            witness exist r R_pos st {alpha < r and r < 1} from 1 / 2:
+                1 / 2 > 0
+                alpha < 1 / 2
+                1 / 2 < 1
+        case alpha >= 1 / 2:
+            witness exist r R_pos st {alpha < r and r < 1} from (alpha + 1) / 2:
+                (alpha + 1) / 2 > 0
+                (alpha + 1) / 2 - alpha = (1 - alpha) / 2
+                (1 - alpha) / 2 > 0
+                alpha < (alpha + 1) / 2
+                1 - (alpha + 1) / 2 = (1 - alpha) / 2
+                1 - (alpha + 1) / 2 > 0
+                (alpha + 1) / 2 < 1
+
+thm scratch_root_test_tail_bound_by_geometric:
+    ? forall a seq(R), r R_pos, n0 N_pos:
+        $is_eventually_below(root_test_terms(a), r, n0)
+        =>:
+            $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
+    claim:
+        ? forall n N_pos:
+            n >= n0
+            =>:
+                abs(a(n)) <= geometric_series_terms_from_one(r)(n)
+        root_test_terms(a)(n) < r
+        root_test_terms(a)(n) = abs(a(n))^(1 / n)
+        abs(a(n))^(1 / n) < r
+        abs(a(n)) >= 0
+        by thm scratch_nth_root_nonnegative(abs(a(n)), n)
+        abs(a(n))^(1 / n) >= 0
+        0 <= abs(a(n))^(1 / n)
+        (abs(a(n))^(1 / n))^n < r^n
+        by thm scratch_nth_root_power_identity_nonnegative(abs(a(n)), n)
+        (abs(a(n))^(1 / n))^n = abs(a(n))
+        abs(a(n)) <= r^n
+        geometric_series_terms_from_one(r)(n) = r^n
+        abs(a(n)) <= geometric_series_terms_from_one(r)(n)
+    $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
+
+thm scratch_root_test_absolute_convergence:
+    ? forall a seq(R), alpha R:
+        $has_finite_limit_superior(root_test_terms(a), alpha)
+        alpha < 1
+        =>:
+            $is_absolutely_convergent_series(a)
+    by thm scratch_exists_positive_between_limsup_and_one(alpha)
+    have by exist r R_pos st {alpha < r and r < 1}: r
+    alpha < r and r < 1
+    alpha < r
+    r < 1
+    r > alpha
+    have by exist n0 N_pos st {$is_eventually_below(root_test_terms(a), r, n0)}: n0
+    by thm scratch_root_test_tail_bound_by_geometric(a, r, n0)
+    $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
+    claim:
+        ? forall n N_pos:
+            n >= n0
+            =>:
+                abs(a(n)) <= geometric_series_terms_from_one(r)(n)
+        abs(a(n)) <= geometric_series_terms_from_one(r)(n)
+    abs(r) = r
+    abs(r) < 1
+    1 - r > 0
+    1 - r != 0
+    by thm geometric_series_from_one_formula(r)
+    $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
+    witness exist M R st {$has_series_sum(geometric_series_terms_from_one(r), M)} from r / (1 - r):
+        $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
+    $is_convergent_series(geometric_series_terms_from_one(r))
+    by thm scratch_eventual_comparison_test_for_series(a, geometric_series_terms_from_one(r), n0)
+    $is_absolutely_convergent_series(a)

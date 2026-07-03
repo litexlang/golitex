@@ -1,0 +1,87 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+prop pointwise_equal_sequences(a, b seq(R)):
+    forall n N_pos:
+        a(n) = b(n)
+
+thm scratch_finite_limsup_extensional:
+    ? forall a, b seq(R), L R:
+        $pointwise_equal_sequences(a, b)
+        $has_finite_limit_superior(a, L)
+        =>:
+            $has_finite_limit_superior(b, L)
+    claim:
+        ? forall x R:
+            x > L
+            =>:
+                exist n0 N_pos st {$is_eventually_below(b, x, n0)}
+        have by exist n0 N_pos st {$is_eventually_below(a, x, n0)}: n0
+        witness exist n1 N_pos st {$is_eventually_below(b, x, n1)} from n0:
+            claim:
+                ? forall n N_pos:
+                    n >= n0
+                    =>:
+                        b(n) < x
+                a(n) < x
+                a(n) = b(n)
+                b(n) < x
+            $is_eventually_below(b, x, n0)
+    claim:
+        ? forall x R:
+            x < L
+            =>:
+                $exceeds_infinitely_often(b, x)
+        claim:
+            ? forall n0 N_pos:
+                $has_late_term_above(b, x, n0)
+            have by exist n N_pos st {n >= n0 and a(n) > x}: n
+            witness exist k N_pos st {k >= n0 and b(k) > x} from n:
+                n >= n0 and a(n) > x
+                n >= n0
+                a(n) > x
+                a(n) = b(n)
+                b(n) > x
+                n >= n0 and b(n) > x
+        $exceeds_infinitely_often(b, x)
+    $has_finite_limit_superior(b, L)
+
+thm scratch_finite_liminf_extensional:
+    ? forall a, b seq(R), L R:
+        $pointwise_equal_sequences(a, b)
+        $has_finite_limit_inferior(a, L)
+        =>:
+            $has_finite_limit_inferior(b, L)
+    claim:
+        ? forall y R:
+            y < L
+            =>:
+                exist n0 N_pos st {$is_eventually_above(b, y, n0)}
+        have by exist n0 N_pos st {$is_eventually_above(a, y, n0)}: n0
+        witness exist n1 N_pos st {$is_eventually_above(b, y, n1)} from n0:
+            claim:
+                ? forall n N_pos:
+                    n >= n0
+                    =>:
+                        b(n) > y
+                a(n) > y
+                a(n) = b(n)
+                b(n) > y
+            $is_eventually_above(b, y, n0)
+    claim:
+        ? forall y R:
+            y > L
+            =>:
+                $falls_infinitely_often(b, y)
+        claim:
+            ? forall n0 N_pos:
+                $has_late_term_below(b, y, n0)
+            have by exist n N_pos st {n >= n0 and a(n) < y}: n
+            witness exist k N_pos st {k >= n0 and b(k) < y} from n:
+                n >= n0 and a(n) < y
+                n >= n0
+                a(n) < y
+                a(n) = b(n)
+                b(n) < y
+                n >= n0 and b(n) < y
+        $falls_infinitely_often(b, y)
+    $has_finite_limit_inferior(b, L)
