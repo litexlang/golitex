@@ -1,38 +1,9 @@
 run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
 
-thm scratch_geometric_dominates_from_root_bound:
+thm scratch_root_tail_bound_by_geometric:
     ? forall a seq(R), r R_pos, n0 N_pos:
-        r < 1
         $is_eventually_below(root_test_terms(a), r, n0)
         =>:
-            $is_absolutely_convergent_series(a)
-    claim:
-        ? forall n N_pos:
-            abs(a(n)) <= r^n
-        by cases:
-            ? abs(a(n)) <= r^n
-            case n >= n0:
-                root_test_terms(a)(n) < r
-                root_test_terms(a)(n) = abs(a(n))^(1 / n)
-                abs(a(n))^(1 / n) < r
-                abs(a(n)) >= 0
-                by thm nth_root_nonnegative(abs(a(n)), n)
-                abs(a(n))^(1 / n) >= 0
-                0 <= abs(a(n))^(1 / n)
-                (abs(a(n))^(1 / n))^n < r^n
-                (abs(a(n))^(1 / n))^n = abs(a(n))
-                abs(a(n)) <= r^n
-            case n < n0:
-                # finite-prefix terms can be absorbed by a larger comparison
-                # constant; this scratch first tests the tail-only algebra.
-                know abs(a(n)) <= r^n
-    abs(r) = r
-    abs(r) < 1
-    1 - r != 0
-    by thm geometric_series_from_one_formula(r)
-    $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
-    witness exist M R st {$has_series_sum(geometric_series_terms_from_one(r), M)} from r / (1 - r):
-        $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
-    $is_convergent_series(geometric_series_terms_from_one(r))
-    by thm comparison_test_for_series(a, geometric_series_terms_from_one(r))
-    $is_absolutely_convergent_series(a)
+            $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
+    by thm root_test_tail_bound_by_geometric(a, r, n0)
+    $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)

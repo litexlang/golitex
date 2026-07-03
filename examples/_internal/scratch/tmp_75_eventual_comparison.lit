@@ -1,41 +1,10 @@
 run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
 
-thm scratch_absolute_series_tail_convergence_reverse:
-    ? forall a seq(R), k N:
-        $is_absolutely_convergent_series(series_shift(a, k))
-        =>:
-            $is_absolutely_convergent_series(a)
-    # finite-prefix addition for absolute series
-    know $is_absolutely_convergent_series(a)
-
 thm scratch_eventual_comparison_test_for_series:
     ? forall a, b seq(R), n0 N_pos:
         $is_convergent_series(b)
-        forall n N_pos:
-            n >= n0
-            =>:
-                abs(a(n)) <= b(n)
+        $is_eventually_abs_bounded_by(a, b, n0)
         =>:
             $is_absolutely_convergent_series(a)
-    have h N = n0 - 1
-    by thm series_laws_tail_convergence(b, h)
-    $is_convergent_series(series_shift(b, h))
-    claim:
-        ? forall n N_pos:
-            abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
-        h = n0 - 1
-        n >= 1
-        n - 1 >= 0
-        n + h = n + (n0 - 1)
-        n + (n0 - 1) = n0 + (n - 1)
-        n0 + (n - 1) >= n0
-        n + h >= n0
-        abs(a(n + h)) <= b(n + h)
-        series_shift(a, h)(n) = a(n + h)
-        series_shift(b, h)(n) = b(n + h)
-        abs(series_shift(a, h)(n)) = abs(a(n + h))
-        abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
-    by thm comparison_test_for_series(series_shift(a, h), series_shift(b, h))
-    $is_absolutely_convergent_series(series_shift(a, h))
-    by thm scratch_absolute_series_tail_convergence_reverse(a, h)
+    by thm eventual_comparison_test_for_series(a, b, n0)
     $is_absolutely_convergent_series(a)

@@ -80,6 +80,14 @@ at a time. You introduce the objects in the world, give yourself vocabulary,
 state the local assumptions of the problem, and then ask Litex whether a new
 fact follows.
 
+In implementation terms, that growing world lives in an `Environment`: the
+physical container for the mathematical context. A Litex statement has two
+jobs. First, Litex checks that the statement makes sense and verifies any fact
+it asserts against the current world. Second, if the statement is accepted, its
+effects are stored back into that world: new names, definitions, proved facts,
+theorem interfaces, and routine inference/cache consequences that later lines
+may reuse. This is why a file feels cumulative rather than merely textual.
+
 A classical syllogism shows the shape:
 
 ```litex
