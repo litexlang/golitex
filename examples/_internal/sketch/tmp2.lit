@@ -1,17 +1,4 @@
-# Definition 3.3.1 (Functions). Let X,Y be sets, and let P(x,y) be a property pertaining to an object x ∈ X and an object y ∈ Y , such that for every x ∈ X, there is exactly one y ∈ Y for which P(x,y) is true (this is sometimes known as the vertical line test). Then we define the function f : X → Y defined by P on the domain X and range Y to be the object which, given any input x ∈ X, assigns an output f(x) ∈ Y , defined to be the unique object f(x) for which P(x,f(x)) is true. Thus, for any x ∈ X and y ∈ Y ,
-# y=f(x) ⇐⇒ P(x,y)istrue.
-
-# 对应的是 litex 的用 have fn as set 语句
-# 当然，litex还有非常多其他的定义函数的方式，然后你在这里都写一下。
-
-
 """
-Lemma 3.3.12 (Composition is associative). Let f : Z -> W, g : Y -> Z,
-and h : X -> Y be functions. Then f o (g o h) = (f o g) o h.
+template<I set, s nonempty_set, g fn(x I) s>:
+    have infinite_cartesian_product set = {f fn(x I)cup(s): forall t I: f(t) $in g(t)}
 """
-
-claim:
-    prove:
-        forall f fn(z N) N, g fn(y N) N, h fn(x N) N, x N:
-            f(g(h(x))) = f(g(h(x)))
-    f(g(h(x))) = f(g(h(x)))
