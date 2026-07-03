@@ -531,12 +531,26 @@ forall f fn(x Z) R:
     abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
 ```
 
-`finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, and closed integer ranges bridge to the existing `sum(start, end, f)` object.
+`finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, closed integer ranges bridge to the existing `sum(start, end, f)` object, and double sums over finite Cartesian products support the usual finite Fubini swap.
 
 ```litex
 finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
 finite_set_sum({}, 'Z(x){x}) = 0
 finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+```
+
+```litex
+thm finite_double_sum_over_cartesian_product_example:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_fubini_example:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
 ```
 
 For a nonempty finite set, an enumeration by a bijection from `1...count(X)` gives the same sum for any bijective ordering.

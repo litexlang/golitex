@@ -1,19 +1,19 @@
-thm finite_series_comparison_tmp:
-    ? forall a, b fn(i Z) R, m, n Z:
-        m <= n
-        forall i Z:
-            m <= i <= n
-            =>:
-                a(i) <= b(i)
-        =>:
-            sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+"""
+目标：用 template 定义finite_set之和
 
-    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+prop is_finite_set_sum(X finite_set, f fn(x X) R, l R):
+    X $subset R
+    forall X 上的 index 函数，它们做成 sum(1, count(X), '(i Z) R {f(i)}) 都等于 l
 
-thm finite_series_triangle_tmp:
-    ? forall a fn(i Z) R, m, n Z:
-        m <= n
-        =>:
-            abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+template<X finite_set: X $subset R>:
+    have by exist x R st {$is_finite_set_sum(X, f, l)}
+    
+证明过程：
+1. 先用 induc 证明所有的 有限集合 X 上都有一个 index 函数
 
-    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+2. 然后证明 所有的 index 函数上定义的 sum(1, count(X), '(i Z) R {f(i)}) 都是相等的
+
+3. 然后你这个 index 函数上定义的 sum(1, count(X), '(i Z) R {f(i)}) 就等于 l，就是证明了那个 exist 函数
+
+4. template 就OK了。
+"""

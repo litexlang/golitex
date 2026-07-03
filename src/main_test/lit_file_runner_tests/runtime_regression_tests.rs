@@ -2473,6 +2473,19 @@ thm finite_series_comparison_test:
 
     sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
 
+thm finite_series_comparison_n_pos_index_test:
+    prove:
+        forall a, b fn(i N_pos) R, m, n N_pos:
+            m <= n
+            forall i N_pos:
+                m <= i <= n
+                =>:
+                    a(i) <= b(i)
+            =>:
+                sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+
+    sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+
 thm finite_series_triangle_test:
     prove:
         forall a fn(i Z) R, m, n Z:
@@ -2582,7 +2595,8 @@ eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
 
 #[test]
 fn finite_set_sum_core_rules() {
-    let source_code = r#"
+    run_with_large_stack("finite_set_sum_core_rules", || {
+        let source_code = r#"
 finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
 finite_set_sum({}, 'Z(x){x}) = 0
 finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
@@ -2598,19 +2612,109 @@ sketch:
     have X power_set(Z)
     know $is_finite_set(X)
     finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+
+thm finite_set_sum_substitution_tmp:
+    prove:
+        forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
+            forall x X:
+                exist! y Y st {g(y) = x}
+            =>:
+                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+
+thm finite_set_sum_range_matches_series_tmp:
+    prove:
+        forall a fn(i Z) R, m, n Z:
+            m <= n
+            =>:
+                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+
+thm finite_set_sum_disjoint_union_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z union(X, Y)) R:
+            intersect(X, Y) = {}
+            =>:
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+
+thm finite_set_sum_add_tmp:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+
+thm finite_set_sum_scalar_mul_tmp:
+    prove:
+        forall X finite_set, f fn(x X) R, c R:
+            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+
+thm finite_set_sum_monotone_tmp:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            forall x X:
+                f(x) <= g(x)
+            =>:
+                finite_set_sum(X, f) <= finite_set_sum(X, g)
+    finite_set_sum(X, f) <= finite_set_sum(X, g)
+
+thm finite_set_sum_triangle_tmp:
+    prove:
+        forall X finite_set, f fn(x X) R:
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "finite_set_sum core rules should verify:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "finite_set_sum core rules should verify:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn finite_set_sum_cartesian_product_and_fubini() {
+    run_with_large_stack("finite_set_sum_cartesian_product_and_fubini", || {
+        let source_code = r#"
+thm finite_double_sum_over_cartesian_product_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_double_sum_over_cartesian_product_reversed_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_fubini_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_cartesian_product_and_fubini");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite-set Cartesian-product/Fubini rules should verify:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

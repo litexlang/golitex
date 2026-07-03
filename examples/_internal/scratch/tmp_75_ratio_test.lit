@@ -1,0 +1,89 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+thm scratch_pointwise_equal_sequences_symmetric:
+    ? forall a, b seq(R):
+        $pointwise_equal_sequences(a, b)
+        =>:
+            $pointwise_equal_sequences(b, a)
+    claim:
+        ? forall n N_pos:
+            b(n) = a(n)
+        a(n) = b(n)
+        b(n) = a(n)
+    $pointwise_equal_sequences(b, a)
+
+thm scratch_ratio_limsup_less_than_one_gives_root_limsup_below_one:
+    ? forall c seq(R), alpha R:
+        $is_positive_sequence(c)
+        $has_finite_limit_superior(ratio_terms(c), alpha)
+        alpha < 1
+        =>:
+            exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
+    # product-estimate existence bridge from Lemma 7.5.2 to the root test
+    know exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
+
+thm scratch_ratio_liminf_greater_than_one_gives_root_limsup_above_one:
+    ? forall c seq(R), beta R:
+        $is_positive_sequence(c)
+        $has_finite_limit_inferior(ratio_terms(c), beta)
+        beta > 1
+        =>:
+            exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
+    # product-estimate existence bridge from Lemma 7.5.2 to the root test
+    know exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
+
+thm scratch_ratio_test_absolute_convergence:
+    ? forall a seq(R), alpha, beta R:
+        $has_no_zero_terms(a)
+        $has_finite_limit_superior(absolute_ratio_terms(a), alpha)
+        $has_finite_limit_inferior(absolute_ratio_terms(a), beta)
+        alpha < 1
+        =>:
+            $is_absolutely_convergent_series(a)
+    by thm abs_sequence_positive_from_no_zero_terms(a)
+    $is_positive_sequence(absolute_value_sequence(a))
+    by thm absolute_ratio_terms_match_positive_ratio_terms(a)
+    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
+    by thm finite_limsup_extensional(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)), alpha)
+    $has_finite_limit_superior(ratio_terms(absolute_value_sequence(a)), alpha)
+    by thm scratch_ratio_limsup_less_than_one_gives_root_limsup_below_one(absolute_value_sequence(a), alpha)
+    have by exist gamma R st {$has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma < 1}: gamma
+    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma < 1
+    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma)
+    gamma < 1
+    by thm root_test_terms_match_absolute_value_sequence(a)
+    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    by thm scratch_pointwise_equal_sequences_symmetric(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    $pointwise_equal_sequences(root_test_terms(absolute_value_sequence(a)), root_test_terms(a))
+    by thm finite_limsup_extensional(root_test_terms(absolute_value_sequence(a)), root_test_terms(a), gamma)
+    $has_finite_limit_superior(root_test_terms(a), gamma)
+    by thm root_test_absolute_convergence(a, gamma)
+    $is_absolutely_convergent_series(a)
+
+thm scratch_ratio_test_divergence:
+    ? forall a seq(R), alpha, beta R:
+        $has_no_zero_terms(a)
+        $has_finite_limit_superior(absolute_ratio_terms(a), alpha)
+        $has_finite_limit_inferior(absolute_ratio_terms(a), beta)
+        beta > 1
+        =>:
+            not $is_convergent_series(a)
+    by thm abs_sequence_positive_from_no_zero_terms(a)
+    $is_positive_sequence(absolute_value_sequence(a))
+    by thm absolute_ratio_terms_match_positive_ratio_terms(a)
+    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
+    by thm finite_liminf_extensional(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)), beta)
+    $has_finite_limit_inferior(ratio_terms(absolute_value_sequence(a)), beta)
+    by thm scratch_ratio_liminf_greater_than_one_gives_root_limsup_above_one(absolute_value_sequence(a), beta)
+    have by exist gamma R st {$has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma > 1}: gamma
+    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma > 1
+    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma)
+    gamma > 1
+    by thm root_test_terms_match_absolute_value_sequence(a)
+    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    by thm scratch_pointwise_equal_sequences_symmetric(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    $pointwise_equal_sequences(root_test_terms(absolute_value_sequence(a)), root_test_terms(a))
+    by thm finite_limsup_extensional(root_test_terms(absolute_value_sequence(a)), root_test_terms(a), gamma)
+    $has_finite_limit_superior(root_test_terms(a), gamma)
+    by thm root_test_divergence(a, gamma)
+    not $is_convergent_series(a)

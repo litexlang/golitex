@@ -460,6 +460,51 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_finite_set_sum_substitution(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_disjoint_union(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_finite_set_sum_add(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_finite_set_sum_scalar_mul(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_sum_over_cartesian_product(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_finite_set_sum_fubini(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
             left,
             right,
