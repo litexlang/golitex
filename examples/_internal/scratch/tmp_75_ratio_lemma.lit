@@ -1,25 +1,5 @@
 run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
 
-thm scratch_eventual_ratio_upper_bound_gives_root_limsup_bound:
-    ? forall c seq(R), r, A R, n0 N_pos:
-        $is_positive_sequence(c)
-        $is_eventually_below(ratio_terms(c), r, n0)
-        $has_finite_limit_superior(root_test_terms(c), A)
-        =>:
-            A <= r
-    # product estimate for consecutive ratios
-    know A <= r
-
-thm scratch_eventual_ratio_lower_bound_gives_root_liminf_bound:
-    ? forall c seq(R), r, A R, n0 N_pos:
-        $is_positive_sequence(c)
-        $is_eventually_above(ratio_terms(c), r, n0)
-        $has_finite_limit_inferior(root_test_terms(c), A)
-        =>:
-            r <= A
-    # product estimate for consecutive ratios
-    know r <= A
-
 thm scratch_ratio_limsup_bounds_root_limsup:
     ? forall c seq(R), L, A R:
         $is_positive_sequence(c)
@@ -27,17 +7,8 @@ thm scratch_ratio_limsup_bounds_root_limsup:
         $has_finite_limit_superior(root_test_terms(c), A)
         =>:
             A <= L
-    by contra:
-        ? A <= L
-        A > L
-        have mid R = (A + L) / 2
-        L < mid
-        mid < A
-        mid > L
-        have by exist n0 N_pos st {$is_eventually_below(ratio_terms(c), mid, n0)}: n0
-        by thm scratch_eventual_ratio_upper_bound_gives_root_limsup_bound(c, mid, A, n0)
-        A <= mid
-        impossible mid < A
+    by thm ratio_limsup_bounds_root_limsup(c, L, A)
+    A <= L
 
 thm scratch_ratio_liminf_bounds_root_liminf:
     ? forall c seq(R), L, A R:
@@ -46,14 +17,5 @@ thm scratch_ratio_liminf_bounds_root_liminf:
         $has_finite_limit_inferior(root_test_terms(c), A)
         =>:
             L <= A
-    by contra:
-        ? L <= A
-        L > A
-        have mid R = (L + A) / 2
-        A < mid
-        mid < L
-        mid < L
-        have by exist n0 N_pos st {$is_eventually_above(ratio_terms(c), mid, n0)}: n0
-        by thm scratch_eventual_ratio_lower_bound_gives_root_liminf_bound(c, mid, A, n0)
-        mid <= A
-        impossible A < mid
+    by thm ratio_liminf_bounds_root_liminf(c, L, A)
+    L <= A

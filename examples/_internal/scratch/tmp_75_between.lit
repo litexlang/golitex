@@ -5,20 +5,5 @@ thm scratch_exists_positive_between_limsup_and_one:
         alpha < 1
         =>:
             exist r R_pos st {alpha < r and r < 1}
-    alpha < 1 / 2 or alpha >= 1 / 2
-    by cases:
-        ? exist r R_pos st {alpha < r and r < 1}
-        case alpha < 1 / 2:
-            witness exist r R_pos st {alpha < r and r < 1} from 1 / 2:
-                1 / 2 > 0
-                alpha < 1 / 2
-                1 / 2 < 1
-        case alpha >= 1 / 2:
-            witness exist r R_pos st {alpha < r and r < 1} from (alpha + 1) / 2:
-                (alpha + 1) / 2 > 0
-                (alpha + 1) / 2 - alpha = (1 - alpha) / 2
-                (1 - alpha) / 2 > 0
-                alpha < (alpha + 1) / 2
-                1 - (alpha + 1) / 2 = (1 - alpha) / 2
-                1 - (alpha + 1) / 2 > 0
-                (alpha + 1) / 2 < 1
+    by thm positive_number_between_below_one(alpha)
+    exist r R_pos st {alpha < r and r < 1}

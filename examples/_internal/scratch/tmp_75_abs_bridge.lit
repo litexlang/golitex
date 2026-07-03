@@ -1,19 +1,11 @@
 run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
 
-have fn absolute_value_sequence(a seq(R)) fn(i N_pos) R = '(j N_pos) R {abs(a(j))}
-
 thm scratch_abs_sequence_positive_from_no_zero_terms:
     ? forall a seq(R):
         $has_no_zero_terms(a)
         =>:
             $is_positive_sequence(absolute_value_sequence(a))
-    claim:
-        ? forall n N_pos:
-            absolute_value_sequence(a)(n) > 0
-        a(n) != 0
-        abs(a(n)) > 0
-        absolute_value_sequence(a)(n) = abs(a(n))
-        absolute_value_sequence(a)(n) > 0
+    by thm abs_sequence_positive_from_no_zero_terms(a)
     $is_positive_sequence(absolute_value_sequence(a))
 
 thm scratch_absolute_ratio_terms_match_positive_ratio_terms:
@@ -21,30 +13,11 @@ thm scratch_absolute_ratio_terms_match_positive_ratio_terms:
         $has_no_zero_terms(a)
         =>:
             $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
-    by thm scratch_abs_sequence_positive_from_no_zero_terms(a)
-    $is_positive_sequence(absolute_value_sequence(a))
-    claim:
-        ? forall n N_pos:
-            absolute_ratio_terms(a)(n) = ratio_terms(absolute_value_sequence(a))(n)
-        absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
-        ratio_terms(absolute_value_sequence(a))(n) = absolute_value_sequence(a)(n + 1) / absolute_value_sequence(a)(n)
-        absolute_value_sequence(a)(n + 1) = abs(a(n + 1))
-        absolute_value_sequence(a)(n) = abs(a(n))
-        ratio_terms(absolute_value_sequence(a))(n) = abs(a(n + 1)) / abs(a(n))
-        absolute_ratio_terms(a)(n) = ratio_terms(absolute_value_sequence(a))(n)
+    by thm absolute_ratio_terms_match_positive_ratio_terms(a)
     $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
 
 thm scratch_root_test_terms_match_absolute_value_sequence:
     ? forall a seq(R):
         $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
-    claim:
-        ? forall n N_pos:
-            root_test_terms(a)(n) = root_test_terms(absolute_value_sequence(a))(n)
-        root_test_terms(a)(n) = abs(a(n))^(1 / n)
-        root_test_terms(absolute_value_sequence(a))(n) = abs(absolute_value_sequence(a)(n))^(1 / n)
-        absolute_value_sequence(a)(n) = abs(a(n))
-        abs(absolute_value_sequence(a)(n)) = abs(abs(a(n)))
-        abs(abs(a(n))) = abs(a(n))
-        root_test_terms(absolute_value_sequence(a))(n) = abs(a(n))^(1 / n)
-        root_test_terms(a)(n) = root_test_terms(absolute_value_sequence(a))(n)
+    by thm root_test_terms_match_absolute_value_sequence(a)
     $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
