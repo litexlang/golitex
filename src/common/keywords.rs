@@ -45,6 +45,7 @@ pub const SET_DIFF: &str = "set_diff";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
+pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
 /// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
 pub const ANONYMOUS_FN_PREFIX: &str = "'";
@@ -230,6 +231,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CUP,
         CAP,
         POWER_SET,
+        GENERAL_CART,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,

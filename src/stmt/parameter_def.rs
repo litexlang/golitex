@@ -710,7 +710,7 @@ fn collect_cited_param_indices_from_obj(
             );
             shadowed_names.push(x.param.clone());
             for fact in x.facts.iter() {
-                collect_cited_param_indices_from_or_and_chain(
+                collect_cited_param_indices_from_exist_body_fact(
                     fact,
                     previous_param_indices,
                     shadowed_names,
@@ -718,6 +718,26 @@ fn collect_cited_param_indices_from_obj(
                 );
             }
             shadowed_names.pop();
+        }
+        Obj::GeneralCart(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.index_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.family_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.family_fn,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
         }
         Obj::FnSet(x) => collect_cited_param_indices_from_fn_set_body(
             &x.body,
@@ -1256,6 +1276,17 @@ fn collect_cited_param_indices_from_fn_set_body(
 
 fn collect_cited_param_indices_from_or_and_chain(
     fact: &OrAndChainAtomicFact,
+    previous_param_indices: &HashMap<String, usize>,
+    shadowed_names: &mut Vec<String>,
+    out: &mut Vec<usize>,
+) {
+    for arg in fact.get_args_from_fact().iter() {
+        collect_cited_param_indices_from_obj(arg, previous_param_indices, shadowed_names, out);
+    }
+}
+
+fn collect_cited_param_indices_from_exist_body_fact(
+    fact: &ExistBodyFact,
     previous_param_indices: &HashMap<String, usize>,
     shadowed_names: &mut Vec<String>,
     out: &mut Vec<usize>,

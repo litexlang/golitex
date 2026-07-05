@@ -270,7 +270,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `examples/03_objects_and_data/README.md`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `examples/03_objects_and_statements.md`.
 
 #### Power set
 
@@ -621,7 +621,7 @@ claim:
             forall A S:
                 $is_nonempty_set(A)
             =>:
-                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -851,7 +851,7 @@ Different fact shapes are verified in different ways, but they all reduce to the
 | **Chain** | Shorthand for adjacent comparisons. | `0 < 1 < 2` |
 | **Disjunction** | At least one branch holds. | `1 = 2 or 1 = 1` |
 | **Existential fact** | **Inline witness form**: `exist`, `exist!`, or `not exist`, followed by `st { ... }`. | `exist x R st { x = 1 }` |
-| **Universal fact** | For all typed variables, conclusions hold. | `forall! x R: x = x`, or block `forall x R:` |
+| **Universal fact** | For all typed variables, conclusions hold. | `forall! x R => {x = x}`, or block `forall x R:` |
 | **Universal with equivalence** | A universal fact with an equivalent reformulation. | block `forall ...` with `<=>:` |
 | **Negated universal** | A universal claim is false. | `not forall x R: x > 0` |
 
@@ -1267,7 +1267,7 @@ Common fact types:
 | Compound fact | Chain | `1 <= 2 = 2 < 3` |
 | Quantified fact | Existence | `exist x R st {x > 0}` |
 | Quantified fact | Unique existence | `exist! x R st {x = 0}` |
-| Quantified fact | Universal fact | `forall! x R: x = x` |
+| Quantified fact | Universal fact | `forall! x R => {x = x}` |
 
 For a fuller explanation, see [Factual Statements](https://litexlang.com/doc/Manual#factual-statements).
 
@@ -2408,7 +2408,7 @@ claim:
             forall A S:
                 $is_nonempty_set(A)
             =>:
-                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```

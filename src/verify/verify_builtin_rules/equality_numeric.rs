@@ -3665,6 +3665,93 @@ impl Runtime {
         Ok(None)
     }
 
+    // Scalars factor out of finite sums over the same integer index range.
+    // Example: `sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})`.
+    pub(crate) fn try_verify_sum_scalar_mul(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+
+        for (sum_side, product_side) in [(left, right), (right, left)] {
+            let Obj::Sum(sum) = sum_side else {
+                continue;
+            };
+            let Obj::Mul(product) = product_side else {
+                continue;
+            };
+            for (base_side, scalar) in [
+                (product.left.as_ref(), product.right.as_ref()),
+                (product.right.as_ref(), product.left.as_ref()),
+            ] {
+                let Obj::Sum(base_sum) = base_side else {
+                    continue;
+                };
+                let start_result = self.verify_objs_are_equal_in_equality_builtin(
+                    sum.start.as_ref(),
+                    base_sum.start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !start_result.is_true() {
+                    continue;
+                }
+                let end_result = self.verify_objs_are_equal_in_equality_builtin(
+                    sum.end.as_ref(),
+                    base_sum.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !end_result.is_true() {
+                    continue;
+                }
+
+                let x_name = self.generate_random_unused_name();
+                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let Some(sum_inst) =
+                    self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let Some(base_inst) =
+                    self.instantiate_unary_anonymous_summand_at(base_sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let expected: Obj = Mul::new(scalar.clone(), base_inst).into();
+                let pointwise_fact: AtomicFact =
+                    EqualFact::new(sum_inst, expected, line_file.clone()).into();
+                let dom_lo: Fact =
+                    LessEqualFact::new((*sum.start).clone(), x_obj.clone(), line_file.clone())
+                        .into();
+                let dom_hi: Fact =
+                    LessEqualFact::new(x_obj.clone(), (*sum.end).clone(), line_file.clone()).into();
+                let pointwise_result = self
+                    .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                        x_name,
+                        vec![dom_lo, dom_hi],
+                        &pointwise_fact,
+                        verify_state,
+                    )?;
+                if !pointwise_result.is_true() {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite sum scalar multiplication",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
     // A finite-set sum over the empty set is zero.
     // Example: `finite_set_sum({}, 'Z(x){x}) = 0`.
     pub(crate) fn try_verify_finite_set_sum_empty(

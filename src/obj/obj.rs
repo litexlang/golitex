@@ -26,6 +26,7 @@ pub enum Obj {
     Cup(Cup),
     Cap(Cap),
     PowerSet(PowerSet),
+    GeneralCart(GeneralCart),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
     FnSet(FnSet),
@@ -136,6 +137,7 @@ pub enum ObjKind {
     Replacement = 66,
     TupleIndexFreeParam = 67,
     CartIndexFreeParam = 68,
+    GeneralCart = 69,
 }
 
 impl ObjKind {
@@ -618,7 +620,14 @@ pub struct ListSet {
 pub struct SetBuilder {
     pub param: String,
     pub param_set: Box<Obj>,
-    pub facts: Vec<OrAndChainAtomicFact>,
+    pub facts: Vec<ExistBodyFact>,
+}
+
+#[derive(Clone)]
+pub struct GeneralCart {
+    pub index_set: Box<Obj>,
+    pub family_set: Box<Obj>,
+    pub family_fn: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -809,7 +818,7 @@ impl SetBuilder {
     pub fn new(
         param: String,
         param_set: Obj,
-        facts: Vec<OrAndChainAtomicFact>,
+        facts: Vec<ExistBodyFact>,
     ) -> Result<Self, RuntimeError> {
         let set_builder = SetBuilder {
             param,
@@ -818,6 +827,16 @@ impl SetBuilder {
         };
         check_set_builder_has_no_duplicate_set_builder_free_parameter(&set_builder)?;
         Ok(set_builder)
+    }
+}
+
+impl GeneralCart {
+    pub fn new(index_set: Obj, family_set: Obj, family_fn: Obj) -> Self {
+        GeneralCart {
+            index_set: Box::new(index_set),
+            family_set: Box::new(family_set),
+            family_fn: Box::new(family_fn),
+        }
     }
 }
 
@@ -1114,6 +1133,7 @@ impl Obj {
             Obj::Cup(_) => ObjKind::Cup,
             Obj::Cap(_) => ObjKind::Cap,
             Obj::PowerSet(_) => ObjKind::PowerSet,
+            Obj::GeneralCart(_) => ObjKind::GeneralCart,
             Obj::ListSet(_) => ObjKind::ListSet,
             Obj::SetBuilder(_) => ObjKind::SetBuilder,
             Obj::FnSet(_) => ObjKind::FnSet,
@@ -1184,6 +1204,7 @@ impl Obj {
             Obj::Cup(_) => CUP.to_string(),
             Obj::Cap(_) => CAP.to_string(),
             Obj::PowerSet(_) => POWER_SET.to_string(),
+            Obj::GeneralCart(_) => GENERAL_CART.to_string(),
             Obj::Cart(_) => CART.to_string(),
             Obj::CartDim(_) => CART_DIM.to_string(),
             Obj::Proj(_) => PROJ.to_string(),
@@ -1347,6 +1368,7 @@ impl Obj {
             Obj::MatrixSet(x) => write!(f, "{}", x)?,
             Obj::MatrixListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
+            Obj::GeneralCart(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
@@ -1453,6 +1475,12 @@ impl Obj {
             Obj::PowerSet(x) => {
                 PowerSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
             }
+            Obj::GeneralCart(x) => GeneralCart::new(
+                Obj::replace_bound_identifier(*x.index_set, from, to),
+                Obj::replace_bound_identifier(*x.family_set, from, to),
+                Obj::replace_bound_identifier(*x.family_fn, from, to),
+            )
+            .into(),
             Obj::ListSet(x) => ListSet::new(
                 x.list
                     .into_iter()
@@ -2460,6 +2488,16 @@ impl fmt::Display for SetBuilder {
     }
 }
 
+impl fmt::Display for GeneralCart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}({}, {}, {})",
+            GENERAL_CART, self.index_set, self.family_set, self.family_fn
+        )
+    }
+}
+
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", CART, braced_vec_to_string(&self.args))
@@ -2636,6 +2674,12 @@ impl From<Cap> for Obj {
 impl From<PowerSet> for Obj {
     fn from(p: PowerSet) -> Self {
         Obj::PowerSet(p)
+    }
+}
+
+impl From<GeneralCart> for Obj {
+    fn from(g: GeneralCart) -> Self {
+        Obj::GeneralCart(g)
     }
 }
 

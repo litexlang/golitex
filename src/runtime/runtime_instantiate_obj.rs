@@ -104,6 +104,9 @@ impl Runtime {
                 self.inst_matrix_list_obj(inner, param_to_arg_map, param_obj_type)
             }
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, param_obj_type),
+            Obj::GeneralCart(inner) => {
+                self.inst_general_cart(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
@@ -617,7 +620,7 @@ impl Runtime {
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut facts = Vec::with_capacity(set_builder.facts.len());
         for fact in set_builder.facts.iter() {
-            facts.push(self.inst_or_and_chain_atomic_fact(
+            facts.push(self.inst_exist_body_fact(
                 fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
@@ -633,6 +636,20 @@ impl Runtime {
             )?,
             facts,
         )?
+        .into())
+    }
+
+    pub fn inst_general_cart(
+        &self,
+        general_cart: &GeneralCart,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(GeneralCart::new(
+            self.inst_obj(&general_cart.index_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&general_cart.family_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&general_cart.family_fn, param_to_arg_map, param_obj_type)?,
+        )
         .into())
     }
 

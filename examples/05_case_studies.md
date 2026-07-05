@@ -205,7 +205,7 @@ claim:
                         n + 1 = e * c = e * (f * d) = (e * f) * d
                         (n + 1) % d = ((e * f) * d) % d = 0
 
-claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
     2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
     by cases k > a:

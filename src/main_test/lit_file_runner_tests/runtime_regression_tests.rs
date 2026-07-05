@@ -580,6 +580,132 @@ count(power_set({1, 2, 3})) = 8
 }
 
 #[test]
+fn subset_fact_proves_power_set_membership() {
+    run_with_large_stack("subset_fact_proves_power_set_membership", || {
+        let source_code = r#"
+have A set
+have B set
+know A $subset B
+A $in power_set(B)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("subset_fact_proves_power_set_membership");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "subset_fact_proves_power_set_membership failed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn builtin_nonempty_family_witness_can_be_named_with_have() {
+    run_with_large_stack(
+        "builtin_nonempty_family_witness_can_be_named_with_have",
+        || {
+            let source_code = r#"
+have X nonempty_set:
+    forall! x X => {$is_nonempty_set(x)}
+
+have A X
+$is_nonempty_set(A)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "builtin_nonempty_family_witness_can_be_named_with_have",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "builtin nonempty family witness test failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn general_cart_builtin_definition_choice_and_membership_inference() {
+    run_with_large_stack(
+        "general_cart_builtin_definition_choice_and_membership_inference",
+        || {
+            let source_code = r#"
+have I set
+have X nonempty_set:
+    forall! x X => {$is_nonempty_set(x)}
+have g fn(alpha I) X
+
+$is_nonempty_set(general_cart(I, X, g))
+general_cart(I, X, g) = {f fn(t I)cup(X): forall! alpha I => {f(alpha) $in g(alpha)}}
+have c general_cart(I, X, g)
+c $in fn(t I)cup(X)
+forall alpha I:
+    c(alpha) $in g(alpha)
+
+have J set
+have h fn(beta J) X
+forall beta J:
+    $is_nonempty_set(h(beta))
+$is_nonempty_set(general_cart(J, X, h))
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "general_cart_builtin_definition_choice_and_membership_inference",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "general_cart builtin definition/choice test failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn general_cart_nonempty_requires_factor_nonempty_fact() {
+    run_with_large_stack(
+        "general_cart_nonempty_requires_factor_nonempty_fact",
+        || {
+            let source_code = r#"
+have I set
+have s nonempty_set
+have g fn(alpha I) s
+
+$is_nonempty_set(general_cart(I, s, g))
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "general_cart_nonempty_requires_factor_nonempty_fact",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "general_cart nonempty should require factor nonempty evidence:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn latex_output_is_fragment_without_default_packages() {
     let output = to_latex_from_source_after_builtins(
         "1 = 1",
@@ -1169,10 +1295,10 @@ by extension:
     ? {1} = {1}
 
 by for:
-    ? forall! n range(0, 3): n < 3
+    ? forall! n range(0, 3) => {n < 3}
 
 by enumerate finite_set:
-    ? forall! z {1, 2}: z $in {1, 2}
+    ? forall! z {1, 2} => {z $in {1, 2}}
 
 prop qgoal_same_obj(x set, y set):
     x = y
@@ -1673,9 +1799,9 @@ forall x R:
 #[test]
 fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
     let source_code = r#"
-by for forall! n range(0, 3): n < 3
+by for forall! n range(0, 3) => {n < 3}
 
-by enumerate finite_set forall! x {1, 2}: x $in {1, 2}
+by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -1718,7 +1844,7 @@ by zorn_lemma: set s, prop leq:
             forall x, y C:
                 $leq(x, y) or $leq(y, x)
             =>:
-                exist u s st {forall! x C: {$leq(x, u)}}
+                exist u s st {forall! x C => {$leq(x, u)}}
 
 exist m s st {forall! x s: $leq(m, x) => {x = m}}
 "#;
@@ -1894,7 +2020,7 @@ by axiom_of_choice: set S:
     know forall A S:
         $is_nonempty_set(A)
 
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1918,7 +2044,7 @@ know forall A S:
 
 by axiom_of_choice: set S
 
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -2494,6 +2620,15 @@ thm finite_series_triangle_test:
                 abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
 
     abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+
+thm finite_series_scalar_mul_test:
+    prove:
+        forall a fn(i Z) R, c R, m, n Z:
+            m <= n
+            =>:
+                sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+
+    sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -6500,7 +6635,7 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             forall x, y C:
                 $local_leq(x, y) or $local_leq(y, x)
             =>:
-                exist u local_ordered_set st {forall! x C: {$local_leq(x, u)}}
+                exist u local_ordered_set st {forall! x C => {$local_leq(x, u)}}
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();

@@ -15,6 +15,7 @@ mod or_and_chain_atomic_fact;
 mod or_fact;
 pub use atomic_fact::*;
 pub use check_fact_has_no_duplicate_free_parameter::{
+    check_exist_body_fact_has_no_duplicate_free_parameter,
     check_exist_fact_has_no_duplicate_exist_free_parameter,
     check_forall_fact_has_no_duplicate_forall_free_parameter,
     check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter,

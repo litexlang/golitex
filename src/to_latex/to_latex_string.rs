@@ -2111,6 +2111,7 @@ impl Obj {
             Obj::Cup(x) => x.to_latex_string(),
             Obj::Cap(x) => x.to_latex_string(),
             Obj::PowerSet(x) => x.to_latex_string(),
+            Obj::GeneralCart(x) => x.to_latex_string(),
             Obj::ListSet(x) => x.to_latex_string(),
             Obj::SetBuilder(x) => x.to_latex_string(),
             Obj::FnSet(x) => x.to_latex_string(),
@@ -2158,6 +2159,17 @@ impl Obj {
             Obj::MatrixScalarMul(x) => x.to_latex_string(),
             Obj::MatrixPow(x) => x.to_latex_string(),
         }
+    }
+}
+
+impl GeneralCart {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{general\_cart}}\left({}, {}, {}\right)",
+            self.index_set.to_latex_string(),
+            self.family_set.to_latex_string(),
+            self.family_fn.to_latex_string()
+        )
     }
 }
 
