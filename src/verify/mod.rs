@@ -23,6 +23,9 @@ mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;
 mod verify_not_forall_fact;
 pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
+pub(crate) use verify_builtin_rules::{
+    general_cart_member_fn_set, general_cart_member_pointwise_fact,
+};
 mod verify_arg_satisfy_param_def;
 mod verify_number_in_standard_set;
 mod verify_obj_well_defined;

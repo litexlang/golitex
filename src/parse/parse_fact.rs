@@ -92,21 +92,24 @@ impl Runtime {
                 &forall_param_names,
                 tb.line_file.clone(),
             )?;
-            if tb.current()? == COLON {
+            let has_colon = if tb.current()? == COLON {
                 tb.skip_token(COLON)?;
-            } else if tb.current()? != RIGHT_ARROW && tb.current()? != LEFT_CURLY_BRACE {
+                true
+            } else if tb.current()? == RIGHT_ARROW {
+                false
+            } else {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "after binding variables in `{}`, expected `{}`, `{}`, or `{}`",
-                            FORALL_BANG, COLON, RIGHT_ARROW, LEFT_CURLY_BRACE
+                            "after binding variables in `{}`, expected `{}` or `{}`",
+                            FORALL_BANG, COLON, RIGHT_ARROW
                         ),
                         tb.line_file.clone(),
                     ),
                 )));
-            }
+            };
 
-            let (dom_facts, then_facts) = this.parse_inline_forall_after_colon(tb)?;
+            let (dom_facts, then_facts) = this.parse_inline_forall_after_header(tb, has_colon)?;
 
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::Forall, &forall_param_names);
@@ -124,73 +127,66 @@ impl Runtime {
         })
     }
 
-    fn parse_inline_forall_after_colon(
+    fn parse_inline_forall_after_header(
         &mut self,
         tb: &mut TokenBlock,
+        has_colon: bool,
     ) -> Result<(Vec<Fact>, Vec<ExistOrAndChainAtomicFact>), RuntimeError> {
         if tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "expected `{}`, `{{`, or body after `{}` header",
+                        "expected `{}` and `{{...}}` after `{}` header",
                         RIGHT_ARROW, FORALL_BANG
                     ),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        if tb.current()? == RIGHT_ARROW {
-            tb.skip_token(RIGHT_ARROW)?;
-            let then_facts = self.parse_inline_forall_then(tb)?;
-            return Ok((vec![], then_facts));
-        }
-        if tb.current()? == LEFT_CURLY_BRACE {
-            let then_facts = self.parse_inline_forall_braced_then_list(tb)?;
-            return Ok((vec![], then_facts));
-        }
-
-        let mut dom_facts: Vec<Fact> = Vec::new();
-        loop {
-            let seg = self.parse_inline_forall_dom_segment(tb)?;
-            if tb.exceed_end_of_head() {
-                if dom_facts.is_empty() {
-                    let then0 = Self::fact_as_exist_or_then(seg, tb.line_file.clone())?;
-                    return Ok((vec![], vec![then0]));
-                }
+        if !has_colon {
+            if tb.current()? != RIGHT_ARROW {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "expected `{}` after `{}` domain facts",
-                            RIGHT_ARROW, FORALL_BANG
+                            "`{}` without a domain must use `{}` followed by a braced then-list",
+                            FORALL_BANG, RIGHT_ARROW
                         ),
                         tb.line_file.clone(),
                     ),
                 )));
             }
-            match tb.current()? {
-                COMMA => {
-                    dom_facts.push(seg);
-                    tb.skip_token(COMMA)?;
-                }
-                RIGHT_ARROW => {
-                    dom_facts.push(seg);
-                    tb.skip_token(RIGHT_ARROW)?;
-                    let then_facts = self.parse_inline_forall_then(tb)?;
-                    return Ok((dom_facts, then_facts));
-                }
-                _ => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            format!(
-                                "expected `,`, `{}`, or end of line after `{}` domain fact",
-                                RIGHT_ARROW, FORALL_BANG
-                            ),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-            }
+            tb.skip_token(RIGHT_ARROW)?;
+            let then_facts = self.parse_inline_forall_then(tb)?;
+            return Ok((vec![], then_facts));
         }
+
+        if tb.current()? == RIGHT_ARROW || tb.current()? == LEFT_CURLY_BRACE {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "`{}` with `{}` must have exactly one domain fact before `{}`",
+                        FORALL_BANG, COLON, RIGHT_ARROW
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let dom_fact = self.parse_inline_forall_dom_segment(tb)?;
+        if tb.exceed_end_of_head() || tb.current()? != RIGHT_ARROW {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "`{}` with a domain must use exactly one domain fact followed by `{}` and a braced then-list",
+                        FORALL_BANG, RIGHT_ARROW
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        tb.skip_token(RIGHT_ARROW)?;
+        let then_facts = self.parse_inline_forall_then(tb)?;
+        Ok((vec![dom_fact], then_facts))
     }
 
     fn parse_inline_forall_dom_segment(
@@ -201,14 +197,25 @@ impl Runtime {
             && tb.token_at_add_index(1) == FORALL
             && tb.token_at_add_index(2) == "!"
         {
-            tb.skip_token(NOT)?;
-            let fact = self.parse_inline_forall_fact(tb, true)?;
-            match fact {
-                Fact::ForallFact(ff) => Ok(NotForallFact::new(ff).into()),
-                _ => unreachable!("parse_inline_forall_fact only returns ForallFact"),
-            }
+            Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "`not {}` is not allowed inside a `{}` domain; use a block `{}`",
+                        FORALL_BANG, FORALL_BANG, FORALL
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )))
         } else if tb.current()? == FORALL && tb.token_at_add_index(1) == "!" {
-            self.parse_inline_forall_fact(tb, true)
+            Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "nested `{}` is not allowed inside a `{}` domain; use a block `{}`",
+                        FORALL_BANG, FORALL_BANG, FORALL
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )))
         } else if tb.current()? == NOT && tb.token_at_add_index(1) == FORALL {
             Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -243,7 +250,15 @@ impl Runtime {
         if tb.current()? == LEFT_CURLY_BRACE {
             return self.parse_inline_forall_braced_then_list(tb);
         }
-        Ok(vec![self.parse_exist_or_and_chain_atomic_fact(tb)?])
+        Err(RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(
+                format!(
+                    "`{}` then-part must be a braced list after `{}`",
+                    FORALL_BANG, RIGHT_ARROW
+                ),
+                tb.line_file.clone(),
+            ),
+        )))
     }
 
     fn parse_inline_forall_braced_then_list(
@@ -251,18 +266,21 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
-        let mut facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-        loop {
-            Self::reject_inline_forall_in_then(tb)?;
-            facts.push(self.parse_exist_or_and_chain_atomic_fact(tb)?);
-            if tb.current()? != RIGHT_CURLY_BRACE {
-                tb.skip_token(COMMA)?;
-            } else {
-                break;
-            }
+        Self::reject_inline_forall_in_then(tb)?;
+        let fact = self.parse_exist_or_and_chain_atomic_fact(tb)?;
+        if tb.current()? != RIGHT_CURLY_BRACE {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "`{}` then braces must contain exactly one fact",
+                        FORALL_BANG
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(facts)
+        Ok(vec![fact])
     }
 
     fn reject_inline_forall_in_then(tb: &TokenBlock) -> Result<(), RuntimeError> {
@@ -290,30 +308,6 @@ impl Runtime {
             )));
         }
         Ok(())
-    }
-
-    fn fact_as_exist_or_then(
-        f: Fact,
-        line_file: LineFile,
-    ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
-        match f {
-            Fact::AtomicFact(a) => Ok(ExistOrAndChainAtomicFact::AtomicFact(a)),
-            Fact::ExistFact(e) => Ok(ExistOrAndChainAtomicFact::ExistFact(e)),
-            Fact::OrFact(o) => Ok(ExistOrAndChainAtomicFact::OrFact(o)),
-            Fact::AndFact(a) => Ok(ExistOrAndChainAtomicFact::AndFact(a)),
-            Fact::ChainFact(c) => Ok(ExistOrAndChainAtomicFact::ChainFact(c)),
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
-                Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!(
-                            "`{}` without `{}` must end with one chain/atomic-style fact",
-                            FORALL_BANG, RIGHT_ARROW
-                        ),
-                        line_file,
-                    ),
-                )))
-            }
-        }
     }
 
     // fact_hierarchy 1
@@ -550,7 +544,7 @@ impl Runtime {
         })
     }
 
-    fn parse_exist_body_fact(
+    pub(crate) fn parse_exist_body_fact(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ExistBodyFact, RuntimeError> {
@@ -856,14 +850,12 @@ mod inline_forall_parse_tests {
         rt.parse_fact(&mut blocks[0])
     }
 
-    #[test]
-    fn inline_forall_single_then_without_arrow() {
-        let f = parse_one_fact_line("forall! x R: x > 0").unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
+    fn parse_error_msg(line: &str) -> String {
+        let err = parse_one_fact_line(line).unwrap_err();
+        let RuntimeError::ParseError(s) = err else {
+            panic!("expected parse error, got {err:?}");
         };
-        assert!(ff.dom_facts.is_empty());
-        assert_eq!(ff.then_facts.len(), 1);
+        s.msg
     }
 
     #[test]
@@ -877,16 +869,6 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn inline_forall_no_colon_braced_then_when_no_dom() {
-        let f = parse_one_fact_line("forall! x R { x > 0, x + 1 > 1 }").unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
-        };
-        assert!(ff.dom_facts.is_empty());
-        assert_eq!(ff.then_facts.len(), 2);
-    }
-
-    #[test]
     fn inline_forall_dom_arrow_then() {
         let f = parse_one_fact_line("forall! x R: x > 0 => { x >= 0 }").unwrap();
         let Fact::ForallFact(ff) = f else {
@@ -897,45 +879,45 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn inline_forall_empty_dom_arrow() {
-        let f = parse_one_fact_line("forall! x R: => { x > 0 }").unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
-        };
-        assert!(ff.dom_facts.is_empty());
-        assert_eq!(ff.then_facts.len(), 1);
+    fn inline_forall_rejects_single_then_without_arrow() {
+        let msg = parse_error_msg("forall! x R: x > 0");
+        assert!(msg.contains("followed by `=>`"), "{}", msg);
     }
 
     #[test]
-    fn inline_forall_nested_in_dom() {
-        let f = parse_one_fact_line("forall! x R: forall! y R: y > 0 => { x > y } => { x > 0 }")
-            .unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
-        };
-        assert_eq!(ff.dom_facts.len(), 1);
-        assert!(matches!(&ff.dom_facts[0], Fact::ForallFact(_)));
-        assert_eq!(ff.then_facts.len(), 1);
+    fn inline_forall_rejects_no_colon_braced_then_when_no_dom() {
+        let msg = parse_error_msg("forall! x R { x > 0, x + 1 > 1 }");
+        assert!(msg.contains("expected `:` or `=>`"), "{}", msg);
     }
 
     #[test]
-    fn inline_forall_braced_then() {
-        let f = parse_one_fact_line("forall! x R: x > 0 => { x >= 0, x + 1 > 0 }").unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
-        };
-        assert_eq!(ff.dom_facts.len(), 1);
-        assert_eq!(ff.then_facts.len(), 2);
+    fn inline_forall_rejects_empty_dom_arrow() {
+        let msg = parse_error_msg("forall! x R: => { x > 0 }");
+        assert!(msg.contains("exactly one domain fact"), "{}", msg);
     }
 
     #[test]
-    fn inline_forall_no_dom_braced_then() {
-        let f = parse_one_fact_line("forall! x R: { x > 0, x + 1 > 1 }").unwrap();
-        let Fact::ForallFact(ff) = f else {
-            panic!("expected ForallFact");
-        };
-        assert!(ff.dom_facts.is_empty());
-        assert_eq!(ff.then_facts.len(), 2);
+    fn inline_forall_rejects_nested_in_dom() {
+        let msg = parse_error_msg("forall! x R: forall! y R => { y > 0 } => { x > 0 }");
+        assert!(msg.contains("nested `forall!`"), "{}", msg);
+    }
+
+    #[test]
+    fn inline_forall_rejects_multiple_domain_facts() {
+        let msg = parse_error_msg("forall! x R: x > 0, x < 1 => { x >= 0 }");
+        assert!(msg.contains("exactly one domain fact"), "{}", msg);
+    }
+
+    #[test]
+    fn inline_forall_rejects_unbraced_then() {
+        let msg = parse_error_msg("forall! x R: x > 0 => x >= 0");
+        assert!(msg.contains("braced list"), "{}", msg);
+    }
+
+    #[test]
+    fn inline_forall_rejects_multiple_then_facts() {
+        let msg = parse_error_msg("forall! x R: x > 0 => { x >= 0, x + 1 > 0 }");
+        assert!(msg.contains("exactly one fact"), "{}", msg);
     }
 
     #[test]

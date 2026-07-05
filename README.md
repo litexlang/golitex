@@ -258,7 +258,7 @@ derive the modular contradiction, and return the larger prime as a witness.
 
 <!-- litex:skip-test -->
 ```text
-claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
     2 <= a <= product(1, a, '(x N_pos) N_pos {x}) <= product(1, a, '(x N_pos) N_pos {x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = 0}: k
     by cases k > a:

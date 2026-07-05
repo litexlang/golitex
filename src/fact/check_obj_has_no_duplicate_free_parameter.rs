@@ -117,6 +117,23 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::GeneralCart(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.index_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.family_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.family_fn,
+                free_param_type,
+                params_already_used,
+            )
+        }
         Obj::ListSet(obj) => {
             for item in obj.list.iter() {
                 check_obj_has_no_duplicate_free_parameter(
@@ -406,7 +423,7 @@ fn check_set_builder_has_no_duplicate_free_parameter(
     )?;
 
     for fact in set_builder.facts.iter() {
-        check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
+        check_exist_body_fact_has_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,

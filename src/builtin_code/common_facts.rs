@@ -7,6 +7,10 @@ know:
     % $in fn(a Z, b Z: b != 0) Z
     ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
 
+# A nonempty family of nonempty sets is available as a basic set-theoretic
+# witness. Example: `have X nonempty_set: forall! x X => {$is_nonempty_set(x)}`.
+know exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
+
 know:
     forall a, b R:
         =>:

@@ -98,6 +98,7 @@ impl Runtime {
             Obj::MatrixScalarMul(x) => self.verify_matrix_scalar_mul_well_defined(x, verify_state),
             Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
+            Obj::GeneralCart(x) => self.verify_general_cart_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
             Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
@@ -1106,10 +1107,33 @@ impl Runtime {
             }
 
             for fact in x.facts.iter() {
-                if let Err(e) = rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    fact,
-                    verify_state,
-                ) {
+                let result = match fact {
+                    ExistBodyFact::AtomicFact(f) => rt
+                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                            &OrAndChainAtomicFact::AtomicFact(f.clone()),
+                            verify_state,
+                        ),
+                    ExistBodyFact::AndFact(f) => rt
+                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                            &OrAndChainAtomicFact::AndFact(f.clone()),
+                            verify_state,
+                        ),
+                    ExistBodyFact::ChainFact(f) => rt
+                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                            &OrAndChainAtomicFact::ChainFact(f.clone()),
+                            verify_state,
+                        ),
+                    ExistBodyFact::OrFact(f) => rt
+                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                            &OrAndChainAtomicFact::OrFact(f.clone()),
+                            verify_state,
+                        ),
+                    ExistBodyFact::InlineForall(f) => {
+                        rt.verify_forall_fact_well_defined(f, verify_state)?;
+                        rt.store_forall_fact_without_well_defined_verified_and_infer(f.clone())
+                    }
+                };
+                if let Err(e) = result {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
                             format!(
@@ -2569,6 +2593,62 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_general_cart_well_defined(
+        &mut self,
+        x: &GeneralCart,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.index_set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.family_set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.family_fn, verify_state)?;
+
+        let index_is_set: Fact = IsSetFact::new((*x.index_set).clone(), default_line_file()).into();
+        self.verify_fact_return_err_if_not_true(&index_is_set, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {}", x),
+                        e,
+                    ),
+                ))
+            })?;
+
+        let family_is_nonempty: Fact =
+            IsNonemptySetFact::new((*x.family_set).clone(), default_line_file()).into();
+        self.verify_fact_return_err_if_not_true(&family_is_nonempty, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {}", x),
+                        e,
+                    ),
+                ))
+            })?;
+
+        let family_fn_set: Obj = FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec!["x".to_string()],
+                (*x.index_set).clone(),
+            )],
+            vec![],
+            (*x.family_set).clone(),
+        )?
+        .into();
+        let family_fn_type: Fact =
+            InFact::new((*x.family_fn).clone(), family_fn_set, default_line_file()).into();
+        self.verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {}", x),
+                        e,
+                    ),
+                ))
+            })?;
+
         Ok(())
     }
 

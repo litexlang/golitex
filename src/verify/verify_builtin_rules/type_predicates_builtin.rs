@@ -292,6 +292,48 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
+            // Axiom of choice for an indexed family: if every factor selected by `g`
+            // is nonempty, then `general_cart(I, s, g)` is nonempty.
+            // Example: from `forall X s: $is_nonempty_set(X)`, prove
+            // `$is_nonempty_set(general_cart(I, s, g))`.
+            // Also accepts the pointwise form `forall alpha I: $is_nonempty_set(g(alpha))`.
+            Obj::GeneralCart(general_cart) => {
+                let global_fact =
+                    general_cart_global_family_nonempty_fact(general_cart, is_nonempty_set_fact);
+                let global_result = self.verify_fact_full(&global_fact, _verify_state)?;
+                if global_result.is_true() {
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "axiom_of_choice: general_cart is nonempty when every set in the family set is nonempty"
+                                .to_string(),
+                            vec![global_result],
+                        )
+                        .into(),
+                    );
+                }
+
+                let Some(pointwise_fact) = general_cart_pointwise_family_nonempty_fact(
+                    general_cart,
+                    is_nonempty_set_fact,
+                )?
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
+                let pointwise_result = self.verify_fact_full(&pointwise_fact, _verify_state)?;
+                if pointwise_result.is_true() {
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "axiom_of_choice: general_cart is nonempty when every indexed factor is nonempty"
+                                .to_string(),
+                            vec![pointwise_result],
+                        )
+                        .into(),
+                    );
+                }
+                Ok((StmtUnknown::new()).into())
+            }
             Obj::FiniteSeqSet(fs) => {
                 let codomain_nonempty = IsNonemptySetFact::new(
                     (*fs.set).clone(),
@@ -782,6 +824,49 @@ impl Runtime {
     }
 }
 
+fn general_cart_global_family_nonempty_fact(
+    general_cart: &GeneralCart,
+    source_fact: &IsNonemptySetFact,
+) -> Fact {
+    let param_name = "X".to_string();
+    let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
+    ForallFact::new(
+        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![param_name],
+            ParamType::Obj(general_cart.family_set.as_ref().clone()),
+        )]),
+        vec![],
+        vec![IsNonemptySetFact::new(param_obj, source_fact.line_file.clone()).into()],
+        source_fact.line_file.clone(),
+    )
+    .expect("general_cart global nonempty forall has a fresh local parameter")
+    .into()
+}
+
+fn general_cart_pointwise_family_nonempty_fact(
+    general_cart: &GeneralCart,
+    source_fact: &IsNonemptySetFact,
+) -> Result<Option<Fact>, RuntimeError> {
+    let Some(head) = FnObjHead::from_callable_obj(general_cart.family_fn.as_ref().clone()) else {
+        return Ok(None);
+    };
+    let param_name = "alpha".to_string();
+    let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
+    let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
+    Ok(Some(
+        ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![param_name],
+                ParamType::Obj(general_cart.index_set.as_ref().clone()),
+            )]),
+            vec![],
+            vec![IsNonemptySetFact::new(factor, source_fact.line_file.clone()).into()],
+            source_fact.line_file.clone(),
+        )?
+        .into(),
+    ))
+}
+
 fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
     matches!(
         obj,
@@ -793,6 +878,7 @@ fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
             | Obj::OneSideInfinityIntervalObj(_)
             | Obj::Union(_)
             | Obj::Cart(_)
+            | Obj::GeneralCart(_)
             | Obj::FnSet(_)
             | Obj::AnonymousFn(_)
             | Obj::FiniteSeqSet(_)

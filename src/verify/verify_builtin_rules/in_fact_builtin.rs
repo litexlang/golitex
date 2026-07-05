@@ -453,6 +453,15 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (_, Obj::PowerSet(power_set)) => {
+                self.verify_in_fact_in_power_set_via_subset(in_fact, power_set, verify_state)
+            }
+            (_, Obj::GeneralCart(general_cart)) => self
+                .verify_in_fact_in_general_cart_by_defining_facts(
+                    in_fact,
+                    general_cart,
+                    verify_state,
+                ),
             (_, Obj::SetBuilder(set_builder)) => self
                 .verify_in_fact_in_set_builder_by_defining_facts(
                     in_fact,
@@ -612,6 +621,50 @@ impl Runtime {
             }
         }
     }
+}
+
+pub(crate) fn general_cart_member_fn_set(general_cart: &GeneralCart) -> Result<Obj, RuntimeError> {
+    Ok(FnSet::new(
+        vec![ParamGroupWithSet::new(
+            vec!["t".to_string()],
+            general_cart.index_set.as_ref().clone(),
+        )],
+        vec![],
+        Cup::new(general_cart.family_set.as_ref().clone()).into(),
+    )?
+    .into())
+}
+
+pub(crate) fn general_cart_member_pointwise_fact(
+    general_cart: &GeneralCart,
+    member: &Obj,
+    line_file: &LineFile,
+) -> Result<Option<Fact>, RuntimeError> {
+    let Some(member_head) = FnObjHead::from_callable_obj(member.clone()) else {
+        return Ok(None);
+    };
+    let Some(family_head) = FnObjHead::from_callable_obj(general_cart.family_fn.as_ref().clone())
+    else {
+        return Ok(None);
+    };
+    let param_name = "t".to_string();
+    let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
+    let member_at_param: Obj =
+        FnObj::new(member_head, vec![vec![Box::new(param_obj.clone())]]).into();
+    let family_at_param: Obj =
+        FnObj::new(family_head, vec![vec![Box::new(param_obj.clone())]]).into();
+    Ok(Some(
+        ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![param_name],
+                ParamType::Obj(general_cart.index_set.as_ref().clone()),
+            )]),
+            vec![],
+            vec![InFact::new(member_at_param, family_at_param, line_file.clone()).into()],
+            line_file.clone(),
+        )?
+        .into(),
+    ))
 }
 
 impl Runtime {
@@ -1076,6 +1129,78 @@ impl Runtime {
         )
     }
 
+    // Proves power-set membership from the subset definition.
+    // Example: if `A $subset B`, then `A $in power_set(B)`.
+    fn verify_in_fact_in_power_set_via_subset(
+        &mut self,
+        in_fact: &InFact,
+        power_set: &PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let subset_fact: AtomicFact = SubsetFact::new(
+            in_fact.element.clone(),
+            power_set.set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "power_set membership: a subset of the base set is an element of the power set"
+                    .to_string(),
+                vec![subset_result],
+            )
+            .into(),
+        )
+    }
+
+    // General Cartesian product membership: a member is a function on `I` into `cup(s)`
+    // whose value at every index lies in the indexed factor.
+    // Example: `f $in general_cart(I, s, g)` follows from
+    // `f $in fn(t I)cup(s)` and `forall! t I => {f(t) $in g(t)}`.
+    fn verify_in_fact_in_general_cart_by_defining_facts(
+        &mut self,
+        in_fact: &InFact,
+        general_cart: &GeneralCart,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let fn_set_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            general_cart_member_fn_set(general_cart)?,
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let fn_set_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&fn_set_fact, verify_state)?;
+        if !fn_set_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let Some(pointwise_fact) =
+            general_cart_member_pointwise_fact(general_cart, &in_fact.element, &in_fact.line_file)?
+        else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let pointwise_result = self.verify_fact_full(&pointwise_fact, verify_state)?;
+        if !pointwise_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            in_fact.clone().into(),
+            "general_cart membership: function into cup(family) with pointwise factor membership"
+                .to_string(),
+            vec![fn_set_result, pointwise_result],
+        )
+        .into())
+    }
+
     fn verify_in_fact_in_set_builder_by_defining_facts(
         &mut self,
         in_fact: &InFact,
@@ -1104,7 +1229,7 @@ impl Runtime {
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact = self
-                .inst_or_and_chain_atomic_fact(
+                .inst_exist_body_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,
@@ -1124,11 +1249,8 @@ impl Runtime {
                     )))
                 })?;
 
-            let instantiated_fact_result = self
-                .verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
-                    &instantiated_fact,
-                    verify_state,
-                )?;
+            let instantiated_fact_result =
+                self.verify_fact_full(&instantiated_fact.to_fact(), verify_state)?;
             if !instantiated_fact_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
