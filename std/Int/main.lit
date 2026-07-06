@@ -36,7 +36,7 @@ have lcm fn(a, b Z) N
 have gcdA fn(a, b Z) Z
 have gcdB fn(a, b Z) Z
 
-know:
+proof_debt:
     forall x R:
         floor(x) <= x < floor(x) + 1
         ceil(x) - 1 < x <= ceil(x)

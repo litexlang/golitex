@@ -15,19 +15,47 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
-        let inside_results = if stmt.prove_process.is_empty() {
-            let forall_fact: Fact = stmt.forall.clone().into();
-            self.verify_fact_return_err_if_not_true(&forall_fact, &VerifyState::new(0, false))
-                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-            vec![]
-        } else {
-            self.exec_have_fn_by_forall_exist_unique_prove_process(stmt)?
-        };
-
-        let infer_result = self.exec_have_fn_by_forall_exist_unique_store_process(stmt, shape)?;
+        let shape = self.exec_have_fn_by_forall_exist_unique_verify_well_definedness(stmt)?;
+        let inside_results = self.exec_have_fn_by_forall_exist_unique_verify_process(stmt)?;
+        let infer_result =
+            self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+    }
+
+    fn exec_have_fn_by_forall_exist_unique_verify_well_definedness(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<HaveFnByForallExistUniqueShape, RuntimeError> {
+        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
+        self.verify_fact_well_defined(
+            &Fact::ForallFact(stmt.forall.clone()),
+            &VerifyState::new(0, false),
+        )
+        .map_err(|e| {
+            short_exec_error(
+                stmt.clone().into(),
+                "have_fn_by_forall_exist_unique: forall fact is not well defined".to_string(),
+                Some(e),
+                vec![],
+            )
+        })?;
+        Ok(shape)
+    }
+
+    fn exec_have_fn_by_forall_exist_unique_verify_process(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        if stmt.prove_process.is_empty() {
+            let forall_fact: Fact = stmt.forall.clone().into();
+            let result = self
+                .verify_fact_return_err_if_not_true(&forall_fact, &VerifyState::new(0, false))
+                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+            Ok(vec![result])
+        } else {
+            self.exec_have_fn_by_forall_exist_unique_prove_process(stmt)
+        }
     }
 
     fn exec_have_fn_by_forall_exist_unique_prove_process(
@@ -126,7 +154,7 @@ impl Runtime {
         })
     }
 
-    fn exec_have_fn_by_forall_exist_unique_store_process(
+    fn exec_have_fn_by_forall_exist_unique_affect_environment(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: HaveFnByForallExistUniqueShape,

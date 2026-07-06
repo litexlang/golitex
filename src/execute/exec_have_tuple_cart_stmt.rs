@@ -6,19 +6,48 @@ impl Runtime {
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let check_results = self.verify_tuple_or_cart_dimension(
-            stmt.clone().into(),
-            &stmt.dimension,
-            stmt.line_file.clone(),
-        )?;
+        self.exec_have_tuple_stmt_verify_well_definedness(stmt)?;
+        let check_results = self.exec_have_tuple_stmt_verify_process(stmt)?;
+        let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+    }
+
+    pub fn exec_have_cart_stmt(&mut self, stmt: &HaveCartStmt) -> Result<StmtResult, RuntimeError> {
+        self.exec_have_cart_stmt_verify_well_definedness(stmt)?;
+        let check_results = self.exec_have_cart_stmt_verify_process(stmt)?;
+        let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+    }
+
+    fn exec_have_tuple_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &HaveTupleStmt,
+    ) -> Result<(), RuntimeError> {
+        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.name)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
             ParamObjType::TupleIndex,
             &stmt.index_name,
             &stmt.dimension,
             &stmt.value,
-        )?;
+        )
+    }
 
+    fn exec_have_tuple_stmt_verify_process(
+        &mut self,
+        stmt: &HaveTupleStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        self.verify_tuple_or_cart_dimension(
+            stmt.clone().into(),
+            &stmt.dimension,
+            stmt.line_file.clone(),
+        )
+    }
+
+    fn exec_have_tuple_stmt_affect_environment(
+        &mut self,
+        stmt: &HaveTupleStmt,
+    ) -> Result<InferResult, RuntimeError> {
         self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
@@ -45,23 +74,38 @@ impl Runtime {
             self.store_have_tuple_or_cart_fact(forall_fact.into(), HaveTupleStmt::store_reason())?,
         );
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+        Ok(infer_result)
     }
 
-    pub fn exec_have_cart_stmt(&mut self, stmt: &HaveCartStmt) -> Result<StmtResult, RuntimeError> {
-        let check_results = self.verify_tuple_or_cart_dimension(
-            stmt.clone().into(),
-            &stmt.dimension,
-            stmt.line_file.clone(),
-        )?;
+    fn exec_have_cart_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &HaveCartStmt,
+    ) -> Result<(), RuntimeError> {
+        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.name)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
             ParamObjType::CartIndex,
             &stmt.index_name,
             &stmt.dimension,
             &stmt.value,
-        )?;
+        )
+    }
 
+    fn exec_have_cart_stmt_verify_process(
+        &mut self,
+        stmt: &HaveCartStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        self.verify_tuple_or_cart_dimension(
+            stmt.clone().into(),
+            &stmt.dimension,
+            stmt.line_file.clone(),
+        )
+    }
+
+    fn exec_have_cart_stmt_affect_environment(
+        &mut self,
+        stmt: &HaveCartStmt,
+    ) -> Result<InferResult, RuntimeError> {
         self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
@@ -92,7 +136,18 @@ impl Runtime {
             self.store_have_tuple_or_cart_fact(forall_fact.into(), HaveCartStmt::store_reason())?,
         );
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+        Ok(infer_result)
+    }
+
+    fn verify_tuple_or_cart_name_available(
+        &mut self,
+        stmt: Stmt,
+        name: &str,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            rt.store_free_param_or_identifier_name(name, ParamObjType::Identifier)
+                .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
+        })
     }
 
     fn verify_tuple_or_cart_dimension(

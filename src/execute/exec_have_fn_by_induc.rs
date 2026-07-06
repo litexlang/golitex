@@ -6,8 +6,17 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
+        self.exec_have_fn_by_induc_verify_well_definedness(stmt)?;
+        let inside_results = self.exec_have_fn_by_induc_verify_process(stmt)?;
+        let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
 
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+    }
+
+    fn exec_have_fn_by_induc_affect_environment(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<InferResult, RuntimeError> {
         let flat = stmt.to_have_fn_equal_case_by_case_stmt();
         let fn_set_stored = self
             .fn_set_from_fn_set_clause(&flat.fn_set_clause)
@@ -20,7 +29,7 @@ impl Runtime {
             self.exec_have_fn_by_induc_stmt_as_algo(stmt)?;
         }
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+        Ok(infer_result)
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
@@ -30,11 +39,46 @@ impl Runtime {
     fn exec_have_fn_by_induc_verify_process(
         &mut self,
         stmt: &HaveFnByInducStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process_body(stmt))?;
+        Ok(vec![])
+    }
+
+    fn exec_have_fn_by_induc_verify_process_body(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
         self.define_have_fn_by_induc_current_params_and_domain(stmt)?;
         self.verify_have_fn_by_induc_measure_lower_bound(stmt)?;
         self.register_have_fn_by_induc_recursive_fn(stmt)?;
         self.verify_have_fn_by_induc_case_list(stmt, &stmt.cases)
+    }
+
+    fn exec_have_fn_by_induc_verify_well_definedness(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            rt.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            let fn_set = rt
+                .fn_set_from_fn_set_clause(&stmt.fn_set_clause)
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            rt.verify_obj_well_defined_and_store_cache(
+                &Obj::from(fn_set),
+                &VerifyState::new(0, false),
+            )
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            rt.define_have_fn_by_induc_current_params_and_domain(stmt)?;
+            rt.verify_obj_well_defined_and_store_cache(&stmt.measure, &VerifyState::new(0, false))
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            rt.verify_obj_well_defined_and_store_cache(
+                &stmt.lower_bound,
+                &VerifyState::new(0, false),
+            )
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            Ok(())
+        })
     }
 
     fn define_have_fn_by_induc_current_params_and_domain(

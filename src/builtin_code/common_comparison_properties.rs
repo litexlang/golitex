@@ -4,8 +4,8 @@
 
 // Real-line trichotomy in common display orders.
 // Example: `forall x, y R: x = y or x < y or x > y`.
-pub const KNOW_REAL_LINE_TRICHOTOMY: &str = r#"
-know:
+pub const PROOF_DEBT_REAL_LINE_TRICHOTOMY: &str = r#"
+proof_debt:
     forall a, b R:
         a = b or a < b or a > b
         a = b or a > b or a < b
@@ -93,7 +93,7 @@ thm a_ge_c:
 "#;
 
 pub const BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES: &str = r#"
-know:
+proof_debt:
     forall a, b R:
         a <= b
         =>:

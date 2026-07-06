@@ -59,7 +59,7 @@ have I set
 have s nonempty_set
 have g fn(alpha I) s
 
-know forall X s:
+proof_debt forall X s:
     $is_nonempty_set(X)
 
 $is_nonempty_set(general_cart(I, s, g))
@@ -1606,7 +1606,7 @@ forall n N:
 - Purpose: Shows the trusted regularity/foundation step for a nonempty set.
 
 ```litex
-know $is_nonempty_set({1, 2})
+proof_debt $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 

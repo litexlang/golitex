@@ -24,7 +24,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by contra: failed to know reverse of `{}`", to_prove_fact),
+                    format!("by contra: failed to store reverse of `{}`", to_prove_fact),
                     Some(store_fact_error),
                     vec![],
                 )

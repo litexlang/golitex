@@ -40,6 +40,64 @@ impl Runtime {
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
+        self.exec_have_exist_obj_stmt_verify_well_definedness(
+            stmt.clone(),
+            equal_tos,
+            exist_fact_in_have_obj_stmt,
+        )?;
+        let inside_results = self
+            .exec_have_exist_obj_stmt_verify_process(stmt.clone(), exist_fact_in_have_obj_stmt)?;
+        let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
+            stmt.clone(),
+            equal_tos,
+            exist_fact_in_have_obj_stmt,
+            line_file,
+        )?;
+
+        Ok((NonFactualStmtSuccess::new(stmt, infer_result, inside_results)).into())
+    }
+
+    fn exec_have_exist_obj_stmt_verify_well_definedness(
+        &mut self,
+        stmt: Stmt,
+        equal_tos: &[String],
+        exist_fact_in_have_obj_stmt: &ExistFactEnum,
+    ) -> Result<(), RuntimeError> {
+        if exist_fact_in_have_obj_stmt
+            .params_def_with_type()
+            .number_of_params()
+            != equal_tos.len()
+        {
+            return Err(short_exec_error(
+                stmt.clone(),
+                "have_exist_obj_stmt: number of params in exist does not match number of given objs"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
+
+        self.run_in_local_env(|rt| {
+            rt.verify_exist_fact_well_defined(
+                exist_fact_in_have_obj_stmt,
+                &VerifyState::new(0, false),
+            )
+            .map_err(|well_defined_error| {
+                exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
+            })?;
+            for obj in equal_tos.iter() {
+                rt.store_free_param_or_identifier_name(obj, ParamObjType::Exist)
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
+            }
+            Ok(())
+        })
+    }
+
+    fn exec_have_exist_obj_stmt_verify_process(
+        &mut self,
+        stmt: Stmt,
+        exist_fact_in_have_obj_stmt: &ExistFactEnum,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
         let verify_state = VerifyState::new(0, false);
 
         let result = self
@@ -56,20 +114,16 @@ impl Runtime {
             ));
         }
 
-        if exist_fact_in_have_obj_stmt
-            .params_def_with_type()
-            .number_of_params()
-            != equal_tos.len()
-        {
-            return Err(short_exec_error(
-                stmt.clone(),
-                "have_exist_obj_stmt: number of params in exist does not match number of given objs"
-                    .to_string(),
-                None,
-                vec![],
-            ));
-        }
+        Ok(vec![result])
+    }
 
+    fn exec_have_exist_obj_stmt_affect_environment(
+        &mut self,
+        stmt: Stmt,
+        equal_tos: &[String],
+        exist_fact_in_have_obj_stmt: &ExistFactEnum,
+        line_file: LineFile,
+    ) -> Result<InferResult, RuntimeError> {
         for obj in equal_tos.iter() {
             self.store_free_param_or_identifier_name(obj, ParamObjType::Exist)?;
         }
@@ -113,6 +167,6 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
-        Ok((NonFactualStmtSuccess::new(stmt, infer_result, vec![result])).into())
+        Ok(infer_result)
     }
 }

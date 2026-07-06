@@ -18,9 +18,9 @@ impl ClaimStmt {
     }
 }
 
-impl KnowStmt {
+impl ProofDebtStmt {
     pub fn stmt_type_name(&self) -> String {
-        "KnowStmt".to_string()
+        "ProofDebtStmt".to_string()
     }
 }
 
@@ -357,7 +357,7 @@ impl ClaimStmt {
     }
 }
 
-impl KnowStmt {
+impl ProofDebtStmt {
     pub fn output_type_string() -> String {
         "unproved assumption".to_string()
     }

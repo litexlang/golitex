@@ -19,5 +19,5 @@ thm finite_set_sum_permutation_invariance:
             $Fn::bijective_fn(S, S, g)
             =>:
                 finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
-    know finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
+    proof_debt finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
     finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)

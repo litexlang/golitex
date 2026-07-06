@@ -18,7 +18,7 @@ _- Jeff Hinton_
 > It explores a narrower interface hypothesis: users write mathematical facts,
 > and the checker grows an explainable verified context. This lowers the user's
 > proof-writing burden by putting more routine mathematical background in the
-> checker, so the trusted base is larger than a small proof kernel. `know` is
+> checker, so the trusted base is larger than a small proof kernel. `proof_debt` is
 > explicit assumption injection: it stores assumptions or proof debt, not facts
 > proved by Litex. Builtin/infer rules are also part of the trusted
 > mathematical background. For a compact discussion of trust boundaries,
@@ -99,17 +99,17 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
 1. Solve the theorem first in natural language, step by step.
-2. Formalize every step in Litex, using `know` as explicit assumption injection only when a step is not formalized yet.
-3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
+2. Formalize every step in Litex, using `proof_debt` as explicit assumption injection only when a step is not formalized yet.
+3. Repeatedly refine each broad `proof_debt` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
-This turns `know` into temporary scaffolding rather than the final proof. The
+This turns `proof_debt` into temporary scaffolding rather than the final proof. The
 same loop is used for larger Mechanics examples and benchmark-style tasks:
 first build a readable proof skeleton, then replace broad assumptions by
 smaller verified branches or record the exact language, library, rule, or
 diagnostic gap that blocks the next step.
 
-When you want to audit a file, inspect the remaining `know` facts before
+When you want to audit a file, inspect the remaining `proof_debt` facts before
 calling the result complete. Each one should be replaced by a checked claim,
 accepted as background, or recorded as proof debt. This audit matters because
 Litex's convenience comes from a larger trusted mathematical background, not
@@ -307,7 +307,7 @@ an object expression. It is well-defined when `P` is a binary `prop` or
 ```litex
 abstract_prop P(x, y)
 
-know forall x {1, 2}, y, y2 set:
+proof_debt forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
@@ -321,14 +321,14 @@ preimage witness back:
 ```litex
 abstract_prop P(x, y)
 
-know forall x {1, 2}, y, y2 set:
+proof_debt forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have a set
-know $P(1, a)
+proof_debt $P(1, a)
 a $in replacement(P, {1, 2})
 
 forall y replacement(P, {1, 2}):
@@ -343,7 +343,7 @@ Later parameter domains may depend on earlier parameters. The return set is not 
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
-The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` restricts to `fn(x S) T`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `'(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
 
 ```litex
 have g set = fn(x R) R
@@ -769,9 +769,9 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `count(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
-| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` restricts to a unary function on `S`. |
+| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}` when an API expects a function on `S`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
-| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, `f` must restrict to a unary function on `S`. |
+| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
 | Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
@@ -803,7 +803,7 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 > Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly. `error` is different: first fix the syntax or make every object well-defined.
 
-This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `know`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
+This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `proof_debt`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
 
 This page mainly lists the **types of facts** Litex can read and how they are shaped. For how those facts are actually proved by the checker, read [Proof Process](https://litexlang.com/doc/Manual#proof-process) and [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules).
 
@@ -1204,11 +1204,11 @@ These predicates express inclusion between sets.
 
 ### Function Restriction
 
-This predicate says whether a function can be viewed as having a smaller or more constrained function type.
+This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `'(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
 
 | Predicate | Negated form | Meaning |
 |-----------|--------------|---------|
-| `f $restricts_to T` | `not f $restricts_to T` | `f` can be restricted to the function space `T`. |
+| `f $restricts_to T` | `not f $restricts_to T` | Low-level check that `f` can be restricted to the function space `T`. |
 
 ---
 
@@ -1360,7 +1360,7 @@ forall x R:
         $p(x)
 ```
 
-> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `know` to give it mathematical behavior, treat that line as an explicit trusted assumption.
+> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `proof_debt` to give it mathematical behavior, treat that line as an explicit trusted assumption.
 
 ---
 
@@ -1530,14 +1530,14 @@ sketch:
 ```litex
 abstract_prop P(x, y)
 
-know forall x {1, 2}, y, y2 set:
+proof_debt forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have y set
-know y $in replacement(P, {1, 2})
+proof_debt y $in replacement(P, {1, 2})
 have by preimage x from y $in replacement(P, {1, 2})
 
 x $in {1, 2}
@@ -1739,7 +1739,7 @@ let b, c R:
 b < c
 ```
 
-> Hint: `let` and `know` both introduce new facts without verification. Litex allows this and warns you because these statements are useful when you intentionally add axioms or temporary assumptions, but abusing them can make the system unsound. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `let` and `proof_debt` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -1841,6 +1841,7 @@ The result is reused in two ways:
 |------|------------------------|-----------------------------|----------|
 | `claim forall ...` | No theorem name | Yes | A short or local fact should help later goals by shape |
 | `thm name:` | Yes | Yes | A named fact should also behave like known context |
+| `axiom name:` | Yes | Yes | A named trusted interface should be available without proof |
 
 This means a proved theorem is both a stable named interface and an ordinary
 known `forall` fact. If a fact is small enough that the final goal shape makes
@@ -1873,33 +1874,56 @@ thm self_eq_named_auto:
 
 ---
 
-### Inject explicit assumptions (`know`)
+### Named trusted facts (`axiom`)
 
-**`know:`** (or **`know`** with a block) injects explicit assumptions into the
-current environment. It may store lemmas, axioms, or proof-debt facts, but it
+**`axiom name:`** declares a named trusted `forall` fact without a proof block.
+It uses the same theorem interface as `thm`: later lines may use it through
+automatic `forall` matching or cite it explicitly with `by thm name(args...)`.
+
+The goal must be written as a single `? forall ...` block. An axiom cannot have
+extra proof steps.
+
+```litex
+abstract_prop primitive_order(x, y)
+
+axiom primitive_order_reflexive:
+    ? forall x R:
+        $primitive_order(x, x)
+
+by thm primitive_order_reflexive(1)
+```
+
+If the run uses `-strict`, user `axiom` declarations are rejected.
+
+---
+
+### Inject explicit assumptions (`proof_debt`)
+
+**`proof_debt:`** (or **`proof_debt`** with a block) injects explicit assumptions into the
+current environment. It may store temporary lemmas or proof-debt facts, but it
 does not call the verifier to prove those facts.
 
-`know` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
+`proof_debt` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
 `by sorry`: it lets development continue by adding a fact whose proof is not
-present. That is sometimes exactly what you want when you are stating axioms,
-building a large proof skeleton, or marking a precise proof-debt item. It is
+present. That is sometimes exactly what you want when you are building a large
+proof skeleton or marking a precise proof-debt item. It is
 also dangerous, because every later proof may depend on the unproved fact.
 
-Read every `know` line as: "assume this fact from here onward." If later output
-shows a `verification` trace citing a `know`ed fact or `forall`, that is a
+Read every `proof_debt` line as: "assume this fact from here onward." If later output
+shows a `verification` trace citing a proof-debt-injected fact or `forall`, that is a
 conditional proof route relative to the injected assumption. It does not mean
 Litex has proved the injected assumption itself.
 
-If Litex reports success on a `know` line, that means the assumption was
+If Litex reports success on a `proof_debt` line, that means the assumption was
 accepted and stored. It is not a proof result for the injected fact.
 
-> Hint: `know` is an axiom-like statement. Litex allows it because it is useful for modeling and incremental proof development, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
+> Hint: Use `axiom name:` when a trusted background fact should be a named theorem-like interface. Use `proof_debt` when you are marking a temporary or local proof gap.
 
-A final artifact should not leave broad `know` facts unexplained. Either prove
+A final artifact should not leave broad `proof_debt` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `know` and `let` statements are rejected instead
+If the run uses `-strict`, user `proof_debt`, `let`, and `axiom` statements are rejected instead
 of being stored. Facts loaded from imported modules are still trusted inputs, so
 strict mode is an audit boundary for the current run, not a claim that all
 dependencies are assumption-free.
@@ -1911,7 +1935,7 @@ have line nonempty_set
 have plane nonempty_set
 
 # All elements on a line or a plane are points (power_set: the set of all subsets of a set)
-know:
+proof_debt:
     forall l line:
         l $in power_set(point)
     forall pl plane:
@@ -1975,6 +1999,21 @@ Use **`import "path/to/module" as M`** to load a local module directory whose en
 
 Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
 
+`stop import` writes to the shared module manager. This means a `stop import`
+statement inside an imported module also affects the original file for the rest
+of the current run, unless that module is imported again and reactivated.
+
+<!-- litex:skip-test -->
+```litex
+# A/main.lit
+import "../B" as B
+stop import B
+
+# main.lit
+import "./A" as A
+$B::some_prop(2) # ordinary verification no longer uses B automatically
+```
+
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
 prefer local definitions, local claims, and explicit proof-debt notes when the
@@ -2006,7 +2045,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered, but they are stopped for automatic verification until the same module is imported again.
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active; use `stop import` when you want to stop an imported module.
 
 ```litex
 have a R = 1
@@ -2016,6 +2055,29 @@ clear
 
 have a R = 2
 a = 2
+```
+
+The imported module table is separate from the current user environment, so
+`clear` does not disable imports.
+
+<!-- litex:skip-test -->
+```litex
+import "./Demo" as Demo
+
+clear
+
+$Demo::some_prop(2) # Demo is still active after clear
+```
+
+In contrast, `stop import` is the explicit global import-control statement.
+
+<!-- litex:skip-test -->
+```litex
+import "./Demo" as Demo
+
+stop import Demo
+
+$Demo::some_prop(2) # ordinary verification no longer uses Demo automatically
 ```
 
 ---
@@ -2386,7 +2448,7 @@ See the `by_zorn_lemma` section of `examples/01_proof_patterns/README.md`.
 Use **`by regularity_axiom(A)`** when `A` is a nonempty set. Litex first checks the obligation `$is_nonempty_set(A)`. If that check passes, it stores the regularity/foundation conclusion that some member of `A` is disjoint from `A`:
 
 ```litex
-know $is_nonempty_set({1, 2})
+proof_debt $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2525,8 +2587,9 @@ The sections above explain the common use cases. This table is a quick map of th
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
+| `axiom name` | Name a trusted `forall` fact without proof, using the same citation interface as `thm` |
 | `alias thm` | Copy a theorem under a new name |
-| `know` | Add facts or axioms to the current context |
+| `proof_debt` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
 | `import` / `run_file` | Use code from another file |
@@ -2549,7 +2612,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by regularity_axiom` | Preview trusted foundation step for nonempty sets |
 
-> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `know` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `proof_debt` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
 ---
 
@@ -2721,7 +2784,7 @@ conjunctive, disjunctive, or negated universal facts.
 | tuple shape predicate | `$is_tuple(t)` |
 | subset relation | `A $subset B` |
 | superset relation | `A $superset B` |
-| function restriction predicate | `f $restricts_to fn(x R) R` |
+| low-level function restriction predicate | `f $restricts_to fn(x R) R` |
 | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
 | global function equality | `$fn_eq(f, g)` |
 | negated user predicate | `not $prime(n)` |
@@ -2738,7 +2801,7 @@ conjunctive, disjunctive, or negated universal facts.
 | negated tuple predicate | `not $is_tuple(t)` |
 | negated subset relation | `not A $subset B` |
 | negated superset relation | `not A $superset B` |
-| negated restriction predicate | `not f $restricts_to fn(x R) R` |
+| negated low-level restriction predicate | `not f $restricts_to fn(x R) R` |
 
 #### Facts inside larger facts
 
@@ -2794,7 +2857,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | Meaning | Example |
 |---------|---------|
 | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
-| inject explicit assumptions | `know x = 1` |
+| inject explicit assumptions | `proof_debt x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
 | define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
@@ -4424,7 +4487,7 @@ _- Kurt Gödel_
 
 Verification answers the question: **can this fact be proved now?**
 
-Builtin inference happens after that. Once a fact is verified or introduced by `know`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
+Builtin inference happens after that. Once a fact is verified or introduced by `proof_debt`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
 
 The main purpose is usability. Inference saves the user from manually writing the obvious next facts again and again.
 
@@ -4841,7 +4904,7 @@ There is no matching automatic rule when `0` is on the left.
 
 ### Function Restriction
 
-For `$restricts_to`, inference narrows the recorded function-space information to the more specific function type you gave. It does not need to restate the whole function definition.
+For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `'(x E) R {f(x)}`.
 
 ```text
 known:

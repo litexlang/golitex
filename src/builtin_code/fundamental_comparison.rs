@@ -5,7 +5,7 @@
 // `number_compare.rs`), not duplicated here.
 
 pub const BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON: &str = r#"
-know:
+proof_debt:
     forall a, b R:
         a <= b
         =>:

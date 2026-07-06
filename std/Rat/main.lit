@@ -24,7 +24,7 @@ prop reduced(q Q):
         =>:
             d = 1
 
-know:
+proof_debt:
     forall q Q:
         den(q) != 0
         q = num(q) / den(q)

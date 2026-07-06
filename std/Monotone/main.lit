@@ -28,7 +28,7 @@ prop bounded_above_seq(a seq(R)):
 prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
 
-know:
+proof_debt:
     # proof_debt: prove from the real least-upper-bound interface by
     # taking the supremum of the sequence range.
     forall a seq(R):

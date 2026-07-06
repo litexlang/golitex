@@ -427,7 +427,7 @@ impl Runtime {
                     Some(line_file.clone()),
                 )?
                 .into()),
-            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(s)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => {
                 let mut facts = Vec::with_capacity(s.facts.len());
                 for fact in s.facts.iter() {
                     facts.push(self.inst_fact(
@@ -437,7 +437,7 @@ impl Runtime {
                         Some(line_file.clone()),
                     )?);
                 }
-                Ok(KnowStmt::new(facts, line_file.clone()).into())
+                Ok(ProofDebtStmt::new(facts, line_file.clone()).into())
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 let fact = self.inst_fact(

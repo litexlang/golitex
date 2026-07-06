@@ -254,7 +254,7 @@ pub(super) fn run_single_the_mechanics_chapter_markdown_file_impl(
     let wall_start = Instant::now();
     for (snippet_index, (label, source_code, md_path_for_run_file)) in snippets.iter().enumerate() {
         if snippet_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
         }
 

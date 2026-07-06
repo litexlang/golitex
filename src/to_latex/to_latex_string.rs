@@ -1289,12 +1289,12 @@ impl IsTupleFact {
     }
 }
 
-impl KnowStmt {
+impl ProofDebtStmt {
     pub fn to_latex_string(&self) -> String {
         if self.facts.len() == 1 {
             format!(
                 r"\operatorname{{{}}} {}",
-                KNOW,
+                PROOF_DEBT,
                 self.facts[0].to_latex_string()
             )
         } else {
@@ -1306,7 +1306,7 @@ impl KnowStmt {
                 .join(" \\\\\n");
             format!(
                 r"\operatorname{{{}}}\colon \begin{{aligned}}{}\end{{aligned}}",
-                KNOW, rows
+                PROOF_DEBT, rows
             )
         }
     }
@@ -2177,7 +2177,7 @@ impl Stmt {
     pub fn to_latex_string(&self) -> String {
         match self {
             Stmt::Fact(x) => x.to_latex_string(),
-            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(x)) => x.to_latex_string(),
+            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(x)) => x.to_latex_string(),
             Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),

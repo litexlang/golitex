@@ -52,7 +52,7 @@ sketch:
 
 instead of wrapping the same statement in a local `claim` unless the proof steps themselves are pedagogically important.
 
-If the source book says `Proof. See Exercise ...`, then the book itself has omitted the proof. In the first pass, record the item as a `thm`, temporarily use `know` for the proof, mark it as proof debt, and return to it in a second pass.
+If the source book says `Proof. See Exercise ...`, then the book itself has omitted the proof. In the first pass, record the item as a `thm`, temporarily use `proof_debt` for the proof, mark it as proof debt, and return to it in a second pass.
 
 Every textbook has its own style. Before processing a new book, write a custom prompt describing how that book presents definitions, examples, exercises, theorem numbering, and omitted proofs. Keep the classification labels stable, but tune the prompt to the source.
 

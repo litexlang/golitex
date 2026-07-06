@@ -221,7 +221,7 @@ forall x R:
     x = x
 ```
 
-### 2. `know`
+### 2. `proof_debt`
 
 Purpose: introduce an assumption without proof, usually for explicit proof debt
 or a background interface.
@@ -234,7 +234,7 @@ or a background interface.
 ```litex
 sketch:
     abstract_prop p(x)
-    know $p(0)
+    proof_debt $p(0)
     $p(0)
 ```
 
@@ -498,7 +498,7 @@ sketch:
     $is_one(1)
 
     abstract_prop related(x, y)
-    know $related(1, 1)
+    proof_debt $related(1, 1)
     $related(1, 1)
 ```
 
@@ -736,8 +736,9 @@ only because they depend on local files or installed modules.
   no structural checks.
 - Truth verification: imported or run files verify normally when loaded.
 - Environment effects: module/file commands update the module manager or
-  current environment; `clear` removes the current user environment and stops
-  imports.
+  current environment; `clear` removes the current user environment but leaves
+  imported modules registered and active. `stop import` is the explicit global
+  command for disabling an imported module.
 
 <!-- litex:skip-test -->
 ```litex
@@ -745,4 +746,30 @@ import Nat
 stop import Nat
 run_file "./some_local_file.lit"
 clear
+```
+
+`clear` only resets the current environment; it does not change the module
+manager.
+
+<!-- litex:skip-test -->
+```litex
+import "./Demo" as Demo
+
+clear
+
+$Demo::some_prop(2) # Demo is still active after clear
+```
+
+`stop import` changes the shared module manager. If an imported module stops
+another module, the original file observes that stopped state too.
+
+<!-- litex:skip-test -->
+```litex
+# A/main.lit
+import "../B" as B
+stop import B
+
+# main.lit
+import "./A" as A
+$B::some_prop(2) # B is stopped for ordinary verification
 ```
