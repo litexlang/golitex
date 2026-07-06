@@ -643,7 +643,7 @@ litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
-litex -strict : reject user know and let statements after builtin initialization
+litex -strict : reject user proof_debt, let, and axiom statements after builtin initialization
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
 litex -install <module> : install the given module

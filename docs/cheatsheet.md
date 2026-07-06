@@ -13,6 +13,19 @@ into three parts:
 
 This is a map of the current implementation, not a proposed redesign.
 
+## Execution Pipeline Refactor Status
+
+The executor is being migrated toward explicit three-stage helpers for each
+statement:
+
+1. `exec_XXX_stmt_verify_well_definedness`
+2. `exec_XXX_stmt_verify_process`
+3. `exec_XXX_stmt_affect_environment`
+
+The explicit three-stage shape now covers control no-ops such as `do_nothing`
+and `clear`, predicate definitions such as `prop` and `abstract_prop`, and the
+object-introduction family of `have` statements listed below.
+
 ## Object Meaning Cheat Sheet
 
 | Object form | Mathematical meaning | Typical well-definedness notes |
@@ -28,7 +41,7 @@ This is a map of the current implementation, not a proposed redesign.
 | `cart(A, B, ...)` | Cartesian product of the factor sets. | Factor objects must be well-defined sets; tuple membership checks each coordinate against its factor. |
 | `fn(x S) T` | Function-space object from inputs in `S` to values in `T`, possibly with domain side conditions. | Parameter sets, side conditions, and return set must be well-defined. |
 | Anonymous function `'(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
-| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; `fn_range_on` also verifies restriction to `S`. |
+| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; for larger-domain functions, pass an anonymous restriction such as `'(x S) T {f(x)}` when an API expects a function on `S`. |
 | `seq(S)`, `finite_seq(S, n)` | Infinite positive-integer-indexed sequences and finite length-`n` sequences with values in `S`. | `S` must be a set; finite-sequence length must be positive and match literal length when a literal is used. |
 | `matrix(S, r, c)` and matrix literals | Rectangular row-column indexed arrays with entries in `S`. | Row and column counts must be positive; literals must be rectangular and entries must belong to `S`. |
 | `&StructName` and `&StructName{obj}.field` | Struct membership as a record-shaped tuple type, and field access through a struct view. | Struct fields and equivalent facts must be well-defined; field access requires the object to be viewed as that struct. |
@@ -39,7 +52,8 @@ This is a map of the current implementation, not a proposed redesign.
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `fact` | The fact must be well-defined. | The fact must be verified as true. | Stores the fact and runs inference. |
-| `know` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
+| `proof_debt` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
+| `axiom name` | Rejected in strict mode; the `? forall ...` fact must be well-defined. | None. | Stores a named theorem-like `forall` fact for matching and `by thm`. |
 | `let` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stores names, parameter type facts, attached facts, and inferred consequences. |
 | `have a R` | `a` must be unused; `R` must be a well-defined object. | Checks `R` is nonempty, for example `$is_nonempty_set(R)`. | Stores the object name `a`, stores `a $in R`, and runs inference. |
 | `have a T = x` | Parameter count must match assigned objects; declared types are instantiated; `x` must be well-defined. | Verifies each assigned object satisfies its declared type. | Stores the object name, its type fact, `a = x`, and sequence or matrix value caches when relevant. |
@@ -107,8 +121,8 @@ This is a map of the current implementation, not a proposed redesign.
 |---|---|---|---|
 | `import` | Resolves module path/name; checks aliases, cycles, duplicate module names, and duplicate paths. | Runs the imported module normally when it is not already cached. | Registers the module environment, import dependencies, and reactivates cached modules when applicable. |
 | `run_file` | Resolves and reads the file path. | Runs the target file normally. | Executes directly in the current user environment. |
-| `clear` | None. | None. | Clears the current user environment and stops all imported modules. |
-| `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification. |
+| `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
+| `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification in the shared module manager. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |
 | `eval by` | The left and right objects must be well-defined. | Verifies `lhs = rhs`. | Stores `lhs = rhs`, `rhs = value`, and `lhs = value`. |

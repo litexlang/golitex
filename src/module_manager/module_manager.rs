@@ -13,9 +13,9 @@ pub struct ImportedModule {
     /// Modules imported while this module was loaded.
     ///
     /// This is not a textual include list for display. It is runtime state used
-    /// after `clear`: imports are cached but marked stopped, so reimporting this
-    /// module must also reactivate these nested imports. For example, reimporting
-    /// `Int` should reactivate the cached `Nat` module that `Int` imports.
+    /// when a cached module is reactivated after `stop import`. For example,
+    /// reimporting `Int` should reactivate the cached `Nat` module that `Int`
+    /// imports.
     pub import_dependencies: Vec<String>,
 }
 

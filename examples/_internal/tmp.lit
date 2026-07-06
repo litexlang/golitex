@@ -20,7 +20,7 @@ strategy sum_of_integrable_fn_integrable:
             $integrable(a, b, g)
             =>:
                 $integrable(a, b, '(x R) R {f(x) + g(x)})
-    know $integrable(a, b, '(x R) R {f(x) + g(x)})
+    proof_debt $integrable(a, b, '(x R) R {f(x) + g(x)})
 
 strategy minus_of_integrable_fn_integrable:
     prove:
@@ -29,7 +29,7 @@ strategy minus_of_integrable_fn_integrable:
             $integrable(a, b, g)
             =>:
                 $integrable(a, b, '(x R) R {f(x) - g(x)})
-    know $integrable(a, b, '(x R) R {f(x) - g(x)})
+    proof_debt $integrable(a, b, '(x R) R {f(x) - g(x)})
 
 strategy scalar_mul_of_integrable_fn_integrable:
     prove:
@@ -37,7 +37,7 @@ strategy scalar_mul_of_integrable_fn_integrable:
             $integrable(a, b, f)
             =>:
                 $integrable(a, b, '(x R) R {c * f(x)})
-    know $integrable(a, b, '(x R) R {c * f(x)})
+    proof_debt $integrable(a, b, '(x R) R {c * f(x)})
 
 strategy constant_fn_integrable:
     prove:
@@ -45,7 +45,7 @@ strategy constant_fn_integrable:
             a <= b
             =>:
                 $integrable(a, b, '(x R) R {c})
-    know $integrable(a, b, '(x R) R {c})
+    proof_debt $integrable(a, b, '(x R) R {c})
 
 strategy identity_fn_integrable:
     prove:
@@ -53,7 +53,7 @@ strategy identity_fn_integrable:
             a <= b
             =>:
                 $integrable(a, b, '(x R) R {x})
-    know $integrable(a, b, '(x R) R {x})
+    proof_debt $integrable(a, b, '(x R) R {x})
 
 strategy square_fn_integrable:
     prove:
@@ -61,7 +61,7 @@ strategy square_fn_integrable:
             a <= b
             =>:
                 $integrable(a, b, '(x R) R {x^2})
-    know $integrable(a, b, '(x R) R {x^2})
+    proof_debt $integrable(a, b, '(x R) R {x^2})
 
 strategy affine_two_x_plus_one_integrable:
     prove:
@@ -69,7 +69,7 @@ strategy affine_two_x_plus_one_integrable:
             a <= b
             =>:
                 $integrable(a, b, '(x R) R {2 * x + 1})
-    know $integrable(a, b, '(x R) R {2 * x + 1})
+    proof_debt $integrable(a, b, '(x R) R {2 * x + 1})
 
 strategy interval_integral_additive_strategy:
     prove:
@@ -79,9 +79,9 @@ strategy interval_integral_additive_strategy:
             $integrable(a, c, f)
             =>:
                 $interval_integral_additive(a, b, c, f, s1, s2)
-    know $interval_integral_additive(a, b, c, f, s1, s2)
+    proof_debt $interval_integral_additive(a, b, c, f, s1, s2)
 
-know:
+proof_debt:
     forall a, b R, f, g fn(x R) R, sf, sg R:
         $integrable(a, b, f)
         $integrable(a, b, g)
@@ -139,10 +139,10 @@ claim:
             =>:
                 $integrable(a, b, '(x R) R {f(x) + g(x)})
     use strategy sum_of_integrable_fn_integrable
-    know $integrable(a, b, '(x R) R {f(x) + g(x)})
+    proof_debt $integrable(a, b, '(x R) R {f(x) + g(x)})
     stop strategy sum_of_integrable_fn_integrable
 
-know:
+proof_debt:
     $integrable(0, 2, '(x R) R {3})
     $integrable(0, 2, '(x R) R {x})
     $integrable(0, 3, '(x R) R {x^2})

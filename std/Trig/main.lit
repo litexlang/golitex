@@ -1,7 +1,7 @@
 # Basic trigonometric function axioms for problem formalization.
 # This file intentionally treats trigonometry as background mathematics: the
 # functions are declared as objects, and standard identities are recorded with
-# `know` instead of being derived from limits or power series.
+# `proof_debt` instead of being derived from limits or power series.
 #
 # The long special-angle section is problem-facing stdlib support, not a claim
 # that these are fundamental theorem interfaces. New one-off trig facts should
@@ -75,7 +75,7 @@ prop cot_periodic_with_period(p R):
         =>:
             cot(x + p) = cot(x)
 
-know:
+proof_debt:
     # Values at the basic axis angles and immediate well-definedness facts.
     sin(0) = 0
     cos(0) = 1

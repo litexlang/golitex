@@ -28,7 +28,7 @@ current parser is command-oriented, not a general argument parser.
 | Option | Meaning |
 |--------|---------|
 | `-detail` | Include fuller JSON trace details. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `know` and `let` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-strict` | Reject user `proof_debt`, `let`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
 Supported language codes are:

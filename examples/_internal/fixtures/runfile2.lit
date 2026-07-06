@@ -1,4 +1,4 @@
 abstract_prop p(a, b)
 
-know forall a, b R:
+proof_debt forall a, b R:
     $p(a, b)

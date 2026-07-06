@@ -124,7 +124,7 @@ prop has_greatest_lower_bound(E set):
 # They are not chapter-level theorems that every source file should reconstruct
 # from scratch. Single-use textbook facts should still stay in the source file
 # that needs them unless they become repeated proof patterns.
-know:
+proof_debt:
     forall x R:
         0 <= x
         =>:

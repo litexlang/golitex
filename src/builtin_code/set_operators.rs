@@ -9,7 +9,7 @@ thm in_intersect_is_in_both:
             =>:
                 $in(z, A)
                 $in(z, B)
-    know:
+    proof_debt:
         $in(z, A)
         $in(z, B)
 
@@ -19,7 +19,7 @@ thm in_set_minus_is_in_first_operand:
             $in(z, set_minus(A, B))
             =>:
                 $in(z, A)
-    know:
+    proof_debt:
         $in(z, A)
 
 thm in_set_minus_is_not_in_second_operand:
@@ -28,7 +28,7 @@ thm in_set_minus_is_not_in_second_operand:
             $in(z, set_minus(A, B))
             =>:
                 not $in(z, B)
-    know:
+    proof_debt:
         not $in(z, B)
 
 thm in_cup_via_member_set:
@@ -38,7 +38,7 @@ thm in_cup_via_member_set:
             $in(z, Y)
             =>:
                 $in(z, cup(F))
-    know:
+    proof_debt:
         $in(z, cup(F))
 
 thm subset_of_finite_set_is_finite:
@@ -47,10 +47,10 @@ thm subset_of_finite_set_is_finite:
             A $subset B
             =>:
                 $is_finite_set(A)
-    know:
+    proof_debt:
         $is_finite_set(A)
 
-know:
+proof_debt:
     forall z set, A set, B set:
         $in(z, A)
         =>:

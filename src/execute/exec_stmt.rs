@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.exec_fact(fact),
-            Stmt::UnsafeStmt(UnsafeStmt::KnowStmt(s)) => self.exec_know_stmt(s),
+            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => self.exec_proof_debt_stmt(s),
             Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(d)) => self.exec_let_stmt(d),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(d)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)

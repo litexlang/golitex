@@ -354,13 +354,13 @@ does not first memorize a huge theorem dictionary and then cite a synonym of
 the theorem in the book. They build definitions, lemmas, and proof habits in
 order. Litex's builtins provide the basic mathematical ground so that this
 kind of step-by-step development can start early, while larger imports and
-`know` assumptions should remain visible background, not a way to erase the
+`proof_debt` assumptions should remain visible background, not a way to erase the
 book's proof. The code should be where the mathematical work happens, not only
 a bibliographic reference into a theorem database.
 
 This route comes with a clear audit obligation. A Litex result should be read
 relative to its trusted background: builtin rules, inference rules,
-standard-library facts, and any explicit `know` assumption injections. The
+standard-library facts, and any explicit `proof_debt` assumption injections. The
 project goal is not to hide that boundary; it is to make the boundary visible
 while keeping the user-facing proof script close to ordinary mathematical
 writing.

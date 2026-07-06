@@ -2,7 +2,7 @@ use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
 impl Runtime {
-    // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
+    // Lit `proof_debt` facts for the nonnegative / positive cone under field operations used to live in
     // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
     // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
     // goals (possibly after `normalize_positive_order_atomic_fact`):

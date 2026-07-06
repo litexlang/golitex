@@ -59,7 +59,7 @@ dependencies, and long-form mathematical development.
 Successful translations should become examples, benchmarks, or documentation
 snippets when appropriate. Failed translations should become minimal blockers
 that guide standard library work, language design, kernel improvements, or
-better diagnostics. It is acceptable to use `know` or `abstract_prop` only when
+better diagnostics. It is acceptable to use `proof_debt` or `abstract_prop` only when
 the blocked part is clearly labeled and the rest of the development remains
 explicit and checkable.
 
@@ -96,7 +96,7 @@ earlier chapter.
 
 Cite packages are explicit proof-debt interfaces, not completed standard
 library modules. Facts in a cite package should be named `thm` or `claim`
-interfaces whose unproved step is marked with `know`, and each such debt should
+interfaces whose unproved step is marked with `proof_debt`, and each such debt should
 be tracked in the nearby `todo.md` or unfinished notes. An imported cite module
 must be self-contained: import the std modules it needs, and put shared source
 vocabulary in a small real `prop`/`have` module such as `chap9_vocab/main.lit`
@@ -187,8 +187,8 @@ For each item, proceed in this order:
    readable while preserving a named theorem interface and explicit proof debt.
 
 5. If the proof cannot be completed immediately, write the best partial Litex
-   proof first. It is acceptable to use `know` temporarily, but only for the
-   blocked step. Next to each temporary `know`, add a concise comment saying
+   proof first. It is acceptable to use `proof_debt` temporarily, but only for the
+   blocked step. Next to each temporary `proof_debt`, add a concise comment saying
    why the step is not yet proved and what kind of missing support it appears
    to need.
 
@@ -198,7 +198,7 @@ For each item, proceed in this order:
    For another dataset or textbook workspace, create the analogous nearby
    folder if it does not already exist. Name the file by the problem or theorem
    id. Record the proof idea, the current Litex attempt, the exact verifier
-   failure if any, every remaining `know`, and the primary blocker label.
+   failure if any, every remaining `proof_debt`, and the primary blocker label.
 
 7. Iterate by removing proof debt one step at a time. Run the verifier after
    each small change and use the exact output to decide the next correction.
@@ -310,7 +310,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 14. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
 
-15. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+15. Do not use `proof_debt` to hide a proof obligation in an example. Use `proof_debt` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
 ## Dataset Translation To Litex
 
@@ -327,9 +327,9 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 5. The translation process should be iterative: write a small Litex proof, run it, inspect the verifier output, and make the next smallest correction.
 
-6. Before using `know` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
+6. Before using `proof_debt` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
 
-7. If part of the formalization is temporarily blocked, it is acceptable to use `know` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
+7. If part of the formalization is temporarily blocked, it is acceptable to use `proof_debt` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
 
 8. Prefer a mathematically natural Litex proof over a source-language-shaped translation. The goal is a verifiable Litex development, not a line-by-line transcription.
 

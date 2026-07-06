@@ -105,7 +105,7 @@ fn run_math500_tmp() {
     let mut durations_ms: Vec<(String, f64)> = Vec::new();
     for (snippet_index, snippet) in snippets.iter().enumerate() {
         if snippet_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(path_for_runtime);
         }
 
@@ -242,7 +242,7 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
 
     for lit_path in lit_paths.iter() {
         if total_count > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
         }
 
         let lit_path_str = lit_path.to_string_lossy().to_string();

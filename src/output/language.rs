@@ -1261,8 +1261,8 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("structure definition", "结构定义"),
     ("proved statement", "已证明语句"),
     (
-        "warning: unproved know assumption",
-        "警告：未经证明的 know 假设",
+        "warning: unproved proof_debt assumption",
+        "警告：未经证明的 proof_debt 假设",
     ),
     (
         "warning: unproved object definition",
@@ -1414,8 +1414,8 @@ const ZH_HANS_TEXTS: &[(&str, &str)] = &[
     ("theorem", "定理"),
     ("proved statement", "已證明語句"),
     (
-        "warning: unproved know assumption",
-        "警告：未經證明的 know 假設",
+        "warning: unproved proof_debt assumption",
+        "警告：未經證明的 proof_debt 假設",
     ),
     (
         "warning: unproved object definition",
@@ -1507,8 +1507,8 @@ const AR_TEXTS: &[(&str, &str)] = &[
     ("theorem", "مبرهنة"),
     ("proved statement", "عبارة مبرهنة"),
     (
-        "warning: unproved know assumption",
-        "تحذير: افتراض know غير مبرهن",
+        "warning: unproved proof_debt assumption",
+        "تحذير: افتراض proof_debt غير مبرهن",
     ),
     (
         "warning: unproved object definition",
@@ -1600,8 +1600,8 @@ const HI_TEXTS: &[(&str, &str)] = &[
     ("theorem", "प्रमेय"),
     ("proved statement", "सिद्ध कथन"),
     (
-        "warning: unproved know assumption",
-        "चेतावनी: अप्रमाणित know मान्यता",
+        "warning: unproved proof_debt assumption",
+        "चेतावनी: अप्रमाणित proof_debt मान्यता",
     ),
     (
         "warning: unproved object definition",
@@ -1696,8 +1696,8 @@ const VI_TEXTS: &[(&str, &str)] = &[
     ("theorem", "định lý"),
     ("proved statement", "mệnh đề đã chứng minh"),
     (
-        "warning: unproved know assumption",
-        "cảnh báo: giả thiết know chưa chứng minh",
+        "warning: unproved proof_debt assumption",
+        "cảnh báo: giả thiết proof_debt chưa chứng minh",
     ),
     (
         "warning: unproved object definition",
@@ -1795,8 +1795,8 @@ const ID_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "pernyataan terbukti"),
     (
-        "warning: unproved know assumption",
-        "peringatan: asumsi know belum terbukti",
+        "warning: unproved proof_debt assumption",
+        "peringatan: asumsi proof_debt belum terbukti",
     ),
     (
         "warning: unproved object definition",
@@ -1897,8 +1897,8 @@ const JA_TEXTS: &[(&str, &str)] = &[
     ("theorem", "定理"),
     ("proved statement", "証明済み文"),
     (
-        "warning: unproved know assumption",
-        "警告：証明されていない know 仮定",
+        "warning: unproved proof_debt assumption",
+        "警告：証明されていない proof_debt 仮定",
     ),
     (
         "warning: unproved object definition",
@@ -1990,8 +1990,8 @@ const KO_TEXTS: &[(&str, &str)] = &[
     ("theorem", "정리"),
     ("proved statement", "증명된 문장"),
     (
-        "warning: unproved know assumption",
-        "경고: 증명되지 않은 know 가정",
+        "warning: unproved proof_debt assumption",
+        "경고: 증명되지 않은 proof_debt 가정",
     ),
     (
         "warning: unproved object definition",
@@ -2086,8 +2086,8 @@ const ES_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "enunciado probado"),
     (
-        "warning: unproved know assumption",
-        "advertencia: suposición know no demostrada",
+        "warning: unproved proof_debt assumption",
+        "advertencia: suposición proof_debt no demostrada",
     ),
     (
         "warning: unproved object definition",
@@ -2188,8 +2188,8 @@ const FR_TEXTS: &[(&str, &str)] = &[
     ("theorem", "théorème"),
     ("proved statement", "énoncé prouvé"),
     (
-        "warning: unproved know assumption",
-        "avertissement : hypothèse know non prouvée",
+        "warning: unproved proof_debt assumption",
+        "avertissement : hypothèse proof_debt non prouvée",
     ),
     (
         "warning: unproved object definition",
@@ -2284,8 +2284,8 @@ const DE_TEXTS: &[(&str, &str)] = &[
     ("theorem", "Satz"),
     ("proved statement", "bewiesene Anweisung"),
     (
-        "warning: unproved know assumption",
-        "Warnung: unbewiesene know-Annahme",
+        "warning: unproved proof_debt assumption",
+        "Warnung: unbewiesene proof_debt-Annahme",
     ),
     (
         "warning: unproved object definition",
@@ -2389,8 +2389,8 @@ const PT_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "declaração provada"),
     (
-        "warning: unproved know assumption",
-        "aviso: suposição know não provada",
+        "warning: unproved proof_debt assumption",
+        "aviso: suposição proof_debt não provada",
     ),
     (
         "warning: unproved object definition",
@@ -2491,8 +2491,8 @@ const RU_TEXTS: &[(&str, &str)] = &[
     ("theorem", "теорема"),
     ("proved statement", "доказанное утверждение"),
     (
-        "warning: unproved know assumption",
-        "предупреждение: недоказанное предположение know",
+        "warning: unproved proof_debt assumption",
+        "предупреждение: недоказанное предположение proof_debt",
     ),
     (
         "warning: unproved object definition",

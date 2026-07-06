@@ -25,10 +25,11 @@ impl Runtime {
                 )),
                 _ => self.parse_have_obj_stmt(tb),
             },
-            KNOW => self.parse_know_stmt(tb),
+            PROOF_DEBT => self.parse_proof_debt_stmt(tb),
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
+            AXIOM => self.parse_def_axiom_stmt(tb),
             STRATEGY => self.parse_def_strategy_stmt(tb),
             USE => self.parse_use_strategy_stmt(tb),
             STOP => match tb.token_at_add_index(1) {
