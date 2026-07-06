@@ -186,6 +186,65 @@ This manual is both a tutorial and a reference. You do not need to read every se
 
 ---
 
+### Builtin Mathematical Background
+
+Litex starts every run with a builtin mathematical environment. This is separate
+from imported `std/...` modules: it is loaded before the user file and provides
+ordinary object names, object forms, trusted background facts, and a small set
+of named theorem interfaces that are useful enough to be globally available.
+
+There are three layers to keep distinct:
+
+- **Builtin objects and object forms** are expressions the parser and
+  well-definedness checker understand directly, such as `R`, `Q`, `Z`, `N`,
+  signed variants like `R_pos` and `Z_nz`, arithmetic operators, `abs`, `sqrt`,
+  `log`, set displays, set builders, `union`, `intersect`, `set_minus`,
+  `power_set`, `cart`, `fn(...)`, `seq(...)`, `matrix(...)`, finite sums and
+  products, integer ranges, real intervals, tuples, and struct views.
+- **Builtin code facts** are preloaded Litex facts. They include operator
+  typing, standard number-set relationships, basic order and comparison
+  principles, set-operator facts, range facts, finite-set count facts, and
+  background interfaces such as integer/rational representations.
+- **Builtin verification rules** are Rust-level verifier patterns that close
+  goals automatically. Arithmetic normalization, order algebra, membership
+  checks, tuple/product facts, and many equality patterns live at this layer.
+
+The builtin code also defines a few global names that can be cited with
+`by thm`. These are theorem interfaces, not new syntax.
+
+```litex
+by thm has_rational_between(0, 1)
+exist q Q st {0 < q < 1}
+```
+
+Some currently preloaded named theorem interfaces are:
+
+| Name | Meaning |
+|------|---------|
+| `has_rational_between`, `exists_rat_between`, `exists_rat_btwn` | If `a < b` for real numbers, there exists `q Q` with `a < q < b`. |
+| `rational_as_integer_ratio` | Every rational can be written as `p / q` with `p Z` and `q Z_nz`. |
+| `archimedean_property` | For every positive real `e`, there exists `n N_pos` with `1 / n < e`. |
+| `a_lt_c`, `a_le_c`, `a_gt_c`, `a_ge_c` | Named transitivity interfaces for real order chains. |
+| `in_intersect_is_in_both` | Membership in an intersection gives membership in both operands. |
+| `in_set_minus_is_in_first_operand`, `in_set_minus_is_not_in_second_operand` | Membership in `set_minus(A, B)` gives membership in `A` and non-membership in `B`. |
+| `in_cup_via_member_set` | If `Y $in F` and `z $in Y`, then `z $in cup(F)`. |
+| `subset_of_finite_set_is_finite` | A subset of a finite set is finite. |
+| `even_power_abs_bound`, `even_power_bound_by_nonnegative_rhs`, `even_power_bound_by_nonpositive_rhs` | Standard even-power comparison interfaces. |
+| `pos_pow_strict_order_reflects`, `pos_pow_order_reflects` | Positive-base power comparison reflects order when the exponent is at least `1`. |
+
+There are many more anonymous builtin facts than named theorem interfaces. For
+example, Litex preloads facts relating `<=` and `<` to differences, zero-product
+facts, basic `range` and `closed_range` descriptions, finite-set nonemptiness
+from positive count, and common set-operator introduction/elimination facts.
+These facts can often be used by automatic known-`forall` matching without a
+visible `by thm` line.
+
+Treat this builtin layer as part of Litex's trusted mathematical background.
+When a theorem is broad, textbook-facing, or domain-specific, prefer putting it
+in the relevant source file or `std` module instead of adding it globally.
+
+---
+
 ## Objects
 
 _The whole is greater than the sum of its parts._

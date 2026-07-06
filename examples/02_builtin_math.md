@@ -385,6 +385,9 @@ forall a, b R:
     =>:
         a^3 < b^3
         b^5 > a^5
+
+by thm has_rational_between(0, 1)
+exist q Q st {0 < q < 1}
 ```
 
 ```litex

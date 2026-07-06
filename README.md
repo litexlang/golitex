@@ -404,15 +404,19 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
-The path of Litex is a deliberate trade-off. Litex accepts a larger trusted
-implementation than small-kernel systems in order to make the proof surface
-lighter. The system tries to do more routine checking in the verifier so users
-can spend more of their attention on the mathematical sequence of facts. This uniqueness is the core value of Litex as a proof assistant, but it also makes contribution to Litex more difficult and demanding. We welcome young talents to try Litex and contribute to it.
-
-Before
-learning a mature formal system such as Lean, Coq, or Isabelle, a learner can
-use Litex to get the basic feeling of formalization: state a mathematical fact,
-ask the checker whether it follows, read the output, and grow a verified
-context one line at a time.
+Litex is an attempt to make mathematics more accessible to everyone. It is
+trying to solve a problem so basic that it is easy to miss. Elementary school
+students can check each other's math homework because, even with very little
+mathematical knowledge, they already understand the shape of mathematical
+reasoning: new facts should follow from old facts by inspectable steps. Formal
+languages are supposed to make that kind of checking precise, but there is
+still no formal language for mathematics that ordinary students, scientists,
+AI agents, and curious readers can all read naturally. Many people do not see
+this as an unsolved problem; some assume it is impossible. Litex is built
+around the opposite hope: that we can have a reasoning language rigorous enough
+for machines to verify and readable enough for people to share. Even if today’s AI systems can already handle many mathematical
+problems and write other formal languages for specific tasks, Litex’s
+defining feature will always remain special: users can genuinely read
+and understand it.
 
 Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their support and advice. I am sure this list will keep growing.
