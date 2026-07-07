@@ -45,6 +45,7 @@ pub const SET_DIFF: &str = "set_diff";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
+pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
 /// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
 pub const ANONYMOUS_FN_PREFIX: &str = "'";
@@ -112,6 +113,7 @@ pub const TRY: &str = "try";
 pub const SCRATCH: &str = "scratch";
 pub const PROVE: &str = "prove";
 pub const THM: &str = "thm";
+pub const AXIOM: &str = "axiom";
 pub const STOP: &str = "stop";
 pub const USE: &str = "use";
 
@@ -139,10 +141,11 @@ pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
-pub const KNOW: &str = "know";
+pub const PROOF_DEBT: &str = "proof_debt";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
 pub const RUN_FILE: &str = "run_file";
+pub const TRUST_FILE: &str = "trust_file";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
@@ -230,6 +233,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CUP,
         CAP,
         POWER_SET,
+        GENERAL_CART,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,
@@ -290,6 +294,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SCRATCH,
         PROVE,
         THM,
+        AXIOM,
         STOP,
         USE,
         BY,
@@ -300,10 +305,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         AS,
         ENUMERATE,
         HAVE,
-        KNOW,
+        PROOF_DEBT,
         CLEAR,
         DO_NOTHING,
         RUN_FILE,
+        TRUST_FILE,
         INDUC,
         STRONG_INDUC,
         FROM,

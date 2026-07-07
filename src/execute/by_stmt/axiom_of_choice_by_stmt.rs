@@ -66,7 +66,7 @@ impl Runtime {
         // Trusted axiom of choice step: once S is a set whose members are
         // nonempty, infer the existence of a function choosing one element
         // from each member. Example: by axiom_of_choice: set S: stores
-        // exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}.
+        // exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}.
         let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
         let choice_fact_string = choice_fact.to_string();
         let infer_result = self
@@ -94,6 +94,18 @@ impl Runtime {
             ByVerificationResult::AxiomOfChoice(by_verification),
         )
         .into())
+    }
+
+    pub(crate) fn exec_by_axiom_of_choice_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByAxiomOfChoiceStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            choice_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }
 

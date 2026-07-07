@@ -1,0 +1,23 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+thm scratch_abs_sequence_positive_from_no_zero_terms:
+    ? forall a seq(R):
+        $has_no_zero_terms(a)
+        =>:
+            $is_positive_sequence(absolute_value_sequence(a))
+    by thm abs_sequence_positive_from_no_zero_terms(a)
+    $is_positive_sequence(absolute_value_sequence(a))
+
+thm scratch_absolute_ratio_terms_match_positive_ratio_terms:
+    ? forall a seq(R):
+        $has_no_zero_terms(a)
+        =>:
+            $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
+    by thm absolute_ratio_terms_match_positive_ratio_terms(a)
+    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
+
+thm scratch_root_test_terms_match_absolute_value_sequence:
+    ? forall a seq(R):
+        $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    by thm root_test_terms_match_absolute_value_sequence(a)
+    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))

@@ -511,7 +511,7 @@ fn run_examples_phase1_sequential_with_runtime(
 
         for (item_index, item) in phase1_items.iter().enumerate() {
             if item_index > 0 {
-                runtime.clear_current_env_and_parse_name_scope();
+                runtime.clear_current_env_parse_name_scope_and_stop_imports();
                 runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
             }
 
@@ -645,7 +645,7 @@ fn run_docs_markdown_with_runtime(
         doc_snippets.iter().enumerate()
     {
         if !runtime_needs_file_path || snippet_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
         }
         runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
 
@@ -820,7 +820,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         if item_index == 0 {
             runtime.new_file_path_new_env_new_name_scope(item.path_for_runtime.as_str());
         } else {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
         }
 

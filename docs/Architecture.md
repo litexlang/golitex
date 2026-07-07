@@ -192,7 +192,7 @@ kernel. A checked result should be read relative to:
 - builtin verification rules;
 - builtin inference rules;
 - standard-library facts and imports;
-- any explicit `know` assumptions in the file;
+- any explicit `proof_debt` assumptions in the file;
 - output rendering of the result trace.
 
 This is a deliberate prototype-stage trade-off. Litex puts more ordinary

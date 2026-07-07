@@ -41,7 +41,7 @@ fn runtime_contract_import_run_file_and_clear() {
     fs::create_dir_all(&module_dir).expect("create runtime contract import module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nknow forall x R:\n    $imported_prop(x)\n",
+        "abstract_prop imported_prop(x)\nproof_debt forall x R:\n    $imported_prop(x)\n",
     )
     .expect("write runtime contract import module");
     let import_source_code = format!(
@@ -71,7 +71,7 @@ fn runtime_contract_import_run_file_and_clear() {
         std::env::temp_dir().join(format!("litex-run-all-contract-run-file-{}.lit", suffix));
     fs::write(
         &run_file_path,
-        "abstract_prop run_file_prop(x)\nknow forall x R:\n    $run_file_prop(x)\n",
+        "abstract_prop run_file_prop(x)\nproof_debt forall x R:\n    $run_file_prop(x)\n",
     )
     .expect("write runtime contract run_file fixture");
     let run_file_path_string = run_file_path.to_string_lossy().into_owned();
@@ -283,6 +283,57 @@ M(2, 3) = 3
             assert!(run_output.contains("\"type\": \"matrix definition\""));
         },
     );
+}
+
+#[test]
+fn failed_have_process_checks_do_not_bind_names() {
+    run_with_large_stack("failed_have_process_checks_do_not_bind_names", || {
+        let cases = [
+            (
+                "failed_have_obj_nonempty",
+                "have s set\nhave a s",
+                "have a R\na $in R",
+            ),
+            (
+                "failed_have_obj_equal_type",
+                "have a N = -1",
+                "have a R = 1\na = 1",
+            ),
+            (
+                "failed_have_fn_return_type",
+                "have fn bad(x R) N = x",
+                "have fn bad(x R) R = x\nbad(1) = 1",
+            ),
+            (
+                "failed_have_finite_seq_bound",
+                "have n N_pos = 3\nhave m N_pos = 2\nhave finite_seq f finite_seq(N_pos, n) for i <= m, f(i) = i",
+                "have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i\nf(1) = 1",
+            ),
+        ];
+
+        for (case_name, failing_source, recovery_source) in cases {
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(case_name);
+
+            let (stmt_results, runtime_error) = run_source_code(failing_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                !run_succeeded,
+                "{} should fail before recovery:\n{}",
+                case_name, run_output
+            );
+
+            let (stmt_results, runtime_error) = run_source_code(recovery_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "{} should not bind the failed have name:\n{}",
+                case_name, run_output
+            );
+        }
+    });
 }
 
 #[test]
@@ -580,6 +631,132 @@ count(power_set({1, 2, 3})) = 8
 }
 
 #[test]
+fn subset_fact_proves_power_set_membership() {
+    run_with_large_stack("subset_fact_proves_power_set_membership", || {
+        let source_code = r#"
+have A set
+have B set
+proof_debt A $subset B
+A $in power_set(B)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("subset_fact_proves_power_set_membership");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "subset_fact_proves_power_set_membership failed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn builtin_nonempty_family_witness_can_be_named_with_have() {
+    run_with_large_stack(
+        "builtin_nonempty_family_witness_can_be_named_with_have",
+        || {
+            let source_code = r#"
+have X nonempty_set:
+    forall! x X => {$is_nonempty_set(x)}
+
+have A X
+$is_nonempty_set(A)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "builtin_nonempty_family_witness_can_be_named_with_have",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "builtin nonempty family witness test failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn general_cart_builtin_definition_choice_and_membership_inference() {
+    run_with_large_stack(
+        "general_cart_builtin_definition_choice_and_membership_inference",
+        || {
+            let source_code = r#"
+have I set
+have X nonempty_set:
+    forall! x X => {$is_nonempty_set(x)}
+have g fn(alpha I) X
+
+$is_nonempty_set(general_cart(I, X, g))
+general_cart(I, X, g) = {f fn(t I)cup(X): forall! alpha I => {f(alpha) $in g(alpha)}}
+have c general_cart(I, X, g)
+c $in fn(t I)cup(X)
+forall alpha I:
+    c(alpha) $in g(alpha)
+
+have J set
+have h fn(beta J) X
+forall beta J:
+    $is_nonempty_set(h(beta))
+$is_nonempty_set(general_cart(J, X, h))
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "general_cart_builtin_definition_choice_and_membership_inference",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "general_cart builtin definition/choice test failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn general_cart_nonempty_requires_factor_nonempty_fact() {
+    run_with_large_stack(
+        "general_cart_nonempty_requires_factor_nonempty_fact",
+        || {
+            let source_code = r#"
+have I set
+have s nonempty_set
+have g fn(alpha I) s
+
+$is_nonempty_set(general_cart(I, s, g))
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "general_cart_nonempty_requires_factor_nonempty_fact",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "general_cart nonempty should require factor nonempty evidence:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn latex_output_is_fragment_without_default_packages() {
     let output = to_latex_from_source_after_builtins(
         "1 = 1",
@@ -708,7 +885,7 @@ forall a set:
 fn sketch_stmt_is_checked_and_local() {
     let source_code = r#"
 sketch:
-    know:
+    proof_debt:
         2 = 3
 2 = 3
 "#;
@@ -814,7 +991,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -932,7 +1109,7 @@ fn try_stmt_unknown_is_reported_and_local() {
     run_with_large_stack("try_stmt_unknown_is_reported_and_local", || {
         let source_code = r#"
 try:
-    know:
+    proof_debt:
         2 = 3
     4 = 5
 "#;
@@ -1097,7 +1274,7 @@ claim:
             x = 1
             =>:
                 x = 1
-        know x = 1
+        proof_debt x = 1
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -1140,11 +1317,11 @@ thm qgoal_self_eq_extra:
 have fn qgoal_identity as set:
     ? forall x R:
         exist! y R st {y = x}
-    know exist! y R st {y = x}
+    proof_debt exist! y R st {y = x}
     exist! y R st {y = x}
 
 abstract_prop qgoal_p(x)
-know forall x R:
+proof_debt forall x R:
     $qgoal_p(x)
 
 strategy qgoal_strategy:
@@ -1169,10 +1346,10 @@ by extension:
     ? {1} = {1}
 
 by for:
-    ? forall! n range(0, 3): n < 3
+    ? forall! n range(0, 3) => {n < 3}
 
 by enumerate finite_set:
-    ? forall! z {1, 2}: z $in {1, 2}
+    ? forall! z {1, 2} => {z $in {1, 2}}
 
 prop qgoal_same_obj(x set, y set):
     x = y
@@ -1186,8 +1363,8 @@ by symmetric_prop:
     y = x
 
 abstract_prop qgoal_induc_p(a)
-know $qgoal_induc_p(0)
-know forall m N:
+proof_debt $qgoal_induc_p(0)
+proof_debt forall m N:
     $qgoal_induc_p(m)
     =>:
         $qgoal_induc_p(m + 1)
@@ -1530,7 +1707,7 @@ fn replacement_membership_infers_preimage_and_preimage_stmt_works() {
             let source_code = r#"
 abstract_prop rel(x, y)
 
-know forall x {3, 5, 9}, y, y2 set:
+proof_debt forall x {3, 5, 9}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
@@ -1542,7 +1719,7 @@ forall y B:
     exist x {3, 5, 9} st {$rel(x, y)}
 
 have y set
-know y $in replacement(rel, {3, 5, 9})
+proof_debt y $in replacement(rel, {3, 5, 9})
 have by preimage x from y $in replacement(rel, {3, 5, 9})
 x $in {3, 5, 9}
 $rel(x, y)
@@ -1571,14 +1748,14 @@ fn replacement_membership_intro_from_relation_witness() {
         let source_code = r#"
 abstract_prop rel(x, y)
 
-know forall x {1, 2}, y, y2 set:
+proof_debt forall x {1, 2}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
         y = y2
 
 have y set
-know $rel(1, y)
+proof_debt $rel(1, y)
 
 y $in replacement(rel, {1, 2})
 "#;
@@ -1673,9 +1850,9 @@ forall x R:
 #[test]
 fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
     let source_code = r#"
-by for forall! n range(0, 3): n < 3
+by for forall! n range(0, 3) => {n < 3}
 
-by enumerate finite_set forall! x {1, 2}: x $in {1, 2}
+by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -1700,8 +1877,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    know $is_nonempty_set(s)
-    know:
+    proof_debt $is_nonempty_set(s)
+    proof_debt:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -1718,7 +1895,7 @@ by zorn_lemma: set s, prop leq:
             forall x, y C:
                 $leq(x, y) or $leq(y, x)
             =>:
-                exist u s st {forall! x C: {$leq(x, u)}}
+                exist u s st {forall! x C => {$leq(x, u)}}
 
 exist m s st {forall! x s: $leq(m, x) => {x = m}}
 "#;
@@ -1768,7 +1945,7 @@ have s set
 abstract_prop leq(x)
 
 by zorn_lemma: set s, prop leq:
-    know $is_nonempty_set(s)
+    proof_debt $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -1793,8 +1970,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    know $is_nonempty_set(s)
-    know:
+    proof_debt $is_nonempty_set(s)
+    proof_debt:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -1860,7 +2037,7 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma s from leq:
-    know $is_nonempty_set(s)
+    proof_debt $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -1891,10 +2068,10 @@ fn by_axiom_of_choice_stores_choice_function_exist_fact() {
 have S set
 
 by axiom_of_choice: set S:
-    know forall A S:
+    proof_debt forall A S:
         $is_nonempty_set(A)
 
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1913,12 +2090,12 @@ exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
 fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
     let source_code = r#"
 have S set
-know forall A S:
+proof_debt forall A S:
     $is_nonempty_set(A)
 
 by axiom_of_choice: set S
 
-exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1991,7 +2168,7 @@ fn by_axiom_of_choice_rejects_old_set_syntax() {
 have S set
 
 by axiom_of_choice S:
-    know forall A S:
+    proof_debt forall A S:
         $is_nonempty_set(A)
 "#;
 
@@ -2050,7 +2227,7 @@ fn by_regularity_axiom_stores_foundation_witness_exist_fact() {
         "by_regularity_axiom_stores_foundation_witness_exist_fact",
         || {
             let source_code = r#"
-know $is_nonempty_set({1, 2})
+proof_debt $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2215,6 +2392,32 @@ $restricts_to('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
         negative_run_output.contains("failed to verify function domain fact"),
         "negative case should explain the domain failure:\n{}",
         negative_run_output
+    );
+}
+
+#[test]
+fn anonymous_fn_restriction_over_abstract_subset_is_well_defined() {
+    run_with_large_stack(
+        "anonymous_fn_restriction_over_abstract_subset_is_well_defined_large_stack",
+        || {
+            let source_code = r#"
+forall E2 set, E power_set(E2), f fn(x E2) R:
+    fn_range('(x E) R {f(x)}) $subset R
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_restriction_over_abstract_subset_is_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "anonymous function restriction over abstract subset failed:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2457,6 +2660,69 @@ product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
 }
 
 #[test]
+fn finite_sum_order_uses_pointwise_bounds() {
+    run_with_large_stack("finite_sum_order_uses_pointwise_bounds_large_stack", || {
+        let source_code = r#"
+thm finite_series_comparison_test:
+    prove:
+        forall a, b fn(i Z) R, m, n Z:
+            m <= n
+            forall i Z:
+                m <= i <= n
+                =>:
+                    a(i) <= b(i)
+            =>:
+                sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+
+    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+
+thm finite_series_comparison_n_pos_index_test:
+    prove:
+        forall a, b fn(i N_pos) R, m, n N_pos:
+            m <= n
+            forall i N_pos:
+                m <= i <= n
+                =>:
+                    a(i) <= b(i)
+            =>:
+                sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+
+    sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+
+thm finite_series_triangle_test:
+    prove:
+        forall a fn(i Z) R, m, n Z:
+            m <= n
+            =>:
+                abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+
+    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+
+thm finite_series_scalar_mul_test:
+    prove:
+        forall a fn(i Z) R, c R, m, n Z:
+            m <= n
+            =>:
+                sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+
+    sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_sum_order_uses_pointwise_bounds");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite sum order should use pointwise bounds:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
     run_with_large_stack(
         "iterated_operator_range_order_is_required_for_symbolic_bounds_large_stack",
@@ -2470,7 +2736,7 @@ thm bad_symbolic_empty_sum:
         forall a fn(i Z) R, m Z:
             sum(m, m - 1, '(i Z) R {a(i)}) = 0
 
-    know:
+    proof_debt:
         sum(m, m - 1, '(i Z) R {a(i)}) = 0
 "#,
                     "sum: cannot verify start <= end for the summation range",
@@ -2483,7 +2749,7 @@ thm bad_symbolic_empty_product:
         forall a fn(i Z) R, m Z:
             product(m, m - 1, '(i Z) R {a(i)}) = 1
 
-    know:
+    proof_debt:
         product(m, m - 1, '(i Z) R {a(i)}) = 1
 "#,
                     "product: cannot verify start <= end for the product range",
@@ -2541,7 +2807,8 @@ eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
 
 #[test]
 fn finite_set_sum_core_rules() {
-    let source_code = r#"
+    run_with_large_stack("finite_set_sum_core_rules", || {
+        let source_code = r#"
 finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
 finite_set_sum({}, 'Z(x){x}) = 0
 finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
@@ -2555,20 +2822,161 @@ sketch:
 
 sketch:
     have X power_set(Z)
-    know $is_finite_set(X)
+    proof_debt $is_finite_set(X)
     finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+
+thm finite_set_sum_substitution_tmp:
+    prove:
+        forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
+            forall x X:
+                exist! y Y st {g(y) = x}
+            =>:
+                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+
+thm finite_set_sum_range_matches_series_tmp:
+    prove:
+        forall a fn(i Z) R, m, n Z:
+            m <= n
+            =>:
+                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+
+thm finite_set_sum_disjoint_union_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z union(X, Y)) R:
+            intersect(X, Y) = {}
+            =>:
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+
+thm finite_set_sum_add_tmp:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+
+thm finite_set_sum_scalar_mul_tmp:
+    prove:
+        forall X finite_set, f fn(x X) R, c R:
+            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+
+thm finite_set_sum_monotone_tmp:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            forall x X:
+                f(x) <= g(x)
+            =>:
+                finite_set_sum(X, f) <= finite_set_sum(X, g)
+    finite_set_sum(X, f) <= finite_set_sum(X, g)
+
+thm finite_set_sum_triangle_tmp:
+    prove:
+        forall X finite_set, f fn(x X) R:
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "finite_set_sum core rules should verify:\n{}",
-        run_output
+        assert!(
+            run_succeeded,
+            "finite_set_sum core rules should verify:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn finite_set_sum_cartesian_product_and_fubini() {
+    run_with_large_stack("finite_set_sum_cartesian_product_and_fubini", || {
+        let source_code = r#"
+thm finite_double_sum_over_cartesian_product_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_double_sum_over_cartesian_product_reversed_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_fubini_tmp:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_cartesian_product_and_fubini");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite-set Cartesian-product/Fubini rules should verify:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn finite_set_sum_bijective_enumerations_are_well_defined() {
+    run_with_large_stack(
+        "finite_set_sum_bijective_enumerations_are_well_defined",
+        || {
+            let source_code = r#"
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+    forall x X:
+        exist! i closed_range(1, count(X)) st {g(i) = x}
+
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
+thm finite_set_sum_raw_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+    sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+
+thm finite_set_sum_template_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_sum_bijective_enumerations_are_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "finite_set_sum bijective enumeration rules should verify:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2589,7 +2997,7 @@ sketch:
 
 sketch:
     have X power_set(Z)
-    know $is_finite_set(X)
+    proof_debt $is_finite_set(X)
     finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
 "#;
 
@@ -2660,7 +3068,7 @@ have f fn(n N_pos) closed_range(1, n)
 fn known_equality_implies_weak_order() {
     let source_code = r#"
 have a, b R
-know a = b
+proof_debt a = b
 a <= b
 a >= b
 "#;
@@ -2683,12 +3091,12 @@ fn known_forall_membership_uses_standard_set_subset_direction() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-know:
+proof_debt:
     forall u set:
         $p(u)
         =>:
             u $in Z
-know $p(x)
+proof_debt $p(x)
 x $in Q
 x $in R
 "#;
@@ -2713,12 +3121,12 @@ fn known_forall_membership_narrowing_requires_known_fact() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-know:
+proof_debt:
     forall u set:
         $p(u)
         =>:
         u $in R
-know $p(x)
+proof_debt $p(x)
 x $in Z
 "#;
 
@@ -2741,7 +3149,7 @@ x $in Z
 fn known_forall_equality_uses_indexed_function_head() {
     let source_code = r#"
 have f fn(x R) R
-know forall a R:
+proof_debt forall a R:
     f(a) = a
 f(1) = 1
 "#;
@@ -2764,7 +3172,7 @@ f(1) = 1
 fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
     let source_code = r#"
 have f fn(x R) R
-know forall a R:
+proof_debt forall a R:
     a = f(a)
 1 + 1 = f(1 + 1)
 "#;
@@ -2788,7 +3196,7 @@ know forall a R:
 fn known_forall_equality_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 have g fn(x R) R
-know forall f fn(x R) R, a R:
+proof_debt forall f fn(x R) R, a R:
     f(a) = a
 g(1) = 1
 "#;
@@ -2812,7 +3220,7 @@ g(1) = 1
 fn known_forall_prop_indexes_forall_param_arg_as_wildcard() {
     let source_code = r#"
 abstract_prop p(x)
-know forall x R:
+proof_debt forall x R:
     $p(x)
 $p(1)
 "#;
@@ -2836,7 +3244,7 @@ $p(1)
 fn known_forall_prop_indexes_expression_arg_shape() {
     let source_code = r#"
 abstract_prop p(x)
-know forall x R:
+proof_debt forall x R:
     $p(x + 1)
 $p(1 + 1)
 "#;
@@ -2858,7 +3266,7 @@ $p(1 + 1)
 fn known_forall_prop_indexes_multi_arg_shape() {
     let source_code = r#"
 abstract_prop p(a, b)
-know forall a, b R:
+proof_debt forall a, b R:
     $p(a, b + 1)
 $p(2, 3 + 1)
 "#;
@@ -2881,7 +3289,7 @@ fn known_forall_prop_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 abstract_prop p(x)
 have g fn(x R) R
-know forall f fn(x R) R:
+proof_debt forall f fn(x R) R:
     $p(f(2))
 $p(g(2))
 "#;
@@ -2906,7 +3314,7 @@ fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
     let source_code = r#"
 abstract_prop p(x)
 
-know forall f, g fn(x R) R:
+proof_debt forall f, g fn(x R) R:
     $p(f)
     $p(g)
     =>:
@@ -2943,7 +3351,7 @@ fn known_forall_does_not_infer_function_from_single_point_application() {
     let source_code = r#"
 abstract_prop p(x)
 
-know forall g fn(x R) R:
+proof_debt forall g fn(x R) R:
     $p('R(x){g(0)})
 
 have h fn(x R) R
@@ -2974,7 +3382,7 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
 sketch:
     have fib fn(x R) R
 
-    know:
+    proof_debt:
         forall x R:
             x = 0
             =>:
@@ -3394,16 +3802,16 @@ forall a, b R:
 fn known_obj_values_store_simplified_fraction_for_nonfinite_decimal() {
     let source_code = r#"
 have a R
-know a = 1 / 2 / 3
+proof_debt a = 1 / 2 / 3
 
 have b R
-know b = 1 / 2
+proof_debt b = 1 / 2
 
 have c R
-know c = 2 / -6
+proof_debt c = 2 / -6
 
 have d R
-know d = 1 / (2 / 3 * 4)
+proof_debt d = 1 / (2 / 3 * 4)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3506,54 +3914,54 @@ fn real_interval_membership_rules() {
 have I set = oo(0, 1)
 
 have a R
-know a $in oo(0, 1)
+proof_debt a $in oo(0, 1)
 a $in R
 0 < a
 a < 1
 
 have b R
-know b $in oc(0, 1)
+proof_debt b $in oc(0, 1)
 0 < b
 b <= 1
 
 have c R
-know c $in co(0, 1)
+proof_debt c $in co(0, 1)
 0 <= c
 c < 1
 
 have d R
-know d $in cc(0, 1)
+proof_debt d $in cc(0, 1)
 0 <= d
 d <= 1
 
 have e R
-know e $in info(1)
+proof_debt e $in info(1)
 e $in R
 e < 1
 
 have f R
-know f $in infc(1)
+proof_debt f $in infc(1)
 f $in R
 f <= 1
 
 have g R
-know g $in oinf(0)
+proof_debt g $in oinf(0)
 g $in R
 0 < g
 
 have h R
-know h $in cinf(0)
+proof_debt h $in cinf(0)
 h $in R
 0 <= h
 
 have x R
-know:
+proof_debt:
     0 < x
     x <= 1
 x $in oc(0, 1)
 
 have y R
-know:
+proof_debt:
     0 <= y
 y $in cinf(0)
 
@@ -3580,7 +3988,7 @@ fn real_interval_nonempty_and_well_defined_rules() {
 have empty_like set = cc(1, 0)
 
 have a, b R
-know:
+proof_debt:
     a <= b
     a < b
 
@@ -3710,13 +4118,13 @@ $is_nonempty_set(union({1}, {}))
 $is_nonempty_set(union({}, {2}))
 
 have A, B set
-know:
+proof_debt:
     $is_nonempty_set(A)
 
 $is_nonempty_set(union(A, B))
 
 have C, D set
-know:
+proof_debt:
     $is_nonempty_set(D)
 
 $is_nonempty_set(union(C, D))
@@ -4082,7 +4490,7 @@ A(1, 2, 3) $in R
 fn weak_order_does_not_recursively_prove_equality() {
     let source_code = r#"
 have a, b R
-know a <= b
+proof_debt a <= b
 a = b
 "#;
 
@@ -4103,7 +4511,7 @@ a = b
 fn zero_product_cancellation_does_not_recursively_reenter_equality() {
     let source_code = r#"
 have a, b, k1, k2 N
-know:
+proof_debt:
     k1 = 0
     b = a * k1
 b = a * k1 = a * 0 = 0
@@ -4129,7 +4537,7 @@ b = a * k1 = a * 0 = 0
 fn exist_unique_infers_component_uniqueness_forall() {
     let source_code = r#"
 abstract_prop p(a, b)
-know exist! a, b R st {$p(a, b)}
+proof_debt exist! a, b R st {$p(a, b)}
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -4155,7 +4563,7 @@ know exist! a, b R st {$p(a, b)}
 fn exist_unique_component_uniqueness_proves_split_then_facts() {
     let source_code = r#"
 abstract_prop p(a, b)
-know exist! a, b R st {$p(a, b)}
+proof_debt exist! a, b R st {$p(a, b)}
 forall a1, b1, a2, b2 R:
     $p(a1, b1)
     $p(a2, b2)
@@ -4184,7 +4592,7 @@ fn exist_unique_still_accepts_tuple_uniqueness_forall() {
     let source_code = r#"
 sketch:
     abstract_prop p(a, b)
-    know:
+    proof_debt:
         exist a, b R st {$p(a, b)}
         forall a1, b1, a2, b2 R:
             $p(a1, b1)
@@ -4214,7 +4622,7 @@ fn have_fn_as_set_accepts_prove_block_target() {
 abstract_prop F(x, y)
 have A set
 have B set
-know forall x A:
+proof_debt forall x A:
     exist! y B st {$F(x, y)}
 
 have fn f as set:
@@ -4250,7 +4658,7 @@ have fn f as set:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    know exist! y B st {$F(x, y)}
+    proof_debt exist! y B st {$F(x, y)}
 
 forall x A:
     $F(x, f(x))
@@ -4280,7 +4688,7 @@ have fn f as set:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    know exist! y B st {$F(x, y)}
+    proof_debt exist! y B st {$F(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4314,7 +4722,7 @@ have fn f as set:
     prove:
         forall x A:
             exist! y B st {$F(x, y), $G(x, y)}
-    know exist! y B st {$F(x, y), $G(x, y)}
+    proof_debt exist! y B st {$F(x, y), $G(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4344,7 +4752,7 @@ fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
 abstract_prop F(x, y)
 have A set
 have B set
-know forall x A:
+proof_debt forall x A:
     exist! y B st {$F(x, y)}
 
 have fn f as set:
@@ -4543,8 +4951,8 @@ witness exist x R st {x = 1} from 1:
 fn by_induc_output_uses_same_trace_for_normal_and_detail() {
     let source_code = r#"
 abstract_prop p(a)
-know $p(0)
-know forall m Z:
+proof_debt $p(0)
+proof_debt forall m Z:
     m >= 0
     $p(m)
     =>:
@@ -4680,7 +5088,7 @@ fn run_file_citation_source_uses_safe_label_and_detail_path() {
     let run_file_path = std::env::temp_dir().join("litex-run-file-citation-source-test.lit");
     fs::write(
         &run_file_path,
-        "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        "abstract_prop p(x)\nproof_debt forall x R:\n    $p(x)\n",
     )
     .unwrap();
     let run_file_path_string = run_file_path.to_string_lossy().into_owned();
@@ -4753,10 +5161,14 @@ fn runner_target_error_returns_message() {
 }
 
 #[test]
-fn runner_accepts_know_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("know 1 = 0", "-runner-test", true);
+fn runner_accepts_proof_debt_as_normal_execution() {
+    let (ok, output) = run_runner_for_code("proof_debt 1 = 0", "-runner-test", true);
 
-    assert!(ok, "runner should not reject know statements:\n{}", output);
+    assert!(
+        ok,
+        "runner should not reject proof_debt statements:\n{}",
+        output
+    );
     assert!(output.contains("\"result\": \"success\""));
 }
 
@@ -4769,10 +5181,104 @@ fn runner_accepts_let_as_normal_execution() {
 }
 
 #[test]
-fn zh_output_localizes_unproved_know_labels() {
-    let source_code = "abstract_prop tmp_rel(m, n)\nknow exist! m, n R st {$tmp_rel(m, n)}\n";
+fn dependency_graph_tracks_fact_citation() {
+    run_with_large_stack("dependency_graph_tracks_fact_citation", || {
+        let (ok, output) =
+            run_dependency_graph_json_for_code("1 = 1\n1 = 1", "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph run failed:\n{}", output);
+        assert!(output.contains("\"kind\": \"verifies\""));
+        assert!(output.contains("\"from\": \"fact:1\""));
+        assert!(output.contains("\"to\": \"fact:2\""));
+    });
+}
+
+#[test]
+fn dependency_graph_tracks_prop_definition_dependencies() {
+    run_with_large_stack(
+        "dependency_graph_tracks_prop_definition_dependencies",
+        || {
+            let source_code = r#"
+prop is_even(x Z):
+    exist k Z st {x = 2 * k}
+
+prop is_multiple_of_four(x Z):
+    exist k Z st {x = 4 * k}
+    $is_even(x)
+"#;
+            let (ok, output) =
+                run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+
+            assert!(ok, "dependency graph prop run failed:\n{}", output);
+            assert!(output.contains("\"kind\": \"uses_definition\""));
+            assert!(output.contains("prop is_even(x Z)"));
+            assert!(output.contains("prop is_multiple_of_four(x Z)"));
+            assert!(
+                !output.contains("~2x"),
+                "dependency graph output should hide internal free-param tags:\n{}",
+                output
+            );
+        },
+    );
+}
+
+#[test]
+fn dependency_graph_dot_outputs_graphviz_edges() {
+    run_with_large_stack("dependency_graph_dot_outputs_graphviz_edges", || {
+        let (ok, output) =
+            run_dependency_graph_dot_for_code("1 + 1 = 2", "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph dot run failed:\n{}", output);
+        assert!(output.contains("digraph litex_dependency_graph"));
+        assert!(output.contains("\"builtin_rule:1\" -> \"fact:1\""));
+        assert!(output.contains("verifies"));
+    });
+}
+
+#[test]
+fn dependency_graph_tracks_by_thm_dependency() {
+    run_with_large_stack("dependency_graph_tracks_by_thm_dependency", || {
+        let source_code = r#"
+thm one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm one_eq_one()
+"#;
+        let (ok, output) =
+            run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph by-thm run failed:\n{}", output);
+        assert!(output.contains("\"kind\": \"theorem\""));
+        assert!(output.contains("\"kind\": \"uses_theorem\""));
+        assert!(output.contains("\"detail\": \"theorem instantiation\""));
+    });
+}
+
+#[test]
+fn dependency_graph_reports_successful_prefix_on_error() {
+    run_with_large_stack(
+        "dependency_graph_reports_successful_prefix_on_error",
+        || {
+            let (ok, output) =
+                run_dependency_graph_json_for_code("1 = 1\n1 = 0", "-depgraph-test", true, false);
+
+            assert!(!ok, "dependency graph error run should fail:\n{}", output);
+            assert!(output.contains("\"result\": \"error\""));
+            assert!(output.contains("\"kind\": \"error\""));
+            assert!(output.contains("\"text\": \"1 = 1\""));
+            assert!(output.contains("\"error_type\": \"VerifyError\""));
+        },
+    );
+}
+
+#[test]
+fn zh_output_localizes_unproved_proof_debt_labels() {
+    let source_code = "abstract_prop tmp_rel(m, n)\nproof_debt exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_know_labels");
+    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_proof_debt_labels");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -4782,7 +5288,7 @@ fn zh_output_localizes_unproved_know_labels() {
     assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
     assert!(run_output.contains("\"结果\": \"成功\""));
     assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
-    assert!(run_output.contains("\"原因\": \"警告：未经证明的 know 假设\""));
+    assert!(run_output.contains("\"原因\": \"警告：未经证明的 proof_debt 假设\""));
     assert!(run_output.contains("\"事实\": \"exist! m, n R st {$tmp_rel("));
     assert!(!run_output.contains("\"result\": \"success\""));
 }
@@ -4852,7 +5358,7 @@ forall:
 #[test]
 fn zh_runner_localizes_wrapper_and_trace() {
     let (ok, output) = run_runner_for_code_with_language(
-        "know 1 = 1",
+        "proof_debt 1 = 1",
         "-runner-test",
         true,
         OutputLanguage::SimplifiedChinese,
@@ -4893,7 +5399,7 @@ fn output_language_parses_supported_cli_codes() {
 }
 
 #[test]
-fn non_english_languages_localize_unproved_know_labels() {
+fn non_english_languages_localize_unproved_proof_debt_labels() {
     let cases = vec![
         (
             OutputLanguage::SimplifiedChinese,
@@ -4904,7 +5410,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "语句",
             "事实",
             "原因",
-            "警告：未经证明的 know 假设",
+            "警告：未经证明的 proof_debt 假设",
         ),
         (
             OutputLanguage::TraditionalChinese,
@@ -4915,7 +5421,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "語句",
             "事實",
             "原因",
-            "警告：未經證明的 know 假設",
+            "警告：未經證明的 proof_debt 假設",
         ),
         (
             OutputLanguage::Japanese,
@@ -4926,7 +5432,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "文",
             "事実",
             "理由",
-            "警告：証明されていない know 仮定",
+            "警告：証明されていない proof_debt 仮定",
         ),
         (
             OutputLanguage::Korean,
@@ -4937,7 +5443,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "문장",
             "사실",
             "이유",
-            "경고: 증명되지 않은 know 가정",
+            "경고: 증명되지 않은 proof_debt 가정",
         ),
         (
             OutputLanguage::Spanish,
@@ -4948,7 +5454,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "enunciado",
             "hecho",
             "razón",
-            "advertencia: suposición know no demostrada",
+            "advertencia: suposición proof_debt no demostrada",
         ),
         (
             OutputLanguage::French,
@@ -4959,7 +5465,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "énoncé",
             "fait",
             "raison",
-            "avertissement : hypothèse know non prouvée",
+            "avertissement : hypothèse proof_debt non prouvée",
         ),
         (
             OutputLanguage::German,
@@ -4970,7 +5476,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "Anweisung",
             "Fakt",
             "Grund",
-            "Warnung: unbewiesene know-Annahme",
+            "Warnung: unbewiesene proof_debt-Annahme",
         ),
         (
             OutputLanguage::Portuguese,
@@ -4981,7 +5487,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "declaração",
             "fato",
             "razão",
-            "aviso: suposição know não provada",
+            "aviso: suposição proof_debt não provada",
         ),
         (
             OutputLanguage::Russian,
@@ -4992,7 +5498,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "утверждение",
             "факт",
             "причина",
-            "предупреждение: недоказанное предположение know",
+            "предупреждение: недоказанное предположение proof_debt",
         ),
         (
             OutputLanguage::Arabic,
@@ -5003,7 +5509,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "العبارة",
             "الحقيقة",
             "السبب",
-            "تحذير: افتراض know غير مبرهن",
+            "تحذير: افتراض proof_debt غير مبرهن",
         ),
         (
             OutputLanguage::Hindi,
@@ -5014,7 +5520,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "कथन",
             "तथ्य",
             "कारण",
-            "चेतावनी: अप्रमाणित know मान्यता",
+            "चेतावनी: अप्रमाणित proof_debt मान्यता",
         ),
         (
             OutputLanguage::Vietnamese,
@@ -5025,7 +5531,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "mệnh_đề",
             "sự_kiện",
             "lý_do",
-            "cảnh báo: giả thiết know chưa chứng minh",
+            "cảnh báo: giả thiết proof_debt chưa chứng minh",
         ),
         (
             OutputLanguage::Indonesian,
@@ -5036,7 +5542,7 @@ fn non_english_languages_localize_unproved_know_labels() {
             "pernyataan",
             "fakta",
             "alasan",
-            "peringatan: asumsi know belum terbukti",
+            "peringatan: asumsi proof_debt belum terbukti",
         ),
     ];
 
@@ -5054,11 +5560,11 @@ fn non_english_languages_localize_unproved_know_labels() {
     {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "non_english_languages_localize_unproved_know_labels",
+            "non_english_languages_localize_unproved_proof_debt_labels",
         );
         runtime.output_language = language;
 
-        let (stmt_results, runtime_error) = run_source_code("know 1 = 1", &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 1", &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
@@ -5069,7 +5575,7 @@ fn non_english_languages_localize_unproved_know_labels() {
         );
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
-        assert!(run_output.contains(&format!("\"{}\": \"know 1 = 1\"", statement_key)));
+        assert!(run_output.contains(&format!("\"{}\": \"proof_debt 1 = 1\"", statement_key)));
         assert!(run_output.contains(&format!("\"{}\": \"1 = 1\"", fact_key)));
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", reason_key, reason_text)));
         assert!(!run_output.contains("\"result\": \"success\""));
@@ -5200,7 +5706,7 @@ fn non_english_runner_localizes_wrapper_keys() {
 
     for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
         let (ok, output) =
-            run_runner_for_code_with_language("know 1 = 1", "-runner-test", true, language);
+            run_runner_for_code_with_language("proof_debt 1 = 1", "-runner-test", true, language);
 
         assert!(ok, "localized runner should succeed:\n{}", output);
         assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
@@ -5213,23 +5719,148 @@ fn non_english_runner_localizes_wrapper_keys() {
 }
 
 #[test]
-fn strict_mode_rejects_user_know() {
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_know");
-    runtime.strict_mode = true;
+fn axiom_declares_named_theorem_like_forall_fact() {
+    let source_code = r#"
+abstract_prop axiom_prop(x)
 
-    let (stmt_results, runtime_error) = run_source_code("know 1 = 0", &mut runtime);
+axiom axiom_prop_all:
+    ? forall x R:
+        $axiom_prop(x)
+
+$axiom_prop(2)
+by thm axiom_prop_all(3)
+$axiom_prop(3)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("axiom_declares_named_theorem_like_forall_fact");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "axiom should store a theorem-like forall fact:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"axiom\""),
+        "axiom output should identify the declaration as an axiom:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn imported_axiom_can_be_cited_by_qualified_theorem_name() {
+    let module_dir =
+        std::env::temp_dir().join(format!("litex-import-axiom-{}", std::process::id()));
+    fs::create_dir_all(&module_dir).expect("create axiom import test module");
+    fs::write(
+        module_dir.join("main.lit"),
+        r#"
+abstract_prop imported_axiom_prop(x)
+
+axiom imported_axiom_all:
+    ? forall x R:
+        $imported_axiom_prop(x)
+"#,
+    )
+    .expect("write axiom import test module");
+    let source_code = format!(
+        "import \"{}\" as Trusted\nby thm Trusted::imported_axiom_all(2)\n$Trusted::imported_axiom_prop(2)",
+        module_dir.to_string_lossy()
+    );
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "imported_axiom_can_be_cited_by_qualified_theorem_name",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    let _ = fs::remove_dir_all(&module_dir);
+    assert!(
+        run_succeeded,
+        "imported axiom should be available through qualified by thm:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn axiom_rejects_proof_body() {
+    let source_code = r#"
+abstract_prop axiom_body_prop(x)
+
+axiom bad_axiom:
+    ? forall x R:
+        $axiom_body_prop(x)
+    proof_debt $axiom_body_prop(1)
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("axiom_rejects_proof_body");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         !run_succeeded,
-        "strict mode should reject user know statements:\n{}",
+        "axiom should reject body statements after its goal block:\n{}",
         run_output
     );
     assert!(
-        run_output.contains(KnowStmt::strict_mode_rejection_message()),
-        "strict mode should report the know boundary:\n{}",
+        run_output.contains("expects exactly one `? forall ...` goal block"),
+        "axiom proof-body rejection should explain the shape:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn axiom_rejects_prove_goal_block() {
+    let source_code = r#"
+axiom bad_axiom:
+    prove:
+        forall:
+            1 = 1
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("axiom_rejects_prove_goal_block");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "axiom should reject `prove:` goal blocks:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("expected `? forall ...` goal block"),
+        "axiom prove-block rejection should explain the expected shape:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_mode_rejects_user_proof_debt() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_proof_debt");
+    runtime.strict_mode = true;
+
+    let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 0", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "strict mode should reject user proof_debt statements:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
+        "strict mode should report the proof_debt boundary:\n{}",
         run_output
     );
 }
@@ -5257,16 +5888,61 @@ fn strict_mode_rejects_user_let() {
 }
 
 #[test]
-fn strict_runner_rejects_user_know() {
-    let (ok, output) = run_runner_for_code_strict("know 1 = 0", "-runner-test", true);
+fn strict_mode_rejects_user_axiom() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_axiom");
+    runtime.strict_mode = true;
+
+    let source_code = r#"
+axiom strict_axiom:
+    ? forall:
+        1 = 1
+"#;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "strict mode should reject user axiom statements:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(DefThmStmt::strict_mode_rejection_message()),
+        "strict mode should report the axiom boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn strict_runner_rejects_user_proof_debt() {
+    let (ok, output) = run_runner_for_code_strict("proof_debt 1 = 0", "-runner-test", true);
 
     assert!(
         !ok,
-        "strict runner should reject know statements:\n{}",
+        "strict runner should reject proof_debt statements:\n{}",
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(KnowStmt::strict_mode_rejection_message()));
+    assert!(output.contains(ProofDebtStmt::strict_mode_rejection_message()));
+}
+
+#[test]
+fn strict_runner_rejects_user_axiom() {
+    let source_code = r#"
+axiom strict_axiom:
+    ? forall:
+        1 = 1
+"#;
+    let (ok, output) = run_runner_for_code_strict(source_code, "-runner-test", true);
+
+    assert!(
+        !ok,
+        "strict runner should reject axiom statements:\n{}",
+        output
+    );
+    assert!(output.contains("\"result\": \"error\""));
+    assert!(output.contains(DefThmStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -5283,13 +5959,13 @@ fn strict_runner_rejects_user_let() {
 }
 
 #[test]
-fn strict_mode_allows_imported_module_know() {
+fn strict_mode_allows_imported_module_proof_debt() {
     let module_dir =
         std::env::temp_dir().join(format!("litex-strict-import-{}", std::process::id()));
     fs::create_dir_all(&module_dir).expect("create strict import test module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nknow $imported_prop(2)\n",
+        "abstract_prop imported_prop(x)\nproof_debt $imported_prop(2)\n",
     )
     .expect("write strict import test module");
     let source_code = format!(
@@ -5298,7 +5974,7 @@ fn strict_mode_allows_imported_module_know() {
     );
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_know");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_proof_debt");
     runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
@@ -5307,7 +5983,7 @@ fn strict_mode_allows_imported_module_know() {
     let _ = fs::remove_dir_all(&module_dir);
     assert!(
         run_succeeded,
-        "strict mode should allow know inside imported modules:\n{}",
+        "strict mode should allow proof_debt inside imported modules:\n{}",
         run_output
     );
 }
@@ -5337,14 +6013,14 @@ fn strict_mode_allows_imported_module_let() {
 }
 
 #[test]
-fn strict_mode_rejects_run_file_know() {
+fn strict_mode_rejects_run_file_proof_debt() {
     let run_file_path =
         std::env::temp_dir().join(format!("litex-strict-run-file-{}.lit", std::process::id()));
-    fs::write(&run_file_path, "know 1 = 0\n").expect("write strict run_file test file");
+    fs::write(&run_file_path, "proof_debt 1 = 0\n").expect("write strict run_file test file");
     let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_know");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_proof_debt");
     runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
@@ -5353,12 +6029,12 @@ fn strict_mode_rejects_run_file_know() {
     let _ = fs::remove_file(&run_file_path);
     assert!(
         !run_succeeded,
-        "strict mode should reject know inside run_file:\n{}",
+        "strict mode should reject proof_debt inside run_file:\n{}",
         run_output
     );
     assert!(
-        run_output.contains(KnowStmt::strict_mode_rejection_message()),
-        "strict run_file failure should report the know boundary:\n{}",
+        run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
+        "strict run_file failure should report the proof_debt boundary:\n{}",
         run_output
     );
 }
@@ -5465,7 +6141,7 @@ fn unquoted_run_file_is_rejected() {
 fn citation_verified_by_type_reflects_cited_stmt_kind() {
     let source_code = r#"
 abstract_prop p(x)
-know forall x R:
+proof_debt forall x R:
     $p(x)
 $p(2)
 let a R:
@@ -5551,11 +6227,11 @@ fn atomic_fact_verification_output_omits_method_and_reports_route_types() {
 1 = 1
 
 abstract_prop known_p(x)
-know $known_p(1)
+proof_debt $known_p(1)
 $known_p(1)
 
 abstract_prop forall_p(x)
-know:
+proof_debt:
     forall x R:
         x = 1
         =>:
@@ -5578,7 +6254,7 @@ by symmetric_prop:
     y = x
 have A set
 have B set
-know $sym_p(A, B)
+proof_debt $sym_p(A, B)
 $sym_p(B, A)
 "#;
 
@@ -5688,7 +6364,7 @@ claim:
     prove:
         2 = 2
     2 = 2
-know:
+proof_debt:
     3 = 3
 let a R:
     a = a
@@ -5712,7 +6388,9 @@ $q(1)
     assert!(!run_output.contains("\"effects\""));
     assert!(run_output.contains("\"store_facts\": ["));
     assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", KnowStmt::store_reason()).as_str()));
+    assert!(
+        run_output.contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str())
+    );
     assert!(run_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str()));
     assert!(!run_output.contains("\"trust\""));
     assert!(run_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
@@ -5727,7 +6405,7 @@ fn object_definition_output_exposes_checks_and_defined_facts() {
 have a R
 have b R = a
 have S set
-know exist x R st {x = x}
+proof_debt exist x R st {x = x}
 have by exist x R st {x = x}: c
 "#;
 
@@ -6244,8 +6922,8 @@ fn by_induc_prop_bridge_and_trusted_outputs_explain_processes() {
         || {
             let source_code = r#"
 abstract_prop local_induc_p(a)
-know $local_induc_p(0)
-know forall m Z:
+proof_debt $local_induc_p(0)
+proof_debt forall m Z:
     m >= 0
     $local_induc_p(m)
     =>:
@@ -6280,14 +6958,14 @@ by symmetric_prop:
 
 have local_family set
 by axiom_of_choice: set local_family:
-    know forall A local_family:
+    proof_debt forall A local_family:
         $is_nonempty_set(A)
 
 have local_ordered_set set
 abstract_prop local_leq(x, y)
 by zorn_lemma: set local_ordered_set, prop local_leq:
-    know $is_nonempty_set(local_ordered_set)
-    know:
+    proof_debt $is_nonempty_set(local_ordered_set)
+    proof_debt:
         forall x local_ordered_set:
             $local_leq(x, x)
         forall x, y, z local_ordered_set:
@@ -6304,7 +6982,7 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             forall x, y C:
                 $local_leq(x, y) or $local_leq(y, x)
             =>:
-                exist u local_ordered_set st {forall! x C: {$local_leq(x, u)}}
+                exist u local_ordered_set st {forall! x C => {$local_leq(x, u)}}
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -7023,7 +7701,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    know $target_thm_prop(x)
+    proof_debt $target_thm_prop(x)
 
 $target_thm_prop(1)
 "#;
@@ -7095,7 +7773,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    know $target_thm_prop(x)
+    proof_debt $target_thm_prop(x)
 
 by thm use_target_thm(1)
 $target_thm_prop(1)
@@ -7128,7 +7806,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7173,7 +7851,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7300,7 +7978,7 @@ strategy use_positive_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7313,7 +7991,7 @@ strategy use_negative_strategy:
             =>:
                 not $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y != 1
             =>:
@@ -7376,7 +8054,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7433,7 +8111,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7481,7 +8159,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y R:
             y = 1
             =>:
@@ -7681,11 +8359,349 @@ fn run_file_std_module_form_is_rejected() {
 }
 
 #[test]
+fn trust_file_std_module_form_is_rejected() {
+    run_with_large_stack("trust_file_std_module_form_is_rejected", || {
+        let source_code = "trust_file Trig";
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code,
+            "trust_file_std_module_form_is_rejected",
+            false,
+        );
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("trust_file expects a quoted relative or absolute file path"));
+    });
+}
+
+#[test]
+fn trust_file_loads_failed_theorem_interface_for_by_thm() {
+    run_with_large_stack(
+        "trust_file_loads_failed_theorem_interface_for_by_thm",
+        || {
+            let trust_file_path =
+                std::env::temp_dir().join("litex-trust-file-failed-theorem-interface-test.lit");
+            fs::write(
+                &trust_file_path,
+                r#"
+abstract_prop trusted_load_prop(x)
+
+thm trusted_load_all:
+    prove:
+        forall x R:
+            =>:
+                $trusted_load_prop(x)
+"#,
+            )
+            .unwrap();
+            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+            let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+            let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+                run_file_source_code.as_str(),
+                "trust_file_failed_theorem_run_file_path",
+                false,
+            );
+            assert!(
+                !run_file_succeeded,
+                "ordinary run_file should fail on the unproved theorem:\n{}",
+                run_file_output
+            );
+
+            let trust_file_source_code = format!(
+                "trust_file \"{}\"\nby thm trusted_load_all(2)\n$trusted_load_prop(2)",
+                trust_file_path_string
+            );
+            let (trust_file_succeeded, trust_file_output, runtime) =
+                run_trust_file_regression_source(
+                    trust_file_source_code.as_str(),
+                    "trust_file_failed_theorem_trusted_path",
+                    false,
+                );
+            let _ = fs::remove_file(&trust_file_path);
+
+            assert!(
+                trust_file_succeeded,
+                "trust_file should load the theorem interface and let by thm use it:\n{}",
+                trust_file_output
+            );
+            assert!(runtime
+                .get_thm_definition_by_name("trusted_load_all")
+                .is_some());
+            assert!(trust_file_output.contains("\"statement\": \"trust_file\""));
+            assert!(!trust_file_output.contains(trust_file_path_string.as_str()));
+        },
+    );
+}
+
+#[test]
+fn trust_file_loads_have_object_environment_effects() {
+    run_with_large_stack("trust_file_loads_have_object_environment_effects", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-have-object-effects-test.lit");
+        fs::write(&trust_file_path, "have trusted_bad N = -1\n").unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+            run_file_source_code.as_str(),
+            "trust_file_have_object_effects_run_file",
+            false,
+        );
+        assert!(
+            !run_file_succeeded,
+            "ordinary run_file should reject the invalid object definition:\n{}",
+            run_file_output
+        );
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\ntrusted_bad = -1",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_have_object_effects_trust_file",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load have-object bindings and facts:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_extension_environment_effects() {
+    run_with_large_stack("trust_file_loads_by_extension_environment_effects", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-by-extension-effects-test.lit");
+        fs::write(
+            &trust_file_path,
+            "have trusted_ext_a set\nhave trusted_ext_b set\nby extension trusted_ext_a = trusted_ext_b\n",
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\ntrusted_ext_a = trusted_ext_b",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_by_extension_effects",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load by-extension equality effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_for_generated_forall_effects() {
+    run_with_large_stack("trust_file_loads_by_for_generated_forall_effects", || {
+        let trust_file_path = std::env::temp_dir().join("litex-trust-file-by-for-effects-test.lit");
+        fs::write(
+            &trust_file_path,
+            r#"
+abstract_prop trusted_for_prop(n)
+
+by for:
+    prove:
+        forall n range(0, 2):
+            $trusted_for_prop(n)
+"#,
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\n$trusted_for_prop(1)",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_by_for_generated_forall_effects",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load by-for generated forall effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_symmetric_prop_registry_effects() {
+    run_with_large_stack(
+        "trust_file_loads_by_symmetric_prop_registry_effects",
+        || {
+            let trust_file_path =
+                std::env::temp_dir().join("litex-trust-file-by-symmetric-prop-effects-test.lit");
+            fs::write(
+                &trust_file_path,
+                r#"
+abstract_prop trusted_sym_prop(x, y)
+
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $trusted_sym_prop(x, y)
+            =>:
+                $trusted_sym_prop(y, x)
+"#,
+            )
+            .unwrap();
+            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+            let trust_file_source_code = format!(
+                r#"
+trust_file "{}"
+have trusted_sym_a set
+have trusted_sym_b set
+proof_debt $trusted_sym_prop(trusted_sym_a, trusted_sym_b)
+$trusted_sym_prop(trusted_sym_b, trusted_sym_a)
+"#,
+                trust_file_path_string
+            );
+            let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+                trust_file_source_code.as_str(),
+                "trust_file_by_symmetric_prop_registry_effects",
+                false,
+            );
+            let _ = fs::remove_file(&trust_file_path);
+
+            assert!(
+                trust_file_succeeded,
+                "trust_file should load by-symmetric-prop registry effects:\n{}",
+                trust_file_output
+            );
+        },
+    );
+}
+
+#[test]
+fn trust_file_restores_affect_only_flag_after_load() {
+    run_with_large_stack("trust_file_restores_affect_only_flag_after_load", || {
+        let trust_file_path = std::env::temp_dir().join("litex-trust-file-flag-restore-test.lit");
+        fs::write(&trust_file_path, "abstract_prop flag_restore_prop(x)\n").unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+        let source_code = format!(
+            "trust_file \"{}\"\n$flag_restore_prop(3)",
+            trust_file_path_string
+        );
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code.as_str(),
+            "trust_file_restores_affect_only_flag_after_load",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            !run_succeeded,
+            "ordinary statement after trust_file should not stay in affect-only mode:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_keeps_duplicate_definition_errors() {
+    run_with_large_stack("trust_file_keeps_duplicate_definition_errors", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-duplicate-definition-test.lit");
+        fs::write(
+            &trust_file_path,
+            "abstract_prop duplicate_trusted_prop(x)\nabstract_prop duplicate_trusted_prop(x)\n",
+        )
+        .unwrap();
+        let source_code = format!("trust_file \"{}\"", trust_file_path.to_string_lossy());
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code.as_str(),
+            "trust_file_keeps_duplicate_definition_errors",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            !run_succeeded,
+            "duplicate definition inside trust_file should still fail:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("already used"));
+    });
+}
+
+#[test]
+fn strict_mode_trust_file_loads_unsafe_interfaces() {
+    run_with_large_stack("strict_mode_trust_file_loads_unsafe_interfaces", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-strict-unsafe-interface-test.lit");
+        fs::write(
+            &trust_file_path,
+            r#"
+abstract_prop strict_trusted_prop(x)
+
+proof_debt forall x R:
+    $strict_trusted_prop(x)
+
+axiom strict_trusted_all:
+    ? forall x R:
+        $strict_trusted_prop(x)
+"#,
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+            run_file_source_code.as_str(),
+            "strict_mode_trust_file_loads_unsafe_interfaces_run_file",
+            true,
+        );
+        assert!(
+            !run_file_succeeded,
+            "strict ordinary run_file should reject proof_debt/axiom content:\n{}",
+            run_file_output
+        );
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\nby thm strict_trusted_all(2)\n$strict_trusted_prop(2)",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "strict_mode_trust_file_loads_unsafe_interfaces_trust_file",
+            true,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "strict trust_file should load unsafe interfaces as trusted environment effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
 fn clear_does_not_preserve_quoted_run_file_environment() {
     let run_file_path = std::env::temp_dir().join("litex-clear-quoted-run-file-test.lit");
     fs::write(
         &run_file_path,
-        "abstract_prop p(x)\nknow forall x R:\n    $p(x)\n",
+        "abstract_prop p(x)\nproof_debt forall x R:\n    $p(x)\n",
     )
     .unwrap();
     let run_file_path_string = run_file_path.to_string_lossy().into_owned();
@@ -7705,6 +8721,20 @@ fn clear_does_not_preserve_quoted_run_file_environment() {
         "quoted run_file content should be cleared:\n{}",
         run_output
     );
+}
+
+fn run_trust_file_regression_source(
+    source_code: &str,
+    file_label: &str,
+    strict_mode: bool,
+) -> (bool, String, Runtime) {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(file_label);
+    runtime.strict_mode = strict_mode;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    (run_succeeded, run_output, runtime)
 }
 
 #[test]

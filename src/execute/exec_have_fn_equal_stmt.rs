@@ -5,37 +5,18 @@ impl Runtime {
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let fn_set_stored = FnSet::from_body(have_fn_equal_stmt.equal_to_anonymous_fn.body.clone())
-            .map_err(|e| {
-                short_exec_error(
-                    have_fn_equal_stmt.clone().into(),
-                    "have_fn_equal_stmt: build fn set for storage failed".to_string(),
-                    Some(e),
-                    vec![],
-                )
-            })?;
-
-        self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt, &fn_set_stored)
-            .map_err(|e| {
-                short_exec_error(
-                    have_fn_equal_stmt.clone().into(),
-                    "have_fn_equal_stmt: verify well-defined failed".to_string(),
-                    Some(e),
-                    vec![],
-                )
-            })?;
-
+        let fn_set_stored =
+            self.exec_have_fn_equal_stmt_verify_well_definedness(have_fn_equal_stmt)?;
+        let inside_results = self.exec_have_fn_equal_stmt_verify_process(have_fn_equal_stmt)?;
         let infer_result =
-            self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, &fn_set_stored)?;
+            self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
 
-        if have_fn_equal_stmt.as_algo {
-            self.exec_have_fn_equal_stmt_as_algo(have_fn_equal_stmt)?;
-        }
-
-        Ok(
-            (NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![]))
-                .into(),
-        )
+        Ok((NonFactualStmtSuccess::new(
+            have_fn_equal_stmt.clone().into(),
+            infer_result,
+            inside_results,
+        ))
+        .into())
     }
 
     fn store_have_fn_equal_stmt_facts(
@@ -105,14 +86,54 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    fn have_fn_equal_stmt_verify_well_defined(
+    pub(crate) fn exec_have_fn_equal_stmt_affect_environment_only(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-        fn_set_stored: &FnSet,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
+        let fn_set_stored = FnSet::from_body(have_fn_equal_stmt.equal_to_anonymous_fn.body.clone())
+            .map_err(|e| {
+                short_exec_error(
+                    have_fn_equal_stmt.clone().into(),
+                    "have_fn_equal_stmt: build fn set for storage failed".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+        let infer_result =
+            self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
+        Ok(
+            NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![])
+                .into(),
+        )
+    }
+
+    fn exec_have_fn_equal_stmt_verify_well_definedness(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+    ) -> Result<FnSet, RuntimeError> {
+        let fn_set_stored = FnSet::from_body(have_fn_equal_stmt.equal_to_anonymous_fn.body.clone())
+            .map_err(|e| {
+                short_exec_error(
+                    have_fn_equal_stmt.clone().into(),
+                    "have_fn_equal_stmt: build fn set for storage failed".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
         self.run_in_local_env(|rt| {
-            rt.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt, fn_set_stored)
+            rt.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt, &fn_set_stored)
         })
+        .map_err(|e| {
+            short_exec_error(
+                have_fn_equal_stmt.clone().into(),
+                "have_fn_equal_stmt: verify well-defined failed".to_string(),
+                Some(e),
+                vec![],
+            )
+        })?;
+
+        Ok(fn_set_stored)
     }
 
     fn have_fn_equal_stmt_verify_well_defined_body(
@@ -145,44 +166,15 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        Ok(())
+    }
 
-        let verify_result = self
-            .run_in_local_env(|rt| {
-                for param_def_with_set in have_fn_equal_stmt
-                    .equal_to_anonymous_fn
-                    .body
-                    .params_def_with_set
-                    .iter()
-                {
-                    rt.define_params_with_set(param_def_with_set)?;
-                }
-                for dom_fact in have_fn_equal_stmt
-                    .equal_to_anonymous_fn
-                    .body
-                    .dom_facts
-                    .iter()
-                {
-                    let _ = rt
-                        .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                            dom_fact.clone(),
-                        )?;
-                }
-                let equal_to_in_ret_set_atomic_fact = InFact::new(
-                    (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
-                    (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
-                    have_fn_equal_stmt.line_file.clone(),
-                )
-                .into();
-                rt.verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
-            })
-            .map_err(|verify_error| {
-                short_exec_error(
-                    have_fn_equal_stmt.clone().into(),
-                    "",
-                    Some(verify_error),
-                    vec![],
-                )
-            })?;
+    fn exec_have_fn_equal_stmt_verify_process(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        let verify_result =
+            self.have_fn_equal_stmt_verify_return_value_in_ret_set(have_fn_equal_stmt)?;
         if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_stmt: {} is not in return set {}",
@@ -196,7 +188,65 @@ impl Runtime {
                 vec![],
             ));
         }
+        Ok(vec![verify_result])
+    }
 
-        Ok(())
+    fn exec_have_fn_equal_stmt_affect_environment(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+        fn_set_stored: &FnSet,
+    ) -> Result<InferResult, RuntimeError> {
+        let infer_result =
+            self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, fn_set_stored)?;
+
+        if have_fn_equal_stmt.as_algo {
+            self.exec_have_fn_equal_stmt_as_algo(have_fn_equal_stmt)?;
+        }
+
+        Ok(infer_result)
+    }
+
+    fn have_fn_equal_stmt_verify_return_value_in_ret_set(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            for param_def_with_set in have_fn_equal_stmt
+                .equal_to_anonymous_fn
+                .body
+                .params_def_with_set
+                .iter()
+            {
+                rt.define_params_with_set(param_def_with_set)?;
+            }
+            for dom_fact in have_fn_equal_stmt
+                .equal_to_anonymous_fn
+                .body
+                .dom_facts
+                .iter()
+            {
+                let _ = rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact.clone(),
+                )?;
+            }
+            let equal_to_in_ret_set_atomic_fact = InFact::new(
+                (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
+                (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
+            rt.verify_atomic_fact(
+                &equal_to_in_ret_set_atomic_fact,
+                &VerifyState::new(0, false),
+            )
+        })
+        .map_err(|verify_error| {
+            short_exec_error(
+                have_fn_equal_stmt.clone().into(),
+                "",
+                Some(verify_error),
+                vec![],
+            )
+        })
     }
 }

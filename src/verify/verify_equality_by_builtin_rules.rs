@@ -58,6 +58,11 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Sqrt(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
+        Obj::GeneralCart(g) => {
+            obj_expr_mentions_bare_id(g.index_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(g.family_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(g.family_fn.as_ref(), id)
+        }
         Obj::Cup(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::Cap(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::Log(l) => {

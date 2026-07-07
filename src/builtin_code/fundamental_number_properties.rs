@@ -1,7 +1,7 @@
 // Integers strictly above 0 are at least 1 (uses Z and order on R).
 
 pub const FUNDAMENTAL_NUMBER_PROPERTIES: &str = r#"
-know:
+proof_debt:
     forall x Z, y Z:
         y < x
         =>:
@@ -48,6 +48,18 @@ know:
         k >= 2 or k != 1
         =>:
             1 % k = 1
+
+# Rationals are dense in the real line.
+# Example: from `a < b`, `by thm has_rational_between(a, b)` gives
+# `exist q Q st {a < q < b}`.
+thm has_rational_between, exists_rat_between, exists_rat_btwn:
+    prove:
+        forall a, b R:
+            a < b
+            =>:
+                exist q Q st {a < q < b}
+    proof_debt:
+        exist q Q st {a < q < b}
 
 # Rational representation by integer numerator and nonzero integer denominator.
 # Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.

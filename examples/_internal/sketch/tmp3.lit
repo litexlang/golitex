@@ -5,7 +5,7 @@ claim:
         2 = 2
     2 = 2
 
-know:
+proof_debt:
     3 = 3
 
 let a R:
@@ -25,5 +25,5 @@ thm tmp_one_eq_one:
 by thm tmp_one_eq_one()
 
 abstract_prop tmp_rel(u, v)
-know exist! m, n R st {$tmp_rel(m, n)}
+proof_debt exist! m, n R st {$tmp_rel(m, n)}
 

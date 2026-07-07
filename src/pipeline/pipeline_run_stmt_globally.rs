@@ -36,14 +36,15 @@ fn run_file(
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.borrow().current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
-    run_file_at_resolved_path(_run_file_stmt.clone().into(), path, _runtime)
+    run_file_at_resolved_path(_run_file_stmt.clone(), path, _runtime)
 }
 
 fn run_file_at_resolved_path(
-    stmt: Stmt,
+    run_file_stmt: RunFileStmt,
     path: String,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
+    let stmt: Stmt = run_file_stmt.clone().into();
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
         RuntimeError::ExecStmtError({
             let lf = stmt.line_file();
@@ -58,11 +59,15 @@ fn run_file_at_resolved_path(
     })?;
 
     let current_source_path = runtime.module_manager.borrow().current_file_path_rc();
+    let old_only_exec_affect_environment = runtime.only_exec_affect_environment;
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
+    runtime.only_exec_affect_environment = old_only_exec_affect_environment
+        || run_file_stmt.mode == RunFileMode::AffectEnvironmentOnly;
 
     let result = run_source_code(content.as_str(), runtime);
 
     runtime.set_current_source_path_rc(current_source_path);
+    runtime.only_exec_affect_environment = old_only_exec_affect_environment;
 
     if let Some(error) = result.1 {
         return Err(error);
@@ -742,7 +747,7 @@ mod tests {
         fs::create_dir_all(&child_dir).expect("create child module dir");
         fs::write(
             nested_dir.join("main.lit"),
-            "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+            "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
         )
         .expect("write nested module");
         fs::write(
@@ -777,7 +782,7 @@ mod tests {
         fs::create_dir_all(&a_dir).expect("create A module dir");
         fs::write(
             b_dir.join("main.lit"),
-            "abstract_prop b_prop(x)\nknow $b_prop(2)",
+            "abstract_prop b_prop(x)\nproof_debt $b_prop(2)",
         )
         .expect("write B module");
         fs::write(
@@ -816,31 +821,30 @@ mod tests {
     }
 
     #[test]
-    fn reimport_cached_module_reactivates_nested_imports_after_clear() {
-        let root = temp_test_dir("reimport-cached-module-reactivates-nested");
+    fn stop_import_inside_imported_module_updates_shared_module_manager() {
+        let root = temp_test_dir("nested-stop-import-shared-manager");
         let nested_dir = root.join("Nested");
         let child_dir = root.join("Child");
         fs::create_dir_all(&nested_dir).expect("create nested module dir");
         fs::create_dir_all(&child_dir).expect("create child module dir");
         fs::write(
             nested_dir.join("main.lit"),
-            "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+            "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
         )
         .expect("write nested module");
         fs::write(
             child_dir.join("main.lit"),
-            "import \"../Nested\" as Nested\nabstract_prop child_prop(x)",
+            "import \"../Nested\" as Nested\nstop import Nested\nabstract_prop child_prop(x)",
         )
         .expect("write child module");
 
         let source_code = format!(
-            "import \"{}\" as Child\nclear\nimport \"{}\" as Child\n$Nested::nested_prop(2)",
-            child_dir.to_string_lossy(),
+            "import \"{}\" as Child\n$Nested::nested_prop(2)",
             child_dir.to_string_lossy()
         );
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "reimport_cached_module_reactivates_nested_imports_after_clear",
+            "stop_import_inside_imported_module_updates_shared_module_manager",
         );
 
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
@@ -852,8 +856,52 @@ mod tests {
         );
 
         assert!(
+            !run_succeeded,
+            "stop import inside Child should stop Nested globally:\n{}",
+            run_output
+        );
+        let module_manager = runtime.module_manager.borrow();
+        assert!(module_manager.imported_modules.contains_key("Child"));
+        assert!(module_manager.imported_modules.contains_key("Nested"));
+        assert!(module_manager.stopped_module.contains("Nested"));
+    }
+
+    #[test]
+    fn clear_keeps_cached_nested_imports_active() {
+        let root = temp_test_dir("clear-keeps-cached-nested-imports-active");
+        let nested_dir = root.join("Nested");
+        let child_dir = root.join("Child");
+        fs::create_dir_all(&nested_dir).expect("create nested module dir");
+        fs::create_dir_all(&child_dir).expect("create child module dir");
+        fs::write(
+            nested_dir.join("main.lit"),
+            "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
+        )
+        .expect("write nested module");
+        fs::write(
+            child_dir.join("main.lit"),
+            "import \"../Nested\" as Nested\nabstract_prop child_prop(x)",
+        )
+        .expect("write child module");
+
+        let source_code = format!(
+            "import \"{}\" as Child\nclear\n$Nested::nested_prop(2)",
+            child_dir.to_string_lossy()
+        );
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("clear_keeps_cached_nested_imports_active");
+
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            false,
+        );
+
+        assert!(
             run_succeeded,
-            "reimporting Child should reactivate its Nested import:\n{}",
+            "clear should leave Child and Nested active:\n{}",
             run_output
         );
         let module_manager = runtime.module_manager.borrow();
@@ -1058,7 +1106,7 @@ mod tests {
             let file_path = write_temp_lit_file(
                 "lit-file-path-registers-module",
                 "chap6_sketch.lit",
-                "abstract_prop loaded_prop(x)\nknow $loaded_prop(2)",
+                "abstract_prop loaded_prop(x)\nproof_debt $loaded_prop(2)",
             );
             let source_code = format!(
                 "import \"{}\" as chap6\n$chap6::loaded_prop(2)",
@@ -1155,7 +1203,7 @@ mod tests {
                 fs::create_dir_all(&module_dir).expect("create temp module dir");
                 fs::write(
                     module_dir.join("Nested.lit"),
-                    "abstract_prop nested_prop(x)\nknow $nested_prop(2)",
+                    "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
                 )
                 .expect("write nested .lit file");
                 fs::write(
@@ -1271,7 +1319,7 @@ prop imported_is_two(x Z):
             "known-atomic",
             r#"
 abstract_prop imported_prop(x)
-know $imported_prop(2)
+proof_debt $imported_prop(2)
 "#,
         );
         let source_code = format!(
@@ -1306,7 +1354,7 @@ know $imported_prop(2)
             module_dir.join("main.lit"),
             r#"
 abstract_prop imported_prop(x)
-know $imported_prop(2)
+proof_debt $imported_prop(2)
 "#,
         )
         .expect("write temp module");
@@ -1375,7 +1423,7 @@ know $imported_prop(2)
             "known-forall",
             r#"
 abstract_prop imported_prop(x)
-know forall x Z:
+proof_debt forall x Z:
     $imported_prop(x)
 "#,
         );
@@ -1413,7 +1461,7 @@ thm imported_thm:
         forall x Z:
             $imported_prop(x)
 
-    know $imported_prop(x)
+    proof_debt $imported_prop(x)
 "#,
         );
         let source_code = format!(
@@ -1443,7 +1491,7 @@ thm imported_thm:
         let path = write_temp_module(
             "local-exist-case",
             r#"
-know:
+proof_debt:
     forall n N:
         exist r N st {r = n}
 
@@ -1501,7 +1549,7 @@ strategy imported_strategy:
             =>:
                 $imported_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y Z:
             y = 2
             =>:
@@ -1546,7 +1594,7 @@ strategy imported_strategy:
             =>:
                 $imported_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y Z:
             y = 2
             =>:
@@ -1598,7 +1646,7 @@ strategy imported_strategy:
             "stop-import-known-atomic",
             r#"
 abstract_prop imported_prop(x)
-know $imported_prop(2)
+proof_debt $imported_prop(2)
 "#,
         );
         let source_code = format!(
@@ -1669,7 +1717,7 @@ prop imported_is_two(x Z):
             "reactivate-stopped-import",
             r#"
 abstract_prop imported_prop(x)
-know $imported_prop(2)
+proof_debt $imported_prop(2)
 "#,
         );
         let source_code = format!(
@@ -1703,12 +1751,12 @@ know $imported_prop(2)
     }
 
     #[test]
-    fn clear_stops_imported_modules_until_reimported() {
+    fn clear_keeps_imported_modules_active() {
         let path = write_temp_module(
-            "clear-stops-import",
+            "clear-keeps-import-active",
             r#"
 abstract_prop imported_prop(x)
-know $imported_prop(2)
+proof_debt $imported_prop(2)
 "#,
         );
         let source_code = format!(
@@ -1717,34 +1765,7 @@ know $imported_prop(2)
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime
-            .new_file_path_new_env_new_name_scope("clear_stops_imported_modules_until_reimported");
-        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-        let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
-            &runtime,
-            &stmt_results,
-            &runtime_error,
-            false,
-        );
-
-        assert!(
-            !run_succeeded,
-            "clear should stop existing imports for verification:\n{}",
-            run_output
-        );
-        assert!(runtime
-            .module_manager
-            .borrow()
-            .stopped_module
-            .contains("Demo"));
-
-        let source_code = format!(
-            "import \"{}\" as Demo\nclear\nimport \"{}\" as Demo\n$Demo::imported_prop(2)",
-            path.to_string_lossy(),
-            path.to_string_lossy()
-        );
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("clear_reimport_reactivates_module");
+        runtime.new_file_path_new_env_new_name_scope("clear_keeps_imported_modules_active");
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) = crate::pipeline::render_run_source_code_output(
             &runtime,
@@ -1755,9 +1776,14 @@ know $imported_prop(2)
 
         assert!(
             run_succeeded,
-            "reimport after clear should reactivate the module:\n{}",
+            "clear should leave existing imports active for verification:\n{}",
             run_output
         );
+        assert!(!runtime
+            .module_manager
+            .borrow()
+            .stopped_module
+            .contains("Demo"));
     }
 
     #[test]
@@ -1772,7 +1798,7 @@ thm imported_thm:
         forall x Z:
             $imported_prop(x)
 
-    know $imported_prop(x)
+    proof_debt $imported_prop(x)
 "#,
         );
         let source_code = format!(
@@ -1811,7 +1837,7 @@ strategy imported_strategy:
             =>:
                 $imported_strategy_prop(x)
 
-    know:
+    proof_debt:
         forall y Z:
             y = 2
             =>:

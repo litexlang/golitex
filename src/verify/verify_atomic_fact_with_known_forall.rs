@@ -659,6 +659,7 @@ impl Runtime {
             }
             Obj::Cup(ref a) => self.match_arg_when_left_is_cup(&a.left, given_arg),
             Obj::Cap(ref a) => self.match_arg_when_left_is_cap(&a.left, given_arg),
+            Obj::GeneralCart(ref left) => self.match_arg_when_left_is_general_cart(left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),
             Obj::FnSet(ref left) => self.match_arg_when_left_is_fn_set_with_params(left, given_arg),
@@ -1513,6 +1514,19 @@ impl Runtime {
         self.match_args_in_fact_in_known_forall_fact_with_given_args(&left_args, &given_args)
     }
 
+    fn match_arg_exist_body_fact_in_known_forall(
+        &mut self,
+        left: &ExistBodyFact,
+        given: &ExistBodyFact,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if !exist_body_facts_have_same_shape(left, given) {
+            return Ok(None);
+        }
+        let left_args = left.get_args_from_fact_ref();
+        let given_args = given.get_args_from_fact_ref();
+        self.match_args_in_fact_in_known_forall_fact_with_given_args(&left_args, &given_args)
+    }
+
     fn match_arg_when_left_is_set_builder(
         &mut self,
         left: &SetBuilder,
@@ -1535,8 +1549,7 @@ impl Runtime {
             return Ok(None);
         }
         for (lf, gf) in left.facts.iter().zip(given.facts.iter()) {
-            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
-            else {
+            let Some(fact_map) = self.match_arg_exist_body_fact_in_known_forall(lf, gf)? else {
                 return Ok(None);
             };
             if !self.merge_arg_match_map_into(&mut merged, fact_map) {
@@ -1553,6 +1566,28 @@ impl Runtime {
             }
         }
         Ok(Some(merged))
+    }
+
+    fn match_arg_when_left_is_general_cart(
+        &mut self,
+        left: &GeneralCart,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::GeneralCart(given) = given_arg else {
+            return Ok(None);
+        };
+        self.match_args_in_fact_in_known_forall_fact_with_given_args(
+            &[
+                left.index_set.as_ref(),
+                left.family_set.as_ref(),
+                left.family_fn.as_ref(),
+            ],
+            &[
+                given.index_set.as_ref(),
+                given.family_set.as_ref(),
+                given.family_fn.as_ref(),
+            ],
+        )
     }
 
     fn match_arg_when_left_is_fn_set_with_params(
@@ -2687,4 +2722,18 @@ fn push_atomic_fact_in_forall_arg_shape_key_if_new(
     if !keys.contains(&key) {
         keys.push(key);
     }
+}
+
+fn exist_body_facts_have_same_shape(left: &ExistBodyFact, right: &ExistBodyFact) -> bool {
+    matches!(
+        (left, right),
+        (ExistBodyFact::AtomicFact(_), ExistBodyFact::AtomicFact(_))
+            | (ExistBodyFact::AndFact(_), ExistBodyFact::AndFact(_))
+            | (ExistBodyFact::ChainFact(_), ExistBodyFact::ChainFact(_))
+            | (ExistBodyFact::OrFact(_), ExistBodyFact::OrFact(_))
+            | (
+                ExistBodyFact::InlineForall(_),
+                ExistBodyFact::InlineForall(_)
+            )
+    )
 }

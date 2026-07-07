@@ -175,7 +175,7 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
     Ok(())
 }
 
-fn check_exist_body_fact_has_no_duplicate_free_parameter(
+pub fn check_exist_body_fact_has_no_duplicate_free_parameter(
     fact: &ExistBodyFact,
     free_param_type: ParamObjType,
     params_already_used: &mut Vec<Vec<String>>,

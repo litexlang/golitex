@@ -197,6 +197,20 @@ fn mark_forall_param_coverage_in_obj(
         Obj::PowerSet(unary) => {
             mark_forall_param_coverage_in_obj(unary.set.as_ref(), coverage_by_forall_param);
         }
+        Obj::GeneralCart(general_cart) => {
+            mark_forall_param_coverage_in_obj(
+                general_cart.index_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                general_cart.family_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                general_cart.family_fn.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
         Obj::ListSet(list_set) => {
             for boxed_obj in list_set.list.iter() {
                 mark_forall_param_coverage_in_obj(boxed_obj.as_ref(), coverage_by_forall_param);
@@ -208,10 +222,7 @@ fn mark_forall_param_coverage_in_obj(
                 coverage_by_forall_param,
             );
             for inner_fact in set_builder.facts.iter() {
-                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
-                    inner_fact,
-                    coverage_by_forall_param,
-                );
+                mark_forall_param_coverage_in_exist_body_fact(inner_fact, coverage_by_forall_param);
             }
         }
         Obj::FnSet(fn_set) => {

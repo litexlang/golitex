@@ -385,6 +385,9 @@ forall a, b R:
     =>:
         a^3 < b^3
         b^5 > a^5
+
+by thm has_rational_between(0, 1)
+exist q Q st {0 < q < 1}
 ```
 
 ```litex
@@ -1138,6 +1141,19 @@ eval sum(0, 0, '(x Z) Z {sum(0, x, '(y Z) Z {x + y})})
 # Point-wise: sum f = sum g + sum h on the same range.
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
 
+# Point-wise order on the same range gives order between finite sums.
+forall f, g fn(x Z) R:
+    forall i Z:
+        1 <= i <= 3
+        =>:
+            f(i) <= g(i)
+    =>:
+        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+
+# Finite-sum triangle inequality.
+forall f fn(x Z) R:
+    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+
 # Merge adjacent index ranges: sum(a..b) + sum((b+1)..c) = sum(a..c), same summand.
 sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
 
@@ -1169,6 +1185,90 @@ forall X power_set(Z):
     $is_finite_set(X)
     =>:
         finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+```
+
+```litex
+thm finite_set_sum_substitution_example:
+    prove:
+        forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
+            forall x X:
+                exist! y Y st {g(y) = x}
+            =>:
+                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+
+thm finite_set_sum_range_bridge_example:
+    prove:
+        forall a fn(i Z) R, m, n Z:
+            m <= n
+            =>:
+                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+
+thm finite_set_sum_disjoint_union_example:
+    prove:
+        forall X, Y finite_set, f fn(z union(X, Y)) R:
+            intersect(X, Y) = {}
+            =>:
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+
+thm finite_set_sum_add_example:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+
+thm finite_set_sum_scalar_mul_example:
+    prove:
+        forall X finite_set, f fn(x X) R, c R:
+            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+
+thm finite_set_sum_monotone_example:
+    prove:
+        forall X finite_set, f, g fn(x X) R:
+            forall x X:
+                f(x) <= g(x)
+            =>:
+                finite_set_sum(X, f) <= finite_set_sum(X, g)
+    finite_set_sum(X, f) <= finite_set_sum(X, g)
+
+thm finite_set_sum_triangle_example:
+    prove:
+        forall X finite_set, f fn(x X) R:
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+
+thm finite_double_sum_over_cartesian_product_example:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+
+thm finite_fubini_example:
+    prove:
+        forall X, Y finite_set, f fn(z cart(X, Y)) R:
+            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+
+# A finite-set sum defined by a bijective enumeration is independent of the enumeration.
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+    forall x X:
+        exist! i closed_range(1, count(X)) st {g(i) = x}
+
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+
+thm finite_set_sum_enumeration_well_defined:
+    prove:
+        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+            count(X) >= 1
+            $is_bijection_from_index_range_to_finite_set(X, g)
+            $is_bijection_from_index_range_to_finite_set(X, h)
+            =>:
+                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 
 # Finite-set product: multiply the function value over each element of a finite set.
 finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4

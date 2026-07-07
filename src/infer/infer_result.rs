@@ -156,7 +156,7 @@ impl InferResult {
     }
 
     pub fn add_unsafe_assumption(&mut self, fact: &Fact) {
-        self.add_store_fact_output(fact, KnowStmt::store_reason(), Vec::new());
+        self.add_store_fact_output(fact, ProofDebtStmt::store_reason(), Vec::new());
     }
 
     pub fn add_let_binding(&mut self, fact: &Fact) {
@@ -309,7 +309,7 @@ impl InferReason {
         match self {
             InferReason::VerifiedStatement => Fact::store_reason().to_string(),
             InferReason::ProvedClaim => ClaimStmt::store_reason().to_string(),
-            InferReason::UnsafeAssumption => KnowStmt::store_reason().to_string(),
+            InferReason::UnsafeAssumption => ProofDebtStmt::store_reason().to_string(),
             InferReason::LetBinding => DefLetStmt::store_reason().to_string(),
             InferReason::InferredFact => "inferred fact".to_string(),
             InferReason::StoredFact => "stored fact".to_string(),

@@ -19,7 +19,7 @@ pub enum Stmt {
 
 #[derive(Clone)]
 pub enum UnsafeStmt {
-    KnowStmt(KnowStmt),
+    ProofDebtStmt(ProofDebtStmt),
     DefLetStmt(DefLetStmt),
 }
 

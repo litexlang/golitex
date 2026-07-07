@@ -271,12 +271,12 @@ $is_one_tmp(1)
 
 # An unsafe known atomic fact, then the same predicate cited as a known fact.
 abstract_prop known_p_tmp(t)
-know $known_p_tmp(1)
+proof_debt $known_p_tmp(1)
 $known_p_tmp(1)
 
 # An unsafe known forall fact, then an atomic predicate proved by instantiation.
 abstract_prop forall_p_tmp(t)
-know:
+proof_debt:
     forall t R:
         t = 1
         =>:
@@ -319,7 +319,7 @@ by symmetric_prop:
     v = u
 have A_tmp set
 have B_tmp set
-know $sym_p_tmp(A_tmp, B_tmp)
+proof_debt $sym_p_tmp(A_tmp, B_tmp)
 $sym_p_tmp(B_tmp, A_tmp)
 
 # A reflexive abstract predicate registration proves a fresh atomic predicate
@@ -330,13 +330,13 @@ by reflexive_prop:
     prove:
         forall u set:
             $refl_p_tmp(u, u)
-    know $refl_p_tmp(u, u)
+    proof_debt $refl_p_tmp(u, u)
 have C_tmp set
 $refl_p_tmp(C_tmp, C_tmp)
 
 # An existential fact can introduce a witness and its prop fact.
 abstract_prop exists_p_tmp(t)
-know exist m R st {$exists_p_tmp(m)}
+proof_debt exist m R st {$exists_p_tmp(m)}
 have by exist m R st {$exists_p_tmp(m)}: witness_tmp
 $exists_p_tmp(witness_tmp)
 
@@ -550,11 +550,11 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 22,
-  "statement": "know $known_p_tmp(1)",
+  "statement": "proof_debt $known_p_tmp(1)",
   "store_facts": [
     {
       "fact": "$known_p_tmp(1)",
-      "reason": "warning: unproved know assumption"
+      "reason": "warning: unproved proof_debt assumption"
     }
   ]
 }
@@ -590,11 +590,11 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 27,
-  "statement": "know forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
+  "statement": "proof_debt forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
   "store_facts": [
     {
       "fact": "forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
-      "reason": "warning: unproved know assumption"
+      "reason": "warning: unproved proof_debt assumption"
     }
   ]
 }
@@ -766,11 +766,11 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 70,
-  "statement": "know $sym_p_tmp(A_tmp, B_tmp)",
+  "statement": "proof_debt $sym_p_tmp(A_tmp, B_tmp)",
   "store_facts": [
     {
       "fact": "$sym_p_tmp(A_tmp, B_tmp)",
-      "reason": "warning: unproved know assumption",
+      "reason": "warning: unproved proof_debt assumption",
       "inferred_facts": [
         "$is_set(A_tmp)",
         "$is_set(B_tmp)",
@@ -816,7 +816,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "proof by reflexivity",
   "line": 77,
-  "statement": "by reflexive_prop:\n    prove:\n        forall u set:\n            $refl_p_tmp(~1u, ~1u)\n    know $refl_p_tmp(~1u, ~1u)"
+  "statement": "by reflexive_prop:\n    prove:\n        forall u set:\n            $refl_p_tmp(~1u, ~1u)\n    proof_debt $refl_p_tmp(~1u, ~1u)"
 }
 
 {
@@ -860,11 +860,11 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 87,
-  "statement": "know exist m R st {$exists_p_tmp(~3m)}",
+  "statement": "proof_debt exist m R st {$exists_p_tmp(~3m)}",
   "store_facts": [
     {
       "fact": "exist m R st {$exists_p_tmp(~3m)}",
-      "reason": "warning: unproved know assumption"
+      "reason": "warning: unproved proof_debt assumption"
     }
   ]
 }

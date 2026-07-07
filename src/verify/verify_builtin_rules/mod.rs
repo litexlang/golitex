@@ -15,5 +15,6 @@ mod order_normalize;
 mod set_relation_duality;
 mod type_predicates_builtin;
 
+pub(crate) use in_fact_builtin::{general_cart_member_fn_set, general_cart_member_pointwise_fact};
 pub(crate) use number_compare::normalized_decimal_string_is_even_integer;
 pub use number_compare::{compare_normalized_number_str_to_zero, NumberCompareResult};

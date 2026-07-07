@@ -137,6 +137,20 @@ impl Runtime {
         .into())
     }
 
+    pub(crate) fn exec_by_enumerate_finite_set_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByEnumerateFiniteSetStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let corresponding_forall_fact = stmt
+            .to_corresponding_forall_fact()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            corresponding_forall_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn infer_result_with_generated_forall_and_store_infer(
         generated_forall_fact: &Fact,
         infer_after_store: InferResult,

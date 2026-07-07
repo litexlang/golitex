@@ -13,6 +13,12 @@ pub use crate::common::name_types::{
     TemplateName, ThmName,
 };
 pub use crate::common::output_language::OutputLanguage;
+pub use crate::dependency_graph::{
+    dependency_graph_dot_for_results, dependency_graph_json_for_results,
+    run_dependency_graph_dot_for_code, run_dependency_graph_dot_for_file,
+    run_dependency_graph_dot_for_repo, run_dependency_graph_json_for_code,
+    run_dependency_graph_json_for_file, run_dependency_graph_json_for_repo,
+};
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
@@ -36,6 +42,7 @@ pub use crate::error::UnknownRuntimeError;
 pub use crate::error::VerifyRuntimeError;
 pub use crate::error::WellDefinedRuntimeError;
 pub use crate::fact::check_anonymous_fn_has_no_duplicate_fn_set_free_parameter;
+pub use crate::fact::check_exist_body_fact_has_no_duplicate_free_parameter;
 pub use crate::fact::check_exist_fact_has_no_duplicate_exist_free_parameter;
 pub use crate::fact::check_fn_set_has_no_duplicate_fn_set_free_parameter;
 pub use crate::fact::check_forall_fact_has_no_duplicate_forall_free_parameter;
@@ -121,6 +128,7 @@ pub use crate::obj::FnSetBody;
 pub use crate::obj::FnSetFreeParamObj;
 pub use crate::obj::FnSetSpace;
 pub use crate::obj::ForallFreeParamObj;
+pub use crate::obj::GeneralCart;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
 pub use crate::obj::InstantiatedTemplateObj;
@@ -292,7 +300,6 @@ pub use crate::stmt::definition_stmt::HaveSeqStmt;
 pub use crate::stmt::definition_stmt::HaveTupleStmt;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::eval_stmt::EvalStmt;
-pub use crate::stmt::know_stmt::KnowStmt;
 pub use crate::stmt::parameter_def::FiniteSet;
 pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamDefWithSet;
@@ -301,12 +308,14 @@ pub use crate::stmt::parameter_def::ParamGroupWithParamType;
 pub use crate::stmt::parameter_def::ParamGroupWithSet;
 pub use crate::stmt::parameter_def::ParamType;
 pub use crate::stmt::parameter_def::Set;
+pub use crate::stmt::proof_debt_stmt::ProofDebtStmt;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
+pub use crate::stmt::tooling_stmt::RunFileMode;
 pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::tooling_stmt::StopImportStmt;
 pub use crate::stmt::try_stmt::TryStmt;
@@ -325,6 +334,7 @@ pub use crate::stmt::DefObjStmt;
 pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::ProofBlockStmt;
@@ -333,6 +343,8 @@ pub use crate::stmt::StopStrategyStmt;
 pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::UseStrategyStmt;
 pub use crate::stmt::WitnessStmt;
+pub(crate) use crate::verify::general_cart_member_fn_set;
+pub(crate) use crate::verify::general_cart_member_pointwise_fact;
 pub use crate::verify::VerifyState;
 
 pub use crate::cli::run_cli;
@@ -372,6 +384,7 @@ pub use crate::common::keywords::AND;
 pub use crate::common::keywords::ANONYMOUS_FN_PREFIX;
 pub use crate::common::keywords::ANTISYMMETRIC_PROP;
 pub use crate::common::keywords::AS;
+pub use crate::common::keywords::AXIOM;
 pub use crate::common::keywords::AXIOM_OF_CHOICE;
 pub use crate::common::keywords::BIJECTIVE;
 pub use crate::common::keywords::BY;
@@ -417,6 +430,7 @@ pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FORALL_BANG;
 pub use crate::common::keywords::FROM;
+pub use crate::common::keywords::GENERAL_CART;
 pub use crate::common::keywords::GREATER;
 pub use crate::common::keywords::GREATER_EQUAL;
 pub use crate::common::keywords::HAVE;
@@ -434,7 +448,6 @@ pub use crate::common::keywords::IS_FINITE_SET;
 pub use crate::common::keywords::IS_NONEMPTY_SET;
 pub use crate::common::keywords::IS_SET;
 pub use crate::common::keywords::IS_TUPLE;
-pub use crate::common::keywords::KNOW;
 pub use crate::common::keywords::LEFT_BRACE;
 pub use crate::common::keywords::LEFT_BRACKET;
 pub use crate::common::keywords::LEFT_CURLY_BRACE;
@@ -467,6 +480,7 @@ pub use crate::common::keywords::POWER_SET;
 pub use crate::common::keywords::PREIMAGE;
 pub use crate::common::keywords::PRODUCT;
 pub use crate::common::keywords::PROJ;
+pub use crate::common::keywords::PROOF_DEBT;
 pub use crate::common::keywords::PROP;
 pub use crate::common::keywords::PROVE;
 pub use crate::common::keywords::Q;
@@ -512,6 +526,7 @@ pub use crate::common::keywords::TEMPLATE;
 pub use crate::common::keywords::TEMPLATE_INSTANCE_PREFIX;
 pub use crate::common::keywords::THM;
 pub use crate::common::keywords::TRANSITIVE_PROP;
+pub use crate::common::keywords::TRUST_FILE;
 pub use crate::common::keywords::TRY;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;

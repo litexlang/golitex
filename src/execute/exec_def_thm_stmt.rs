@@ -2,7 +2,26 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
-        let thm_names = stmt.names.join(", ");
+        self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
+        let body_exec_result = self.exec_def_thm_stmt_verify_process(stmt)?;
+        let infer_result_after_store = self.exec_def_thm_stmt_affect_environment(stmt)?;
+
+        Ok(body_exec_result.with_infers(infer_result_after_store))
+    }
+
+    fn exec_def_thm_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &DefThmStmt,
+    ) -> Result<(), RuntimeError> {
+        if stmt.is_axiom() && self.strict_mode {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                DefThmStmt::strict_mode_rejection_message(),
+                None,
+                vec![],
+            ));
+        }
+
         let keyword = stmt.keyword();
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
@@ -15,9 +34,22 @@ impl Runtime {
                 Some(e),
                 vec![],
             )
-        })?;
+        })
+    }
 
-        let body_exec_result: StmtResult = self.run_in_local_env(|rt| {
+    fn exec_def_thm_stmt_verify_process(
+        &mut self,
+        stmt: &DefThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        if stmt.is_axiom() {
+            return Ok(
+                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]).into(),
+            );
+        }
+
+        let thm_names = stmt.names.join(", ");
+        let keyword = stmt.keyword();
+        self.run_in_local_env(|rt| {
             rt.define_params_with_type(
                 &stmt.forall_fact.params_def_with_type,
                 false,
@@ -93,17 +125,34 @@ impl Runtime {
                 NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
                     .into(),
             )
-        })?;
+        })
+    }
 
+    pub(crate) fn exec_def_thm_stmt_affect_environment(
+        &mut self,
+        stmt: &DefThmStmt,
+    ) -> Result<InferResult, RuntimeError> {
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        let infer_result_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+        if self.only_exec_affect_environment {
+            return self.store_trusted_fact_and_infer_with_reason(
                 Fact::ForallFact(stmt.forall_fact.clone()),
-                InferReason::Other(DefThmStmt::store_reason().to_string()),
-            )?;
+                InferReason::Other(stmt.store_reason().to_string()),
+            );
+        }
 
-        Ok(body_exec_result.with_infers(infer_result_after_store))
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            Fact::ForallFact(stmt.forall_fact.clone()),
+            InferReason::Other(stmt.store_reason().to_string()),
+        )
+    }
+
+    pub(crate) fn exec_def_thm_stmt_affect_environment_only(
+        &mut self,
+        stmt: &DefThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_def_thm_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

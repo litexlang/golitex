@@ -281,7 +281,7 @@ fn run_the_mechanics_markdown_file_snippets(
         if snippet_index == 0 {
             runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
         } else {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
         }
 

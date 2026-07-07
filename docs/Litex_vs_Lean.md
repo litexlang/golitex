@@ -633,6 +633,24 @@ its domain, or writing `1 / 0`.
 
 In Lean, the user often chooses the step explicitly: rewrite with this hypothesis, simplify this definition, apply this theorem, run this tactic. This gives very fine control and scales to deep formal developments. Litex chooses a different default for ordinary mathematics: many routine proof paths are tried by the checker.
 
+### Less IDE-Centered Proof Writing
+
+Lean's editor support is one of its strengths. In ordinary Lean development,
+the IDE is often part of the proof process: a tactic changes the current goal
+into new goals, the user reads the updated hypotheses and targets, and the next
+command is chosen in response to that state. This is powerful, but it makes much
+of the workflow goal-state driven. The proof script is often written by
+interactively steering a changing proof state until no goals remain.
+
+Litex is designed to be less dependent on that style of interaction. A Litex
+proof usually reads as a sequence of mathematical facts, witnesses, cases,
+equalities, and contradictions in roughly the order a person would write the
+argument. The user is not primarily satisfying a succession of changing goals
+reported by an IDE; the user is writing the intended derivation, and the checker
+accepts each line when it follows from the current context. IDE support and good
+diagnostics still matter, but the core workflow should remain usable from a
+plain file and a command-line verifier.
+
 ## Speed Is A Design Signal, Not Just An Optimization
 
 Lean's generality is a real strength. It supports proof terms, elaboration,

@@ -3,6 +3,7 @@ pub mod cli;
 pub mod common;
 #[cfg(test)]
 pub mod debug_test;
+pub mod dependency_graph;
 pub mod environment;
 pub mod error;
 pub mod execute;

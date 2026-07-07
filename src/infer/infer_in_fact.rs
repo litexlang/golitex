@@ -276,8 +276,8 @@ impl Runtime {
         )?;
 
         for fact_in_set_builder in set_builder.facts.iter() {
-            let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
-                .inst_or_and_chain_atomic_fact(
+            let instantiated_fact_in_set_builder = self
+                .inst_exist_body_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,
@@ -295,11 +295,36 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
-            let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
-            let fact_to_store = instantiated_fact_as_fact;
+            let fact_to_store = instantiated_fact_in_set_builder.to_fact();
 
             infer_result.new_fact(&fact_to_store);
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
+        }
+
+        Ok(infer_result)
+    }
+
+    pub fn infer_membership_in_general_cart_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+        general_cart: &GeneralCart,
+    ) -> Result<InferResult, RuntimeError> {
+        let fn_set_fact: Fact = InFact::new(
+            in_fact.element.clone(),
+            general_cart_member_fn_set(general_cart)?,
+            in_fact.line_file.clone(),
+        )
+        .into();
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&fn_set_fact);
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fn_set_fact)?;
+
+        if let Some(pointwise_fact) =
+            general_cart_member_pointwise_fact(general_cart, &in_fact.element, &in_fact.line_file)?
+        {
+            infer_result.new_fact(&pointwise_fact);
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(pointwise_fact)?;
         }
 
         Ok(infer_result)
@@ -359,6 +384,13 @@ impl Runtime {
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
             Obj::SetBuilder(set_builder) => {
                 self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
+            }
+            // General Cartesian product: membership gives the choice function type and the
+            // pointwise factor-membership forall.
+            // Example: `c $in general_cart(I, s, g)` infers
+            // `c $in fn(t I)cup(s)` and `forall t I: c(t) $in g(t)`.
+            Obj::GeneralCart(general_cart) => {
+                self.infer_membership_in_general_cart_from_in_fact(in_fact, general_cart)
             }
             // Power set membership: `A $in power_set(B)` means `A $subset B`.
             // Example: from `A $in power_set(Z)`, infer `A $subset Z`.

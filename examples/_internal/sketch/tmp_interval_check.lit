@@ -5,7 +5,7 @@ sketch:
 
 sketch:
     have x R
-    know:
+    proof_debt:
         2 < x
         x < 12
     x $in oc(2, 12)
@@ -13,13 +13,13 @@ sketch:
 
 sketch:
     have y R
-    know:
+    proof_debt:
         y < 3
     y $in info(3)
 
 sketch:
     have z R
-    know:
+    proof_debt:
         z > 3
     z $in oinf(3)
 
