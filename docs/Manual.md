@@ -14,81 +14,120 @@ _- Jeff Hinton_
 
 > **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion.
 
-> **Boundary notice:** Litex is not a replacement for Lean, Coq, or Isabelle.
-> It explores a narrower interface hypothesis: users write mathematical facts,
-> and the checker grows an explainable verified context. This lowers the user's
-> proof-writing burden by putting more routine mathematical background in the
-> checker, so the trusted base is larger than a small proof kernel. `proof_debt` is
-> explicit assumption injection: it stores assumptions or proof debt, not facts
-> proved by Litex. Builtin/infer rules are also part of the trusted
-> mathematical background. For a compact discussion of trust boundaries,
-> comparison with Lean, and project positioning, read
-> [FAQ](https://litexlang.com/doc/FAQ).
+This manual explains how Litex reads and checks mathematical proof scripts. The
+central idea is: **users write facts; Litex grows a verified context**.
 
-This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
+Start with an ordinary mathematical sentence:
 
-A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
+> For every real number `x`, if `x = 2`, then `x + 1 = 3` and `x^2 = 4`.
 
-Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. When a person reads a mathematical fact, they often recognize the pattern and remember which already-proved fact should apply; Litex is built around the same kind of shape-directed matching. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
+In Litex, the same idea can be written as checked proof code:
 
-Named facts still matter, but there are two citation surfaces to learn first:
-automatic context and explicit theorem calls. A `claim` proves a fact and
-exports only that final fact into the current context; when the final fact is a
-`forall`, Litex can try to use it later by automatic matching. A `thm` gives an
-important `forall` fact a name, stores that proved `forall` for ordinary
-matching, and also lets the user cite it explicitly with `by thm
-name(args...)`. In short: use `claim` by default for local stored facts, and
-use `thm` when the fact should also have a stable theorem name.
-
-This is the sense behind the slogan **Litex: The Formal Language Where Code Verifies Itself**. The code does not prove arbitrary goals by magic; it exposes mathematical facts in shapes the checker can match against builtin rules, known facts, known `forall` facts, and the growing verified context.
-
-Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
-
-This also supports a textbook style of development. A Litex file can read like
-a small course: introduce the objects, define the vocabulary, prove local
-lemmas, and then use those lemmas in later theorems. The intended workflow is
-not to replace the chapter's main proof by a search through a large imported
-library. Imports are useful background, but the proof script should usually
-show the derivation the reader is meant to learn.
-
-This is an intentional convenience trade-off. The trusted base is larger because
-the checker directly understands many relation-level interactions between
-ordinary mathematical objects. The design goal is not kernel minimality at this
-stage; it is a short, explainable feedback loop where the user can write the
-next mathematical fact and see whether it follows from the current context.
-
-This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a checked and explainable trace relative to the trusted background. For example, using a known value can be written as direct algebraic steps:
-
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
+```litex
+forall x R:
     x = 2
     =>:
         x + 1 = 3
-        x^2 = 4</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
-example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
-  have h_add : x + 1 = 3 := by
-    rw [h]
-    norm_num
-  have h_square : x ^ 2 = 4 := by
-    rw [h]
-    norm_num
-  exact ⟨h_add, h_square⟩</code></pre>
-    </td>
-  </tr>
-</table>
+        x^2 = 4
+```
 
-Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs. The deeper design goal is to make formal proof feel like context growth: write facts in mathematical order, let the checker explain how each accepted fact follows, and reuse the verified context as the argument develops.
+The English sentence helps a human understand the idea. The Litex code is what
+the verifier checks. Litex introduces an arbitrary real number `x`, assumes
+`x = 2` in the local context, then checks the two conclusions using equality
+substitution and arithmetic.
 
-> Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. For the dedicated comparison, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
+Keep these four layers separate while reading:
+
+| Layer | What it is | How to read it |
+|-------|------------|----------------|
+| Natural-language math | A human explanation, textbook sentence, or AI-generated solution idea. | Useful for understanding, but not itself checked by Litex. |
+| Litex code | A formal script made of objects, facts, and statements. | This is the input the verifier actually checks. |
+| Verifier output | The result and explanation for each checked statement. | Read `true`, `unknown`, and `error` as feedback about the formal script. |
+| AI assistance | Optional help for drafting, translating, or repairing Litex code. | AI suggestions are untrusted until the Litex verifier checks the resulting code. |
+
+A Litex file is read from top to bottom. Each accepted line may introduce a
+name, define vocabulary, prove a fact, open a local proof block, or store
+information that later lines can use. That growing store of accepted
+information is the **verified context**.
+
+For example:
+
+```litex
+have x R = 2
+x + 1 = 3
+```
+
+The first line introduces a real object `x` and records that its value is `2`.
+The second line is not a command to rewrite something manually. It is the next
+mathematical fact the user wants. Litex checks that it follows from the current
+context, closes the arithmetic, and then stores the new fact too.
+
+This is the sense behind the slogan **Litex: The Formal Language Where Code
+Verifies Itself**. It does not mean that Litex proves arbitrary goals by magic.
+It means the user writes mathematical facts in formal code, and the checker
+tries to justify those facts from builtin rules, known facts, known `forall`
+facts, definitions, theorem calls, and the growing context.
+
+### Why Objects, Facts, And Statements Matter
+
+The long object and statement lists in this manual are not arbitrary syntax
+inventory. They are the finite menu of forms Litex uses to turn ordinary
+mathematics into checkable code. Once you can classify a piece of Litex code as
+an object, a fact, or a statement, most of the language becomes much easier to
+read.
+
+- **Objects** are the mathematical things and expressions a proof talks about:
+  `x`, `2`, `R`, `{1, 2}`, `x + 1`, `(a, b)`, or `fn(t R) R`.
+- **Facts** are judgments about objects: `x = 2`, `x $in R`, `0 <= x`,
+  `$is_set(A)`, or a user-defined predicate such as `$prime(n)`.
+- **Statements** are the actions in a Litex file: introduce an object with
+  `have`, define a predicate with `prop`, assert a bare fact, prove a local
+  `claim`, name a reusable theorem with `thm`, give a `witness`, or split a
+  proof with `by cases`.
+
+An expression such as `x + 1` is only an object. It becomes a fact only when a
+relation or predicate makes a claim about it, such as `x + 1 = 3`.
+
+Some Litex code is checked even before truth is considered. A line involving
+`1 / x`, `sqrt(x)`, `f(a)`, or `&Point{p}.x` may fail because the object itself
+is not yet well-defined in the current context. The verifier first needs domain
+facts such as `x != 0`, `0 <= x`, or `a` being in the domain of `f`.
+
+### How AI Fits In
+
+AI can be useful for producing a natural-language proof idea, proposing a Litex
+translation, or suggesting the next smaller step after a verifier failure. But
+AI is not the proof checker. A Litex result should be trusted only relative to
+the formal code that was run, the verifier output, and the trusted background
+that the run used.
+
+This distinction is especially important when translating textbook or dataset
+problems. A good workflow is:
+
+1. Understand the mathematical idea in natural language.
+2. Translate that idea into Litex objects, facts, and statements.
+3. Run Litex and read the exact output.
+4. If the result is `unknown`, add a smaller mathematical step.
+5. If the result is `error`, fix syntax or well-definedness first.
+6. If the proof uses `proof_debt`, treat that line as an explicit assumption,
+   not as a proved fact.
+
+### Trust Boundary
+
+Litex is not a replacement for Lean, Coq, or Isabelle. It explores a narrower
+interface hypothesis: many ordinary mathematical arguments may be cheaper to
+check if users write facts directly and the checker grows an explainable
+verified context.
+
+This convenience has a real trust cost. Litex has a larger trusted
+mathematical background than a small proof kernel: builtin objects, builtin
+facts, verifier rules, inference rules, imported standard-library facts, and
+any explicit `proof_debt` assumptions all matter. `proof_debt` is assumption
+injection. It stores a fact for later use, but it does not prove that fact.
+
+For a compact discussion of trust boundaries, comparison with Lean, and project
+positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
+[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
@@ -134,43 +173,51 @@ This style matches the verifier feedback loop better than a large algebraic jump
 
 ### Mental model
 
-When learning Litex, it is enough to keep the following mental model in mind. Try to connect each Litex idea with its everyday mathematical counterpart: the objects you write, the facts you claim, the statements that organize the proof, and the checker steps that justify and store those facts.
+When learning Litex, keep this small model in mind:
 
-- **Objects** are the mathematical things a proof talks about: numbers, sets, tuples, functions, products, sequences, matrices, and names introduced earlier.
-- **Facts** are judgments about objects: `x = 2`, `x $in N`, `0 <= x`, `$is_set(A)`, or a user-defined predicate such as `$prime(n)`.
-- **Statements** are the user-facing forms that introduce objects, define concepts, organize local proofs, and assert facts.
-- **Well-definedness** is the gate before proof: every object inside a fact must make mathematical sense in the current context.
-- **Verification** proves the current goal from the context, definitions, evaluation, normalization, and builtin verification rules.
-- **Execution** is what a statement does to the current context. A statement may define a name, open a proof block, verify a fact, store accepted facts, or run inference. Inference is one part of execution for factual statements: after a fact is accepted, Litex may add standard consequences or side information to the context.
+1. A **statement** is executed in the current context.
+2. If the statement contains a **fact**, every **object** inside that fact must
+   be well-defined first.
+3. Litex then tries to verify the fact from builtin rules, known facts, known
+   `forall` facts, definitions, theorem calls, and local assumptions.
+4. If the statement succeeds, it may add names, definitions, proved facts,
+   theorem interfaces, or inferred consequences to the context.
 
-Litex keeps the object and statement menus finite on purpose. Some forms are
-there because the checker needs them as basic logical, computational, or
-mathematical background. Others are there because they correspond to familiar
-mathematical notation, often close to a LaTeX feature, and make proof scripts
-feel like the paper mathematics users already know. For the design rationale,
-see the
+Litex keeps the object and statement menus finite on purpose. Some forms exist
+because the checker needs them as basic logical, computational, or mathematical
+background. Others exist because they correspond to familiar mathematical
+notation, often close to a LaTeX feature, and make proof scripts feel like the
+paper mathematics users already know. For the design rationale, see the
 [FAQ question on Litex's object and statement menu](https://litexlang.com/doc/FAQ#why-does-litex-have-this-particular-menu-of-objects-and-statements).
 
-The key distinction is that an expression such as `x + 1` is only an object. It becomes a fact only when a relation or predicate makes a claim about it, such as `x + 1 = 3`.
-
-Another key distinction is that some Litex code is proving that an object is allowed to exist in the current mathematical context. A line involving `1 / x`, `sqrt(x)`, `f(a)`, or `&Point{p}.x` may fail before any theorem is considered, because the checker first needs the domain fact that makes the object well-defined.
-
-Many uncommon forms can be skipped at first. Read them when a proof needs them; the common core above is enough for most early examples.
+Many uncommon forms can be skipped at first. Read them when a proof needs them;
+the common core above is enough for most early examples.
 
 ---
 
 ### Guidance For Reading This Manual
 
-This manual is both a tutorial and a reference. You do not need to read every section with the same attention on the first pass.
+This manual is both a tutorial and a reference. New readers should not try to
+memorize every object, statement, builtin rule, or inference rule on the first
+pass. The first goal is to understand the core loop: write a fact, make sure
+its objects are well-defined, let Litex check it, then reuse accepted facts.
 
 **Read first**
 
-1. [Objects](https://litexlang.com/doc/Manual#objects): the mathematical terms and data-like structures Litex can talk about.
-2. [Well-Defined Objects](https://litexlang.com/doc/Manual#well-defined-objects): the domain obligations that must be proved before an object can appear in a checked fact.
-3. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
-4. [Statements](https://litexlang.com/doc/Manual#statements): the common statement forms used to introduce definitions, context, and proof blocks.
-5. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end loop from writing a fact to storing checked information.
-6. [Architecture](https://litexlang.com/doc/Architecture): the implementation pipeline from source text to parsing, execution, verification, inference, and output.
+1. [Objects](https://litexlang.com/doc/Manual#objects): skim the object menu so
+   you know what mathematical expressions Litex can talk about.
+2. [Well-Defined Objects](https://litexlang.com/doc/Manual#well-defined-objects):
+   read the opening explanation and return to the table when a domain issue
+   appears.
+3. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements):
+   learn atomic facts, chains, conjunctions, disjunctions, `exist`, and
+   `forall`.
+4. [Statements](https://litexlang.com/doc/Manual#statements): focus first on
+   bare facts, `have`, `prop`, `claim`, `thm`, `witness`, `by cases`, and
+   `by contra`.
+5. [Proof Process](https://litexlang.com/doc/Manual#proof-process): read how a
+   fact moves from text to well-definedness, verification, storage, and
+   inference.
 
 **Read early**
 
@@ -180,9 +227,9 @@ This manual is both a tutorial and a reference. You do not need to read every se
 **Use as reference**
 
 1. [Syntax Reference](https://litexlang.com/doc/Manual#syntax-reference) gives a compact map of statement, fact, and object forms.
-2. The long builtin-rule catalogue is for lookup. You do not need to memorize every rule.
-3. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted. Read the overview early, and use the detailed rule list when you want to understand why later facts became available.
-4. Less common object and statement forms, such as advanced set operations, families, induction, finite enumeration, and preview features, can wait until your proof needs them.
+2. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted.
+3. [Architecture](https://litexlang.com/doc/Architecture) explains the implementation pipeline from source text to parsing, execution, verification, inference, and output.
+4. The long builtin-rule catalogue and less common forms such as advanced set operations, templates, induction, finite enumeration, and preview features can wait until a proof needs them.
 
 ---
 

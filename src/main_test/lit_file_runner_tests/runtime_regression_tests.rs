@@ -5181,6 +5181,100 @@ fn runner_accepts_let_as_normal_execution() {
 }
 
 #[test]
+fn dependency_graph_tracks_fact_citation() {
+    run_with_large_stack("dependency_graph_tracks_fact_citation", || {
+        let (ok, output) =
+            run_dependency_graph_json_for_code("1 = 1\n1 = 1", "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph run failed:\n{}", output);
+        assert!(output.contains("\"kind\": \"verifies\""));
+        assert!(output.contains("\"from\": \"fact:1\""));
+        assert!(output.contains("\"to\": \"fact:2\""));
+    });
+}
+
+#[test]
+fn dependency_graph_tracks_prop_definition_dependencies() {
+    run_with_large_stack(
+        "dependency_graph_tracks_prop_definition_dependencies",
+        || {
+            let source_code = r#"
+prop is_even(x Z):
+    exist k Z st {x = 2 * k}
+
+prop is_multiple_of_four(x Z):
+    exist k Z st {x = 4 * k}
+    $is_even(x)
+"#;
+            let (ok, output) =
+                run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+
+            assert!(ok, "dependency graph prop run failed:\n{}", output);
+            assert!(output.contains("\"kind\": \"uses_definition\""));
+            assert!(output.contains("prop is_even(x Z)"));
+            assert!(output.contains("prop is_multiple_of_four(x Z)"));
+            assert!(
+                !output.contains("~2x"),
+                "dependency graph output should hide internal free-param tags:\n{}",
+                output
+            );
+        },
+    );
+}
+
+#[test]
+fn dependency_graph_dot_outputs_graphviz_edges() {
+    run_with_large_stack("dependency_graph_dot_outputs_graphviz_edges", || {
+        let (ok, output) =
+            run_dependency_graph_dot_for_code("1 + 1 = 2", "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph dot run failed:\n{}", output);
+        assert!(output.contains("digraph litex_dependency_graph"));
+        assert!(output.contains("\"builtin_rule:1\" -> \"fact:1\""));
+        assert!(output.contains("verifies"));
+    });
+}
+
+#[test]
+fn dependency_graph_tracks_by_thm_dependency() {
+    run_with_large_stack("dependency_graph_tracks_by_thm_dependency", || {
+        let source_code = r#"
+thm one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
+
+by thm one_eq_one()
+"#;
+        let (ok, output) =
+            run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+
+        assert!(ok, "dependency graph by-thm run failed:\n{}", output);
+        assert!(output.contains("\"kind\": \"theorem\""));
+        assert!(output.contains("\"kind\": \"uses_theorem\""));
+        assert!(output.contains("\"detail\": \"theorem instantiation\""));
+    });
+}
+
+#[test]
+fn dependency_graph_reports_successful_prefix_on_error() {
+    run_with_large_stack(
+        "dependency_graph_reports_successful_prefix_on_error",
+        || {
+            let (ok, output) =
+                run_dependency_graph_json_for_code("1 = 1\n1 = 0", "-depgraph-test", true, false);
+
+            assert!(!ok, "dependency graph error run should fail:\n{}", output);
+            assert!(output.contains("\"result\": \"error\""));
+            assert!(output.contains("\"kind\": \"error\""));
+            assert!(output.contains("\"text\": \"1 = 1\""));
+            assert!(output.contains("\"error_type\": \"VerifyError\""));
+        },
+    );
+}
+
+#[test]
 fn zh_output_localizes_unproved_proof_debt_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\nproof_debt exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::new_with_builtin_code();
