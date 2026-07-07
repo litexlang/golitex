@@ -138,9 +138,9 @@ impl From<ClaimStmt> for Stmt {
     }
 }
 
-impl From<KnowStmt> for Stmt {
-    fn from(v: KnowStmt) -> Self {
-        UnsafeStmt::KnowStmt(v).into()
+impl From<ProofDebtStmt> for Stmt {
+    fn from(v: ProofDebtStmt) -> Self {
+        UnsafeStmt::ProofDebtStmt(v).into()
     }
 }
 

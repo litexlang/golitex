@@ -14,6 +14,7 @@ pub struct Runtime {
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
     pub loading_builtin_code: bool,
+    pub only_exec_affect_environment: bool,
 }
 
 impl Runtime {
@@ -31,6 +32,7 @@ impl Runtime {
             strict_mode: false,
             output_language: OutputLanguage::English,
             loading_builtin_code: false,
+            only_exec_affect_environment: false,
         }
     }
 
@@ -66,6 +68,7 @@ impl Runtime {
             strict_mode: false,
             output_language: parent_runtime.output_language,
             loading_builtin_code: false,
+            only_exec_affect_environment: parent_runtime.only_exec_affect_environment,
         }
     }
 }
@@ -188,6 +191,12 @@ impl Runtime {
             }
         }
         self.parsing_free_param_collection.clear();
+    }
+
+    /// Reset an isolated runner item while preserving the user-facing `clear`
+    /// semantics. Markdown/dataset runners use this to keep snippets independent.
+    pub fn clear_current_env_parse_name_scope_and_stop_imports(&mut self) {
+        self.clear_current_env_and_parse_name_scope();
         self.module_manager.borrow_mut().stop_all_imported_modules();
     }
 

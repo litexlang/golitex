@@ -15,6 +15,12 @@ impl Runtime {
         if let Some(result) = self.try_verify_abs_basic_lower_bound(f, atomic_fact)? {
             return Ok(Some(result));
         }
+        if let Some(result) = self.try_verify_abs_finite_sum_triangle(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_verify_abs_finite_set_sum_triangle(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
         if let Some(result) = self.try_verify_abs_triangle(f, atomic_fact)? {
             return Ok(Some(result));
         }
@@ -204,6 +210,147 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "abs: x <= abs(x) and -x <= abs(x)".to_string(),
                 Vec::new(),
+            ),
+        )))
+    }
+
+    // Finite sum triangle inequality.
+    // Example: `abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})`.
+    fn try_verify_abs_finite_sum_triangle(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Abs(abs) = &f.left else {
+            return Ok(None);
+        };
+        let Obj::Sum(left_sum) = abs.arg.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::Sum(right_sum) = &f.right else {
+            return Ok(None);
+        };
+
+        let verify_state = VerifyState::new(0, true);
+        let start_result = self.verify_objs_are_equal_in_equality_builtin(
+            left_sum.start.as_ref(),
+            right_sum.start.as_ref(),
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !start_result.is_true() {
+            return Ok(None);
+        }
+        let end_result = self.verify_objs_are_equal_in_equality_builtin(
+            left_sum.end.as_ref(),
+            right_sum.end.as_ref(),
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !end_result.is_true() {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) =
+            self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_inst) =
+            self.instantiate_unary_anonymous_summand_at(right_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let pointwise_fact: AtomicFact =
+            EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
+        let dom_lo: Fact = LessEqualFact::new(
+            (*left_sum.start).clone(),
+            x_obj.clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let dom_hi: Fact =
+            LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
+        let pointwise_result = self
+            .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                x_name,
+                vec![dom_lo, dom_hi],
+                &pointwise_fact,
+                &verify_state,
+            )?;
+        if !pointwise_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "abs: finite sum triangle inequality".to_string(),
+                vec![start_result, end_result, pointwise_result],
+            ),
+        )))
+    }
+
+    // Finite-set sum triangle inequality.
+    // Example: `abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})`.
+    fn try_verify_abs_finite_set_sum_triangle(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Abs(abs) = &f.left else {
+            return Ok(None);
+        };
+        let Obj::SumOfFiniteSet(left_sum) = abs.arg.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::SumOfFiniteSet(right_sum) = &f.right else {
+            return Ok(None);
+        };
+
+        let verify_state = VerifyState::new(0, true);
+        let set_result = self.verify_objs_are_equal_in_equality_builtin(
+            left_sum.set.as_ref(),
+            right_sum.set.as_ref(),
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !set_result.is_true() {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_inst) =
+            self.instantiate_unary_function_at(right_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let pointwise_fact: AtomicFact =
+            EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
+        let pointwise_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(left_sum.set.as_ref().clone()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.verify_atomic_fact(&pointwise_fact, &verify_state)
+        })?;
+        if !pointwise_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "abs: finite-set sum triangle inequality".to_string(),
+                vec![set_result, pointwise_result],
             ),
         )))
     }

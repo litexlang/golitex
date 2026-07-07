@@ -242,6 +242,10 @@ impl Runtime {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::GeneralCart(a) => match right {
+                Obj::GeneralCart(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,

@@ -1192,6 +1192,44 @@ impl Runtime {
             })?;
             return Ok(PowerSet::new(value).into());
         }
+        if tok == GENERAL_CART {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "general_cart expects 3 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let index_set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "general_cart expects 3 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let family_set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "general_cart expects 3 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let family_fn = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "general_cart expects 3 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(GeneralCart::new(index_set, family_set, family_fn).into());
+        }
         if tok == CART_DIM {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1695,8 +1733,8 @@ impl Runtime {
 
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
-                        let f = this.parse_or_and_chain_atomic_fact(tb)?;
-                        facts_inst.push(this.inst_or_and_chain_atomic_fact(
+                        let f = this.parse_exist_body_fact(tb)?;
+                        facts_inst.push(this.inst_exist_body_fact(
                             &f,
                             &empty,
                             ParamObjType::SetBuilder,

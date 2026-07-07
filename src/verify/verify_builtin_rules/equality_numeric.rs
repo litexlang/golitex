@@ -2859,7 +2859,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn instantiate_unary_anonymous_summand_at(
+    pub(crate) fn instantiate_unary_anonymous_summand_at(
         &mut self,
         func: &Obj,
         x: &Obj,
@@ -2891,7 +2891,7 @@ impl Runtime {
         )?))
     }
 
-    fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         param_name: String,
         dom_facts: Vec<Fact>,
@@ -3665,6 +3665,93 @@ impl Runtime {
         Ok(None)
     }
 
+    // Scalars factor out of finite sums over the same integer index range.
+    // Example: `sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})`.
+    pub(crate) fn try_verify_sum_scalar_mul(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+
+        for (sum_side, product_side) in [(left, right), (right, left)] {
+            let Obj::Sum(sum) = sum_side else {
+                continue;
+            };
+            let Obj::Mul(product) = product_side else {
+                continue;
+            };
+            for (base_side, scalar) in [
+                (product.left.as_ref(), product.right.as_ref()),
+                (product.right.as_ref(), product.left.as_ref()),
+            ] {
+                let Obj::Sum(base_sum) = base_side else {
+                    continue;
+                };
+                let start_result = self.verify_objs_are_equal_in_equality_builtin(
+                    sum.start.as_ref(),
+                    base_sum.start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !start_result.is_true() {
+                    continue;
+                }
+                let end_result = self.verify_objs_are_equal_in_equality_builtin(
+                    sum.end.as_ref(),
+                    base_sum.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !end_result.is_true() {
+                    continue;
+                }
+
+                let x_name = self.generate_random_unused_name();
+                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let Some(sum_inst) =
+                    self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let Some(base_inst) =
+                    self.instantiate_unary_anonymous_summand_at(base_sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let expected: Obj = Mul::new(scalar.clone(), base_inst).into();
+                let pointwise_fact: AtomicFact =
+                    EqualFact::new(sum_inst, expected, line_file.clone()).into();
+                let dom_lo: Fact =
+                    LessEqualFact::new((*sum.start).clone(), x_obj.clone(), line_file.clone())
+                        .into();
+                let dom_hi: Fact =
+                    LessEqualFact::new(x_obj.clone(), (*sum.end).clone(), line_file.clone()).into();
+                let pointwise_result = self
+                    .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                        x_name,
+                        vec![dom_lo, dom_hi],
+                        &pointwise_fact,
+                        verify_state,
+                    )?;
+                if !pointwise_result.is_true() {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite sum scalar multiplication",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
     // A finite-set sum over the empty set is zero.
     // Example: `finite_set_sum({}, 'Z(x){x}) = 0`.
     pub(crate) fn try_verify_finite_set_sum_empty(
@@ -3803,16 +3890,45 @@ impl Runtime {
             {
                 continue;
             }
-            if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    finite_sum.func.as_ref(),
-                    range_sum.func.as_ref(),
+            let exact_func_result = self.verify_objs_are_equal_in_equality_builtin(
+                finite_sum.func.as_ref(),
+                range_sum.func.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !exact_func_result.is_true() {
+                let x_name = self.generate_random_unused_name();
+                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let Some(finite_inst) =
+                    self.instantiate_unary_function_at(finite_sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let Some(range_inst) =
+                    self.instantiate_unary_function_at(range_sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let pointwise_fact: AtomicFact =
+                    EqualFact::new(finite_inst, range_inst, line_file.clone()).into();
+                let dom_lo: Fact = LessEqualFact::new(
+                    (*range_sum.start).clone(),
+                    x_obj.clone(),
                     line_file.clone(),
-                    verify_state,
-                )?
-                .is_true()
-            {
-                continue;
+                )
+                .into();
+                let dom_hi: Fact =
+                    LessEqualFact::new(x_obj, (*range_sum.end).clone(), line_file.clone()).into();
+                let pointwise_result = self
+                    .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                        x_name,
+                        vec![dom_lo, dom_hi],
+                        &pointwise_fact,
+                        verify_state,
+                    )?;
+                if !pointwise_result.is_true() {
+                    continue;
+                }
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -3946,6 +4062,571 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // Finite-set sum substitution along a bijection onto the original set.
+    // Example: from `forall x X: exist! y Y st {g(y) = x}`, prove
+    // `finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})`.
+    pub(crate) fn try_verify_finite_set_sum_substitution(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (source_side, pullback_side) in [(left, right), (right, left)] {
+            let (Obj::SumOfFiniteSet(source_sum), Obj::SumOfFiniteSet(pullback_sum)) =
+                (source_side, pullback_side)
+            else {
+                continue;
+            };
+
+            let y_name = self.generate_random_unused_name();
+            let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+            let Some(pullback_at_y) =
+                self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &y_obj)?
+            else {
+                continue;
+            };
+            let Some(map_y) = Self::unary_application_arg_matching_callable(
+                &pullback_at_y,
+                source_sum.func.as_ref(),
+            ) else {
+                continue;
+            };
+            let Some(source_at_map_y) =
+                self.instantiate_unary_function_at(source_sum.func.as_ref(), &map_y)?
+            else {
+                continue;
+            };
+            let pointwise_fact: AtomicFact =
+                EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
+            let pointwise_result = self
+                .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    y_name,
+                    pullback_sum.set.as_ref().clone(),
+                    &pointwise_fact,
+                    verify_state,
+                )?;
+            if !pointwise_result.is_true() {
+                continue;
+            }
+
+            let base_name = self.generate_random_unused_name();
+            let x_name = format!("{}a", base_name);
+            let exist_y_name = format!("{}b", base_name);
+            let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+            let exist_y_obj =
+                obj_for_bound_param_in_scope(exist_y_name.clone(), ParamObjType::Exist);
+            let Some(pullback_at_exist_y) =
+                self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &exist_y_obj)?
+            else {
+                continue;
+            };
+            let Some(map_exist_y) = Self::unary_application_arg_matching_callable(
+                &pullback_at_exist_y,
+                source_sum.func.as_ref(),
+            ) else {
+                continue;
+            };
+            let preimage_eq: AtomicFact =
+                EqualFact::new(map_exist_y, x_obj, line_file.clone()).into();
+            let exist_body = ExistFactBody::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec![exist_y_name],
+                    ParamType::Obj(pullback_sum.set.as_ref().clone()),
+                )]),
+                vec![ExistBodyFact::AtomicFact(preimage_eq)],
+                line_file.clone(),
+            )?;
+            let unique_preimage_fact: Fact = ExistFactEnum::ExistUniqueFact(exist_body).into();
+            let unique_preimage_result = self.run_in_local_env(|rt| {
+                let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec![x_name],
+                    ParamType::Obj(source_sum.set.as_ref().clone()),
+                )]);
+                rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+                rt.verify_fact_full(&unique_preimage_fact, verify_state)
+            })?;
+            if !unique_preimage_result.is_true() {
+                continue;
+            }
+
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set sum substitution along a uniquely-covered index set",
+            )));
+        }
+        Ok(None)
+    }
+
+    // Finite-set sums split over disjoint unions.
+    // Example: from `intersect(X, Y) = {}`, prove
+    // `finite_set_sum(union(X, Y), f) = finite_set_sum(X, f|X) + finite_set_sum(Y, f|Y)`.
+    pub(crate) fn try_verify_finite_set_sum_disjoint_union(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (union_side, add_side) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(union_sum) = union_side else {
+                continue;
+            };
+            let Obj::Add(add) = add_side else {
+                continue;
+            };
+            for (first_side, second_side) in [
+                (add.left.as_ref(), add.right.as_ref()),
+                (add.right.as_ref(), add.left.as_ref()),
+            ] {
+                let (Obj::SumOfFiniteSet(first_sum), Obj::SumOfFiniteSet(second_sum)) =
+                    (first_side, second_side)
+                else {
+                    continue;
+                };
+                let expected_union: Obj = Union::new(
+                    first_sum.set.as_ref().clone(),
+                    second_sum.set.as_ref().clone(),
+                )
+                .into();
+                let union_result = self.verify_objs_are_equal_in_equality_builtin(
+                    union_sum.set.as_ref(),
+                    &expected_union,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !union_result.is_true() {
+                    continue;
+                }
+                let empty_set: Obj = ListSet::new(vec![]).into();
+                let intersection: Obj = Intersect::new(
+                    first_sum.set.as_ref().clone(),
+                    second_sum.set.as_ref().clone(),
+                )
+                .into();
+                let disjoint_result = self.verify_objs_are_equal_in_equality_builtin(
+                    &intersection,
+                    &empty_set,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !disjoint_result.is_true() {
+                    continue;
+                }
+                let first_pointwise = self.verify_finite_set_sum_functions_pointwise_equal(
+                    union_sum.func.as_ref(),
+                    first_sum.func.as_ref(),
+                    first_sum.set.as_ref().clone(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !first_pointwise.is_true() {
+                    continue;
+                }
+                let second_pointwise = self.verify_finite_set_sum_functions_pointwise_equal(
+                    union_sum.func.as_ref(),
+                    second_sum.func.as_ref(),
+                    second_sum.set.as_ref().clone(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !second_pointwise.is_true() {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum over a disjoint union",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // Finite-set sums distribute over pointwise addition on the same finite set.
+    // Example: `finite_set_sum(X, '(x X) R {f(x) + g(x)}) =
+    // finite_set_sum(X, f) + finite_set_sum(X, g)`.
+    pub(crate) fn try_verify_finite_set_sum_add(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (sum_side, add_side) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(sum) = sum_side else {
+                continue;
+            };
+            let Obj::Add(add) = add_side else {
+                continue;
+            };
+            let (Obj::SumOfFiniteSet(first_sum), Obj::SumOfFiniteSet(second_sum)) =
+                (add.left.as_ref(), add.right.as_ref())
+            else {
+                continue;
+            };
+            let first_set_result = self.verify_objs_are_equal_in_equality_builtin(
+                sum.set.as_ref(),
+                first_sum.set.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !first_set_result.is_true() {
+                continue;
+            }
+            let second_set_result = self.verify_objs_are_equal_in_equality_builtin(
+                sum.set.as_ref(),
+                second_sum.set.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !second_set_result.is_true() {
+                continue;
+            }
+
+            let x_name = self.generate_random_unused_name();
+            let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+            let Some(sum_inst) = self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let Some(first_inst) =
+                self.instantiate_unary_function_at(first_sum.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let Some(second_inst) =
+                self.instantiate_unary_function_at(second_sum.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let expected: Obj = Add::new(first_inst, second_inst).into();
+            let pointwise_fact: AtomicFact =
+                EqualFact::new(sum_inst, expected, line_file.clone()).into();
+            let pointwise_result = self
+                .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    x_name,
+                    sum.set.as_ref().clone(),
+                    &pointwise_fact,
+                    verify_state,
+                )?;
+            if !pointwise_result.is_true() {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set sum distributes over pointwise addition",
+            )));
+        }
+        Ok(None)
+    }
+
+    // Scalars factor out of finite-set sums on the same finite set.
+    // Example: `finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)`.
+    pub(crate) fn try_verify_finite_set_sum_scalar_mul(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (sum_side, product_side) in [(left, right), (right, left)] {
+            let Obj::SumOfFiniteSet(sum) = sum_side else {
+                continue;
+            };
+            let Obj::Mul(product) = product_side else {
+                continue;
+            };
+            for (base_side, scalar) in [
+                (product.left.as_ref(), product.right.as_ref()),
+                (product.right.as_ref(), product.left.as_ref()),
+            ] {
+                let Obj::SumOfFiniteSet(base_sum) = base_side else {
+                    continue;
+                };
+                let set_result = self.verify_objs_are_equal_in_equality_builtin(
+                    sum.set.as_ref(),
+                    base_sum.set.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if !set_result.is_true() {
+                    continue;
+                }
+
+                let x_name = self.generate_random_unused_name();
+                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let Some(sum_inst) =
+                    self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let Some(base_inst) =
+                    self.instantiate_unary_function_at(base_sum.func.as_ref(), &x_obj)?
+                else {
+                    continue;
+                };
+                let expected: Obj = Mul::new(scalar.clone(), base_inst).into();
+                let pointwise_fact: AtomicFact =
+                    EqualFact::new(sum_inst, expected, line_file.clone()).into();
+                let pointwise_result = self
+                    .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                        x_name,
+                        sum.set.as_ref().clone(),
+                        &pointwise_fact,
+                        verify_state,
+                    )?;
+                if !pointwise_result.is_true() {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum scalar multiplication",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A nested finite-set sum over two finite sets is the finite-set sum over
+    // their Cartesian product.
+    // Example: `finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})})
+    // = finite_set_sum(cart(X, Y), f)`.
+    pub(crate) fn try_verify_finite_set_sum_over_cartesian_product(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (nested_side, flat_side) in [(left, right), (right, left)] {
+            let Some(nested_shape) = self.nested_finite_set_sum_cartesian_shape(
+                nested_side,
+                line_file.clone(),
+                verify_state,
+            )?
+            else {
+                continue;
+            };
+            let Obj::SumOfFiniteSet(flat_sum) = flat_side else {
+                continue;
+            };
+            let set_result = self.verify_objs_are_equal_in_equality_builtin(
+                flat_sum.set.as_ref(),
+                &nested_shape.product_set,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !set_result.is_true() {
+                continue;
+            }
+            let func_result = self.verify_objs_are_equal_in_equality_builtin(
+                flat_sum.func.as_ref(),
+                &nested_shape.function,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if !func_result.is_true() {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: double finite-set sum over Cartesian product",
+            )));
+        }
+        Ok(None)
+    }
+
+    // Fubini for finite-set sums: two nested sums with the same flattened
+    // Cartesian-product summand can swap their summation order.
+    // Example: `sum_X sum_Y f((x, y)) = sum_Y sum_X f((x, y))`.
+    pub(crate) fn try_verify_finite_set_sum_fubini(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let Some(left_shape) =
+            self.nested_finite_set_sum_cartesian_shape(left, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_shape) =
+            self.nested_finite_set_sum_cartesian_shape(right, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+        let set_result = self.verify_objs_are_equal_in_equality_builtin(
+            &left_shape.product_set,
+            &right_shape.product_set,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !set_result.is_true() {
+            return Ok(None);
+        }
+        let func_result = self.verify_objs_are_equal_in_equality_builtin(
+            &left_shape.function,
+            &right_shape.function,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !func_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: finite-set Fubini over Cartesian product",
+        )))
+    }
+
+    // Range sums over two bijective enumerations of the same finite set are equal.
+    // Example: from `forall x X: exist! i 1...count(X) st {g(i) = x}` and the
+    // analogous fact for `h`, prove `sum(1, count(X), '(i 1...count(X)) R {f(g(i))})
+    // = sum(1, count(X), '(i 1...count(X)) R {f(h(i))})`.
+    pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (left_sum, right_sum) = match (left, right) {
+            (Obj::Sum(l), Obj::Sum(r)) => (l, r),
+            _ => return Ok(None),
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.start.as_ref(),
+                right_sum.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.end.as_ref(),
+                right_sum.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let Some(left_shape) =
+            self.finite_set_enumeration_summand_shape(left_sum, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_shape) =
+            self.finite_set_enumeration_summand_shape(right_sum, line_file.clone(), verify_state)?
+        else {
+            return Ok(None);
+        };
+
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.outer_function,
+                &right_shape.outer_function,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.index_set,
+                &right_shape.index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &left_shape.target_set,
+                &right_shape.target_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let finite_target: AtomicFact =
+            IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&finite_target, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self.verify_unique_preimage_enumerator_fact(
+            &left_shape,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+        if !self.verify_unique_preimage_enumerator_fact(
+            &right_shape,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: sums over bijective enumerations of the same finite set",
+        )))
     }
 
     // A finite-set product over the empty set is one.
@@ -4247,7 +4928,119 @@ impl Runtime {
         acc
     }
 
-    fn instantiate_unary_function_at(
+    fn unary_application_arg_matching_callable(application: &Obj, callable: &Obj) -> Option<Obj> {
+        let Obj::FnObj(fn_obj) = application else {
+            return None;
+        };
+        if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+            return None;
+        }
+        let expected_head = FnObjHead::from_callable_obj(callable.clone())?;
+        let actual_head_obj: Obj = fn_obj.head.as_ref().clone().into();
+        let expected_head_obj: Obj = expected_head.into();
+        if !objs_equal_by_display_string(&actual_head_obj, &expected_head_obj) {
+            return None;
+        }
+        Some(fn_obj.body[0][0].as_ref().clone())
+    }
+
+    fn verify_finite_set_sum_functions_pointwise_equal(
+        &mut self,
+        left_func: &Obj,
+        right_func: &Obj,
+        set: Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
+            return Ok(StmtResult::Unknown(StmtUnknown::new()));
+        };
+        let Some(right_inst) = self.instantiate_unary_function_at(right_func, &x_obj)? else {
+            return Ok(StmtResult::Unknown(StmtUnknown::new()));
+        };
+        let pointwise_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file).into();
+        self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            x_name,
+            set,
+            &pointwise_fact,
+            verify_state,
+        )
+    }
+
+    fn nested_finite_set_sum_cartesian_shape(
+        &mut self,
+        obj: &Obj,
+        _line_file: LineFile,
+        _verify_state: &VerifyState,
+    ) -> Result<Option<NestedFiniteSetSumCartesianShape>, RuntimeError> {
+        let Obj::SumOfFiniteSet(outer_sum) = obj else {
+            return Ok(None);
+        };
+        let outer_name = self.generate_random_unused_name();
+        let outer_obj = obj_for_bound_param_in_scope(outer_name.clone(), ParamObjType::Forall);
+        let Some(inner_sum_obj) =
+            self.instantiate_unary_function_at(outer_sum.func.as_ref(), &outer_obj)?
+        else {
+            return Ok(None);
+        };
+        let Obj::SumOfFiniteSet(inner_sum) = inner_sum_obj else {
+            return Ok(None);
+        };
+        if obj_expr_mentions_bare_id(inner_sum.set.as_ref(), outer_name.as_str()) {
+            return Ok(None);
+        }
+
+        let inner_name = format!("{}_inner", outer_name);
+        let inner_obj = obj_for_bound_param_in_scope(inner_name.clone(), ParamObjType::Forall);
+        let Some(summand) =
+            self.instantiate_unary_function_at(inner_sum.func.as_ref(), &inner_obj)?
+        else {
+            return Ok(None);
+        };
+        let Obj::FnObj(call) = summand else {
+            return Ok(None);
+        };
+        if call.body.len() != 1 || call.body[0].len() != 1 {
+            return Ok(None);
+        }
+        let Obj::Tuple(tuple) = call.body[0][0].as_ref() else {
+            return Ok(None);
+        };
+        if tuple.args.len() != 2 {
+            return Ok(None);
+        }
+
+        let first_arg = tuple.args[0].as_ref();
+        let second_arg = tuple.args[1].as_ref();
+        let first_is_outer = verify_equality_by_they_are_the_same(first_arg, &outer_obj);
+        let second_is_inner = verify_equality_by_they_are_the_same(second_arg, &inner_obj);
+        let first_is_inner = verify_equality_by_they_are_the_same(first_arg, &inner_obj);
+        let second_is_outer = verify_equality_by_they_are_the_same(second_arg, &outer_obj);
+        let product_set: Obj = if first_is_outer && second_is_inner {
+            Cart::new(vec![
+                outer_sum.set.as_ref().clone(),
+                inner_sum.set.as_ref().clone(),
+            ])
+            .into()
+        } else if first_is_inner && second_is_outer {
+            Cart::new(vec![
+                inner_sum.set.as_ref().clone(),
+                outer_sum.set.as_ref().clone(),
+            ])
+            .into()
+        } else {
+            return Ok(None);
+        };
+        let function: Obj = call.head.as_ref().clone().into();
+        Ok(Some(NestedFiniteSetSumCartesianShape {
+            product_set,
+            function,
+        }))
+    }
+
+    pub(crate) fn instantiate_unary_function_at(
         &mut self,
         func: &Obj,
         x: &Obj,
@@ -4271,6 +5064,28 @@ impl Runtime {
         ))
     }
 
+    pub(crate) fn unary_anonymous_function_param_set(func: &Obj) -> Option<Obj> {
+        let af: &AnonymousFn = match func {
+            Obj::AnonymousFn(af) => af,
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return None;
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => return None,
+                }
+            }
+            _ => return None,
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return None;
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let param_name = param_names.first()?;
+        Self::set_for_unary_param(&af.body.params_def_with_set, param_name.as_str())
+    }
+
     fn verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         param_name: String,
@@ -4286,6 +5101,175 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
         })
+    }
+
+    fn finite_set_enumeration_summand_shape(
+        &mut self,
+        sum: &Sum,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FiniteSetEnumerationSummand>, RuntimeError> {
+        let af = match sum.func.as_ref() {
+            Obj::AnonymousFn(af) => af,
+            Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                _ => return Ok(None),
+            },
+            _ => return Ok(None),
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let Some(param_name) = param_names.first() else {
+            return Ok(None);
+        };
+        let Some(index_set) =
+            Self::set_for_unary_param(&af.body.params_def_with_set, param_name.as_str())
+        else {
+            return Ok(None);
+        };
+        let sum_index_set: Obj =
+            ClosedRange::new(sum.start.as_ref().clone(), sum.end.as_ref().clone()).into();
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &index_set,
+                &sum_index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        let Obj::FnObj(outer_call) = af.equal_to.as_ref() else {
+            return Ok(None);
+        };
+        if outer_call.body.len() != 1 || outer_call.body[0].len() != 1 {
+            return Ok(None);
+        }
+        let Obj::FnObj(enumerator_call) = outer_call.body[0][0].as_ref() else {
+            return Ok(None);
+        };
+        if enumerator_call.body.len() != 1 || enumerator_call.body[0].len() != 1 {
+            return Ok(None);
+        }
+        let index_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::FnSet);
+        if !verify_equality_by_they_are_the_same(enumerator_call.body[0][0].as_ref(), &index_obj) {
+            return Ok(None);
+        }
+
+        let outer_function: Obj = outer_call.head.as_ref().clone().into();
+        let enumerator: Obj = enumerator_call.head.as_ref().clone().into();
+        let Some(outer_body) = self.get_fn_range_on_function_body(&outer_function) else {
+            return Ok(None);
+        };
+        if ParamGroupWithSet::number_of_params(&outer_body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let outer_param_names =
+            ParamGroupWithSet::collect_param_names(&outer_body.params_def_with_set);
+        let Some(outer_param_name) = outer_param_names.first() else {
+            return Ok(None);
+        };
+        let Some(target_set) =
+            Self::set_for_unary_param(&outer_body.params_def_with_set, outer_param_name.as_str())
+        else {
+            return Ok(None);
+        };
+
+        let Some(enumerator_body) = self.get_fn_range_on_function_body(&enumerator) else {
+            return Ok(None);
+        };
+        if ParamGroupWithSet::number_of_params(&enumerator_body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let enumerator_param_names =
+            ParamGroupWithSet::collect_param_names(&enumerator_body.params_def_with_set);
+        let Some(enumerator_param_name) = enumerator_param_names.first() else {
+            return Ok(None);
+        };
+        let Some(enumerator_index_set) = Self::set_for_unary_param(
+            &enumerator_body.params_def_with_set,
+            enumerator_param_name.as_str(),
+        ) else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                &enumerator_index_set,
+                &index_set,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                enumerator_body.ret_set.as_ref(),
+                &target_set,
+                line_file,
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+
+        Ok(Some(FiniteSetEnumerationSummand {
+            outer_function,
+            enumerator_head: enumerator_call.head.as_ref().clone(),
+            index_set,
+            target_set,
+        }))
+    }
+
+    fn verify_unique_preimage_enumerator_fact(
+        &mut self,
+        shape: &FiniteSetEnumerationSummand,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let x_name = self.generate_random_unused_name();
+        let i_name = format!("{}_idx", x_name);
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let i_obj = obj_for_bound_param_in_scope(i_name.clone(), ParamObjType::Exist);
+        let enumerator_at_i: Obj =
+            FnObj::new(shape.enumerator_head.clone(), vec![vec![Box::new(i_obj)]]).into();
+        let body_fact: AtomicFact =
+            EqualFact::new(enumerator_at_i, x_obj, line_file.clone()).into();
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![i_name],
+                ParamType::Obj(shape.index_set.clone()),
+            )]),
+            vec![ExistBodyFact::AtomicFact(body_fact)],
+            line_file.clone(),
+        )?;
+        let forall_fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(shape.target_set.clone()),
+            )]),
+            vec![],
+            vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
+            line_file,
+        )?;
+        let fact: Fact = forall_fact.into();
+        let result = self.verify_fact_full(&fact, verify_state)?;
+        Ok(result.is_true())
+    }
+
+    fn set_for_unary_param(params_def: &ParamDefWithSet, param_name: &str) -> Option<Obj> {
+        for group in params_def.iter() {
+            if group.params.iter().any(|p| p == param_name) {
+                return Some(group.set_obj().clone());
+            }
+        }
+        None
     }
 
     /// `(x mod m) mod m = x mod m` when the nested `%` uses the same modulus as the outer `%`.
@@ -4498,4 +5482,16 @@ impl Runtime {
             "equality: integer congruence — same modulus, residues for matching + / - / *",
         )))
     }
+}
+
+struct FiniteSetEnumerationSummand {
+    outer_function: Obj,
+    enumerator_head: FnObjHead,
+    index_set: Obj,
+    target_set: Obj,
+}
+
+struct NestedFiniteSetSumCartesianShape {
+    product_set: Obj,
+    function: Obj,
 }

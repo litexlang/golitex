@@ -6,17 +6,56 @@ impl Runtime {
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        self.exec_have_obj_equal_stmt_verify_well_definedness(have_obj_equal_stmt)?;
+        let check_results = self.exec_have_obj_equal_stmt_verify_process(have_obj_equal_stmt)?;
+        let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
+
+        Ok((NonFactualStmtSuccess::new(
+            have_obj_equal_stmt.clone().into(),
+            infer_result,
+            check_results,
+        ))
+        .into())
+    }
+
+    fn exec_have_obj_equal_stmt_verify_well_definedness(
+        &mut self,
+        have_obj_equal_stmt: &HaveObjEqualStmt,
+    ) -> Result<(), RuntimeError> {
         if have_obj_equal_stmt.param_def.number_of_params()
             != have_obj_equal_stmt.objs_equal_to.len()
         {
             return Err(short_exec_error(
- have_obj_equal_stmt.clone().into(),
-                    "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
-                    None,
-                    vec![],
-                ));
+                have_obj_equal_stmt.clone().into(),
+                "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to"
+                    .to_string(),
+                None,
+                vec![],
+            ));
         }
 
+        self.run_in_local_env(|rt| {
+            rt.define_params_with_type(
+                &have_obj_equal_stmt.param_def,
+                false,
+                ParamObjType::Identifier,
+            )
+            .map_err(|define_params_error| {
+                short_exec_error(
+                    have_obj_equal_stmt.clone().into(),
+                    "",
+                    Some(define_params_error),
+                    vec![],
+                )
+            })?;
+            Ok(())
+        })
+    }
+
+    fn exec_have_obj_equal_stmt_verify_process(
+        &mut self,
+        have_obj_equal_stmt: &HaveObjEqualStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         let mut check_results: Vec<StmtResult> = Vec::new();
@@ -72,22 +111,35 @@ impl Runtime {
             }
         }
 
+        Ok(check_results)
+    }
+
+    pub(crate) fn exec_have_obj_equal_stmt_affect_environment(
+        &mut self,
+        have_obj_equal_stmt: &HaveObjEqualStmt,
+    ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
 
-        let mut param_infer_result = self
-            .define_params_with_type(
+        let mut param_infer_result = if self.only_exec_affect_environment {
+            self.define_params_with_type_trusted(
+                &have_obj_equal_stmt.param_def,
+                ParamObjType::Identifier,
+            )
+        } else {
+            self.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 true,
                 ParamObjType::Identifier,
             )
-            .map_err(|define_params_error| {
-                short_exec_error(
-                    have_obj_equal_stmt.clone().into(),
-                    "",
-                    Some(define_params_error),
-                    vec![],
-                )
-            })?;
+        }
+        .map_err(|define_params_error| {
+            short_exec_error(
+                have_obj_equal_stmt.clone().into(),
+                "",
+                Some(define_params_error),
+                vec![],
+            )
+        })?;
         param_infer_result
             .relabel_all_added_facts_with_store_reason(HaveObjEqualStmt::store_reason());
         infer_result.new_infer_result_inside(param_infer_result);
@@ -148,11 +200,17 @@ impl Runtime {
             }
         }
 
-        Ok((NonFactualStmtSuccess::new(
-            have_obj_equal_stmt.clone().into(),
-            infer_result,
-            check_results,
-        ))
-        .into())
+        Ok(infer_result)
+    }
+
+    pub(crate) fn exec_have_obj_equal_stmt_affect_environment_only(
+        &mut self,
+        have_obj_equal_stmt: &HaveObjEqualStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
+        Ok(
+            NonFactualStmtSuccess::new(have_obj_equal_stmt.clone().into(), infer_result, vec![])
+                .into(),
+        )
     }
 }

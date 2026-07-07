@@ -59,21 +59,21 @@ impl Stmt {
 impl UnsafeStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            UnsafeStmt::KnowStmt(stmt) => stmt.line_file.clone(),
+            UnsafeStmt::ProofDebtStmt(stmt) => stmt.line_file.clone(),
             UnsafeStmt::DefLetStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
     pub fn stmt_type_name(&self) -> String {
         match self {
-            UnsafeStmt::KnowStmt(stmt) => stmt.stmt_type_name(),
+            UnsafeStmt::ProofDebtStmt(stmt) => stmt.stmt_type_name(),
             UnsafeStmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
     pub fn output_type_string(&self) -> String {
         match self {
-            UnsafeStmt::KnowStmt(_) => KnowStmt::output_type_string(),
+            UnsafeStmt::ProofDebtStmt(_) => ProofDebtStmt::output_type_string(),
             UnsafeStmt::DefLetStmt(_) => DefLetStmt::output_type_string(),
         }
     }
@@ -362,7 +362,7 @@ impl CommandStmt {
             CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
             CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
             CommandStmt::StopImportStmt(_) => StopImportStmt::output_type_string(),
-            CommandStmt::RunFileStmt(_) => RunFileStmt::output_type_string(),
+            CommandStmt::RunFileStmt(stmt) => stmt.output_type_string(),
             CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),
             CommandStmt::EvalByStmt(_) => EvalByStmt::output_type_string(),
             CommandStmt::UseStrategyStmt(_) => UseStrategyStmt::output_type_string(),

@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const MAIN_DOT_LIT: &str = "main.lit";
 
@@ -12,6 +13,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
+const DEPGRAPH_FLAG: &str = "-depgraph";
+const DEPGRAPH_DOT_FLAG: &str = "-depgraph-dot";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
@@ -125,6 +128,64 @@ pub fn run_cli() {
                         eprintln!("{}", message);
                         print_help_message();
                         process::exit(2);
+                    }
+                };
+                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
+            DEPGRAPH_FLAG => {
+                index += 1;
+                let (ok, output) = match main_flag_dependency_graph(
+                    &args,
+                    &mut index,
+                    detail_output,
+                    strict_mode,
+                    false,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                let output = match write_dependency_graph_cli_output(&output, "json", ok) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        process::exit(1);
+                    }
+                };
+                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
+            DEPGRAPH_DOT_FLAG => {
+                index += 1;
+                let (ok, output) = match main_flag_dependency_graph(
+                    &args,
+                    &mut index,
+                    detail_output,
+                    strict_mode,
+                    true,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                let output = match write_dependency_graph_cli_output(&output, "dot", ok) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        process::exit(1);
                     }
                 };
                 println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
@@ -505,8 +566,133 @@ fn main_flag_runner(
     }
 }
 
+fn main_flag_dependency_graph(
+    args: &[String],
+    index: &mut usize,
+    detail_output: bool,
+    strict_mode: bool,
+    dot_output: bool,
+) -> Result<(bool, String), String> {
+    let flag = if dot_output {
+        DEPGRAPH_DOT_FLAG
+    } else {
+        DEPGRAPH_FLAG
+    };
+    let target_flag = read_any_value_after_flag(args, index, flag)?;
+    match target_flag.as_str() {
+        "-e" => {
+            let code = read_non_flag_value_after_flag(args, index, "-e")?;
+            if dot_output {
+                Ok(run_dependency_graph_dot_for_code(
+                    code.as_str(),
+                    flag,
+                    detail_output,
+                    strict_mode,
+                ))
+            } else {
+                Ok(run_dependency_graph_json_for_code(
+                    code.as_str(),
+                    flag,
+                    detail_output,
+                    strict_mode,
+                ))
+            }
+        }
+        "-f" => {
+            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
+            if dot_output {
+                Ok(run_dependency_graph_dot_for_file(
+                    file_path.as_str(),
+                    detail_output,
+                    strict_mode,
+                ))
+            } else {
+                Ok(run_dependency_graph_json_for_file(
+                    file_path.as_str(),
+                    detail_output,
+                    strict_mode,
+                ))
+            }
+        }
+        "-r" => {
+            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
+            if dot_output {
+                Ok(run_dependency_graph_dot_for_repo(
+                    repo_path.as_str(),
+                    detail_output,
+                    strict_mode,
+                ))
+            } else {
+                Ok(run_dependency_graph_json_for_repo(
+                    repo_path.as_str(),
+                    detail_output,
+                    strict_mode,
+                ))
+            }
+        }
+        _ => Err(format!(
+            "{} must be followed by one of: -f <file>, -e <code>, -r <repo>",
+            flag
+        )),
+    }
+}
+
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
+}
+
+fn write_dependency_graph_cli_output(
+    graph_output: &str,
+    extension: &str,
+    ok: bool,
+) -> Result<String, String> {
+    let output_dir = Path::new("tmp").join("depgraph");
+    fs::create_dir_all(&output_dir).map_err(|error| {
+        format!(
+            "failed to create dependency graph output directory {:?}: {}",
+            output_dir, error
+        )
+    })?;
+
+    let filename = format!(
+        "dependency_graph_{}_{}.{}",
+        process::id(),
+        dependency_graph_timestamp_millis(),
+        extension
+    );
+    let output_path = output_dir.join(filename);
+    fs::write(&output_path, graph_output).map_err(|error| {
+        format!(
+            "failed to write dependency graph output {:?}: {}",
+            output_path, error
+        )
+    })?;
+
+    Ok(render_json_value(
+        &JsonValue::Object(vec![
+            (
+                "result".to_string(),
+                JsonValue::JsonString(if ok { "success" } else { "error" }.to_string()),
+            ),
+            ("ok".to_string(), JsonValue::Bool(ok)),
+            (
+                "format".to_string(),
+                JsonValue::JsonString(extension.to_string()),
+            ),
+            (
+                "output_path".to_string(),
+                JsonValue::JsonString(output_path.to_string_lossy().into_owned()),
+            ),
+        ]),
+        0,
+    ))
+}
+
+fn dependency_graph_timestamp_millis() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis())
+        .unwrap_or(0)
 }
 
 fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
@@ -632,6 +818,12 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <repo> : run a repository and return one wrapper JSON object
+litex -depgraph -f <file> : run a file, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
+litex -depgraph -e <code> : run source code, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
+litex -depgraph -r <repo> : run a repository, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
+litex -depgraph-dot -f <file> : run a file, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
+litex -depgraph-dot -e <code> : run source code, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
+litex -depgraph-dot -r <repo> : run a repository, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
@@ -643,7 +835,7 @@ litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
-litex -strict : reject user know and let statements after builtin initialization
+litex -strict : reject user proof_debt, let, and axiom statements after builtin initialization
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
 litex -install <module> : install the given module

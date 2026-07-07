@@ -1,0 +1,19 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+thm scratch_finite_limsup_extensional:
+    ? forall a, b seq(R), L R:
+        $pointwise_equal_sequences(a, b)
+        $has_finite_limit_superior(a, L)
+        =>:
+            $has_finite_limit_superior(b, L)
+    by thm finite_limsup_extensional(a, b, L)
+    $has_finite_limit_superior(b, L)
+
+thm scratch_finite_liminf_extensional:
+    ? forall a, b seq(R), L R:
+        $pointwise_equal_sequences(a, b)
+        $has_finite_limit_inferior(a, L)
+        =>:
+            $has_finite_limit_inferior(b, L)
+    by thm finite_liminf_extensional(a, b, L)
+    $has_finite_limit_inferior(b, L)

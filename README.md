@@ -60,11 +60,7 @@ attempts. The goal is to make ordinary mathematical reasoning precise enough
 for machine feedback while preserving the structure and appearance of
 mathematical reasoning itself.
 
-*We want Litex to become a first language for learning formalization: readable enough that even a curious ten-year-old can follow the core idea*. Before
-learning a mature formal system such as Lean, Coq, or Isabelle, a learner can
-use Litex to get the basic feeling of formalization: state a mathematical fact,
-ask the checker whether it follows, read the output, and grow a verified
-context one line at a time.
+*We want Litex to become a first language for learning formalization: readable enough that even a curious ten-year-old can follow the core idea. Since a 10-year-old can verify his math homework, and a formal language is used for math verification, it is reasonable to expect that we can develop a formal language that is readable enough that even a curious ten-year-old can follow the core idea.*
 
 Because Litex output supports multiple languages (简体中文, 繁體中文, 日本語,
 English, 한국어, Español, Français, Deutsch, Português, Русский, العربية,
@@ -83,6 +79,14 @@ Think of a Litex file as a small mathematical world that grows one checked fact
 at a time. You introduce the objects in the world, give yourself vocabulary,
 state the local assumptions of the problem, and then ask Litex whether a new
 fact follows.
+
+In implementation terms, that growing world lives in an `Environment`: the
+physical container for the mathematical context. A Litex statement has two
+jobs. First, Litex checks that the statement makes sense and verifies any fact
+it asserts against the current world. Second, if the statement is accepted, its
+effects are stored back into that world: new names, definitions, proved facts,
+theorem interfaces, and routine inference/cache consequences that later lines
+may reuse. This is why a file feels cumulative rather than merely textual.
 
 A classical syllogism shows the shape:
 
@@ -254,7 +258,7 @@ derive the modular contradiction, and return the larger prime as a witness.
 
 <!-- litex:skip-test -->
 ```text
-claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
     2 <= a <= product(1, a, '(x N_pos) N_pos {x}) <= product(1, a, '(x N_pos) N_pos {x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, '(x N_pos) N_pos {x}) + 1) % k = 0}: k
     by cases k > a:
@@ -350,13 +354,13 @@ does not first memorize a huge theorem dictionary and then cite a synonym of
 the theorem in the book. They build definitions, lemmas, and proof habits in
 order. Litex's builtins provide the basic mathematical ground so that this
 kind of step-by-step development can start early, while larger imports and
-`know` assumptions should remain visible background, not a way to erase the
+`proof_debt` assumptions should remain visible background, not a way to erase the
 book's proof. The code should be where the mathematical work happens, not only
 a bibliographic reference into a theorem database.
 
 This route comes with a clear audit obligation. A Litex result should be read
 relative to its trusted background: builtin rules, inference rules,
-standard-library facts, and any explicit `know` assumption injections. The
+standard-library facts, and any explicit `proof_debt` assumption injections. The
 project goal is not to hide that boundary; it is to make the boundary visible
 while keeping the user-facing proof script close to ordinary mathematical
 writing.
@@ -400,9 +404,19 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
-The path of Litex is a deliberate trade-off. Litex accepts a larger trusted
-implementation than small-kernel systems in order to make the proof surface
-lighter. The system tries to do more routine checking in the verifier so users
-can spend more of their attention on the mathematical sequence of facts. This uniqueness is the core value of Litex as a proof assistant, but it also makes contribution to Litex more difficult and demanding. We welcome young talents to try Litex and contribute to it.
+Litex is an attempt to make mathematics more accessible to everyone. It is
+trying to solve a problem so basic that it is easy to miss. Elementary school
+students can check each other's math homework because, even with very little
+mathematical knowledge, they already understand the shape of mathematical
+reasoning: new facts should follow from old facts by inspectable steps. Formal
+languages are supposed to make that kind of checking precise, but there is
+still no formal language for mathematics that ordinary students, scientists,
+AI agents, and curious readers can all read naturally. Many people do not see
+this as an unsolved problem; some assume it is impossible. Litex is built
+around the opposite hope: that we can have a reasoning language rigorous enough
+for machines to verify and readable enough for people to share. Even if today’s AI systems can already handle many mathematical
+problems and write other formal languages for specific tasks, Litex’s
+defining feature will always remain special: users can genuinely read
+and understand it.
 
 Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their support and advice. I am sure this list will keep growing.

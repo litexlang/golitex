@@ -421,9 +421,14 @@ impl Runtime {
                 .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
             Obj::SetBuilder(x) => {
                 Self::obj_depends_on_given_exist_param(x.param_set.as_ref(), names)
-                    || x.facts.iter().any(|fact| {
-                        Self::or_and_chain_fact_depends_on_given_exist_param(fact, names)
-                    })
+                    || x.facts
+                        .iter()
+                        .any(|fact| Self::exist_body_fact_depends_on_given_exist_param(fact, names))
+            }
+            Obj::GeneralCart(x) => {
+                Self::obj_depends_on_given_exist_param(x.index_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.family_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.family_fn.as_ref(), names)
             }
             Obj::FnSet(x) => Self::fn_set_body_depends_on_given_exist_param(&x.body, names),
             Obj::AnonymousFn(x) => {
@@ -493,6 +498,15 @@ impl Runtime {
 
     fn or_and_chain_fact_depends_on_given_exist_param(
         fact: &OrAndChainAtomicFact,
+        names: &[String],
+    ) -> bool {
+        fact.get_args_from_fact_ref()
+            .into_iter()
+            .any(|obj| Self::obj_depends_on_given_exist_param(obj, names))
+    }
+
+    fn exist_body_fact_depends_on_given_exist_param(
+        fact: &ExistBodyFact,
         names: &[String],
     ) -> bool {
         fact.get_args_from_fact_ref()

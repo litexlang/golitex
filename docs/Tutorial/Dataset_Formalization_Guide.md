@@ -50,18 +50,18 @@ Although this code verifies, it only proves isolated numeric facts. It does
 not translate the assumption that an arbitrary positive real number `x`
 satisfies `x^3 = 8`, and it does not prove `x + 3 = 5`.
 
-3. AI might overuse `know`.
+3. AI might overuse `proof_debt`.
 
 For the running example, an AI might generate:
 
 <!-- litex:skip-test -->
 
 ```litex
-know:
+proof_debt:
     x^3 = 8
     x + 3 = 5
 ```
 
-This hides the core proof obligation instead of translating it. `know` should
+This hides the core proof obligation instead of translating it. `proof_debt` should
 only be used for an explicitly labeled background fact or temporary proof debt,
 not to replace the condition and conclusion of the problem itself.

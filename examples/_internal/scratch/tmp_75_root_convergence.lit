@@ -1,0 +1,9 @@
+run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
+
+thm scratch_root_tail_bound_by_geometric:
+    ? forall a seq(R), r R_pos, n0 N_pos:
+        $is_eventually_below(root_test_terms(a), r, n0)
+        =>:
+            $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
+    by thm root_test_tail_bound_by_geometric(a, r, n0)
+    $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)

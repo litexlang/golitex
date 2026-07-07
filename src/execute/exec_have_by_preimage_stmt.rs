@@ -5,6 +5,24 @@ impl Runtime {
         &mut self,
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        self.exec_have_by_preimage_stmt_verify_well_definedness(stmt)?;
+        let inside_results = self.exec_have_by_preimage_stmt_verify_process(stmt)?;
+        let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+    }
+
+    pub(crate) fn exec_have_by_preimage_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
+    fn exec_have_by_preimage_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<(), RuntimeError> {
         if let Obj::Replacement(replacement) = &stmt.range_membership.set {
             if stmt.preimage_names.len() != 1 {
                 return Err(short_exec_error(
@@ -17,11 +35,11 @@ impl Runtime {
                     vec![],
                 ));
             }
-            let source_result = self.verify_preimage_source_membership(stmt)?;
-            return self.exec_have_by_replacement_preimage_stmt(stmt, replacement, source_result);
+            self.verify_replacement_preimage_shape(stmt, replacement)?;
+            return self.verify_preimage_names_are_available(stmt);
         }
 
-        let (function, fn_body) = self.preimage_function_and_body(stmt)?;
+        let (_function, fn_body) = self.preimage_function_and_body(stmt)?;
         let param_count = fn_body.params_def_with_set.number_of_params();
         if stmt.preimage_names.len() != param_count {
             return Err(short_exec_error(
@@ -35,13 +53,27 @@ impl Runtime {
                 vec![],
             ));
         }
-        let source_result = self.verify_preimage_source_membership(stmt)?;
+        self.verify_preimage_names_are_available(stmt)
+    }
 
-        for name in stmt.preimage_names.iter() {
-            self.store_free_param_or_identifier_name(name, ParamObjType::Exist)
-                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+    fn exec_have_by_preimage_stmt_verify_process(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        Ok(vec![self.verify_preimage_source_membership(stmt)?])
+    }
+
+    fn exec_have_by_preimage_stmt_affect_environment(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<InferResult, RuntimeError> {
+        if let Obj::Replacement(replacement) = &stmt.range_membership.set {
+            return self
+                .exec_have_by_replacement_preimage_stmt_affect_environment(stmt, replacement);
         }
 
+        let (function, fn_body) = self.preimage_function_and_body(stmt)?;
+        self.store_preimage_names(stmt)?;
         let preimage_objs: Vec<Obj> = stmt
             .preimage_names
             .iter()
@@ -65,10 +97,7 @@ impl Runtime {
             &preimage_objs,
         )?);
 
-        Ok(
-            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![source_result])
-                .into(),
-        )
+        Ok(infer_result)
     }
 
     fn verify_preimage_source_membership(
@@ -93,12 +122,40 @@ impl Runtime {
         Ok(source_result)
     }
 
-    fn exec_have_by_replacement_preimage_stmt(
+    fn verify_replacement_preimage_shape(
+        &self,
+        _stmt: &HaveByPreimageStmt,
+        _replacement: &Replacement,
+    ) -> Result<(), RuntimeError> {
+        Ok(())
+    }
+
+    fn verify_preimage_names_are_available(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            for name in stmt.preimage_names.iter() {
+                rt.store_free_param_or_identifier_name(name, ParamObjType::Exist)
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+            }
+            Ok(())
+        })
+    }
+
+    fn store_preimage_names(&mut self, stmt: &HaveByPreimageStmt) -> Result<(), RuntimeError> {
+        for name in stmt.preimage_names.iter() {
+            self.store_free_param_or_identifier_name(name, ParamObjType::Exist)
+                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        }
+        Ok(())
+    }
+
+    fn exec_have_by_replacement_preimage_stmt_affect_environment(
         &mut self,
         stmt: &HaveByPreimageStmt,
         replacement: &Replacement,
-        source_result: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<InferResult, RuntimeError> {
         let preimage_name = &stmt.preimage_names[0];
         self.store_free_param_or_identifier_name(preimage_name, ParamObjType::Exist)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
@@ -133,10 +190,7 @@ impl Runtime {
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
 
-        Ok(
-            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![source_result])
-                .into(),
-        )
+        Ok(infer_result)
     }
 
     fn preimage_function_and_body(

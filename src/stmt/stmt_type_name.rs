@@ -18,9 +18,9 @@ impl ClaimStmt {
     }
 }
 
-impl KnowStmt {
+impl ProofDebtStmt {
     pub fn stmt_type_name(&self) -> String {
-        "KnowStmt".to_string()
+        "ProofDebtStmt".to_string()
     }
 }
 
@@ -357,7 +357,7 @@ impl ClaimStmt {
     }
 }
 
-impl KnowStmt {
+impl ProofDebtStmt {
     pub fn output_type_string() -> String {
         "unproved assumption".to_string()
     }
@@ -388,8 +388,11 @@ impl DefTemplateStmt {
 }
 
 impl RunFileStmt {
-    pub fn output_type_string() -> String {
-        "run file statement".to_string()
+    pub fn output_type_string(&self) -> String {
+        match self.mode {
+            RunFileMode::VerifyAndExecute => "run file statement".to_string(),
+            RunFileMode::AffectEnvironmentOnly => "trusted file statement".to_string(),
+        }
     }
 }
 

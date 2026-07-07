@@ -1,4 +1,4 @@
-know:
+proof_debt:
     forall a R, b R:
         a + b = b + a
 

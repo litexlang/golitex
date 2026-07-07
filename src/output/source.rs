@@ -163,8 +163,8 @@ pub(crate) fn source_ref_json_value(
 
 pub(crate) fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
     if should_hide_file_paths(runtime) {
-        if let Stmt::Command(CommandStmt::RunFileStmt(_)) = stmt {
-            return "run_file".to_string();
+        if let Stmt::Command(CommandStmt::RunFileStmt(run_file_stmt)) = stmt {
+            return run_file_stmt.keyword().to_string();
         }
     }
     user_visible_stmt_or_msg_text(&stmt.to_string())

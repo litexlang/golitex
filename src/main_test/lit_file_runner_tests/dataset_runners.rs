@@ -133,7 +133,7 @@ fn run_gsm8k_jsonl_file(
     if *total_count == 0 {
         runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
     } else {
-        runtime.clear_current_env_and_parse_name_scope();
+        runtime.clear_current_env_parse_name_scope_and_stop_imports();
         runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
     }
 
@@ -143,7 +143,7 @@ fn run_gsm8k_jsonl_file(
         }
 
         if *total_count > 0 || line_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
         }
 
@@ -396,7 +396,7 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
             continue;
         }
         if total_count > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
         }
 
@@ -571,7 +571,7 @@ fn run_metamathqa_jsonl_file(
         }
 
         if line_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
         }
 
@@ -809,7 +809,7 @@ fn run_jsonl_debug_items(
 
     for (item_index, item) in items.iter().enumerate() {
         if item_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
         }
 
@@ -918,7 +918,7 @@ fn run_labeled_jsonl_solution_file(
         }
 
         if line_index > 0 {
-            runtime.clear_current_env_and_parse_name_scope();
+            runtime.clear_current_env_parse_name_scope_and_stop_imports();
             runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
         }
 

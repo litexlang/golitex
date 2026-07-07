@@ -37,13 +37,18 @@ impl Obj {
             Obj::Cup(x) => x.left.contains_forall_free_param_obj(),
             Obj::Cap(x) => x.left.contains_forall_free_param_obj(),
             Obj::PowerSet(x) => x.set.contains_forall_free_param_obj(),
+            Obj::GeneralCart(x) => {
+                x.index_set.contains_forall_free_param_obj()
+                    || x.family_set.contains_forall_free_param_obj()
+                    || x.family_fn.contains_forall_free_param_obj()
+            }
             Obj::ListSet(x) => x
                 .list
                 .iter()
                 .any(|obj| obj.contains_forall_free_param_obj()),
             Obj::SetBuilder(x) => {
                 x.param_set.contains_forall_free_param_obj()
-                    || or_and_chain_facts_contain_forall_free_param_obj(&x.facts)
+                    || exist_body_facts_contain_forall_free_param_obj(&x.facts)
             }
             Obj::FnSet(x) => fn_set_body_contains_forall_free_param_obj(&x.body),
             Obj::AnonymousFn(x) => {
@@ -145,6 +150,14 @@ fn fn_set_body_contains_forall_free_param_obj(body: &FnSetBody) -> bool {
 }
 
 fn or_and_chain_facts_contain_forall_free_param_obj(facts: &[OrAndChainAtomicFact]) -> bool {
+    facts.iter().any(|fact| {
+        fact.get_args_from_fact()
+            .iter()
+            .any(|arg| arg.contains_forall_free_param_obj())
+    })
+}
+
+fn exist_body_facts_contain_forall_free_param_obj(facts: &[ExistBodyFact]) -> bool {
     facts.iter().any(|fact| {
         fact.get_args_from_fact()
             .iter()

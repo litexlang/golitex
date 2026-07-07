@@ -52,7 +52,7 @@ flowchart TB
 
         subgraph assume_path["2C. Assumptions Store Context"]
             direction TB
-            assume_input["Assumption-like input<br/>know blocks,<br/>local domain facts,<br/>or caller-checked facts"]
+            assume_input["Assumption-like input<br/>proof_debt blocks,<br/>local domain facts,<br/>or caller-checked facts"]
             assume_check["Check it is meaningful<br/>then store it without<br/>finding a proof route here"]
             assumed["Stored as context<br/>later proof steps<br/>may depend on it"]
 

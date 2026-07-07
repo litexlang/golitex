@@ -43,10 +43,33 @@ claim:
             forall A S:
                 $is_nonempty_set(A)
             =>:
-                exist f fn(A S) cup(S) st {forall! A S: {f(A) $in A}}
+                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
-    by axiom_of_choice: set S:
-        ...
+by axiom_of_choice: set S:
+    ...
+```
+
+## 3.1. `general_cart`
+
+- Category: `proof pattern`
+- Purpose: Uses the built-in general Cartesian product as a choice-function set.
+
+```litex
+have I set
+have s nonempty_set
+have g fn(alpha I) s
+
+proof_debt forall X s:
+    $is_nonempty_set(X)
+
+$is_nonempty_set(general_cart(I, s, g))
+general_cart(I, s, g) = {f fn(t I)cup(s): forall! alpha I => {f(alpha) $in g(alpha)}}
+
+have c general_cart(I, s, g)
+c $in fn(t I)cup(s)
+
+forall alpha I:
+    c(alpha) $in g(alpha)
 ```
 
 ## 4. `by_cases`
@@ -177,7 +200,7 @@ by enumerate finite_set:
                 a = 2
                 b = 4
 
-by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2, 4)}:
+by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) = (2, 4)}:
     ...
 ```
 
@@ -251,7 +274,7 @@ by for:
             n <= 10
     do_nothing
 
-by for forall! n range(0, 3): n < 3:
+by for forall! n range(0, 3) => {n < 3}:
     ...
 
 by for:
@@ -679,11 +702,7 @@ forall:
 ```litex
 forall! a R: a > 0 => { a + 1 > 1 }
 
-forall! a R: forall! b R: b > 0 => { a + b > a } => { a + 1 > a }
-
-forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
-
-forall! a R: a > 0 => { a > -1, a + 1 > 0 }
+forall! a R: a > 0 => {a + 1 > 1 and a + 2 > 2}
 ```
 
 ## 21. `logic`
@@ -1587,7 +1606,7 @@ forall n N:
 - Purpose: Shows the trusted regularity/foundation step for a nonempty set.
 
 ```litex
-know $is_nonempty_set({1, 2})
+proof_debt $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 

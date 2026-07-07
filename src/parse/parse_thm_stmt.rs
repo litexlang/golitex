@@ -4,21 +4,7 @@ impl Runtime {
     pub fn parse_def_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let keyword = THM;
         tb.skip_token(keyword)?;
-        let mut thm_names = Vec::new();
-        loop {
-            let name = tb.advance()?;
-            is_valid_litex_name(&name).map_err(|msg| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-                ))
-            })?;
-            thm_names.push(name);
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-            } else {
-                break;
-            }
-        }
+        let thm_names = parse_thm_name_list(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -77,4 +63,67 @@ impl Runtime {
         let stmt = DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone());
         Ok(stmt.into())
     }
+
+    pub fn parse_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        let keyword = AXIOM;
+        tb.skip_token(keyword)?;
+        let axiom_names = parse_thm_name_list(tb)?;
+        tb.skip_token(COLON)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("{}: unexpected token after axiom name list", keyword),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        if tb.body.len() != 1 {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("{}: expects exactly one `? forall ...` goal block", keyword),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let goal_block = tb.body.get_mut(0).ok_or_else(|| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("{}: expected `?` goal block", keyword),
+                    tb.line_file.clone(),
+                ),
+            ))
+        })?;
+        if !goal_block.current_token_is_equal_to(QUESTION_GOAL) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("{}: expected `? forall ...` goal block", keyword),
+                    goal_block.line_file.clone(),
+                ),
+            )));
+        }
+        let forall_fact = self.parse_goal_forall_fact_block(goal_block, keyword)?;
+
+        let stmt = DefThmStmt::new_axiom(axiom_names, forall_fact, tb.line_file.clone());
+        Ok(stmt.into())
+    }
+}
+
+fn parse_thm_name_list(tb: &mut TokenBlock) -> Result<Vec<String>, RuntimeError> {
+    let mut names = Vec::new();
+    loop {
+        let name = tb.advance()?;
+        is_valid_litex_name(&name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+        names.push(name);
+        if tb.current_token_is_equal_to(COMMA) {
+            tb.skip_token(COMMA)?;
+        } else {
+            break;
+        }
+    }
+    Ok(names)
 }

@@ -3,6 +3,17 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_contra_stmt(&mut self, stmt: &ByContraStmt) -> Result<StmtResult, RuntimeError> {
+        self.exec_by_contra_stmt_verify_well_definedness(stmt)?;
+        let result = self.exec_by_contra_stmt_verify_process(stmt)?;
+        let infer_result = self.exec_by_contra_stmt_affect_environment(stmt)?;
+
+        Ok(result.with_infers(infer_result))
+    }
+
+    fn exec_by_contra_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &ByContraStmt,
+    ) -> Result<(), RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
@@ -12,8 +23,14 @@ impl Runtime {
                     Some(verify_error),
                     vec![],
                 )
-            })?;
+            })
+    }
 
+    fn exec_by_contra_stmt_verify_process(
+        &mut self,
+        stmt: &ByContraStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let to_prove_fact = stmt.to_prove.clone();
         let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
 
@@ -24,7 +41,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by contra: failed to know reverse of `{}`", to_prove_fact),
+                    format!("by contra: failed to store reverse of `{}`", to_prove_fact),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -84,9 +101,37 @@ impl Runtime {
             ));
         }
 
+        let reverse_assumption = reverse_fact_for_by_contra(&stmt.to_prove)?;
+        let by_verification = ByContraVerificationResult::new(
+            stmt.to_prove.clone(),
+            reverse_assumption,
+            stmt.proof.len(),
+            stmt.impossible_fact.clone(),
+        )
+        .into();
+
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            InferResult::new(),
+            exec_proof_inside_results,
+            by_verification,
+        )
+        .into())
+    }
+
+    pub(crate) fn exec_by_contra_stmt_affect_environment(
+        &mut self,
+        stmt: &ByContraStmt,
+    ) -> Result<InferResult, RuntimeError> {
+        let to_prove_fact = stmt.to_prove.clone();
         let to_prove_fact_display_string = to_prove_fact.to_string();
-        let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(to_prove_fact)
+        if self.only_exec_affect_environment {
+            return self.store_trusted_fact_and_infer_with_reason(
+                to_prove_fact,
+                InferReason::VerifiedStatement,
+            );
+        }
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(to_prove_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -97,24 +142,15 @@ impl Runtime {
                     Some(store_fact_error),
                     vec![],
                 )
-            })?;
+            })
+    }
 
-        let reverse_assumption = reverse_fact_for_by_contra(&stmt.to_prove)?;
-        let by_verification = ByContraVerificationResult::new(
-            stmt.to_prove.clone(),
-            reverse_assumption,
-            stmt.proof.len(),
-            stmt.impossible_fact.clone(),
-        )
-        .into();
-
-        Ok((NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            exec_proof_inside_results,
-            by_verification,
-        ))
-        .into())
+    pub(crate) fn exec_by_contra_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByContraStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_by_contra_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }
 

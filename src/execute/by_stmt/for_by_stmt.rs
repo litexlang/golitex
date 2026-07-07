@@ -34,6 +34,20 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn exec_by_for_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByForStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let corresponding_forall_fact = stmt
+            .to_corresponding_forall_fact()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            corresponding_forall_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn exec_by_for_ranges(
         &mut self,
         stmt: &ByForStmt,
