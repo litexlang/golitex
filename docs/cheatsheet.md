@@ -1,5 +1,10 @@
 # Statement Execution Cheat Sheet
 
+If you are new to Litex, read
+[Litex Language Introduction](Litex_Language_Introduction.md) before this page.
+That note explains the mathematical meaning of objects, facts, statements, and
+context growth.  This cheat sheet is a dense executor/reference map.
+
 This note summarizes the current executor behavior by separating each statement
 into three parts:
 
