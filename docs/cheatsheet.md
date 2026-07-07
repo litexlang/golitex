@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `run_file`, and `stop import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, `run_file`, `trust_file`, and `stop import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -126,6 +126,7 @@ object-introduction family of `have` statements listed below.
 |---|---|---|---|
 | `import` | Resolves module path/name; checks aliases, cycles, duplicate module names, and duplicate paths. | Runs the imported module normally when it is not already cached. | Registers the module environment, import dependencies, and reactivates cached modules when applicable. |
 | `run_file` | Resolves and reads the file path. | Runs the target file normally. | Executes directly in the current user environment. |
+| `trust_file` | Resolves and reads a quoted file path like `run_file`. | Skips ordinary proof and well-definedness checking in the loaded file. | Loads trusted environment effects such as facts, definitions, theorem interfaces, object bindings, and strategy registrations. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification in the shared module manager. |
 | `do_nothing` | None. | None. | None. |

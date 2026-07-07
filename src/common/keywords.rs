@@ -145,6 +145,7 @@ pub const PROOF_DEBT: &str = "proof_debt";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
 pub const RUN_FILE: &str = "run_file";
+pub const TRUST_FILE: &str = "trust_file";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
@@ -308,6 +309,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLEAR,
         DO_NOTHING,
         RUN_FILE,
+        TRUST_FILE,
         INDUC,
         STRONG_INDUC,
         FROM,

@@ -362,7 +362,7 @@ impl CommandStmt {
             CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
             CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
             CommandStmt::StopImportStmt(_) => StopImportStmt::output_type_string(),
-            CommandStmt::RunFileStmt(_) => RunFileStmt::output_type_string(),
+            CommandStmt::RunFileStmt(stmt) => stmt.output_type_string(),
             CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),
             CommandStmt::EvalByStmt(_) => EvalByStmt::output_type_string(),
             CommandStmt::UseStrategyStmt(_) => UseStrategyStmt::output_type_string(),

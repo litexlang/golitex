@@ -61,6 +61,7 @@ impl Runtime {
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
             RUN_FILE => self.parse_run_file_stmt(tb),
+            TRUST_FILE => self.parse_trust_file_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),

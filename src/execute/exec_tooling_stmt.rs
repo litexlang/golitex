@@ -129,7 +129,10 @@ impl Runtime {
             let lf = st.line_file();
             RuntimeErrorStruct::new(
                 Some(st),
-                "run_file can only be run as a top-level statement".to_string(),
+                format!(
+                    "{} can only be run as a top-level statement",
+                    stmt.keyword()
+                ),
                 lf,
                 None,
                 vec![],

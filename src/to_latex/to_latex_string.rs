@@ -1793,7 +1793,7 @@ impl RunFileStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\operatorname{{{}}}\ \texttt{{{}}}",
-            RUN_FILE,
+            self.keyword(),
             latex_texttt_escape(&self.file_path)
         )
     }

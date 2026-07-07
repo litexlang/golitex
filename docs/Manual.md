@@ -2076,8 +2076,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `run_file`, and `stop import` are
-not allowed inside `try:`.
+Control statements such as `clear`, `import`, `run_file`, `trust_file`, and
+`stop import` are not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
 scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
@@ -2129,11 +2129,20 @@ theorem.
 
 **`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
 
+**`trust_file "path.lit"`** reads a quoted file with the same path rules as
+`run_file`, but treats the file as trusted. Litex loads only persistent
+environment effects such as facts, definitions, theorem interfaces, object
+bindings, and strategy registrations. It does not run ordinary proof checking
+or well-definedness checking for the loaded file. Use this only for local files
+whose contents you intentionally trust, for example a temporary interface file
+used to speed up a large translation dependency.
+
 ```text
 import Nat
 import "./chap6_sketch.lit" as chap6
 stop import Nat
 run_file "./runfile2.lit"
+trust_file "./trusted_interfaces.lit"
 ```
 
 ---

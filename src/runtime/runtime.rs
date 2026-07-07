@@ -14,6 +14,7 @@ pub struct Runtime {
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
     pub loading_builtin_code: bool,
+    pub only_exec_affect_environment: bool,
 }
 
 impl Runtime {
@@ -31,6 +32,7 @@ impl Runtime {
             strict_mode: false,
             output_language: OutputLanguage::English,
             loading_builtin_code: false,
+            only_exec_affect_environment: false,
         }
     }
 
@@ -66,6 +68,7 @@ impl Runtime {
             strict_mode: false,
             output_language: parent_runtime.output_language,
             loading_builtin_code: false,
+            only_exec_affect_environment: parent_runtime.only_exec_affect_environment,
         }
     }
 }
