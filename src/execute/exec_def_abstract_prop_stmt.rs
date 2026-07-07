@@ -52,12 +52,24 @@ impl Runtime {
         Ok(vec![])
     }
 
-    fn exec_def_abstract_prop_stmt_affect_environment(
+    pub(crate) fn exec_def_abstract_prop_stmt_affect_environment(
         &mut self,
         def_abstract_prop_stmt: &DefAbstractPropStmt,
     ) -> Result<InferResult, RuntimeError> {
         self.store_def_abstract_prop(def_abstract_prop_stmt)?;
         Ok(InferResult::new())
+    }
+
+    pub(crate) fn exec_def_abstract_prop_stmt_affect_environment_only(
+        &mut self,
+        def_abstract_prop_stmt: &DefAbstractPropStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result =
+            self.exec_def_abstract_prop_stmt_affect_environment(def_abstract_prop_stmt)?;
+        Ok(
+            NonFactualStmtSuccess::new(def_abstract_prop_stmt.clone().into(), infer_result, vec![])
+                .into(),
+        )
     }
 }
 

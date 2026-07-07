@@ -13,7 +13,7 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
     }
 
-    fn exec_have_fn_by_induc_affect_environment(
+    pub(crate) fn exec_have_fn_by_induc_affect_environment(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<InferResult, RuntimeError> {
@@ -30,6 +30,14 @@ impl Runtime {
         }
 
         Ok(infer_result)
+    }
+
+    pub(crate) fn exec_have_fn_by_induc_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {

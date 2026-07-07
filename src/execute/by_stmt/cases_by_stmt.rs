@@ -3,6 +3,17 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_cases_stmt(&mut self, stmt: &ByCasesStmt) -> Result<StmtResult, RuntimeError> {
+        self.exec_by_cases_stmt_verify_well_definedness(stmt)?;
+        let result = self.exec_by_cases_stmt_verify_process(stmt)?;
+        let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
+
+        Ok(result.with_infers(infer_result))
+    }
+
+    fn exec_by_cases_stmt_verify_well_definedness(
+        &mut self,
+        stmt: &ByCasesStmt,
+    ) -> Result<(), RuntimeError> {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
@@ -74,6 +85,13 @@ impl Runtime {
             ));
         }
 
+        Ok(())
+    }
+
+    fn exec_by_cases_stmt_verify_process(
+        &mut self,
+        stmt: &ByCasesStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         let mut inside_results =
             vec![self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?];
         let mut case_result_counts = Vec::new();
@@ -83,23 +101,6 @@ impl Runtime {
                 self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
             case_result_counts.push(case_results.len());
             inside_results.append(&mut case_results);
-        }
-
-        let mut infer_result = InferResult::new();
-        for then_fact in stmt.then_facts.iter() {
-            let one_then_fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                    then_fact.clone(),
-                )
-                .map_err(|store_fact_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!("by cases: failed to release `{}`", then_fact),
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })?;
-            infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
 
         let proof_step_counts = stmt
@@ -116,13 +117,50 @@ impl Runtime {
         )
         .into();
 
-        Ok((NonFactualStmtSuccess::new_with_by_verification(
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
             stmt.clone().into(),
-            infer_result,
+            InferResult::new(),
             inside_results,
             by_verification,
-        ))
+        )
         .into())
+    }
+
+    pub(crate) fn exec_by_cases_stmt_affect_environment(
+        &mut self,
+        stmt: &ByCasesStmt,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        for then_fact in stmt.then_facts.iter() {
+            let one_then_fact_infer_result = if self.only_exec_affect_environment {
+                self.store_trusted_fact_and_infer_with_reason(
+                    then_fact.clone(),
+                    InferReason::VerifiedStatement,
+                )
+            } else {
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    then_fact.clone(),
+                )
+            }
+            .map_err(|store_fact_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by cases: failed to release `{}`", then_fact),
+                    Some(store_fact_error),
+                    vec![],
+                )
+            })?;
+            infer_result.new_infer_result_inside(one_then_fact_infer_result);
+        }
+        Ok(infer_result)
+    }
+
+    pub(crate) fn exec_by_cases_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByCasesStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(

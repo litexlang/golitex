@@ -20,9 +20,16 @@ pub struct ImportGlobalModuleStmt {
     pub line_file: LineFile,
 }
 
+#[derive(Clone, PartialEq)]
+pub enum RunFileMode {
+    VerifyAndExecute,
+    AffectEnvironmentOnly,
+}
+
 #[derive(Clone)]
 pub struct RunFileStmt {
     pub file_path: String,
+    pub mode: RunFileMode,
     pub line_file: LineFile,
 }
 
@@ -34,9 +41,21 @@ pub struct StopImportStmt {
 
 impl RunFileStmt {
     pub fn new(file_path: String, line_file: LineFile) -> Self {
+        RunFileStmt::new_with_mode(file_path, RunFileMode::VerifyAndExecute, line_file)
+    }
+
+    pub fn new_with_mode(file_path: String, mode: RunFileMode, line_file: LineFile) -> Self {
         RunFileStmt {
             file_path,
+            mode,
             line_file,
+        }
+    }
+
+    pub fn keyword(&self) -> &'static str {
+        match self.mode {
+            RunFileMode::VerifyAndExecute => RUN_FILE,
+            RunFileMode::AffectEnvironmentOnly => TRUST_FILE,
         }
     }
 }
@@ -58,7 +77,14 @@ impl fmt::Display for StopImportStmt {
 
 impl fmt::Display for RunFileStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.file_path)
+        write!(
+            f,
+            "{} {}{}{}",
+            self.keyword(),
+            DOUBLE_QUOTE,
+            self.file_path,
+            DOUBLE_QUOTE
+        )
     }
 }
 

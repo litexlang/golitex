@@ -20,6 +20,10 @@ impl Runtime {
         verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
+        if self.only_exec_affect_environment {
+            return self
+                .store_and_infer_fact_without_well_defined_verified_with_reason(fact, reason);
+        }
         if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
@@ -54,6 +58,14 @@ impl Runtime {
             _ => VerifyState::new_with_final_round(false),
         };
         self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
+    }
+
+    pub fn store_trusted_fact_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_and_infer_fact_without_well_defined_verified_with_reason(fact, reason)
     }
 
     fn store_and_infer_fact_without_well_defined_verified_with_reason(

@@ -210,6 +210,16 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    pub(crate) fn exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
+        let infer_result =
+            self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn have_fn_by_forall_exist_unique_shape(
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,

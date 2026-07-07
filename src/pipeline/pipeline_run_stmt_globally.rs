@@ -36,14 +36,15 @@ fn run_file(
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.borrow().current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
-    run_file_at_resolved_path(_run_file_stmt.clone().into(), path, _runtime)
+    run_file_at_resolved_path(_run_file_stmt.clone(), path, _runtime)
 }
 
 fn run_file_at_resolved_path(
-    stmt: Stmt,
+    run_file_stmt: RunFileStmt,
     path: String,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
+    let stmt: Stmt = run_file_stmt.clone().into();
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
         RuntimeError::ExecStmtError({
             let lf = stmt.line_file();
@@ -58,11 +59,15 @@ fn run_file_at_resolved_path(
     })?;
 
     let current_source_path = runtime.module_manager.borrow().current_file_path_rc();
+    let old_only_exec_affect_environment = runtime.only_exec_affect_environment;
     runtime.new_file_and_update_runtime_with_file_content(path.as_str());
+    runtime.only_exec_affect_environment = old_only_exec_affect_environment
+        || run_file_stmt.mode == RunFileMode::AffectEnvironmentOnly;
 
     let result = run_source_code(content.as_str(), runtime);
 
     runtime.set_current_source_path_rc(current_source_path);
+    runtime.only_exec_affect_environment = old_only_exec_affect_environment;
 
     if let Some(error) = result.1 {
         return Err(error);

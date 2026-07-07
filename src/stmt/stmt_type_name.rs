@@ -388,8 +388,11 @@ impl DefTemplateStmt {
 }
 
 impl RunFileStmt {
-    pub fn output_type_string() -> String {
-        "run file statement".to_string()
+    pub fn output_type_string(&self) -> String {
+        match self.mode {
+            RunFileMode::VerifyAndExecute => "run file statement".to_string(),
+            RunFileMode::AffectEnvironmentOnly => "trusted file statement".to_string(),
+        }
     }
 }
 

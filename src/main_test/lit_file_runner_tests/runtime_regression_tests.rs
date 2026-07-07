@@ -8359,6 +8359,344 @@ fn run_file_std_module_form_is_rejected() {
 }
 
 #[test]
+fn trust_file_std_module_form_is_rejected() {
+    run_with_large_stack("trust_file_std_module_form_is_rejected", || {
+        let source_code = "trust_file Trig";
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code,
+            "trust_file_std_module_form_is_rejected",
+            false,
+        );
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("trust_file expects a quoted relative or absolute file path"));
+    });
+}
+
+#[test]
+fn trust_file_loads_failed_theorem_interface_for_by_thm() {
+    run_with_large_stack(
+        "trust_file_loads_failed_theorem_interface_for_by_thm",
+        || {
+            let trust_file_path =
+                std::env::temp_dir().join("litex-trust-file-failed-theorem-interface-test.lit");
+            fs::write(
+                &trust_file_path,
+                r#"
+abstract_prop trusted_load_prop(x)
+
+thm trusted_load_all:
+    prove:
+        forall x R:
+            =>:
+                $trusted_load_prop(x)
+"#,
+            )
+            .unwrap();
+            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+            let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+            let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+                run_file_source_code.as_str(),
+                "trust_file_failed_theorem_run_file_path",
+                false,
+            );
+            assert!(
+                !run_file_succeeded,
+                "ordinary run_file should fail on the unproved theorem:\n{}",
+                run_file_output
+            );
+
+            let trust_file_source_code = format!(
+                "trust_file \"{}\"\nby thm trusted_load_all(2)\n$trusted_load_prop(2)",
+                trust_file_path_string
+            );
+            let (trust_file_succeeded, trust_file_output, runtime) =
+                run_trust_file_regression_source(
+                    trust_file_source_code.as_str(),
+                    "trust_file_failed_theorem_trusted_path",
+                    false,
+                );
+            let _ = fs::remove_file(&trust_file_path);
+
+            assert!(
+                trust_file_succeeded,
+                "trust_file should load the theorem interface and let by thm use it:\n{}",
+                trust_file_output
+            );
+            assert!(runtime
+                .get_thm_definition_by_name("trusted_load_all")
+                .is_some());
+            assert!(trust_file_output.contains("\"statement\": \"trust_file\""));
+            assert!(!trust_file_output.contains(trust_file_path_string.as_str()));
+        },
+    );
+}
+
+#[test]
+fn trust_file_loads_have_object_environment_effects() {
+    run_with_large_stack("trust_file_loads_have_object_environment_effects", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-have-object-effects-test.lit");
+        fs::write(&trust_file_path, "have trusted_bad N = -1\n").unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+            run_file_source_code.as_str(),
+            "trust_file_have_object_effects_run_file",
+            false,
+        );
+        assert!(
+            !run_file_succeeded,
+            "ordinary run_file should reject the invalid object definition:\n{}",
+            run_file_output
+        );
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\ntrusted_bad = -1",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_have_object_effects_trust_file",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load have-object bindings and facts:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_extension_environment_effects() {
+    run_with_large_stack("trust_file_loads_by_extension_environment_effects", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-by-extension-effects-test.lit");
+        fs::write(
+            &trust_file_path,
+            "have trusted_ext_a set\nhave trusted_ext_b set\nby extension trusted_ext_a = trusted_ext_b\n",
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\ntrusted_ext_a = trusted_ext_b",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_by_extension_effects",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load by-extension equality effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_for_generated_forall_effects() {
+    run_with_large_stack("trust_file_loads_by_for_generated_forall_effects", || {
+        let trust_file_path = std::env::temp_dir().join("litex-trust-file-by-for-effects-test.lit");
+        fs::write(
+            &trust_file_path,
+            r#"
+abstract_prop trusted_for_prop(n)
+
+by for:
+    prove:
+        forall n range(0, 2):
+            $trusted_for_prop(n)
+"#,
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\n$trusted_for_prop(1)",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "trust_file_by_for_generated_forall_effects",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "trust_file should load by-for generated forall effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_loads_by_symmetric_prop_registry_effects() {
+    run_with_large_stack(
+        "trust_file_loads_by_symmetric_prop_registry_effects",
+        || {
+            let trust_file_path =
+                std::env::temp_dir().join("litex-trust-file-by-symmetric-prop-effects-test.lit");
+            fs::write(
+                &trust_file_path,
+                r#"
+abstract_prop trusted_sym_prop(x, y)
+
+by symmetric_prop:
+    prove:
+        forall x, y set:
+            $trusted_sym_prop(x, y)
+            =>:
+                $trusted_sym_prop(y, x)
+"#,
+            )
+            .unwrap();
+            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+            let trust_file_source_code = format!(
+                r#"
+trust_file "{}"
+have trusted_sym_a set
+have trusted_sym_b set
+proof_debt $trusted_sym_prop(trusted_sym_a, trusted_sym_b)
+$trusted_sym_prop(trusted_sym_b, trusted_sym_a)
+"#,
+                trust_file_path_string
+            );
+            let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+                trust_file_source_code.as_str(),
+                "trust_file_by_symmetric_prop_registry_effects",
+                false,
+            );
+            let _ = fs::remove_file(&trust_file_path);
+
+            assert!(
+                trust_file_succeeded,
+                "trust_file should load by-symmetric-prop registry effects:\n{}",
+                trust_file_output
+            );
+        },
+    );
+}
+
+#[test]
+fn trust_file_restores_affect_only_flag_after_load() {
+    run_with_large_stack("trust_file_restores_affect_only_flag_after_load", || {
+        let trust_file_path = std::env::temp_dir().join("litex-trust-file-flag-restore-test.lit");
+        fs::write(&trust_file_path, "abstract_prop flag_restore_prop(x)\n").unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+        let source_code = format!(
+            "trust_file \"{}\"\n$flag_restore_prop(3)",
+            trust_file_path_string
+        );
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code.as_str(),
+            "trust_file_restores_affect_only_flag_after_load",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            !run_succeeded,
+            "ordinary statement after trust_file should not stay in affect-only mode:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn trust_file_keeps_duplicate_definition_errors() {
+    run_with_large_stack("trust_file_keeps_duplicate_definition_errors", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-duplicate-definition-test.lit");
+        fs::write(
+            &trust_file_path,
+            "abstract_prop duplicate_trusted_prop(x)\nabstract_prop duplicate_trusted_prop(x)\n",
+        )
+        .unwrap();
+        let source_code = format!("trust_file \"{}\"", trust_file_path.to_string_lossy());
+
+        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
+            source_code.as_str(),
+            "trust_file_keeps_duplicate_definition_errors",
+            false,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            !run_succeeded,
+            "duplicate definition inside trust_file should still fail:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("already used"));
+    });
+}
+
+#[test]
+fn strict_mode_trust_file_loads_unsafe_interfaces() {
+    run_with_large_stack("strict_mode_trust_file_loads_unsafe_interfaces", || {
+        let trust_file_path =
+            std::env::temp_dir().join("litex-trust-file-strict-unsafe-interface-test.lit");
+        fs::write(
+            &trust_file_path,
+            r#"
+abstract_prop strict_trusted_prop(x)
+
+proof_debt forall x R:
+    $strict_trusted_prop(x)
+
+axiom strict_trusted_all:
+    ? forall x R:
+        $strict_trusted_prop(x)
+"#,
+        )
+        .unwrap();
+        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
+
+        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
+        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
+            run_file_source_code.as_str(),
+            "strict_mode_trust_file_loads_unsafe_interfaces_run_file",
+            true,
+        );
+        assert!(
+            !run_file_succeeded,
+            "strict ordinary run_file should reject proof_debt/axiom content:\n{}",
+            run_file_output
+        );
+
+        let trust_file_source_code = format!(
+            "trust_file \"{}\"\nby thm strict_trusted_all(2)\n$strict_trusted_prop(2)",
+            trust_file_path_string
+        );
+        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
+            trust_file_source_code.as_str(),
+            "strict_mode_trust_file_loads_unsafe_interfaces_trust_file",
+            true,
+        );
+        let _ = fs::remove_file(&trust_file_path);
+
+        assert!(
+            trust_file_succeeded,
+            "strict trust_file should load unsafe interfaces as trusted environment effects:\n{}",
+            trust_file_output
+        );
+    });
+}
+
+#[test]
 fn clear_does_not_preserve_quoted_run_file_environment() {
     let run_file_path = std::env::temp_dir().join("litex-clear-quoted-run-file-test.lit");
     fs::write(
@@ -8383,6 +8721,20 @@ fn clear_does_not_preserve_quoted_run_file_environment() {
         "quoted run_file content should be cleared:\n{}",
         run_output
     );
+}
+
+fn run_trust_file_regression_source(
+    source_code: &str,
+    file_label: &str,
+    strict_mode: bool,
+) -> (bool, String, Runtime) {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(file_label);
+    runtime.strict_mode = strict_mode;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    (run_succeeded, run_output, runtime)
 }
 
 #[test]

@@ -161,7 +161,7 @@ fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
     match stmt {
         Stmt::Command(CommandStmt::ClearStmt(_)) => Some("clear"),
         Stmt::Command(CommandStmt::ImportStmt(_)) => Some("import"),
-        Stmt::Command(CommandStmt::RunFileStmt(_)) => Some("run_file"),
+        Stmt::Command(CommandStmt::RunFileStmt(s)) => Some(s.keyword()),
         Stmt::Command(CommandStmt::StopImportStmt(_)) => Some("stop_import"),
         _ => None,
     }

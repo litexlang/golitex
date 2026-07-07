@@ -103,6 +103,36 @@ impl Runtime {
         )
         .into())
     }
+
+    pub(crate) fn exec_by_enumerate_range_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByEnumerateRangeStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let branches = enumerate_range_equalities(stmt)
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
+        if branches.is_empty() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "{}: {}",
+                    enumerate_range_stmt_name(&stmt.range),
+                    enumerate_range_empty_error(&stmt.range)
+                ),
+                None,
+                vec![],
+            ));
+        }
+        let generated_fact: Fact = if branches.len() == 1 {
+            branches[0].clone().into()
+        } else {
+            OrFact::new(branches, stmt.line_file.clone()).into()
+        };
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            generated_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
 }
 
 fn enumerated_range_set_obj(range: &ClosedRangeOrRange) -> Obj {

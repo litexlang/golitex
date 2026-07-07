@@ -3,7 +3,6 @@ mod local_debug_tests {
     use std::fs;
     use std::path::PathBuf;
     use std::time::Instant;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     use crate::prelude::*;
 
@@ -34,20 +33,6 @@ mod local_debug_tests {
     #[ignore = "local debug helper; reads tmp/debug.lit"]
     fn run_debug_snippets() {
         run_with_large_stack("run_debug_snippets_large_stack", run_debug_snippets_impl);
-    }
-
-    // LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-    // LITEX_DEPGRAPH_DOT=1 LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-    // LITEX_DEPGRAPH_BOTH=1 LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-    // LITEX_DEPGRAPH_DETAIL_OUTPUT=1 LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-    // LITEX_DEPGRAPH_STRICT=1 LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-    #[test]
-    #[ignore = "local debug helper; reads LITEX_DEPGRAPH_FILE"]
-    fn run_dependency_graph_debug_file() {
-        run_with_large_stack(
-            "run_dependency_graph_debug_file_large_stack",
-            run_dependency_graph_debug_file_impl,
-        );
     }
 
     fn run_debug_snippets_impl() {
@@ -153,60 +138,6 @@ mod local_debug_tests {
         );
     }
 
-    fn run_dependency_graph_debug_file_impl() {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let Some(lit_path) = dependency_graph_lit_path(&manifest_dir) else {
-            println!("--- run_dependency_graph_debug_file: skip ---");
-            println!("  Set LITEX_DEPGRAPH_FILE=path/to/file.lit");
-            return;
-        };
-        if !lit_path.is_file() {
-            panic!(
-                "LITEX_DEPGRAPH_FILE does not point to a file: {}",
-                lit_path.display()
-            );
-        }
-        let Some(lit_path_string) = lit_path.to_str() else {
-            panic!("LITEX_DEPGRAPH_FILE must be valid UTF-8: {:?}", lit_path);
-        };
-
-        let detail_output = env_flag_is_set("LITEX_DEPGRAPH_DETAIL_OUTPUT");
-        let strict_mode = env_flag_is_set("LITEX_DEPGRAPH_STRICT");
-        let write_dot = env_flag_is_set("LITEX_DEPGRAPH_DOT");
-        let write_both = env_flag_is_set("LITEX_DEPGRAPH_BOTH");
-
-        let start_time = Instant::now();
-        let mut outputs = Vec::new();
-        if write_dot || write_both {
-            let (ok, graph_output) =
-                run_dependency_graph_dot_for_file(lit_path_string, detail_output, strict_mode);
-            let output_path = write_dependency_graph_debug_output(&graph_output, "dot");
-            outputs.push((ok, "dot", output_path));
-        }
-        if !write_dot || write_both {
-            let (ok, graph_output) =
-                run_dependency_graph_json_for_file(lit_path_string, detail_output, strict_mode);
-            let output_path = write_dependency_graph_debug_output(&graph_output, "json");
-            outputs.push((ok, "json", output_path));
-        }
-
-        let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
-        println!("--- dependency graph debug file ---");
-        println!("  input: {}", lit_path.display());
-        println!("  duration: {:.2} ms", duration_ms);
-        for (ok, format, output_path) in &outputs {
-            println!(
-                "  {}: {} ({})",
-                format,
-                output_path.display(),
-                if *ok { "success" } else { "error" }
-            );
-        }
-        if outputs.iter().any(|(ok, _, _)| !*ok) {
-            panic!("dependency graph run failed; inspect output file above");
-        }
-    }
-
     fn split_debug_snippets(source_code: &str) -> Vec<DebugSnippet> {
         let mut snippets: Vec<DebugSnippet> = Vec::new();
         let mut current_lines: Vec<String> = Vec::new();
@@ -249,49 +180,6 @@ mod local_debug_tests {
             }
             _ => manifest_dir.join(DEBUG_LIT_REL_PATH),
         }
-    }
-
-    fn dependency_graph_lit_path(manifest_dir: &PathBuf) -> Option<PathBuf> {
-        let path = match std::env::var("LITEX_DEPGRAPH_FILE") {
-            Ok(path) if !path.trim().is_empty() => PathBuf::from(path.trim()),
-            _ => return None,
-        };
-        if path.is_absolute() {
-            Some(path)
-        } else {
-            Some(manifest_dir.join(path))
-        }
-    }
-
-    fn write_dependency_graph_debug_output(graph_output: &str, extension: &str) -> PathBuf {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let output_dir = manifest_dir.join("tmp").join("depgraph");
-        fs::create_dir_all(&output_dir).unwrap_or_else(|error| {
-            panic!(
-                "failed to create dependency graph output directory {:?}: {}",
-                output_dir, error
-            )
-        });
-        let output_path = output_dir.join(format!(
-            "dependency_graph_debug_{}_{}.{}",
-            std::process::id(),
-            dependency_graph_timestamp_millis(),
-            extension
-        ));
-        fs::write(&output_path, graph_output).unwrap_or_else(|error| {
-            panic!(
-                "failed to write dependency graph output {:?}: {}",
-                output_path, error
-            )
-        });
-        output_path
-    }
-
-    fn dependency_graph_timestamp_millis() -> u128 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_millis())
-            .unwrap_or(0)
     }
 
     fn push_current_debug_snippet(

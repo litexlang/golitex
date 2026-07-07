@@ -87,7 +87,31 @@ impl Runtime {
     }
 
     pub fn parse_run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(RUN_FILE)?;
+        self.parse_run_or_trust_file_stmt(
+            tb,
+            RUN_FILE,
+            RunFileMode::VerifyAndExecute,
+            "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules",
+        )
+    }
+
+    pub fn parse_trust_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        self.parse_run_or_trust_file_stmt(
+            tb,
+            TRUST_FILE,
+            RunFileMode::AffectEnvironmentOnly,
+            "trust_file expects a quoted relative or absolute file path",
+        )
+    }
+
+    fn parse_run_or_trust_file_stmt(
+        &self,
+        tb: &mut TokenBlock,
+        keyword: &str,
+        mode: RunFileMode,
+        quoted_path_error: &str,
+    ) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(keyword)?;
         if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
             tb.skip_token(DOUBLE_QUOTE)?;
             let mut path_parts: Vec<String> = vec![];
@@ -96,12 +120,12 @@ impl Runtime {
             }
             tb.skip_token(DOUBLE_QUOTE)?;
             let file_path = path_parts.join("");
-            return Ok(RunFileStmt::new(file_path, tb.line_file.clone()).into());
+            return Ok(RunFileStmt::new_with_mode(file_path, mode, tb.line_file.clone()).into());
         }
 
         Err(RuntimeError::from(ParseRuntimeError(
             RuntimeErrorStruct::new_with_msg_and_line_file(
-                "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules".to_string(),
+                quoted_path_error.to_string(),
                 tb.line_file.clone(),
             ),
         )))

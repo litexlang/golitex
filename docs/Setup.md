@@ -412,17 +412,6 @@ Use `-depgraph` for the machine-readable JSON graph. Use `-depgraph-dot` for
 Graphviz DOT, which can be rendered with a Graphviz command such as
 `dot -Tsvg tmp/depgraph/example.dot -o tmp/depgraph/example.svg`.
 
-During local development, the ignored test helper can process one `.lit` file
-from a path:
-
-```bash
-LITEX_DEPGRAPH_FILE=path/to/file.lit cargo test run_dependency_graph_debug_file -- --ignored --nocapture
-```
-
-Set `LITEX_DEPGRAPH_DOT=1` for DOT output, or `LITEX_DEPGRAPH_BOTH=1` to write
-both JSON and DOT files. The helper writes artifacts under `tmp/depgraph` and
-prints the generated paths.
-
 ---
 
 ## Commands that may still be unavailable
