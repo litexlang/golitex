@@ -1,9 +1,9 @@
 pub mod builtin_code;
 pub mod cli;
 pub mod common;
+pub mod concept_graph;
 #[cfg(test)]
 pub mod debug_test;
-pub mod dependency_graph;
 pub mod environment;
 pub mod error;
 pub mod execute;

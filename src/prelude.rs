@@ -13,11 +13,11 @@ pub use crate::common::name_types::{
     TemplateName, ThmName,
 };
 pub use crate::common::output_language::OutputLanguage;
-pub use crate::dependency_graph::{
-    dependency_graph_dot_for_results, dependency_graph_json_for_results,
-    run_dependency_graph_dot_for_code, run_dependency_graph_dot_for_file,
-    run_dependency_graph_dot_for_repo, run_dependency_graph_json_for_code,
-    run_dependency_graph_json_for_file, run_dependency_graph_json_for_repo,
+pub use crate::concept_graph::{
+    concept_graph_dot_for_source, concept_graph_json_for_source, run_concept_graph_dot_for_code,
+    run_concept_graph_dot_for_file, run_concept_graph_dot_for_repo,
+    run_concept_graph_json_for_code, run_concept_graph_json_for_file,
+    run_concept_graph_json_for_repo,
 };
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
