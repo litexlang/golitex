@@ -53,16 +53,14 @@ fact-oriented formal language can make checked mathematics cheap enough for
 students, domain scientists, and AI agents to produce useful formal data at
 scale.
 
-## Output Is a Proof Interface
+## Output Explains Every Line
 
-Litex does not only answer "accepted" or "rejected". Output is one of the main
-interfaces of the language. The source file is the proof as the user writes it;
-the output is the proof as the checker reads it back.
+Litex does not only say whether a proof passed. It can print what every line
+did, why it was accepted, and what later lines can reuse.
 
-This is a core design choice. In ordinary mathematical prose, a reader may see
-a sentence and wonder: why is this true, which earlier facts does it use, and
-what can I use it for later? Litex output is designed to answer those questions
-line by line.
+In ordinary mathematical prose, a reader may see a sentence and wonder: why is
+this true, which earlier facts does it use, and what can I use it for later?
+Litex output is designed to answer those questions line by line.
 
 For each checked statement, the output tries to show three things:
 
@@ -71,28 +69,8 @@ For each checked statement, the output tries to show three things:
 2. **How the fact was verified.** The route might be arithmetic, equality
    substitution, a known fact, a matching `forall`, a theorem call, or a
    builtin mathematical rule.
-3. **How the environment changed.** Accepted facts, definitions, theorem
-   interfaces, and inferred consequences become part of the context for later
-   statements.
-
-This makes the output more than a success message. It turns a proof script into
-inspectable mathematical data:
-
-- A dependency graph can point from each accepted line to the definitions,
-  previous facts, theorem calls, builtin rules, and assumptions it used.
-- An interactive textbook can let a reader click a sentence and ask "why is
-  this true?" without relying only on informal prose.
-- An AI repair loop can see whether a line failed because a domain condition,
-  equality, membership fact, or lemma is missing.
-- A proof audit can expose which steps were checked, which came from imports,
-  and which were accepted as explicit `proof_debt`.
-
-Natural language explanations are useful, but they do not usually carry
-machine-checkable provenance. Traditional theorem-prover interfaces often
-center on proof states, tactics, elaboration messages, or kernel terms. Litex
-puts statement-by-statement proof reading into the main user experience: an
-ordinary-looking mathematical line can be printed back with its verification
-route and its effect on the growing context.
+3. **What later lines can reuse.** Accepted facts, definitions, theorem names,
+   and inferred consequences become part of the context for later statements.
 
 For the tiny file above, the human reading is:
 
@@ -122,14 +100,19 @@ shape:
 }
 ```
 
-The JSON shape is intentional: it is structured enough for dependency tables,
-flow charts, knowledge graphs, interactive textbooks, and AI tools, while still
-being readable as an explanation of what happened in the proof.
+*Litex output also supports multiple languages, including English, 中文,
+日本語, 한국어, Español, Français, Deutsch, Português, Русский, العربية,
+हिन्दी, Tiếng Việt, and Bahasa Indonesia. The source code stays the same; the
+explanation can be localized.*
 
-*Litex output also supports multiple languages, including English, Chinese,
-Japanese, Korean, Spanish, French, German, Portuguese, Russian, Arabic, Hindi,
-Vietnamese, and Indonesian. The source code stays the same; the explanation can
-be localized.*
+<sub>
+This structured output can support dependency graphs, flow charts, knowledge
+graphs, interactive textbooks, AI proof-repair loops, and proof audits. Each
+accepted line can point to the definitions, previous facts, theorem calls,
+builtin rules, imports, or assumptions it used. Natural-language explanations
+are useful, but they do not normally preserve this kind of structured,
+checkable proof trail.
+</sub>
 
 ## A Few Litex Examples
 
@@ -322,15 +305,22 @@ example : g ⟨1, by norm_num⟩ = 2 := by
 
 Lean is more general and more mature. Litex chooses a surface closer to the
 way the same domain restriction often appears in ordinary mathematical writing.
+For numeric formulas and update rules with a direct programming-language shape,
+Litex also has a narrow `litex -python` path: checked `have fn as algo`
+definitions can be emitted as ordinary Python for scientific-computing-style
+kernels. See [Litex To Python](https://litexlang.com/doc/Litex_To_Python) for
+the current supported subset.
 
 For a much longer and more careful comparison, see
 [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
 ## A Larger Mathematical Surface
 
-Litex can define reusable mathematical vocabulary. For example, a group
-interface can keep the carrier set, operation, inverse, identity, and axioms in
-one visible place:
+Litex is not limited to small arithmetic examples. It can also express abstract
+mathematical concepts directly. For example, a group can be described by a
+carrier set, an inverse operation, a binary operation, an identity element, and
+the usual axioms. After defining that abstract interface, Litex can check that
+the integers with negation, addition, and `0` form a group:
 
 ```litex
 prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
@@ -349,14 +339,15 @@ struct Group<s nonempty_set>:
     e s
     <=>:
         $GroupProperty(s, inv, op, e)
+
+$GroupProperty(Z, '(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0)
+
+('(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0) $in &Group<Z>
 ```
 
-Litex is also being pressure-tested on real mathematical translation work:
-textbook chapters, MATH-style problems, high-school mathematics, miniF2F-style
-items, and Tao Analysis material. The goal is not only to collect successful
-proofs. Failed translations are useful too, because they expose concrete gaps
-in syntax, standard-library interfaces, verifier rules, diagnostics, or proof
-automation.
+The last line says that `(Z, x -> -x, (x, y) -> x + y, 0)` is an instance of
+the `Group` structure. Litex verifies it by checking the tuple fields have the
+right types and that the displayed group axioms hold for integer addition.
 
 ## Trust Boundary
 
@@ -366,7 +357,7 @@ background used in that run:
 - builtin objects and builtin mathematical facts;
 - builtin verification and inference rules;
 - imported standard-library facts;
-- explicit `know`, `let`, `axiom`, or `proof_debt` assumptions;
+- explicit `axiom`, or `proof_debt` assumptions;
 - the current implementation of the parser, runtime, and verifier.
 
 `proof_debt` is assumption injection. It is useful for marking unfinished

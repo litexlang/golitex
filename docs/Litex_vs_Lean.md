@@ -10,6 +10,7 @@ Related docs:
 
 - [Manual](https://litexlang.com/doc/Manual)
 - [FAQ](https://litexlang.com/doc/FAQ)
+- [Litex To Python](https://litexlang.com/doc/Litex_To_Python)
 
 Litex source code stays the same across languages, but CLI output supports
 localized JSON keys and explanatory labels with `litex -lang <code> ...`.
@@ -379,6 +380,44 @@ have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
 
 signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
 ```
+
+### Checked Numeric Kernels Can Become Python
+
+The same surface matters when a mathematical definition also has an obvious
+programming-language shape. Some scientific-computing code is essentially a
+numeric formula or update rule: choose constants, define a real-valued function,
+compose it with other functions, and run it later in Python. Litex can keep the
+formula in mathematical form, verify the supported source first, and then emit
+ordinary Python with `litex -python`.
+
+```litex
+have dt R_pos = 1 / 100
+have fn as algo euler_step(y, dy R) R = y + dt * dy
+have fn as algo twice_step(y, dy R) R = euler_step(euler_step(y, dy), dy)
+```
+
+The current Python extractor emits code shaped like:
+
+```python
+dt = (1.0 / 100.0)
+
+def euler_step(y, dy):
+    return (y + (dt * dy))
+
+def twice_step(y, dy):
+    return euler_step(euler_step(y, dy), dy)
+```
+
+This is not only syntax translation. The intended workflow is to write the
+executable definition together with the mathematical facts and constraints it
+should satisfy, check the Litex source, and then extract the supported
+definitions. In the current v1 backend, extraction is deliberately narrow:
+numeric constants and `R`-parameter `have fn as algo` definitions become Python
+`float` code. Domain-restricted mathematical functions such as
+`fn(x R: x > 0) R` are part of the verification language, while direct
+extraction for that shape is future backend work. See
+[Litex To Python](https://litexlang.com/doc/Litex_To_Python) for the exact
+supported subset and trust boundary.
 
 ### Anonymous Functions Can Be Passed Directly
 
