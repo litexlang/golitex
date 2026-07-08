@@ -229,7 +229,7 @@ claim:
             =>:
                 $isomorphic_group(G, D)
 
-    have by exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}: phi
+    obtain phi from exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
 
     $group_homomorphism(G, D, phi)
     phi(r) = rho

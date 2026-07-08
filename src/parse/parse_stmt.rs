@@ -6,7 +6,11 @@ impl Runtime {
             ALIAS => self.parse_alias_stmt(tb),
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
-            LET => self.parse_def_let_stmt(tb),
+            SUPPOSE => self.parse_def_let_stmt(tb),
+            LET => Err(parse_stmt_error(
+                tb,
+                "`let` has been removed; use `suppose` for unproved local object assumptions",
+            )),
             HAVE => match tb.token_at_add_index(1) {
                 TUPLE => self.parse_have_tuple_stmt(tb),
                 CART => self.parse_have_cart_stmt(tb),
@@ -16,15 +20,19 @@ impl Runtime {
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),
-                    EXIST => self.parse_have_exist(tb),
-                    _ => Err(parse_stmt_error(tb, "have by: expected `exist` or `preimage`")),
+                    EXIST => Err(parse_stmt_error(
+                        tb,
+                        "`have by exist ...: name` has been removed; use `obtain name from exist ...`",
+                    )),
+                    _ => Err(parse_stmt_error(tb, "have by: expected `preimage`")),
                 },
                 "" => Err(parse_stmt_error(
                     tb,
-                    "have: expected object definition, `fn`, `by exist`, or `by preimage`",
+                    "have: expected object definition, `fn`, or `by preimage`",
                 )),
                 _ => self.parse_have_obj_stmt(tb),
             },
+            OBTAIN => self.parse_obtain_exist_stmt(tb),
             PROOF_DEBT => self.parse_proof_debt_stmt(tb),
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
@@ -108,9 +116,9 @@ mod parse_stmt_diagnostic_tests {
         let cases = [
             (
                 "have",
-                "have: expected object definition, `fn`, `by exist`, or `by preimage`",
+                "have: expected object definition, `fn`, or `by preimage`",
             ),
-            ("have by", "have by: expected `exist` or `preimage`"),
+            ("have by", "have by: expected `preimage`"),
             ("stop", "stop: expected `import` or `strategy`"),
         ];
 

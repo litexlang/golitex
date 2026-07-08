@@ -96,7 +96,7 @@ impl Runtime {
         }
 
         // Function extensionality for anonymous function values.
-        // Example: `'R(x){f(x) + g(x)} = 'R(y){g(y) + f(y)}` follows from
+        // Example: `fn(x R) R {f(x) + g(x)} = fn(y R) R {g(y) + f(y)}` follows from
         // the existing `$fn_eq` pointwise equality verifier.
         let fn_eq_fact = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
         let fn_eq_result =
@@ -333,7 +333,7 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
-        // `sum(1, n, 'Z(x){f(x)}) = sum(1, n, 'Z(y){f(y)})`.
+        // `sum(1, n, fn(x Z) Z {f(x)}) = sum(1, n, fn(y Z) Z {f(y)})`.
         let fn_eq_fact = FnEqualFact::new(
             left_func.clone(),
             right_func.clone(),

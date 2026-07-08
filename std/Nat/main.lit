@@ -142,8 +142,8 @@ proof_debt:
     forall n N:
         exist! s power_set(N) st {$divisors_value(n, s)}
 
-have fn divisors as set:
-    forall n N:
+have fn divisors by exist!:
+    ? forall n N:
         exist! s power_set(N) st {$divisors_value(n, s)}
 
 proof_debt:
@@ -337,7 +337,7 @@ thm euclidean_division_fixed_divisor:
                 $EuclideanDivision(0, q, 0, 0)
 
         prove induc:
-            have by exist m, r N st {$EuclideanDivision(n, q, m, r)}: m, r
+            obtain m, r from exist m, r N st {$EuclideanDivision(n, q, m, r)}
             by cases:
                 prove:
                     exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)}

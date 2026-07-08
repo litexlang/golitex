@@ -112,7 +112,7 @@ sketch:
 
 Mathematical meaning: `fn(x R) R` is the set of functions from `R` to `R`, and
 `have fn f(x R) R = ...` names one such function.  Anonymous functions such as
-`'R(x){x + 1}` are function values written directly at the point of use.
+`fn(x R) R {x + 1}` are function values written directly at the point of use.
 
 ```litex
 sketch:
@@ -120,8 +120,8 @@ sketch:
 
     shift $in fn(x R) R
     shift(2) = 3
-    'R(x){x + 1}(2) = 3
-    $fn_eq('R(x){x}, 'R(y){y})
+    fn(x R) R {x + 1}(2) = 3
+    $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 ### 8. Function Images
@@ -238,7 +238,7 @@ sketch:
     $p(0)
 ```
 
-### 3. `let`
+### 3. `suppose`
 
 Purpose: introduce local names together with assumed facts about them.
 
@@ -250,7 +250,7 @@ Purpose: introduce local names together with assumed facts about them.
 
 ```litex
 sketch:
-    let a R:
+    suppose a R:
         a = 1
 
     a $in R
@@ -291,7 +291,7 @@ sketch:
     a = 1
 ```
 
-### 6. `have by exist`
+### 6. `obtain ... from exist`
 
 Purpose: name witnesses from an already known existential fact.
 
@@ -306,7 +306,7 @@ sketch:
     witness exist x R st {x = 1} from 1:
         1 = 1
 
-    have by exist x R st {x = 1}: a
+    obtain a from exist x R st {x = 1}
     a $in R
     a = 1
 ```
@@ -436,7 +436,7 @@ sketch:
     have A set = R
     have B set = R
 
-    have fn f as set:
+    have fn f by exist!:
         prove:
             forall x A:
                 exist! y B st {y = x}
@@ -651,7 +651,7 @@ sketch:
     by contra:
         prove:
             not exist x R st {x != x}
-    have by exist x R st {x != x}: a
+    obtain a from exist x R st {x != x}
     impossible a = a
 ```
 

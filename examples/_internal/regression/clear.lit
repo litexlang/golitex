@@ -1,13 +1,13 @@
 # clear empties the top env and top parse-time name map; use separate top-level blocks
-# so the second `let` is parsed after `clear` runs (parse-time names from the first block remain
+# so the second `suppose` is parsed after `clear` runs (parse-time names from the first block remain
 # only until that block finishes executing).
 sketch:
-    let a R:
+    suppose a R:
         a = 1
     a = 1
 
 clear
 
-let a R:
+suppose a R:
     a = 2
 a = 2

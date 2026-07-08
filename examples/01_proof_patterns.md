@@ -156,7 +156,7 @@ by contra 1 = 1:
 by contra:
     prove:
         not exist x R st {x != x}
-    have by exist x R st {x != x}: a
+    obtain a from exist x R st {x != x}
     impossible a = a
 
 by contra:

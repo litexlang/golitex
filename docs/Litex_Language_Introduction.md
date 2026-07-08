@@ -142,7 +142,7 @@ thm no_largest_integer_intro:
         not exist M Z st {$is_largest_integer(M)}
     by contra:
         ? not exist M Z st {$is_largest_integer(M)}
-        have by exist M Z st {$is_largest_integer(M)}: M
+        obtain M from exist M Z st {$is_largest_integer(M)}
         M + 1 $in Z
         M + 1 <= M
         M < M + 1

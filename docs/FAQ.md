@@ -56,7 +56,7 @@ Most of the features of Litex come from the author's experience in writing mathe
 
 Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired by the discovery that when we talk about sets, we almost always are saying that `something is a set`. So the word `set` never appear independently in the language. It always shows up together with `<some_object> is a set`.
 
-Anonymous function syntax like`'(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
+Anonymous function syntax like`fn(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
 
 The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
 
@@ -81,7 +81,7 @@ As far as Litex is concerned, Litex contains and only contains standard math pro
 ## Why does Litex have this particular menu of objects and statements?
 
 Litex's grammar is intentionally finite and opinionated. The goal is not to
-let every possible proof-engine concept become a new surface form. The goal is
+suppose every possible proof-engine concept become a new surface form. The goal is
 to keep a small set of object and statement forms that make ordinary
 mathematical writing comfortable while remaining checkable.
 
@@ -415,19 +415,19 @@ The explicit prefix is intentional. The same tuple may belong to several
 struct sets, and the same field name may refer to different indices in
 different struct views.
 
-## Why can an anonymous function be written as `'R(x){-x}`?
+## Why can an anonymous function be written as `fn(x R) R {-x}`?
 
 This is intentional shorthand, not a typo. The fully explicit anonymous
-function form is `'(x R) R { -x }`: the parameter `x` ranges over `R`, the
+function form is `fn(x R) R { -x }`: the parameter `x` ranges over `R`, the
 return set is `R`, and the body is `-x`.
 
 When all parameters have the same domain as the return set, Litex also accepts
-the compact form `'R(x){-x}`. Similarly, `'R(x, y){x + y}` means that both
+the compact form `fn(x R) R {-x}`. Similarly, `fn(x, y) R {x + y}` means that both
 inputs range over `R` and the return set is `R`; it is the compact version of
-`'(x R, y R) R { x + y }`.
+`fn(x R, y R) R { x + y }`.
 
 The compact form is useful in short mathematical expressions, such as passing
-`'R(x){x}` to a sum or using `'R(x){-x}` as a group inverse operation. In
+`fn(x R) R {x}` to a sum or using `fn(x R) R {-x}` as a group inverse operation. In
 explanatory documentation or when the domain and return set are easy to
 confuse, the explicit form is usually clearer. Both forms denote ordinary
 anonymous function objects and can be compared by Litex's function-equality
@@ -669,10 +669,10 @@ This is one reason Litex proofs can stay close to ordinary mathematical prose.
 The user states the meaningful structural fact once, and the checker records
 the small consequences that a human reader would normally keep in mind.
 
-## Why does `have by exist` name witnesses explicitly?
+## Why does `obtain ... from exist` name witnesses explicitly?
 
 An existential fact says that some object exists. A later proof often needs to
-choose a name for such an object and use its properties. `have by exist` is the
+choose a name for such an object and use its properties. `obtain ... from exist` is the
 Litex form of that ordinary mathematical move.
 
 For example:
@@ -681,11 +681,11 @@ For example:
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
     1 / 2 < 1
-have by exist v R st {v > 0, v < 1}: w
+obtain w from exist v R st {v > 0, v < 1}
 w > 0
 ```
 
-The first block proves an existential fact. The `have by exist` line introduces
+The first block proves an existential fact. The `obtain` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
@@ -754,7 +754,7 @@ closed under pointwise addition, subtraction, and multiplication. For a nested
 anonymous function such as:
 
 ```text
-'R(x R){f(x) + (g(x) - h(x)) * t(x)}
+fn(x R) R {f(x) + (g(x) - h(x)) * t(x)}
 ```
 
 without a strategy, the user may have to introduce the intermediate pieces by

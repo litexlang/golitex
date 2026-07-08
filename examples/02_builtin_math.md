@@ -810,8 +810,8 @@ sketch:
                 $mod_eq(c, d, n)
                 =>:
                     $mod_eq(a + c, b + d, n)
-        have by exist x Z st {a - b = n * x}: x
-        have by exist y Z st {c - d = n * y}: y
+        obtain x from exist x Z st {a - b = n * x}
+        obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
 
@@ -822,8 +822,8 @@ sketch:
                 $mod_eq(c, d, n)
                 =>:
                     $mod_eq(a - c, b - d, n)
-        have by exist x Z st {a - b = n * x}: x
-        have by exist y Z st {c - d = n * y}: y
+        obtain x from exist x Z st {a - b = n * x}
+        obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a - c) - (b - d) = n * k} from x - y:
             (a - c) - (b - d) = (a - b) - (c - d) = n * x - n * y = n * (x - y)
 
@@ -833,7 +833,7 @@ sketch:
                 $mod_eq(a, b, n)
                 =>:
                     $mod_eq(-a, -b, n)
-        have by exist x Z st {a - b = n * x}: x
+        obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {(-a) - (-b) = n * k} from -x:
             (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
 
@@ -844,8 +844,8 @@ sketch:
                 $mod_eq(c, d, n)
                 =>:
                     $mod_eq(a * c, b * d, n)
-        have by exist x Z st {a - b = n * x}: x
-        have by exist y Z st {c - d = n * y}: y
+        obtain x from exist x Z st {a - b = n * x}
+        obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
             a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
 
@@ -855,7 +855,7 @@ sketch:
                 $mod_eq(a, b, n)
                 =>:
                     $mod_eq(a^2, b^2, n)
-        have by exist x Z st {a - b = n * x}: x
+        obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^2 - b^2 = n * k} from x * (a + b):
             a^2 - b^2 = (a - b) * (a + b) = n * x * (a + b) = n * (x * (a + b))
 
@@ -865,7 +865,7 @@ sketch:
                 $mod_eq(a, b, n)
                 =>:
                     $mod_eq(a^3, b^3, n)
-        have by exist x Z st {a - b = n * x}: x
+        obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
             a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
 
@@ -882,7 +882,7 @@ sketch:
                 $mod_eq(a, 2, 4)
                 =>:
                     $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
-        have by exist x Z st {a - 2 = 4 * x}: x
+        obtain x from exist x Z st {a - 2 = 4 * x}
         witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
             a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
 
@@ -1127,19 +1127,19 @@ forall a R:
 - Purpose: Shows finite sums/products and induction with product facts.
 
 ```litex
-sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
-product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+product(1, 3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 3, fn(y Z) Z {y})
+product(1, 3, fn(x Z) Z {x}) = product(1, 3, fn(y Z) Z {y})
 
-eval sum(1, 3, 'Z(x){x})
-eval product(1, 3, 'Z(x){x^2})
-eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})})
-eval sum(0, 0, '(x Z) Z {sum(0, x, '(y Z) Z {x + y})})
+eval sum(1, 3, fn(x Z) Z {x})
+eval product(1, 3, fn(x Z) Z {x^2})
+eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
+eval sum(0, 0, fn(x Z) Z {sum(0, x, fn(y Z) Z {x + y})})
 
 
 # Point-wise: sum f = sum g + sum h on the same range.
-sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x})
 
 # Point-wise order on the same range gives order between finite sums.
 forall f, g fn(x Z) R:
@@ -1148,14 +1148,14 @@ forall f, g fn(x Z) R:
         =>:
             f(i) <= g(i)
     =>:
-        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 # Finite-sum triangle inequality.
 forall f fn(x Z) R:
-    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+    abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 
 # Merge adjacent index ranges: sum(a..b) + sum((b+1)..c) = sum(a..c), same summand.
-sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
+sum(1, 3, fn(x Z) Z {x + x}) + sum(4, 6, fn(x Z) Z {x + x}) = sum(1, 6, fn(x Z) Z {x + x})
 
 # Constant summand: length * c when c does not use the index.
 ```
@@ -1163,28 +1163,28 @@ sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {
 ```litex
 sketch:
     have c Z
-    sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
+    sum(1, 3, fn(x Z) Z {c}) = ((3 - 1) + 1) * c
 
 # Finite-set sum: sum the function value over each element of a finite set.
-finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-finite_set_sum({}, 'Z(x){x}) = 0
-finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-finite_set_sum({1, 2}, 'Z(x){x}) $in Z
-finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 ```
 
 ```litex
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
 ```
 
 ```litex
 forall X power_set(Z):
     $is_finite_set(X)
     =>:
-        finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+        finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 ```
 
 ```litex
@@ -1194,36 +1194,36 @@ thm finite_set_sum_substitution_example:
             forall x X:
                 exist! y Y st {g(y) = x}
             =>:
-                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
-    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+                finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_bridge_example:
     prove:
         forall a fn(i Z) R, m, n Z:
             m <= n
             =>:
-                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
-    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+                sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+    sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
 
 thm finite_set_sum_disjoint_union_example:
     prove:
         forall X, Y finite_set, f fn(z union(X, Y)) R:
             intersect(X, Y) = {}
             =>:
-                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
-    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 
 thm finite_set_sum_add_example:
     prove:
         forall X finite_set, f, g fn(x X) R:
-            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
-    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+            finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
 
 thm finite_set_sum_scalar_mul_example:
     prove:
         forall X finite_set, f fn(x X) R, c R:
-            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
-    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+            finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
 
 thm finite_set_sum_monotone_example:
     prove:
@@ -1237,20 +1237,20 @@ thm finite_set_sum_monotone_example:
 thm finite_set_sum_triangle_example:
     prove:
         forall X finite_set, f fn(x X) R:
-            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
-    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 
 thm finite_double_sum_over_cartesian_product_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 # A finite-set sum defined by a bijective enumeration is independent of the enumeration.
 prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
@@ -1258,7 +1258,7 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
         exist! i closed_range(1, count(X)) st {g(i) = x}
 
 template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
     prove:
@@ -1271,67 +1271,67 @@ thm finite_set_sum_enumeration_well_defined:
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 
 # Finite-set product: multiply the function value over each element of a finite set.
-finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-finite_set_product({}, 'Z(x){x}) = 1
-finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-finite_set_product({1, 2}, 'Z(x){x}) $in Z
-finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
-finite_set_product({}, 'N_pos(x){x}) $in N_pos
+finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
+finite_set_product({}, fn(x Z) Z {x}) = 1
+finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
+finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_product({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 ```
 
 ```litex
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
 ```
 
 ```litex
 forall X power_set(Z):
     $is_finite_set(X)
     =>:
-        finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
+        finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 
 # Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
-sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})
+sum(1, 3, fn(x Z) Z {x}) = sum(2, 4, fn(x Z) Z {x - 1})
 
 # Last index: sum(s..e,f) = sum(s..e-1,f) + f(e) (same unary f); product analogue with *.
-sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
-product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
+product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * fn(x Z) Z {x}(3)
 
 # Partition: sum(a..d,f) as edge-to-edge sub-sums (same f); product analogue with *.
-sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
+sum(1, 10, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x}) + sum(4, 8, fn(x Z) Z {x}) + sum(9, 10, fn(x Z) Z {x})
 ```
 
 ```litex
 sketch:
-    sum(1, 3, 'Z(x){x}) = sum(1, 2, 'Z(x){x}) + 'Z(x){x}(3)
-    product(1, 3, 'Z(x){x}) = product(1, 2, 'Z(x){x}) * 'Z(x){x}(3)
+    sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
+    product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * fn(x Z) Z {x}(3)
 
-    sum(1, 10, 'Z(x){x}) = sum(1, 3, 'Z(x){x}) + sum(4, 8, 'Z(x){x}) + sum(9, 10, 'Z(x){x})
+    sum(1, 10, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x}) + sum(4, 8, fn(x Z) Z {x}) + sum(9, 10, fn(x Z) Z {x})
 
-eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
+eval sum(1, 3, fn(x Z) Z {sum(1, x, fn(y Z) Z {x + y})})
 ```
 
 ```litex
 sketch:
     by induc a from 1:
         prove:
-            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
-        product(1, 1, 'N_pos(x){x}) = 1
-        1 <= product(1, 1, 'N_pos(x){x})
+        product(1, 1, fn(x N_pos) N_pos {x}) = 1
+        1 <= product(1, 1, fn(x N_pos) N_pos {x})
 
         claim:
             prove:
                 forall k Z:
                     k >= 1
-                    product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
+                    product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
                     =>:
-                        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+                        product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
-            product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
-            witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
-            product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
-            k + 1 <= product(1, k + 1, 'N_pos(x){x})
+            product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
+            witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
+            product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
+            k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 ```

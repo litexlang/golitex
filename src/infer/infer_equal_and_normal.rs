@@ -224,7 +224,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// `name = '(... ) ... { ... }'`: treat `name` as having the anonymous function's `FnSetBody`
+    /// `name = fn(... ) ... { ... }'`: treat `name` as having the anonymous function's `FnSetBody`
     /// (same side table as `name $in fn ...` after infer).
     fn infer_equal_fact_by_anonymous_fn(
         &mut self,

@@ -87,6 +87,12 @@ pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
+pub use crate::graph::{
+    run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
+    run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
+    run_graph_for_file_with_strict_and_language, run_graph_for_repo,
+    run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
+};
 pub use crate::infer::{
     BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
     StoreFactOutput,
@@ -465,6 +471,7 @@ pub use crate::common::keywords::NONEMPTY_SET;
 pub use crate::common::keywords::NOT;
 pub use crate::common::keywords::NOT_EQUAL;
 pub use crate::common::keywords::N_POS;
+pub use crate::common::keywords::OBTAIN;
 pub use crate::common::keywords::OC;
 pub use crate::common::keywords::OINF;
 pub use crate::common::keywords::OO;
@@ -514,6 +521,7 @@ pub use crate::common::keywords::SUBSET;
 pub use crate::common::keywords::SUCCESS_COLON;
 pub use crate::common::keywords::SUM;
 pub use crate::common::keywords::SUPERSET;
+pub use crate::common::keywords::SUPPOSE;
 pub use crate::common::keywords::SURJECTIVE;
 pub use crate::common::keywords::SYMMETRIC_PROP;
 pub use crate::common::keywords::TEMPLATE;

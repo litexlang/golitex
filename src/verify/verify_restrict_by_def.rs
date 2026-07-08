@@ -33,7 +33,7 @@ struct RestrictProofFlow {
 impl Runtime {
     // Restricts an anonymous function by verifying the target function domain is a valid subdomain
     // for the anonymous function and that outputs stay in the requested return set.
-    // Example: `$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)`.
+    // Example: `$restricts_to(fn(x R) R {x + 1}, fn(x closed_range(1, 2)) R)`.
     pub fn verify_restrict_fact_using_its_definition(
         &mut self,
         restrict_fact: &RestrictFact,

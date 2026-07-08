@@ -337,7 +337,7 @@ $refl_p_tmp(C_tmp, C_tmp)
 # An existential fact can introduce a witness and its prop fact.
 abstract_prop exists_p_tmp(t)
 proof_debt exist m R st {$exists_p_tmp(m)}
-have by exist m R st {$exists_p_tmp(m)}: witness_tmp
+obtain witness_tmp from exist m R st {$exists_p_tmp(m)}
 $exists_p_tmp(witness_tmp)
 
 # Function definitions store function-space and equation facts; applications
@@ -873,7 +873,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "object definition by existence",
   "line": 88,
-  "statement": "have by exist m R st {$exists_p_tmp(~3m)} : witness_tmp",
+  "statement": "obtain witness_tmp", from exist m R st {$exists_p_tmp(~3m)}
   "store_facts": [
     {
       "fact": "witness_tmp $in R",
@@ -917,7 +917,7 @@ The output explains the proof process step by step. By looking at the output, yo
       "reason": "function definition"
     },
     {
-      "fact": "id_tmp = '(t R) R {~5t}",
+      "fact": "id_tmp = fn(t R) R {~5t}",
       "reason": "function definition"
     }
   ]

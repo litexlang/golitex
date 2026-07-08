@@ -308,7 +308,7 @@ Objects are the material that facts talk about. For the full path from objects t
 
 #### Names and parameters
 
-Objects introduced by `forall`, `have`, `let`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
+Objects introduced by `forall`, `have`, `suppose`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
 
 ```litex
 forall x R:
@@ -443,13 +443,13 @@ forall y replacement(P, {1, 2}):
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `fn(x R) R {...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
 
 Later parameter domains may depend on earlier parameters. The return set is not dependent on the function parameters, so a signature such as `fn(n N_pos) closed_range(1, n)` is rejected.
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
-The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `'(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `fn(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
 
 ```litex
 have g set = fn(x R) R
@@ -467,7 +467,7 @@ sketch:
 ```
 
 ```litex
-'R(x){x + 1}(2) = 3
+fn(x R) R {x + 1}(2) = 3
 ```
 
 ```litex
@@ -618,12 +618,12 @@ count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3
 `sum(start, end, f)` is a finite summation over a bounded integer index. The
 first argument is the lower bound, the second argument is the upper bound, and
 the third argument is a function that gives the summand for each index. For
-example, `sum(1, 3, '(x Z) Z {x})` passes lower bound `1`, upper bound `3`, and
-the function `'(x Z) Z {x}`; mathematically it is
+example, `sum(1, 3, fn(x Z) Z {x})` passes lower bound `1`, upper bound `3`, and
+the function `fn(x Z) Z {x}`; mathematically it is
 `\sum_{x = 1}^{3} x`.
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
 
 forall f, g fn(x Z) R:
     forall i Z:
@@ -631,32 +631,32 @@ forall f, g fn(x Z) R:
         =>:
             f(i) <= g(i)
     =>:
-        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 forall f fn(x Z) R:
-    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+    abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 ```
 
 `finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, closed integer ranges bridge to the existing `sum(start, end, f)` object, and double sums over finite Cartesian products support the usual finite Fubini swap.
 
 ```litex
-finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-finite_set_sum({}, 'Z(x){x}) = 0
-finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
 ```
 
 ```litex
 thm finite_double_sum_over_cartesian_product_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 ```
 
 For a nonempty finite set, an enumeration by a bijection from `1...count(X)` gives the same sum for any bijective ordering.
@@ -667,7 +667,7 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
         exist! i closed_range(1, count(X)) st {g(i) = x}
 
 template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
     prove:
@@ -683,9 +683,9 @@ thm finite_set_sum_enumeration_well_defined:
 `finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
 
 ```litex
-finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-finite_set_product({}, 'Z(x){x}) = 1
-finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
+finite_set_product({}, fn(x Z) Z {x}) = 1
+finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
 ```
 
 #### Integer intervals as sets
@@ -865,7 +865,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Set builder `{x S: ...}` | The parameter set `S` must be well-defined. The body facts are checked for well-definedness in a local context where `x $in S` is available. |
 | `replacement(P, A)` | `P` must name a binary `prop` or `abstract_prop`, `A` must be well-defined, and Litex must verify uniqueness: `forall x A, y, y2 set: $P(x, y), $P(x, y2) => y = y2`. |
 | Function space `fn(x S: domain facts) T` | Parameter sets must be well-defined. Domain facts are checked in the local parameter context, and the return set `T` must be well-defined. Later parameter sets may depend on earlier parameters. |
-| Anonymous function `'(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
+| Anonymous function `fn(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
 | Function application `f(a)` | The function head must have a known function-space fact or be an anonymous function. The arguments must be well-defined and must satisfy the parameter sets and domain facts. Curried applications repeat this check at each layer. |
 | Finite sequence literal `[a, b, ...]` | Each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. |
 | Cartesian product `cart(A, B, ...)` and tuple `(a, b, ...)` | Each component must be well-defined. |
@@ -875,9 +875,9 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `count(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
-| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}` when an API expects a function on `S`. |
+| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}` when an API expects a function on `S`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
-| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}`. |
+| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
 | Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
@@ -1138,13 +1138,13 @@ The body after `st` is the list of facts the witness must satisfy.
 
 > Hint: To prove an `exist` goal, Litex usually needs a concrete witness. In proof code, use `witness` when you want to tell Litex which object should be used as the witness.
 
-> Hint: To use an already known `exist` fact, use `have by exist` to give names to the witnesses and bring their body facts into the current context.
+> Hint: To use an already known `exist` fact, use `obtain ... from exist ...` to give names to the witnesses and bring their body facts into the current context.
 
 Example:
 
 ```litex
 witness exist u R st { u = 1 } from 1
-have by exist v R st { v = 1 }: h
+obtain h from exist v R st { v = 1 }
 h = 1
 ```
 
@@ -1310,7 +1310,7 @@ These predicates express inclusion between sets.
 
 ### Function Restriction
 
-This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `'(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
+This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `fn(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
 
 | Predicate | Negated form | Meaning |
 |-----------|--------------|---------|
@@ -1575,15 +1575,15 @@ the typed header.
 
 ---
 
-### Naming witnesses (`have by exist`)
+### Naming witnesses (`obtain ... from exist`)
 
-When an existential fact is already known, **`have by exist`** gives names to its witnesses. After that, you can use the witness properties directly.
+When an existential fact is already known, **`obtain ... from exist ...`** gives names to its witnesses. After that, you can use the witness properties directly.
 
 ```litex
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
     1 / 2 < 1
-have by exist v R st {v > 0, v < 1}: w
+obtain w from exist v R st {v > 0, v < 1}
 w > 0
 ```
 
@@ -1765,7 +1765,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn ... as set: prove: forall ... exist!`)
+### Function from unique existence (`have fn ... by exist!: prove: forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1773,7 +1773,7 @@ Use this when mathematics tells you that for every input there exists a **unique
 have A set = R
 have B set = R
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {y = x}
@@ -1785,13 +1785,13 @@ forall x A:
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block. The older direct form `have fn f as set: forall ...` is still accepted for compatibility.
+> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block.
 
-> Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
+> Hint: `by exist!` means "define a function from unique existence." The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
 Classic structure example: the `group_quotient` section of
 `examples/04_structures/README.md` combines
-`struct`, `template`, and `have fn ... as set` to define the quotient set of a
+`struct`, `template`, and `have fn ... by exist!` to define the quotient set of a
 group by taking the set of left cosets. It also adds the quotient
 multiplication interface for a normal subgroup and proves the representative
 independence lemmas needed for well-definedness.
@@ -1799,7 +1799,7 @@ independence lemmas needed for well-definedness.
 <!-- litex:skip-test -->
 ```litex
 template<s set>:
-    have fn group_quotient as set:
+    have fn group_quotient by exist!:
         prove:
             forall g &Group<s>, h power_set(s):
                 exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
@@ -1830,22 +1830,22 @@ have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
 
 ---
 
-### Local assumption block (`let`)
+### Local assumption block (`suppose`)
 
-Use **`let`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
+Use **`suppose`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
 
 ```litex
-let a R:
+suppose a R:
     a = 1
 a = 1
 
-let b, c R:
+suppose b, c R:
     b < c
 
 b < c
 ```
 
-> Hint: `let` and `proof_debt` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `suppose` and `proof_debt` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -2029,7 +2029,7 @@ A final artifact should not leave broad `proof_debt` facts unexplained. Either p
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `proof_debt`, `let`, and `axiom` statements are rejected instead
+If the run uses `-strict`, user `proof_debt`, `suppose`, and `axiom` statements are rejected instead
 of being stored. Facts loaded from imported modules are still trusted inputs, so
 strict mode is an audit boundary for the current run, not a claim that all
 dependencies are assumption-free.
@@ -2054,7 +2054,7 @@ proof_debt:
 
 **`sketch:`** opens a checked local block: a nested list of statements closed before the outer environment continues.
 
-It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
+It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... by exist!`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
 
 `sketch:` is the canonical top-level spelling for this checked sandbox. Older
 notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
@@ -2206,15 +2206,15 @@ eval 1 + 1 / 3 # exact rational arithmetic
 
 eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 
-eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
+eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})}) # sum of a sum
 ```
 
 Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
 
 ```litex
-have a set = sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+have a set = sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
 
-eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+eval a from sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
 ```
 
 ---
@@ -2223,7 +2223,7 @@ eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
 
 **`witness exist … from …:`** supplies explicit values and a sub-proof that they satisfy the existential body, concluding **`exist …`**.
 
-Existence proofs are often used together with `have by exist`: first prove that some object exists, then name the witness so later lines can use an object with the stated properties.
+Existence proofs are often used together with `obtain ... from exist`: first prove that some object exists, then name the witness so later lines can use an object with the stated properties.
 
 ```litex
 witness exist x, y R st {x > y} from 1, 0:
@@ -2231,7 +2231,7 @@ witness exist x, y R st {x > y} from 1, 0:
 
 exist a, b R st {a > b}
 
-have by exist x, y R st {x > y}: w, z
+obtain w, z from exist x, y R st {x > y}
 w > z
 ```
 
@@ -2692,13 +2692,13 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have seq s seq(S) for i, s(i) = expr` | Define a sequence by its entries |
 | `have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr` | Define a finite sequence by its entries |
 | `have matrix M matrix(S, r, c) for i <= r, j <= c, M(i, j) = expr` | Define a matrix by its entries |
-| `have by exist` | Name witnesses from a known existential fact |
+| `obtain ... from exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
-| `have fn ... as set: prove: forall ... exist!` | Define a function from unique existence |
+| `have fn ... by exist!: prove: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
-| `let` | Introduce local names and local assumptions |
+| `suppose` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
@@ -2814,7 +2814,7 @@ bound variable in a set builder.
 | set comprehension | `{x R: x >= 0}` |
 | replacement set from a binary relation | `replacement(P, A)` |
 | function space | `fn(x R: x >= 0) R` |
-| anonymous function value | `'(x R) R {x + 1}` |
+| anonymous function value | `fn(x R) R {x + 1}` |
 | function application, possibly curried | `f(2)`, `f(x)(y)` |
 | Cartesian product | `cart(A, B)` |
 | Cartesian-product dimension | `cart_dim(cart(A, B))` |
@@ -2956,14 +2956,14 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a finite sequence by entries | `have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i` |
 | define a matrix by entries | `have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j` |
 | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
-| name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
+| name witnesses from a known existential fact | `obtain a from exist x R st {x = 1}` |
 | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
 | define a function by one expression | `have fn f(x R) R = x + 1` |
 | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
 | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
-| define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| define a function from unique existence | `have fn choose by exist!:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
 | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
-| introduce local names and assumed facts | `let x R:`<br>`x = 1` |
+| introduce local names and assumed facts | `suppose x R:`<br>`x = 1` |
 | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
 | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
@@ -3243,7 +3243,7 @@ If direct known facts do not close the goal, Litex searches applicable universal
 
 Object matching is structural. If the `forall` conclusion has a parameter such as `x`, that parameter may bind to the object in the goal. If the conclusion has a structured object such as `f(x)`, `x + 1`, or `(x, y)`, Litex matches the outer shape first, then recursively matches the inner objects.
 
-Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p('R(x){f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `'R(x){b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
+Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p(fn(x R) R {f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `fn(x R) R {b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
 
 The following example shows why this matters. The known `forall` fact says that a predicate `p` is closed under pointwise addition of real-valued functions. The proof still uses the known `forall` fact one layer at a time: first it establishes the inner sum function, then it uses that result as the second summand in the outer function.
 
@@ -3257,16 +3257,16 @@ claim:
                 $p(f)
                 $p(g)
                 =>:
-                    $p('R(x){f(x) + g(x)})
+                    $p(fn(x R) R {f(x) + g(x)})
             $p(a)
             $p(b)
             $p(c)
             =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
+                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    $p(fn(x R) R {b(x) + c(x)})
 ```
 
-In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the assumed universal conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `'R(x){b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
+In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the assumed universal conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `fn(x R) R {b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
 
 ```text
 known fact:
@@ -3751,7 +3751,7 @@ f(2) = 3
 Anonymous functions behave the same way: applying the function substitutes the argument into the body.
 
 ```litex
-'R(x){x + 1}(2) = 3
+fn(x R) R {x + 1}(2) = 3
 ```
 
 #### Absolute Value
@@ -3925,12 +3925,12 @@ forall a, b R_pos, c R:
 Litex has builtin rules for common finite `sum` and `product` shapes: single-term ranges, splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
 
 ```litex
-sum(1, 1, 'N_pos(x){x}) = 1
-product(1, 1, 'N_pos(x){x}) = 1
+sum(1, 1, fn(x N_pos) N_pos {x}) = 1
+product(1, 1, fn(x N_pos) N_pos {x}) = 1
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x})
 ```
 
 ```litex
@@ -3940,39 +3940,39 @@ forall f, g fn(x Z) R:
         =>:
             f(i) <= g(i)
     =>:
-        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 forall f fn(x Z) R:
-    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+    abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
+sum(1, 3, fn(x Z) Z {x + x}) + sum(4, 6, fn(x Z) Z {x + x}) = sum(1, 6, fn(x Z) Z {x + x})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
 ```
 
 ```litex
-product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
+product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * fn(x Z) Z {x}(3)
 ```
 
 ```litex
-sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
+sum(1, 10, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x}) + sum(4, 8, fn(x Z) Z {x}) + sum(9, 10, fn(x Z) Z {x})
 ```
 
 ```litex
-product(1, 10, '(x Z) Z {x}) = product(1, 3, '(x Z) Z {x}) * product(4, 8, '(x Z) Z {x}) * product(9, 10, '(x Z) Z {x})
+product(1, 10, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x}) * product(4, 8, fn(x Z) Z {x}) * product(9, 10, fn(x Z) Z {x})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})
+sum(1, 3, fn(x Z) Z {x}) = sum(2, 4, fn(x Z) Z {x - 1})
 ```
 
 ```litex
 have c Z
-sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
+sum(1, 3, fn(x Z) Z {c}) = ((3 - 1) + 1) * c
 ```
 
 #### Modular Arithmetic
@@ -4448,7 +4448,7 @@ A finite `sum` or `product` over an integer range is treated as a real once the 
 
 ```litex
 sketch:
-    sum(1, 3, '(x Z) Z {x}) $in R
+    sum(1, 3, fn(x Z) Z {x}) $in R
 ```
 
 If a function application is well-defined and its known return set is `R`, the application can be verified as real.
@@ -4563,7 +4563,7 @@ $fn_eq_in(f, g, R)
 Anonymous function heads can be compared the same way when they denote the same map on the set.
 
 ```litex
-$fn_eq_in('R(x){x}, 'R(y){y}, R)
+$fn_eq_in(fn(x R) R {x}, fn(y R) R {y}, R)
 ```
 
 #### Equality From Function Type
@@ -4571,7 +4571,7 @@ $fn_eq_in('R(x){x}, 'R(y){y}, R)
 `$fn_eq(f, g)` is for values whose function type is given by the same `fn(...)` or `have fn` specification on both sides. After checking that the type data matches, the goal reduces to a parameterized proof that `f` and `g` agree on every argument tuple.
 
 ```litex
-$fn_eq('R(x){x}, 'R(y){y})
+$fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 ```litex
@@ -5019,7 +5019,7 @@ There is no matching automatic rule when `0` is on the left.
 
 ### Function Restriction
 
-For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `'(x E) R {f(x)}`.
+For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `fn(x E) R {f(x)}`.
 
 ```text
 known:

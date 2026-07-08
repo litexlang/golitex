@@ -8,7 +8,7 @@ claim:
 proof_debt:
     3 = 3
 
-let a R:
+suppose a R:
     a = a
 
 have x R

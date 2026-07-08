@@ -695,13 +695,13 @@ impl DefLetStmt {
         match self.facts.len() {
             0 => format!(
                 r"\operatorname{{{}}}\, {}",
-                LET,
+                SUPPOSE,
                 self.param_def.to_latex_string()
             ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}",
-                    LET,
+                    SUPPOSE,
                     self.param_def.to_latex_string()
                 )];
                 for fact in &self.facts {

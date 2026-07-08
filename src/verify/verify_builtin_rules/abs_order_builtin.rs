@@ -215,7 +215,7 @@ impl Runtime {
     }
 
     // Finite sum triangle inequality.
-    // Example: `abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})`.
+    // Example: `abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})`.
     fn try_verify_abs_finite_sum_triangle(
         &mut self,
         f: &LessEqualFact,
@@ -294,7 +294,7 @@ impl Runtime {
     }
 
     // Finite-set sum triangle inequality.
-    // Example: `abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})`.
+    // Example: `abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})`.
     fn try_verify_abs_finite_set_sum_triangle(
         &mut self,
         f: &LessEqualFact,

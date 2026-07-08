@@ -430,7 +430,7 @@ Litex treats anonymous functions as ordinary objects. You can pass them directly
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})</code></pre>
+<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>def inner (x : ℤ) : ℤ :=
@@ -444,7 +444,7 @@ def total : ℤ :=
 **What differs.** Litex can pass an anonymous function object directly to a repeated sum or product. Lean can do the same mathematics, but users often introduce `fun` expressions, named definitions, ranges, coercions, or library conventions around finite sums.
 
 ```litex
-eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
+eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 ```
 
 ### Set Expressions Are Ordinary Objects
@@ -912,13 +912,13 @@ claim:
                 &#36;p(f)
                 &#36;p(g)
                 =&gt;:
-                    &#36;p('R(x){f(x) + g(x)})
+                    &#36;p(fn(x R) R {f(x) + g(x)})
             &#36;p(a)
             &#36;p(b)
             &#36;p(c)
             =&gt;:
-                &#36;p('R(x){a(x) + (b(x) + c(x))})
-    &#36;p('R(x){b(x) + c(x)})</code></pre>
+                &#36;p(fn(x R) R {a(x) + (b(x) + c(x))})
+    &#36;p(fn(x R) R {b(x) + c(x)})</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
@@ -936,7 +936,7 @@ example (p : (ℝ → ℝ) → Prop)
 **What differs.** In the final Litex goal, the matcher treats
 `a(x) + (b(x) + c(x))` as an instance of `f(x) + g(x)`. Since `g` is applied to
 the full anonymous-function parameter list `x`, Litex may infer
-`g := 'R(x){b(x) + c(x)}`. Lean can express the same proof, but the user
+`g := fn(x R) R {b(x) + c(x)}`. Lean can express the same proof, but the user
 normally supplies the intermediate function and applies the universal
 hypothesis explicitly.
 
@@ -1145,23 +1145,23 @@ claim:
             forall n, k N_pos:
                 k &lt;= n
                 =>:
-                    product(1, n, 'N_pos(x){x}) % k = 0
+                    product(1, n, fn(x N_pos) N_pos {x}) % k = 0
             forall n N_pos:
                 2 &lt;= n
                 =>:
                     exist k N_pos st {&#36;prime(k), n % k = 0}
             forall n N_pos:
-                n &lt;= product(1, n, 'N_pos(x){x})
+                n &lt;= product(1, n, fn(x N_pos) N_pos {x})
             2 &lt;= a
             =>:
                 exist k N_pos st {k > a, &#36;prime(k)}
-    2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {&#36;prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    2 &lt;= a &lt;= product(1, a, fn(x N_pos) N_pos {x}) &lt;= product(1, a, fn(x N_pos) N_pos {x}) + 1
+    obtain k from exist k N_pos st {&#36;prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
     by cases k > a:
         case k &lt;= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
         case k > a:
             do_nothing
     witness exist k N_pos st {k > a, &#36;prime(k)} from k</code></pre>
@@ -1189,7 +1189,7 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
 
 **What differs.** Litex puts the background lemmas in the premise of the `claim` and keeps the final argument as a direct proof spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
 
-What Litex is trying to show is different. The user states the facts and witnesses they want, while the checker matches those targets against builtin rules and known information. Chains expose order/transitivity goals, `have by exist ...` exposes an existential pattern, `by cases` exposes branches, and `witness` exposes the object that should close an existential goal.
+What Litex is trying to show is different. The user states the facts and witnesses they want, while the checker matches those targets against builtin rules and known information. Chains expose order/transitivity goals, `obtain ... from exist ...` exposes an existential pattern, `by cases` exposes branches, and `witness` exposes the object that should close an existential goal.
 
 > The `prop` block defines the vocabulary. The premise of the `claim` lists the background mathematics. The main proof is the part after that premise.
 

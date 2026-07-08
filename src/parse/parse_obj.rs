@@ -214,9 +214,31 @@ impl Runtime {
             }
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
-            Ok(self.parse_fn_set(tb)?.into())
-        } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
-            let mut result = self.parse_anonymous_fn(tb)?;
+            let fn_set = self.parse_fn_set(tb)?;
+            let mut result: Obj = if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
+                let all_fn_names =
+                    ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
+                let equal_to = self.parse_in_local_free_param_scope(
+                    ParamObjType::FnSet,
+                    &all_fn_names,
+                    tb.line_file.clone(),
+                    |this| {
+                        tb.skip_token(LEFT_CURLY_BRACE)?;
+                        let equal_to = this.parse_obj(tb)?;
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(equal_to)
+                    },
+                )?;
+                self.new_anonymous_fn(
+                    fn_set.body.params_def_with_set.clone(),
+                    fn_set.body.dom_facts.clone(),
+                    (*fn_set.body.ret_set).clone(),
+                    equal_to,
+                )?
+                .into()
+            } else {
+                fn_set.into()
+            };
             if let Obj::AnonymousFn(anon) = &result {
                 let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
                 while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -230,119 +252,16 @@ impl Runtime {
                 }
             }
             Ok(result)
+        } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
+            Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "apostrophe anonymous functions have been removed; use `fn(x S) T {body}`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
-        }
-    }
-
-    /// `'` + `(param sets [: dom])` + return set + `{ body }`, or `'` + set + `(names)` + `{ body }`.
-    ///
-    /// After a comma-separated name list, if the next token is `:` (domain facts) rather than a set
-    /// expression, parameters are taken to be in `R` (same as writing `x, y R : ...`).
-    pub fn parse_anonymous_fn(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        tb.skip_token(ANONYMOUS_FN_PREFIX)?;
-        if tb.current_token_is_equal_to(LEFT_BRACE) {
-            let built = self.run_in_local_parsing_time_name_scope(|this| {
-                tb.skip_token(LEFT_BRACE)?;
-                let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
-                loop {
-                    let param = parse_synthetically_correct_identifier_string(tb)?;
-                    let mut current_params = vec![param];
-
-                    while tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        current_params.push(parse_synthetically_correct_identifier_string(tb)?);
-                    }
-
-                    let param_group = if tb.current_token_is_equal_to(COLON) {
-                        ParamGroupWithSet::new(current_params, StandardSet::R.into())
-                    } else {
-                        ParamGroupWithSet::new(current_params, this.parse_obj(tb)?)
-                    };
-                    this.parsing_free_param_collection.begin_scope(
-                        ParamObjType::FnSet,
-                        &param_group.params,
-                        tb.line_file.clone(),
-                    )?;
-
-                    params_def_with_set.push(param_group);
-
-                    if tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        continue;
-                    } else if tb.current_token_is_equal_to(COLON) {
-                        break;
-                    } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
-                        break;
-                    } else {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file("anonymous fn: expected `,`, `:`, or closing `)` after parameter group"
-                                    .to_string(), tb.line_file.clone()),
-                        )));
-                    }
-                }
-
-                let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-
-                let mut dom_facts = vec![];
-                if tb.current_token_is_equal_to(COLON) {
-                    tb.skip_token(COLON)?;
-                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
-                    dom_facts.push(cur);
-                    while tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        let cur = this.parse_or_and_chain_atomic_fact(tb)?;
-                        dom_facts.push(cur);
-                    }
-                }
-
-                tb.skip_token(RIGHT_BRACE)?;
-                // Return sets are non-dependent; parse them outside the function-parameter scope.
-                this.parsing_free_param_collection
-                    .end_scope(ParamObjType::FnSet, &all_fn_names);
-                let ret_set_parsed = this.parse_obj(tb)?;
-                let equal_to = this.parse_in_local_free_param_scope(
-                    ParamObjType::FnSet,
-                    &all_fn_names,
-                    tb.line_file.clone(),
-                    |inner| {
-                        tb.skip_token(LEFT_CURLY_BRACE)?;
-                        let equal_to = inner.parse_obj(tb)?;
-                        tb.skip_token(RIGHT_CURLY_BRACE)?;
-                        Ok(equal_to)
-                    },
-                )?;
-                let built =
-                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
-                Ok(built)
-            })?;
-            Ok(built.into())
-        } else {
-            let set_obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
-            let built = self.run_in_local_parsing_time_name_scope(|this| {
-                tb.skip_token(LEFT_BRACE)?;
-                let mut params = vec![parse_synthetically_correct_identifier_string(tb)?];
-                while tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                    params.push(parse_synthetically_correct_identifier_string(tb)?);
-                }
-                tb.skip_token(RIGHT_BRACE)?;
-                let param_group = ParamGroupWithSet::new(params, set_obj.clone());
-                let param_groups = vec![param_group.clone()];
-                let all_names = ParamGroupWithSet::collect_param_names(&param_groups);
-                this.parsing_free_param_collection.begin_scope(
-                    ParamObjType::FnSet,
-                    &all_names,
-                    tb.line_file.clone(),
-                )?;
-                tb.skip_token(LEFT_CURLY_BRACE)?;
-                let equal_to = this.parse_obj(tb)?;
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-                this.parsing_free_param_collection
-                    .end_scope(ParamObjType::FnSet, &all_names);
-                this.new_anonymous_fn(vec![param_group], vec![], set_obj, equal_to)
-            })?;
-            Ok(built.into())
         }
     }
 
