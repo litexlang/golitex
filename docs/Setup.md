@@ -295,12 +295,6 @@ Basic behavior:
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
-| `-kg -e <code>` | Run a source string, write a concept graph JSON file under `tmp/kg`, and print the output path. |
-| `-kg -f <file>` | Run a file, write a concept graph JSON file under `tmp/kg`, and print the output path. |
-| `-kg -r <repo>` | Run a repository `main.lit`, write a concept graph JSON file under `tmp/kg`, and print the output path. |
-| `-kg-dot -e <code>` | Run a source string, write a concept graph DOT file under `tmp/kg`, and print the output path. |
-| `-kg-dot -f <file>` | Run a file, write a concept graph DOT file under `tmp/kg`, and print the output path. |
-| `-kg-dot -r <repo>` | Run a repository `main.lit`, write a concept graph DOT file under `tmp/kg`, and print the output path. |
 | `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
 | `-latex` | Start an interactive REPL that prints LaTeX output. |
@@ -313,7 +307,7 @@ Basic behavior:
 | `-update <module>` | Update a module, when available. |
 | `-tutorial` | Run the tutorial, when available. |
 
-Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-kg -e`, `-kg -f`, `-kg -r`, `-kg-dot -e`, `-kg-dot -f`, `-kg-dot -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
 
 Litex supports multiple output languages through `-lang <code>`. See
 [`docs/cli.md`](cli.md) for the current list of supported language codes.
@@ -399,18 +393,6 @@ The wrapper includes:
 - `"trace"`, containing the ordinary Litex statement-by-statement JSON output.
 
 Unlike the basic `-e`, `-f`, and `-r` commands, the runner exits with a nonzero code when the checked run fails or when the target source cannot be loaded.
-
----
-
-## Concept graph output
-
-`litex -kg ...` and `litex -kg-dot ...` run the same verifier and write a
-concept graph artifact under `tmp/kg`. The command prints a
-small JSON object with `"ok"`, `"result"`, `"format"`, and `"output_path"`.
-
-Use `-kg` for the machine-readable JSON graph. Use `-kg-dot` for
-Graphviz DOT, which can be rendered with a Graphviz command such as
-`dot -Tsvg tmp/kg/example.dot -o tmp/kg/example.svg`.
 
 ---
 

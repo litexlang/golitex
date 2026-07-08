@@ -1,7 +1,6 @@
 pub mod builtin_code;
 pub mod cli;
 pub mod common;
-pub mod concept_graph;
 #[cfg(test)]
 pub mod debug_test;
 pub mod environment;
