@@ -13,6 +13,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
+const KG_FLAG: &str = "-kg";
+const KG_DOT_FLAG: &str = "-kg-dot";
 const DEPGRAPH_FLAG: &str = "-depgraph";
 const DEPGRAPH_DOT_FLAG: &str = "-depgraph-dot";
 
@@ -136,9 +138,9 @@ pub fn run_cli() {
                 }
                 return;
             }
-            DEPGRAPH_FLAG => {
+            KG_FLAG => {
                 index += 1;
-                let (ok, output) = match main_flag_dependency_graph(
+                let (ok, output) = match main_flag_concept_graph(
                     &args,
                     &mut index,
                     detail_output,
@@ -152,7 +154,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let output = match write_dependency_graph_cli_output(&output, "json", ok) {
+                let output = match write_concept_graph_cli_output(&output, "json", ok) {
                     Ok(output) => output,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -165,9 +167,9 @@ pub fn run_cli() {
                 }
                 return;
             }
-            DEPGRAPH_DOT_FLAG => {
+            KG_DOT_FLAG => {
                 index += 1;
-                let (ok, output) = match main_flag_dependency_graph(
+                let (ok, output) = match main_flag_concept_graph(
                     &args,
                     &mut index,
                     detail_output,
@@ -181,7 +183,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let output = match write_dependency_graph_cli_output(&output, "dot", ok) {
+                let output = match write_concept_graph_cli_output(&output, "dot", ok) {
                     Ok(output) => output,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -193,6 +195,10 @@ pub fn run_cli() {
                     process::exit(1);
                 }
                 return;
+            }
+            DEPGRAPH_FLAG | DEPGRAPH_DOT_FLAG => {
+                eprintln!("-depgraph has been replaced by -kg; use -kg or -kg-dot with the same -f, -e, or -r target.");
+                process::exit(2);
             }
             "-latex" => {
                 index += 1;
@@ -566,31 +572,27 @@ fn main_flag_runner(
     }
 }
 
-fn main_flag_dependency_graph(
+fn main_flag_concept_graph(
     args: &[String],
     index: &mut usize,
     detail_output: bool,
     strict_mode: bool,
     dot_output: bool,
 ) -> Result<(bool, String), String> {
-    let flag = if dot_output {
-        DEPGRAPH_DOT_FLAG
-    } else {
-        DEPGRAPH_FLAG
-    };
+    let flag = if dot_output { KG_DOT_FLAG } else { KG_FLAG };
     let target_flag = read_any_value_after_flag(args, index, flag)?;
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
             if dot_output {
-                Ok(run_dependency_graph_dot_for_code(
+                Ok(run_concept_graph_dot_for_code(
                     code.as_str(),
                     flag,
                     detail_output,
                     strict_mode,
                 ))
             } else {
-                Ok(run_dependency_graph_json_for_code(
+                Ok(run_concept_graph_json_for_code(
                     code.as_str(),
                     flag,
                     detail_output,
@@ -601,13 +603,13 @@ fn main_flag_dependency_graph(
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
             if dot_output {
-                Ok(run_dependency_graph_dot_for_file(
+                Ok(run_concept_graph_dot_for_file(
                     file_path.as_str(),
                     detail_output,
                     strict_mode,
                 ))
             } else {
-                Ok(run_dependency_graph_json_for_file(
+                Ok(run_concept_graph_json_for_file(
                     file_path.as_str(),
                     detail_output,
                     strict_mode,
@@ -617,13 +619,13 @@ fn main_flag_dependency_graph(
         "-r" => {
             let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
             if dot_output {
-                Ok(run_dependency_graph_dot_for_repo(
+                Ok(run_concept_graph_dot_for_repo(
                     repo_path.as_str(),
                     detail_output,
                     strict_mode,
                 ))
             } else {
-                Ok(run_dependency_graph_json_for_repo(
+                Ok(run_concept_graph_json_for_repo(
                     repo_path.as_str(),
                     detail_output,
                     strict_mode,
@@ -641,29 +643,29 @@ fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
 }
 
-fn write_dependency_graph_cli_output(
+fn write_concept_graph_cli_output(
     graph_output: &str,
     extension: &str,
     ok: bool,
 ) -> Result<String, String> {
-    let output_dir = Path::new("tmp").join("depgraph");
+    let output_dir = Path::new("tmp").join("kg");
     fs::create_dir_all(&output_dir).map_err(|error| {
         format!(
-            "failed to create dependency graph output directory {:?}: {}",
+            "failed to create concept graph output directory {:?}: {}",
             output_dir, error
         )
     })?;
 
     let filename = format!(
-        "dependency_graph_{}_{}.{}",
+        "concept_graph_{}_{}.{}",
         process::id(),
-        dependency_graph_timestamp_millis(),
+        concept_graph_timestamp_millis(),
         extension
     );
     let output_path = output_dir.join(filename);
     fs::write(&output_path, graph_output).map_err(|error| {
         format!(
-            "failed to write dependency graph output {:?}: {}",
+            "failed to write concept graph output {:?}: {}",
             output_path, error
         )
     })?;
@@ -688,7 +690,7 @@ fn write_dependency_graph_cli_output(
     ))
 }
 
-fn dependency_graph_timestamp_millis() -> u128 {
+fn concept_graph_timestamp_millis() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_millis())
@@ -818,12 +820,12 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <repo> : run a repository and return one wrapper JSON object
-litex -depgraph -f <file> : run a file, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
-litex -depgraph -e <code> : run source code, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
-litex -depgraph -r <repo> : run a repository, write a proof dependency graph JSON file under tmp/depgraph, and print the output path
-litex -depgraph-dot -f <file> : run a file, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
-litex -depgraph-dot -e <code> : run source code, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
-litex -depgraph-dot -r <repo> : run a repository, write a proof dependency graph DOT file under tmp/depgraph, and print the output path
+litex -kg -f <file> : run a file, write a concept graph JSON file under tmp/kg, and print the output path
+litex -kg -e <code> : run source code, write a concept graph JSON file under tmp/kg, and print the output path
+litex -kg -r <repo> : run a repository main.lit, write a concept graph JSON file under tmp/kg, and print the output path
+litex -kg-dot -f <file> : run a file, write a concept graph DOT file under tmp/kg, and print the output path
+litex -kg-dot -e <code> : run source code, write a concept graph DOT file under tmp/kg, and print the output path
+litex -kg-dot -r <repo> : run a repository main.lit, write a concept graph DOT file under tmp/kg, and print the output path
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX

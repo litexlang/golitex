@@ -5181,96 +5181,121 @@ fn runner_accepts_let_as_normal_execution() {
 }
 
 #[test]
-fn dependency_graph_tracks_fact_citation() {
-    run_with_large_stack("dependency_graph_tracks_fact_citation", || {
-        let (ok, output) =
-            run_dependency_graph_json_for_code("1 = 1\n1 = 1", "-depgraph-test", true, false);
-
-        assert!(ok, "dependency graph run failed:\n{}", output);
-        assert!(output.contains("\"kind\": \"verifies\""));
-        assert!(output.contains("\"from\": \"fact:1\""));
-        assert!(output.contains("\"to\": \"fact:2\""));
-    });
-}
-
-#[test]
-fn dependency_graph_tracks_prop_definition_dependencies() {
+fn concept_graph_binds_source_items_to_formal_statements() {
     run_with_large_stack(
-        "dependency_graph_tracks_prop_definition_dependencies",
+        "concept_graph_binds_source_items_to_formal_statements",
         || {
             let source_code = r#"
+"""
+Definition 1.1. An even integer has the form 2k.
+"""
 prop is_even(x Z):
     exist k Z st {x = 2 * k}
 
-prop is_multiple_of_four(x Z):
-    exist k Z st {x = 4 * k}
-    $is_even(x)
+"""
+Proposition 1.2. A basic theorem node.
+"""
+thm one_eq_one:
+    prove:
+        forall:
+            1 = 1
+    1 = 1
 "#;
             let (ok, output) =
-                run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+                run_concept_graph_json_for_code(source_code, "-kg-test", true, false);
 
-            assert!(ok, "dependency graph prop run failed:\n{}", output);
-            assert!(output.contains("\"kind\": \"uses_definition\""));
-            assert!(output.contains("prop is_even(x Z)"));
-            assert!(output.contains("prop is_multiple_of_four(x Z)"));
-            assert!(
-                !output.contains("~2x"),
-                "dependency graph output should hide internal free-param tags:\n{}",
-                output
-            );
+            assert!(ok, "concept graph run failed:\n{}", output);
+            assert!(output.contains("\"schema_version\": \"litex_concept_graph.v1\""));
+            assert!(output.contains("\"id\": \"source:definition:1_1\""));
+            assert!(output.contains("\"id\": \"formal:prop:is_even\""));
+            assert!(output.contains("\"kind\": \"defines\""));
+            assert!(output.contains("\"id\": \"source:theorem:1_2\""));
+            assert!(output.contains("\"id\": \"formal:thm:one_eq_one\""));
+            assert!(output.contains("\"kind\": \"formalizes\""));
         },
     );
 }
 
 #[test]
-fn dependency_graph_dot_outputs_graphviz_edges() {
-    run_with_large_stack("dependency_graph_dot_outputs_graphviz_edges", || {
-        let (ok, output) =
-            run_dependency_graph_dot_for_code("1 + 1 = 2", "-depgraph-test", true, false);
+fn concept_graph_dot_outputs_graphviz_graph() {
+    run_with_large_stack("concept_graph_dot_outputs_graphviz_graph", || {
+        let (ok, output) = run_concept_graph_dot_for_code("1 + 1 = 2", "-kg-test", true, false);
 
-        assert!(ok, "dependency graph dot run failed:\n{}", output);
-        assert!(output.contains("digraph litex_dependency_graph"));
-        assert!(output.contains("\"builtin_rule:1\" -> \"fact:1\""));
-        assert!(output.contains("verifies"));
+        assert!(ok, "concept graph dot run failed:\n{}", output);
+        assert!(output.contains("digraph litex_concept_graph"));
     });
 }
 
 #[test]
-fn dependency_graph_tracks_by_thm_dependency() {
-    run_with_large_stack("dependency_graph_tracks_by_thm_dependency", || {
-        let source_code = r#"
+fn concept_graph_tracks_kg_comments_and_by_thm_dependencies() {
+    run_with_large_stack(
+        "concept_graph_tracks_kg_comments_and_by_thm_dependencies",
+        || {
+            let source_code = r#"
+# kg: node concept trivial_truth label="trivial truth"
+# kg: bind concept:trivial_truth formal:thm:one_eq_one
+# kg: edge depends_on concept:derived_truth concept:trivial_truth source="test"
+
 thm one_eq_one:
     prove:
         forall:
             1 = 1
     1 = 1
 
-by thm one_eq_one()
+thm two_eq_two:
+    prove:
+        forall:
+            2 = 2
+    by thm one_eq_one()
+    2 = 2
 "#;
-        let (ok, output) =
-            run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
+            let (ok, output) =
+                run_concept_graph_json_for_code(source_code, "-kg-test", true, false);
 
-        assert!(ok, "dependency graph by-thm run failed:\n{}", output);
-        assert!(output.contains("\"kind\": \"theorem\""));
-        assert!(output.contains("\"kind\": \"uses_theorem\""));
-        assert!(output.contains("\"detail\": \"theorem instantiation\""));
+            assert!(ok, "concept graph by-thm run failed:\n{}", output);
+            assert!(output.contains("\"id\": \"concept:trivial_truth\""));
+            assert!(output.contains("\"from\": \"concept:trivial_truth\""));
+            assert!(output.contains("\"to\": \"formal:thm:one_eq_one\""));
+            assert!(output.contains("\"provenance\": \"kg_comment\""));
+            assert!(output.contains("\"from\": \"formal:thm:two_eq_two\""));
+            assert!(output.contains("\"to\": \"formal:thm:one_eq_one\""));
+            assert!(output.contains("\"provenance\": \"auto_by_thm\""));
+        },
+    );
+}
+
+#[test]
+fn concept_graph_tracks_proof_debt_nodes() {
+    run_with_large_stack("concept_graph_tracks_proof_debt_nodes", || {
+        let source_code = r#"
+prop impossible_marker(x R):
+    1 = 0
+
+proof_debt 1 = 0
+"#;
+        let (ok, output) = run_concept_graph_json_for_code(source_code, "-kg-test", true, false);
+
+        assert!(ok, "concept graph proof_debt run failed:\n{}", output);
+        assert!(output.contains("\"kind\": \"proof_debt\""));
+        assert!(output.contains("\"kind\": \"has_proof_debt\""));
     });
 }
 
 #[test]
-fn dependency_graph_reports_successful_prefix_on_error() {
-    run_with_large_stack(
-        "dependency_graph_reports_successful_prefix_on_error",
-        || {
-            let (ok, output) =
-                run_dependency_graph_json_for_code("1 = 1\n1 = 0", "-depgraph-test", true, false);
+fn concept_graph_ids_do_not_include_absolute_target_path() {
+    let source_code = "prop marker(x R):\n    x = x\n";
+    let output = concept_graph_json_for_source(
+        "file",
+        "/Users/example/private/project/main.lit",
+        source_code,
+        &None,
+    );
 
-            assert!(!ok, "dependency graph error run should fail:\n{}", output);
-            assert!(output.contains("\"result\": \"error\""));
-            assert!(output.contains("\"kind\": \"error\""));
-            assert!(output.contains("\"text\": \"1 = 1\""));
-            assert!(output.contains("\"error_type\": \"VerifyError\""));
-        },
+    assert!(output.contains("\"id\": \"formal:prop:marker\""));
+    assert!(
+        !output.contains("/Users/example/private/project"),
+        "concept graph output should not expose absolute target paths:\n{}",
+        output
     );
 }
 
