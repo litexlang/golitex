@@ -260,10 +260,10 @@ thm even_power_bound_by_nonpositive_rhs:
         x <= -y
 
 
-let pi R:
+suppose pi R:
     pi > 0
 
-let euler_e R:
+suppose euler_e R:
     euler_e > 0
         
 proof_debt:

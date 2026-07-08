@@ -182,18 +182,9 @@ $is_one(1)
 ### Proof by Contradiction Reads Like Proof by Contradiction
 
 ```litex
-prop surjective_fn(S, T set, f fn(x S) T):
-    forall y T:
-        exist x S st {y = f(x)}
-
-have fn square(x R) R = x^2
-
-by contra not $surjective_fn(R, R, square):
-    have by exist x R st {-1 = square(x)}: x
-    0 <= x^2
-    -1 = square(x) = x^2
-    0 <= -1
-    impossible 0 <= -1
+by contra not 2 < 1:
+    2 < 1
+    impossible 2 < 1
 ```
 
 These examples are small on purpose. They show the surface rule: write the next
@@ -227,9 +218,9 @@ struct Group<s nonempty_set>:
     <=>:
         $GroupProperty(s, inv, op, e)
 
-$GroupProperty(Z, '(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0)
+$GroupProperty(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
 
-('(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0) $in &Group<Z>
+(fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0) $in &Group<Z>
 ```
 
 The last line says that `(Z, x -> -x, (x, y) -> x + y, 0)` is an instance of

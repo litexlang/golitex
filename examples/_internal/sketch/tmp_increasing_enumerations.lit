@@ -63,7 +63,7 @@ claim:
             not $is_finite_set(S)
             =>:
                 exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
-    have by exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}: P
+    obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}
     $least_prefix_sequence(S, P)
     witness exist P0 fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P0)} from P:
         $least_prefix_sequence(S, P)
@@ -105,8 +105,8 @@ claim:
             not $is_finite_set(S)
             =>:
                 exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
-    have by exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}: P
-    have by exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}: a
+    obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
+    obtain a from exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}
     $least_order_enumeration(S, a)
     witness exist a0 fn(n N_pos) N st {$least_order_enumeration(S, a0)} from a:
         $least_order_enumeration(S, a)
@@ -173,7 +173,7 @@ claim:
             not $is_finite_set(S)
             =>:
                 $countably_infinite_N_subset(S)
-    have by exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}: a
+    obtain a from exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
     have fn enum_to_subset(n N_pos) S = a(n)
     forall n N_pos:
         enum_to_subset(n) = a(n)

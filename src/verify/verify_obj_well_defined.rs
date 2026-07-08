@@ -1576,7 +1576,7 @@ impl Runtime {
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         // A finite range sum is only well-defined on a nonempty integer interval.
-        // Example: `sum(1, 3, 'Z(i){i})` is valid, but `sum(m, m - 1, f)` is not.
+        // Example: `sum(1, 3, fn(i Z) Z {i})` is valid, but `sum(m, m - 1, f)` is not.
         self.require_less_equal_verified(
             &x.start,
             &x.end,
@@ -1825,7 +1825,7 @@ impl Runtime {
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         // A finite range product is only well-defined on a nonempty integer interval.
-        // Example: `product(1, 3, 'Z(i){i})` is valid, but `product(m, m - 1, f)` is not.
+        // Example: `product(1, 3, fn(i Z) Z {i})` is valid, but `product(m, m - 1, f)` is not.
         self.require_less_equal_verified(
             &x.start,
             &x.end,

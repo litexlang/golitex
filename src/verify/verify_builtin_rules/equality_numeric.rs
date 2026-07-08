@@ -3023,7 +3023,7 @@ impl Runtime {
     }
 
     // A finite sum over one index is the summand at that index.
-    // Example: `sum(1, 1, 'N_pos(x){x}) = 1`.
+    // Example: `sum(1, 1, fn(x N_pos) N_pos {x}) = 1`.
     pub(crate) fn try_verify_sum_single_term(
         &mut self,
         left: &Obj,
@@ -3072,7 +3072,7 @@ impl Runtime {
     }
 
     // A finite product over one index is the factor at that index.
-    // Example: `product(1, 1, 'N_pos(x){x}) = 1`.
+    // Example: `product(1, 1, fn(x N_pos) N_pos {x}) = 1`.
     pub(crate) fn try_verify_product_single_term(
         &mut self,
         left: &Obj,
@@ -3666,7 +3666,7 @@ impl Runtime {
     }
 
     // Scalars factor out of finite sums over the same integer index range.
-    // Example: `sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})`.
+    // Example: `sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})`.
     pub(crate) fn try_verify_sum_scalar_mul(
         &mut self,
         left: &Obj,
@@ -3753,7 +3753,7 @@ impl Runtime {
     }
 
     // A finite-set sum over the empty set is zero.
-    // Example: `finite_set_sum({}, 'Z(x){x}) = 0`.
+    // Example: `finite_set_sum({}, fn(x Z) Z {x}) = 0`.
     pub(crate) fn try_verify_finite_set_sum_empty(
         &mut self,
         left: &Obj,
@@ -3800,7 +3800,7 @@ impl Runtime {
 
     // A finite-set sum over a displayed finite set expands to the left-associated sum
     // of the summand at each listed element. Example:
-    // `finite_set_sum({1, 2}, 'Z(x){x}) = 1 + 2`.
+    // `finite_set_sum({1, 2}, fn(x Z) Z {x}) = 1 + 2`.
     pub(crate) fn try_verify_finite_set_sum_list_expansion(
         &mut self,
         left: &Obj,
@@ -3850,7 +3850,7 @@ impl Runtime {
     }
 
     // A finite-set sum over an integer closed range agrees with the existing range sum.
-    // Example: `finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})`.
+    // Example: `finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})`.
     pub(crate) fn try_verify_finite_set_sum_closed_range_bridge(
         &mut self,
         left: &Obj,
@@ -3941,7 +3941,7 @@ impl Runtime {
     }
 
     // A constant finite-set summand is the set cardinality times the constant.
-    // Example: `finite_set_sum(X, '(x X) R {c}) = count(X) * c`.
+    // Example: `finite_set_sum(X, fn(x X) R {c}) = count(X) * c`.
     pub(crate) fn try_verify_finite_set_sum_constant_summand(
         &mut self,
         left: &Obj,
@@ -4066,7 +4066,7 @@ impl Runtime {
 
     // Finite-set sum substitution along a bijection onto the original set.
     // Example: from `forall x X: exist! y Y st {g(y) = x}`, prove
-    // `finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})`.
+    // `finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})`.
     pub(crate) fn try_verify_finite_set_sum_substitution(
         &mut self,
         left: &Obj,
@@ -4255,7 +4255,7 @@ impl Runtime {
     }
 
     // Finite-set sums distribute over pointwise addition on the same finite set.
-    // Example: `finite_set_sum(X, '(x X) R {f(x) + g(x)}) =
+    // Example: `finite_set_sum(X, fn(x X) R {f(x) + g(x)}) =
     // finite_set_sum(X, f) + finite_set_sum(X, g)`.
     pub(crate) fn try_verify_finite_set_sum_add(
         &mut self,
@@ -4338,7 +4338,7 @@ impl Runtime {
     }
 
     // Scalars factor out of finite-set sums on the same finite set.
-    // Example: `finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)`.
+    // Example: `finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)`.
     pub(crate) fn try_verify_finite_set_sum_scalar_mul(
         &mut self,
         left: &Obj,
@@ -4411,7 +4411,7 @@ impl Runtime {
 
     // A nested finite-set sum over two finite sets is the finite-set sum over
     // their Cartesian product.
-    // Example: `finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})})
+    // Example: `finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})})
     // = finite_set_sum(cart(X, Y), f)`.
     pub(crate) fn try_verify_finite_set_sum_over_cartesian_product(
         &mut self,
@@ -4514,8 +4514,8 @@ impl Runtime {
 
     // Range sums over two bijective enumerations of the same finite set are equal.
     // Example: from `forall x X: exist! i 1...count(X) st {g(i) = x}` and the
-    // analogous fact for `h`, prove `sum(1, count(X), '(i 1...count(X)) R {f(g(i))})
-    // = sum(1, count(X), '(i 1...count(X)) R {f(h(i))})`.
+    // analogous fact for `h`, prove `sum(1, count(X), fn(i 1...count(X)) R {f(g(i))})
+    // = sum(1, count(X), fn(i 1...count(X)) R {f(h(i))})`.
     pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
         &mut self,
         left: &Obj,
@@ -4630,7 +4630,7 @@ impl Runtime {
     }
 
     // A finite-set product over the empty set is one.
-    // Example: `finite_set_product({}, 'Z(x){x}) = 1`.
+    // Example: `finite_set_product({}, fn(x Z) Z {x}) = 1`.
     pub(crate) fn try_verify_finite_set_product_empty(
         &mut self,
         left: &Obj,
@@ -4677,7 +4677,7 @@ impl Runtime {
 
     // A finite-set product over a displayed finite set expands to the left-associated product
     // of the factor at each listed element. Example:
-    // `finite_set_product({1, 2}, 'Z(x){x}) = 1 * 2`.
+    // `finite_set_product({1, 2}, fn(x Z) Z {x}) = 1 * 2`.
     pub(crate) fn try_verify_finite_set_product_list_expansion(
         &mut self,
         left: &Obj,
@@ -4727,7 +4727,7 @@ impl Runtime {
     }
 
     // A finite-set product over an integer closed range agrees with the existing range product.
-    // Example: `finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})`.
+    // Example: `finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})`.
     pub(crate) fn try_verify_finite_set_product_closed_range_bridge(
         &mut self,
         left: &Obj,
@@ -4789,7 +4789,7 @@ impl Runtime {
     }
 
     // A constant finite-set factor is the constant raised to the set cardinality.
-    // Example: `finite_set_product(X, '(x X) R {c}) = c ^ count(X)`.
+    // Example: `finite_set_product(X, fn(x X) R {c}) = c ^ count(X)`.
     pub(crate) fn try_verify_finite_set_product_constant_factor(
         &mut self,
         left: &Obj,

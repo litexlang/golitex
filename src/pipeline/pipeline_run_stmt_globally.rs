@@ -1499,7 +1499,7 @@ thm local_exist_case:
     prove:
         forall n N:
             exist s N st {s = n}
-    have by exist r N st {r = n}: r
+    obtain r from exist r N st {r = n}
     by cases:
         prove:
             exist s N st {s = n}

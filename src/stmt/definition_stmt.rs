@@ -187,7 +187,7 @@ pub enum TemplateDefEnum {
     HaveMatrixStmt(HaveMatrixStmt),
 }
 
-// have by exist a R st {$p(a)}: a
+// obtain a from exist x R st {$p(x)}
 #[derive(Clone)]
 pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
@@ -305,7 +305,7 @@ impl DefLetStmt {
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user let statements; use have/claim/thm/prove or move trusted background into an imported module"
+        "strict mode rejects user suppose statements; use have/claim/thm/prove or move trusted background into an imported module"
     }
 }
 
@@ -313,11 +313,11 @@ impl fmt::Display for DefLetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let param_str = self.param_def.to_string();
         match self.facts.len() {
-            0 => write!(f, "{} {}", LET, param_str),
+            0 => write!(f, "{} {}", SUPPOSE, param_str),
             _ => write!(
                 f,
                 "{} {}{}\n{}",
-                LET,
+                SUPPOSE,
                 param_str,
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)
@@ -693,12 +693,11 @@ impl fmt::Display for HaveByExistStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {} {}",
-            HAVE,
-            BY,
-            self.exist_fact_in_have_obj_st,
-            COLON,
+            "{} {} {} {}",
+            OBTAIN,
             vec_to_string_join_by_comma(&self.equal_tos),
+            FROM,
+            self.exist_fact_in_have_obj_st,
         )
     }
 }

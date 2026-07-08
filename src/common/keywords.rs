@@ -47,7 +47,7 @@ pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
-/// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
+/// Removed anonymous-function prefix kept only for targeted migration diagnostics.
 pub const ANONYMOUS_FN_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
@@ -104,6 +104,7 @@ pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const ALIAS: &str = "alias";
 pub const LET: &str = "let";
+pub const SUPPOSE: &str = "suppose";
 pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
@@ -141,6 +142,7 @@ pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
+pub const OBTAIN: &str = "obtain";
 pub const PROOF_DEBT: &str = "proof_debt";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
@@ -286,6 +288,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNKNOWN_COLON,
         ALIAS,
         LET,
+        SUPPOSE,
         PROP,
         ABSTRACT_PROP,
         CLAIM,
@@ -305,6 +308,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         AS,
         ENUMERATE,
         HAVE,
+        OBTAIN,
         PROOF_DEBT,
         CLEAR,
         DO_NOTHING,

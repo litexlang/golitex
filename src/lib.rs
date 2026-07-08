@@ -7,6 +7,7 @@ pub mod environment;
 pub mod error;
 pub mod execute;
 pub mod fact;
+pub mod graph;
 pub mod infer;
 pub mod main_test;
 pub mod module_manager;

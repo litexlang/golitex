@@ -1681,7 +1681,7 @@ impl Runtime {
     }
 
     // Finite-set sum: the return set of the summand controls the numeric set of the sum.
-    // Example: `finite_set_sum({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the domain must be nonempty.
+    // Example: `finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the domain must be nonempty.
     fn verify_in_fact_finite_set_sum_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1733,7 +1733,7 @@ impl Runtime {
     }
 
     // Finite-set product: the return set of the factor controls the numeric set of the product.
-    // Example: `finite_set_product({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the empty product is `1`.
+    // Example: `finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the empty product is `1`.
     fn verify_in_fact_finite_set_product_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1778,7 +1778,7 @@ impl Runtime {
     // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return
     // set is `Z` or `N_pos` (positive naturals are integers) and the whole iterated object is
     // well-defined on the integer interval.
-    // Example: `sum(1, n, 'Z(x){x}) $in Z`, `product(1, a, 'N_pos(x){x}) $in Z`.
+    // Example: `sum(1, n, fn(x Z) Z {x}) $in Z`, `product(1, a, fn(x N_pos) N_pos {x}) $in Z`.
     fn verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1841,7 +1841,7 @@ impl Runtime {
 
     // `sum(start, end, f)` / `product(start, end, f)` in `N_pos` when the iterand's declared
     // return set is `N_pos` and the whole iterated object is well-defined on the integer interval.
-    // Example: `product(1, a, 'N_pos(x){x}) $in N_pos`.
+    // Example: `product(1, a, fn(x N_pos) N_pos {x}) $in N_pos`.
     fn verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,

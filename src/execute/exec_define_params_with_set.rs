@@ -121,7 +121,7 @@ impl Runtime {
     /// Parameter membership bridge through already-known subset facts.
     /// When defining `x S`, if the environment already has `S $subset T`, record
     /// `x $in T` in the same local environment. This supports function bodies such
-    /// as `'(x E) R {f(x)}` when `E $subset E2` and `f fn(x E2) R`, without making
+    /// as `fn(x E) R {f(x)}` when `E $subset E2` and `f fn(x E2) R`, without making
     /// every ordinary membership fact recursively infer through all known subsets.
     fn store_param_memberships_in_known_supersets(
         &mut self,

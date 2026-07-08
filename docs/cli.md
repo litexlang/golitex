@@ -20,15 +20,16 @@ litex -detail -strict -f examples/tmp.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
-Do not rely on extra positional tokens after a command's required values. The
-current parser is command-oriented, not a general argument parser.
+Do not rely on extra positional tokens after a command's required values, except
+for the documented graph-output path after `litex -graph`. The current parser
+is command-oriented, not a general argument parser.
 
 ## Global Options
 
 | Option | Meaning |
 |--------|---------|
 | `-detail` | Include fuller JSON trace details. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `proof_debt`, `let`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-strict` | Reject user `proof_debt`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
 Supported language codes are:
@@ -56,7 +57,7 @@ Current mappings:
 | `vi` | Vietnamese |
 | `id` | Indonesian |
 
-`-detail`, `-strict`, and `-lang` mainly affect verifier and runner commands.
+`-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
 They do not make module-management or tutorial placeholder commands functional.
 
 ## Value Rules
@@ -122,6 +123,22 @@ Runner exit behavior:
 - exits with code `0` when `ok` is true;
 - exits with code `1` when the checked run fails or the target cannot be loaded;
 - exits with code `2` for CLI usage errors, such as a missing value.
+
+## Graph Commands
+
+| Command | Behavior |
+|---------|----------|
+| `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Run `<repo>/main.lit` and save one prop/function/fact relation graph JSON object. |
+
+The graph is an MVP concept map for direct Litex vocabulary references. It
+creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
+`claim`. Edges point from the referenced dependency to the later consumer:
+`uses_prop`, `uses_fn`, and `justified_by` for theorem-backed function
+construction. The wrapper includes machine-readable `nodes` and `edges`, plus a
+Mermaid `flowchart LR` string for quick rendering. If the final `<json>` path
+is omitted, Litex prints the graph JSON to stdout for quick debugging.
 
 ## LaTeX Commands
 
@@ -189,6 +206,12 @@ Run a strict CI-style check:
 
 ```bash
 litex -strict -runner -f examples/tmp.lit
+```
+
+Generate a relation graph:
+
+```bash
+litex -graph -f scripts/analysis-one/chapters_in_litex/chap6.lit scripts/analysis-one/chapters_in_litex/chap6.graph.json
 ```
 
 Run with Chinese output labels:

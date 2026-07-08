@@ -133,6 +133,49 @@ pub fn run_cli() {
                 }
                 return;
             }
+            "-graph" => {
+                index += 1;
+                let (ok, output, save_path) = match main_flag_graph(
+                    &args,
+                    &mut index,
+                    detail_output,
+                    strict_mode,
+                    output_language,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                let trimmed_output = string_with_trimmed_outer_newlines(output.as_str());
+                if let Some(save_path) = save_path {
+                    let path = Path::new(save_path.as_str());
+                    if let Some(parent) = path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            if let Err(error) = fs::create_dir_all(parent) {
+                                eprintln!(
+                                    "failed to create graph output directory for {}: {}",
+                                    save_path, error
+                                );
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    if let Err(error) = fs::write(path, format!("{}\n", trimmed_output)) {
+                        eprintln!("failed to write graph JSON to {}: {}", save_path, error);
+                        process::exit(1);
+                    }
+                    println!("saved graph JSON to {}", save_path);
+                } else {
+                    println!("{}", trimmed_output);
+                }
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
             "-latex" => {
                 index += 1;
                 if index >= args.len() {
@@ -505,6 +548,87 @@ fn main_flag_runner(
     }
 }
 
+fn main_flag_graph(
+    args: &[String],
+    index: &mut usize,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+) -> Result<(bool, String, Option<String>), String> {
+    let target_flag = read_any_value_after_flag(args, index, "-graph")?;
+    let hide_file_paths = !detail_output;
+    match target_flag.as_str() {
+        "-e" => {
+            let code = read_non_flag_value_after_flag(args, index, "-e")?;
+            let save_path = read_optional_graph_save_path(args, index)?;
+            let output = if strict_mode {
+                run_graph_for_code_strict_with_language(
+                    code.as_str(),
+                    "-graph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            } else {
+                run_graph_for_code_with_language(
+                    code.as_str(),
+                    "-graph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            };
+            Ok((output.0, output.1, save_path))
+        }
+        "-f" => {
+            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
+            let save_path = read_optional_graph_save_path(args, index)?;
+            let output = run_graph_for_file_with_strict_and_language(
+                file_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        "-r" => {
+            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
+            let save_path = read_optional_graph_save_path(args, index)?;
+            let output = run_graph_for_repo_with_strict_and_language(
+                repo_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        _ => Err(
+            "-graph must be followed by one of: -f <file> [json], -e <code> [json], -r <repo> [json]"
+                .to_string(),
+        ),
+    }
+}
+
+fn read_optional_graph_save_path(
+    args: &[String],
+    index: &mut usize,
+) -> Result<Option<String>, String> {
+    let save_path = match args.get(*index) {
+        Some(candidate) if !candidate.starts_with('-') => {
+            *index += 1;
+            Some(candidate.clone())
+        }
+        _ => None,
+    };
+
+    if let Some(unexpected) = args.get(*index) {
+        return Err(format!(
+            "unexpected argument after -graph target: {}",
+            unexpected
+        ));
+    }
+
+    Ok(save_path)
+}
+
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
 }
@@ -632,6 +756,9 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <repo> : run a repository and return one wrapper JSON object
+litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
+litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
+litex -graph -r <repo> <json> : run a repository and save a prop/function/fact relation graph JSON object
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
@@ -643,7 +770,7 @@ litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
-litex -strict : reject user proof_debt, let, and axiom statements after builtin initialization
+litex -strict : reject user proof_debt, suppose, and axiom statements after builtin initialization
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
 litex -install <module> : install the given module
@@ -675,6 +802,12 @@ mod tests {
     fn help_lists_python_command() {
         let message = help_message();
         assert!(message.contains("litex -python -f <file>"));
+    }
+
+    #[test]
+    fn help_lists_graph_command() {
+        let message = help_message();
+        assert!(message.contains("litex -graph -f <file> <json>"));
     }
 
     #[test]

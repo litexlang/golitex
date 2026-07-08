@@ -1238,6 +1238,63 @@ prove:
 }
 
 #[test]
+fn removed_surface_syntax_is_rejected_with_migration_hints() {
+    run_with_large_stack(
+        "removed_surface_syntax_is_rejected_with_migration_hints",
+        || {
+            let cases = [
+                (
+                    "old_let",
+                    "let x R",
+                    "`let` has been removed; use `suppose`",
+                ),
+                (
+                    "old_have_by_exist",
+                    "have by exist x R st {x = 1}: a",
+                    "`have by exist ...: name` has been removed",
+                ),
+                (
+                    "old_have_fn_as_set",
+                    r#"
+have fn f as set:
+    prove:
+        forall x R:
+            exist! y R st {y = x}
+"#,
+                    "`have fn <name> as set:` has been removed",
+                ),
+                (
+                    "old_anonymous_fn_prefix",
+                    "'(x R) R {x} = fn(y R) R {y}",
+                    "apostrophe anonymous functions have been removed",
+                ),
+            ];
+
+            for (label, source_code, expected_message) in cases {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    !run_succeeded,
+                    "{} should reject removed syntax:\n{}",
+                    label, run_output
+                );
+                assert!(
+                    run_output.contains(expected_message),
+                    "{} should include migration hint `{}`:\n{}",
+                    label,
+                    expected_message,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn internal_claim_prove_block_remains_supported() {
     run_with_large_stack("internal_claim_prove_block_remains_supported", || {
         let source_code = r#"
@@ -1314,7 +1371,7 @@ thm qgoal_self_eq_extra:
         x = x
     x = x
 
-have fn qgoal_identity as set:
+have fn qgoal_identity by exist!:
     ? forall x R:
         exist! y R st {y = x}
     proof_debt exist! y R st {y = x}
@@ -1510,7 +1567,7 @@ prop is_injective_fn(S, T set, f fn(x S) T):
             x1 = x2
 
 template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
-    have fn inverse_function as set:
+    have fn inverse_function by exist!:
         prove:
             forall y fn_range_on(f, X):
                 exist! x X st {y = f(x)}
@@ -2192,7 +2249,7 @@ by axiom_of_choice S:
 #[test]
 fn choose_object_is_no_longer_builtin() {
     let source_code = r#"
-let s nonempty_set:
+suppose s nonempty_set:
     forall x s:
         $is_nonempty_set(x)
 
@@ -2279,8 +2336,11 @@ by regularity_axiom({})
 }
 
 #[test]
-fn have_by_exist_body_well_defined_can_use_forall_domain_fact() {
-    let source_code = r#"
+fn obtain_body_well_defined_can_use_forall_domain_fact() {
+    run_with_large_stack(
+        "obtain_body_well_defined_can_use_forall_domain_fact",
+        || {
+            let source_code = r#"
 prop image_like(S, T set, f fn(x S) T, A, B set):
     A $subset S
     forall y B:
@@ -2299,36 +2359,38 @@ claim:
             forall a A:
                 a $in S
         a $in S
-    have by exist a A st {f(x) = f(a)}: a
+    obtain a from exist a A st {f(x) = f(a)}
     a $in S
     f(x) = f(a)
     x = x
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_by_exist_body_well_defined_can_use_forall_domain_fact",
-    );
-    runtime.detail_output = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "obtain_body_well_defined_can_use_forall_domain_fact",
+            );
+            runtime.detail_output = true;
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have_by_exist_body_well_defined_can_use_forall_domain_fact failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"object definition by existence\""),
-        "have by exist should report the semantic statement type:\n{}",
-        run_output
-    );
-    assert_no_legacy_acceptance_field(&run_output, "have by exist");
-    assert!(
-        !run_output.contains("HaveExistObjStmt"),
-        "have by exist should not report the legacy statement type:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "obtain_body_well_defined_can_use_forall_domain_fact failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"object definition by existence\""),
+                "obtain from exist should report the semantic statement type\n{}",
+                run_output
+            );
+            assert_no_legacy_acceptance_field(&run_output, "have by exist");
+            assert!(
+                !run_output.contains("HaveExistObjStmt"),
+                "obtain from exist should not report the legacy statement type\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2345,10 +2407,10 @@ fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
 
 fn anonymous_fn_restrict_positive_cases_impl() {
     let positive_source_code = r#"
-$restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
-$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
-$restricts_to('(x R: x > 0) R {x}, fn(x N_pos) R)
-$restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
+$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) R)
+$restricts_to(fn(x R) R {x + 1}, fn(x closed_range(1, 2)) R)
+$restricts_to(fn(x R: x > 0) R {x}, fn(x N_pos) R)
+$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) N)
 "#;
 
     let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -2370,7 +2432,7 @@ $restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
 
 fn anonymous_fn_restrict_negative_case_impl() {
     let negative_source_code = r#"
-$restricts_to('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+$restricts_to(fn(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
 "#;
 
     let mut negative_runtime = Runtime::new_with_builtin_code();
@@ -2402,7 +2464,7 @@ fn anonymous_fn_restriction_over_abstract_subset_is_well_defined() {
         || {
             let source_code = r#"
 forall E2 set, E power_set(E2), f fn(x E2) R:
-    fn_range('(x E) R {f(x)}) $subset R
+    fn_range(fn(x E) R {f(x)}) $subset R
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -2423,63 +2485,68 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
 
 #[test]
 fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
-    let positive_source_code = r#"
-'R(x){x} = 'R(y){y}
+    run_with_large_stack(
+        "anonymous_fn_direct_equality_uses_pointwise_extensionality",
+        || {
+            let positive_source_code = r#"
+fn(x R) R {x} = fn(y R) R {y}
 
 forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){g(x) + f(x)}
+    fn(x R) R {f(x) + g(x)} = fn(x R) R {g(x) + f(x)}
 
 forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){'R(y){f(y)}(x) + 'R(y){g(y)}(x)}
+    fn(x R) R {f(x) + g(x)} = fn(x R) R {fn(y R) R {f(y)}(x) + fn(y R) R {g(y)}(x)}
 
-'(x R: x > 0) R {x} = '(y R: y > 0) R {y}
+fn(x R: x > 0) R {x} = fn(y R: y > 0) R {y}
 "#;
 
-    let mut positive_runtime = Runtime::new_with_builtin_code();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
-    );
-    let (positive_stmt_results, positive_runtime_error) =
-        run_source_code(positive_source_code, &mut positive_runtime);
-    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
-        &positive_runtime,
-        &positive_stmt_results,
-        &positive_runtime_error,
-        false,
-    );
-    assert!(
-        positive_run_succeeded,
-        "anonymous fn direct equality should use pointwise extensionality:\n{}",
-        positive_run_output
-    );
+            let mut positive_runtime = Runtime::new_with_builtin_code();
+            positive_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
+            );
+            let (positive_stmt_results, positive_runtime_error) =
+                run_source_code(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_stmt_results,
+                &positive_runtime_error,
+                false,
+            );
+            assert!(
+                positive_run_succeeded,
+                "anonymous fn direct equality should use pointwise extensionality:\n{}",
+                positive_run_output
+            );
 
-    let negative_source_code = r#"
-'(x N) R {x} = 'R(x){x}
+            let negative_source_code = r#"
+fn(x N) R {x} = fn(x R) R {x}
 "#;
 
-    let mut negative_runtime = Runtime::new_with_builtin_code();
-    negative_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
-    );
-    let (negative_stmt_results, negative_runtime_error) =
-        run_source_code(negative_source_code, &mut negative_runtime);
-    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
-        &negative_runtime,
-        &negative_stmt_results,
-        &negative_runtime_error,
-        false,
-    );
-    assert!(
-        !negative_run_succeeded,
-        "anonymous fn direct equality should not ignore domain differences:\n{}",
-        negative_run_output
+            let mut negative_runtime = Runtime::new_with_builtin_code();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
+            );
+            let (negative_stmt_results, negative_runtime_error) =
+                run_source_code(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_stmt_results,
+                &negative_runtime_error,
+                false,
+            );
+            assert!(
+                !negative_run_succeeded,
+                "anonymous fn direct equality should not ignore domain differences:\n{}",
+                negative_run_output
+            );
+        },
     );
 }
 
 #[test]
 fn curried_have_fn_equal_unfolds_pointwise() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = '(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
 
 forall a, b seq(R), k N_pos:
     seq_add(a, b)(k) = a(k) + b(k)
@@ -2501,7 +2568,7 @@ forall a, b seq(R), k N_pos:
 #[test]
 fn fn_application_returning_fn_set_verifies_sequence_membership() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = '(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
 
 forall a, b seq(R):
     seq_add(a, b) $in seq(R)
@@ -2608,14 +2675,14 @@ fn iterated_operator_equality_uses_fn_eq_for_function_arg() {
         "iterated_operator_equality_uses_fn_eq_for_function_arg_large_stack",
         || {
             let positive_source_code = r#"
-sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
-product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 3, fn(y Z) Z {y})
+product(1, 3, fn(x Z) Z {x}) = product(1, 3, fn(y Z) Z {y})
 
 forall f, g fn(x Z) Z:
-    sum(1, 3, 'Z(x){f(x) + g(x)}) = sum(1, 3, 'Z(y){g(y) + f(y)})
+    sum(1, 3, fn(x Z) Z {f(x) + g(x)}) = sum(1, 3, fn(y Z) Z {g(y) + f(y)})
 
 forall f, g fn(x Z) Z:
-    product(1, 3, 'Z(x){f(x) * g(x)}) = product(1, 3, 'Z(y){g(y) * f(y)})
+    product(1, 3, fn(x Z) Z {f(x) * g(x)}) = product(1, 3, fn(y Z) Z {g(y) * f(y)})
 "#;
 
             let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -2636,7 +2703,7 @@ forall f, g fn(x Z) Z:
             );
 
             let negative_source_code = r#"
-product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
+product(1, 3, fn(x Z) Z {x}) = product(1, 4, fn(y Z) Z {y})
 "#;
 
             let mut negative_runtime = Runtime::new_with_builtin_code();
@@ -2672,9 +2739,9 @@ thm finite_series_comparison_test:
                 =>:
                     a(i) <= b(i)
             =>:
-                sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+                sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
-    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+    sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
 thm finite_series_comparison_n_pos_index_test:
     prove:
@@ -2685,27 +2752,27 @@ thm finite_series_comparison_n_pos_index_test:
                 =>:
                     a(i) <= b(i)
             =>:
-                sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+                sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
-    sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+    sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
 thm finite_series_triangle_test:
     prove:
         forall a fn(i Z) R, m, n Z:
             m <= n
             =>:
-                abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+                abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
-    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+    abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
 thm finite_series_scalar_mul_test:
     prove:
         forall a fn(i Z) R, c R, m, n Z:
             m <= n
             =>:
-                sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+                sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 
-    sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+    sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2734,10 +2801,10 @@ fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
 thm bad_symbolic_empty_sum:
     prove:
         forall a fn(i Z) R, m Z:
-            sum(m, m - 1, '(i Z) R {a(i)}) = 0
+            sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 
     proof_debt:
-        sum(m, m - 1, '(i Z) R {a(i)}) = 0
+        sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 "#,
                     "sum: cannot verify start <= end for the summation range",
                 ),
@@ -2747,10 +2814,10 @@ thm bad_symbolic_empty_sum:
 thm bad_symbolic_empty_product:
     prove:
         forall a fn(i Z) R, m Z:
-            product(m, m - 1, '(i Z) R {a(i)}) = 1
+            product(m, m - 1, fn(i Z) R {a(i)}) = 1
 
     proof_debt:
-        product(m, m - 1, '(i Z) R {a(i)}) = 1
+        product(m, m - 1, fn(i Z) R {a(i)}) = 1
 "#,
                     "product: cannot verify start <= end for the product range",
                 ),
@@ -2785,7 +2852,7 @@ fn nested_iterated_operator_with_positive_index_is_well_defined() {
         "nested_iterated_operator_with_positive_index_is_well_defined_large_stack",
         || {
             let source_code = r#"
-eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
+eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -2809,21 +2876,21 @@ eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
 fn finite_set_sum_core_rules() {
     run_with_large_stack("finite_set_sum_core_rules", || {
         let source_code = r#"
-finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-finite_set_sum({}, 'Z(x){x}) = 0
-finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-finite_set_sum({1, 2}, 'Z(x){x}) $in Z
-finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
 
 sketch:
     have X power_set(Z)
     proof_debt $is_finite_set(X)
-    finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+    finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 
 thm finite_set_sum_substitution_tmp:
     prove:
@@ -2831,36 +2898,36 @@ thm finite_set_sum_substitution_tmp:
             forall x X:
                 exist! y Y st {g(y) = x}
             =>:
-                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
-    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+                finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_matches_series_tmp:
     prove:
         forall a fn(i Z) R, m, n Z:
             m <= n
             =>:
-                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
-    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+                sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+    sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
 
 thm finite_set_sum_disjoint_union_tmp:
     prove:
         forall X, Y finite_set, f fn(z union(X, Y)) R:
             intersect(X, Y) = {}
             =>:
-                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
-    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 
 thm finite_set_sum_add_tmp:
     prove:
         forall X finite_set, f, g fn(x X) R:
-            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
-    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+            finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
 
 thm finite_set_sum_scalar_mul_tmp:
     prove:
         forall X finite_set, f fn(x X) R, c R:
-            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
-    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+            finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
 
 thm finite_set_sum_monotone_tmp:
     prove:
@@ -2874,8 +2941,8 @@ thm finite_set_sum_monotone_tmp:
 thm finite_set_sum_triangle_tmp:
     prove:
         forall X finite_set, f fn(x X) R:
-            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
-    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2899,20 +2966,20 @@ fn finite_set_sum_cartesian_product_and_fubini() {
 thm finite_double_sum_over_cartesian_product_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_double_sum_over_cartesian_product_reversed_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2940,7 +3007,7 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
         exist! i closed_range(1, count(X)) st {g(i) = x}
 
 template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
     prove:
@@ -2949,8 +3016,8 @@ thm finite_set_sum_raw_enumeration_well_defined:
             $is_bijection_from_index_range_to_finite_set(X, g)
             $is_bijection_from_index_range_to_finite_set(X, h)
             =>:
-                sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
-    sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+                sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
+    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
 
 thm finite_set_sum_template_enumeration_well_defined:
     prove:
@@ -2983,22 +3050,22 @@ thm finite_set_sum_template_enumeration_well_defined:
 #[test]
 fn finite_set_product_core_rules() {
     let source_code = r#"
-finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-finite_set_product({}, 'Z(x){x}) = 1
-finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-finite_set_product({1, 2}, 'Z(x){x}) $in Z
-finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
-finite_set_product({}, 'N_pos(x){x}) $in N_pos
+finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
+finite_set_product({}, fn(x Z) Z {x}) = 1
+finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
+finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_product({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
 
 sketch:
     have X power_set(Z)
     proof_debt $is_finite_set(X)
-    finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
+    finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3318,7 +3385,7 @@ proof_debt forall f, g fn(x R) R:
     $p(f)
     $p(g)
     =>:
-        $p('R(x){f(x) + g(x)})
+        $p(fn(x R) R {f(x) + g(x)})
 
 claim:
     prove:
@@ -3327,8 +3394,8 @@ claim:
             $p(b)
             $p(c)
             =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
+                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    $p(fn(x R) R {b(x) + c(x)})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3352,10 +3419,10 @@ fn known_forall_does_not_infer_function_from_single_point_application() {
 abstract_prop p(x)
 
 proof_debt forall g fn(x R) R:
-    $p('R(x){g(0)})
+    $p(fn(x R) R {g(0)})
 
 have h fn(x R) R
-$p('R(x){h(x)})
+$p(fn(x R) R {h(x)})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -4617,15 +4684,16 @@ sketch:
 }
 
 #[test]
-fn have_fn_as_set_accepts_prove_block_target() {
-    let source_code = r#"
+fn have_fn_by_exist_accepts_prove_block_target() {
+    run_with_large_stack("have_fn_by_exist_accepts_prove_block_target", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 proof_debt forall x A:
     exist! y B st {$F(x, y)}
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
@@ -4634,27 +4702,29 @@ forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_accepts_prove_block_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_prove_block_target");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set prove target should succeed:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! prove target should succeed:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_prove_body_can_establish_target() {
-    let source_code = r#"
+fn have_fn_by_exist_prove_body_can_establish_target() {
+    run_with_large_stack("have_fn_by_exist_prove_body_can_establish_target", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
@@ -4664,27 +4734,31 @@ forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_prove_body_can_establish_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_prove_body_can_establish_target",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set proof body should establish the target forall:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! proof body should establish the target forall:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_releases_unique_witness_direction() {
-    let source_code = r#"
+fn have_fn_by_exist_releases_unique_witness_direction() {
+    run_with_large_stack("have_fn_by_exist_releases_unique_witness_direction", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
@@ -4696,29 +4770,34 @@ forall x A, y B:
         y = f(x)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime
-        .new_file_path_new_env_new_name_scope("have_fn_as_set_releases_unique_witness_direction");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_releases_unique_witness_direction",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set should release the unique witness direction:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! should release the unique witness direction:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_unique_witness_direction_keeps_all_body_facts() {
-    let source_code = r#"
+fn have_fn_by_exist_unique_witness_direction_keeps_all_body_facts() {
+    run_with_large_stack(
+        "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
+        || {
+            let source_code = r#"
 abstract_prop F(x, y)
 abstract_prop G(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y), $G(x, y)}
@@ -4731,31 +4810,34 @@ forall x A, y B:
         y = f(x)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_fn_as_set_unique_witness_direction_keeps_all_body_facts",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set uniqueness direction should keep every exist! body fact:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "have fn by exist! uniqueness direction should keep every exist! body fact:\n{}",
+                run_output
+            );
+        },
     );
 }
 
 #[test]
-fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
-    let source_code = r#"
+fn have_fn_by_exist_rejects_direct_forall_legacy_form() {
+    run_with_large_stack("have_fn_by_exist_rejects_direct_forall_legacy_form", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 proof_debt forall x A:
     exist! y B st {$F(x, y)}
 
-have fn f as set:
+have fn f by exist!:
     forall x A:
         exist! y B st {$F(x, y)}
 
@@ -4763,45 +4845,57 @@ forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_fn_as_set_still_accepts_direct_forall_compatibility_form",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_rejects_direct_forall_legacy_form",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "legacy direct forall form should remain accepted:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "legacy direct forall form should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("expects a `prove:` or `?` goal block"),
+            "legacy direct forall rejection should point to the new goal block shape:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_prove_block_requires_forall_target() {
-    let source_code = r#"
-have fn f as set:
+fn have_fn_by_exist_prove_block_requires_forall_target() {
+    run_with_large_stack(
+        "have_fn_by_exist_prove_block_requires_forall_target",
+        || {
+            let source_code = r#"
+have fn f by exist!:
     prove:
         1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime
-        .new_file_path_new_env_new_name_scope("have_fn_as_set_prove_block_requires_forall_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_prove_block_requires_forall_target",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "non-forall prove target should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("`prove:` must contain a single `forall` fact"),
-        "non-forall prove target should report the expected shape:\n{}",
-        run_output
+            assert!(
+                !run_succeeded,
+                "non-forall prove target should fail:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("goal must be a single `forall` fact"),
+                "non-forall prove target should report the expected shape:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -5173,11 +5267,17 @@ fn runner_accepts_proof_debt_as_normal_execution() {
 }
 
 #[test]
-fn runner_accepts_let_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("let x R", "-runner-test", true);
+fn runner_accepts_suppose_as_normal_execution() {
+    run_with_large_stack("runner_accepts_suppose_as_normal_execution", || {
+        let (ok, output) = run_runner_for_code("suppose x R", "-runner-test", true);
 
-    assert!(ok, "runner should not reject let statements:\n{}", output);
-    assert!(output.contains("\"result\": \"success\""));
+        assert!(
+            ok,
+            "runner should not reject suppose statements:\n{}",
+            output
+        );
+        assert!(output.contains("\"result\": \"success\""));
+    });
 }
 
 #[test]
@@ -5772,25 +5872,27 @@ fn strict_mode_rejects_user_proof_debt() {
 }
 
 #[test]
-fn strict_mode_rejects_user_let() {
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_let");
-    runtime.strict_mode = true;
+fn strict_mode_rejects_user_suppose() {
+    run_with_large_stack("strict_mode_rejects_user_suppose", || {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_suppose");
+        runtime.strict_mode = true;
 
-    let (stmt_results, runtime_error) = run_source_code("let x R", &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let (stmt_results, runtime_error) = run_source_code("suppose x R", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "strict mode should reject user let statements:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
-        "strict mode should report the let boundary:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "strict mode should reject user suppose statements:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+            "strict mode should report the suppose boundary:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -5852,16 +5954,18 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_let() {
-    let (ok, output) = run_runner_for_code_strict("let x R", "-runner-test", true);
+fn strict_runner_rejects_user_suppose() {
+    run_with_large_stack("strict_runner_rejects_user_suppose", || {
+        let (ok, output) = run_runner_for_code_strict("suppose x R", "-runner-test", true);
 
-    assert!(
-        !ok,
-        "strict runner should reject let statements:\n{}",
-        output
-    );
-    assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
+        assert!(
+            !ok,
+            "strict runner should reject suppose statements:\n{}",
+            output
+        );
+        assert!(output.contains("\"result\": \"error\""));
+        assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
+    });
 }
 
 #[test]
@@ -5895,27 +5999,31 @@ fn strict_mode_allows_imported_module_proof_debt() {
 }
 
 #[test]
-fn strict_mode_allows_imported_module_let() {
-    let module_dir =
-        std::env::temp_dir().join(format!("litex-strict-import-let-{}", std::process::id()));
-    fs::create_dir_all(&module_dir).expect("create strict import let test module");
-    fs::write(module_dir.join("main.lit"), "let imported_value R\n")
-        .expect("write strict import let test module");
-    let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
+fn strict_mode_allows_imported_module_suppose() {
+    run_with_large_stack("strict_mode_allows_imported_module_suppose", || {
+        let module_dir = std::env::temp_dir().join(format!(
+            "litex-strict-import-suppose-{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&module_dir).expect("create strict import suppose test module");
+        fs::write(module_dir.join("main.lit"), "suppose imported_value R\n")
+            .expect("write strict import suppose test module");
+        let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_let");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_suppose");
+        runtime.strict_mode = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    let _ = fs::remove_dir_all(&module_dir);
-    assert!(
-        run_succeeded,
-        "strict mode should allow let inside imported modules:\n{}",
-        run_output
-    );
+        let _ = fs::remove_dir_all(&module_dir);
+        assert!(
+            run_succeeded,
+            "strict mode should allow suppose inside imported modules:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -5946,32 +6054,35 @@ fn strict_mode_rejects_run_file_proof_debt() {
 }
 
 #[test]
-fn strict_mode_rejects_run_file_let() {
-    let run_file_path = std::env::temp_dir().join(format!(
-        "litex-strict-run-file-let-{}.lit",
-        std::process::id()
-    ));
-    fs::write(&run_file_path, "let x R\n").expect("write strict run_file let test file");
-    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
+fn strict_mode_rejects_run_file_suppose() {
+    run_with_large_stack("strict_mode_rejects_run_file_suppose", || {
+        let run_file_path = std::env::temp_dir().join(format!(
+            "litex-strict-run-file-suppose-{}.lit",
+            std::process::id()
+        ));
+        fs::write(&run_file_path, "suppose x R\n")
+            .expect("write strict run_file suppose test file");
+        let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_let");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_suppose");
+        runtime.strict_mode = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    let _ = fs::remove_file(&run_file_path);
-    assert!(
-        !run_succeeded,
-        "strict mode should reject let inside run_file:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
-        "strict run_file failure should report the let boundary:\n{}",
-        run_output
-    );
+        let _ = fs::remove_file(&run_file_path);
+        assert!(
+            !run_succeeded,
+            "strict mode should reject suppose inside run_file:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+            "strict run_file failure should report the suppose boundary:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -6050,7 +6161,7 @@ abstract_prop p(x)
 proof_debt forall x R:
     $p(x)
 $p(2)
-let a R:
+suppose a R:
     a = 1
 a = 1
 prop q(x R):
@@ -6272,7 +6383,7 @@ claim:
     2 = 2
 proof_debt:
     3 = 3
-let a R:
+suppose a R:
     a = a
 prop q(x R):
     x = 1
@@ -6312,7 +6423,7 @@ have a R
 have b R = a
 have S set
 proof_debt exist x R st {x = x}
-have by exist x R st {x = x}: c
+obtain c from exist x R st {x = x}
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();

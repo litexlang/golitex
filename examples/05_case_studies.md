@@ -75,55 +75,55 @@ prop prime(a N_pos):
 claim:
     prove:
         forall a N_pos:
-            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
     by induc a from 1:
         prove:
-            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
-        product(1, 1, 'N_pos(x){x}) = 1
-        1 <= product(1, 1, 'N_pos(x){x})
+        product(1, 1, fn(x N_pos) N_pos {x}) = 1
+        1 <= product(1, 1, fn(x N_pos) N_pos {x})
 
         claim:
             prove:
                 forall k Z:
                     k >= 1
-                    product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
+                    product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
                     =>:
-                        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+                        product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
-            product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
-            witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
-            product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
-            k + 1 <= product(1, k + 1, 'N_pos(x){x})
+            product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
+            witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
+            product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
+            k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
 claim:
     prove:
         forall a, k N_pos:
             k <= a
             =>:
-                product(1, a, 'N_pos(x){x}) % k = 0
+                product(1, a, fn(x N_pos) N_pos {x}) % k = 0
 
     by cases:
         prove:
-            product(1, a, 'N_pos(x){x}) % k = 0
+            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
         case k = a:
-            product(1, a, 'N_pos(x){x}) % a = 0
-            product(1, a, 'N_pos(x){x}) % k = product(1, a, 'N_pos(x){x}) % a = 0
+            product(1, a, fn(x N_pos) N_pos {x}) % a = 0
+            product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
         case k < a:
-            product(1, a, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * product(k + 1, a, 'N_pos(x){x})
-            product(1, k, 'N_pos(x){x}) % k = 0
-            have by exist r Z st {product(1, k, 'N_pos(x){x}) = r * k}: r
-            witness exist t Z st {product(1, a, 'N_pos(x){x}) = t * k} from r * product(k + 1, a, 'N_pos(x){x}):
-                product(1, a, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * product(k + 1, a, 'N_pos(x){x}) = (r * k) * product(k + 1, a, 'N_pos(x){x}) = (r * product(k + 1, a, 'N_pos(x){x})) * k
-            product(1, a, 'N_pos(x){x}) % k = 0
+            product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
+            product(1, k, fn(x N_pos) N_pos {x}) % k = 0
+            obtain r from exist r Z st {product(1, k, fn(x N_pos) N_pos {x}) = r * k}
+            witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * product(k + 1, a, fn(x N_pos) N_pos {x}):
+                product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * k) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * product(k + 1, a, fn(x N_pos) N_pos {x})) * k
+            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
 
 claim:
     prove:
         forall a N_pos:
-            a <= product(1, a, 'N_pos(x){x})
+            a <= product(1, a, fn(x N_pos) N_pos {x})
 
-    product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+    product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
 claim:
     prove:
@@ -178,7 +178,7 @@ claim:
                         $prime(n+1)
                         impossible $prime(n+1)
 
-                    have by exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}: c
+                    obtain c from exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}
 
                     2 <= c < n+1
 
@@ -192,11 +192,11 @@ claim:
                         case c >= n + 1:
                             impossible c < n + 1
 
-                    have by exist k N_pos st {$prime(k), c % k = 0}: d
+                    obtain d from exist k N_pos st {$prime(k), c % k = 0}
 
-                    have by exist k Z st {(n+1) = k * c}: e
+                    obtain e from exist k Z st {(n+1) = k * c}
 
-                    have by exist k Z st {c = k * d}: f
+                    obtain f from exist k Z st {c = k * d}
 
                     witness exist t Z st {e * f * d = t * d} from e * f
                     (e * f * d) % d = 0
@@ -206,13 +206,13 @@ claim:
                         (n + 1) % d = ((e * f) * d) % d = 0
 
 claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
-    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
-    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
+    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
     by cases k > a:
         case k <= a:
-            product(1, a, 'N_pos(x){x}) % k = 0
-            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
         case k > a:
             do_nothing
     witness exist k N_pos st {k > a, $prime(k)} from k
@@ -925,7 +925,7 @@ claim:
         case n % 2 = 1:
             (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
             n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-    have by exist r N st {n * (n + 1) = 2 * r}: r
+    obtain r from exist r N st {n * (n + 1) = 2 * r}
     witness exist y N st {2 * y = n * (n + 1)} from r:
         n * (n + 1) = 2 * r
         2 * r = n * (n + 1)
@@ -936,7 +936,7 @@ claim:
             y1 = n * (n + 1) / 2 = y2
     exist! y N st {2 * y = n * (n + 1)}
 
-have fn tri as set:
+have fn tri by exist!:
     prove:
         forall n N:
             exist! y N st {2 * y = n * (n + 1)}
@@ -1076,7 +1076,7 @@ by induc n from 0:
             $triangular_interval(0, 0)
 
     prove induc:
-        have by exist s N st {$triangular_interval(n, s)}: s
+        obtain s from exist s N st {$triangular_interval(n, s)}
         by cases:
             prove:
                 exist t N st {$triangular_interval(n + 1, t)}
@@ -1094,7 +1094,7 @@ claim:
     prove:
         forall n N:
             exist t cart(N, N) st {n = cantor_pair(t)}
-    have by exist s N st {$triangular_interval(n, s)}: s
+    obtain s from exist s N st {$triangular_interval(n, s)}
     have b N = n - tri(s)
     n - tri(s) <= s
     have a N = s - b
@@ -1203,20 +1203,20 @@ claim:
 claim:
     prove:
         forall n N_pos:
-            sum(0, n, 'R(x){x}) = n * (n + 1) / 2
+            sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
 
     by induc n from 1:
         prove:
-            sum(0, n, 'R(x){x}) = n * (n + 1) / 2
+            sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
 
         prove from n = 1:
-            sum(0, 0, 'R(x){x}) = 0
-            sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 'R(x){x}(1)
-            'R(x){x}(1) = 1
-            sum(0, 1, 'R(x){x}) = sum(0, 0, 'R(x){x}) + 1 = 0 + 1 = 1 = 1 * (1 + 1) / 2
+            sum(0, 0, fn(x R) R {x}) = 0
+            sum(0, 1, fn(x R) R {x}) = sum(0, 0, fn(x R) R {x}) + fn(x R) R {x}(1)
+            fn(x R) R {x}(1) = 1
+            sum(0, 1, fn(x R) R {x}) = sum(0, 0, fn(x R) R {x}) + 1 = 0 + 1 = 1 = 1 * (1 + 1) / 2
 
         prove induc:
-            sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + 'R(x){x}(n + 1)
-            'R(x){x}(n + 1) = n + 1
-            sum(0, n + 1, 'R(x){x}) = sum(0, n, 'R(x){x}) + (n + 1) = n * (n + 1) / 2 + (n + 1) = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
+            sum(0, n + 1, fn(x R) R {x}) = sum(0, n, fn(x R) R {x}) + fn(x R) R {x}(n + 1)
+            fn(x R) R {x}(n + 1) = n + 1
+            sum(0, n + 1, fn(x R) R {x}) = sum(0, n, fn(x R) R {x}) + (n + 1) = n * (n + 1) / 2 + (n + 1) = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
 ```
