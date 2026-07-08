@@ -370,15 +370,17 @@ formal checking without losing sight of the argument.
 
 1. [Setup: Download Litex](https://litexlang.com/doc/Setup): install Litex and
    run files from the command line.
-2. [Manual](https://litexlang.com/doc/Manual): syntax, proof flow, builtin
+2. [Examples learning path](docs/Examples.md): the first place to look after
+   setup, from tiny checked facts to small mathematical worlds.
+3. [Manual](https://litexlang.com/doc/Manual): syntax, proof flow, builtin
    verification rules, inference, and trust boundaries.
-3. [Litex Output Is Your Friend](https://litexlang.com/doc/Tutorial/Litex_Output_Is_Your_Friend):
+4. [Litex Output Is Your Friend](https://litexlang.com/doc/Tutorial/Litex_Output_Is_Your_Friend):
    how to read verifier output as a proof trace.
-4. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): a dedicated
+5. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): a dedicated
    comparison of proof interface and ecosystem tradeoffs.
-5. [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction):
+6. [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction):
    a textbook-style introduction to Litex proof writing.
-6. [Hugging Face: Litex examples and datasets](https://huggingface.co/litexlang)
+7. [Hugging Face: Litex examples and datasets](https://huggingface.co/litexlang)
 
 Contact:
 

@@ -259,11 +259,13 @@ not to search for a theorem.  The next step is to add the missing domain fact.
 
 ## What To Read Next
 
-Read this note before using the implementation cheat sheet.  Then use:
+Read this note before using the implementation cheat sheet. Then use:
 
-- `docs/Manual.md` for the durable language reference.
-- `examples/01_proof_patterns.md` for proof patterns.
-- `examples/02_builtin_math.md` for built-in arithmetic, set, function, and
+- `docs/Examples.md` for the newcomer route through runnable examples.
+- `docs/Examples.md#start-here` for the first 10-minute checked experience.
+- `docs/Manual.md` for the durable language reference after the example path.
+- `docs/Examples.md#proof-patterns` for proof patterns.
+- `docs/Examples.md#builtin-math` for built-in arithmetic, set, function, and
   object behavior.
 - `docs/cheatsheet.md` when you want an executor-level map of statement forms,
   fact forms, and environment effects.

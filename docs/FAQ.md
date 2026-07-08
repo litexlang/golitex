@@ -626,7 +626,7 @@ The distinction is partly about performance, but mostly about readability.
 When a result is mathematically important, naming the theorem at the use site
 often makes the proof easier to audit.
 
-## Is `proof_debt` a proof?
+## Is proof debt a proof?
 
 No. `proof_debt` is explicit assumption injection, not a proof-producing command. It
 adds a fact to the current context after checking that the statement is
@@ -693,7 +693,7 @@ The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current
 argument.
 
-## What are `fn_range` and `have by preimage` for?
+## How do function ranges and preimages work?
 
 `fn_range(f)` is the set of values reached by a function `f`. If Litex knows
 that a value is in this range, then ordinary mathematics allows us to choose a
