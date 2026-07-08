@@ -138,7 +138,9 @@ creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
 `uses_prop`, `uses_fn`, and `justified_by` for theorem-backed function
 construction. The wrapper includes machine-readable `nodes` and `edges`, plus a
 Mermaid `flowchart LR` string for quick rendering. If the final `<json>` path
-is omitted, Litex prints the graph JSON to stdout for quick debugging.
+is omitted, Litex prints the graph JSON to stdout for quick debugging. In this
+repository, generated graph JSON, Mermaid, SVG, or PNG artifacts should be
+written under `tmp/graphs/`; `tmp/` is ignored by git.
 
 ## LaTeX Commands
 
@@ -211,7 +213,7 @@ litex -strict -runner -f examples/tmp.lit
 Generate a relation graph:
 
 ```bash
-litex -graph -f scripts/analysis-one/chapters_in_litex/chap6.lit scripts/analysis-one/chapters_in_litex/chap6.graph.json
+litex -graph -f scripts/analysis-one/chapters_in_litex/chap6.lit tmp/graphs/chap6_graph.json
 ```
 
 Run with Chinese output labels:

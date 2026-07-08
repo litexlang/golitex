@@ -1162,6 +1162,34 @@ mod tests {
     }
 
     #[test]
+    fn anonymous_function_inside_prop_records_inner_dependencies() {
+        let output = graph_output(
+            "abstract_prop p(x)\nhave fn a(x R) R = x\nprop f():\n    fn(x R: $p(x)) R {a(x)} = fn(x R: $p(x)) R {a(x)}\n",
+        );
+
+        assert!(output.contains(r#""from": "prop:p""#));
+        assert!(output.contains(r#""to": "prop:f""#));
+        assert!(output.contains(r#""kind": "uses_prop""#));
+        assert!(output.contains(r#""from": "fn:a""#));
+        assert!(output.contains(r#""to": "prop:f""#));
+        assert!(output.contains(r#""kind": "uses_fn""#));
+    }
+
+    #[test]
+    fn anonymous_function_returned_by_fn_records_inner_dependencies() {
+        let output = graph_output(
+            "abstract_prop p(x)\nhave fn a(x R) R = x\nhave fn make(x R: $p(x)) fn(z R) R = fn(y R) R {a(y)}\n",
+        );
+
+        assert!(output.contains(r#""from": "prop:p""#));
+        assert!(output.contains(r#""to": "fn:make""#));
+        assert!(output.contains(r#""kind": "uses_prop""#));
+        assert!(output.contains(r#""from": "fn:a""#));
+        assert!(output.contains(r#""to": "fn:make""#));
+        assert!(output.contains(r#""kind": "uses_fn""#));
+    }
+
+    #[test]
     fn theorem_statement_records_vocabulary_dependencies() {
         let output = graph_output(
             "abstract_prop p(x)\nthm p_fact:\n    prove:\n        forall x R:\n            $p(x)\n            =>:\n                x = x\n        x = x\n",

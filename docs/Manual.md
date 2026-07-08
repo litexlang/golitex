@@ -6,6 +6,11 @@ Try the examples in browser: https://litexlang.com/doc/Manual
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
 
+> New reader path: the Manual is a reference, not the best first reading path.
+> Start with the [examples learning path](Examples.md), especially
+> [Start Here](Examples.md#start-here), then return here when an example needs
+> syntax or verifier details.
+
 ## Manual Introduction
 
 _In science, you can say things that seem crazy, but in the long run, they can turn out to be right._
@@ -197,10 +202,12 @@ the common core above is enough for most early examples.
 
 ### Guidance For Reading This Manual
 
-This manual is both a tutorial and a reference. New readers should not try to
-memorize every object, statement, builtin rule, or inference rule on the first
-pass. The first goal is to understand the core loop: write a fact, make sure
-its objects are well-defined, let Litex check it, then reuse accepted facts.
+This manual is mainly a reference. New readers should not try to memorize every
+object, statement, builtin rule, or inference rule on the first pass. For a
+first path through runnable examples, start with the
+[examples learning path](Examples.md). The first goal is to understand the core
+loop: write a fact, make sure its objects are well-defined, then let Litex
+check it and reuse accepted facts.
 
 **Read first**
 
@@ -376,7 +383,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `examples/03_objects_and_statements.md`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `docs/Examples.md#objects-and-statements`.
 
 #### Power set
 
@@ -1442,7 +1449,7 @@ by thm 自反等式(1)
 
 ---
 
-### Abstract predicate symbol (`abstract_prop`)
+### Abstract predicates
 
 Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. It only declares the name; it does not give the predicate any mathematical property by itself.
 
@@ -1547,7 +1554,7 @@ cannot depend on the tuple or cart currently being defined. A cart made this
 way is equal to a literal `cart(...)` when Litex can verify the cart fact,
 dimension, and each projection.
 
-### Symbolic sequence and matrix definitions (`have seq`, `have finite_seq`, `have matrix`)
+### Symbolic sequences and matrices
 
 Use **`have seq s seq(S) for i, s(i) = expr`**,
 **`have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr`**, or
@@ -1789,12 +1796,10 @@ forall x A:
 
 > Hint: `by exist!` means "define a function from unique existence." The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
-Classic structure example: the `group_quotient` section of
-`examples/04_structures/README.md` combines
-`struct`, `template`, and `have fn ... by exist!` to define the quotient set of a
-group by taking the set of left cosets. It also adds the quotient
-multiplication interface for a normal subgroup and proves the representative
-independence lemmas needed for well-definedness.
+For a short first encounter with `struct`, `template`, and small mathematical
+interfaces, see `docs/Examples.md#small-worlds`. Longer quotient-style
+developments belong in case studies and tutorial material once the basic
+building blocks are familiar.
 
 <!-- litex:skip-test -->
 ```litex
@@ -2003,7 +2008,7 @@ If the run uses `-strict`, user `axiom` declarations are rejected.
 
 ---
 
-### Inject explicit assumptions (`proof_debt`)
+### Explicit assumptions without a proof
 
 **`proof_debt:`** (or **`proof_debt`** with a block) injects explicit assumptions into the
 current environment. It may store temporary lemmas or proof-debt facts, but it
@@ -2147,7 +2152,7 @@ trust_file "./trusted_interfaces.lit"
 
 ---
 
-### No-op (`do_nothing`)
+### Empty proof steps
 
 A trivial proof step (placeholder or explicit skip). Write `do_nothing` or `...` to skip a proof step.
 
@@ -2237,7 +2242,7 @@ w > z
 
 ---
 
-### Witness non-emptiness (`witness $is_nonempty_set`)
+### Witnessing nonempty sets
 
 Shows a set is nonempty by naming a member and proving membership.
 
@@ -2314,7 +2319,7 @@ by contra:
 
 ---
 
-### Enumerate a finite set (`by enumerate finite_set`)
+### Enumerating finite sets
 
 Finite “for all members of this enumerated set” reasoning—useful for small domains and Cartesian products of finite sets.
 
@@ -2350,7 +2355,7 @@ sketch:
 
 ---
 
-### Induction (`by induc`, `by strong_induc`)
+### Induction and strong induction
 
 **`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment. The structured form separates the base proof from the induction-step proof.
 
@@ -2489,7 +2494,7 @@ by extension:
 
 ---
 
-### Register a reflexive predicate (`by reflexive_prop`)
+### Registering reflexivity
 
 Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
 
@@ -2511,7 +2516,7 @@ $same_obj(a, a)
 
 ---
 
-### Register a transitive predicate (`by transitive_prop`)
+### Registering transitivity
 
 Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
@@ -2543,7 +2548,7 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
-### Zorn lemma preview (`by zorn_lemma`)
+### Zorn's lemma preview
 
 Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section; if no local proof statements are needed, use **`by zorn_lemma: set S, prop P`** without the final proof-body colon. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
 
@@ -2554,11 +2559,11 @@ exist m S st {forall! x S: $P(m, x) => {x = m}}
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet quantify over prop names as first-class relation objects.
 
-See the `by_zorn_lemma` section of `examples/01_proof_patterns/README.md`.
+See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 
 ---
 
-### Regularity/Foundation preview (`by regularity_axiom`)
+### Foundation preview
 
 Use **`by regularity_axiom(A)`** when `A` is a nonempty set. Litex first checks the obligation `$is_nonempty_set(A)`. If that check passes, it stores the regularity/foundation conclusion that some member of `A` is disjoint from `A`:
 
@@ -2574,7 +2579,7 @@ This is a preview trusted statement rather than an ordinary theorem, because Lit
 
 ---
 
-### Axiom of choice preview (`by axiom_of_choice`)
+### Axiom of choice preview
 
 Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section; if no local proof statements are needed, use **`by axiom_of_choice: set S`** without the final proof-body colon. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
 
@@ -2592,18 +2597,17 @@ claim:
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
 
-See the `by_axiom_of_choice` section of `examples/01_proof_patterns/README.md`.
+See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 
 ---
 
-### Register a symmetric predicate (`by symmetric_prop`)
+### Registering symmetry
 
 Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the ordinary goal block (`prove:` or `?`) is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See the `by_symmetric_reflexive_antisymmetric_prop` section of
-`examples/01_proof_patterns/README.md`.
+See the predicate property registration examples in `docs/Examples.md#proof-patterns`.
 
 ```litex
 prop p(x set, y set):
@@ -2626,7 +2630,7 @@ forall a, b set:
 
 ---
 
-### Register an antisymmetric predicate (`by antisymmetric_prop`)
+### Registering antisymmetry
 
 Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
 
@@ -2656,7 +2660,7 @@ forall a, b set:
 
 ---
 
-### Closed range as cases (`by closed_range as cases`)
+### Turning closed ranges into cases
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 For a one-point range, it records the single equality directly instead of a one-branch `or`.
