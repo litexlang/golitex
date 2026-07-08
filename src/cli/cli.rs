@@ -5,7 +5,6 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const MAIN_DOT_LIT: &str = "main.lit";
 
@@ -13,10 +12,6 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
-const KG_FLAG: &str = "-kg";
-const KG_DOT_FLAG: &str = "-kg-dot";
-const DEPGRAPH_FLAG: &str = "-depgraph";
-const DEPGRAPH_DOT_FLAG: &str = "-depgraph-dot";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
@@ -137,68 +132,6 @@ pub fn run_cli() {
                     process::exit(1);
                 }
                 return;
-            }
-            KG_FLAG => {
-                index += 1;
-                let (ok, output) = match main_flag_concept_graph(
-                    &args,
-                    &mut index,
-                    detail_output,
-                    strict_mode,
-                    false,
-                ) {
-                    Ok(output) => output,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                let output = match write_concept_graph_cli_output(&output, "json", ok) {
-                    Ok(output) => output,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        process::exit(1);
-                    }
-                };
-                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
-                if !ok {
-                    process::exit(1);
-                }
-                return;
-            }
-            KG_DOT_FLAG => {
-                index += 1;
-                let (ok, output) = match main_flag_concept_graph(
-                    &args,
-                    &mut index,
-                    detail_output,
-                    strict_mode,
-                    true,
-                ) {
-                    Ok(output) => output,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                let output = match write_concept_graph_cli_output(&output, "dot", ok) {
-                    Ok(output) => output,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        process::exit(1);
-                    }
-                };
-                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
-                if !ok {
-                    process::exit(1);
-                }
-                return;
-            }
-            DEPGRAPH_FLAG | DEPGRAPH_DOT_FLAG => {
-                eprintln!("-depgraph has been replaced by -kg; use -kg or -kg-dot with the same -f, -e, or -r target.");
-                process::exit(2);
             }
             "-latex" => {
                 index += 1;
@@ -572,129 +505,8 @@ fn main_flag_runner(
     }
 }
 
-fn main_flag_concept_graph(
-    args: &[String],
-    index: &mut usize,
-    detail_output: bool,
-    strict_mode: bool,
-    dot_output: bool,
-) -> Result<(bool, String), String> {
-    let flag = if dot_output { KG_DOT_FLAG } else { KG_FLAG };
-    let target_flag = read_any_value_after_flag(args, index, flag)?;
-    match target_flag.as_str() {
-        "-e" => {
-            let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            if dot_output {
-                Ok(run_concept_graph_dot_for_code(
-                    code.as_str(),
-                    flag,
-                    detail_output,
-                    strict_mode,
-                ))
-            } else {
-                Ok(run_concept_graph_json_for_code(
-                    code.as_str(),
-                    flag,
-                    detail_output,
-                    strict_mode,
-                ))
-            }
-        }
-        "-f" => {
-            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            if dot_output {
-                Ok(run_concept_graph_dot_for_file(
-                    file_path.as_str(),
-                    detail_output,
-                    strict_mode,
-                ))
-            } else {
-                Ok(run_concept_graph_json_for_file(
-                    file_path.as_str(),
-                    detail_output,
-                    strict_mode,
-                ))
-            }
-        }
-        "-r" => {
-            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            if dot_output {
-                Ok(run_concept_graph_dot_for_repo(
-                    repo_path.as_str(),
-                    detail_output,
-                    strict_mode,
-                ))
-            } else {
-                Ok(run_concept_graph_json_for_repo(
-                    repo_path.as_str(),
-                    detail_output,
-                    strict_mode,
-                ))
-            }
-        }
-        _ => Err(format!(
-            "{} must be followed by one of: -f <file>, -e <code>, -r <repo>",
-            flag
-        )),
-    }
-}
-
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
-}
-
-fn write_concept_graph_cli_output(
-    graph_output: &str,
-    extension: &str,
-    ok: bool,
-) -> Result<String, String> {
-    let output_dir = Path::new("tmp").join("kg");
-    fs::create_dir_all(&output_dir).map_err(|error| {
-        format!(
-            "failed to create concept graph output directory {:?}: {}",
-            output_dir, error
-        )
-    })?;
-
-    let filename = format!(
-        "concept_graph_{}_{}.{}",
-        process::id(),
-        concept_graph_timestamp_millis(),
-        extension
-    );
-    let output_path = output_dir.join(filename);
-    fs::write(&output_path, graph_output).map_err(|error| {
-        format!(
-            "failed to write concept graph output {:?}: {}",
-            output_path, error
-        )
-    })?;
-
-    Ok(render_json_value(
-        &JsonValue::Object(vec![
-            (
-                "result".to_string(),
-                JsonValue::JsonString(if ok { "success" } else { "error" }.to_string()),
-            ),
-            ("ok".to_string(), JsonValue::Bool(ok)),
-            (
-                "format".to_string(),
-                JsonValue::JsonString(extension.to_string()),
-            ),
-            (
-                "output_path".to_string(),
-                JsonValue::JsonString(output_path.to_string_lossy().into_owned()),
-            ),
-        ]),
-        0,
-    ))
-}
-
-fn concept_graph_timestamp_millis() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis())
-        .unwrap_or(0)
 }
 
 fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
@@ -820,12 +632,6 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <repo> : run a repository and return one wrapper JSON object
-litex -kg -f <file> : run a file, write a concept graph JSON file under tmp/kg, and print the output path
-litex -kg -e <code> : run source code, write a concept graph JSON file under tmp/kg, and print the output path
-litex -kg -r <repo> : run a repository main.lit, write a concept graph JSON file under tmp/kg, and print the output path
-litex -kg-dot -f <file> : run a file, write a concept graph DOT file under tmp/kg, and print the output path
-litex -kg-dot -e <code> : run source code, write a concept graph DOT file under tmp/kg, and print the output path
-litex -kg-dot -r <repo> : run a repository main.lit, write a concept graph DOT file under tmp/kg, and print the output path
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX

@@ -158,16 +158,11 @@ have fn f(x R) R = x^2 + 1
 f(3) = 10
 ```
 
-### Domain Conditions Stay Near the Function
-
-```litex
-have fn g(x R: x > 0) R = x + 1
-
-g(1) = 2
-```
-
-The call `g(1)` is meaningful because Litex can check the domain condition
-`1 > 0`.
+For numeric formulas and update rules with a direct programming-language shape,
+Litex also has a narrow `litex -python` path: checked `have fn as algo`
+definitions can be emitted as ordinary Python for scientific-computing-style
+kernels. See [Litex To Python](https://litexlang.com/doc/Litex_To_Python) for
+the current supported subset.
 
 ### Existential Witnesses Are Direct
 
@@ -192,13 +187,10 @@ prop surjective_fn(S, T set, f fn(x S) T):
         exist x S st {y = f(x)}
 
 have fn square(x R) R = x^2
-forall x R:
-    square(x) = x^2
 
 by contra not $surjective_fn(R, R, square):
     have by exist x R st {-1 = square(x)}: x
     0 <= x^2
-    square(x) = x^2
     -1 = square(x) = x^2
     0 <= -1
     impossible 0 <= -1
@@ -208,11 +200,48 @@ These examples are small on purpose. They show the surface rule: write the next
 mathematical fact, and let the checker explain whether the current context
 justifies it.
 
-## Litex vs Lean: Same Idea, Different Interface
+
+### Abstract Mathematical Concepts
+
+Litex is not limited to small arithmetic examples. It can also express abstract
+mathematical concepts directly. For example, a group can be described by a
+carrier set, an inverse operation, a binary operation, an identity element, and
+the usual axioms. After defining that abstract interface, Litex can check that
+the integers with negation, addition, and `0` form a group:
+
+```litex
+prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s nonempty_set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $GroupProperty(s, inv, op, e)
+
+$GroupProperty(Z, '(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0)
+
+('(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0) $in &Group<Z>
+```
+
+The last line says that `(Z, x -> -x, (x, y) -> x + y, 0)` is an instance of
+the `Group` structure. Litex verifies it by checking the tuple fields have the
+right types and that the displayed group axioms hold for integer addition.
+
+
+## Litex & Lean:Shared Aim, Different First Principles
 
 Lean is a mature theorem prover with a powerful dependent type theory, Mathlib,
 expert tooling, and a large community. Litex is a younger research system with
-a larger trusted mathematical background and a narrower interface goal.
+a larger trusted mathematical background and a narrower interface goal. Litex and Lean share the broad aim of making mathematics machine-checkable.
 
 The point of the comparison below is not that Lean cannot prove these examples.
 Lean proves them easily. The point is that the default user interface is
@@ -305,49 +334,9 @@ example : g ⟨1, by norm_num⟩ = 2 := by
 
 Lean is more general and more mature. Litex chooses a surface closer to the
 way the same domain restriction often appears in ordinary mathematical writing.
-For numeric formulas and update rules with a direct programming-language shape,
-Litex also has a narrow `litex -python` path: checked `have fn as algo`
-definitions can be emitted as ordinary Python for scientific-computing-style
-kernels. See [Litex To Python](https://litexlang.com/doc/Litex_To_Python) for
-the current supported subset.
 
 For a much longer and more careful comparison, see
 [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
-
-## A Larger Mathematical Surface
-
-Litex is not limited to small arithmetic examples. It can also express abstract
-mathematical concepts directly. For example, a group can be described by a
-carrier set, an inverse operation, a binary operation, an identity element, and
-the usual axioms. After defining that abstract interface, Litex can check that
-the integers with negation, addition, and `0` form a group:
-
-```litex
-prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
-    forall x, y, z s:
-        op(x, op(y, z)) = op(op(x, y), z)
-    forall x s:
-        op(e, x) = x
-        op(x, e) = x
-    forall x s:
-        op(x, inv(x)) = e
-        op(inv(x), x) = e
-
-struct Group<s nonempty_set>:
-    inv fn(x s) s
-    op fn(x, y s) s
-    e s
-    <=>:
-        $GroupProperty(s, inv, op, e)
-
-$GroupProperty(Z, '(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0)
-
-('(x Z) Z {-x}, '(x, y Z) Z {x + y}, 0) $in &Group<Z>
-```
-
-The last line says that `(Z, x -> -x, (x, y) -> x + y, 0)` is an instance of
-the `Group` structure. Litex verifies it by checking the tuple fields have the
-right types and that the displayed group axioms hold for integer addition.
 
 ## Trust Boundary
 
