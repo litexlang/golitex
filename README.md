@@ -362,6 +362,16 @@ Litex is aiming at three practical goals:
 3. **Translation as pressure test.** Use real mathematical sources to discover
    language, library, verifier, and diagnostic gaps.
 
+By the end of 2026, our goal is to make textbook-first formalization the main
+benchmark for Litex: a public, auditable body of undergraduate mathematics
+translations across calculus, linear algebra, geometry, probability, analysis,
+algebra, and number theory. We think this is more meaningful than simply
+accumulating many isolated definitions, theorem names, or lines of formal code,
+because a textbook translation tests whether the language can preserve the
+actual mathematical development: definitions in order, local lemmas,
+intermediate facts, proof routes, verifier output, and explicit blockers when
+the current system falls short.
+
 Litex is not a shortcut around mathematics. It is an experiment in making the
 proof trail readable enough that more people and AI systems can participate in
 formal checking without losing sight of the argument.

@@ -35,8 +35,9 @@ pub use runtime_success::{
     ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
     ClaimVerificationResult, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
     KnownForallInstantiationItem, KnownForallInstantiationResult, KnownForallRequirementResult,
-    NonFactualStmtSuccess, ObjectIntroductionItem, VerifiedByBuiltinRuleResult,
-    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
+    NonFactualStmtSuccess, ObjectIntroductionItem, TheoremVerificationResult,
+    VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum,
+    VerifiedBysResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;
