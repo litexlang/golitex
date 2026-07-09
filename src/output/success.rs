@@ -6,7 +6,7 @@ use crate::prelude::{
     ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
     ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
     ClaimVerificationResult, CommandStmt, FactualStmtSuccess, NonFactualStmtSuccess, Runtime, Stmt,
-    StmtResult, VerifiedByResult,
+    StmtResult, TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -117,6 +117,13 @@ fn non_factual_verification_value(
     runtime: &Runtime,
     x: &NonFactualStmtSuccess,
 ) -> Option<JsonValue> {
+    if let Some(theorem_verification) = x.theorem_verification.as_ref() {
+        return Some(theorem_verification_value(
+            runtime,
+            theorem_verification,
+            &x.inside_results,
+        ));
+    }
     if let Some(claim_verification) = x.claim_verification.as_ref() {
         return match claim_verification {
             ClaimVerificationResult::Forall(verification) => Some(claim_forall_verification_value(
@@ -190,6 +197,50 @@ fn non_factual_verification_value(
             &x.inside_results,
         )),
     }
+}
+
+fn theorem_verification_value(
+    runtime: &Runtime,
+    verification: &TheoremVerificationResult,
+    inside_results: &[StmtResult],
+) -> JsonValue {
+    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let conclusion_results = inside_results.iter().skip(verification.proof_step_count);
+    let conclusions = verification
+        .forall_fact
+        .then_facts
+        .iter()
+        .zip(conclusion_results)
+        .map(|(stmt, result)| {
+            forall_proved_fact_value(runtime, &verification.forall_fact, stmt, result)
+        })
+        .collect::<Vec<_>>();
+
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("theorem proof".to_string()),
+        ),
+        (
+            "theorems".to_string(),
+            JsonValue::Array(string_items(&verification.names)),
+        ),
+        (
+            "parameters".to_string(),
+            JsonValue::Array(forall_param_items(
+                &verification.forall_fact.params_def_with_type,
+            )),
+        ),
+        (
+            "assumptions".to_string(),
+            JsonValue::Array(forall_assumption_items(&verification.assumption_infers)),
+        ),
+        ("proof_steps".to_string(), JsonValue::Array(proof_steps)),
+        (
+            JSON_KEY_CONCLUSIONS.to_string(),
+            JsonValue::Array(conclusions),
+        ),
+    ])
 }
 
 fn claim_forall_verification_value(

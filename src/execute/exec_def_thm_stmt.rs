@@ -50,20 +50,24 @@ impl Runtime {
         let thm_names = stmt.names.join(", ");
         let keyword = stmt.keyword();
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(
-                &stmt.forall_fact.params_def_with_type,
-                false,
-                ParamObjType::Forall,
-            )
-            .map_err(|define_params_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
-            })?;
+            let mut assumption_infers = rt
+                .define_params_with_type(
+                    &stmt.forall_fact.params_def_with_type,
+                    false,
+                    ParamObjType::Forall,
+                )
+                .map_err(|define_params_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
+                })?;
 
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
-                rt.verify_well_defined_and_store_and_infer(
+                let mut dom_infers = rt.verify_well_defined_and_store_and_infer(
                     dom_fact.clone(),
                     &VerifyState::new(0, false),
                 )?;
+                dom_infers
+                    .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+                assumption_infers.new_infer_result_inside(dom_infers);
             }
 
             let mut inside_results = vec![];
@@ -121,10 +125,20 @@ impl Runtime {
                 inside_results.push(result);
             }
 
-            Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
-                    .into(),
+            let theorem_verification = TheoremVerificationResult::new(
+                stmt.names.clone(),
+                stmt.forall_fact.clone(),
+                assumption_infers,
+                proof_len,
+            );
+
+            Ok(NonFactualStmtSuccess::new_with_theorem_verification(
+                stmt.clone().into(),
+                InferResult::new(),
+                inside_results,
+                theorem_verification,
             )
+            .into())
         })
     }
 

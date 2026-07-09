@@ -42,16 +42,16 @@ impl Runtime {
         runtime.loading_builtin_code = true;
         let (stmt_results, runtime_error) =
             crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-        let (ok, msg) = crate::pipeline::render_run_source_code_output(
-            &runtime,
-            &stmt_results,
-            &runtime_error,
-            true,
-        );
-        runtime.loading_builtin_code = false;
-        if !ok {
+        if runtime_error.is_some() {
+            let (_, msg) = crate::pipeline::render_run_source_code_output(
+                &runtime,
+                &stmt_results,
+                &runtime_error,
+                true,
+            );
             panic!("builtin code execution failed: {}", msg);
         }
+        runtime.loading_builtin_code = false;
         runtime
     }
 

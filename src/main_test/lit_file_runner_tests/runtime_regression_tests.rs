@@ -4996,6 +4996,46 @@ witness exist x R st {x = 1} from 1:
 }
 
 #[test]
+fn normal_theorem_output_exposes_structured_proof_route() {
+    run_with_large_stack(
+        "normal_theorem_output_exposes_structured_proof_route",
+        || {
+            let source_code = r#"
+thm theorem_trace_self_eq:
+    prove:
+        forall x R:
+            x = x
+    x = x
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("normal_theorem_output_proof_route");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "normal theorem proof-route fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"theorem proof\""));
+            assert!(run_output.contains("\"theorem_trace_self_eq\""));
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"x\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal theorem output should expose structured route without raw inside_results:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn detail_output_expands_proof_level_inside_results() {
     run_with_large_stack("detail_output_expands_proof_level_inside_results", || {
         let source_code = r#"

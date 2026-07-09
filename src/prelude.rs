@@ -241,6 +241,7 @@ pub use crate::result::OrFactUnknown;
 pub use crate::result::ProofBlockStmtResult;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
+pub use crate::result::TheoremVerificationResult;
 pub use crate::result::UnsafeStmtResult;
 pub use crate::result::VerifiedByBuiltinRuleResult;
 pub use crate::result::VerifiedByFactResult;

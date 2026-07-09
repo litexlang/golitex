@@ -6,8 +6,16 @@ pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
     pub inside_results: Vec<StmtResult>,
+    pub theorem_verification: Option<TheoremVerificationResult>,
     pub claim_verification: Option<ClaimVerificationResult>,
     pub by_verification: Option<ByVerificationResult>,
+}
+
+pub struct TheoremVerificationResult {
+    pub names: Vec<String>,
+    pub forall_fact: ForallFact,
+    pub assumption_infers: InferResult,
+    pub proof_step_count: usize,
 }
 
 pub enum ClaimVerificationResult {
@@ -559,6 +567,23 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            theorem_verification: None,
+            claim_verification: None,
+            by_verification: None,
+        }
+    }
+
+    pub fn new_with_theorem_verification(
+        stmt: Stmt,
+        infers: InferResult,
+        inside_results: Vec<StmtResult>,
+        theorem_verification: TheoremVerificationResult,
+    ) -> Self {
+        NonFactualStmtSuccess {
+            stmt,
+            infers,
+            inside_results,
+            theorem_verification: Some(theorem_verification),
             claim_verification: None,
             by_verification: None,
         }
@@ -574,6 +599,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            theorem_verification: None,
             claim_verification: Some(claim_verification),
             by_verification: None,
         }
@@ -589,6 +615,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            theorem_verification: None,
             claim_verification: None,
             by_verification: Some(by_verification),
         }
@@ -596,6 +623,22 @@ impl NonFactualStmtSuccess {
 
     pub fn new_with_stmt(stmt: Stmt) -> Self {
         Self::new(stmt, InferResult::new(), vec![])
+    }
+}
+
+impl TheoremVerificationResult {
+    pub fn new(
+        names: Vec<String>,
+        forall_fact: ForallFact,
+        assumption_infers: InferResult,
+        proof_step_count: usize,
+    ) -> Self {
+        TheoremVerificationResult {
+            names,
+            forall_fact,
+            assumption_infers,
+            proof_step_count,
+        }
     }
 }
 
@@ -914,6 +957,17 @@ impl fmt::Debug for ClaimVerificationResult {
             ClaimVerificationResult::Forall(v) => f.debug_tuple("Forall").field(v).finish(),
             ClaimVerificationResult::Fact(v) => f.debug_tuple("Fact").field(v).finish(),
         }
+    }
+}
+
+impl fmt::Debug for TheoremVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TheoremVerificationResult")
+            .field("names", &self.names)
+            .field("forall_fact", &self.forall_fact.to_string())
+            .field("assumption_infers", &self.assumption_infers)
+            .field("proof_step_count", &self.proof_step_count)
+            .finish()
     }
 }
 
