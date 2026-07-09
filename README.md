@@ -47,6 +47,41 @@ checks them using the stored value of `x`, equality substitution, and arithmetic
 That is the central interface: **users write facts; Litex grows a verified
 context**.
 
+## A Small Mathematical Workflow
+
+Litex is a bet on compression: not compressing mathematics into opaque
+automation, but compressing the user-facing verification workflow into a few
+inspectable mathematical moves.
+
+Litex tries to reduce formal verification to a small mathematical state:
+
+| Idea | Meaning | Litex shape |
+| --- | --- | --- |
+| **object** | a thing being discussed: a number, set, function, or expression | `have x R = 2` |
+| **prop** | a predicate or relation | `prop positive(x R): x > 0` |
+| **statement** | a fact asserted about objects | `x + 1 = 3` |
+| **fact** | an accepted statement that later lines can reuse | after `x = 2` is accepted, later lines may use `x = 2` |
+
+The proof side is meant to be just as small:
+
+| Proof route | Meaning | Litex shape |
+| --- | --- | --- |
+| builtin reasoning | close routine arithmetic, equality, order, membership, set, or function facts | `2 + 3 = 5` |
+| known fact matching | reuse a fact already in the context | write the target fact again |
+| known `forall` matching | instantiate a universal fact whose premises match the context | `forall x R: ...` then write its conclusion |
+| definition unfolding | use the meaning of a `prop` or definition | `$positive(1)` from `prop positive(x R): x > 0` |
+| theorem call | cite a named theorem explicitly | `by thm self_eq(1)` |
+| local claim | prove an intermediate fact and store it | `claim: ...` |
+| witness | prove an existential or nonempty fact by giving objects | `witness exist x R st {x = 1} from 1` |
+| contradiction | assume the opposite and derive an impossible fact | `by contra: ...` |
+| cases | split into exhaustive cases | `by cases: ...` |
+| induction | prove a base case and an induction step | `by induc n from 0: ...` |
+
+*For ordinary fact-oriented proof work, that is it!* The rest of the language
+mostly names, packages, imports, or structures these same moves. The user's
+attention stays on ordinary mathematical objects and facts, and the verifier
+explains which small proof route accepted each step.
+
 Litex is not trying to replace Lean, Coq, Rocq, Isabelle, or any mature proof
 assistant. It tests a different hypothesis: that a smaller, readable,
 fact-oriented formal language can make checked mathematics cheap enough for

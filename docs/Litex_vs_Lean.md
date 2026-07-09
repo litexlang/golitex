@@ -41,6 +41,13 @@ One useful way to say the difference is: Lean often asks the user to choose proo
 
 > In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
 
+Another way to state the Litex design choice is compression without opacity.
+Litex does not try to compress mathematics by hiding proof search inside a
+black box. It tries to compress the user-facing verification workflow into a
+few inspectable mathematical moves: objects, predicates, statements, accepted
+facts, builtin reasoning, known-fact matching, definition unfolding, theorem
+calls, witnesses, local claims, contradiction, cases, and induction.
+
 This is not just a syntactic convenience. Litex tries to keep the main cognitive load on mathematical patterns: equality chains, subset arguments, existential witnesses, contradiction proofs, finite case splits, membership in a displayed set, and so on. When a person reads a fact, they often recognize its pattern and know which already-proved fact should apply; Litex makes that habit mechanical by using those patterns to search builtin rules, known facts, and known `forall` facts. The user is asked to remember the mathematical structure of the argument, not the name of the tactic or library lemma that packages the same move—as G. H. Hardy put it, *A mathematician, like a painter or poet, is a maker of patterns*.
 
 This is a large reduction in friction for ordinary proofs. Even the largest library cannot package every future argument in exactly the final shape a user needs; eventually the user still has to write the mathematics. Litex's bet is that the remembered material should stay close to that mathematics. Remembering library and tactic names is useful in a system like Lean, but it is not the mathematical content the proof is trying to expose.
