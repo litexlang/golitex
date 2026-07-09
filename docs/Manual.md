@@ -3053,6 +3053,60 @@ reports `true`.
 
 The exact details depend on the shape of the fact, but this loop is the main mental model.
 
+### Small Proof Workflow
+
+Most user-facing proof work in Litex reduces to a small set of mathematical
+moves:
+
+| Move | What the user writes | What Litex checks |
+| --- | --- | --- |
+| builtin reasoning | a direct fact such as `2 + 3 = 5` | arithmetic, equality, order, membership, set, function, and other builtin patterns |
+| known fact matching | a fact already present in the context | whether the same fact, possibly up to known equalities, is already known |
+| known `forall` matching | a desired conclusion of a universal fact | whether parameters and premises can be matched from the current context |
+| definition unfolding | a `prop` or definition-shaped fact | whether the target follows from the recorded meaning of the definition |
+| theorem call | `by thm name(args...)` | whether the named theorem applies to the arguments and stores its conclusions |
+| local claim | `claim:` | whether a local proof block establishes a reusable intermediate fact |
+| standard proof form | `by contra`, `by cases`, or `by induc` | whether contradiction, case split, or induction subproofs close the goal |
+| witness | `witness ...` | whether the displayed objects satisfy the existential or nonempty goal |
+
+For example, a direct mathematical fact can close by builtin reasoning:
+
+```litex
+2 + 3 = 5
+```
+
+A theorem call makes the reused theorem visible:
+
+```litex
+thm self_eq:
+    ? forall x R:
+        x = x
+    x = x
+
+by thm self_eq(1)
+```
+
+A local claim packages an intermediate fact before later lines reuse the
+expanded context:
+
+```litex
+claim:
+    ? 1 = 1
+    1 = 1
+
+1 = 1
+```
+
+This is why Litex proofs often read like ordinary mathematical derivations:
+the user writes facts, witnesses, and standard proof blocks, while the checker
+tries builtin rules, known facts, definitions, theorem calls, and local proof
+structure.
+
+The design goal is compression without opacity. Litex does not ask users to
+memorize a large proof-command vocabulary for ordinary steps, and it does not
+hide successful steps behind a silent automation box. The proof route remains
+small enough to learn, and the output remains explicit enough to inspect.
+
 ### Full Verifier Flow
 
 The complete execution path is simple to read from the outside: Litex reads a
@@ -3622,6 +3676,14 @@ forall a, x R:
 This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`.
 
 For most factual statements, `verification` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. Builtin rule evidence uses `rule` for the user-facing mathematical explanation and may include `rule_id` for the internal/debug label. Known `forall` use records the cited `forall` fact that proves the goal. Detail output can additionally show the parameter `instantiation` and the instantiated `requirements` checked before the conclusion is accepted. A successfully proved `forall` fact reports `conclusions` instead of a separate `verification` summary. Each entry in `conclusions` has a `statement` and a `verification` object. Detail output additionally expands the local `parameters` and `assumptions`. If a then-fact is available from the local forall context, its verification is shown as `type: "local assumption"` with source such as `parameter definition` or `forall premise`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`; normal output lists each step's fact and nested `verification` evidence, while detail output also includes structural labels and step indexes.
+
+Output can also expose inferred facts. These are routine consequences that
+Litex adds to the context after accepting a statement, parameter, definition,
+witness, or theorem call. For example, a parameter such as `n N` may infer
+`n >= 0`, a subset fact may infer the corresponding `forall x A: x $in B`
+shape, and a proved sequence predicate may infer its function type and
+epsilon-style consequences. These inferred facts are part of the environment
+delta that later lines can reuse.
 
 When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Conjunctions report their failed subgoal under `failed_part`; chains report the failed segment under `failed_chain_step`. Normal output keeps these failure nodes focused on the failed statement and omits positional metadata such as child indexes; detail output keeps that metadata and the full nested unknown tree for debugging.
 
