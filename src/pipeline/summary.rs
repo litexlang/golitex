@@ -1,6 +1,6 @@
-use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
+use crate::common::json_value::{render_json_value, JsonValue};
 use crate::prelude::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 #[derive(Clone, Debug, Default)]
 pub struct RunSummary {
@@ -24,19 +24,33 @@ pub struct RunSummary {
     pub supposes: usize,
     pub abstract_interfaces: usize,
     pub stack_runner_warnings: usize,
+    pub top_level_fact_statements: usize,
+    pub nested_statements: usize,
+    pub nested_fact_statements: usize,
+    pub stored_fact_outputs: usize,
+    pub inferred_fact_outputs: usize,
     indirect_proof_debt_reasons: Vec<String>,
-    statement_items: Vec<StatementSummaryItem>,
     statement_type_counts: BTreeMap<String, usize>,
     output_type_counts: BTreeMap<String, usize>,
+    proof_method_counts: BTreeMap<String, usize>,
+    by_theorem_counts: BTreeMap<String, usize>,
+    builtin_rule_counts: BTreeMap<String, usize>,
+    stored_fact_reason_counts: BTreeMap<String, usize>,
+    inferred_builtin_rule_counts: BTreeMap<String, usize>,
+    inferred_infer_rule_counts: BTreeMap<String, usize>,
+    trust_dependency_counts: BTreeMap<String, usize>,
+    main_environment: Option<EnvironmentSummary>,
 }
 
-#[derive(Clone, Debug)]
-struct StatementSummaryItem {
-    index: usize,
-    line_file: LineFile,
-    statement_type: String,
-    output_type: String,
-    statement: String,
+#[derive(Clone, Debug, Default)]
+struct EnvironmentSummary {
+    field_key_counts: BTreeMap<String, usize>,
+    field_item_counts: BTreeMap<String, usize>,
+    category_counts: BTreeMap<String, usize>,
+    fact_index_counts: BTreeMap<String, usize>,
+    fact_origin_counts: BTreeMap<String, usize>,
+    cache_fact_trust_dependency_counts: BTreeMap<String, usize>,
+    theorem_trust_dependency_counts: BTreeMap<String, usize>,
 }
 
 impl RunSummary {
@@ -47,7 +61,7 @@ impl RunSummary {
         let mut summary = RunSummary::default();
         summary.top_level_statements = stmt_results.len();
         for result in stmt_results {
-            summary.visit_result(result);
+            summary.visit_result(result, 0);
         }
         if let Some(error) = runtime_error {
             summary.visit_runtime_error(error);
@@ -56,26 +70,39 @@ impl RunSummary {
         summary
     }
 
-    fn visit_result(&mut self, result: &StmtResult) {
+    pub fn from_run_with_runtime(
+        runtime: &Runtime,
+        stmt_results: &[StmtResult],
+        runtime_error: &Option<RuntimeError>,
+    ) -> RunSummary {
+        let mut summary = Self::from_run(stmt_results, runtime_error);
+        if let Some(environment) = runtime.environment_stack.last() {
+            summary.main_environment = Some(EnvironmentSummary::from_environment(environment));
+        }
+        summary
+    }
+
+    fn visit_result(&mut self, result: &StmtResult, depth: usize) {
         if result.is_true() {
             self.verified_statements += 1;
         }
         if let Some(success) = result.factual_success() {
-            self.visit_fact_stmt(&success.stmt);
+            self.visit_fact_stmt(&success.stmt, depth);
             self.visit_infer_result(&success.infers);
-            self.visit_verified_by(&success.verified_by);
+            self.visit_verified_by(&success.verified_by, depth);
         }
         if let Some(success) = result.non_factual_success() {
-            self.visit_stmt(&success.stmt);
+            self.visit_stmt(&success.stmt, depth);
             self.visit_infer_result(&success.infers);
+            self.visit_non_factual_verification(success);
             for inside_result in success.inside_results.iter() {
-                self.visit_result(inside_result);
+                self.visit_result(inside_result, depth + 1);
             }
         }
     }
 
-    fn visit_stmt(&mut self, stmt: &Stmt) {
-        self.record_stmt(stmt);
+    fn visit_stmt(&mut self, stmt: &Stmt, depth: usize) {
+        self.record_stmt(stmt, depth);
         match stmt {
             Stmt::Fact(_) => {
                 self.fact_statements += 1;
@@ -116,6 +143,9 @@ impl RunSummary {
             Stmt::By(_) => {
                 self.by_statements += 1;
             }
+            Stmt::Witness(_) => {
+                self.record_witness_stmt();
+            }
             Stmt::ProofBlock(_) => {
                 self.proof_blocks += 1;
             }
@@ -126,39 +156,36 @@ impl RunSummary {
         }
     }
 
-    fn visit_fact_stmt(&mut self, fact: &Fact) {
-        self.record_fact(fact);
+    fn visit_fact_stmt(&mut self, fact: &Fact, depth: usize) {
+        self.record_fact(fact, depth);
         self.fact_statements += 1;
+        if depth == 0 {
+            self.top_level_fact_statements += 1;
+        } else {
+            self.nested_fact_statements += 1;
+        }
     }
 
-    fn record_stmt(&mut self, stmt: &Stmt) {
+    fn record_stmt(&mut self, stmt: &Stmt, depth: usize) {
         self.statements += 1;
+        if depth > 0 {
+            self.nested_statements += 1;
+        }
         let statement_type = stmt.stmt_type_name();
         let output_type = stmt.output_type_string();
         self.bump_statement_type(statement_type.as_str());
         self.bump_output_type(output_type.as_str());
-        self.statement_items.push(StatementSummaryItem::new(
-            self.statements,
-            stmt.line_file(),
-            statement_type,
-            output_type,
-            stmt.to_string(),
-        ));
     }
 
-    fn record_fact(&mut self, fact: &Fact) {
+    fn record_fact(&mut self, fact: &Fact, depth: usize) {
         self.statements += 1;
+        if depth > 0 {
+            self.nested_statements += 1;
+        }
         let statement_type = fact.fact_type_string();
         let output_type = fact.output_type_string();
         self.bump_statement_type(statement_type.as_str());
         self.bump_output_type(output_type.as_str());
-        self.statement_items.push(StatementSummaryItem::new(
-            self.statements,
-            fact.line_file(),
-            statement_type,
-            output_type,
-            fact.to_string(),
-        ));
     }
 
     fn bump_statement_type(&mut self, statement_type: &str) {
@@ -175,9 +202,27 @@ impl RunSummary {
             .or_insert(0) += 1;
     }
 
+    fn record_witness_stmt(&mut self) {
+        bump_count(&mut self.proof_method_counts, "witness");
+    }
+
+    fn bump_by_method(&mut self, method: &str) {
+        let label = format!("by {}", method);
+        bump_count(&mut self.proof_method_counts, label.as_str());
+    }
+
     fn visit_infer_result(&mut self, infer_result: &InferResult) {
         for output in infer_result.store_fact_outputs() {
+            self.stored_fact_outputs += 1;
+            self.inferred_fact_outputs += output.inferred_facts.len();
             let reason = &output.itself_and_why_itself_is_stored.1;
+            bump_count(&mut self.stored_fact_reason_counts, reason);
+            if let Some(rule) = reason_rule_name(reason, "inferred by builtin rule `") {
+                bump_count(&mut self.inferred_builtin_rule_counts, rule.as_str());
+            }
+            if let Some(rule) = reason_rule_name(reason, "inferred by infer rule `") {
+                bump_count(&mut self.inferred_infer_rule_counts, rule.as_str());
+            }
             if reason.contains("depends_on_unproved_assumptions")
                 && reason.contains("proof_debt")
                 && !self
@@ -190,47 +235,128 @@ impl RunSummary {
         }
     }
 
-    fn visit_verified_by(&mut self, verified_by: &VerifiedByResult) {
+    fn visit_verified_by(&mut self, verified_by: &VerifiedByResult, depth: usize) {
         match verified_by {
             VerifiedByResult::BuiltinRule(result) => {
+                bump_count(&mut self.proof_method_counts, "builtin rule");
+                bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
                 for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal);
+                    self.visit_result(subgoal, depth + 1);
                 }
             }
             VerifiedByResult::KnownForallInstantiation(result) => {
-                self.visit_known_forall_instantiation(result);
+                bump_count(&mut self.proof_method_counts, "known forall instantiation");
+                self.visit_known_forall_instantiation(result, depth);
             }
             VerifiedByResult::VerifiedBys(result) => {
+                bump_count(&mut self.proof_method_counts, "verified by citations");
                 for item in result.cite_what.iter() {
-                    self.visit_verified_by_item(item);
+                    self.visit_verified_by_item(item, depth);
                 }
             }
             VerifiedByResult::ForallProof(result) => {
+                bump_count(&mut self.proof_method_counts, "forall proof");
+                self.visit_infer_result(&result.assumption_infers);
                 for proved in result.proves.iter() {
-                    self.visit_result(&proved.result);
+                    self.visit_result(&proved.result, depth + 1);
                 }
             }
-            VerifiedByResult::Fact(_) => {}
+            VerifiedByResult::Fact(result) => {
+                bump_count(&mut self.proof_method_counts, "known fact");
+                self.visit_stmt_trust_dependencies(&result.cite_what);
+            }
         }
     }
 
-    fn visit_verified_by_item(&mut self, item: &VerifiedBysEnum) {
+    fn visit_verified_by_item(&mut self, item: &VerifiedBysEnum, depth: usize) {
         match item {
             VerifiedBysEnum::ByBuiltinRule(result) => {
+                bump_count(&mut self.proof_method_counts, "builtin rule");
+                bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
                 for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal);
+                    self.visit_result(subgoal, depth + 1);
                 }
             }
             VerifiedBysEnum::ByKnownForall(result) => {
-                self.visit_known_forall_instantiation(&result.result);
+                bump_count(&mut self.proof_method_counts, "known forall instantiation");
+                self.visit_known_forall_instantiation(&result.result, depth);
             }
-            VerifiedBysEnum::ByFact(_) => {}
+            VerifiedBysEnum::ByFact(result) => {
+                bump_count(&mut self.proof_method_counts, "known fact");
+                self.visit_stmt_trust_dependencies(&result.cite_what);
+            }
         }
     }
 
-    fn visit_known_forall_instantiation(&mut self, result: &KnownForallInstantiationResult) {
+    fn visit_known_forall_instantiation(
+        &mut self,
+        result: &KnownForallInstantiationResult,
+        depth: usize,
+    ) {
+        self.visit_stmt_trust_dependencies(&result.cite_what);
         for requirement in result.requirements.iter() {
-            self.visit_result(&requirement.result);
+            self.visit_result(&requirement.result, depth + 1);
+        }
+    }
+
+    fn visit_non_factual_verification(&mut self, success: &NonFactualStmtSuccess) {
+        if let Some(theorem) = success.theorem_verification.as_ref() {
+            bump_count(&mut self.proof_method_counts, "theorem proof");
+            self.visit_infer_result(&theorem.assumption_infers);
+        }
+
+        if let Some(claim) = success.claim_verification.as_ref() {
+            bump_count(&mut self.proof_method_counts, "claim");
+            match claim {
+                ClaimVerificationResult::Forall(result) => {
+                    self.visit_infer_result(&result.assumption_infers);
+                }
+                ClaimVerificationResult::Fact(_) => {}
+            }
+        }
+
+        if let Some(by_verification) = success.by_verification.as_ref() {
+            self.visit_by_verification(by_verification);
+        }
+    }
+
+    fn visit_by_verification(&mut self, by_verification: &ByVerificationResult) {
+        match by_verification {
+            ByVerificationResult::Cases(_) => self.bump_by_method("cases"),
+            ByVerificationResult::Contra(_) => self.bump_by_method("contra"),
+            ByVerificationResult::EnumerateFiniteSet(_) => {
+                self.bump_by_method("enumerate finite set")
+            }
+            ByVerificationResult::EnumerateRange(_) => self.bump_by_method("enumerate range"),
+            ByVerificationResult::Induc(_) => self.bump_by_method("induc"),
+            ByVerificationResult::For(_) => self.bump_by_method("for"),
+            ByVerificationResult::Extension(_) => self.bump_by_method("extension"),
+            ByVerificationResult::PropRegistration(result) => {
+                self.bump_by_method(result.registration_type.as_str());
+                self.visit_infer_result(&result.assumption_infers);
+            }
+            ByVerificationResult::AxiomOfChoice(_) => self.bump_by_method("axiom of choice"),
+            ByVerificationResult::ZornLemma(_) => self.bump_by_method("zorn lemma"),
+            ByVerificationResult::RegularityAxiom(_) => self.bump_by_method("regularity axiom"),
+            ByVerificationResult::Theorem(result) => {
+                self.bump_by_method("theorem");
+                bump_count(&mut self.by_theorem_counts, result.theorem.as_str());
+            }
+        }
+    }
+
+    fn visit_stmt_trust_dependencies(&mut self, stmt: &Stmt) {
+        match stmt {
+            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(_)) => {
+                bump_count(&mut self.trust_dependency_counts, "proof_debt");
+            }
+            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
+                bump_count(&mut self.trust_dependency_counts, "suppose");
+            }
+            Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {
+                bump_count(&mut self.trust_dependency_counts, "axiom");
+            }
+            _ => {}
         }
     }
 
@@ -253,162 +379,427 @@ impl RunSummary {
                 JsonValue::JsonString("run summary".to_string()),
             ),
             (
-                "summary".to_string(),
-                JsonValue::Object(vec![
-                    ("statements".to_string(), JsonValue::Number(self.statements)),
-                    (
-                        "top_level_statements".to_string(),
-                        JsonValue::Number(self.top_level_statements),
-                    ),
-                    (
-                        "verified_statements".to_string(),
-                        JsonValue::Number(self.verified_statements),
-                    ),
-                    (
-                        "fact_statements".to_string(),
-                        JsonValue::Number(self.fact_statements),
-                    ),
-                    (
-                        "prop_definitions".to_string(),
-                        JsonValue::Number(self.prop_definitions),
-                    ),
-                    (
-                        "abstract_prop_definitions".to_string(),
-                        JsonValue::Number(self.abstract_prop_definitions),
-                    ),
-                    (
-                        "theorem_statements".to_string(),
-                        JsonValue::Number(self.theorem_statements),
-                    ),
-                    (
-                        "theorem_names".to_string(),
-                        JsonValue::Number(self.theorem_names),
-                    ),
-                    (
-                        "by_statements".to_string(),
-                        JsonValue::Number(self.by_statements),
-                    ),
-                    (
-                        "proof_blocks".to_string(),
-                        JsonValue::Number(self.proof_blocks),
-                    ),
-                    (
-                        "object_definitions".to_string(),
-                        JsonValue::Number(self.object_definitions),
-                    ),
-                    (
-                        "function_definitions".to_string(),
-                        JsonValue::Number(self.function_definitions),
-                    ),
-                    (
-                        "alias_statements".to_string(),
-                        JsonValue::Number(self.alias_statements),
-                    ),
-                    (
-                        "import_statements".to_string(),
-                        JsonValue::Number(self.import_statements),
-                    ),
-                    (
-                        "direct_proof_debt".to_string(),
-                        JsonValue::Number(self.direct_proof_debt),
-                    ),
-                    (
-                        "indirect_proof_debt".to_string(),
-                        JsonValue::Number(self.indirect_proof_debt),
-                    ),
-                    ("axioms".to_string(), JsonValue::Number(self.axioms)),
-                    ("supposes".to_string(), JsonValue::Number(self.supposes)),
-                    (
-                        "abstract_interfaces".to_string(),
-                        JsonValue::Number(self.abstract_interfaces),
-                    ),
-                    (
-                        "stack_runner_warnings".to_string(),
-                        JsonValue::Number(self.stack_runner_warnings),
-                    ),
-                ]),
+                "proof_method_counts".to_string(),
+                count_map_json_value(&self.proof_method_counts),
             ),
             (
-                "statement_type_counts".to_string(),
-                count_map_json_value(&self.statement_type_counts),
-            ),
-            (
-                "output_type_counts".to_string(),
-                count_map_json_value(&self.output_type_counts),
-            ),
-            (
-                "statements".to_string(),
-                JsonValue::Array(
-                    self.statement_items
-                        .iter()
-                        .map(StatementSummaryItem::json_value)
-                        .collect(),
-                ),
-            ),
-            (
-                "summary_text".to_string(),
-                JsonValue::JsonString(self.summary_text()),
+                "main_environment".to_string(),
+                self.main_environment_json_value(),
             ),
         ])
     }
 
-    fn summary_text(&self) -> String {
-        format!(
-            "statements: {}; top-level statements: {}; verified statements: {}; facts: {}; props: {}; abstract props: {}; theorem statements: {}; theorem names: {}; by statements: {}; direct proof debt: {}; indirect proof debt: {}; axioms: {}; supposes: {}; abstract interfaces: {}; stack/runner warnings: {}",
-            self.statements,
-            self.top_level_statements,
-            self.verified_statements,
-            self.fact_statements,
-            self.prop_definitions,
-            self.abstract_prop_definitions,
-            self.theorem_statements,
-            self.theorem_names,
-            self.by_statements,
-            self.direct_proof_debt,
-            self.indirect_proof_debt,
-            self.axioms,
-            self.supposes,
-            self.abstract_interfaces,
-            self.stack_runner_warnings
-        )
+    fn main_environment_json_value(&self) -> JsonValue {
+        match &self.main_environment {
+            Some(summary) => summary.json_value(),
+            None => JsonValue::Null,
+        }
     }
 }
 
-impl StatementSummaryItem {
-    fn new(
-        index: usize,
-        line_file: LineFile,
-        statement_type: String,
-        output_type: String,
-        statement: String,
-    ) -> Self {
-        Self {
-            index,
-            line_file,
-            statement_type,
-            output_type,
-            statement,
+impl EnvironmentSummary {
+    fn from_environment(environment: &Environment) -> Self {
+        let mut summary = Self::default();
+
+        summary.add_field_counts(
+            "defined_identifiers",
+            environment.defined_identifiers.len(),
+            environment.defined_identifiers.len(),
+        );
+        summary.add_field_counts(
+            "defined_def_props",
+            environment.defined_def_props.len(),
+            environment.defined_def_props.len(),
+        );
+        summary.add_field_counts(
+            "defined_abstract_props",
+            environment.defined_abstract_props.len(),
+            environment.defined_abstract_props.len(),
+        );
+        summary.add_field_counts(
+            "defined_algorithms",
+            environment.defined_algorithms.len(),
+            environment.defined_algorithms.len(),
+        );
+        summary.add_field_counts(
+            "defined_structs",
+            environment.defined_structs.len(),
+            environment.defined_structs.len(),
+        );
+        summary.add_field_counts(
+            "defined_templates",
+            environment.defined_templates.len(),
+            environment.defined_templates.len(),
+        );
+        summary.add_field_counts(
+            "defined_thm_stmts",
+            environment.defined_thm_stmts.len(),
+            environment.defined_thm_stmts.len(),
+        );
+        summary.add_field_counts(
+            "defined_thm_trust_summaries",
+            environment.defined_thm_trust_summaries.len(),
+            environment.defined_thm_trust_summaries.len(),
+        );
+        summary.add_field_counts(
+            "defined_strategy_stmts",
+            environment.defined_strategy_stmts.len(),
+            environment.defined_strategy_stmts.len(),
+        );
+
+        let equality_fact_count = unique_known_equality_count(environment);
+        summary.add_field_counts(
+            "known_equality",
+            environment.known_equality.len(),
+            equality_fact_count,
+        );
+
+        let atomic_0_count = environment
+            .known_atomic_facts_with_0_or_more_than_2_args
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_atomic_facts_with_0_or_more_than_2_args",
+            environment
+                .known_atomic_facts_with_0_or_more_than_2_args
+                .len(),
+            atomic_0_count,
+        );
+
+        let atomic_1_count = environment
+            .known_atomic_facts_with_1_arg
+            .values()
+            .map(|facts| facts.len())
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_atomic_facts_with_1_arg",
+            environment.known_atomic_facts_with_1_arg.len(),
+            atomic_1_count,
+        );
+
+        let atomic_2_count = environment
+            .known_atomic_facts_with_2_args
+            .values()
+            .map(|facts| facts.len())
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_atomic_facts_with_2_args",
+            environment.known_atomic_facts_with_2_args.len(),
+            atomic_2_count,
+        );
+
+        let exist_count = environment
+            .known_exist_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_exist_facts",
+            environment.known_exist_facts.len(),
+            exist_count,
+        );
+
+        let or_count = environment
+            .known_or_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts("known_or_facts", environment.known_or_facts.len(), or_count);
+
+        let forall_atomic_count = environment
+            .known_atomic_facts_in_forall_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_atomic_facts_in_forall_facts",
+            environment.known_atomic_facts_in_forall_facts.len(),
+            forall_atomic_count,
+        );
+
+        let forall_atomic_by_shape_count = environment
+            .known_atomic_facts_in_forall_facts_by_arg_shape
+            .values()
+            .map(|shape_map| shape_map.values().map(Vec::len).sum::<usize>())
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_atomic_facts_in_forall_facts_by_arg_shape",
+            environment
+                .known_atomic_facts_in_forall_facts_by_arg_shape
+                .len(),
+            forall_atomic_by_shape_count,
+        );
+
+        let forall_exist_count = environment
+            .known_exist_facts_in_forall_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_exist_facts_in_forall_facts",
+            environment.known_exist_facts_in_forall_facts.len(),
+            forall_exist_count,
+        );
+
+        let forall_and_count = environment
+            .known_and_facts_in_forall_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_and_facts_in_forall_facts",
+            environment.known_and_facts_in_forall_facts.len(),
+            forall_and_count,
+        );
+
+        let forall_or_count = environment
+            .known_or_facts_in_forall_facts
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_or_facts_in_forall_facts",
+            environment.known_or_facts_in_forall_facts.len(),
+            forall_or_count,
+        );
+
+        summary.add_field_counts(
+            "known_objs_equal_to_tuple",
+            environment.known_objs_equal_to_tuple.len(),
+            environment.known_objs_equal_to_tuple.len(),
+        );
+        summary.add_field_counts(
+            "known_objs_equal_to_cart",
+            environment.known_objs_equal_to_cart.len(),
+            environment.known_objs_equal_to_cart.len(),
+        );
+        summary.add_field_counts(
+            "known_objs_equal_to_finite_seq_list",
+            environment.known_objs_equal_to_finite_seq_list.len(),
+            environment.known_objs_equal_to_finite_seq_list.len(),
+        );
+        summary.add_field_counts(
+            "known_objs_equal_to_matrix_list",
+            environment.known_objs_equal_to_matrix_list.len(),
+            environment.known_objs_equal_to_matrix_list.len(),
+        );
+        summary.add_field_counts(
+            "known_obj_values",
+            environment.known_obj_values.len(),
+            environment.known_obj_values.len(),
+        );
+        summary.add_field_counts(
+            "known_objs_equal_to_set_builder",
+            environment.known_objs_equal_to_set_builder.len(),
+            environment.known_objs_equal_to_set_builder.len(),
+        );
+        summary.add_field_counts(
+            "known_objs_in_fn_sets",
+            environment.known_objs_in_fn_sets.len(),
+            environment.known_objs_in_fn_sets.len(),
+        );
+        summary.add_field_counts(
+            "known_transitive_props",
+            environment.known_transitive_props.len(),
+            environment.known_transitive_props.len(),
+        );
+
+        let symmetric_permutation_count = environment
+            .known_symmetric_props
+            .values()
+            .map(Vec::len)
+            .sum::<usize>();
+        summary.add_field_counts(
+            "known_symmetric_props",
+            environment.known_symmetric_props.len(),
+            symmetric_permutation_count,
+        );
+
+        summary.add_field_counts(
+            "known_reflexive_props",
+            environment.known_reflexive_props.len(),
+            environment.known_reflexive_props.len(),
+        );
+        summary.add_field_counts(
+            "known_antisymmetric_props",
+            environment.known_antisymmetric_props.len(),
+            environment.known_antisymmetric_props.len(),
+        );
+        summary.add_field_counts(
+            "cache_well_defined_obj",
+            environment.cache_well_defined_obj.len(),
+            environment.cache_well_defined_obj.len(),
+        );
+        summary.add_field_counts(
+            "cache_known_fact",
+            environment.cache_known_fact.len(),
+            environment.cache_known_fact.len(),
+        );
+        summary.add_field_counts(
+            "cache_known_fact_trust",
+            environment.cache_known_fact_trust.len(),
+            environment.cache_known_fact_trust.len(),
+        );
+        summary.add_field_counts(
+            "used_strategy_stmts",
+            environment.used_strategy_stmts.len(),
+            environment.used_strategy_stmts.len(),
+        );
+        summary.add_field_counts(
+            "stopped_strategy_stmts",
+            environment.stopped_strategy_stmts.len(),
+            environment.stopped_strategy_stmts.len(),
+        );
+
+        summary.add_category_counts(environment);
+        summary.add_fact_index_counts(environment);
+        summary.add_fact_origin_counts(environment);
+        summary.add_trust_dependency_counts(environment);
+
+        summary
+    }
+
+    fn add_field_counts(&mut self, name: &str, key_count: usize, item_count: usize) {
+        self.field_key_counts.insert(name.to_string(), key_count);
+        self.field_item_counts.insert(name.to_string(), item_count);
+    }
+
+    fn add_category_counts(&mut self, environment: &Environment) {
+        self.category_counts
+            .insert("objects".to_string(), environment.defined_identifiers.len());
+        self.category_counts
+            .insert("props".to_string(), environment.defined_def_props.len());
+        self.category_counts.insert(
+            "abstract_props".to_string(),
+            environment.defined_abstract_props.len(),
+        );
+        self.category_counts.insert(
+            "algorithms".to_string(),
+            environment.defined_algorithms.len(),
+        );
+        self.category_counts
+            .insert("structs".to_string(), environment.defined_structs.len());
+        self.category_counts
+            .insert("templates".to_string(), environment.defined_templates.len());
+        self.category_counts
+            .insert("theorems".to_string(), environment.defined_thm_stmts.len());
+        self.category_counts.insert(
+            "strategies".to_string(),
+            environment.defined_strategy_stmts.len(),
+        );
+        self.category_counts.insert(
+            "known_facts".to_string(),
+            environment.cache_known_fact.len(),
+        );
+        self.category_counts.insert(
+            "object_cache_entries".to_string(),
+            environment.known_objs_equal_to_tuple.len()
+                + environment.known_objs_equal_to_cart.len()
+                + environment.known_objs_equal_to_finite_seq_list.len()
+                + environment.known_objs_equal_to_matrix_list.len()
+                + environment.known_obj_values.len()
+                + environment.known_objs_equal_to_set_builder.len()
+                + environment.known_objs_in_fn_sets.len()
+                + environment.cache_well_defined_obj.len(),
+        );
+        self.category_counts.insert(
+            "property_registrations".to_string(),
+            environment.known_transitive_props.len()
+                + environment.known_symmetric_props.len()
+                + environment.known_reflexive_props.len()
+                + environment.known_antisymmetric_props.len(),
+        );
+    }
+
+    fn add_fact_index_counts(&mut self, environment: &Environment) {
+        self.fact_index_counts.insert(
+            "known_facts".to_string(),
+            environment.cache_known_fact.len(),
+        );
+    }
+
+    fn add_fact_origin_counts(&mut self, environment: &Environment) {
+        let cached_total = environment.cache_known_fact.len();
+        let cached_with_trust = environment.cache_known_fact_trust.len();
+        self.fact_origin_counts
+            .insert("known_facts_total".to_string(), cached_total);
+        self.fact_origin_counts.insert(
+            "known_facts_without_unproved_dependencies".to_string(),
+            cached_total.saturating_sub(cached_with_trust),
+        );
+        self.fact_origin_counts.insert(
+            "known_facts_with_unproved_dependencies".to_string(),
+            cached_with_trust,
+        );
+
+        let theorem_total = environment.defined_thm_stmts.len();
+        let theorem_with_trust = environment.defined_thm_trust_summaries.len();
+        self.fact_origin_counts
+            .insert("theorems_total".to_string(), theorem_total);
+        self.fact_origin_counts.insert(
+            "theorems_without_unproved_dependencies".to_string(),
+            theorem_total.saturating_sub(theorem_with_trust),
+        );
+        self.fact_origin_counts.insert(
+            "theorems_with_unproved_dependencies".to_string(),
+            theorem_with_trust,
+        );
+    }
+
+    fn add_trust_dependency_counts(&mut self, environment: &Environment) {
+        for summary in environment.cache_known_fact_trust.values() {
+            for dependency in summary.dependencies.iter() {
+                bump_count(
+                    &mut self.cache_fact_trust_dependency_counts,
+                    dependency.kind.as_str(),
+                );
+            }
+        }
+        for summary in environment.defined_thm_trust_summaries.values() {
+            for dependency in summary.dependencies.iter() {
+                bump_count(
+                    &mut self.theorem_trust_dependency_counts,
+                    dependency.kind.as_str(),
+                );
+            }
         }
     }
 
     fn json_value(&self) -> JsonValue {
         JsonValue::Object(vec![
-            ("index".to_string(), JsonValue::Number(self.index)),
             (
-                "line".to_string(),
-                line_file_line_json_value(&self.line_file),
+                "overview_counts".to_string(),
+                count_map_json_value(&self.category_counts),
             ),
             (
-                "statement_type".to_string(),
-                JsonValue::JsonString(self.statement_type.clone()),
+                "known_fact_counts".to_string(),
+                count_map_json_value(&self.fact_index_counts),
             ),
             (
-                "output_type".to_string(),
-                JsonValue::JsonString(self.output_type.clone()),
+                "trust_summary".to_string(),
+                count_map_json_value(&self.fact_origin_counts),
             ),
             (
-                "statement".to_string(),
-                JsonValue::JsonString(strip_free_param_numeric_tags_in_display(&self.statement)),
+                "unproved_dependency_counts".to_string(),
+                self.unproved_dependency_counts_json_value(),
+            ),
+            (
+                "environment_field_counts".to_string(),
+                field_counts_json_value(&self.field_key_counts, &self.field_item_counts),
+            ),
+        ])
+    }
+
+    fn unproved_dependency_counts_json_value(&self) -> JsonValue {
+        JsonValue::Object(vec![
+            (
+                "known_facts".to_string(),
+                count_map_json_value(&self.cache_fact_trust_dependency_counts),
+            ),
+            (
+                "theorems".to_string(),
+                count_map_json_value(&self.theorem_trust_dependency_counts),
             ),
         ])
     }
@@ -422,6 +813,15 @@ pub fn display_run_summary_json(
     render_json_value(&summary.to_json_value(runtime_error.is_none()), 0)
 }
 
+pub fn display_run_summary_json_with_runtime(
+    runtime: &Runtime,
+    stmt_results: &[StmtResult],
+    runtime_error: &Option<RuntimeError>,
+) -> String {
+    let summary = RunSummary::from_run_with_runtime(runtime, stmt_results, runtime_error);
+    render_json_value(&summary.to_json_value(runtime_error.is_none()), 0)
+}
+
 fn count_map_json_value(counts: &BTreeMap<String, usize>) -> JsonValue {
     JsonValue::Object(
         counts
@@ -429,6 +829,47 @@ fn count_map_json_value(counts: &BTreeMap<String, usize>) -> JsonValue {
             .map(|(name, count)| (name.clone(), JsonValue::Number(*count)))
             .collect(),
     )
+}
+
+fn field_counts_json_value(
+    key_counts: &BTreeMap<String, usize>,
+    item_counts: &BTreeMap<String, usize>,
+) -> JsonValue {
+    JsonValue::Object(
+        key_counts
+            .iter()
+            .map(|(field_name, key_count)| {
+                let item_count = item_counts.get(field_name).copied().unwrap_or(*key_count);
+                (
+                    field_name.clone(),
+                    JsonValue::Object(vec![
+                        ("map_keys".to_string(), JsonValue::Number(*key_count)),
+                        ("stored_items".to_string(), JsonValue::Number(item_count)),
+                    ]),
+                )
+            })
+            .collect(),
+    )
+}
+
+fn bump_count(counts: &mut BTreeMap<String, usize>, name: &str) {
+    *counts.entry(name.to_string()).or_insert(0) += 1;
+}
+
+fn reason_rule_name(reason: &str, prefix: &str) -> Option<String> {
+    let rest = reason.strip_prefix(prefix)?;
+    let rule = rest.strip_suffix('`')?;
+    Some(rule.to_string())
+}
+
+fn unique_known_equality_count(environment: &Environment) -> usize {
+    let mut seen = HashSet::new();
+    for (direct_proof_map, _) in environment.known_equality.values() {
+        for fact in direct_proof_map.values() {
+            seen.insert(fact.to_string());
+        }
+    }
+    seen.len()
 }
 
 fn is_function_definition(stmt: &DefObjStmt) -> bool {
