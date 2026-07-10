@@ -5,7 +5,7 @@
 flowchart TB
     subgraph source["1. Read The Program"]
         direction LR
-        input["User input<br/>file, command-line code,<br/>import, or run_file"]
+        input["User input<br/>file, command-line code,<br/>or module import"]
         session["Start a checking session<br/>load builtin facts/rules<br/>and shared import context"]
         blocks["Split into statements<br/>respect indentation<br/>and nested proof blocks"]
         understand["Understand each statement<br/>command, fact,<br/>or assumption"]

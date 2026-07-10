@@ -13,10 +13,6 @@ impl Runtime {
         param_def: &ParamGroupWithSet,
         binding_scope: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        if self.current_execution_is_trusted_file() {
-            return self.define_params_with_set_in_scope_trusted(param_def, binding_scope);
-        }
-
         let param_set = param_def.set_obj();
         self.verify_obj_well_defined_and_store_cache(param_set, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
@@ -58,54 +54,6 @@ impl Runtime {
                             "define params with set: failed to store in-set fact for parameter `{}`",
                             name
                         ), store_fact_error)))
-                })?;
-            infer_result.new_infer_result_inside(fact_infer_result);
-            infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
-                name,
-                binding_scope,
-                param_set,
-                fact.clone(),
-            )?);
-        }
-        Ok(infer_result)
-    }
-
-    fn define_params_with_set_in_scope_trusted(
-        &mut self,
-        param_def: &ParamGroupWithSet,
-        binding_scope: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
-        let param_set = param_def.set_obj();
-        let mut infer_result = InferResult::new();
-        let facts = param_def.facts_for_binding_scope(binding_scope);
-        for (name, fact) in param_def.params.iter().zip(facts.iter()) {
-            self.store_free_param_or_identifier_name(name, binding_scope)
-                .map_err(|runtime_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "define params with set: failed to declare parameter `{}`",
-                                name
-                            ),
-                            runtime_error,
-                        ),
-                    ))
-                })?;
-            let fact_infer_result = self
-                .store_trusted_fact_and_infer_with_reason(
-                    fact.clone(),
-                    InferReason::ParameterDefinition,
-                )
-                .map_err(|store_fact_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "define params with set: failed to store in-set fact for parameter `{}`",
-                                name
-                            ),
-                            store_fact_error,
-                        ),
-                    ))
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
             infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(

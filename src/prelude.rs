@@ -98,9 +98,8 @@ pub use crate::infer::{
     StoreFactOutput,
 };
 pub use crate::module_manager::{
-    discover_repository, ExportEntry, FileEnvId, FileEnvironment, FileEnvironmentKind,
-    FileLoadMode, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
-    BUILTIN_CODE_PATH,
+    discover_repository, ExportEntry, FileEnvId, FileEnvironment, FileStatus, ImportTarget,
+    ModuleId, ModuleManager, ModuleRunner, ModuleStatus, BUILTIN_CODE_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -330,9 +329,6 @@ pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::tooling_stmt::LocalImportStmt;
-pub use crate::stmt::tooling_stmt::RunFileMode;
-pub use crate::stmt::tooling_stmt::RunFileStmt;
-pub use crate::stmt::tooling_stmt::StopImportStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
@@ -518,7 +514,6 @@ pub use crate::common::keywords::RIGHT_ARROW;
 pub use crate::common::keywords::RIGHT_BRACE;
 pub use crate::common::keywords::RIGHT_BRACKET;
 pub use crate::common::keywords::RIGHT_CURLY_BRACE;
-pub use crate::common::keywords::RUN_FILE;
 pub use crate::common::keywords::R_NEG;
 pub use crate::common::keywords::R_NZ;
 pub use crate::common::keywords::R_POS;
@@ -547,7 +542,6 @@ pub use crate::common::keywords::TEMPLATE;
 pub use crate::common::keywords::TEMPLATE_INSTANCE_PREFIX;
 pub use crate::common::keywords::THM;
 pub use crate::common::keywords::TRANSITIVE_PROP;
-pub use crate::common::keywords::TRUST_FILE;
 pub use crate::common::keywords::TRY;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;

@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `run_file`, `trust_file`, and `stop import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, `export`, and `local_import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -125,12 +125,9 @@ object-introduction family of `have` statements listed below.
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `export file` / `export mod` | Allowed only in repository `mod.lit`; validates explicit file/module targets, names, duplicate paths, and recursive manifests. | None during discovery. | Declares the module interface and canonical export graph. |
-| `import` | In repository mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs recursively exported knowledge and the imported module `main.lit` once. | Registers import dependencies and reactivates cached modules when applicable. |
+| `import` | In repository mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs recursively exported knowledge and the imported module `main.lit` once. | Registers import dependencies and reuses cached modules. |
 | `local_import` | Repository-only; the bare name must be declared by the current module's `mod.lit`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity. |
-| `run_file` | Resolves and reads the file path. | Runs the target file normally. | Stores effects in a separate ordinary file environment owned by the current module. |
-| `trust_file` | Resolves and reads a quoted file path like `run_file`. | Skips ordinary proof and well-definedness checking in the loaded file. | Loads trusted environment effects such as facts, definitions, theorem interfaces, object bindings, and strategy registrations. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
-| `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification in the shared module manager. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |
 | `eval by` | The left and right objects must be well-defined. | Verifies `lhs = rhs`. | Stores `lhs = rhs`, `rhs = value`, and `lhs = value`. |

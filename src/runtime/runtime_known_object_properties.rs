@@ -16,37 +16,8 @@ impl Runtime {
         let local_count = frame.local_environment_stack.len();
         match frame.layer {
             ExecutionLayer::Builtin => local_count + 1,
-            ExecutionLayer::Main => {
-                let module = self
-                    .module_manager
-                    .module(frame.module_id.expect("module frame requires a module"))
-                    .expect("current module should exist");
-                let ordinary_file_count = module
-                    .file_environments
-                    .iter()
-                    .filter(|file| {
-                        file.kind == FileEnvironmentKind::Ordinary
-                            && file.status == FileStatus::Loaded
-                    })
-                    .count();
-                local_count + ordinary_file_count + 2
-            }
-            ExecutionLayer::File(current_file_id) => {
-                let module = self
-                    .module_manager
-                    .module(frame.module_id.expect("module frame requires a module"))
-                    .expect("current module should exist");
-                let other_ordinary_file_count = module
-                    .file_environments
-                    .iter()
-                    .filter(|file| {
-                        file.id != current_file_id
-                            && file.kind == FileEnvironmentKind::Ordinary
-                            && file.status == FileStatus::Loaded
-                    })
-                    .count();
-                local_count + 1 + other_ordinary_file_count + 2
-            }
+            ExecutionLayer::Main => local_count + 2,
+            ExecutionLayer::File(_) => local_count + 3,
         }
     }
 
@@ -70,24 +41,10 @@ impl Runtime {
             }
             ExecutionLayer::Main => {
                 let module = self.module_manager.module(frame.module_id?)?;
-                let ordinary_files = module
-                    .file_environments
-                    .iter()
-                    .filter(|file| {
-                        file.kind == FileEnvironmentKind::Ordinary
-                            && file.status == FileStatus::Loaded
-                    })
-                    .collect::<Vec<&FileEnvironment>>();
-                let file_count = ordinary_files.len();
-                if layer_index < file_count {
-                    return ordinary_files
-                        .get(file_count - 1 - layer_index)
-                        .map(|file| file.environment.as_ref());
-                }
-                if layer_index == file_count {
+                if layer_index == 0 {
                     return Some(module.main_environment.as_ref());
                 }
-                if layer_index == file_count + 1 {
+                if layer_index == 1 {
                     return Some(self.module_manager.builtin_environment.as_ref());
                 }
                 None
@@ -95,31 +52,13 @@ impl Runtime {
             ExecutionLayer::File(current_file_id) => {
                 let module = self.module_manager.module(frame.module_id?)?;
                 let current_file = module.file_environment(current_file_id)?;
-                let other_ordinary_files = module
-                    .file_environments
-                    .iter()
-                    .filter(|file| {
-                        file.id != current_file_id
-                            && file.kind == FileEnvironmentKind::Ordinary
-                            && file.status == FileStatus::Loaded
-                    })
-                    .collect::<Vec<&FileEnvironment>>();
-                let current_file_count = 1;
-                let file_count = current_file_count + other_ordinary_files.len();
                 if layer_index == 0 {
                     return Some(current_file.environment.as_ref());
                 }
-                if layer_index < file_count {
-                    return other_ordinary_files
-                        .iter()
-                        .rev()
-                        .nth(layer_index - 1)
-                        .map(|file| file.environment.as_ref());
-                }
-                if layer_index == file_count {
+                if layer_index == 1 {
                     return Some(module.main_environment.as_ref());
                 }
-                if layer_index == file_count + 1 {
+                if layer_index == 2 {
                     return Some(self.module_manager.builtin_environment.as_ref());
                 }
                 None
@@ -722,18 +661,7 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
-                let mut environments = module
-                    .file_environments
-                    .iter()
-                    .rev()
-                    .filter(|file| {
-                        file.kind == FileEnvironmentKind::Ordinary
-                            && file.status == FileStatus::Loaded
-                    })
-                    .map(|file| file.environment.as_ref())
-                    .collect::<Vec<&Environment>>();
-                environments.push(module.main_environment.as_ref());
-                environments
+                vec![module.main_environment.as_ref()]
             }
             Some(ImportTarget::File { module_id, file_id }) => {
                 if active_local_target.is_none() && !module_name.contains(MOD_SIGN) {
@@ -751,9 +679,6 @@ impl Runtime {
     }
 
     pub fn active_imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
-        if self.module_manager.imported_module_is_stopped(module_name) {
-            return vec![];
-        }
         self.imported_module_environments(module_name)
     }
 

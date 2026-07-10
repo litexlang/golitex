@@ -90,9 +90,10 @@ source-facing definitions, theorem statements, core proof route, and checked
 derivations. Put the surrounding fact into an adjacent module such as
 `chap7_cite/main.lit`, `<source>_cite/main.lit`, or a local `cite/main.lit`.
 The main file should import this module with `import "../chap7_cite"` or the
-analogous relative module import; do not use `run_file` for cite packages.
-Reserve `run_file` for source-order reuse such as one chapter loading an
-earlier chapter.
+analogous relative module import. For repository projects, declare the cite
+package with `export mod` and import its root name. Represent source-order file
+reuse with `export file` in `mod.lit` and `local_import` in the dependent
+source; Litex has no statement for loading an arbitrary `.lit` path.
 
 Cite packages are explicit proof-debt interfaces, not completed standard
 library modules. Facts in a cite package should be named `thm` or `claim`

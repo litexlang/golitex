@@ -120,26 +120,20 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
 
-        let mut param_infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(
-                &have_obj_equal_stmt.param_def,
-                ParamObjType::Identifier,
-            )
-        } else {
-            self.define_params_with_type(
+        let mut param_infer_result = self
+            .define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 true,
                 ParamObjType::Identifier,
             )
-        }
-        .map_err(|define_params_error| {
-            short_exec_error(
-                have_obj_equal_stmt.clone().into(),
-                "",
-                Some(define_params_error),
-                vec![],
-            )
-        })?;
+            .map_err(|define_params_error| {
+                short_exec_error(
+                    have_obj_equal_stmt.clone().into(),
+                    "",
+                    Some(define_params_error),
+                    vec![],
+                )
+            })?;
         param_infer_result
             .relabel_all_added_facts_with_store_reason(HaveObjEqualStmt::store_reason());
         infer_result.new_infer_result_inside(param_infer_result);
@@ -201,16 +195,5 @@ impl Runtime {
         }
 
         Ok(infer_result)
-    }
-
-    pub(crate) fn exec_have_obj_equal_stmt_affect_environment_only(
-        &mut self,
-        have_obj_equal_stmt: &HaveObjEqualStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
-        Ok(
-            NonFactualStmtSuccess::new(have_obj_equal_stmt.clone().into(), infer_result, vec![])
-                .into(),
-        )
     }
 }

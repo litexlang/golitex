@@ -718,26 +718,6 @@ parameter. This feature is small but important: it makes "since this value is
 in the range, take a point mapping to it" a checkable, named move rather than
 an implicit jump.
 
-## Why does Litex have `stop import`?
-
-Imports add useful facts, theorems, and proof routes. But a large imported
-module can also make automatic search harder to understand. `stop import Name`
-keeps the module registered while removing it from ordinary automatic
-verification.
-
-This lets users control the active proof environment. A stopped module can
-still be cited explicitly, for example with a named theorem call, but its facts
-do not silently participate in every later search.
-
-The point is not only speed. It is auditability. If a proof depends on a large
-external result, the proof is often clearer when that dependency appears as an
-explicit citation instead of an invisible background match.
-
-This is also a textbook-design issue. When a file is following a book, imports
-should not silently turn the chapter into theorem lookup. `stop import` gives
-the author a way to keep a module available for explicit citation while making
-the active proof context reflect the local derivation.
-
 ## What is `strategy` for?
 
 `strategy` is for proof patterns where the hard part is not the outer

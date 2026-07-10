@@ -5,8 +5,8 @@ use crate::prelude::{
     ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
     ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
     ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
-    ClaimVerificationResult, CommandStmt, FactualStmtSuccess, NonFactualStmtSuccess, Runtime, Stmt,
-    StmtResult, TheoremVerificationResult, VerifiedByResult,
+    ClaimVerificationResult, FactualStmtSuccess, NonFactualStmtSuccess, Runtime, Stmt, StmtResult,
+    TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -1126,11 +1126,10 @@ fn local_assumption_fact_value(fact: &str, reason: &str) -> JsonValue {
 
 fn inside_results_value(
     runtime: &Runtime,
-    stmt: &Stmt,
+    _stmt: &Stmt,
     inside_results: &[StmtResult],
 ) -> JsonValue {
-    let should_show_inside_results =
-        runtime.detail_output || matches!(stmt, Stmt::Command(CommandStmt::RunFileStmt(_)));
+    let should_show_inside_results = runtime.detail_output;
     if !should_show_inside_results {
         return JsonValue::Array(vec![]);
     }

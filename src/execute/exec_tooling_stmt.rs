@@ -63,16 +63,6 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
-    pub fn exec_stop_import_stmt(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.exec_stop_import_stmt_verify_well_definedness(stmt)?;
-        let inside_results = self.exec_stop_import_stmt_verify_process(stmt)?;
-        let infer_result = self.exec_stop_import_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
-    }
-
     fn exec_do_nothing_stmt_verify_well_definedness(
         &mut self,
         _stmt: &DoNothingStmt,
@@ -114,58 +104,5 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         self.clear_current_env_and_parse_name_scope();
         Ok(InferResult::new())
-    }
-
-    fn exec_stop_import_stmt_verify_well_definedness(
-        &mut self,
-        _stmt: &StopImportStmt,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    fn exec_stop_import_stmt_verify_process(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
-        let module_was_imported = self
-            .module_manager
-            .module_by_import_name(&stmt.module_name)
-            .is_some_and(|module| module.status != ModuleStatus::Discovered);
-        if !module_was_imported {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!("module `{}` has not been imported", stmt.module_name),
-                None,
-                vec![],
-            ));
-        }
-        Ok(vec![])
-    }
-
-    fn exec_stop_import_stmt_affect_environment(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        self.module_manager
-            .stop_imported_module(&stmt.module_name)
-            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
-        Ok(InferResult::new())
-    }
-
-    pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                format!(
-                    "{} can only be run as a top-level statement",
-                    stmt.keyword()
-                ),
-                lf,
-                None,
-                vec![],
-            )
-        }));
     }
 }

@@ -66,19 +66,6 @@ impl Runtime {
         )
         .into())
     }
-
-    pub(crate) fn exec_by_regularity_axiom_stmt_affect_environment_only(
-        &mut self,
-        stmt: &ByRegularityAxiomStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let regularity_fact =
-            regularity_axiom_exist_fact(stmt.set.clone(), stmt.line_file.clone())?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
-            regularity_fact,
-            InferReason::VerifiedStatement,
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
-    }
 }
 
 fn regularity_axiom_exist_fact(set: Obj, line_file: LineFile) -> Result<Fact, RuntimeError> {

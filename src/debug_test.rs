@@ -81,7 +81,7 @@ mod local_debug_tests {
 
         for (snippet_index, snippet) in snippets.iter().enumerate() {
             if snippet_index > 0 && !keep_env_between_snippets {
-                runtime.clear_current_env_parse_name_scope_and_stop_imports();
+                runtime.reset_for_isolated_runner_item();
                 runtime.set_current_user_lit_file_path(path_for_runtime);
             }
 

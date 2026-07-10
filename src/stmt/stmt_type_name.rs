@@ -48,12 +48,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl RunFileStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "RunFileStmt".to_string()
-    }
-}
-
 impl ImportRelativePathStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportRelativePathStmt".to_string()
@@ -96,12 +90,6 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClearStmt".to_string()
-    }
-}
-
-impl StopImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "StopImportStmt".to_string()
     }
 }
 
@@ -399,15 +387,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl RunFileStmt {
-    pub fn output_type_string(&self) -> String {
-        match self.mode {
-            RunFileMode::VerifyAndExecute => "run file statement".to_string(),
-            RunFileMode::AffectEnvironmentOnly => "trusted file statement".to_string(),
-        }
-    }
-}
-
 impl ImportRelativePathStmt {
     pub fn output_type_string() -> String {
         "import statement".to_string()
@@ -450,12 +429,6 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn output_type_string() -> String {
         "clear statement".to_string()
-    }
-}
-
-impl StopImportStmt {
-    pub fn output_type_string() -> String {
-        "stop import statement".to_string()
     }
 }
 

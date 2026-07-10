@@ -2081,8 +2081,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `local_import`, `export`,
-`run_file`, `trust_file`, and `stop import` are not allowed inside `try:`.
+Control statements such as `clear`, `import`, `local_import`, and `export` are
+not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
 scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
@@ -2102,9 +2102,9 @@ x = 1
 
 ---
 
-### Modules, manifests, and file loading (preview)
+### Modules and manifests (preview)
 
-Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
+Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same module again is an idempotent no-op.
 
 There are two deliberately separate top-level modes:
 
@@ -2158,27 +2158,6 @@ are not the repository dependency mechanism. In isolated file mode,
 directory containing `main.lit`. Ordinary `import` never loads a `.lit` file;
 declare a file with `export file` and access it with `local_import` instead.
 
-Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
-
-`stop import` writes to the shared module manager. This means a `stop import`
-statement inside an imported module also affects the original file for the rest
-of the current run, unless that module is imported again and reactivated.
-
-<!-- litex:skip-test -->
-```litex
-# project/mod.lit
-export mod "./A" as A
-export mod "./B" as B
-
-# A/main.lit
-import B
-stop import B
-
-# project/main.lit
-import A
-$B::some_prop(2) # ordinary verification no longer uses B automatically
-```
-
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
 prefer local definitions, local claims, and explicit proof-debt notes when the
@@ -2186,27 +2165,10 @@ book is building a concept. Extract repeated interfaces into std later; do not
 hide the main derivation by importing a large package and citing a synonym
 theorem.
 
-**`run_file "path.lit"`** runs a quoted ordinary file in a separate persistent
-file environment owned by the current module. It does not copy statements into
-the module's main environment. Lookup sees the current local/file scopes, the
-module main environment, builtin knowledge, and explicitly referenced imported
-modules. Ordinary file environments are cleared by `clear`; manifest-owned
-export nodes remain registered.
-
-**`trust_file "path.lit"`** reads a quoted file with the same path rules as
-`run_file`, but treats the file as trusted. Litex loads only persistent
-environment effects such as facts, definitions, theorem interfaces, object
-bindings, and strategy registrations. It does not run ordinary proof checking
-or well-definedness checking for the loaded file. Use this only for local files
-whose contents you intentionally trust, for example a temporary interface file
-used to speed up a large translation dependency.
-
-```text
-import Nat
-stop import Nat
-run_file "./runfile2.lit"
-trust_file "./trusted_interfaces.lit"
-```
+There is no statement that loads an arbitrary `.lit` path. Isolated `-f` runs
+exactly one source file. Multi-file developments must use `-r`, declare every
+source in `mod.lit`, and load declared sources with `local_import`. Litex does
+not provide a file-loading statement that bypasses verification.
 
 ---
 
@@ -2223,7 +2185,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active; use `stop import` when you want to stop an imported module.
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active.
 
 ```litex
 have a R = 1
@@ -2245,17 +2207,6 @@ import "./Demo" as Demo
 clear
 
 $Demo::some_prop(2) # Demo is still active after clear
-```
-
-In contrast, `stop import` is the explicit global import-control statement.
-
-<!-- litex:skip-test -->
-```litex
-import "./Demo" as Demo
-
-stop import Demo
-
-$Demo::some_prop(2) # ordinary verification no longer uses Demo automatically
 ```
 
 ---
@@ -2770,7 +2721,6 @@ The sections above explain the common use cases. This table is a quick map of th
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
 | `export` / `import` / `local_import` | Declare and load repository module interfaces |
-| `run_file` / `trust_file` | Load an ordinary file into a separate module-owned file environment |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -3048,8 +2998,6 @@ code, evaluate an expression, or register a reusable proof pattern.
 | import a local module directory | `import "local_module" as L` |
 | declare a repository file export | `export file "./local.lit" as local` in `mod.lit` |
 | bind a declared export inside a module source | `local_import local` |
-| stop automatic use of an imported module | `stop import Nat` |
-| run an ordinary file in a separate module-owned environment | `run_file "./sketch.lit"` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |

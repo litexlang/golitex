@@ -184,21 +184,4 @@ impl Runtime {
         ))
         .into())
     }
-
-    pub(crate) fn exec_by_extension_stmt_affect_environment_only(
-        &mut self,
-        stmt: &ByExtensionStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let equality_fact: Fact = EqualFact::new(
-            stmt.left.clone(),
-            stmt.right.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
-            equality_fact,
-            InferReason::VerifiedStatement,
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
-    }
 }

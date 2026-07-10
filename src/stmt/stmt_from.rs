@@ -186,18 +186,6 @@ impl From<ClearStmt> for Stmt {
     }
 }
 
-impl From<StopImportStmt> for Stmt {
-    fn from(v: StopImportStmt) -> Self {
-        CommandStmt::StopImportStmt(v).into()
-    }
-}
-
-impl From<RunFileStmt> for Stmt {
-    fn from(v: RunFileStmt) -> Self {
-        CommandStmt::RunFileStmt(v).into()
-    }
-}
-
 impl From<EvalStmt> for Stmt {
     fn from(v: EvalStmt) -> Self {
         CommandStmt::EvalStmt(v).into()

@@ -3687,8 +3687,8 @@ Purpose: run checked exploratory code without committing it, or run a checked
 batch that commits only if every nested statement succeeds.
 
 - Well-definedness / structural checks: each nested statement performs its own
-  checks; `try` rejects control statements such as `clear`, `import`, and
-  `run_file`.
+  checks; `try` rejects control statements such as `clear`, `import`, `export`,
+  and `local_import`.
 - Truth verification: nested statements verify normally.
 - Environment effects: `sketch` has no outer effect; `try` commits the child
   environment into the parent environment on success.
@@ -3802,27 +3802,24 @@ Purpose: make an explicit empty proof step.
 do_nothing
 ```
 
-#### 25. Module And File Commands
+#### 25. Module Commands
 
-Purpose: load, stop, or clear external environments.  These examples are syntax
-only because they depend on local files or installed modules.
+Purpose: declare repository interfaces, load modules, bind exported sources,
+or clear the current environment. These examples are syntax only because they
+depend on local files or installed modules.
 
 - Well-definedness / structural checks: repository `export` declarations and
   `local_import` bindings are validated during discovery; `import` resolves a
-  module and `run_file` resolves a file path; `stop import` requires an already
-  imported module; `clear` has no structural checks.
-- Truth verification: imported or run files verify normally when loaded.
-- Environment effects: module/file commands update the module manager or a
-  separate module-owned file environment; `clear` removes the current user and
-  ordinary file environments but preserves manifest export nodes. Imported
-  modules remain registered and active. `stop import` is the explicit global
-  command for disabling an imported module.
+  module; `clear` has no structural checks.
+- Truth verification: imported modules and exported files verify normally when
+  loaded.
+- Environment effects: module commands update the module manager; `clear`
+  removes the current user environment. Imported modules and manifest export
+  nodes remain registered.
 
 <!-- litex:skip-test -->
 ```litex
 import Nat
-stop import Nat
-run_file "./some_local_file.lit"
 clear
 ```
 
@@ -3836,20 +3833,6 @@ import "./Demo" as Demo
 clear
 
 $Demo::some_prop(2) # Demo is still active after clear
-```
-
-`stop import` changes the shared module manager. If an imported module stops
-another module, the original file observes that stopped state too.
-
-<!-- litex:skip-test -->
-```litex
-## A/main.lit
-import "../B" as B
-stop import B
-
-## main.lit
-import "./A" as A
-$B::some_prop(2) # B is stopped for ordinary verification
 ```
 
 ---
