@@ -261,6 +261,7 @@ impl Runtime {
             AtomicFact::NotSupersetFact(_) => NotSupersetFact::new(left, right, line_file).into(),
             AtomicFact::RestrictFact(_) => RestrictFact::new(left, right, line_file).into(),
             AtomicFact::NotRestrictFact(_) => NotRestrictFact::new(left, right, line_file).into(),
+            AtomicFact::FnEqualFact(_) => FnEqualFact::new(left, right, line_file).into(),
             AtomicFact::NormalAtomicFact(x) => {
                 NormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
             }

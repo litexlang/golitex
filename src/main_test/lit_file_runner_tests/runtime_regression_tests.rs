@@ -4950,6 +4950,58 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
 }
 
 #[test]
+fn run_summary_counts_direct_unproved_interfaces() {
+    run_with_large_stack("run_summary_counts_direct_unproved_interfaces", || {
+        let source_code = r#"
+1 = 1
+proof_debt 1 = 0
+suppose x R
+abstract_prop summary_prop(x)
+prop summary_concrete_prop(x R):
+    x = x
+axiom summary_axiom:
+    ? forall y R:
+        y = y
+thm summary_theorem:
+    ? forall y R:
+        y = y
+    y = y
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("run_summary_counts");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let summary = RunSummary::from_run(&stmt_results, &runtime_error);
+        let summary_output = display_run_summary_json(&stmt_results, &runtime_error);
+
+        assert!(
+            runtime_error.is_none(),
+            "summary fixture failed:\n{}",
+            summary_output
+        );
+        assert_eq!(summary.direct_proof_debt, 1);
+        assert_eq!(summary.supposes, 1);
+        assert_eq!(summary.prop_definitions, 1);
+        assert_eq!(summary.abstract_prop_definitions, 1);
+        assert_eq!(summary.theorem_statements, 1);
+        assert_eq!(summary.abstract_interfaces, 1);
+        assert_eq!(summary.axioms, 1);
+        assert!(summary_output.contains("\"output_type\": \"run summary\""));
+        assert!(summary_output.contains("\"top_level_statements\": 7"));
+        assert!(summary_output.contains("\"prop_definitions\": 1"));
+        assert!(summary_output.contains("\"abstract_prop_definitions\": 1"));
+        assert!(summary_output.contains("\"theorem_statements\": 1"));
+        assert!(summary_output.contains("\"statement_type_counts\""));
+        assert!(summary_output.contains("\"output_type_counts\""));
+        assert!(summary_output.contains("\"statements\""));
+        assert!(summary_output.contains("\"direct_proof_debt\": 1"));
+        assert!(summary_output.contains("\"supposes\": 1"));
+        assert!(summary_output.contains("\"abstract_interfaces\": 1"));
+        assert!(summary_output.contains("\"axioms\": 1"));
+    });
+}
+
+#[test]
 fn normal_output_folds_proof_level_inside_results() {
     run_with_large_stack("normal_output_folds_proof_level_inside_results", || {
         let source_code = r#"

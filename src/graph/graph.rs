@@ -23,6 +23,7 @@ struct GraphEdge {
     from: String,
     to: String,
     kind: String,
+    count: usize,
 }
 
 #[derive(Default)]
@@ -40,7 +41,7 @@ struct GraphBuilder {
     nodes: Vec<GraphNode>,
     node_index: HashMap<String, usize>,
     edges: Vec<GraphEdge>,
-    edge_keys: HashSet<String>,
+    edge_index: HashMap<String, usize>,
 }
 
 pub fn run_graph_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
@@ -210,8 +211,10 @@ fn run_graph_on_source(
     } else {
         fields.push(("error".to_string(), JsonValue::Null));
     }
+    fields.push(("summary".to_string(), graph.summary_json()));
     fields.push(("nodes".to_string(), graph.nodes_json(!hide_file_paths)));
     fields.push(("edges".to_string(), graph.edges_json()));
+    fields.push(("usage".to_string(), graph.usage_json()));
     fields.push((
         "mermaid".to_string(),
         JsonValue::JsonString(graph.mermaid()),
@@ -246,8 +249,10 @@ fn graph_target_error_output(
             target_json_value(target_kind, target_label, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::JsonString(message)),
+        ("summary".to_string(), GraphBuilder::empty_summary_json()),
         ("nodes".to_string(), JsonValue::Array(vec![])),
         ("edges".to_string(), JsonValue::Array(vec![])),
+        ("usage".to_string(), JsonValue::Array(vec![])),
         (
             "mermaid".to_string(),
             JsonValue::JsonString("flowchart LR".to_string()),
@@ -278,7 +283,7 @@ impl GraphBuilder {
             nodes: Vec::new(),
             node_index: HashMap::new(),
             edges: Vec::new(),
-            edge_keys: HashSet::new(),
+            edge_index: HashMap::new(),
         }
     }
 
@@ -334,7 +339,22 @@ impl GraphBuilder {
         }
     }
 
-    fn add_standalone_fact(&mut self, _fact: &Fact) {}
+    fn add_standalone_fact(&mut self, fact: &Fact) {
+        let name = format!("fact@{}", line_label(&fact.line_file()));
+        let node_id = fact_id("fact", &name);
+        self.ensure_node(
+            node_id.clone(),
+            "fact",
+            &name,
+            true,
+            Some("fact"),
+            Some(&fact.line_file()),
+            Some(&fact.to_string()),
+        );
+        let mut collector = DepCollector::new();
+        collector.collect_fact(fact);
+        self.add_dependency_edges(&node_id, &collector.deps);
+    }
 
     fn add_def_obj_stmt(&mut self, stmt: &DefObjStmt, full_stmt: &Stmt) {
         match stmt {
@@ -410,6 +430,7 @@ impl GraphBuilder {
             let mut collector = DepCollector::new();
             collector.collect_forall_fact(&stmt.forall_fact);
             self.add_dependency_edges(&node_id, &collector.deps);
+            self.add_by_thm_edges_to(&node_id, &stmt.prove_process);
         }
     }
 
@@ -428,6 +449,7 @@ impl GraphBuilder {
         let mut collector = DepCollector::new();
         collector.collect_fact(&stmt.fact);
         self.add_dependency_edges(&node_id, &collector.deps);
+        self.add_by_thm_edges_to(&node_id, &stmt.proof);
     }
 
     fn add_fn_node(&mut self, name: &str, line_file: &LineFile, stmt: &Stmt) -> String {
@@ -462,6 +484,22 @@ impl GraphBuilder {
             let source_id = fn_id(fn_name);
             self.ensure_node(source_id.clone(), "fn", fn_name, false, None, None, None);
             self.add_edge(&source_id, target_id, "uses_fn");
+        }
+    }
+
+    fn add_by_thm_edges_to(&mut self, target_id: &str, stmts: &[Stmt]) {
+        for thm_name in by_thm_names_in_stmts(stmts) {
+            let fact_id = fact_id("thm", &thm_name);
+            self.ensure_node(
+                fact_id.clone(),
+                "fact",
+                &thm_name,
+                false,
+                Some("thm"),
+                None,
+                None,
+            );
+            self.add_edge(&fact_id, target_id, "justified_by");
         }
     }
 
@@ -505,26 +543,164 @@ impl GraphBuilder {
             return;
         }
         let key = format!("{}|{}|{}", from, to, kind);
-        if self.edge_keys.insert(key) {
-            self.edges.push(GraphEdge {
-                from: from.to_string(),
-                to: to.to_string(),
-                kind: kind.to_string(),
-            });
+        if let Some(index) = self.edge_index.get(&key).copied() {
+            self.edges[index].count += 1;
+            return;
         }
+        self.edge_index.insert(key, self.edges.len());
+        self.edges.push(GraphEdge {
+            from: from.to_string(),
+            to: to.to_string(),
+            kind: kind.to_string(),
+            count: 1,
+        });
     }
 
     fn nodes_json(&self, include_source: bool) -> JsonValue {
         JsonValue::Array(
             self.nodes
                 .iter()
-                .map(|node| node.json_value(include_source))
+                .map(|node| node.json_value(include_source, self))
                 .collect(),
         )
     }
 
     fn edges_json(&self) -> JsonValue {
         JsonValue::Array(self.edges.iter().map(GraphEdge::json_value).collect())
+    }
+
+    fn summary_json(&self) -> JsonValue {
+        let mut defined_nodes = 0;
+        let mut prop_nodes = 0;
+        let mut defined_props = 0;
+        let mut fn_nodes = 0;
+        let mut defined_fns = 0;
+        let mut fact_nodes = 0;
+        let mut defined_facts = 0;
+        let mut thm_nodes = 0;
+        let mut axiom_nodes = 0;
+        let mut claim_nodes = 0;
+
+        for node in self.nodes.iter() {
+            if node.defined {
+                defined_nodes += 1;
+            }
+            match node.kind.as_str() {
+                "prop" => {
+                    prop_nodes += 1;
+                    if node.defined {
+                        defined_props += 1;
+                    }
+                }
+                "fn" => {
+                    fn_nodes += 1;
+                    if node.defined {
+                        defined_fns += 1;
+                    }
+                }
+                "fact" => {
+                    fact_nodes += 1;
+                    if node.defined {
+                        defined_facts += 1;
+                    }
+                    match node.fact_kind.as_deref() {
+                        Some("thm") => thm_nodes += 1,
+                        Some("axiom") => axiom_nodes += 1,
+                        Some("claim") => claim_nodes += 1,
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        JsonValue::Object(vec![
+            ("nodes".to_string(), JsonValue::Number(self.nodes.len())),
+            (
+                "defined_nodes".to_string(),
+                JsonValue::Number(defined_nodes),
+            ),
+            ("edges".to_string(), JsonValue::Number(self.edges.len())),
+            (
+                "edge_uses".to_string(),
+                JsonValue::Number(self.edges.iter().map(|edge| edge.count).sum()),
+            ),
+            ("props".to_string(), JsonValue::Number(prop_nodes)),
+            (
+                "defined_props".to_string(),
+                JsonValue::Number(defined_props),
+            ),
+            ("functions".to_string(), JsonValue::Number(fn_nodes)),
+            (
+                "defined_functions".to_string(),
+                JsonValue::Number(defined_fns),
+            ),
+            ("facts".to_string(), JsonValue::Number(fact_nodes)),
+            (
+                "defined_facts".to_string(),
+                JsonValue::Number(defined_facts),
+            ),
+            ("theorems".to_string(), JsonValue::Number(thm_nodes)),
+            ("axioms".to_string(), JsonValue::Number(axiom_nodes)),
+            ("claims".to_string(), JsonValue::Number(claim_nodes)),
+        ])
+    }
+
+    fn empty_summary_json() -> JsonValue {
+        JsonValue::Object(vec![
+            ("nodes".to_string(), JsonValue::Number(0)),
+            ("defined_nodes".to_string(), JsonValue::Number(0)),
+            ("edges".to_string(), JsonValue::Number(0)),
+            ("edge_uses".to_string(), JsonValue::Number(0)),
+            ("props".to_string(), JsonValue::Number(0)),
+            ("defined_props".to_string(), JsonValue::Number(0)),
+            ("functions".to_string(), JsonValue::Number(0)),
+            ("defined_functions".to_string(), JsonValue::Number(0)),
+            ("facts".to_string(), JsonValue::Number(0)),
+            ("defined_facts".to_string(), JsonValue::Number(0)),
+            ("theorems".to_string(), JsonValue::Number(0)),
+            ("axioms".to_string(), JsonValue::Number(0)),
+            ("claims".to_string(), JsonValue::Number(0)),
+        ])
+    }
+
+    fn usage_json(&self) -> JsonValue {
+        let mut items = self
+            .nodes
+            .iter()
+            .map(|node| {
+                (
+                    self.outgoing_edge_use_count(&node.id),
+                    self.incoming_edge_use_count(&node.id),
+                    node.name.clone(),
+                    node.usage_json_value(self),
+                )
+            })
+            .collect::<Vec<_>>();
+        items.sort_by(|left, right| {
+            right
+                .0
+                .cmp(&left.0)
+                .then_with(|| right.1.cmp(&left.1))
+                .then_with(|| left.2.cmp(&right.2))
+        });
+        JsonValue::Array(items.into_iter().map(|(_, _, _, value)| value).collect())
+    }
+
+    fn incoming_edge_use_count(&self, node_id: &str) -> usize {
+        self.edges
+            .iter()
+            .filter(|edge| edge.to == node_id)
+            .map(|edge| edge.count)
+            .sum()
+    }
+
+    fn outgoing_edge_use_count(&self, node_id: &str) -> usize {
+        self.edges
+            .iter()
+            .filter(|edge| edge.from == node_id)
+            .map(|edge| edge.count)
+            .sum()
     }
 
     fn mermaid(&self) -> String {
@@ -542,11 +718,16 @@ impl GraphBuilder {
             } else {
                 "-->"
             };
+            let label = if edge.count > 1 {
+                format!("{} x{}", edge.kind, edge.count)
+            } else {
+                edge.kind.clone()
+            };
             lines.push(format!(
                 "    {} {}|{}| {}",
                 mermaid_id(&edge.from),
                 arrow,
-                edge.kind,
+                label,
                 mermaid_id(&edge.to)
             ));
         }
@@ -555,7 +736,7 @@ impl GraphBuilder {
 }
 
 impl GraphNode {
-    fn json_value(&self, include_source: bool) -> JsonValue {
+    fn json_value(&self, include_source: bool, builder: &GraphBuilder) -> JsonValue {
         let mut fields = vec![
             ("id".to_string(), JsonValue::JsonString(self.id.clone())),
             ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
@@ -565,6 +746,14 @@ impl GraphNode {
                 JsonValue::JsonString(self.label.clone()),
             ),
             ("defined".to_string(), JsonValue::Bool(self.defined)),
+            (
+                "uses_count".to_string(),
+                JsonValue::Number(builder.incoming_edge_use_count(&self.id)),
+            ),
+            (
+                "used_by_count".to_string(),
+                JsonValue::Number(builder.outgoing_edge_use_count(&self.id)),
+            ),
         ];
         if let Some(fact_kind) = self.fact_kind.as_ref() {
             fields.push((
@@ -589,6 +778,30 @@ impl GraphNode {
         }
         JsonValue::Object(fields)
     }
+
+    fn usage_json_value(&self, builder: &GraphBuilder) -> JsonValue {
+        let mut fields = vec![
+            ("id".to_string(), JsonValue::JsonString(self.id.clone())),
+            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
+            ("name".to_string(), JsonValue::JsonString(self.name.clone())),
+            ("defined".to_string(), JsonValue::Bool(self.defined)),
+            (
+                "uses_count".to_string(),
+                JsonValue::Number(builder.incoming_edge_use_count(&self.id)),
+            ),
+            (
+                "used_by_count".to_string(),
+                JsonValue::Number(builder.outgoing_edge_use_count(&self.id)),
+            ),
+        ];
+        if let Some(fact_kind) = self.fact_kind.as_ref() {
+            fields.push((
+                "fact_kind".to_string(),
+                JsonValue::JsonString(fact_kind.clone()),
+            ));
+        }
+        JsonValue::Object(fields)
+    }
 }
 
 impl GraphEdge {
@@ -597,6 +810,7 @@ impl GraphEdge {
             ("from".to_string(), JsonValue::JsonString(self.from.clone())),
             ("to".to_string(), JsonValue::JsonString(self.to.clone())),
             ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
+            ("count".to_string(), JsonValue::Number(self.count)),
         ])
     }
 }
@@ -1022,7 +1236,7 @@ fn by_thm_names_in_stmts(stmts: &[Stmt]) -> Vec<String> {
 
 fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
     match stmt {
-        Stmt::By(ByStmt::ByThmStmt(s)) => push_unique(out, s.name.to_string()),
+        Stmt::By(ByStmt::ByThmStmt(s)) => out.push(s.name.to_string()),
         Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
             for stmt in s.proof.iter() {
                 collect_by_thm_names_in_stmt(stmt, out);
@@ -1059,12 +1273,6 @@ fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
             }
         }
         _ => {}
-    }
-}
-
-fn push_unique(out: &mut Vec<String>, value: String) {
-    if !out.contains(&value) {
-        out.push(value);
     }
 }
 
@@ -1153,6 +1361,20 @@ mod tests {
     }
 
     #[test]
+    fn graph_output_includes_summary_and_usage_counts() {
+        let output =
+            graph_output("abstract_prop p(x)\nprop q(x R):\n    $p(x)\nprop r(x R):\n    $p(x)\n");
+
+        assert!(output.contains(r#""summary""#));
+        assert!(output.contains(r#""usage""#));
+        assert!(output.contains(r#""defined_props": 3"#));
+        assert!(output.contains(r#""edges": 2"#));
+        assert!(output.contains(r#""id": "prop:p""#));
+        assert!(output.contains(r#""used_by_count": 2"#));
+        assert!(output.contains(r#""count": 1"#));
+    }
+
+    #[test]
     fn function_domain_records_prop_dependency() {
         let output = graph_output("abstract_prop p(x)\nhave fn f(x R: $p(x)) R = x\n");
 
@@ -1198,6 +1420,18 @@ mod tests {
         assert!(output.contains(r#""id": "fact:thm:p_fact""#));
         assert!(output.contains(r#""from": "prop:p""#));
         assert!(output.contains(r#""to": "fact:thm:p_fact""#));
+    }
+
+    #[test]
+    fn theorem_proof_records_theorem_citation_usage() {
+        let output = graph_output(
+            "thm graph_base:\n    ? forall x R:\n        x = x\n    x = x\nthm graph_use_base:\n    prove:\n        forall x R:\n            x = x\n    by thm graph_base(x)\n    x = x\n",
+        );
+
+        assert!(output.contains(r#""from": "fact:thm:graph_base""#));
+        assert!(output.contains(r#""to": "fact:thm:graph_use_base""#));
+        assert!(output.contains(r#""kind": "justified_by""#));
+        assert!(output.contains(r#""used_by_count": 1"#));
     }
 
     #[test]

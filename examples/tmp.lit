@@ -1,0 +1,33 @@
+proof_debt 1 = 1
+
+thm direct_debt_theorem:
+    ? forall :
+        2 = 2
+    proof_debt 2 = 2
+
+thm cites_direct_debt_theorem:
+    ? forall :
+        2 = 2
+    by thm direct_debt_theorem()
+
+thm cites_cached_debt_fact:
+    ? forall :
+        1 = 1
+    1 = 1
+
+axiom trusted_axiom:
+    ? forall :
+        3 = 3
+
+thm cites_axiom_theorem:
+    ? forall :
+        3 = 3
+    by thm trusted_axiom()
+
+suppose supposed_value R:
+    supposed_value = supposed_value
+
+thm cites_suppose_fact:
+    ? forall :
+        supposed_value = supposed_value
+    supposed_value = supposed_value

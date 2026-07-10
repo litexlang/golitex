@@ -1,5 +1,6 @@
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::run_stmt_at_global_env;
+use crate::pipeline::summary::display_run_summary_json;
 use crate::prelude::*;
 use std::fs;
 
@@ -16,6 +17,7 @@ pub fn run_source_code_in_file(entry_file_path: &str) -> String {
         false,
         false,
         OutputLanguage::English,
+        false,
     )
     .1
 }
@@ -43,6 +45,22 @@ pub fn run_source_code_in_file_for_cli_with_strict_and_language(
     strict_mode: bool,
     output_language: OutputLanguage,
 ) -> String {
+    run_source_code_in_file_for_cli_with_summary_and_language(
+        entry_file_path,
+        detail_output,
+        strict_mode,
+        output_language,
+        false,
+    )
+}
+
+pub fn run_source_code_in_file_for_cli_with_summary_and_language(
+    entry_file_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> String {
     let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,
         Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
@@ -53,6 +71,7 @@ pub fn run_source_code_in_file_for_cli_with_strict_and_language(
         detail_output,
         strict_mode,
         output_language,
+        summarize,
     )
     .1
 }
@@ -73,6 +92,7 @@ pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) 
         false,
         false,
         OutputLanguage::English,
+        false,
     )
 }
 
@@ -82,6 +102,7 @@ fn run_source_code_with_output(
     detail_output: bool,
     strict_mode: bool,
     output_language: OutputLanguage,
+    summarize: bool,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new_with_builtin_code();
@@ -90,7 +111,14 @@ fn run_source_code_with_output(
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if summarize {
+        output.push('\n');
+        output.push_str(display_run_summary_json(&stmt_results, &runtime_error).as_str());
+        output.push('\n');
+    }
+    (ok, output)
 }
 
 pub fn run_source_code(

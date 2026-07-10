@@ -485,6 +485,13 @@ impl Runtime {
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
+                if let Some(result) = self.verify_in_fact_element_in_fn_set_by_known_restriction(
+                    element,
+                    expected_fn_set,
+                    in_fact,
+                )? {
+                    return Ok(result);
+                }
                 self.verify_in_fact_element_in_fn_set_by_stored_definition(
                     element,
                     expected_fn_set,
@@ -3218,6 +3225,36 @@ impl Runtime {
             ]),
             _ => None,
         }
+    }
+
+    // Restriction-to-membership bridge for function spaces.
+    // Example: after `f $restricts_to fn(x S) T`, prove `f $in fn(x S) T`.
+    fn verify_in_fact_element_in_fn_set_by_known_restriction(
+        &mut self,
+        element: &Obj,
+        expected_fn_set: &FnSet,
+        in_fact: &InFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let restriction_fact: AtomicFact = RestrictFact::new(
+            element.clone(),
+            Obj::FnSet(expected_fn_set.clone()),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let restriction_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&restriction_fact)?;
+        if !restriction_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn membership from known restricts_to".to_string(),
+                vec![restriction_result],
+            )
+            .into(),
+        ))
     }
 
     // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.

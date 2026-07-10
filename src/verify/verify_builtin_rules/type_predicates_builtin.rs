@@ -820,6 +820,28 @@ impl Runtime {
                 .into(),
             );
         }
+        if let Obj::ClosedRange(closed_range) = &not_is_nonempty_set_fact.set {
+            // Integer closed interval `{x in Z | lo <= x <= hi}` is empty from a known
+            // `hi < lo` fact.
+            // Example: under `b < a`, prove `not $is_nonempty_set(closed_range(a, b))`.
+            let lt: AtomicFact = LessFact::new(
+                closed_range.end.as_ref().clone(),
+                closed_range.start.as_ref().clone(),
+                not_is_nonempty_set_fact.line_file.clone(),
+            )
+            .into();
+            let lt_ok = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&lt)?;
+            if lt_ok.is_true() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_is_nonempty_set_fact.clone().into(),
+                        "closed_range_empty_when_end_lt_start".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
         Ok((StmtUnknown::new()).into())
     }
 }

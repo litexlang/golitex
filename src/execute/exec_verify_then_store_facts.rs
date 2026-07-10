@@ -19,6 +19,23 @@ impl Runtime {
         verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.store_reason();
+        let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
+        self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason_and_trust(
+            fact,
+            verify_state,
+            reason_text,
+            trust_summary,
+        )
+    }
+
+    pub fn verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason_and_trust(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+        verify_state: &VerifyState,
+        reason: impl Into<String>,
+        trust_summary: ProofTrustSummary,
+    ) -> Result<InferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
@@ -27,13 +44,14 @@ impl Runtime {
                     well_defined_error,
                 )
             })?;
-        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
-            fact.clone(),
-            reason.store_reason(),
+        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_trust(
+                fact.clone(),
+                reason,
+                trust_summary,
         )
-            .map_err(|store_fact_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
-            })
+        .map_err(|store_fact_error| {
+            exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
+        })
     }
 
     pub fn verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(

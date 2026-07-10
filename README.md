@@ -88,6 +88,13 @@ fact-oriented formal language can make checked mathematics cheap enough for
 students, domain scientists, and AI agents to produce useful formal data at
 scale.
 
+The same fact-and-rule workflow also points to an AI-facing use case:
+lightweight **proof-carrying policy**. Instead of hard-coding a fixed list of
+`if`/`else` rules, a system can write policies as facts, definitions, and
+`forall` rules; as new context enters, Litex can derive checked consequences
+such as whether an agent action is allowed, forbidden, or needs human review,
+and the output can expose the proof trace behind that decision.
+
 ## Output Explains Every Line
 
 Litex does not only say whether a proof passed. It can print what every line

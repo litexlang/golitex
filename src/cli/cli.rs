@@ -12,11 +12,13 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
+const SUMMARIZE_FLAG: &str = "-summarize";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let detail_output = remove_flag(&mut args, DETAIL_FLAG);
     let strict_mode = remove_flag(&mut args, STRICT_FLAG);
+    let summarize_output = remove_flag(&mut args, SUMMARIZE_FLAG);
     let output_language = match remove_language_flag(&mut args) {
         Ok(language) => language,
         Err(message) => {
@@ -62,8 +64,15 @@ pub fn run_cli() {
                 runtime.output_language = output_language;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
-                let output =
+                let mut output =
                     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+                if summarize_output {
+                    output.1.push('\n');
+                    output
+                        .1
+                        .push_str(display_run_summary_json(&stmt_results, &runtime_error).as_str());
+                    output.1.push('\n');
+                }
                 println!("{}", output.1.trim());
                 return;
             }
@@ -82,6 +91,7 @@ pub fn run_cli() {
                     detail_output,
                     strict_mode,
                     output_language,
+                    summarize_output,
                 );
                 return;
             }
@@ -108,6 +118,7 @@ pub fn run_cli() {
                     detail_output,
                     strict_mode,
                     output_language,
+                    summarize_output,
                 );
                 return;
             }
@@ -458,6 +469,7 @@ fn main_flag_file(
     detail_output: bool,
     strict_mode: bool,
     output_language: OutputLanguage,
+    summarize_output: bool,
 ) {
     let path = remove_windows_carriage_return(file_flag);
 
@@ -488,11 +500,12 @@ fn main_flag_file(
         }
     };
 
-    let output = run_source_code_in_file_for_cli_with_strict_and_language(
+    let output = run_source_code_in_file_for_cli_with_summary_and_language(
         path_string.as_str(),
         detail_output,
         strict_mode,
         output_language,
+        summarize_output,
     );
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
@@ -771,6 +784,7 @@ litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -detail : include full trace details and raw source paths in JSON output
 litex -strict : reject user proof_debt, suppose, and axiom statements after builtin initialization
+litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
 litex -install <module> : install the given module
@@ -796,6 +810,12 @@ mod tests {
     fn help_lists_strict_command() {
         let message = help_message();
         assert!(message.contains("litex -strict"));
+    }
+
+    #[test]
+    fn help_lists_summarize_command() {
+        let message = help_message();
+        assert!(message.contains("litex -summarize"));
     }
 
     #[test]

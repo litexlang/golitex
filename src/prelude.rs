@@ -183,12 +183,14 @@ pub use crate::obj::{
 };
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
-    display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
-    run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_for_cli, run_source_code_in_file_for_cli_with_strict,
-    run_source_code_in_file_for_cli_with_strict_and_language, run_source_code_in_file_with_ok,
-    run_stmt_at_global_env,
+    display_run_summary_json, display_runtime_error_json, display_stmt_exec_result_json,
+    render_run_source_code_output, run_latex_repl, run_repl, run_repl_with_detail_output,
+    run_repl_with_detail_output_and_strict, run_repl_with_detail_output_and_strict_and_language,
+    run_source_code, run_source_code_in_file, run_source_code_in_file_for_cli,
+    run_source_code_in_file_for_cli_with_strict,
+    run_source_code_in_file_for_cli_with_strict_and_language,
+    run_source_code_in_file_for_cli_with_summary_and_language, run_source_code_in_file_with_ok,
+    run_stmt_at_global_env, RunSummary,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
@@ -239,6 +241,8 @@ pub use crate::result::NotForallUnknown;
 pub use crate::result::ObjectIntroductionItem;
 pub use crate::result::OrFactUnknown;
 pub use crate::result::ProofBlockStmtResult;
+pub use crate::result::ProofTrustDependency;
+pub use crate::result::ProofTrustSummary;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
 pub use crate::result::TheoremVerificationResult;

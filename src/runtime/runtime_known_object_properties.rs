@@ -279,6 +279,15 @@ impl Runtime {
         (false, default_line_file())
     }
 
+    pub fn trust_summary_for_cached_fact(&self, key: &str) -> ProofTrustSummary {
+        for env in self.iter_environments_from_top() {
+            if let Some(summary) = env.cache_known_fact_trust.get(key) {
+                return summary.clone();
+            }
+        }
+        ProofTrustSummary::new()
+    }
+
     pub fn get_object_equal_to_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(name) {
