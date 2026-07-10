@@ -270,11 +270,21 @@ the `Group` structure. Litex verifies it by checking the tuple fields have the
 right types and that the displayed group axioms hold for integer addition.
 
 
-## Litex & Lean:Shared Aim, Different First Principles
+## Litex & Lean: Shared Aim, Different First Principles
 
 Lean is a mature theorem prover with a powerful dependent type theory, Mathlib,
 expert tooling, and a large community. Litex is a younger research system with
 a larger trusted mathematical background and a narrower interface goal. Litex and Lean share the broad aim of making mathematics machine-checkable.
+
+We are also developing a partial Litex-to-Lean compiler. The longer-term
+experiment is not to make Litex a Lean-based language, but to let it serve as a
+fact-oriented, set-theory-based, intuitive, and simple-to-write interface for
+Lean. Litex remains an independent formal language, designed around a
+set-theoretic mathematical surface and explicit fact growth. Lean is not its
+foundation; it is an important backend: Litex can compile verified
+developments into independently checkable Lean code and reuse the Mathlib
+ecosystem. This is ongoing work; see
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
 The point of the comparison below is not that Lean cannot prove these examples.
 Lean proves them easily. The point is that the default user interface is
@@ -369,7 +379,7 @@ Lean is more general and more mature. Litex chooses a surface closer to the
 way the same domain restriction often appears in ordinary mathematical writing.
 
 For a much longer and more careful comparison, see
-[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
 ## Trust Boundary
 
@@ -428,8 +438,8 @@ formal checking without losing sight of the argument.
    verification rules, inference, and trust boundaries.
 4. [Litex Output Is Your Friend](https://litexlang.com/doc/Tutorial/Litex_Output_Is_Your_Friend):
    how to read verifier output as a proof trace.
-5. [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean): a dedicated
-   comparison of proof interface and ecosystem tradeoffs.
+5. [Litex and Lean](https://litexlang.com/doc/Litex_and_Lean): how the two
+   interfaces can work together, including the ongoing compilation bridge.
 6. [The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction):
    a textbook-style introduction to Litex proof writing.
 7. [Hugging Face: Litex examples and datasets](https://huggingface.co/litexlang)

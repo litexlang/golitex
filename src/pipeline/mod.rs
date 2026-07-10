@@ -16,4 +16,4 @@ pub use pipeline_repl::{
     run_repl_with_detail_output_and_strict_and_language,
 };
 pub use pipeline_run_stmt_globally::run_stmt_at_global_env;
-pub use summary::{display_run_summary_json, RunSummary};
+pub use summary::{display_run_summary_json, display_run_summary_json_with_runtime, RunSummary};

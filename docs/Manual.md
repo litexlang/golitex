@@ -132,7 +132,7 @@ injection. It stores a fact for later use, but it does not prove that fact.
 
 For a compact discussion of trust boundaries, comparison with Lean, and project
 positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
-[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 

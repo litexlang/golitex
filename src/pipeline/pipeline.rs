@@ -1,6 +1,6 @@
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::run_stmt_at_global_env;
-use crate::pipeline::summary::display_run_summary_json;
+use crate::pipeline::summary::display_run_summary_json_with_runtime;
 use crate::prelude::*;
 use std::fs;
 
@@ -115,7 +115,9 @@ fn run_source_code_with_output(
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
     if summarize {
         output.push('\n');
-        output.push_str(display_run_summary_json(&stmt_results, &runtime_error).as_str());
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
+        );
         output.push('\n');
     }
     (ok, output)

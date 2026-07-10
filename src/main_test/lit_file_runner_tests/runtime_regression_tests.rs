@@ -4966,13 +4966,20 @@ thm summary_theorem:
     ? forall y R:
         y = y
     y = y
+claim:
+    prove:
+        1 = 1
+    1 = 1
+witness exist z R st {z = 1} from 1:
+    1 = 1
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope("run_summary_counts");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let summary = RunSummary::from_run(&stmt_results, &runtime_error);
-        let summary_output = display_run_summary_json(&stmt_results, &runtime_error);
+        let summary_output =
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             runtime_error.is_none(),
@@ -4987,17 +4994,37 @@ thm summary_theorem:
         assert_eq!(summary.abstract_interfaces, 1);
         assert_eq!(summary.axioms, 1);
         assert!(summary_output.contains("\"output_type\": \"run summary\""));
-        assert!(summary_output.contains("\"top_level_statements\": 7"));
-        assert!(summary_output.contains("\"prop_definitions\": 1"));
-        assert!(summary_output.contains("\"abstract_prop_definitions\": 1"));
-        assert!(summary_output.contains("\"theorem_statements\": 1"));
-        assert!(summary_output.contains("\"statement_type_counts\""));
-        assert!(summary_output.contains("\"output_type_counts\""));
-        assert!(summary_output.contains("\"statements\""));
-        assert!(summary_output.contains("\"direct_proof_debt\": 1"));
-        assert!(summary_output.contains("\"supposes\": 1"));
-        assert!(summary_output.contains("\"abstract_interfaces\": 1"));
-        assert!(summary_output.contains("\"axioms\": 1"));
+        assert!(summary_output.contains("\"proof_method_counts\""));
+        assert!(summary_output.contains("\"claim\""));
+        assert!(!summary_output.contains("\"claim fact proof\""));
+        assert!(!summary_output.contains("\"claim forall proof\""));
+        assert!(summary_output.contains("\"witness\": 1"));
+        assert!(!summary_output.contains("\"by_method_counts\""));
+        assert!(!summary_output.contains("\"witness_counts\""));
+        assert!(!summary_output.contains("\"existence\": 1"));
+        assert!(!summary_output.contains("\"total\": 1"));
+        assert!(summary_output.contains("\"main_environment\""));
+        assert!(summary_output.contains("\"overview_counts\""));
+        assert!(summary_output.contains("\"objects\""));
+        assert!(summary_output.contains("\"props\""));
+        assert!(summary_output.contains("\"environment_field_counts\""));
+        assert!(summary_output.contains("\"map_keys\""));
+        assert!(summary_output.contains("\"stored_items\""));
+        assert!(summary_output.contains("\"known_fact_counts\""));
+        assert!(summary_output.contains("\"known_facts\""));
+        assert!(summary_output.contains("\"trust_summary\""));
+        assert!(summary_output.contains("\"unproved_dependency_counts\""));
+        assert!(!summary_output.contains("\"category_counts\""));
+        assert!(!summary_output.contains("\"field_key_counts\""));
+        assert!(!summary_output.contains("\"field_item_counts\""));
+        assert!(!summary_output.contains("\"fact_origin_counts\""));
+        assert!(!summary_output.contains("\"cache_fact_trust_dependency_counts\""));
+        assert!(!summary_output.contains("\"theorem_trust_dependency_counts\""));
+        assert!(!summary_output.contains("\"statement_type_counts\""));
+        assert!(!summary_output.contains("\"output_type_counts\""));
+        assert!(!summary_output.contains("\"stored_fact_reason_counts\""));
+        assert!(!summary_output.contains("\"unique_equality_facts\""));
+        assert!(!summary_output.contains("\"statements\""));
     });
 }
 

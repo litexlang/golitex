@@ -1,10 +1,10 @@
-# Litex vs Lean
+# Litex and Lean: Interfaces, Foundations, and a Compilation Bridge
 
 Jiachen Shen and The Litex Team, 2026-05-07. Email: litexlang@outlook.com
 
-Try the examples in browser: https://litexlang.com/doc/Litex_vs_Lean
+Try the examples in browser: https://litexlang.com/doc/Litex_and_Lean
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_and_Lean.md
 
 Related docs:
 
@@ -16,96 +16,24 @@ Litex source code stays the same across languages, but CLI output supports
 localized JSON keys and explanatory labels with `litex -lang <code> ...`.
 See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
 
-_You can check out any time you like. But you can never leave._
+## Shared Aim, Different Layers
 
-_— Hotel California_
+Litex and Lean both make mathematics machine-checkable, but they expose
+different layers. Lean provides dependent type theory, proof terms, tactics,
+Mathlib, and a mature community. Litex provides a fact-oriented,
+set-theoretic surface where objects, relations, and the next verified fact are
+the main interface.
 
-## Two Styles Of Formal Mathematics
+Litex is independent and is not intended to replace Lean. The practical
+difference is simple: Lean usually asks the user to guide a proof state with
+theorems or tactics; Litex lets the user write a target fact and matches it
+against context, builtin rules, and known facts.
 
-**Boundary note.** This page compares user interfaces and proof-writing style.
-It is not a ranking, a migration argument, or a claim that Litex replaces Lean.
-Lean has a mature foundation, Mathlib, expert tooling, and a much larger
-community. Litex is a younger research system with a larger trusted base and a
-narrower goal: testing whether fact-oriented checked mathematics can reduce
-interaction cost for textbook-style proofs and AI repair loops.
-
-Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language, and they expose different models of formal proof to the user.
-
-Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. Its user community is large, active, and highly professional, and this gives Lean a significant present-day advantage in library coverage, tooling, examples, and expert support. Litex is younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
-
-- Lean exposes a very general proof engine. The user works with theorem statements, hypotheses, terms, proof states, tactics, and library lemmas.
-
-- Litex exposes a fact-oriented mathematical surface built from objects, facts, and statements, starting from a set-theoretic picture: sets, elements, functions, and relations—the kind of informal foundation many people meet in everyday mathematics. Users write facts; Litex grows a verified context by checking them, storing them, inferring routine consequences, and explaining how accepted facts were proved.
-
-One useful way to say the difference is: Lean often asks the user to choose proof commands explicitly, while Litex lets the user state the target fact and asks the kernel to match it against builtin rules, known facts, and known `forall` facts. A Litex statement is both something a mathematician can read and a shape the checker can use for matching.
-
-> In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
-
-Another way to state the Litex design choice is compression without opacity.
-Litex does not try to compress mathematics by hiding proof search inside a
-black box. It tries to compress the user-facing verification workflow into a
-few inspectable mathematical moves: objects, predicates, statements, accepted
-facts, builtin reasoning, known-fact matching, definition unfolding, theorem
-calls, witnesses, local claims, contradiction, cases, and induction.
-
-This is not just a syntactic convenience. Litex tries to keep the main cognitive load on mathematical patterns: equality chains, subset arguments, existential witnesses, contradiction proofs, finite case splits, membership in a displayed set, and so on. When a person reads a fact, they often recognize its pattern and know which already-proved fact should apply; Litex makes that habit mechanical by using those patterns to search builtin rules, known facts, and known `forall` facts. The user is asked to remember the mathematical structure of the argument, not the name of the tactic or library lemma that packages the same move—as G. H. Hardy put it, *A mathematician, like a painter or poet, is a maker of patterns*.
-
-This is a large reduction in friction for ordinary proofs. Even the largest library cannot package every future argument in exactly the final shape a user needs; eventually the user still has to write the mathematics. Litex's bet is that the remembered material should stay close to that mathematics. Remembering library and tactic names is useful in a system like Lean, but it is not the mathematical content the proof is trying to expose.
-
-### Library Lookup vs Textbook Derivation
-
-Large libraries are one of Lean's greatest strengths. Mathlib lets users reuse
-deep, carefully engineered mathematics instead of reproving it. For research
-formalization and large developments, that is often exactly the right tool.
-
-For textbook formalization, however, there is a different educational goal. If
-formalizing a theorem from a book mainly means importing a large library,
-searching for an equivalent theorem, and citing it, the proof script is closer
-to a dictionary lookup than to the book's derivation. It verifies a result, but
-it may not show how the chapter built the result from previous definitions and
-lemmas. In that situation, much of the user's work is library navigation:
-knowing which package to import, which theorem name matches the book's
-statement, and how to adapt the library theorem to the local goal.
-
-Litex is designed around the opposite default for textbook work: start from the
-basic mathematical objects, introduce the vocabulary in the order the book
-does, write the next fact, and let the checked context grow. Imports should
-provide background vocabulary or explicit trusted interfaces, not erase the
-book's main proof. This is especially important for students, because the code
-should let them learn the mathematics while formalizing it.
-
-This is why Litex can be described by the slogan **Litex: The Formal Language Where Code Verifies Itself**. The phrase means that the user writes mathematical facts as code, and the checker tries to justify those facts from context, builtin rules, known facts, and known `forall` facts; it is not a claim of fully automatic proof search.
-
-Litex also lets a development start from an abstract interface. A user can name
-domains, relations, and axioms first, then reason from that structure before
-choosing a concrete model. This is useful for geometry, quotient constructions,
-axiomatic algebraic structures, and other developments where the right
-interface should be visible before the concrete representation is chosen.
-
-The trade-off is real. Lean is stronger for large formal developments and advanced abstractions, and at present its ecosystem advantage is substantial. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
-
-This also explains why Litex has a larger trusted base. Litex deliberately puts
-many ordinary mathematical relationships into the checker instead of requiring
-the user to surface every such relationship through explicit library calls or
-proof commands. That choice is made for user convenience and local feedback, not
-because mature proof-assistant kernel minimality is unimportant.
-
-Lean is a powerful formal mathematics ecosystem. Litex explores a different
-layer: a readable, fact-oriented verification interface for ordinary
-mathematical reasoning and AI repair loops.
-
-This matters for AI mathematical discovery as well as for human-written
-examples. A discovery attempt may produce a long proof trail: intermediate
-claims, reductions, computations, and local lemmas. Litex is aimed at checking
-that trail as it is produced, so wrong turns can fail early and remaining
-assumptions can be made explicit instead of hidden in fluent prose.
-
-This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. When a Litex example appears after the note, it gives the same idea in a self-contained form.
-
-The Lean examples are meant to be readable counterparts, not claims of shortest
-possible Lean code. The Litex examples are meant to show the current interface,
-not to hide the fact that builtin rules, infer rules, and explicit assumptions are
-part of the trust boundary explained in the [FAQ](https://litexlang.com/doc/FAQ).
+This page keeps the existing examples as the main comparison. A partial,
+ongoing Litex-to-Lean compiler is described near the end: Litex code is first
+executed and verified, then supported statements are emitted as Lean and
+checked independently. The current MVP is small; exact proof-path replay will
+eventually require structured provenance.
 
 ---
 
@@ -113,21 +41,17 @@ part of the trust boundary explained in the [FAQ](https://litexlang.com/doc/FAQ)
 
 ### Main README Example
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
+<!-- litex:skip-test -->
+```litex
+forall x R:
     x = 2
     =>:
         x + 1 = 3
-        x^2 = 4</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
+        x^2 = 4
+```
+
+```lean
+import Mathlib.Tactic
 example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   have h_add : x + 1 = 3 := by
     rw [h]
@@ -135,10 +59,8 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   have h_square : x ^ 2 = 4 := by
     rw [h]
     norm_num
-  exact ⟨h_add, h_square⟩</code></pre>
-    </td>
-  </tr>
-</table>
+  exact ⟨h_add, h_square⟩
+```
 
 **What differs.** Litex writes the desired facts directly. The checker stores `x = 2` in the local context, substitutes it into later goals, and closes the arithmetic. Lean names the hypothesis and guides rewriting explicitly through its proof language.
 
@@ -152,30 +74,24 @@ forall x R:
 
 ### Smallest Facts
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>1 + 1 = 2
-1 &#36;in {1, 2}
+<!-- litex:skip-test -->
+```litex
+1 + 1 = 2
+1 $in {1, 2}
 forall a {1, 2, 3}:
-    a = 1 or a = 2 or a = 3</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+    a = 1 or a = 2 or a = 3
+```
+
+```lean
+import Mathlib
 example : 1 + 1 = 2 := by
   norm_num
 example : 1 ∈ ({1, 2} : Finset ℕ) := by
   simp
 example (a : ℕ) (ha : a ∈ ({1, 2, 3} : Finset ℕ)) :
     a = 1 ∨ a = 2 ∨ a = 3 := by
-  simpa using ha</code></pre>
-    </td>
-  </tr>
-</table>
+  simpa using ha
+```
 
 **What differs.** Litex writes arithmetic and membership as direct facts. Lean proves them quickly too, but usually after choosing the set-like type and calling simplification. If an object is in an enumerated set such as `{1, 2, 3}`, Litex immediately knows the corresponding disjunction: `a = 1 or a = 2 or a = 3`.
 
@@ -220,23 +136,17 @@ Lean can express these ideas too, often with more precision and more generality.
 
 These examples belong together because they involve objects whose validity depends on a domain condition or a function definition.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x {y R: y > 0}:
-    x > 0</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+forall x {y R: y > 0}:
+    x > 0
+```
+
+```lean
+import Mathlib
 example (x : {y : ℝ // y > 0}) : (x : ℝ) > 0 := by
-  exact x.property</code></pre>
-    </td>
-  </tr>
-</table>
+  exact x.property
+```
 
 **What differs.** Litex keeps the domain condition in the parameter. Lean usually packages the value and proof as a subtype.
 
@@ -245,24 +155,18 @@ forall x {y R: y > 0}:
     x > 0
 ```
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn g(x R: x > 0) R = x + 1
-g(1) = 2</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+have fn g(x R: x > 0) R = x + 1
+g(1) = 2
+```
+
+```lean
+import Mathlib
 def g (x : {x : ℝ // x > 0}) : ℝ := x.val + 1
 example : g ⟨1, by norm_num⟩ = 2 := by
-  norm_num [g]</code></pre>
-    </td>
-  </tr>
-</table>
+  norm_num [g]
+```
 
 **What differs.** Litex checks `1 > 0` as background mathematics. Lean passes a subtype value containing both `1` and its proof.
 
@@ -272,26 +176,20 @@ have fn g(x R: x > 0) R = x + 1
 g(1) = 2
 ```
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn h(x R) R by cases:
+<!-- litex:skip-test -->
+```litex
+have fn h(x R) R by cases:
     case x = 2: 3
     case x != 2: 4
-h(2) = 3</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+h(2) = 3
+```
+
+```lean
+import Mathlib
 noncomputable def h (x : ℝ) : ℝ := if x = 2 then 3 else 4
 example : h 2 = 3 := by
-  simp [h]</code></pre>
-    </td>
-  </tr>
-</table>
+  simp [h]
+```
 
 **What differs.** Litex's `case` form reads like a piecewise definition. Lean uses `if` and unfolds it with simplification.
 
@@ -303,14 +201,9 @@ have fn h(x R) R by cases:
 h(2) = 3
 ```
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn k(z R) R by cases:
+<!-- litex:skip-test -->
+```litex
+have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 have x R
@@ -318,18 +211,17 @@ by cases k(x) > 2:
     case x = 2:
         k(x) = 3 > 2
     case x != 2:
-        k(x) = 4 > 2</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+        k(x) = 4 > 2
+```
+
+```lean
+import Mathlib
 noncomputable def k (z : ℝ) : ℝ := if z = 2 then 3 else 4
 example (x : ℝ) : k x > 2 := by
   by_cases h : x = 2
   · simp [k, h]
-  · simp [k, h]</code></pre>
-    </td>
-  </tr>
-</table>
+  · simp [k, h]
+```
 
 **What differs.** Litex keeps the cases and the function use close together. Lean introduces a named case assumption and feeds it to `simp`.
 
@@ -353,27 +245,21 @@ Application problems often start from a formula that domain users already know.
 For example, the signed area of the parallelogram spanned by two planar vectors
 `x` and `y` is `x[1] * y[2] - x[2] * y[1]`.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
+<!-- litex:skip-test -->
+```litex
+have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
 
-signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
+```
+
+```lean
+import Mathlib
 def signedArea (x y : ℝ × ℝ) : ℝ :=
   x.1 * y.2 - x.2 * y.1
 
 example : signedArea (1, 0) (0, 1) = 1 := by
-  norm_num [signedArea]</code></pre>
-    </td>
-  </tr>
-</table>
+  norm_num [signedArea]
+```
 
 This matters for applied mathematics. Many users who want to verify a geometry,
 physics, economics, or engineering calculation are not trying to study type
@@ -430,23 +316,17 @@ supported subset and trust boundary.
 
 Litex treats anonymous functions as ordinary objects. You can pass them directly into `sum`, `product`, or another higher-level mathematical object without first giving the function a separate name. This is useful for nested sums and products, where naming every temporary function would distract from the formula.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>def inner (x : ℤ) : ℤ :=
+<!-- litex:skip-test -->
+```litex
+eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
+```
+
+```lean
+def inner (x : ℤ) : ℤ :=
   Finset.sum (Finset.Icc 1 x) (fun y => x + y)
 def total : ℤ :=
-  Finset.sum (Finset.Icc 1 3) inner</code></pre>
-    </td>
-  </tr>
-</table>
+  Finset.sum (Finset.Icc 1 3) inner
+```
 
 **What differs.** Litex can pass an anonymous function object directly to a repeated sum or product. Lean can do the same mathematics, but users often introduce `fun` expressions, named definitions, ranges, coercions, or library conventions around finite sums.
 
@@ -458,25 +338,19 @@ eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 
 Because Litex is set-theoretic, set expressions are also ordinary objects. A set-builder or a finite set can appear where an object appears, just like `1`, `R`, or a function object. You do not need to define an extra named set first when the expression itself is clear.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>{x R: x > 0} = {x R: x > 0}
-{1, 2} = {1, 2}</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+{x R: x > 0} = {x R: x > 0}
+{1, 2} = {1, 2}
+```
+
+```lean
+import Mathlib
 example : ({x : ℝ | x > 0} : Set ℝ) = {x : ℝ | x > 0} := by
   rfl
 example : ({1, 2} : Finset ℕ) = {1, 2} := by
-  rfl</code></pre>
-    </td>
-  </tr>
-</table>
+  rfl
+```
 
 **What differs.** Litex's set expressions are objects that can be passed around and compared directly without first naming them. Lean also has sets, but the surrounding type (`Set ℝ`, `Finset ℕ`, subtype, and so on) is usually explicit.
 
@@ -495,22 +369,18 @@ Lean also proves propositions. The surface difference is that Lean code usually 
 
 ### Calculation Chains
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x, y R:
+<!-- litex:skip-test -->
+```litex
+forall x, y R:
     2 * x + 3 * y = 10
     4 * x + 5 * y = 14
     =>:
         y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = -4</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = -4
+```
+
+```lean
+import Mathlib
 example (x y : ℝ)
     (h1 : 2 * x + 3 * y = 10)
     (h2 : 4 * x + 5 * y = 14) :
@@ -527,10 +397,8 @@ example (x y : ℝ)
       _ = -4 := by norm_num
   constructor
   · exact hy
-  · exact hx</code></pre>
-    </td>
-  </tr>
-</table>
+  · exact hx
+```
 
 **What differs.** Litex's calculation chain is one factual statement. Lean's explicit version uses named goals, `calc`, rewrites, and tactics.
 
@@ -552,25 +420,19 @@ Litex statements are proof-script actions: `have`, `claim`, `witness`, `by cases
 Lean also has structured proof commands and tactics. The difference is that Litex statements are meant to look like common mathematical proof moves, while Lean tactics operate a very general proof state.
 
 ### Witness Statements
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
+```
+
+```lean
+import Mathlib
 example : ∃ a b c d : ℕ,
     a > 0 ∧ b > 0 ∧ c > 0 ∧ d > 0 ∧
     a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4 := by
   refine ⟨95800, 217519, 414560, 422481, ?_⟩
-  norm_num</code></pre>
-    </td>
-  </tr>
-</table>
+  norm_num
+```
 
 **What differs.** Litex puts the concrete values first. Lean packages values and obligations through constructors.
 
@@ -580,61 +442,51 @@ witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 21
 
 ### Contradiction
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p0(x, y)
+<!-- litex:skip-test -->
+```litex
+abstract_prop p0(x, y)
 abstract_prop q0(x, y)
 claim:
     prove:
         forall:
             forall a, b R:
-                &#36;p0(a, b)
+                $p0(a, b)
                 =>:
-                    &#36;q0(a, b)
-            not &#36;q0(1, 2)
+                    $q0(a, b)
+            not $q0(1, 2)
             =>:
-                not &#36;p0(1, 2)
+                not $p0(1, 2)
     by contra:
         prove:
-            not &#36;p0(1, 2)
-        impossible &#36;q0(1, 2)</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+            not $p0(1, 2)
+        impossible $q0(1, 2)
+```
+
+```lean
+import Mathlib
 example (p q : ℝ → ℝ → Prop)
     (h : ∀ a b, p a b → q a b)
     (hnq : ¬ q 1 2) :
     ¬ p 1 2 := by
   intro hp
-  exact hnq (h 1 2 hp)</code></pre>
-    </td>
-  </tr>
-</table>
+  exact hnq (h 1 2 hp)
+```
 
 **What differs.** Litex writes the contradiction as a proof move. Lean expresses it as a function from an assumption to contradiction.
 
 
 ### Set Equality By Counterexample
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
-    2 &#36;in {a N: a % 2 = 0}
-    2 &#36;in {a N: a % 4 = 0}
-    impossible 2 % 4 = 0</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    2 $in {a N: a % 2 = 0}
+    2 $in {a N: a % 4 = 0}
+    impossible 2 % 4 = 0
+```
+
+```lean
+import Mathlib
 example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠ {a : ℕ | a % 2 = 0} := by
   intro h
   have h2 : (2 : ℕ) ∈ ({a : ℕ | a % 2 = 0} : Set ℕ) := by
@@ -642,10 +494,8 @@ example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠ {a : ℕ | a % 2 = 0} := by
   have h4 : (2 : ℕ) ∈ ({a : ℕ | a % 4 = 0} : Set ℕ) := by
     rw [h]
     exact h2
-  norm_num at h4</code></pre>
-    </td>
-  </tr>
-</table>
+  norm_num at h4
+```
 
 **What differs.** Litex uses `2` as the counterexample directly. Under the temporary equality assumption, membership transfers from the even naturals to the multiples of `4`, and the arithmetic contradiction closes the proof. Lean names the equality, rewrites the membership goal, and lets `norm_num` discharge the false modular fact.
 
@@ -798,31 +648,25 @@ After `rfl`, the state is closed:
 No goals
 ```
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex transition output</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean-style state snapshot</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>statement:
+<!-- litex:skip-test -->
+```litex
+statement:
   1 = 1
 verification:
   builtin rule:
     same expression on both sides
 environment effect:
   store fact 1 = 1
-  reason: proved statement</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>current proof state:
+  reason: proved statement
+```
+
+```lean
+current proof state:
 |- 1 = 1
 
 after rfl:
-No goals</code></pre>
-    </td>
-  </tr>
-</table>
+No goals
+```
 
 **What differs.** Lean's interaction usually helps the user inspect the current
 proof state. Litex's output emphasizes the delta: what the last statement added,
@@ -831,32 +675,26 @@ successful automation inspectable instead of opaque.
 
 ### Known Facts By Matching
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x, y)
+<!-- litex:skip-test -->
+```litex
+abstract_prop p(x, y)
 forall a, b, a2, b2 set:
     a = a2
     b = b2
-    &#36;p(a, b)
+    $p(a, b)
     =>:
-        &#36;p(a2, b2)</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>example (p : α → β → Prop)
+        $p(a2, b2)
+```
+
+```lean
+example (p : α → β → Prop)
     {a a2 : α} {b b2 : β}
     (ha : a = a2) (hb : b = b2) (hp : p a b) :
     p a2 b2 := by
   subst a2
   subst b2
-  exact hp</code></pre>
-    </td>
-  </tr>
-</table>
+  exact hp
+```
 
 **What differs.** Litex reuses known facts by equality-compatible matching. Lean usually transports the fact explicitly.
 
@@ -872,26 +710,20 @@ forall a, b, a2, b2 set:
 
 ### Known `forall` Facts
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
+<!-- litex:skip-test -->
+```litex
+abstract_prop p(x)
 forall:
     forall x R:
-        &#36;p(x)
+        $p(x)
     =>:
-        &#36;p(2)</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>example (p : ℝ → Prop) (h : ∀ x : ℝ, p x) : p 2 := by
-  exact h 2</code></pre>
-    </td>
-  </tr>
-</table>
+        $p(2)
+```
+
+```lean
+example (p : ℝ → Prop) (h : ∀ x : ℝ, p x) : p 2 := by
+  exact h 2
+```
 
 **What differs.** Litex matches the goal against known `forall` facts. Lean applies the universal hypothesis explicitly.
 
@@ -903,42 +735,36 @@ that a predicate `p` is closed under pointwise addition of real-valued
 functions. Litex first proves the inner sum function, then matches the final
 anonymous-function body against the same known fact again.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
+<!-- litex:skip-test -->
+```litex
+abstract_prop p(x)
 
 claim:
     prove:
         forall a, b, c fn(x R) R:
             forall f, g fn(x R) R:
-                &#36;p(f)
-                &#36;p(g)
-                =&gt;:
-                    &#36;p(fn(x R) R {f(x) + g(x)})
-            &#36;p(a)
-            &#36;p(b)
-            &#36;p(c)
-            =&gt;:
-                &#36;p(fn(x R) R {a(x) + (b(x) + c(x))})
-    &#36;p(fn(x R) R {b(x) + c(x)})</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+                $p(f)
+                $p(g)
+                =>:
+                    $p(fn(x R) R {f(x) + g(x)})
+            $p(a)
+            $p(b)
+            $p(c)
+            =>:
+                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    $p(fn(x R) R {b(x) + c(x)})
+```
+
+```lean
+import Mathlib
 
 example (p : (ℝ → ℝ) → Prop)
-    (h : ∀ f g : ℝ → ℝ, p f → p g → p (fun x =&gt; f x + g x))
+    (h : ∀ f g : ℝ → ℝ, p f → p g → p (fun x => f x + g x))
     (a b c : ℝ → ℝ) (pa : p a) (pb : p b) (pc : p c) :
-    p (fun x =&gt; a x + (b x + c x)) := by
-  have hbc : p (fun x =&gt; b x + c x) := h b c pb pc
-  exact h a (fun x =&gt; b x + c x) pa hbc</code></pre>
-    </td>
-  </tr>
-</table>
+    p (fun x => a x + (b x + c x)) := by
+  have hbc : p (fun x => b x + c x) := h b c pb pc
+  exact h a (fun x => b x + c x) pa hbc
+```
 
 **What differs.** In the final Litex goal, the matcher treats
 `a(x) + (b(x) + c(x))` as an instance of `f(x) + g(x)`. Since `g` is applied to
@@ -977,22 +803,16 @@ Set theory is a good place to see Litex's design. Litex's surface language treat
 
 ### Nested Finite Sets
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>{1, 2} &#36;in {{}, {1, 2}}</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+{1, 2} $in {{}, {1, 2}}
+```
+
+```lean
+import Mathlib
 example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
-  simp</code></pre>
-    </td>
-  </tr>
-</table>
+  simp
+```
 
 **What differs.** Litex writes nested set membership directly. Lean makes the outer element type explicit: `Set (Set ℕ)`.
 
@@ -1002,23 +822,17 @@ example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
 
 ### Finite Enumeration
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall i {1, 2}:
-    i = 1 or i = 2</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+forall i {1, 2}:
+    i = 1 or i = 2
+```
+
+```lean
+import Mathlib
 example {i : ℕ} (hi : i ∈ ({1, 2} : Finset ℕ)) : i = 1 ∨ i = 2 := by
-  simpa using hi</code></pre>
-    </td>
-  </tr>
-</table>
+  simpa using hi
+```
 
 **What differs.** Litex unfolds the finite display as possible values. Lean uses `Finset ℕ` and simplification.
 
@@ -1029,24 +843,18 @@ forall i {1, 2}:
 
 ### Power Set Membership
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>{1, 2} &#36;in power_set({1, 2, 3})</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+<!-- litex:skip-test -->
+```litex
+{1, 2} $in power_set({1, 2, 3})
+```
+
+```lean
+import Mathlib
 example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
   intro x hx
   simp at hx
-  simp [hx]</code></pre>
-    </td>
-  </tr>
-</table>
+  simp [hx]
+```
 
 **What differs.** Litex writes power-set membership directly. Lean often proves the underlying subset relation.
 
@@ -1056,54 +864,42 @@ example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
 
 ### Subset Facts Produce Membership Facts
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall A, B set, x A:
-    A &#36;subset B
+<!-- litex:skip-test -->
+```litex
+forall A, B set, x A:
+    A $subset B
     =>:
-        x &#36;in B</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x ∈ B := by
-  exact hAB hx</code></pre>
-    </td>
-  </tr>
-</table>
+        x $in B
+```
+
+```lean
+example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x ∈ B := by
+  exact hAB hx
+```
 
 **What differs.** Litex infers membership consequences from `A $subset B`. Lean applies the subset hypothesis as a function.
 
 
 ### Unequal Cardinalities Rule Out Equality
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>by contra:
+<!-- litex:skip-test -->
+```litex
+by contra:
     prove:
         {1, 2, 3} != {1, 2}
     count({1, 2, 3}) = 3
     count({1, 2}) = 2
     count({1, 2, 3}) = count({1, 2})
-    impossible 3 = 2</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+    impossible 3 = 2
+```
+
+```lean
+import Mathlib
 example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
   intro h
   have hcard := congrArg Finset.card h
-  norm_num at hcard</code></pre>
-    </td>
-  </tr>
-</table>
+  norm_num at hcard
+```
 
 **What differs.** Litex follows the count contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
 
@@ -1132,17 +928,12 @@ Both systems can express the classic proof that there are infinitely many primes
 5. If `k <= a`, then `k` divides the product, so `product + 1` has remainder `1` modulo `k`, contradicting that `k` divides it.
 6. Therefore `k > a`.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>prop prime(a N_pos):
-    2 &lt;= a
+<!-- litex:skip-test -->
+```litex
+prop prime(a N_pos):
+    2 <= a
     forall b N_pos:
-        2 &lt;= b &lt; a
+        2 <= b < a
         =>:
             a % b != 0
 
@@ -1150,33 +941,34 @@ claim:
     prove:
         forall a N_pos:
             forall n, k N_pos:
-                k &lt;= n
+                k <= n
                 =>:
                     product(1, n, fn(x N_pos) N_pos {x}) % k = 0
             forall n N_pos:
-                2 &lt;= n
+                2 <= n
                 =>:
-                    exist k N_pos st {&#36;prime(k), n % k = 0}
+                    exist k N_pos st {$prime(k), n % k = 0}
             forall n N_pos:
-                n &lt;= product(1, n, fn(x N_pos) N_pos {x})
-            2 &lt;= a
+                n <= product(1, n, fn(x N_pos) N_pos {x})
+            2 <= a
             =>:
-                exist k N_pos st {k > a, &#36;prime(k)}
-    2 &lt;= a &lt;= product(1, a, fn(x N_pos) N_pos {x}) &lt;= product(1, a, fn(x N_pos) N_pos {x}) + 1
-    obtain k from exist k N_pos st {&#36;prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+                exist k N_pos st {k > a, $prime(k)}
+    2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
+    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
     by cases k > a:
-        case k &lt;= a:
+        case k <= a:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
         case k > a:
             do_nothing
-    witness exist k N_pos st {k > a, &#36;prime(k)} from k</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+    witness exist k N_pos st {k > a, $prime(k)} from k
+```
+
+```lean
+import Mathlib
 example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
-  have hN0 : 0 &lt; N ! := by exact Nat.factorial_pos N
+  have hN0 : 0 < N ! := by exact Nat.factorial_pos N
   have hN2 : 2 ≤ N ! + 1 := by omega
   obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Nat.Prime p ∧ p ∣ N ! + 1 :=
     Nat.exists_prime_and_dvd hN2
@@ -1189,10 +981,8 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
       have hp_dvd_sum : p ∣ (N ! + 1) - N ! := Nat.dvd_sub hpN hp_dvd_factorial
       simpa using hp_dvd_sum
     exact Nat.Prime.not_dvd_one hp hp_dvd_one
-  · exact hp</code></pre>
-    </td>
-  </tr>
-</table>
+  · exact hp
+```
 
 **What differs.** Litex puts the background lemmas in the premise of the `claim` and keeps the final argument as a direct proof spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
 
@@ -1259,6 +1049,85 @@ Use Litex when you want:
 Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine, backed by a rich library and a large expert community; Litex tries to make common mathematical reasoning feel direct.
 
 ---
+
+## Ongoing Project: Compiling Litex To Lean
+
+The current bridge runs the Litex verifier first, because later facts depend on
+the verified context and inference produced by earlier statements:
+
+```text
+Litex source
+  -> execute and verify with Litex
+  -> retain supported verified statements
+  -> emit named Lean theorems
+  -> ask Lean and Mathlib to check the generated file
+```
+
+The following pairs show the current mapping. The examples omit the generated
+`import Mathlib` and namespace wrapper.
+
+### Closed Fact
+
+Litex:
+
+```text
+1 + 1 = 2
+```
+
+Generated Lean:
+
+```text
+theorem litex_fact_1 : ((1 : ℝ) + (1 : ℝ)) = (2 : ℝ) := by
+  nlinarith
+```
+
+### Universal Fact With A Premise
+
+Litex:
+
+```text
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+```
+
+Generated Lean:
+
+```text
+theorem litex_fact_1 : ∀(x : ℝ) (_h1 : x = (2 : ℝ)),
+    (x + (1 : ℝ)) = (3 : ℝ) := by
+  intro x h1
+  nlinarith
+```
+
+### Named Theorem
+
+Litex:
+
+```text
+thm add_comm:
+    prove:
+        forall a, b R:
+            a + b = b + a
+    a + b = b + a
+```
+
+Generated Lean:
+
+```text
+theorem add_comm (a b : ℝ) : (a + b) = (b + a) := by
+  have litex_fact_1 : (a + b) = (b + a) := by
+    nlinarith
+  nlinarith
+```
+
+The MVP currently reconstructs a Lean proof from statement shape. Litex's
+human-readable messages are not yet machine-readable proof certificates, so
+faithful replay will need fact IDs, rule IDs, scope IDs, and dependency traces.
+Unsupported or explicitly trusted forms are rejected instead of hidden behind
+`sorry`, `admit`, or generated axioms. Sets, functions, complete module
+translation, and exact proof-path replay remain future work.
 
 ## Appendix: Foundations And Design Intent
 

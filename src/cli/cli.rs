@@ -68,9 +68,14 @@ pub fn run_cli() {
                     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
                 if summarize_output {
                     output.1.push('\n');
-                    output
-                        .1
-                        .push_str(display_run_summary_json(&stmt_results, &runtime_error).as_str());
+                    output.1.push_str(
+                        display_run_summary_json_with_runtime(
+                            &runtime,
+                            &stmt_results,
+                            &runtime_error,
+                        )
+                        .as_str(),
+                    );
                     output.1.push('\n');
                 }
                 println!("{}", output.1.trim());
