@@ -95,6 +95,8 @@ pub enum ProofBlockStmt {
 #[derive(Clone)]
 pub enum CommandStmt {
     ImportStmt(ImportStmt),
+    ExportStmt(ExportStmt),
+    LocalImportStmt(LocalImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     StopImportStmt(StopImportStmt),

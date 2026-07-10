@@ -34,11 +34,13 @@ impl Runtime {
     > {
         let lookup_key = given_or_fact.key();
 
-        let envs_count = self.environment_stack.len();
+        let envs_count = self.environment_count();
         for i in iterate_from_env_index..envs_count {
-            let stack_idx = envs_count - 1 - i;
+            let stack_idx = i;
             let known_forall_facts_count = {
-                let env = &self.environment_stack[stack_idx];
+                let env = self
+                    .environment_by_top_index(stack_idx)
+                    .expect("environment index should be valid");
                 match env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
                     Some(v) => v.len(),
                     None => continue,
@@ -52,7 +54,9 @@ impl Runtime {
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let current_known_forall = {
-                    let env = &self.environment_stack[stack_idx];
+                    let env = self
+                        .environment_by_top_index(stack_idx)
+                        .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) =
                         env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
                     else {

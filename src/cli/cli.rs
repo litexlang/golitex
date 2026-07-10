@@ -1,12 +1,14 @@
 use crate::prelude::*;
-use crate::to_latex::to_latex_from_source_after_builtins;
-use crate::to_python::to_python_from_source_after_builtins;
+use crate::to_latex::{
+    to_latex_from_repository_after_builtins, to_latex_from_source_after_builtins,
+};
+use crate::to_python::{
+    to_python_from_repository_after_builtins, to_python_from_source_after_builtins,
+};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
-
-pub const MAIN_DOT_LIT: &str = "main.lit";
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
@@ -110,16 +112,8 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let joined = Path::new(repo_path.as_str()).join(MAIN_DOT_LIT);
-                let joined_string = match joined.to_str() {
-                    Some(path_string) => path_string.to_string(),
-                    None => {
-                        eprintln!("Error: repo path is not valid UTF-8");
-                        process::exit(1);
-                    }
-                };
-                main_flag_file(
-                    joined_string.as_str(),
+                main_flag_repo(
+                    repo_path.as_str(),
                     detail_output,
                     strict_mode,
                     output_language,
@@ -241,15 +235,7 @@ pub fn run_cli() {
                                     process::exit(2);
                                 }
                             };
-                        let joined = Path::new(repo_path.as_str()).join(MAIN_DOT_LIT);
-                        let joined_string = match joined.to_str() {
-                            Some(path_string) => path_string.to_string(),
-                            None => {
-                                eprintln!("Error: repo path is not valid UTF-8");
-                                process::exit(1);
-                            }
-                        };
-                        compile_file_to_latex(joined_string.as_str(), output_language)
+                        compile_repo_to_latex(repo_path.as_str(), output_language)
                     }
                     _ => {
                         eprintln!(
@@ -307,15 +293,7 @@ pub fn run_cli() {
                                     process::exit(2);
                                 }
                             };
-                        let joined = Path::new(repo_path.as_str()).join(MAIN_DOT_LIT);
-                        let joined_string = match joined.to_str() {
-                            Some(path_string) => path_string.to_string(),
-                            None => {
-                                eprintln!("Error: repo path is not valid UTF-8");
-                                process::exit(1);
-                            }
-                        };
-                        compile_file_to_python(joined_string.as_str(), output_language)
+                        compile_repo_to_python(repo_path.as_str(), output_language)
                     }
                     _ => {
                         eprintln!(
@@ -515,6 +493,24 @@ fn main_flag_file(
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
+fn main_flag_repo(
+    repo_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize_output: bool,
+) {
+    let path = remove_windows_carriage_return(repo_path);
+    let output = run_source_code_in_repository_for_cli_with_summary_and_language(
+        path.as_str(),
+        detail_output,
+        strict_mode,
+        output_language,
+        summarize_output,
+    );
+    println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+}
+
 fn main_flag_runner(
     args: &[String],
     index: &mut usize,
@@ -678,6 +674,17 @@ fn compile_file_to_latex(file_path: &str, output_language: OutputLanguage) -> St
     }
 }
 
+fn compile_repo_to_latex(repo_path: &str, output_language: OutputLanguage) -> String {
+    match to_latex_from_repository_after_builtins(repo_path) {
+        Ok(output) => output,
+        Err(error) => {
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
+            display_runtime_error_json(&runtime, &error, true)
+        }
+    }
+}
+
 fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
     match to_python_from_source_after_builtins(code.as_str(), "-python -e") {
@@ -701,6 +708,17 @@ fn compile_file_to_python(file_path: &str, output_language: OutputLanguage) -> S
             let mut runtime = Runtime::new();
             runtime.output_language = output_language;
             display_runtime_error_json(&runtime, &e, true)
+        }
+    }
+}
+
+fn compile_repo_to_python(repo_path: &str, output_language: OutputLanguage) -> String {
+    match to_python_from_repository_after_builtins(repo_path) {
+        Ok(output) => output,
+        Err(error) => {
+            let mut runtime = Runtime::new();
+            runtime.output_language = output_language;
+            display_runtime_error_json(&runtime, &error, true)
         }
     }
 }

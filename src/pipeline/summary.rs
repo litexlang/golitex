@@ -76,8 +76,12 @@ impl RunSummary {
         runtime_error: &Option<RuntimeError>,
     ) -> RunSummary {
         let mut summary = Self::from_run(stmt_results, runtime_error);
-        if let Some(environment) = runtime.environment_stack.last() {
-            summary.main_environment = Some(EnvironmentSummary::from_environment(environment));
+        if let Some(entry_module_id) = runtime.module_manager.entry_module_id {
+            if let Some(module) = runtime.module_manager.module(entry_module_id) {
+                summary.main_environment = Some(EnvironmentSummary::from_environment(
+                    module.main_environment.as_ref(),
+                ));
+            }
         }
         summary
     }
@@ -149,7 +153,8 @@ impl RunSummary {
             Stmt::ProofBlock(_) => {
                 self.proof_blocks += 1;
             }
-            Stmt::Command(CommandStmt::ImportStmt(_)) => {
+            Stmt::Command(CommandStmt::ImportStmt(_))
+            | Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
                 self.import_statements += 1;
             }
             _ => {}

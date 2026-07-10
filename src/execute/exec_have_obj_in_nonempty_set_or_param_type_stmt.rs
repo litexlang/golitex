@@ -45,7 +45,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = if self.only_exec_affect_environment {
+        let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(&stmt.param_def, ParamObjType::Identifier)
         } else {
             self.define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)

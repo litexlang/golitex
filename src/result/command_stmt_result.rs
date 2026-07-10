@@ -3,6 +3,8 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum CommandStmtResult {
     ImportStmt(NonFactualStmtSuccess),
+    ExportStmt(NonFactualStmtSuccess),
+    LocalImportStmt(NonFactualStmtSuccess),
     DoNothingStmt(NonFactualStmtSuccess),
     ClearStmt(NonFactualStmtSuccess),
     StopImportStmt(NonFactualStmtSuccess),
@@ -17,6 +19,10 @@ impl CommandStmtResult {
     pub fn new(success: NonFactualStmtSuccess) -> Self {
         match &success.stmt {
             Stmt::Command(CommandStmt::ImportStmt(_)) => CommandStmtResult::ImportStmt(success),
+            Stmt::Command(CommandStmt::ExportStmt(_)) => CommandStmtResult::ExportStmt(success),
+            Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
+                CommandStmtResult::LocalImportStmt(success)
+            }
             Stmt::Command(CommandStmt::DoNothingStmt(_)) => {
                 CommandStmtResult::DoNothingStmt(success)
             }
@@ -40,6 +46,8 @@ impl CommandStmtResult {
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::ExportStmt(success)
+            | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::StopImportStmt(success)
@@ -54,6 +62,8 @@ impl CommandStmtResult {
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::ExportStmt(success)
+            | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::StopImportStmt(success)
@@ -68,6 +78,8 @@ impl CommandStmtResult {
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::ExportStmt(success)
+            | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::StopImportStmt(success)

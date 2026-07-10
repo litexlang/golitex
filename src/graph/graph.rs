@@ -1,11 +1,9 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::Path;
 
 const GRAPH_NAME: &str = "litex-relation-graph";
 const GRAPH_VERSION: &str = "0.1";
-const MAIN_DOT_LIT: &str = "main.lit";
 
 #[derive(Clone)]
 struct GraphNode {
@@ -149,19 +147,43 @@ pub fn run_graph_for_repo_with_strict_and_language(
     strict_mode: bool,
     _output_language: OutputLanguage,
 ) -> (bool, String) {
-    let joined = Path::new(repo_path).join(MAIN_DOT_LIT);
-    let joined_string = match joined.to_str() {
-        Some(path_string) => path_string.to_string(),
-        None => {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = !hide_file_paths;
+    runtime.strict_mode = strict_mode;
+    let main_file_path = match discover_repository(&mut runtime, repo_path) {
+        Ok(path) => path,
+        Err(error) => {
+            return render_graph_result(
+                "repo",
+                repo_path,
+                hide_file_paths,
+                runtime,
+                vec![],
+                Some(error),
+            );
+        }
+    };
+    let source_code = match fs::read_to_string(&main_file_path) {
+        Ok(content) => content,
+        Err(error) => {
             return graph_target_error_output(
                 "repo",
                 repo_path,
                 hide_file_paths,
-                "repo path is not valid UTF-8".to_string(),
+                format!("could not read repository main.lit: {}", error),
             );
         }
     };
-    run_graph_for_file_with_strict(joined_string.as_str(), hide_file_paths, strict_mode)
+    let normalized_source = remove_windows_carriage_return(&source_code);
+    let (stmt_results, runtime_error) = run_source_code(&normalized_source, &mut runtime);
+    render_graph_result(
+        "repo",
+        repo_path,
+        hide_file_paths,
+        runtime,
+        stmt_results,
+        runtime_error,
+    )
 }
 
 fn run_graph_on_source(
@@ -178,6 +200,24 @@ fn run_graph_on_source(
     runtime.strict_mode = strict_mode;
 
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+    render_graph_result(
+        target_kind,
+        target_label,
+        hide_file_paths,
+        runtime,
+        stmt_results,
+        runtime_error,
+    )
+}
+
+fn render_graph_result(
+    target_kind: &str,
+    target_label: &str,
+    hide_file_paths: bool,
+    runtime: Runtime,
+    stmt_results: Vec<StmtResult>,
+    runtime_error: Option<RuntimeError>,
+) -> (bool, String) {
     let ok = runtime_error.is_none();
     let graph = GraphBuilder::from_stmt_results(&stmt_results);
     let mut fields = vec![

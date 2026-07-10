@@ -1,9 +1,144 @@
 use crate::prelude::*;
-use std::rc::Rc;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
-        self.environment_stack.iter().rev().map(|env| env.as_ref())
+        (0..self.environment_count()).map(|index| {
+            self.environment_by_top_index(index)
+                .expect("environment index should be valid")
+        })
+    }
+
+    pub fn environment_count(&self) -> usize {
+        let frame = self
+            .execution_stack
+            .last()
+            .expect("an execution frame should always exist");
+        let local_count = frame.local_environment_stack.len();
+        match frame.layer {
+            ExecutionLayer::Builtin => local_count + 1,
+            ExecutionLayer::Main => {
+                let module = self
+                    .module_manager
+                    .module(frame.module_id.expect("module frame requires a module"))
+                    .expect("current module should exist");
+                let ordinary_file_count = module
+                    .file_environments
+                    .iter()
+                    .filter(|file| {
+                        file.kind == FileEnvironmentKind::Ordinary
+                            && file.status == FileStatus::Loaded
+                    })
+                    .count();
+                local_count + ordinary_file_count + 2
+            }
+            ExecutionLayer::File(current_file_id) => {
+                let module = self
+                    .module_manager
+                    .module(frame.module_id.expect("module frame requires a module"))
+                    .expect("current module should exist");
+                let other_ordinary_file_count = module
+                    .file_environments
+                    .iter()
+                    .filter(|file| {
+                        file.id != current_file_id
+                            && file.kind == FileEnvironmentKind::Ordinary
+                            && file.status == FileStatus::Loaded
+                    })
+                    .count();
+                local_count + 1 + other_ordinary_file_count + 2
+            }
+        }
+    }
+
+    pub fn environment_by_top_index(&self, index: usize) -> Option<&Environment> {
+        let frame = self.execution_stack.last()?;
+        let local_count = frame.local_environment_stack.len();
+        if index < local_count {
+            return frame
+                .local_environment_stack
+                .get(local_count - 1 - index)
+                .map(|environment| environment.as_ref());
+        }
+        let layer_index = index - local_count;
+        match frame.layer {
+            ExecutionLayer::Builtin => {
+                if layer_index == 0 {
+                    Some(self.module_manager.builtin_environment.as_ref())
+                } else {
+                    None
+                }
+            }
+            ExecutionLayer::Main => {
+                let module = self.module_manager.module(frame.module_id?)?;
+                let ordinary_files = module
+                    .file_environments
+                    .iter()
+                    .filter(|file| {
+                        file.kind == FileEnvironmentKind::Ordinary
+                            && file.status == FileStatus::Loaded
+                    })
+                    .collect::<Vec<&FileEnvironment>>();
+                let file_count = ordinary_files.len();
+                if layer_index < file_count {
+                    return ordinary_files
+                        .get(file_count - 1 - layer_index)
+                        .map(|file| file.environment.as_ref());
+                }
+                if layer_index == file_count {
+                    return Some(module.main_environment.as_ref());
+                }
+                if layer_index == file_count + 1 {
+                    return Some(self.module_manager.builtin_environment.as_ref());
+                }
+                None
+            }
+            ExecutionLayer::File(current_file_id) => {
+                let module = self.module_manager.module(frame.module_id?)?;
+                let current_file = module.file_environment(current_file_id)?;
+                let other_ordinary_files = module
+                    .file_environments
+                    .iter()
+                    .filter(|file| {
+                        file.id != current_file_id
+                            && file.kind == FileEnvironmentKind::Ordinary
+                            && file.status == FileStatus::Loaded
+                    })
+                    .collect::<Vec<&FileEnvironment>>();
+                let current_file_count = 1;
+                let file_count = current_file_count + other_ordinary_files.len();
+                if layer_index == 0 {
+                    return Some(current_file.environment.as_ref());
+                }
+                if layer_index < file_count {
+                    return other_ordinary_files
+                        .iter()
+                        .rev()
+                        .nth(layer_index - 1)
+                        .map(|file| file.environment.as_ref());
+                }
+                if layer_index == file_count {
+                    return Some(module.main_environment.as_ref());
+                }
+                if layer_index == file_count + 1 {
+                    return Some(self.module_manager.builtin_environment.as_ref());
+                }
+                None
+            }
+        }
+    }
+
+    pub fn environment_is_builtin_by_top_index(&self, index: usize) -> bool {
+        self.environment_by_top_index(index)
+            .is_some_and(|environment| {
+                std::ptr::eq(
+                    environment,
+                    self.module_manager.builtin_environment.as_ref(),
+                )
+            })
+    }
+
+    pub fn builtin_environment(&self) -> &Environment {
+        self.module_manager.builtin_environment.as_ref()
     }
 
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
@@ -257,8 +392,9 @@ impl Runtime {
                 .cloned();
         }
 
-        self.active_imported_module_environment(module_name)
-            .and_then(|env| env.known_objs_in_fn_sets.get(local_name).cloned())
+        self.active_imported_module_environments(module_name)
+            .into_iter()
+            .find_map(|env| env.known_objs_in_fn_sets.get(local_name).cloned())
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
@@ -298,7 +434,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(local_name) {
                     return Some(known_cart_obj.clone());
                 }
@@ -319,7 +455,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
                 {
                     return Some(set_builder.clone());
@@ -336,7 +472,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((Some(known_tuple_obj), _, _)) =
                     env.known_objs_equal_to_tuple.get(local_name)
                 {
@@ -354,7 +490,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((known_list, _, _)) =
                     env.known_objs_equal_to_finite_seq_list.get(local_name)
                 {
@@ -372,7 +508,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((_, member_of, _)) =
                     env.known_objs_equal_to_finite_seq_list.get(local_name)
                 {
@@ -390,7 +526,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((known_matrix, _, _)) =
                     env.known_objs_equal_to_matrix_list.get(local_name)
                 {
@@ -408,7 +544,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(local_name)
                 {
                     return member_of.clone();
@@ -425,7 +561,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some(cart) = env.known_objs_equal_to_tuple.get(local_name) {
                     return cart.1.clone();
                 }
@@ -442,7 +578,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some(KnownObjValue::SimplifiedNumber(number)) =
                     env.known_obj_values.get(local_name)
                 {
@@ -463,7 +599,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
+            for env in self.active_imported_module_environments(module_name) {
                 if let Some(known_value) = env.known_obj_values.get(local_name) {
                     return match known_value {
                         KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
@@ -476,51 +612,58 @@ impl Runtime {
     }
 
     pub fn get_all_objs_equal_to_given(&self, given: &str) -> Vec<String> {
-        let mut result = vec![];
-        for env in self.iter_environments_from_top() {
-            result.extend(Self::get_all_objs_equal_to_given_in_environment(env, given));
-        }
-
-        result
+        let environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        Self::get_all_objs_equal_to_given_in_environments(&environments, given)
     }
 
     pub fn get_all_obj_representatives_equal_to_given(&self, given: &Obj) -> Vec<Obj> {
         let given_key = given.to_string();
         let mut result = Vec::new();
-        for env in self.iter_environments_from_top() {
-            Self::extend_obj_representatives_equal_to_given_in_environment(
-                &mut result,
-                env,
-                &given_key,
-            );
-        }
+        let environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        Self::extend_obj_representatives_equal_to_given_in_environments(
+            &mut result,
+            &environments,
+            std::slice::from_ref(&given_key),
+        );
 
         if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
-                Self::extend_obj_representatives_equal_to_given_in_environment(
-                    &mut result,
-                    env.as_ref(),
-                    local_name,
-                );
-            }
+            let environments = self.active_imported_module_environments(module_name);
+            Self::extend_obj_representatives_equal_to_given_in_environments(
+                &mut result,
+                &environments,
+                &[given_key.clone(), local_name.to_string()],
+            );
         }
 
         result.retain(|obj| obj.to_string() != given_key);
         result
     }
 
-    fn extend_obj_representatives_equal_to_given_in_environment(
+    fn extend_obj_representatives_equal_to_given_in_environments(
         result: &mut Vec<Obj>,
-        environment: &Environment,
-        given: &str,
+        environments: &[&Environment],
+        initial_keys: &[String],
     ) {
-        if let Some((_, equiv_class_members_rc)) = environment.known_equality.get(given) {
-            for obj in equiv_class_members_rc.iter() {
-                if !result
-                    .iter()
-                    .any(|known_obj: &Obj| known_obj.to_string() == obj.to_string())
-                {
-                    result.push(obj.clone());
+        let mut keys = initial_keys.to_vec();
+        let mut next_index = 0;
+        while next_index < keys.len() {
+            let current = keys[next_index].clone();
+            next_index += 1;
+            for environment in environments {
+                let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+                    continue;
+                };
+                for object in equivalent_objects.iter() {
+                    let object_key = object.to_string();
+                    if !keys.contains(&object_key) {
+                        keys.push(object_key.clone());
+                    }
+                    if !result
+                        .iter()
+                        .any(|known_obj: &Obj| known_obj.to_string() == object_key)
+                    {
+                        result.push(object.clone());
+                    }
                 }
             }
         }
@@ -530,38 +673,110 @@ impl Runtime {
         environment: &Environment,
         given: &str,
     ) -> Vec<String> {
-        let mut result = vec![];
-        if let Some((_, equiv_class_members_rc)) = environment.known_equality.get(given) {
-            for obj in equiv_class_members_rc.iter() {
-                result.push(obj.to_string());
+        Self::get_all_objs_equal_to_given_in_environments(&[environment], given)
+    }
+
+    pub(crate) fn get_all_objs_equal_to_given_in_environments(
+        environments: &[&Environment],
+        given: &str,
+    ) -> Vec<String> {
+        let mut result = vec![given.to_string()];
+        let mut next_index = 0;
+        let mut found_equality = false;
+
+        while next_index < result.len() {
+            let current = result[next_index].clone();
+            next_index += 1;
+            for environment in environments {
+                let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+                    continue;
+                };
+                found_equality = true;
+                for object in equivalent_objects.iter() {
+                    let object_key = object.to_string();
+                    if !result.contains(&object_key) {
+                        result.push(object_key);
+                    }
+                }
             }
         }
-        result
-    }
 
-    pub fn imported_module_environment(&self, module_name: &str) -> Option<Rc<Environment>> {
-        self.module_manager
-            .borrow()
-            .imported_modules
-            .get(module_name)
-            .map(|module| Rc::clone(&module.environment))
-    }
-
-    pub fn active_imported_module_environment(&self, module_name: &str) -> Option<Rc<Environment>> {
-        if self
-            .module_manager
-            .borrow()
-            .imported_module_is_stopped(module_name)
-        {
-            return None;
+        if found_equality {
+            result
+        } else {
+            vec![]
         }
-        self.imported_module_environment(module_name)
+    }
+
+    pub fn imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
+        if self.is_current_parse_module(module_name) {
+            return vec![];
+        }
+        let active_local_target = self.active_local_import(module_name);
+        let target = active_local_target.or_else(|| {
+            self.module_manager
+                .import_target_by_canonical_name(module_name)
+        });
+        match target {
+            Some(ImportTarget::Module(module_id)) => {
+                let Some(module) = self.module_manager.module(module_id) else {
+                    return vec![];
+                };
+                let mut environments = module
+                    .file_environments
+                    .iter()
+                    .rev()
+                    .filter(|file| {
+                        file.kind == FileEnvironmentKind::Ordinary
+                            && file.status == FileStatus::Loaded
+                    })
+                    .map(|file| file.environment.as_ref())
+                    .collect::<Vec<&Environment>>();
+                environments.push(module.main_environment.as_ref());
+                environments
+            }
+            Some(ImportTarget::File { module_id, file_id }) => {
+                if active_local_target.is_none() && !module_name.contains(MOD_SIGN) {
+                    return vec![];
+                }
+                self.module_manager
+                    .module(module_id)
+                    .and_then(|module| module.file_environment(file_id))
+                    .filter(|file| file.status == FileStatus::Loaded)
+                    .map(|file| vec![file.environment.as_ref()])
+                    .unwrap_or_default()
+            }
+            None => vec![],
+        }
+    }
+
+    pub fn active_imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
+        if self.module_manager.imported_module_is_stopped(module_name) {
+            return vec![];
+        }
+        self.imported_module_environments(module_name)
     }
 
     pub fn is_current_parse_module(&self, module_name: &str) -> bool {
-        let module_manager = self.module_manager.borrow();
-        !module_manager.current_module_name.is_empty()
-            && module_manager.current_module_name == module_name
+        self.current_parse_namespace()
+            .is_some_and(|current_name| current_name == module_name)
+    }
+
+    pub fn current_parse_namespace(&self) -> Option<&str> {
+        let frame = self.execution_stack.last()?;
+        let module = self.module_manager.module(frame.module_id?)?;
+        match frame.layer {
+            ExecutionLayer::Builtin => None,
+            ExecutionLayer::Main => {
+                (!module.module_name.is_empty()).then_some(module.module_name.as_str())
+            }
+            ExecutionLayer::File(file_id) => module
+                .file_environment(file_id)
+                .and_then(|file| file.canonical_name.as_deref())
+                .or_else(|| {
+                    (!module.module_name.is_empty()).then_some(module.module_name.as_str())
+                }),
+        }
     }
 
     pub fn atomic_fact_referenced_module_names(&self, atomic_fact: &AtomicFact) -> Vec<String> {
@@ -667,12 +882,8 @@ fn module_qualified_obj_name(obj: &Obj) -> Option<(&str, &str)> {
 }
 
 fn split_module_qualified_key(key: &str) -> Option<(&str, &str)> {
-    let parts = key.split(MOD_SIGN).collect::<Vec<&str>>();
-    if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
-        Some((parts[0], parts[1]))
-    } else {
-        None
-    }
+    key.rsplit_once(MOD_SIGN)
+        .filter(|(module_name, local_name)| !module_name.is_empty() && !local_name.is_empty())
 }
 
 fn collect_module_name_from_atomic_name(name: &AtomicName, module_names: &mut Vec<String>) {

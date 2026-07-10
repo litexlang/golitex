@@ -3807,13 +3807,15 @@ do_nothing
 Purpose: load, stop, or clear external environments.  These examples are syntax
 only because they depend on local files or installed modules.
 
-- Well-definedness / structural checks: `import` and `run_file` resolve module
-  or file paths; `stop import` requires an already imported module; `clear` has
-  no structural checks.
+- Well-definedness / structural checks: repository `export` declarations and
+  `local_import` bindings are validated during discovery; `import` resolves a
+  module and `run_file` resolves a file path; `stop import` requires an already
+  imported module; `clear` has no structural checks.
 - Truth verification: imported or run files verify normally when loaded.
-- Environment effects: module/file commands update the module manager or
-  current environment; `clear` removes the current user environment but leaves
-  imported modules registered and active. `stop import` is the explicit global
+- Environment effects: module/file commands update the module manager or a
+  separate module-owned file environment; `clear` removes the current user and
+  ordinary file environments but preserves manifest export nodes. Imported
+  modules remain registered and active. `stop import` is the explicit global
   command for disabling an imported module.
 
 <!-- litex:skip-test -->

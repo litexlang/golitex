@@ -66,6 +66,8 @@ impl Runtime {
                 ),
             ))),
             IMPORT => self.parse_import_stmt(tb),
+            EXPORT => self.parse_export_stmt(tb),
+            LOCAL_IMPORT => self.parse_local_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
             RUN_FILE => self.parse_run_file_stmt(tb),
