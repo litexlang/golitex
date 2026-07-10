@@ -134,8 +134,6 @@ impl fmt::Display for CommandStmt {
             CommandStmt::LocalImportStmt(x) => write!(f, "{}", x),
             CommandStmt::DoNothingStmt(x) => write!(f, "{}", x),
             CommandStmt::ClearStmt(x) => write!(f, "{}", x),
-            CommandStmt::StopImportStmt(x) => write!(f, "{}", x),
-            CommandStmt::RunFileStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalByStmt(x) => write!(f, "{}", x),
             CommandStmt::UseStrategyStmt(x) => write!(f, "{}", x),

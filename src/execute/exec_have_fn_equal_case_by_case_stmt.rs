@@ -217,32 +217,6 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_fn_equal_case_by_case_stmt_affect_environment_only(
-        &mut self,
-        have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let fn_set_stored = self
-            .fn_set_from_fn_set_clause(&have_fn_equal_case_by_case_stmt.fn_set_clause)
-            .map_err(|e| {
-                short_exec_error(
-                    have_fn_equal_case_by_case_stmt.clone().into(),
-                    "have_fn_equal_case_by_case_stmt: build fn set for storage failed".to_string(),
-                    Some(e),
-                    vec![],
-                )
-            })?;
-        let infer_result = self.exec_have_fn_equal_case_by_case_stmt_affect_environment(
-            have_fn_equal_case_by_case_stmt,
-            &fn_set_stored,
-        )?;
-        Ok(NonFactualStmtSuccess::new(
-            have_fn_equal_case_by_case_stmt.clone().into(),
-            infer_result,
-            vec![],
-        )
-        .into())
-    }
-
     fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,

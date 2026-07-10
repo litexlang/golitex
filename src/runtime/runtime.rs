@@ -136,22 +136,6 @@ impl Runtime {
         self.execution_stack.pop();
     }
 
-    pub fn current_file_load_mode(&self) -> Option<FileLoadMode> {
-        let frame = self.execution_stack.last()?;
-        let ExecutionLayer::File(file_id) = frame.layer else {
-            return None;
-        };
-        let module_id = frame.module_id?;
-        self.module_manager
-            .module(module_id)?
-            .file_environment(file_id)
-            .map(|file| file.mode)
-    }
-
-    pub fn current_execution_is_trusted_file(&self) -> bool {
-        self.current_file_load_mode() == Some(FileLoadMode::Trust)
-    }
-
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
         self.strict_mode
             && self
@@ -275,6 +259,21 @@ impl Runtime {
             }
         }
     }
+
+    /// Rebuild the module registry between independent runner items while reusing builtins.
+    #[cfg(test)]
+    pub(crate) fn reset_for_isolated_runner_item(&mut self) {
+        let path = self.current_file_path_rc().to_string();
+        let mut module_manager = Box::new(ModuleManager::new(path.as_str()));
+        std::mem::swap(
+            &mut module_manager.builtin_environment,
+            &mut self.module_manager.builtin_environment,
+        );
+        self.module_manager = module_manager;
+        self.execution_stack = vec![ExecutionFrame::new_builtin()];
+        self.parsing_free_param_collection.clear();
+        self.new_file_path_new_env_new_name_scope(path.as_str());
+    }
 }
 
 impl Runtime {
@@ -356,9 +355,6 @@ impl Runtime {
                         ExecutionLayer::Builtin => {}
                         ExecutionLayer::Main => {
                             module.main_environment = Box::new(Environment::new_empty_env());
-                            module
-                                .file_environments
-                                .retain(|file| file.kind == FileEnvironmentKind::Exported);
                         }
                         ExecutionLayer::File(file_id) => {
                             if let Some(file) = module.file_environment_mut(file_id) {
@@ -370,13 +366,6 @@ impl Runtime {
             }
         }
         self.parsing_free_param_collection.clear();
-    }
-
-    /// Reset an isolated runner item while preserving the user-facing `clear`
-    /// semantics. Markdown/dataset runners use this to keep snippets independent.
-    pub fn clear_current_env_parse_name_scope_and_stop_imports(&mut self) {
-        self.clear_current_env_and_parse_name_scope();
-        self.module_manager.stop_all_imported_modules();
     }
 
     pub fn has_user_env(&self) -> bool {

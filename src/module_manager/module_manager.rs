@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 // Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
@@ -206,7 +206,7 @@ impl ModuleManager {
         self.module(id)
     }
 
-    pub fn imported_module_can_be_loaded_or_reactivated(
+    pub fn imported_module_can_be_loaded(
         &self,
         module_name: &str,
         absolute_path: &str,
@@ -360,66 +360,6 @@ impl ModuleManager {
         }
         if let Some(module) = self.modules.get_mut(&importing) {
             module.record_import(imported);
-        }
-    }
-
-    pub fn reactivate_imported_module(&mut self, module_id: ModuleId) {
-        let mut visited_modules = HashSet::new();
-        self.reactivate_imported_module_with_dependencies(module_id, &mut visited_modules);
-    }
-
-    fn reactivate_imported_module_with_dependencies(
-        &mut self,
-        module_id: ModuleId,
-        visited_modules: &mut HashSet<ModuleId>,
-    ) {
-        if !visited_modules.insert(module_id) {
-            return;
-        }
-        let dependencies = match self.modules.get_mut(&module_id) {
-            Some(module) => {
-                module.status = ModuleStatus::Loaded;
-                module.imports.clone()
-            }
-            None => return,
-        };
-        for dependency in dependencies {
-            self.reactivate_imported_module_with_dependencies(dependency, visited_modules);
-        }
-    }
-
-    pub fn stop_imported_module(&mut self, module_name: &str) -> Result<(), String> {
-        let Some(module_id) = self.module_id_by_name(module_name) else {
-            return Err(format!("module `{}` has not been imported", module_name));
-        };
-        let Some(module) = self.modules.get_mut(&module_id) else {
-            unreachable!("module name index points to a missing module")
-        };
-        if module.status == ModuleStatus::Discovered {
-            return Err(format!("module `{}` has not been imported", module_name));
-        }
-        module.status = ModuleStatus::Stopped;
-        Ok(())
-    }
-
-    pub fn stop_all_imported_modules(&mut self) {
-        let entry_module_id = self.entry_module_id;
-        for module in self.modules.values_mut() {
-            if Some(module.id) != entry_module_id && module.status == ModuleStatus::Loaded {
-                module.status = ModuleStatus::Stopped;
-            }
-        }
-    }
-
-    pub fn imported_module_is_stopped(&self, module_name: &str) -> bool {
-        match self.import_target_by_canonical_name(module_name) {
-            Some(ImportTarget::Module(module_id)) => self
-                .module(module_id)
-                .is_some_and(|module| module.status == ModuleStatus::Stopped),
-            Some(ImportTarget::File { module_id, .. }) => self
-                .module(module_id)
-                .is_some_and(|module| module.status == ModuleStatus::Stopped),
-            None => false,
         }
     }
 

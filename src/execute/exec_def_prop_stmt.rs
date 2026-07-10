@@ -69,14 +69,6 @@ impl Runtime {
         self.store_def_prop(def_prop_stmt)?;
         Ok(InferResult::new())
     }
-
-    pub(crate) fn exec_def_prop_stmt_affect_environment_only(
-        &mut self,
-        def_prop_stmt: &DefPropStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
-        Ok(NonFactualStmtSuccess::new(def_prop_stmt.clone().into(), infer_result, vec![]).into())
-    }
 }
 
 fn def_prop_name_already_used_error(name: &str, existing_namespace: &str) -> RuntimeError {

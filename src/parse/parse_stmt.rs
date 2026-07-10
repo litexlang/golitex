@@ -41,9 +41,8 @@ impl Runtime {
             STRATEGY => self.parse_def_strategy_stmt(tb),
             USE => self.parse_use_strategy_stmt(tb),
             STOP => match tb.token_at_add_index(1) {
-                IMPORT => self.parse_stop_import_stmt(tb),
                 STRATEGY => self.parse_stop_strategy_stmt(tb),
-                _ => Err(parse_stmt_error(tb, "stop: expected `import` or `strategy`")),
+                _ => Err(parse_stmt_error(tb, "stop: expected `strategy`")),
             },
             SKETCH => self.parse_sketch_stmt(tb),
             TRY => self.parse_try_stmt(tb),
@@ -70,8 +69,6 @@ impl Runtime {
             LOCAL_IMPORT => self.parse_local_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
-            RUN_FILE => self.parse_run_file_stmt(tb),
-            TRUST_FILE => self.parse_trust_file_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
@@ -121,7 +118,7 @@ mod parse_stmt_diagnostic_tests {
                 "have: expected object definition, `fn`, or `by preimage`",
             ),
             ("have by", "have by: expected `preimage`"),
-            ("stop", "stop: expected `import` or `strategy`"),
+            ("stop", "stop: expected `strategy`"),
         ];
 
         for (source_code, expected_message) in cases {

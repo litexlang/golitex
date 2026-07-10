@@ -8,18 +8,6 @@ pub struct ModuleId(pub usize);
 pub struct FileEnvId(pub usize);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FileLoadMode {
-    Run,
-    Trust,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FileEnvironmentKind {
-    Ordinary,
-    Exported,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileStatus {
     Unloaded,
     Loading,
@@ -31,7 +19,6 @@ pub enum ModuleStatus {
     Discovered,
     Loading,
     Loaded,
-    Stopped,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -65,8 +52,6 @@ impl ExportEntry {
 pub struct FileEnvironment {
     pub id: FileEnvId,
     pub source_path: String,
-    pub mode: FileLoadMode,
-    pub kind: FileEnvironmentKind,
     pub canonical_name: Option<String>,
     pub environment: Box<Environment>,
     pub local_imports: HashMap<String, ImportTarget>,
@@ -74,25 +59,10 @@ pub struct FileEnvironment {
 }
 
 impl FileEnvironment {
-    pub fn new(id: FileEnvId, source_path: String, mode: FileLoadMode) -> Self {
+    pub fn new(id: FileEnvId, source_path: String, canonical_name: String) -> Self {
         FileEnvironment {
             id,
             source_path,
-            mode,
-            kind: FileEnvironmentKind::Ordinary,
-            canonical_name: None,
-            environment: Box::new(Environment::new_empty_env()),
-            local_imports: HashMap::new(),
-            status: FileStatus::Loading,
-        }
-    }
-
-    pub fn new_exported(id: FileEnvId, source_path: String, canonical_name: String) -> Self {
-        FileEnvironment {
-            id,
-            source_path,
-            mode: FileLoadMode::Run,
-            kind: FileEnvironmentKind::Exported,
             canonical_name: Some(canonical_name),
             environment: Box::new(Environment::new_empty_env()),
             local_imports: HashMap::new(),
@@ -140,28 +110,14 @@ impl ModuleRunner {
         }
     }
 
-    pub fn create_file_environment(
-        &mut self,
-        source_path: String,
-        mode: FileLoadMode,
-    ) -> FileEnvId {
-        let id = FileEnvId(self.file_environments.len());
-        self.file_environments
-            .push(FileEnvironment::new(id, source_path, mode));
-        id
-    }
-
     pub fn create_exported_file_environment(
         &mut self,
         source_path: String,
         canonical_name: String,
     ) -> FileEnvId {
         let id = FileEnvId(self.file_environments.len());
-        self.file_environments.push(FileEnvironment::new_exported(
-            id,
-            source_path,
-            canonical_name,
-        ));
+        self.file_environments
+            .push(FileEnvironment::new(id, source_path, canonical_name));
         id
     }
 

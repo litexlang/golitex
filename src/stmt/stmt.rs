@@ -99,8 +99,6 @@ pub enum CommandStmt {
     LocalImportStmt(LocalImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
-    StopImportStmt(StopImportStmt),
-    RunFileStmt(RunFileStmt),
     EvalStmt(EvalStmt),
     EvalByStmt(EvalByStmt),
     UseStrategyStmt(UseStrategyStmt),

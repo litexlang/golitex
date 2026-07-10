@@ -766,17 +766,6 @@ impl ClearStmt {
     }
 }
 
-impl StopImportStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \operatorname{{{}}}\ {}",
-            STOP,
-            IMPORT,
-            latex_local_ident(&self.module_name)
-        )
-    }
-}
-
 impl EqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1789,16 +1778,6 @@ impl RestrictFact {
     }
 }
 
-impl RunFileStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \texttt{{{}}}",
-            self.keyword(),
-            latex_texttt_escape(&self.file_path)
-        )
-    }
-}
-
 impl SeqSet {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2222,8 +2201,6 @@ impl Stmt {
             Stmt::Command(CommandStmt::LocalImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::StopImportStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::RunFileStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalByStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),

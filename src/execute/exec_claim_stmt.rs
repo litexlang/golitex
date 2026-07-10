@@ -164,24 +164,9 @@ impl Runtime {
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<InferResult, RuntimeError> {
-        if self.current_execution_is_trusted_file() {
-            return self.store_trusted_fact_and_infer_with_reason(
-                stmt.fact.clone(),
-                InferReason::ProvedClaim,
-            );
-        }
-
         self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             stmt.fact.clone(),
             InferReason::ProvedClaim,
         )
-    }
-
-    pub(crate) fn exec_claim_stmt_affect_environment_only(
-        &mut self,
-        stmt: &ClaimStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.exec_claim_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

@@ -40,55 +40,6 @@ pub struct ImportGlobalModuleStmt {
     pub line_file: LineFile,
 }
 
-#[derive(Clone, PartialEq)]
-pub enum RunFileMode {
-    VerifyAndExecute,
-    AffectEnvironmentOnly,
-}
-
-#[derive(Clone)]
-pub struct RunFileStmt {
-    pub file_path: String,
-    pub mode: RunFileMode,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct StopImportStmt {
-    pub module_name: String,
-    pub line_file: LineFile,
-}
-
-impl RunFileStmt {
-    pub fn new(file_path: String, line_file: LineFile) -> Self {
-        RunFileStmt::new_with_mode(file_path, RunFileMode::VerifyAndExecute, line_file)
-    }
-
-    pub fn new_with_mode(file_path: String, mode: RunFileMode, line_file: LineFile) -> Self {
-        RunFileStmt {
-            file_path,
-            mode,
-            line_file,
-        }
-    }
-
-    pub fn keyword(&self) -> &'static str {
-        match self.mode {
-            RunFileMode::VerifyAndExecute => RUN_FILE,
-            RunFileMode::AffectEnvironmentOnly => TRUST_FILE,
-        }
-    }
-}
-
-impl StopImportStmt {
-    pub fn new(module_name: String, line_file: LineFile) -> Self {
-        StopImportStmt {
-            module_name,
-            line_file,
-        }
-    }
-}
-
 impl ExportStmt {
     pub fn new(kind: ExportKind, path: String, name: String, line_file: LineFile) -> Self {
         ExportStmt {
@@ -113,12 +64,6 @@ impl LocalImportStmt {
     }
 }
 
-impl fmt::Display for StopImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", STOP, IMPORT, self.module_name)
-    }
-}
-
 impl fmt::Display for ExportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -138,19 +83,6 @@ impl fmt::Display for ExportStmt {
 impl fmt::Display for LocalImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", LOCAL_IMPORT, self.name)
-    }
-}
-
-impl fmt::Display for RunFileStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{}",
-            self.keyword(),
-            DOUBLE_QUOTE,
-            self.file_path,
-            DOUBLE_QUOTE
-        )
     }
 }
 

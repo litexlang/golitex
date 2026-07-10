@@ -290,7 +290,6 @@ fn scan_repository_dependencies(
             let files = module
                 .file_environments
                 .iter()
-                .filter(|file| file.kind == FileEnvironmentKind::Exported)
                 .map(|file| (file.id, file.source_path.clone()))
                 .collect::<Vec<(FileEnvId, String)>>();
             let modules = module
@@ -467,11 +466,7 @@ fn reject_nested_local_imports(blocks: &[TokenBlock]) -> Result<(), RuntimeError
 fn reject_cyclic_local_imports(runtime: &Runtime) -> Result<(), RuntimeError> {
     let mut edges = HashMap::<FileNode, Vec<FileNode>>::new();
     for module in runtime.module_manager.modules.values() {
-        for file in module
-            .file_environments
-            .iter()
-            .filter(|file| file.kind == FileEnvironmentKind::Exported)
-        {
+        for file in module.file_environments.iter() {
             let node = FileNode {
                 module_id: module.id,
                 file_id: file.id,

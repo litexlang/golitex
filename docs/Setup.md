@@ -322,7 +322,7 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
 By default, Litex omits empty arrays and empty strings, and it does not print
 raw file paths. Cross-source references still keep safe provenance labels such
-as `builtin_code`, `std/Trig`, or `external_file`. Use
+as `builtin_code`, `std/Trig`, or an exported file's canonical name. Use
 `-detail` when you need full trace details and raw paths for debugging.
 
 If the whole run succeeds:

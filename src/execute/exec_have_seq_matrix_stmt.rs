@@ -33,25 +33,6 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
-    pub(crate) fn exec_have_seq_stmt_affect_environment_only(
-        &mut self,
-        stmt: &HaveSeqStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_seq_anonymous_fn(stmt)
-            .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
-        let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
-            stmt.clone().into(),
-            &stmt.name,
-            stmt.seq_set.clone().into(),
-            shape,
-            HaveSeqStmt::store_reason(),
-            stmt.line_file.clone(),
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
-    }
-
     pub fn exec_have_finite_seq_stmt(
         &mut self,
         stmt: &HaveFiniteSeqStmt,
@@ -88,25 +69,6 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
-    }
-
-    pub(crate) fn exec_have_finite_seq_stmt_affect_environment_only(
-        &mut self,
-        stmt: &HaveFiniteSeqStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_finite_seq_anonymous_fn(stmt)
-            .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
-        let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
-            stmt.clone().into(),
-            &stmt.name,
-            stmt.finite_seq_set.clone().into(),
-            shape,
-            HaveFiniteSeqStmt::store_reason(),
-            stmt.line_file.clone(),
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     pub fn exec_have_matrix_stmt(
@@ -154,25 +116,6 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
-    pub(crate) fn exec_have_matrix_stmt_affect_environment_only(
-        &mut self,
-        stmt: &HaveMatrixStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_matrix_anonymous_fn(stmt)
-            .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
-        let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
-            stmt.clone().into(),
-            &stmt.name,
-            stmt.matrix_set.clone().into(),
-            shape,
-            HaveMatrixStmt::store_reason(),
-            stmt.line_file.clone(),
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
-    }
-
     fn exec_have_indexed_fn_definition_verify_well_definedness(
         &mut self,
         stmt: Stmt,
@@ -191,19 +134,6 @@ impl Runtime {
             &fn_set,
         )?;
 
-        Ok(HaveIndexedFnDefinitionShape {
-            anonymous_fn,
-            fn_set,
-        })
-    }
-
-    fn have_indexed_fn_definition_shape_trusted(
-        &mut self,
-        stmt: Stmt,
-        anonymous_fn: AnonymousFn,
-    ) -> Result<HaveIndexedFnDefinitionShape, RuntimeError> {
-        let fn_set = FnSet::from_body(anonymous_fn.body.clone())
-            .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))?;
         Ok(HaveIndexedFnDefinitionShape {
             anonymous_fn,
             fn_set,

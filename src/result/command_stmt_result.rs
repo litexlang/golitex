@@ -7,8 +7,6 @@ pub enum CommandStmtResult {
     LocalImportStmt(NonFactualStmtSuccess),
     DoNothingStmt(NonFactualStmtSuccess),
     ClearStmt(NonFactualStmtSuccess),
-    StopImportStmt(NonFactualStmtSuccess),
-    RunFileStmt(NonFactualStmtSuccess),
     EvalStmt(NonFactualStmtSuccess),
     EvalByStmt(NonFactualStmtSuccess),
     UseStrategyStmt(NonFactualStmtSuccess),
@@ -27,10 +25,6 @@ impl CommandStmtResult {
                 CommandStmtResult::DoNothingStmt(success)
             }
             Stmt::Command(CommandStmt::ClearStmt(_)) => CommandStmtResult::ClearStmt(success),
-            Stmt::Command(CommandStmt::StopImportStmt(_)) => {
-                CommandStmtResult::StopImportStmt(success)
-            }
-            Stmt::Command(CommandStmt::RunFileStmt(_)) => CommandStmtResult::RunFileStmt(success),
             Stmt::Command(CommandStmt::EvalStmt(_)) => CommandStmtResult::EvalStmt(success),
             Stmt::Command(CommandStmt::EvalByStmt(_)) => CommandStmtResult::EvalByStmt(success),
             Stmt::Command(CommandStmt::UseStrategyStmt(_)) => {
@@ -50,8 +44,6 @@ impl CommandStmtResult {
             | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
-            | CommandStmtResult::StopImportStmt(success)
-            | CommandStmtResult::RunFileStmt(success)
             | CommandStmtResult::EvalStmt(success)
             | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)
@@ -66,8 +58,6 @@ impl CommandStmtResult {
             | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
-            | CommandStmtResult::StopImportStmt(success)
-            | CommandStmtResult::RunFileStmt(success)
             | CommandStmtResult::EvalStmt(success)
             | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)
@@ -82,8 +72,6 @@ impl CommandStmtResult {
             | CommandStmtResult::LocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
-            | CommandStmtResult::StopImportStmt(success)
-            | CommandStmtResult::RunFileStmt(success)
             | CommandStmtResult::EvalStmt(success)
             | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)

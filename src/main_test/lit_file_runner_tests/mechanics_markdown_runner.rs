@@ -277,12 +277,12 @@ fn run_the_mechanics_markdown_file_snippets(
     let mut failed_labels: Vec<String> = Vec::new();
     let mut failure_outputs: Vec<String> = Vec::new();
 
-    for (snippet_index, (label, source_code, md_path_for_run_file)) in snippets.iter().enumerate() {
+    for (snippet_index, (label, source_code, source_path)) in snippets.iter().enumerate() {
         if snippet_index == 0 {
-            runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
+            runtime.new_file_path_new_env_new_name_scope(source_path.as_str());
         } else {
-            runtime.clear_current_env_parse_name_scope_and_stop_imports();
-            runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+            runtime.reset_for_isolated_runner_item();
+            runtime.set_current_user_lit_file_path(source_path.as_str());
         }
 
         let normalized_source = remove_windows_carriage_return(source_code);

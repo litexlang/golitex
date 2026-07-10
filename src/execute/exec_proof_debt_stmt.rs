@@ -39,29 +39,17 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for fact in proof_debt_stmt.facts.iter() {
-            let fact_infer_result = if self.current_execution_is_trusted_file() {
-                self.store_trusted_fact_and_infer_with_reason(
-                    fact.clone(),
-                    InferReason::UnsafeAssumption,
-                )
-            } else {
-                self.verify_fact_well_defined_and_store_and_infer_with_reason(
+            let fact_infer_result = self
+                .verify_fact_well_defined_and_store_and_infer_with_reason(
                     fact.clone(),
                     &VerifyState::new(0, false),
                     InferReason::UnsafeAssumption,
                 )
-            }
-            .map_err(|e| exec_stmt_error_with_stmt_and_cause(proof_debt_stmt.clone().into(), e))?;
+                .map_err(|e| {
+                    exec_stmt_error_with_stmt_and_cause(proof_debt_stmt.clone().into(), e)
+                })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(infer_result)
-    }
-
-    pub(crate) fn exec_proof_debt_stmt_affect_environment_only(
-        &mut self,
-        proof_debt_stmt: &ProofDebtStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.exec_proof_debt_stmt_affect_environment(proof_debt_stmt)?;
-        Ok(NonFactualStmtSuccess::new(proof_debt_stmt.clone().into(), infer_result, vec![]).into())
     }
 }

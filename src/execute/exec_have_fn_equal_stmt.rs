@@ -87,27 +87,6 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_fn_equal_stmt_affect_environment_only(
-        &mut self,
-        have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let fn_set_stored = FnSet::from_body(have_fn_equal_stmt.equal_to_anonymous_fn.body.clone())
-            .map_err(|e| {
-                short_exec_error(
-                    have_fn_equal_stmt.clone().into(),
-                    "have_fn_equal_stmt: build fn set for storage failed".to_string(),
-                    Some(e),
-                    vec![],
-                )
-            })?;
-        let infer_result =
-            self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
-        Ok(
-            NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![])
-                .into(),
-        )
-    }
-
     fn exec_have_fn_equal_stmt_verify_well_definedness(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,

@@ -45,26 +45,14 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(&stmt.param_def, ParamObjType::Identifier)
-        } else {
-            self.define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)
-        }
-        .map_err(|define_params_error| {
-            exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
-        })?;
+        let mut infer_result = self
+            .define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)
+            .map_err(|define_params_error| {
+                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
+            })?;
         infer_result.relabel_all_added_facts_with_store_reason(
             HaveObjInNonemptySetOrParamTypeStmt::store_reason(),
         );
         Ok(infer_result)
-    }
-
-    pub(crate) fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(
-        &mut self,
-        stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result =
-            self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

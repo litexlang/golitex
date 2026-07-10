@@ -32,24 +32,4 @@ impl Runtime {
 
         Ok(infer_result)
     }
-
-    pub(crate) fn exec_fact_stmt_affect_environment_only(
-        &mut self,
-        fact: &Fact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
-            fact.clone(),
-            InferReason::VerifiedStatement,
-        )?;
-
-        Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                fact.clone(),
-                infer_result,
-                "trusted file load".to_string(),
-                vec![],
-            )
-            .into(),
-        )
-    }
 }

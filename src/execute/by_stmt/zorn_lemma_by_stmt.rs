@@ -123,47 +123,6 @@ impl Runtime {
         )
         .into())
     }
-
-    pub(crate) fn exec_by_zorn_lemma_stmt_affect_environment_only(
-        &mut self,
-        stmt: &ByZornLemmaStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let prop_name = stmt.prop_name.to_string();
-        match user_defined_prop_arity(self, &prop_name) {
-            Some(arity) => {
-                if arity != 2 {
-                    return Err(short_exec_error(
-                        stmt.clone().into(),
-                        format!(
-                            "by zorn_lemma: `{}` must be a binary user-defined prop",
-                            prop_name
-                        ),
-                        None,
-                        vec![],
-                    ));
-                }
-            }
-            None => {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    format!("by zorn_lemma: `{}` must be a user-defined prop", prop_name),
-                    None,
-                    vec![],
-                ));
-            }
-        }
-
-        let maximal_fact = zorn_lemma_maximal_fact(
-            stmt.set.clone(),
-            stmt.prop_name.clone(),
-            stmt.line_file.clone(),
-        )?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
-            maximal_fact,
-            InferReason::VerifiedStatement,
-        )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
-    }
 }
 
 fn zorn_lemma_obligations(

@@ -16,11 +16,7 @@ const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_BUILTIN: &str = "builtin";
 const SOURCE_KIND_STD: &str = "std";
 const SOURCE_KIND_MODULE: &str = "module";
-const SOURCE_KIND_RUN_FILE: &str = "run_file";
-
-fn should_hide_file_paths(runtime: &Runtime) -> bool {
-    !runtime.detail_output
-}
+const SOURCE_KIND_FILE: &str = "file";
 
 fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
     Rc::ptr_eq(&left.1, &right.1) || left.1.as_ref() == right.1.as_ref()
@@ -50,14 +46,20 @@ fn display_source_label_for_line_file(
         return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
     }
 
+    for module in runtime.module_manager.modules.values() {
+        for file in module.file_environments.iter() {
+            if file.source_path == path {
+                let source = file.canonical_name.as_deref().unwrap_or(SOURCE_KIND_FILE);
+                return Some((SOURCE_KIND_FILE.to_string(), source.to_string()));
+            }
+        }
+    }
+
     if let Some(label) = imported_module_source_label_for_path(runtime, path) {
         return Some(label);
     }
 
-    Some((
-        SOURCE_KIND_RUN_FILE.to_string(),
-        "external_file".to_string(),
-    ))
+    Some((SOURCE_KIND_FILE.to_string(), SOURCE_KIND_FILE.to_string()))
 }
 
 fn imported_module_source_label_for_path(
@@ -165,12 +167,7 @@ pub(crate) fn source_ref_json_value(
     ))
 }
 
-pub(crate) fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
-    if should_hide_file_paths(runtime) {
-        if let Stmt::Command(CommandStmt::RunFileStmt(run_file_stmt)) = stmt {
-            return run_file_stmt.keyword().to_string();
-        }
-    }
+pub(crate) fn stmt_text_for_json(_runtime: &Runtime, stmt: &Stmt) -> String {
     user_visible_stmt_or_msg_text(&stmt.to_string())
 }
 
