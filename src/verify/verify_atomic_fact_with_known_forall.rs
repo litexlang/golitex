@@ -57,12 +57,14 @@ impl Runtime {
         let key = given_fact.key();
         let is_true = given_fact.is_true();
 
-        let envs_count = self.environment_stack.len();
+        let envs_count = self.environment_count();
         let lookup_key = (key.clone(), is_true);
         for i in iterate_from_env_index..envs_count {
-            let stack_idx = envs_count - 1 - i;
+            let stack_idx = i;
             let known_forall_facts_count = {
-                let env = &self.environment_stack[stack_idx];
+                let env = self
+                    .environment_by_top_index(stack_idx)
+                    .expect("environment index should be valid");
                 match env.known_atomic_facts_in_forall_facts.get(&lookup_key) {
                     Some(v) => v.len(),
                     None => continue,
@@ -77,7 +79,9 @@ impl Runtime {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let env_kind = self.known_forall_env_kind(stack_idx);
                 let (atomic_fact_in_known_forall, current_known_forall) = {
-                    let env = &self.environment_stack[stack_idx];
+                    let env = self
+                        .environment_by_top_index(stack_idx)
+                        .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) =
                         env.known_atomic_facts_in_forall_facts.get(&lookup_key)
                     else {
@@ -157,31 +161,14 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         for module_name in module_names.iter() {
-            let Some(known_forall_facts_count) = ({
-                self.active_imported_module_environment(module_name)
-                    .and_then(|env| {
-                        env.known_atomic_facts_in_forall_facts
-                            .get(&lookup_key)
-                            .map(|facts| facts.len())
-                    })
-            }) else {
-                continue;
-            };
+            let candidates = self
+                .active_imported_module_environments(module_name)
+                .into_iter()
+                .filter_map(|env| env.known_atomic_facts_in_forall_facts.get(&lookup_key))
+                .flat_map(|facts| facts.iter().rev().cloned())
+                .collect::<Vec<_>>();
 
-            for j in 0..known_forall_facts_count {
-                let entry_idx = known_forall_facts_count - 1 - j;
-                let candidate = {
-                    self.active_imported_module_environment(module_name)
-                        .and_then(|env| {
-                            env.known_atomic_facts_in_forall_facts
-                                .get(&lookup_key)
-                                .and_then(|facts| facts.get(entry_idx))
-                                .cloned()
-                        })
-                };
-                let Some((atomic_fact_in_known_forall, forall_rc)) = candidate else {
-                    continue;
-                };
+            for (atomic_fact_in_known_forall, forall_rc) in candidates {
                 if let Some(fact_verified) = self.try_verify_known_forall_candidate(
                     KnownForallSearchPhase::Fallback,
                     KnownForallEnvKind::User,
@@ -262,9 +249,8 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
-        let envs_count = self.environment_stack.len();
-        for i in 0..envs_count {
-            let stack_idx = envs_count - 1 - i;
+        let envs_count = self.environment_count();
+        for stack_idx in 0..envs_count {
             for arg_shape_lookup_key in arg_shape_lookup_keys.iter() {
                 if let Some(fact_verified) = self.try_verify_with_arg_shape_key_in_env(
                     stack_idx,
@@ -305,11 +291,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
-        let envs_count = self.environment_stack.len();
-        for i in 0..envs_count {
-            let stack_idx = envs_count - 1 - i;
+        let envs_count = self.environment_count();
+        for stack_idx in 0..envs_count {
             let arg_shape_keys = {
-                let env = &self.environment_stack[stack_idx];
+                let env = self
+                    .environment_by_top_index(stack_idx)
+                    .expect("environment index should be valid");
                 let Some(arg_shape_map) = env
                     .known_atomic_facts_in_forall_facts_by_arg_shape
                     .get(&lookup_key)
@@ -337,22 +324,25 @@ impl Runtime {
         }
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         for module_name in module_names.iter() {
-            let arg_shape_keys = {
-                let Some(env) = self.active_imported_module_environment(module_name) else {
-                    continue;
-                };
-                let Some(arg_shape_map) = env
-                    .known_atomic_facts_in_forall_facts_by_arg_shape
-                    .get(&lookup_key)
-                else {
-                    continue;
-                };
-                arg_shape_map
-                    .keys()
-                    .filter(|key| !arg_shape_lookup_keys.contains(key))
-                    .cloned()
-                    .collect::<Vec<_>>()
-            };
+            let mut arg_shape_keys = self
+                .active_imported_module_environments(module_name)
+                .into_iter()
+                .filter_map(|env| {
+                    env.known_atomic_facts_in_forall_facts_by_arg_shape
+                        .get(&lookup_key)
+                })
+                .flat_map(|arg_shape_map| arg_shape_map.keys())
+                .filter(|key| !arg_shape_lookup_keys.contains(key))
+                .cloned()
+                .collect::<Vec<_>>();
+            let mut seen_arg_shape_keys = Vec::new();
+            arg_shape_keys.retain(|key| {
+                if seen_arg_shape_keys.contains(key) {
+                    return false;
+                }
+                seen_arg_shape_keys.push(key.clone());
+                true
+            });
             for arg_shape_key in arg_shape_keys.iter() {
                 if let Some(fact_verified) = self
                     .try_verify_with_arg_shape_key_in_imported_module_env(
@@ -381,7 +371,9 @@ impl Runtime {
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let Some(bucket_count) = ({
-            let env = &self.environment_stack[stack_idx];
+            let env = self
+                .environment_by_top_index(stack_idx)
+                .expect("environment index should be valid");
             env.known_atomic_facts_in_forall_facts_by_arg_shape
                 .get(&lookup_key)
                 .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
@@ -394,7 +386,9 @@ impl Runtime {
             let entry_idx = bucket_count - 1 - j;
             let env_kind = self.known_forall_env_kind(stack_idx);
             let candidate = {
-                let env = &self.environment_stack[stack_idx];
+                let env = self
+                    .environment_by_top_index(stack_idx)
+                    .expect("environment index should be valid");
                 env.known_atomic_facts_in_forall_facts_by_arg_shape
                     .get(lookup_key)
                     .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
@@ -427,33 +421,18 @@ impl Runtime {
         verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let Some(bucket_count) = ({
-            self.active_imported_module_environment(module_name)
-                .and_then(|env| {
-                    env.known_atomic_facts_in_forall_facts_by_arg_shape
-                        .get(lookup_key)
-                        .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
-                        .map(|bucket| bucket.len())
-                })
-        }) else {
-            return Ok(None);
-        };
+        let candidates = self
+            .active_imported_module_environments(module_name)
+            .into_iter()
+            .filter_map(|env| {
+                env.known_atomic_facts_in_forall_facts_by_arg_shape
+                    .get(lookup_key)
+                    .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
+            })
+            .flat_map(|bucket| bucket.iter().rev().cloned())
+            .collect::<Vec<_>>();
 
-        for j in 0..bucket_count {
-            let entry_idx = bucket_count - 1 - j;
-            let candidate = {
-                self.active_imported_module_environment(module_name)
-                    .and_then(|env| {
-                        env.known_atomic_facts_in_forall_facts_by_arg_shape
-                            .get(lookup_key)
-                            .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
-                            .and_then(|bucket| bucket.get(entry_idx))
-                            .cloned()
-                    })
-            };
-            let Some((atomic_fact_in_known_forall_fact, forall_rc)) = candidate else {
-                continue;
-            };
+        for (atomic_fact_in_known_forall_fact, forall_rc) in candidates {
             if let Some(fact_verified) = self.try_verify_known_forall_candidate(
                 phase,
                 KnownForallEnvKind::User,
@@ -469,7 +448,7 @@ impl Runtime {
     }
 
     fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {
-        if stack_idx == FILE_INDEX_FOR_BUILTIN {
+        if self.environment_is_builtin_by_top_index(stack_idx) {
             return KnownForallEnvKind::Builtin;
         }
         KnownForallEnvKind::User

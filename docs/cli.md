@@ -89,8 +89,8 @@ those flags. `-lang` also consumes the next token globally.
 |---------|----------|
 | `litex` | Start the interactive verifier REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run a Litex file. Relative paths are resolved against the current working directory. |
-| `litex -r <repo>` | Run `<repo>/main.lit`. |
+| `litex -f <file>` | Run one Litex file as an isolated script. It does not read `mod.lit`; `export` and `local_import` are unavailable. |
+| `litex -r <repo>` | Discover and validate `<repo>/mod.lit` recursively, then run `<repo>/main.lit`. |
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -120,7 +120,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Run `<repo>/main.lit` and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run `<repo>/main.lit`, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -146,7 +146,7 @@ Runner exit behavior:
 |---------|----------|
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Run `<repo>/main.lit` and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run `<repo>/main.lit`, and save one prop/function/fact relation graph JSON object. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and

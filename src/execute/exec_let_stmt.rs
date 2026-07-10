@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         def_let_stmt: &DefLetStmt,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
-        if self.strict_mode {
+        if self.strict_mode_applies_to_current_module() {
             return Err(short_exec_error(
                 def_let_stmt.clone().into(),
                 DefLetStmt::strict_mode_rejection_message(),
@@ -34,14 +34,14 @@ impl Runtime {
         &mut self,
         def_let_stmt: &DefLetStmt,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = if self.only_exec_affect_environment {
+        let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(&def_let_stmt.param_def, ParamObjType::Identifier)
         } else {
             self.define_params_with_type(&def_let_stmt.param_def, false, ParamObjType::Identifier)
         }
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_let_stmt.clone().into(), e))?;
         for fact in def_let_stmt.facts.iter() {
-            let fact_infer_result = if self.only_exec_affect_environment {
+            let fact_infer_result = if self.current_execution_is_trusted_file() {
                 self.store_trusted_fact_and_infer_with_reason(fact.clone(), InferReason::LetBinding)
             } else {
                 self.verify_fact_well_defined_and_store_and_infer_with_reason(

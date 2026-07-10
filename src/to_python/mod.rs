@@ -1,3 +1,5 @@
 mod to_python_pipeline;
 
-pub use to_python_pipeline::{to_python, to_python_from_source_after_builtins};
+pub use to_python_pipeline::{
+    to_python, to_python_from_repository_after_builtins, to_python_from_source_after_builtins,
+};

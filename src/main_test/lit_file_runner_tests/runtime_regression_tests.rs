@@ -1017,10 +1017,7 @@ try:
                 run_output
             );
 
-            let env = runtime
-                .environment_stack
-                .last()
-                .expect("runtime should have a current environment");
+            let env = &runtime.current_module().main_environment;
             assert_eq!(
                 env.used_strategy_stmts
                     .get(&("target_strategy_prop".to_string(), true)),
@@ -3895,7 +3892,7 @@ proof_debt d = 1 / (2 / 3 * 4)
         run_output
     );
 
-    let env = runtime.environment_stack.last().expect("top environment");
+    let env = &runtime.current_module().main_environment;
     match env.known_obj_values.get("a") {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "1");
@@ -7963,10 +7960,7 @@ $target_strategy_prop(1)
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.used_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8047,10 +8041,7 @@ stop strategy use_target_strategy
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert!(env
         .defined_strategy_stmts
         .contains_key("use_target_strategy"));
@@ -8152,10 +8143,7 @@ stop strategy use_negative_strategy
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.used_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8272,10 +8260,7 @@ $target_strategy_prop(1)
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.stopped_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8323,10 +8308,7 @@ claim:
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.stopped_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),

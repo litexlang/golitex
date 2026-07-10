@@ -75,6 +75,18 @@ impl ImportStmt {
     }
 }
 
+impl ExportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ExportStmt".to_string()
+    }
+}
+
+impl LocalImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "LocalImportStmt".to_string()
+    }
+}
+
 impl DoNothingStmt {
     pub fn stmt_type_name(&self) -> String {
         "DoNothingStmt".to_string()
@@ -414,6 +426,18 @@ impl ImportStmt {
             ImportStmt::ImportRelativePath(_) => ImportRelativePathStmt::output_type_string(),
             ImportStmt::ImportGlobalModule(_) => ImportGlobalModuleStmt::output_type_string(),
         }
+    }
+}
+
+impl ExportStmt {
+    pub fn output_type_string() -> String {
+        "module export declaration".to_string()
+    }
+}
+
+impl LocalImportStmt {
+    pub fn output_type_string() -> String {
+        "local import statement".to_string()
     }
 }
 

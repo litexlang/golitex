@@ -7,6 +7,26 @@ pub enum ImportStmt {
     ImportGlobalModule(ImportGlobalModuleStmt),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExportKind {
+    File,
+    Module,
+}
+
+#[derive(Clone)]
+pub struct ExportStmt {
+    pub kind: ExportKind,
+    pub path: String,
+    pub name: String,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct LocalImportStmt {
+    pub name: String,
+    pub line_file: LineFile,
+}
+
 #[derive(Clone)]
 pub struct ImportRelativePathStmt {
     pub path: String,
@@ -69,9 +89,55 @@ impl StopImportStmt {
     }
 }
 
+impl ExportStmt {
+    pub fn new(kind: ExportKind, path: String, name: String, line_file: LineFile) -> Self {
+        ExportStmt {
+            kind,
+            path,
+            name,
+            line_file,
+        }
+    }
+
+    pub fn kind_keyword(&self) -> &'static str {
+        match self.kind {
+            ExportKind::File => EXPORT_FILE,
+            ExportKind::Module => EXPORT_MODULE,
+        }
+    }
+}
+
+impl LocalImportStmt {
+    pub fn new(name: String, line_file: LineFile) -> Self {
+        LocalImportStmt { name, line_file }
+    }
+}
+
 impl fmt::Display for StopImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", STOP, IMPORT, self.module_name)
+    }
+}
+
+impl fmt::Display for ExportStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {}{}{} {} {}",
+            EXPORT,
+            self.kind_keyword(),
+            DOUBLE_QUOTE,
+            self.path,
+            DOUBLE_QUOTE,
+            AS,
+            self.name
+        )
+    }
+}
+
+impl fmt::Display for LocalImportStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", LOCAL_IMPORT, self.name)
     }
 }
 

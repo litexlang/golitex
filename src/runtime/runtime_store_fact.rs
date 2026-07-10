@@ -53,7 +53,7 @@ impl Runtime {
         reason_text: String,
         trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self
                 .store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(
                     fact,

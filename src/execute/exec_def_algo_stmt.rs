@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             self.store_def_algo(def_algo_stmt)?;
             return Ok(NonFactualStmtSuccess::new_with_stmt(def_algo_stmt.clone().into()).into());
         }

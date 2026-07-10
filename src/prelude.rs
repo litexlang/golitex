@@ -97,7 +97,11 @@ pub use crate::infer::{
     BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
     StoreFactOutput,
 };
-pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
+pub use crate::module_manager::{
+    discover_repository, ExportEntry, FileEnvId, FileEnvironment, FileEnvironmentKind,
+    FileLoadMode, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
+    BUILTIN_CODE_PATH,
+};
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
 pub use crate::obj::Abs;
@@ -186,11 +190,13 @@ pub use crate::pipeline::{
     display_run_summary_json, display_run_summary_json_with_runtime, display_runtime_error_json,
     display_stmt_exec_result_json, render_run_source_code_output, run_latex_repl, run_repl,
     run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_for_cli, run_source_code_in_file_for_cli_with_strict,
+    run_repl_with_detail_output_and_strict_and_language, run_repository_with_output,
+    run_source_code, run_source_code_in_file, run_source_code_in_file_for_cli,
+    run_source_code_in_file_for_cli_with_strict,
     run_source_code_in_file_for_cli_with_strict_and_language,
     run_source_code_in_file_for_cli_with_summary_and_language, run_source_code_in_file_with_ok,
-    run_stmt_at_global_env, RunSummary,
+    run_source_code_in_repository_for_cli_with_summary_and_language, run_stmt_at_global_env,
+    RunSummary,
 };
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
@@ -261,7 +267,8 @@ pub use crate::runner::{
     run_runner_for_repo_with_strict, run_runner_for_repo_with_strict_and_language,
 };
 pub use crate::runtime::FreeParamCollection;
-pub use crate::runtime::Runtime;
+pub use crate::runtime::RunMode;
+pub use crate::runtime::{ExecutionFrame, ExecutionLayer, Runtime};
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
 pub use crate::stmt::by_stmt::ByCasesStmt;
@@ -317,9 +324,12 @@ pub use crate::stmt::proof_debt_stmt::ProofDebtStmt;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
+pub use crate::stmt::tooling_stmt::ExportKind;
+pub use crate::stmt::tooling_stmt::ExportStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
+pub use crate::stmt::tooling_stmt::LocalImportStmt;
 pub use crate::stmt::tooling_stmt::RunFileMode;
 pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::tooling_stmt::StopImportStmt;
@@ -420,6 +430,9 @@ pub use crate::common::keywords::EQUIVALENT_SIGN;
 pub use crate::common::keywords::EVAL;
 pub use crate::common::keywords::EXIST;
 pub use crate::common::keywords::EXIST_BANG;
+pub use crate::common::keywords::EXPORT;
+pub use crate::common::keywords::EXPORT_FILE;
+pub use crate::common::keywords::EXPORT_MODULE;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;
@@ -459,6 +472,7 @@ pub use crate::common::keywords::LEFT_CURLY_BRACE;
 pub use crate::common::keywords::LESS;
 pub use crate::common::keywords::LESS_EQUAL;
 pub use crate::common::keywords::LET;
+pub use crate::common::keywords::LOCAL_IMPORT;
 pub use crate::common::keywords::LOG;
 pub use crate::common::keywords::MATRIX;
 pub use crate::common::keywords::MATRIX_ADD;

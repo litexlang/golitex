@@ -274,7 +274,7 @@ impl Runtime {
         ))
     }
 
-    /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).
+    /// Build equality closures without merging the underlying environments.
     fn collect_known_equality_pairs_from_envs(
         &self,
         left_string: &str,
@@ -282,18 +282,17 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
-        let mut pairs = Vec::with_capacity(self.environment_stack.len());
-        for env in self.iter_environments_from_top() {
-            let known_left = env
-                .known_equality
-                .get(left_string)
-                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-            let known_right = env
-                .known_equality
-                .get(right_string)
-                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-            pairs.push((known_left, known_right));
-        }
+        let current_environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        let mut pairs = vec![(
+            known_equality_class_across_environments(
+                &current_environments,
+                &[left_string.to_string()],
+            ),
+            known_equality_class_across_environments(
+                &current_environments,
+                &[right_string.to_string()],
+            ),
+        )];
         let mut module_names = self.obj_referenced_module_names(left);
         for module_name in self.obj_referenced_module_names(right) {
             if !module_names
@@ -304,21 +303,18 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
-                let left_key =
-                    equality_lookup_key_for_module_env(left, left_string, module_name.as_str());
-                let right_key =
-                    equality_lookup_key_for_module_env(right, right_string, module_name.as_str());
-                let known_left = env
-                    .known_equality
-                    .get(left_key.as_str())
-                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-                let known_right = env
-                    .known_equality
-                    .get(right_key.as_str())
-                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-                pairs.push((known_left, known_right));
+            let environments = self.active_imported_module_environments(module_name);
+            if environments.is_empty() {
+                continue;
             }
+            let left_keys =
+                equality_lookup_keys_for_module_env(left, left_string, module_name.as_str());
+            let right_keys =
+                equality_lookup_keys_for_module_env(right, right_string, module_name.as_str());
+            pairs.push((
+                known_equality_class_across_environments(&environments, &left_keys),
+                known_equality_class_across_environments(&environments, &right_keys),
+            ));
         }
         pairs
     }
@@ -1040,13 +1036,57 @@ impl Runtime {
     }
 }
 
-fn equality_lookup_key_for_module_env(obj: &Obj, default_key: &str, module_name: &str) -> String {
+fn equality_lookup_keys_for_module_env(
+    obj: &Obj,
+    default_key: &str,
+    module_name: &str,
+) -> Vec<String> {
+    let mut keys = vec![default_key.to_string()];
     if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = obj {
         if identifier.mod_name == module_name {
-            return identifier.name.clone();
+            keys.push(identifier.name.clone());
         }
     }
-    default_key.to_string()
+    keys
+}
+
+fn known_equality_class_across_environments(
+    environments: &[&Environment],
+    initial_keys: &[String],
+) -> Option<Rc<Vec<Obj>>> {
+    let mut keys = initial_keys.to_vec();
+    let mut objects = Vec::new();
+    let mut next_index = 0;
+    let mut found_equality = false;
+
+    while next_index < keys.len() {
+        let current = keys[next_index].clone();
+        next_index += 1;
+        for environment in environments {
+            let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+                continue;
+            };
+            found_equality = true;
+            for object in equivalent_objects.iter() {
+                let object_key = object.to_string();
+                if !keys.contains(&object_key) {
+                    keys.push(object_key.clone());
+                }
+                if !objects
+                    .iter()
+                    .any(|known: &Obj| known.to_string() == object_key)
+                {
+                    objects.push(object.clone());
+                }
+            }
+        }
+    }
+
+    if found_equality {
+        Some(Rc::new(objects))
+    } else {
+        None
+    }
 }
 
 fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) -> Obj {

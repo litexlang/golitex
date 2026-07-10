@@ -872,9 +872,9 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            if let Some(environment) = self.active_imported_module_environment(module_name) {
+            for environment in self.active_imported_module_environments(module_name) {
                 Self::extend_known_preimages_for_replacement_target_from_environment(
-                    environment.as_ref(),
+                    environment,
                     &lookup_key,
                     &target_keys,
                     &mut candidates,
@@ -931,9 +931,9 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            if let Some(environment) = self.active_imported_module_environment(module_name) {
+            for environment in self.active_imported_module_environments(module_name) {
                 Self::extend_known_member_sets_for_cup_family_from_environment(
-                    environment.as_ref(),
+                    environment,
                     &family_keys,
                     &mut candidates,
                 );

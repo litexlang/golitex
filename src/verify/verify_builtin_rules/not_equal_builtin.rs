@@ -340,9 +340,9 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            if let Some(environment) = self.active_imported_module_environment(module_name) {
+            for environment in self.active_imported_module_environments(module_name) {
                 Self::collect_known_sets_containing_obj_in_environment(
-                    environment.as_ref(),
+                    environment,
                     &lookup_key,
                     &obj_strings,
                     &mut sets,

@@ -166,11 +166,13 @@ impl Runtime {
                     return Ok(());
                 }
             }
-        } else if let Some(env) = self.imported_module_environment(&x.mod_name) {
-            if env.defined_identifiers.contains_key(&x.name)
-                || env.defined_structs.contains_key(&x.name)
-            {
-                return Ok(());
+        } else {
+            for env in self.imported_module_environments(&x.mod_name) {
+                if env.defined_identifiers.contains_key(&x.name)
+                    || env.defined_structs.contains_key(&x.name)
+                {
+                    return Ok(());
+                }
             }
         }
 

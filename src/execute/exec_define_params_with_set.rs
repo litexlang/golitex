@@ -13,7 +13,7 @@ impl Runtime {
         param_def: &ParamGroupWithSet,
         binding_scope: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self.define_params_with_set_in_scope_trusted(param_def, binding_scope);
         }
 

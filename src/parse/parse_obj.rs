@@ -1543,18 +1543,26 @@ impl Runtime {
             )))
         })?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = tb.advance()?;
-            validate_litex_name_for_parse(&right, tb.line_file.clone()).map_err(|e| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "replacement expects its first argument to be a prop name".to_string(),
-                    tb.line_file.clone(),
-                    Some(e),
-                    vec![],
-                )))
-            })?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip()?;
+                let part = tb.advance()?;
+                validate_litex_name_for_parse(&part, tb.line_file.clone()).map_err(|e| {
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        "replacement expects its first argument to be a prop name".to_string(),
+                        tb.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+                parts.push(part);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
         } else {
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
@@ -1714,9 +1722,15 @@ impl Runtime {
     }
 
     fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let left = parse_synthetically_correct_identifier_string(tb)?;
-        tb.skip_token(MOD_SIGN)?;
-        let right = parse_synthetically_correct_identifier_string(tb)?;
+        let mut parts = vec![parse_synthetically_correct_identifier_string(tb)?];
+        while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip_token(MOD_SIGN)?;
+            parts.push(parse_synthetically_correct_identifier_string(tb)?);
+        }
+        let right = parts
+            .pop()
+            .expect("qualified name should have a local name");
+        let left = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1773,9 +1787,16 @@ impl Runtime {
     pub fn parse_atomic_name(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip()?;
+                parts.push(parse_synthetically_correct_identifier_string(tb)?);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
         } else {
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
@@ -1788,10 +1809,18 @@ impl Runtime {
         let left = tb.advance()?;
         validate_litex_name_for_parse(&left, tb.line_file.clone())?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip_token(MOD_SIGN)?;
-            let right = tb.advance()?;
-            validate_litex_name_for_parse(&right, tb.line_file.clone())?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip_token(MOD_SIGN)?;
+                let part = tb.advance()?;
+                validate_litex_name_for_parse(&part, tb.line_file.clone())?;
+                parts.push(part);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
         } else if let Some(module_name) = self.current_parse_module_name() {
             Ok(AtomicName::WithMod(module_name.to_string(), left))
         } else {
@@ -1800,33 +1829,29 @@ impl Runtime {
     }
 
     fn current_parse_module_name(&self) -> Option<String> {
-        let current_module_name = self.module_manager.borrow().current_module_name.clone();
-        if current_module_name.is_empty() {
-            None
-        } else {
-            Some(current_module_name)
-        }
+        self.current_parse_namespace().map(str::to_string)
     }
 
     fn name_is_in_builtin_identifier_layer(&self, name: &str) -> bool {
         if is_builtin_identifier_name(name) {
             return true;
         }
-        self.environment_stack
-            .get(FILE_INDEX_FOR_BUILTIN)
-            .map_or(false, |env| env.defined_identifiers.contains_key(name))
+        self.builtin_environment()
+            .defined_identifiers
+            .contains_key(name)
     }
 
     fn name_is_in_builtin_prop_layer(&self, name: &str) -> bool {
         if is_builtin_predicate(name) {
             return true;
         }
-        self.environment_stack
-            .get(FILE_INDEX_FOR_BUILTIN)
-            .map_or(false, |env| {
-                env.defined_def_props.contains_key(name)
-                    || env.defined_abstract_props.contains_key(name)
-            })
+        self.builtin_environment()
+            .defined_def_props
+            .contains_key(name)
+            || self
+                .builtin_environment()
+                .defined_abstract_props
+                .contains_key(name)
     }
 
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
@@ -1972,6 +1997,13 @@ mod module_qualification_parse_tests {
         rt.parse_stmt(&mut blocks[0]).expect("parse stmt line")
     }
 
+    fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
+        if rt.current_layer() == ExecutionLayer::Builtin {
+            rt.new_file_path_new_env_new_name_scope("test.lit");
+        }
+        rt.current_module_mut().module_name = module_name.to_string();
+    }
+
     fn assert_with_mod(name: &AtomicName, expected_mod_name: &str, expected_name: &str) {
         let AtomicName::WithMod(mod_name, name) = name else {
             panic!("expected module-qualified name");
@@ -2026,7 +2058,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_definition_name_bare() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
@@ -2081,7 +2113,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "forall x Z:\n    $some_prop(x)");
 
@@ -2108,7 +2140,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_identifier() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
 
@@ -2133,7 +2165,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_builtin_identifier_bare() {
         let mut rt = Runtime::new_with_builtin_code();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
@@ -2146,7 +2178,8 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_builtin_layer_predicate_bare() {
         let mut rt = Runtime::new();
-        rt.environment_stack[FILE_INDEX_FOR_BUILTIN]
+        rt.module_manager
+            .builtin_environment
             .defined_abstract_props
             .insert(
                 "builtin_prop".to_string(),
@@ -2156,7 +2189,7 @@ mod module_qualification_parse_tests {
                     default_line_file(),
                 ),
             );
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
 
@@ -2172,7 +2205,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
@@ -2208,7 +2241,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_reference_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
@@ -2232,7 +2265,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "Other::a");
 

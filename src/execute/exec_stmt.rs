@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self.exec_stmt_affect_environment_only(stmt);
         }
 
@@ -55,6 +55,8 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
+            Stmt::Command(CommandStmt::ExportStmt(s)) => self.exec_export_stmt(s),
+            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::StopImportStmt(s)) => self.exec_stop_import_stmt(s),
@@ -177,6 +179,8 @@ impl Runtime {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
+            Stmt::Command(CommandStmt::ExportStmt(s)) => self.exec_export_stmt(s),
+            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::StopImportStmt(s)) => self.exec_stop_import_stmt(s),

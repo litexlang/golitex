@@ -8,12 +8,10 @@ impl Runtime {
                     .get_prop_definition_by_name_in_current_envs(local_name)
                     .cloned();
             }
-            return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name.to_string())
-                        .cloned()
-                });
+            return get_prop_definition_from_environments(
+                self.imported_module_environments(module_name),
+                local_name,
+            );
         }
 
         self.get_prop_definition_by_name_in_current_envs(predicate_name)
@@ -27,12 +25,10 @@ impl Runtime {
                     .get_prop_definition_by_name_in_current_envs(local_name)
                     .cloned();
             }
-            return self
-                .active_imported_module_environment(module_name)
-                .and_then(|environment| {
-                    get_prop_definition_by_name_in_env(environment.as_ref(), local_name.to_string())
-                        .cloned()
-                });
+            return get_prop_definition_from_environments(
+                self.active_imported_module_environments(module_name),
+                local_name,
+            );
         }
 
         self.get_prop_definition_by_name_in_current_envs(predicate_name)
@@ -70,15 +66,10 @@ impl Runtime {
                     .get_abstract_prop_definition_by_name_in_current_envs(local_name)
                     .cloned();
             }
-            return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| {
-                    get_abstract_prop_definition_by_name_in_env(
-                        environment.as_ref(),
-                        local_name.to_string(),
-                    )
-                    .cloned()
-                });
+            return get_abstract_prop_definition_from_environments(
+                self.imported_module_environments(module_name),
+                local_name,
+            );
         }
 
         self.get_abstract_prop_definition_by_name_in_current_envs(predicate_name)
@@ -120,8 +111,9 @@ impl Runtime {
                     .cloned();
             }
             return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_structs.get(local_name).cloned());
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_structs.get(local_name).cloned());
         }
 
         self.get_struct_definition_by_name_in_current_envs(struct_name)
@@ -149,8 +141,9 @@ impl Runtime {
                     .cloned();
             }
             return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_templates.get(local_name).cloned());
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_templates.get(local_name).cloned());
         }
 
         self.get_template_definition_by_name_in_current_envs(template_name)
@@ -178,8 +171,9 @@ impl Runtime {
                     .cloned();
             }
             return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| environment.defined_thm_stmts.get(local_name).cloned());
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_thm_stmts.get(local_name).cloned());
         }
 
         self.get_thm_definition_by_name_in_current_envs(thm_name)
@@ -192,8 +186,9 @@ impl Runtime {
                 return self.get_thm_trust_summary_by_name_in_current_envs(local_name);
             }
             return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| {
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| {
                     environment
                         .defined_thm_trust_summaries
                         .get(local_name)
@@ -233,8 +228,9 @@ impl Runtime {
                     .cloned();
             }
             return self
-                .imported_module_environment(module_name)
-                .and_then(|environment| {
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| {
                     environment.defined_strategy_stmts.get(local_name).cloned()
                 });
         }
@@ -258,12 +254,8 @@ impl Runtime {
 }
 
 fn split_module_qualified_name(name: &str) -> Option<(&str, &str)> {
-    let parts = name.split(MOD_SIGN).collect::<Vec<&str>>();
-    if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
-        Some((parts[0], parts[1]))
-    } else {
-        None
-    }
+    name.rsplit_once(MOD_SIGN)
+        .filter(|(module_name, local_name)| !module_name.is_empty() && !local_name.is_empty())
 }
 
 fn get_prop_definition_by_name_in_env(
@@ -298,5 +290,40 @@ fn get_abstract_prop_definition_by_name_in_env(
     {
         return None;
     }
+    None
+}
+
+fn get_prop_definition_from_environments(
+    environments: Vec<&Environment>,
+    predicate_name: &str,
+) -> Option<DefPropStmt> {
+    for environment in environments {
+        if let Some(definition) = environment.defined_def_props.get(predicate_name) {
+            return Some(definition.clone());
+        }
+        if environment
+            .defined_abstract_props
+            .contains_key(predicate_name)
+        {
+            return None;
+        }
+    }
+
+    None
+}
+
+fn get_abstract_prop_definition_from_environments(
+    environments: Vec<&Environment>,
+    predicate_name: &str,
+) -> Option<DefAbstractPropStmt> {
+    for environment in environments {
+        if let Some(definition) = environment.defined_abstract_props.get(predicate_name) {
+            return Some(definition.clone());
+        }
+        if environment.defined_def_props.contains_key(predicate_name) {
+            return None;
+        }
+    }
+
     None
 }

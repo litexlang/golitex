@@ -14,7 +14,7 @@ impl Runtime {
         &mut self,
         stmt: &DefThmStmt,
     ) -> Result<(), RuntimeError> {
-        if stmt.is_axiom() && self.strict_mode {
+        if stmt.is_axiom() && self.strict_mode_applies_to_current_module() {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 DefThmStmt::strict_mode_rejection_message(),
@@ -161,7 +161,7 @@ impl Runtime {
         self.store_def_thm_with_trust(stmt, trust_summary)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self.store_trusted_fact_and_infer_with_reason_and_trust(
                 Fact::ForallFact(stmt.forall_fact.clone()),
                 InferReason::Other(stmt.store_reason_with_trust(trust_summary)),

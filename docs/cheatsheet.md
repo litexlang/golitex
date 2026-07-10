@@ -124,8 +124,10 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `import` | Resolves module path/name; checks aliases, cycles, duplicate module names, and duplicate paths. | Runs the imported module normally when it is not already cached. | Registers the module environment, import dependencies, and reactivates cached modules when applicable. |
-| `run_file` | Resolves and reads the file path. | Runs the target file normally. | Executes directly in the current user environment. |
+| `export file` / `export mod` | Allowed only in repository `mod.lit`; validates explicit file/module targets, names, duplicate paths, and recursive manifests. | None during discovery. | Declares the module interface and canonical export graph. |
+| `import` | In repository mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs recursively exported knowledge and the imported module `main.lit` once. | Registers import dependencies and reactivates cached modules when applicable. |
+| `local_import` | Repository-only; the bare name must be declared by the current module's `mod.lit`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity. |
+| `run_file` | Resolves and reads the file path. | Runs the target file normally. | Stores effects in a separate ordinary file environment owned by the current module. |
 | `trust_file` | Resolves and reads a quoted file path like `run_file`. | Skips ordinary proof and well-definedness checking in the loaded file. | Loads trusted environment effects such as facts, definitions, theorem interfaces, object bindings, and strategy registrations. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification in the shared module manager. |
