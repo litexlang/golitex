@@ -39,6 +39,7 @@ impl Runtime {
 
     pub fn exec_alias_thm_stmt(&mut self, stmt: &AliasThmStmt) -> Result<StmtResult, RuntimeError> {
         let target_name = stmt.target_name.to_string();
+        let trust_summary = self.get_thm_trust_summary_by_name(&target_name);
         let mut target = self
             .get_thm_definition_by_name(&target_name)
             .ok_or_else(|| {
@@ -51,7 +52,7 @@ impl Runtime {
             })?;
         target.names = vec![stmt.new_name.clone()];
         target.line_file = stmt.line_file.clone();
-        self.store_def_thm(&target)
+        self.store_def_thm_with_trust(&target, &trust_summary)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }

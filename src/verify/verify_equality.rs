@@ -22,6 +22,12 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(done) =
+            self.try_verify_function_equality_from_known_fn_eq(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
         let mut result =
             self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
@@ -82,6 +88,48 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    // Function extensionality bridge from an already proved `$fn_eq`.
+    // Example: after `$fn_eq(f, g)`, prove the ordinary equality `f = g`.
+    fn try_verify_function_equality_from_known_fn_eq(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let direct = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
+        if let Some(done) =
+            self.try_verify_function_equality_from_one_known_fn_eq(left, right, &direct)?
+        {
+            return Ok(Some(done));
+        }
+
+        let reversed = FnEqualFact::new(right.clone(), left.clone(), line_file.clone());
+        self.try_verify_function_equality_from_one_known_fn_eq(left, right, &reversed)
+    }
+
+    fn try_verify_function_equality_from_one_known_fn_eq(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        fn_eq_fact: &FnEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let fn_eq_atomic: AtomicFact = fn_eq_fact.clone().into();
+        let fn_eq_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_atomic)?;
+        if !fn_eq_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), fn_eq_fact.line_file.clone()).into(),
+                "function equality from known fn_eq".to_string(),
+                vec![fn_eq_result],
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_anonymous_functions_equal_by_fn_eq(

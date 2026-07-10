@@ -175,6 +175,17 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
 
+        if Self::forall_has_literal_empty_obj_parameter_domain(forall_fact) {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    forall_fact.clone().into(),
+                    "forall over empty parameter set".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            );
+        }
+
         self.run_in_local_env(|rt| {
             let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
@@ -187,5 +198,19 @@ impl Runtime {
                 None,
             )
         })
+    }
+
+    fn forall_has_literal_empty_obj_parameter_domain(forall_fact: &ForallFact) -> bool {
+        forall_fact
+            .params_def_with_type
+            .groups
+            .iter()
+            .any(|group| match &group.param_type {
+                ParamType::Obj(Obj::ListSet(list_set)) => list_set.list.is_empty(),
+                ParamType::Obj(Obj::Range(range)) => {
+                    range.start.to_string() == range.end.to_string()
+                }
+                _ => false,
+            })
     }
 }

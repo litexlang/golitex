@@ -35,6 +35,7 @@ pub struct Environment {
     pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+    pub defined_thm_trust_summaries: HashMap<ThmName, ProofTrustSummary>,
     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
@@ -77,6 +78,7 @@ pub struct Environment {
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
+    pub cache_known_fact_trust: HashMap<FactString, ProofTrustSummary>,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -97,6 +99,7 @@ impl Environment {
         structs: HashMap<StructName, DefStructStmt>,
         templates: HashMap<TemplateName, DefTemplateStmt>,
         defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+        defined_thm_trust_summaries: HashMap<ThmName, ProofTrustSummary>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -140,6 +143,7 @@ impl Environment {
         known_set_builder_objs: HashMap<ObjString, (SetBuilder, LineFile)>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
         cache_known_fact: HashMap<FactString, LineFile>,
+        cache_known_fact_trust: HashMap<FactString, ProofTrustSummary>,
     ) -> Self {
         Environment {
             defined_identifiers: objs,
@@ -149,6 +153,7 @@ impl Environment {
             defined_structs: structs,
             defined_templates: templates,
             defined_thm_stmts,
+            defined_thm_trust_summaries,
             defined_strategy_stmts: HashMap::new(),
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
@@ -174,6 +179,7 @@ impl Environment {
             known_antisymmetric_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
+            cache_known_fact_trust,
             used_strategy_stmts: HashMap::new(),
             stopped_strategy_stmts: HashMap::new(),
         }
@@ -796,6 +802,8 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
         )
     }
 }
@@ -885,7 +893,24 @@ impl Environment {
         fact_key: FactString,
         fact_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        self.cache_known_fact.insert(fact_key, fact_line_file);
+        self.store_fact_to_cache_known_fact_with_trust(
+            fact_key,
+            fact_line_file,
+            ProofTrustSummary::new(),
+        )
+    }
+
+    pub fn store_fact_to_cache_known_fact_with_trust(
+        &mut self,
+        fact_key: FactString,
+        fact_line_file: LineFile,
+        trust_summary: ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
+        self.cache_known_fact
+            .insert(fact_key.clone(), fact_line_file);
+        if !trust_summary.is_empty() {
+            self.cache_known_fact_trust.insert(fact_key, trust_summary);
+        }
         Ok(())
     }
 }

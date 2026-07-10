@@ -17,6 +17,7 @@ primary command. Prefer putting them before the command for readability:
 
 ```bash
 litex -detail -strict -f examples/tmp.lit
+litex -summarize -f examples/tmp.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
@@ -30,6 +31,7 @@ is command-oriented, not a general argument parser.
 |--------|---------|
 | `-detail` | Include fuller JSON trace details. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
 | `-strict` | Reject user `proof_debt`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
 Supported language codes are:
@@ -58,6 +60,7 @@ Current mappings:
 | `id` | Indonesian |
 
 `-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
+`-summarize` affects ordinary verifier commands.
 They do not make module-management or tutorial placeholder commands functional.
 
 ## Value Rules
@@ -76,9 +79,9 @@ litex -r examples
 This means source code beginning with `-` should usually be put in a `.lit`
 file and run with `-f`.
 
-Because `-detail` and `-strict` are removed globally before command parsing,
-do not use a standalone command value exactly equal to either flag. `-lang`
-also consumes the next token globally.
+Because `-detail`, `-strict`, and `-summarize` are removed globally before
+command parsing, do not use a standalone command value exactly equal to any of
+those flags. `-lang` also consumes the next token globally.
 
 ## Verifier Commands
 
@@ -92,6 +95,19 @@ also consumes the next token globally.
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
 successful prefix followed by an error object.
+
+With `-summarize`, Litex appends one final JSON object whose `output_type` is
+`"run summary"`. The ordinary statement output before that object is unchanged.
+The summary reports top-level and expanded statement counts, fact/prop/theorem
+definition counts, proof-block and `by` counts, direct `proof_debt` statements,
+indirect proof-debt dependencies, axioms, supposes, abstract interfaces, and
+stack/runner warnings. It also includes `statement_type_counts`,
+`output_type_counts`, and a `statements` array with line numbers and rendered
+statement text for editor-side cursor selection. Prefer:
+
+```bash
+litex -summarize -f examples/tmp.lit
+```
 
 Ordinary verifier commands are designed for interactive inspection. Programs
 should read the JSON result instead of relying only on the process exit code.
@@ -136,11 +152,13 @@ The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
 `claim`. Edges point from the referenced dependency to the later consumer:
 `uses_prop`, `uses_fn`, and `justified_by` for theorem-backed function
-construction. The wrapper includes machine-readable `nodes` and `edges`, plus a
-Mermaid `flowchart LR` string for quick rendering. If the final `<json>` path
-is omitted, Litex prints the graph JSON to stdout for quick debugging. In this
-repository, generated graph JSON, Mermaid, SVG, or PNG artifacts should be
-written under `tmp/graphs/`; `tmp/` is ignored by git.
+construction. The wrapper includes a `summary`, machine-readable `nodes` and
+`edges`, a sorted `usage` table, and a Mermaid `flowchart LR` string for quick
+rendering. Nodes include `uses_count` and `used_by_count`; edges include
+`count`, so UI code can rank often-cited props, functions, facts, and theorems.
+If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
+quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
+artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 
 ## LaTeX Commands
 

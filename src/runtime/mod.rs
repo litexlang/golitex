@@ -7,6 +7,7 @@ mod runtime_instantiate_have_fn_forall;
 mod runtime_instantiate_obj;
 mod runtime_known_object_properties;
 mod runtime_parsing_free_param_collection;
+mod runtime_proof_trust;
 mod runtime_resolve_obj;
 mod runtime_store_arg_satisfy_param_type_when_not_defining_new_identifiers;
 mod runtime_store_fact;

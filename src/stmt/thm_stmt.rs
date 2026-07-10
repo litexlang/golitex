@@ -56,8 +56,16 @@ impl DefThmStmt {
     pub fn store_reason(&self) -> &'static str {
         match self.kind {
             DefThmKind::Theorem => "proved theorem",
-            DefThmKind::Axiom => "declared axiom",
+            DefThmKind::Axiom => Self::axiom_store_reason(),
         }
+    }
+
+    pub fn store_reason_with_trust(&self, trust_summary: &ProofTrustSummary) -> String {
+        trust_summary.reason_with_base(self.store_reason())
+    }
+
+    pub fn axiom_store_reason() -> &'static str {
+        "declared axiom"
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
