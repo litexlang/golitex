@@ -4,13 +4,22 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-const MOD_DOT_LIT: &str = "mod.lit";
-const MAIN_DOT_LIT: &str = "main.lit";
+const LITEX_CONFIG: &str = "litex.config";
+const LEGACY_MOD_DOT_LIT: &str = "mod.lit";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 struct FileNode {
     module_id: ModuleId,
-    file_id: FileEnvId,
+    file_id: FileId,
+}
+
+#[derive(Clone, Copy)]
+pub enum RepositoryFileTarget {
+    Entrance(ModuleId),
+    File {
+        module_id: ModuleId,
+        file_id: FileId,
+    },
 }
 
 pub fn discover_repository(
@@ -18,28 +27,9 @@ pub fn discover_repository(
     repository_path: &str,
 ) -> Result<String, RuntimeError> {
     let repository_root = canonical_directory(repository_path, repository_path, 0)?;
-    let mod_lit_path = repository_root.join(MOD_DOT_LIT);
-    let main_lit_path = repository_root.join(MAIN_DOT_LIT);
-    require_file(
-        &mod_lit_path,
-        format!(
-            "repository `{}` does not contain {}",
-            repository_root.to_string_lossy(),
-            MOD_DOT_LIT
-        ),
-        repository_path,
-        0,
-    )?;
-    require_file(
-        &main_lit_path,
-        format!(
-            "repository `{}` does not contain {}",
-            repository_root.to_string_lossy(),
-            MAIN_DOT_LIT
-        ),
-        repository_path,
-        0,
-    )?;
+    let config_path = require_project_config(&repository_root, repository_path, 0)?;
+    let config = read_project_config(&config_path)?;
+    let main_lit_path = resolve_entrance_file(&repository_root, &config, &config_path)?;
 
     let repository_root_string = path_string(&repository_root, repository_path, 0)?;
     let main_lit_string = path_string(&main_lit_path, repository_path, 0)?;
@@ -47,63 +37,95 @@ pub fn discover_repository(
         .new_repository_path_new_env_new_name_scope(repository_root_string, main_lit_string.clone())
         .map_err(|message| repository_error(message, repository_path, 0))?;
 
-    discover_module_manifest(runtime, root_module_id, &mod_lit_path)?;
+    discover_module_config(runtime, root_module_id, &config_path, config)?;
     let module_import_edges = scan_repository_dependencies(runtime)?;
     reject_cyclic_local_imports(runtime)?;
     reject_cyclic_module_imports(runtime, &module_import_edges)?;
     Ok(main_lit_string)
 }
 
-fn discover_module_manifest(
+pub fn discover_repository_for_file(
     runtime: &mut Runtime,
-    module_id: ModuleId,
-    mod_lit_path: &Path,
-) -> Result<(), RuntimeError> {
-    let content = fs::read_to_string(mod_lit_path).map_err(|error| {
+    file_path: &str,
+) -> Result<Option<RepositoryFileTarget>, RuntimeError> {
+    let canonical_file = fs::canonicalize(file_path).map_err(|error| {
         repository_error(
-            format!(
-                "failed to read {}: {}",
-                mod_lit_path.to_string_lossy(),
-                error
-            ),
-            &mod_lit_path.to_string_lossy(),
+            format!("source file `{}` does not exist: {}", file_path, error),
+            file_path,
             0,
         )
     })?;
-    let mod_lit_string = path_string(mod_lit_path, &mod_lit_path.to_string_lossy(), 0)?;
-    let mut tokenizer = Tokenizer::new();
-    let blocks = tokenizer.parse_blocks(&content, Rc::from(mod_lit_string.as_str()))?;
-
-    for mut block in blocks {
-        if !block.body.is_empty() {
-            return Err(repository_error(
-                "export declarations cannot have a body".to_string(),
-                mod_lit_string.as_str(),
-                block.line_file.0,
-            ));
-        }
-        if block.header.first().map(String::as_str) != Some(EXPORT) {
-            return Err(repository_error(
-                "mod.lit is declarative and may contain only `export file` or `export mod` declarations"
-                    .to_string(),
-                mod_lit_string.as_str(),
-                block.line_file.0,
-            ));
-        }
-        let statement = runtime.parse_stmt(&mut block)?;
-        let Stmt::Command(CommandStmt::ExportStmt(export)) = statement else {
-            unreachable!("export parser should produce an export statement")
-        };
-        discover_export(runtime, module_id, export)?;
+    if !canonical_file.is_file() {
+        return Err(repository_error(
+            format!("source path `{}` is not a file", file_path),
+            file_path,
+            0,
+        ));
     }
+    let canonical_file_string = path_string(&canonical_file, file_path, 0)?;
+    let mut roots = canonical_file
+        .parent()
+        .into_iter()
+        .flat_map(Path::ancestors)
+        .filter(|directory| directory.join(LITEX_CONFIG).is_file())
+        .collect::<Vec<&Path>>();
+    roots.reverse();
 
+    for root in roots {
+        let root_string = path_string(root, file_path, 0)?;
+        let mut probe = Runtime::new();
+        if discover_repository(&mut probe, root_string.as_str()).is_err() {
+            continue;
+        }
+        if repository_target_for_path(&probe, canonical_file_string.as_str()).is_none() {
+            continue;
+        }
+        discover_repository(runtime, root_string.as_str())?;
+        return Ok(repository_target_for_path(
+            runtime,
+            canonical_file_string.as_str(),
+        ));
+    }
+    Ok(None)
+}
+
+fn repository_target_for_path(
+    runtime: &Runtime,
+    source_path: &str,
+) -> Option<RepositoryFileTarget> {
+    for module in runtime.module_manager.modules.values() {
+        if module.main_file_path == source_path {
+            return Some(RepositoryFileTarget::Entrance(module.id));
+        }
+        for file in module.files.iter() {
+            if file.source_path == source_path {
+                return Some(RepositoryFileTarget::File {
+                    module_id: module.id,
+                    file_id: file.id,
+                });
+            }
+        }
+    }
+    None
+}
+
+fn discover_module_config(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    config_path: &Path,
+    config: ProjectConfig,
+) -> Result<(), RuntimeError> {
+    for export in config.exports {
+        discover_config_export(runtime, module_id, config_path, export)?;
+    }
     Ok(())
 }
 
-fn discover_export(
+fn discover_config_export(
     runtime: &mut Runtime,
     owner_module_id: ModuleId,
-    export: ExportStmt,
+    config_path: &Path,
+    export: ProjectExport,
 ) -> Result<(), RuntimeError> {
     let (owner_root, owner_name, is_root) = {
         let owner = runtime
@@ -124,149 +146,125 @@ fn discover_export(
         .contains_key(&export.name)
     {
         return Err(repository_error(
-            format!("duplicate export name `{}` in the same module", export.name),
-            export.line_file.1.as_ref(),
-            export.line_file.0,
+            format!("duplicate export name `{}` in [export]", export.name),
+            &config_path.to_string_lossy(),
+            export.line,
         ));
     }
 
     let target_path = owner_root.join(&export.path);
-    match export.kind {
-        ExportKind::File => {
-            let canonical_path = canonical_file(
-                &target_path,
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            if canonical_path
-                .extension()
-                .and_then(|extension| extension.to_str())
-                != Some("lit")
-            {
-                return Err(repository_error(
-                    "export file must point to a .lit file".to_string(),
-                    export.line_file.1.as_ref(),
-                    export.line_file.0,
-                ));
-            }
-            if canonical_path.file_name().and_then(|name| name.to_str()) == Some(MOD_DOT_LIT) {
-                return Err(repository_error(
-                    "mod.lit is a module declaration file and cannot be exported as a source file"
-                        .to_string(),
-                    export.line_file.1.as_ref(),
-                    export.line_file.0,
-                ));
-            }
-            let source_path = path_string(
-                &canonical_path,
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            let canonical_name = join_module_name(&owner_name, &export.name);
-            let file_id = runtime
-                .module_manager
-                .module_mut(owner_module_id)
-                .expect("manifest owner module should exist")
-                .create_exported_file_environment(source_path.clone(), canonical_name.clone());
-            let target = ImportTarget::File {
-                module_id: owner_module_id,
-                file_id,
-            };
-            runtime
-                .module_manager
-                .register_exported_file(canonical_name, source_path, target)
-                .map_err(|message| {
-                    repository_error(message, export.line_file.1.as_ref(), export.line_file.0)
-                })?;
-            runtime
-                .module_manager
-                .module_mut(owner_module_id)
-                .expect("manifest owner module should exist")
-                .exports
-                .insert(
-                    export.name.clone(),
-                    ExportEntry::File {
-                        name: export.name.clone(),
-                        file_id,
-                    },
-                );
-            if is_root {
-                runtime
-                    .module_manager
-                    .register_root_export(export.name, target)
-                    .map_err(|message| {
-                        repository_error(message, export.line_file.1.as_ref(), export.line_file.0)
-                    })?;
-            }
+    if target_path.is_file() {
+        let canonical_path =
+            canonical_file(&target_path, &config_path.to_string_lossy(), export.line)?;
+        if canonical_path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            != Some("lit")
+        {
+            return Err(repository_error(
+                "[export] file targets must point to a .lit file".to_string(),
+                &config_path.to_string_lossy(),
+                export.line,
+            ));
         }
-        ExportKind::Module => {
-            let canonical_root = canonical_directory(
-                &target_path.to_string_lossy(),
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            let child_mod_lit = canonical_root.join(MOD_DOT_LIT);
-            let child_main_lit = canonical_root.join(MAIN_DOT_LIT);
-            require_file(
-                &child_mod_lit,
-                format!(
-                    "exported module directory `{}` does not contain {}",
-                    canonical_root.to_string_lossy(),
-                    MOD_DOT_LIT
-                ),
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            require_file(
-                &child_main_lit,
-                format!(
-                    "exported module directory `{}` does not contain {}",
-                    canonical_root.to_string_lossy(),
-                    MAIN_DOT_LIT
-                ),
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            let child_name = join_module_name(&owner_name, &export.name);
-            let child_root_string = path_string(
-                &canonical_root,
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            let child_main_string = path_string(
-                &child_main_lit,
-                export.line_file.1.as_ref(),
-                export.line_file.0,
-            )?;
-            let child_module_id = runtime
-                .module_manager
-                .create_discovered_module(child_name, child_root_string, child_main_string)
-                .map_err(|message| {
-                    repository_error(message, export.line_file.1.as_ref(), export.line_file.0)
-                })?;
-            let target = ImportTarget::Module(child_module_id);
+        if canonical_path.file_name().and_then(|name| name.to_str()) == Some(LEGACY_MOD_DOT_LIT) {
+            return Err(repository_error(
+                "mod.lit is obsolete; migrate declarations to litex.config".to_string(),
+                &config_path.to_string_lossy(),
+                export.line,
+            ));
+        }
+        let source_path =
+            path_string(&canonical_path, &config_path.to_string_lossy(), export.line)?;
+        let canonical_name = join_module_name(&owner_name, &export.name);
+        let file_id = runtime
+            .module_manager
+            .module_mut(owner_module_id)
+            .expect("manifest owner module should exist")
+            .create_exported_file(source_path.clone(), canonical_name.clone());
+        let target = ImportTarget::File {
+            module_id: owner_module_id,
+            file_id,
+        };
+        runtime
+            .module_manager
+            .register_exported_file(canonical_name, source_path, target)
+            .map_err(|message| {
+                repository_error(message, &config_path.to_string_lossy(), export.line)
+            })?;
+        runtime
+            .module_manager
+            .module_mut(owner_module_id)
+            .expect("manifest owner module should exist")
+            .exports
+            .insert(
+                export.name.clone(),
+                ExportEntry::File {
+                    name: export.name.clone(),
+                    file_id,
+                },
+            );
+        if is_root {
             runtime
                 .module_manager
-                .module_mut(owner_module_id)
-                .expect("manifest owner module should exist")
-                .exports
-                .insert(
-                    export.name.clone(),
-                    ExportEntry::Module {
-                        name: export.name.clone(),
-                        module_id: child_module_id,
-                    },
-                );
-            if is_root {
-                runtime
-                    .module_manager
-                    .register_root_export(export.name, target)
-                    .map_err(|message| {
-                        repository_error(message, export.line_file.1.as_ref(), export.line_file.0)
-                    })?;
-            }
-            discover_module_manifest(runtime, child_module_id, &child_mod_lit)?;
+                .register_root_export(export.name, target)
+                .map_err(|message| {
+                    repository_error(message, &config_path.to_string_lossy(), export.line)
+                })?;
         }
+    } else if target_path.is_dir() {
+        let canonical_root = canonical_directory(
+            &target_path.to_string_lossy(),
+            &config_path.to_string_lossy(),
+            export.line,
+        )?;
+        let child_config_path =
+            require_project_config(&canonical_root, &config_path.to_string_lossy(), export.line)?;
+        let child_config = read_project_config(&child_config_path)?;
+        let child_main_lit =
+            resolve_entrance_file(&canonical_root, &child_config, &child_config_path)?;
+        let child_name = join_module_name(&owner_name, &export.name);
+        let child_root_string =
+            path_string(&canonical_root, &config_path.to_string_lossy(), export.line)?;
+        let child_main_string =
+            path_string(&child_main_lit, &config_path.to_string_lossy(), export.line)?;
+        let child_module_id = runtime
+            .module_manager
+            .create_discovered_module(child_name, child_root_string, child_main_string)
+            .map_err(|message| {
+                repository_error(message, &config_path.to_string_lossy(), export.line)
+            })?;
+        let target = ImportTarget::Module(child_module_id);
+        runtime
+            .module_manager
+            .module_mut(owner_module_id)
+            .expect("manifest owner module should exist")
+            .exports
+            .insert(
+                export.name.clone(),
+                ExportEntry::Module {
+                    name: export.name.clone(),
+                    module_id: child_module_id,
+                },
+            );
+        if is_root {
+            runtime
+                .module_manager
+                .register_root_export(export.name, target)
+                .map_err(|message| {
+                    repository_error(message, &config_path.to_string_lossy(), export.line)
+                })?;
+        }
+        discover_module_config(runtime, child_module_id, &child_config_path, child_config)?;
+    } else {
+        return Err(repository_error(
+            format!(
+                "[export] target `{}` does not exist",
+                target_path.to_string_lossy()
+            ),
+            &config_path.to_string_lossy(),
+            export.line,
+        ));
     }
     Ok(())
 }
@@ -282,25 +280,17 @@ fn scan_repository_dependencies(
         .copied()
         .collect::<Vec<ModuleId>>();
     for module_id in module_ids {
-        let (main_path, exported_files, exported_modules) = {
+        let (main_path, exported_files) = {
             let module = runtime
                 .module_manager
                 .module(module_id)
                 .expect("discovered module should exist");
             let files = module
-                .file_environments
+                .files
                 .iter()
                 .map(|file| (file.id, file.source_path.clone()))
-                .collect::<Vec<(FileEnvId, String)>>();
-            let modules = module
-                .exports
-                .values()
-                .filter_map(|export| match export {
-                    ExportEntry::Module { module_id, .. } => Some(*module_id),
-                    ExportEntry::File { .. } => None,
-                })
-                .collect::<Vec<ModuleId>>();
-            (module.main_file_path.clone(), files, modules)
+                .collect::<Vec<(FileId, String)>>();
+            (module.main_file_path.clone(), files)
         };
 
         let (main_imports, main_module_imports) =
@@ -308,7 +298,6 @@ fn scan_repository_dependencies(
         let main_edges = module_import_edges
             .entry(module_id)
             .or_insert_with(Vec::new);
-        main_edges.extend(exported_modules);
         for imported_module in main_module_imports {
             if !main_edges.contains(&imported_module) {
                 main_edges.push(imported_module);
@@ -334,7 +323,7 @@ fn scan_repository_dependencies(
             runtime
                 .module_manager
                 .module_mut(module_id)
-                .and_then(|module| module.file_environment_mut(file_id))
+                .and_then(|module| module.file_mut(file_id))
                 .expect("exported file should exist")
                 .local_imports = imports;
         }
@@ -363,7 +352,7 @@ fn scan_source_dependencies(
         let first_token = block.header.first().map(String::as_str);
         if first_token == Some(EXPORT) {
             return Err(repository_error(
-                "export is declarative and can only appear in mod.lit".to_string(),
+                "`export` is configured in litex.config and is not a Litex statement".to_string(),
                 source_path,
                 block.line_file.0,
             ));
@@ -376,7 +365,7 @@ fn scan_source_dependencies(
             match import {
                 ImportStmt::ImportRelativePath(_) => {
                     return Err(repository_error(
-                        "repository mode import must name a root export or globally registered module; use mod.lit and local_import for module-local dependencies"
+                        "project mode import must name a root export or globally registered module; use litex.config and local_import for module-local dependencies"
                             .to_string(),
                         source_path,
                         block.line_file.0,
@@ -426,7 +415,7 @@ fn scan_source_dependencies(
             .ok_or_else(|| {
                 repository_error(
                     format!(
-                        "local_import `{}` is not declared by this module's mod.lit",
+                        "local_import `{}` is not declared by this module's litex.config",
                         local_import.name
                     ),
                     source_path,
@@ -466,7 +455,7 @@ fn reject_nested_local_imports(blocks: &[TokenBlock]) -> Result<(), RuntimeError
 fn reject_cyclic_local_imports(runtime: &Runtime) -> Result<(), RuntimeError> {
     let mut edges = HashMap::<FileNode, Vec<FileNode>>::new();
     for module in runtime.module_manager.modules.values() {
-        for file in module.file_environments.iter() {
+        for file in module.files.iter() {
             let node = FileNode {
                 module_id: module.id,
                 file_id: file.id,
@@ -500,7 +489,7 @@ fn reject_cyclic_local_imports(runtime: &Runtime) -> Result<(), RuntimeError> {
             let source_path = runtime
                 .module_manager
                 .module(node.module_id)
-                .and_then(|module| module.file_environment(node.file_id))
+                .and_then(|module| module.file(node.file_id))
                 .map(|file| file.source_path.as_str())
                 .unwrap_or("");
             return Err(repository_error(
@@ -630,8 +619,8 @@ fn file_node_name(runtime: &Runtime, node: FileNode) -> String {
     runtime
         .module_manager
         .module(node.module_id)
-        .and_then(|module| module.file_environment(node.file_id))
-        .and_then(|file| file.canonical_name.clone())
+        .and_then(|module| module.file(node.file_id))
+        .map(|file| file.canonical_name.clone())
         .unwrap_or_else(|| format!("file#{}", node.file_id.0))
 }
 
@@ -661,7 +650,7 @@ fn canonical_file(path: &Path, source_path: &str, line: usize) -> Result<PathBuf
     let canonical = fs::canonicalize(path).map_err(|error| {
         repository_error(
             format!(
-                "exported file `{}` does not exist: {}",
+                "source file `{}` does not exist: {}",
                 path.to_string_lossy(),
                 error
             ),
@@ -672,7 +661,7 @@ fn canonical_file(path: &Path, source_path: &str, line: usize) -> Result<PathBuf
     if !canonical.is_file() {
         return Err(repository_error(
             format!(
-                "export file path `{}` is not a file",
+                "configured source path `{}` is not a file",
                 path.to_string_lossy()
             ),
             source_path,
@@ -680,6 +669,81 @@ fn canonical_file(path: &Path, source_path: &str, line: usize) -> Result<PathBuf
         ));
     }
     Ok(canonical)
+}
+
+fn require_project_config(
+    directory: &Path,
+    source_path: &str,
+    line: usize,
+) -> Result<PathBuf, RuntimeError> {
+    let legacy_path = directory.join(LEGACY_MOD_DOT_LIT);
+    if legacy_path.is_file() {
+        return Err(repository_error(
+            format!(
+                "{} is obsolete; move its declarations to {}/{}",
+                legacy_path.to_string_lossy(),
+                directory.to_string_lossy(),
+                LITEX_CONFIG
+            ),
+            source_path,
+            line,
+        ));
+    }
+    let config_path = directory.join(LITEX_CONFIG);
+    require_file(
+        &config_path,
+        format!(
+            "project directory `{}` does not contain {}",
+            directory.to_string_lossy(),
+            LITEX_CONFIG
+        ),
+        source_path,
+        line,
+    )?;
+    Ok(config_path)
+}
+
+fn read_project_config(config_path: &Path) -> Result<ProjectConfig, RuntimeError> {
+    let config_path_string = path_string(config_path, &config_path.to_string_lossy(), 0)?;
+    let content = fs::read_to_string(config_path).map_err(|error| {
+        repository_error(
+            format!(
+                "failed to read {}: {}",
+                config_path.to_string_lossy(),
+                error
+            ),
+            config_path_string.as_str(),
+            0,
+        )
+    })?;
+    parse_project_config(content.as_str(), config_path_string.as_str())
+}
+
+fn resolve_entrance_file(
+    root: &Path,
+    config: &ProjectConfig,
+    config_path: &Path,
+) -> Result<PathBuf, RuntimeError> {
+    let path = canonical_file(
+        &root.join(&config.entrance_path),
+        &config_path.to_string_lossy(),
+        config.entrance_line,
+    )?;
+    if path.extension().and_then(|extension| extension.to_str()) != Some("lit") {
+        return Err(repository_error(
+            "[entrance].file must point to a .lit file".to_string(),
+            &config_path.to_string_lossy(),
+            config.entrance_line,
+        ));
+    }
+    if path.file_name().and_then(|name| name.to_str()) == Some(LEGACY_MOD_DOT_LIT) {
+        return Err(repository_error(
+            "[entrance].file cannot point to obsolete mod.lit".to_string(),
+            &config_path.to_string_lossy(),
+            config.entrance_line,
+        ));
+    }
+    Ok(path)
 }
 
 fn require_file(
@@ -734,25 +798,30 @@ mod tests {
             let a = root.join("A");
             let chapters = a.join("chapters");
             fs::create_dir_all(&chapters).expect("create repository fixture");
-            write_file(&root.join("mod.lit"), "export mod \"./A\" as A\n");
+            write_project_config(&root, "./main.lit", &[("A", "./A")]);
             write_file(
                 &root.join("main.lit"),
                 "import A\n\nA::chapters::leaf::x = 1\n",
             );
-            write_file(
-                &a.join("mod.lit"),
-                "export file \"./chap2.lit\" as chap2\nexport file \"./chap3.lit\" as chap3\nexport mod \"./chapters\" as chapters\n",
+            write_project_config(
+                &a,
+                "./main.lit",
+                &[
+                    ("chap2", "./chap2.lit"),
+                    ("chap3", "./chap3.lit"),
+                    ("chapters", "./chapters"),
+                ],
             );
-            write_file(&a.join("main.lit"), "local_import chap3\n\nchap3::z = 1\n");
+            write_file(
+                &a.join("main.lit"),
+                "local_import chap3\nlocal_import chapters\n\nchap3::z = 1\n",
+            );
             write_file(&a.join("chap2.lit"), "have x R = 1\n");
             write_file(
                 &a.join("chap3.lit"),
                 "local_import chap2\n\nhave z R = chap2::x\n",
             );
-            write_file(
-                &chapters.join("mod.lit"),
-                "export file \"./leaf.lit\" as leaf\n",
-            );
+            write_project_config(&chapters, "./main.lit", &[("leaf", "./leaf.lit")]);
             write_file(
                 &chapters.join("main.lit"),
                 "local_import leaf\n\nleaf::x = 1\n",
@@ -772,14 +841,80 @@ mod tests {
     }
 
     #[test]
+    fn repository_example_works_across_output_frontends() {
+        run_repository_test_with_large_stack("repository_frontends", || {
+            let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("examples")
+                .join("08_module_repository");
+            let repository_path = root.to_str().expect("example path is UTF-8");
+
+            let (verifier_ok, verifier_output) = run_repository_with_output(
+                repository_path,
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(verifier_ok, "{verifier_output}");
+            assert!(verifier_output.contains("A::chap3::z = 1"));
+
+            let (runner_ok, runner_output) = run_runner_for_repo(repository_path, true);
+            assert!(runner_ok, "{runner_output}");
+
+            let (graph_ok, graph_output) = run_graph_for_repo(repository_path, true);
+            assert!(graph_ok, "{graph_output}");
+
+            let latex_output =
+                crate::to_latex::to_latex_from_repository_after_builtins(repository_path)
+                    .unwrap_or_else(|error| panic!("repository LaTeX failed: {error:?}"));
+            assert!(latex_output.contains("A::chap3"), "{latex_output}");
+
+            let python_output =
+                crate::to_python::to_python_from_repository_after_builtins(repository_path)
+                    .unwrap_or_else(|error| panic!("repository Python failed: {error:?}"));
+            assert_eq!(python_output, "answer = 1.0");
+
+            let chapter_path = root.join("A").join("chap3.lit");
+            let chapter_path_string = chapter_path.to_str().expect("chapter path is UTF-8");
+            let (chapter_ok, chapter_output) = run_source_code_in_file_with_ok(chapter_path_string);
+            assert!(chapter_ok, "{chapter_output}");
+            assert!(chapter_output.contains("A::chap2::x"), "{chapter_output}");
+
+            let (chapter_runner_ok, chapter_runner_output) =
+                run_runner_for_file(chapter_path_string, true);
+            assert!(chapter_runner_ok, "{chapter_runner_output}");
+
+            let (chapter_graph_ok, chapter_graph_output) =
+                run_graph_for_file(chapter_path_string, true);
+            assert!(chapter_graph_ok, "{chapter_graph_output}");
+
+            let chapter_latex =
+                crate::to_latex::to_latex_from_file_after_builtins(chapter_path_string)
+                    .unwrap_or_else(|error| panic!("project chapter LaTeX failed: {error:?}"));
+            assert!(
+                chapter_latex.contains("local\\_import chap2"),
+                "{chapter_latex}"
+            );
+
+            let mut isolated_runtime = Runtime::new_with_builtin_code();
+            let (_, isolated_error) = crate::pipeline::run_file_with_project_context(
+                chapter_path_string,
+                &mut isolated_runtime,
+                true,
+            );
+            assert!(
+                isolated_error.is_some(),
+                "isolated mode must not load chap2"
+            );
+        });
+    }
+
+    #[test]
     fn repository_discovery_rejects_local_import_cycles_before_execution() {
         run_repository_test_with_large_stack("repository_cycle", || {
             let root = repository_test_dir("cycle");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_file(
-                &root.join("mod.lit"),
-                "export file \"./a.lit\" as a\nexport file \"./b.lit\" as b\n",
-            );
+            write_project_config(&root, "./main.lit", &[("a", "./a.lit"), ("b", "./b.lit")]);
             write_file(&root.join("main.lit"), "local_import a\n");
             write_file(&root.join("a.lit"), "local_import b\n");
             write_file(&root.join("b.lit"), "local_import a\n");
@@ -808,14 +943,11 @@ mod tests {
             let b = root.join("B");
             fs::create_dir_all(&a).expect("create A fixture");
             fs::create_dir_all(&b).expect("create B fixture");
-            write_file(
-                &root.join("mod.lit"),
-                "export mod \"./A\" as A\nexport mod \"./B\" as B\n",
-            );
+            write_project_config(&root, "./main.lit", &[("A", "./A"), ("B", "./B")]);
             write_file(&root.join("main.lit"), "import A\n");
-            write_file(&a.join("mod.lit"), "");
+            write_project_config(&a, "./main.lit", &[]);
             write_file(&a.join("main.lit"), "import B\n");
-            write_file(&b.join("mod.lit"), "");
+            write_project_config(&b, "./main.lit", &[]);
             write_file(&b.join("main.lit"), "import A\n");
 
             let (ok, output) = run_repository_with_output(
@@ -841,16 +973,17 @@ mod tests {
             let root = repository_test_dir("root-file-scope");
             let a = root.join("A");
             fs::create_dir_all(&a).expect("create A fixture");
-            write_file(
-                &root.join("mod.lit"),
-                "export file \"./shared.lit\" as shared\nexport mod \"./A\" as A\n",
+            write_project_config(
+                &root,
+                "./main.lit",
+                &[("shared", "./shared.lit"), ("A", "./A")],
             );
             write_file(
                 &root.join("main.lit"),
                 "local_import shared\nshared::root_x = 1\nimport A\n",
             );
             write_file(&root.join("shared.lit"), "have root_x R = 1\n");
-            write_file(&a.join("mod.lit"), "");
+            write_project_config(&a, "./main.lit", &[]);
             write_file(&a.join("main.lit"), "shared::root_x = 1\n");
 
             let (ok, output) = run_repository_with_output(
@@ -869,24 +1002,23 @@ mod tests {
     }
 
     #[test]
-    fn file_mode_rejects_manifests_exports_and_local_imports() {
+    fn file_mode_rejects_configs_exports_and_unregistered_local_imports() {
         run_repository_test_with_large_stack("file_mode_module_syntax", || {
             let root = repository_test_dir("file-mode");
             fs::create_dir_all(&root).expect("create repository fixture");
-            let manifest = root.join("mod.lit");
+            let config = root.join("litex.config");
             let export_script = root.join("export-script.lit");
             let local_import_script = root.join("local-import-script.lit");
-            write_file(&manifest, "export file \"./x.lit\" as x\n");
+            write_project_config(&root, "./main.lit", &[]);
             write_file(&export_script, "export file \"./x.lit\" as x\n");
             write_file(&local_import_script, "local_import x\n");
 
-            let (manifest_ok, manifest_output) =
-                run_source_code_in_file_with_ok(manifest.to_str().expect("fixture path is UTF-8"));
-            assert!(!manifest_ok, "{manifest_output}");
+            let (config_ok, config_output) =
+                run_source_code_in_file_with_ok(config.to_str().expect("fixture path is UTF-8"));
+            assert!(!config_ok, "{config_output}");
             assert!(
-                manifest_output
-                    .contains("mod.lit is a module declaration file; run the project with -r"),
-                "{manifest_output}"
+                config_output.contains("litex.config is project configuration"),
+                "{config_output}"
             );
 
             let (export_ok, export_output) = run_source_code_in_file_with_ok(
@@ -894,7 +1026,7 @@ mod tests {
             );
             assert!(!export_ok, "{export_output}");
             assert!(
-                export_output.contains("export is unavailable in isolated file mode"),
+                export_output.contains("`export` is configured in litex.config"),
                 "{export_output}"
             );
 
@@ -906,6 +1038,87 @@ mod tests {
                 local_output.contains("local_import is unavailable in isolated file mode"),
                 "{local_output}"
             );
+        });
+    }
+
+    #[test]
+    fn repository_mode_rejects_legacy_mod_lit_with_migration_message() {
+        run_repository_test_with_large_stack("legacy_mod_lit", || {
+            let root = repository_test_dir("legacy-mod-lit");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_file(
+                &root.join("mod.lit"),
+                "export file \"./chap1.lit\" as chap1\n",
+            );
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!ok, "{output}");
+            assert!(output.contains("mod.lit is obsolete"), "{output}");
+            assert!(output.contains("litex.config"), "{output}");
+        });
+    }
+
+    #[test]
+    fn registered_file_runs_its_local_import_closure_without_running_unrelated_exports() {
+        run_repository_test_with_large_stack("repository_file_target", || {
+            let root = repository_test_dir("file-target");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(
+                &root,
+                "./book.lit",
+                &[
+                    ("chap6", "./chap6.lit"),
+                    ("chap7", "./chap7.lit"),
+                    ("python_chapter", "./python_chapter.lit"),
+                    ("broken", "./broken.lit"),
+                ],
+            );
+            write_file(&root.join("book.lit"), "have title R = 1\n");
+            write_file(&root.join("chap6.lit"), "have base R = 1\n");
+            write_file(
+                &root.join("chap7.lit"),
+                "local_import chap6\n\nhave result R = chap6::base\n",
+            );
+            write_file(
+                &root.join("python_chapter.lit"),
+                "local_import chap6\n\nhave answer R = 1\n",
+            );
+            write_file(&root.join("broken.lit"), "1 = 0\n");
+
+            let (entry_ok, entry_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(entry_ok, "{entry_output}");
+            assert!(!entry_output.contains("1 = 0"), "{entry_output}");
+
+            let (chapter_ok, chapter_output) = run_source_code_in_file_with_ok(
+                root.join("chap7.lit")
+                    .to_str()
+                    .expect("fixture path is UTF-8"),
+            );
+            assert!(chapter_ok, "{chapter_output}");
+            assert!(
+                chapter_output.contains("result = chap6::base"),
+                "{chapter_output}"
+            );
+
+            let python_output = crate::to_python::to_python_from_file_after_builtins(
+                root.join("python_chapter.lit")
+                    .to_str()
+                    .expect("fixture path is UTF-8"),
+            )
+            .unwrap_or_else(|error| panic!("project chapter Python failed: {error:?}"));
+            assert_eq!(python_output, "answer = 1.0");
         });
     }
 
@@ -925,5 +1138,16 @@ mod tests {
 
     fn write_file(path: &Path, content: &str) {
         fs::write(path, content).expect("write repository fixture");
+    }
+
+    fn write_project_config(root: &Path, entrance: &str, exports: &[(&str, &str)]) {
+        let mut content = format!("[entrance]\nfile = \"{}\"\n", entrance);
+        if !exports.is_empty() {
+            content.push_str("\n[export]\n");
+            for (name, path) in exports {
+                content.push_str(format!("{} = \"{}\"\n", name, path).as_str());
+            }
+        }
+        write_file(&root.join("litex.config"), content.as_str());
     }
 }

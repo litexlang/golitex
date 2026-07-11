@@ -38,7 +38,7 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            for environment in self.active_imported_module_environments(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
                 if result.is_true() {
                     return Ok(result);
@@ -76,7 +76,7 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            for environment in self.active_imported_module_environments(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
                 if result.is_true() {
                     return Ok(result);
@@ -126,7 +126,7 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            for environment in self.active_imported_module_environments(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
                     environment,
                     atomic_fact,
@@ -195,7 +195,7 @@ impl Runtime {
     ) {
         result.extend(self.get_all_objs_equal_to_given(given));
         for module_name in module_names.iter() {
-            let environments = self.active_imported_module_environments(module_name);
+            let environments = self.imported_module_environments(module_name);
             if environments.is_empty() {
                 continue;
             }

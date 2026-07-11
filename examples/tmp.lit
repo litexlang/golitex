@@ -1,1156 +1,5786 @@
-"""
-Historical Codex transcript: the three Q/A pairs after the C++/Runtime module-registry question.
-Source: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
-
-===== 问题 1 (jsonl line 2551) =====
-给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
-
-===== 回答 1 (jsonl line 2568) =====
-<proposed_plan>
-# Litex Runtime / ModuleRunner 目标架构
-
-## 1. 总体原则
-
-不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
-
-一次 top-level 执行对应一个 `Runtime`：
-
-```text
-Runtime
-├── ModuleManager                  // 本次运行中的所有 module
-│   ├── builtin environment
-│   ├── main module runner
-│   ├── imported module runner
-│   └── ...
-└── execution_stack                // 当前执行位置
-```
-
-Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
-
-`ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
-
----
-
-## 2. 基础 ID 和模式类型
-
-```rust
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct ModuleId(pub usize);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct FileEnvId(pub usize);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FileLoadMode {
-    Run,
-    Trust,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ModuleStatus {
-    Loading,
-    Loaded,
-    Stopped,
-}
-```
-
-使用 `ModuleId` 而不是互相引用：
-
-```text
-ModuleRunner A  --imports--> ModuleId(B)
-ModuleRunner B  --imports--> ModuleId(C)
-```
-
-真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
-
----
-
-## 3. Environment：保持为事实存储层
-
-现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
-
-它继续保存：
-
-```rust
-pub struct Environment {
-    // definitions
-    pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
-    pub defined_def_props: HashMap<PropName, DefPropStmt>,
-    pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-    pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
-    pub defined_structs: HashMap<StructName, DefStructStmt>,
-    pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
-    pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
-    pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
-
-    // equality and fact indexes
-    pub known_equality: ...,
-    pub known_atomic_facts_with_1_arg: ...,
-    pub known_atomic_facts_with_2_args: ...,
-    pub known_exist_facts: ...,
-    pub known_or_facts: ...,
-    pub known_atomic_facts_in_forall_facts: ...,
-
-    // object-shape caches
-    pub known_objs_equal_to_tuple: ...,
-    pub known_objs_equal_to_cart: ...,
-    pub known_obj_values: ...,
-    pub known_objs_equal_to_set_builder: ...,
-
-    // verifier caches
-    pub cache_well_defined_obj: ...,
-    pub cache_known_fact: ...,
-    pub cache_known_fact_trust: ...,
-
-    // strategy registrations
-    pub known_transitive_props: ...,
-    pub known_symmetric_props: ...,
-    pub known_reflexive_props: ...,
-    pub known_antisymmetric_props: ...,
-}
-```
-
-这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
-
-`Environment` 的职责只有：
-
-```text
-保存事实
-保存定义
-保存索引
-保存 verifier cache
-```
-
-它不负责：
-
-```text
-module import
-文件读取
-当前执行位置
-跨 module 查找
-```
-
----
-
-## 4. FileEnvironment：run_file / trust_file 的独立环境
-
-`run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
-
-```rust
-pub struct FileEnvironment {
-    pub id: FileEnvId,
-    pub source_path: String,
-    pub mode: FileLoadMode,
-    pub environment: Environment,
-}
-```
-
-一个 module 的结构变成：
-
-```text
-ModuleRunner
-├── main_env
-├── file_envs[0]  // run_file "a.lit"
-├── file_envs[1]  // trust_file "b.lit"
-└── file_envs[2]  // run_file "c.lit"
-```
-
-`run_file`：
-
-```text
-创建 FileEnvironment(mode = Run)
-执行文件
-成功后保留 FileEnvironment
-```
-
-`trust_file`：
-
-```text
-创建 FileEnvironment(mode = Trust)
-跳过普通 proof verification，但执行环境效果
-成功后保留 FileEnvironment
-```
-
-如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
-
----
-
-## 5. ModuleRunner：单个 module 的本地状态
-
-```rust
-pub struct ModuleRunner {
-    pub id: ModuleId,
-
-    pub module_name: String,
-    pub module_root_path: String,
-    pub main_file_path: String,
-    pub is_std: bool,
-
-    // module 自己的主环境
-    pub main_environment: Environment,
-
-    // run_file / trust_file 产生的持久环境
-    pub file_environments: Vec<FileEnvironment>,
-
-    // module graph 中的依赖
-    pub imports: Vec<ModuleId>,
-
-    pub status: ModuleStatus,
-}
-```
-
-`ModuleRunner` 只负责本地状态：
-
-```rust
-impl ModuleRunner {
-    pub fn main_environment(&self) -> &Environment;
-    pub fn main_environment_mut(&mut self) -> &mut Environment;
-
-    pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
-    pub fn file_environment_mut(&mut self, id: FileEnvId)
-        -> Option<&mut FileEnvironment>;
-
-    pub fn create_file_environment(
-        &mut self,
-        path: String,
-        mode: FileLoadMode,
-    ) -> FileEnvId;
-}
-```
-
-不建议写成：
-
-```rust
-impl ModuleRunner {
-    pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
-}
-```
-
-因为这样会导致：
-
-```text
-ModuleRunner 借用了 Runtime 内部的一部分
-同时又需要完整借用 Runtime
-```
-
-这正是 Rust 借用检查器最容易卡住的地方。
-
-正确的入口仍然是：
-
-```rust
-runtime.run_stmt(stmt)
-```
-
-而不是：
-
-```rust
-runtime.current_module().run_stmt(stmt)
-```
-
----
-
-## 6. ModuleManager：本次运行中的 module world
-
-现在的 `ModuleManager` 可以演化为：
-
-```rust
-pub struct ModuleManager {
-    // builtin background
-    pub builtin_environment: Environment,
-
-    // 所有 module runner
-    pub modules: HashMap<ModuleId, ModuleRunner>,
-
-    // lookup indexes
-    pub module_by_name: HashMap<String, ModuleId>,
-    pub module_by_path: HashMap<String, ModuleId>,
-
-    // import lifecycle
-    pub loading_import_stack: Vec<ModuleId>,
-    pub pending_import_dependencies:
-        HashMap<ModuleId, Vec<ModuleId>>,
-
-    // stop import
-    pub stopped_modules: HashSet<ModuleId>,
-
-    pub next_module_id: usize,
-}
-```
-
-主要方法：
-
-```rust
-impl ModuleManager {
-    pub fn create_entry_module(
-        &mut self,
-        name: String,
-        path: String,
-    ) -> ModuleId;
-
-    pub fn begin_import(
-        &mut self,
-        name: String,
-        path: String,
-    ) -> Result<ModuleId, RuntimeError>;
-
-    pub fn finish_import(
-        &mut self,
-        module_id: ModuleId,
-    );
-
-    pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
-
-    pub fn module_mut(
-        &mut self,
-        id: ModuleId,
-    ) -> Option<&mut ModuleRunner>;
-
-    pub fn module_by_name(
-        &self,
-        name: &str,
-    ) -> Option<&ModuleRunner>;
-
-    pub fn resolve_module_name(
-        &self,
-        name: &str,
-    ) -> Result<ModuleId, RuntimeError>;
-}
-```
-
-原来的：
-
-```rust
-ImportedModule {
-    absolute_path,
-    environment,
-    is_std,
-    import_dependencies,
-}
-```
-
-可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
-
----
-
-## 7. ExecutionFrame：当前正在执行什么
-
-`Runtime` 需要知道当前正在执行：
-
-- 哪个 module；
-- module 的 main file 还是某个 run_file；
-- 当前 source path；
-- 当前局部 proof environment；
-- 当前解析时的 free parameters。
-
-```rust
-pub enum ExecutionLayer {
-    Main,
-    File(FileEnvId),
-}
-
-pub struct SourceContext {
-    pub source_path: String,
-    pub layer: ExecutionLayer,
-}
-
-pub struct ExecutionFrame {
-    pub module_id: ModuleId,
-    pub source: SourceContext,
-
-    // claim / forall / exist / cases 等局部环境
-    pub local_environment_stack: Vec<Environment>,
-
-    // 当前 source 的解析状态
-    pub parsing_free_param_collection: FreeParamCollection,
-}
-```
-
-这里要区分两种 environment：
-
-```text
-ModuleRunner.main_environment
-ModuleRunner.file_environments
-    └── 持久的文件环境
-
-ExecutionFrame.local_environment_stack
-    └── 临时的 proof/local scope
-```
-
-例如：
-
-```text
-main_env
-file_envs[0]
-file_envs[1]
-local_env_stack[0]   // claim
-local_env_stack[1]   // forall body
-```
-
-局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
-
----
-
-## 8. Runtime：一次完整执行的总协调者
-
-目标结构：
-
-```rust
-pub struct Runtime {
-    // 本次 top-level run 的 module 世界
-    pub module_manager: ModuleManager,
-
-    // 当前执行位置
-    pub execution_stack: Vec<ExecutionFrame>,
-
-    // output / execution options
-    pub detail_output: bool,
-    pub strict_mode: bool,
-    pub output_language: OutputLanguage,
-    pub loading_builtin_code: bool,
-}
-```
-
-最终不再需要：
-
-```rust
-pub environment_stack: Vec<Box<Environment>>;
-pub only_exec_affect_environment: bool;
-```
-
-因为：
-
-```text
-environment_stack
-    → 拆成 ModuleRunner 的 main/file env
-      + ExecutionFrame 的 local env stack
-
-only_exec_affect_environment
-    → 改成 FileLoadMode::Trust
-```
-
-Runtime 的核心接口：
-
-```rust
-impl Runtime {
-    pub fn new() -> Self;
-
-    pub fn run_entry_file(
-        &mut self,
-        path: &str,
-    ) -> RunResult;
-
-    pub fn run_source_code(
-        &mut self,
-        source: &str,
-        context: SourceContext,
-    ) -> RunResult;
-
-    pub fn run_stmt(
-        &mut self,
-        stmt: &Stmt,
-    ) -> Result<StmtResult, RuntimeError>;
-
-    pub fn run_import_stmt(
-        &mut self,
-        stmt: &ImportStmt,
-    ) -> Result<StmtResult, RuntimeError>;
-
-    pub fn run_file_stmt(
-        &mut self,
-        stmt: &RunFileStmt,
-    ) -> Result<StmtResult, RuntimeError>;
-
-    pub fn current_module_id(&self) -> ModuleId;
-
-    pub fn current_module(&self) -> &ModuleRunner;
-
-    pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
-
-    pub fn lookup_environment(
-        &self,
-        reference: &Obj,
-    ) -> LookupResult;
-}
-```
-
-但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
-
----
-
-## 9. LookupResult：跨 environment / module 查找
-
-现在很多 verifier 直接遍历：
-
-```rust
-self.environment_stack.iter().rev()
-```
-
-目标是把这件事集中到 Runtime：
-
-```rust
-pub enum EnvironmentSource {
-    LocalScope,
-    CurrentFile,
-    CurrentModuleMain,
-    Builtin,
-    ImportedModule(ModuleId),
-}
-
-pub struct EnvironmentRef<'a> {
-    pub source: EnvironmentSource,
-    pub environment: &'a Environment,
-}
-
-pub struct LookupResult<'a> {
-    pub environments: Vec<EnvironmentRef<'a>>,
-}
-```
-
-逻辑顺序可以是：
-
-```text
-1. 当前 execution frame 的 local_environment_stack
-2. 当前 file environment
-3. 当前 module 的其他 file environments
-4. 当前 module 的 main_environment
-5. builtin_environment
-6. 被明确引用的 imported module
-```
-
-重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
-
----
-
-## 10. 一次执行的完整入口
-
-### 入口文件
-
-```text
-run_source_code_in_file(path)
-    ↓
-创建 Runtime
-    ↓
-初始化 builtin_environment
-    ↓
-创建 entry ModuleRunner
-    ↓
-push ExecutionFrame {
-    module_id: entry_module,
-    layer: Main,
-    source_path: entry_path,
-}
-    ↓
-tokenizer.parse_blocks
-    ↓
-runtime.parse_stmt
-    ↓
-runtime.run_stmt
-```
-
-### 普通 statement
-
-```text
-Runtime::run_stmt(stmt)
-    ↓
-读取 current ExecutionFrame
-    ↓
-Runtime 构造 lookup view
-    ↓
-执行 well-definedness
-    ↓
-执行 verifier
-    ↓
-执行 infer
-    ↓
-把新事实写入当前 layer 的 Environment
-    ↓
-返回 StmtResult
-```
-
-### import
-
-```text
-Runtime::run_stmt(import M)
-    ↓
-ModuleManager.resolve_import
-    ↓
-创建 ModuleRunner(M)
-    ↓
-注册 ModuleId(M)
-    ↓
-push ExecutionFrame(module = M, layer = Main)
-    ↓
-执行 M/main.lit
-    ↓
-递归处理 M 的 imports
-    ↓
-pop ExecutionFrame
-    ↓
-将 M 标记为 Loaded
-    ↓
-回到原 module
-```
-
-这里不再创建：
-
-```rust
-Runtime::new_for_import_from_parent(...)
-```
-
-所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
-
-### run_file
-
-```text
-Runtime::run_stmt(run_file "a.lit")
-    ↓
-当前 ModuleRunner 创建 FileEnvironment
-    ↓
-push ExecutionFrame {
-    module_id: current_module,
-    layer: File(file_env_id),
-    source_path: "a.lit",
-}
-    ↓
-执行 a.lit
-    ↓
-pop ExecutionFrame
-    ↓
-保留 file_env
-```
-
-### trust_file
-
-流程相同，只是：
-
-```rust
-FileEnvironment {
-    mode: FileLoadMode::Trust,
-    ...
-}
-```
-
-执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
-
----
-
-## 11. Rust 借用问题的处理方式
-
-不要写：
-
-```rust
-runtime.current_module_mut().run_stmt(stmt, runtime)
-```
-
-建议由 Runtime 统一调度：
-
-```rust
-impl Runtime {
-    pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        let current_module_id = self.current_module_id();
-        let lookup_view = self.build_lookup_view(current_module_id)?;
-
-        let result = self.verify_stmt(stmt, &lookup_view)?;
-
-        self.apply_stmt_effect(
-            current_module_id,
-            self.current_layer(),
-            result,
-        )
-    }
-}
-```
-
-也就是：
-
-```text
-先读取 module graph 和 lookup 信息
-再验证
-最后单独修改当前 runner
-```
-
-如果未来确实需要跨 module 的可变访问，使用：
-
-```rust
-ModuleId
-```
-
-重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
-
-不要使用：
-
-```rust
-struct ModuleRunner<'a> {
-    runtime: &'a Runtime,
-}
-```
-
-也不要使用：
-
-```rust
-Rc<RefCell<Runtime>> inside ModuleRunner
-```
-
-这两种写法都会让生命周期或循环所有权变得非常复杂。
-
----
-
-## 12. 迁移顺序
-
-建议分阶段迁移，而不是一次性改掉所有 verifier：
-
-1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
-2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
-3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
-4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
-5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
-6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
-7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
-8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
-
-这样最终得到的模型是：
-
-```text
-一个 Runtime
-    管理所有 ModuleRunner
-        每个 ModuleRunner 有 main_env
-        每个 ModuleRunner 有 file_envs
-    Runtime 用 execution_stack 管理当前执行位置
-    Runtime 负责跨 module lookup
-    Environment 只保存数学事实和定义
-```
-
-这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
-</proposed_plan>
-
-===== 问题 2 (jsonl line 2574) =====
-大思路完全没有问题，很厉害，但是      // lookup indexes
-      pub module_by_name: HashMap<String, ModuleId>,
-      pub module_by_path: HashMap<String, ModuleId>,
-
-      // import lifecycle
-      pub loading_import_stack: Vec<ModuleId>,
-      pub pending_import_dependencies:
-          HashMap<ModuleId, Vec<ModuleId>>,
-
-      // stop import
-      pub stopped_modules: HashSet<ModuleId>,
-
-      pub next_module_id: usize, 这些field 有什么用呢
-
-===== 回答 2 (jsonl line 2577) =====
-这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
-
-```rust
-pub module_by_name: HashMap<String, ModuleId>
-```
-
-用于把：
-
-```text
-import Nat
-M.x
-stop import Nat
-```
-
-中的模块名解析成 `ModuleId`。
-
-同时防止：
-
-```text
-两个不同路径都叫 Nat
-```
-
-造成模块名冲突。
-
----
-
-```rust
-pub module_by_path: HashMap<String, ModuleId>
-```
-
-用于根据规范化后的绝对路径查找 module。
-
-例如：
-
-```text
-import "./math"
-import "/project/math"
-```
-
-如果它们最终是同一个路径，就不能重复加载两次。
-
-它也支持：
-
-```text
-模块已经加载过 → 直接复用
-模块只是 stop 了 → 重新激活
-```
-
----
-
-```rust
-pub loading_import_stack: Vec<ModuleId>
-```
-
-用于检测循环 import。
-
-例如：
-
-```text
-A imports B
-B imports C
-C imports A
-```
-
-执行时：
-
-```text
-loading_import_stack = [A, B, C]
-```
-
-发现 A 已经在 stack 中，就可以报告：
-
-```text
-cyclic import: A -> B -> C -> A
-```
-
-它是执行中的调用栈，不是最终的依赖列表。
-
----
-
-```rust
-pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
-```
-
-这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
-
-例如：
-
-```text
-Int/main.lit:
-    import Nat
-```
-
-加载 Int 时：
-
-```text
-Int 还没有进入 loaded modules
-```
-
-但已经需要记录：
-
-```text
-Int -> Nat
-```
-
-因此暂存在：
-
-```rust
-pending_import_dependencies[Int] = vec![Nat]
-```
-
-等 Int 完整执行成功后，再把它放进：
-
-```rust
-ModuleRunner {
-    imports: vec![Nat],
-}
-```
-
-如果加载失败，则丢弃 pending 记录。
-
-实际上，后面也可以把这个字段简化成：
-
-```rust
-ModuleRunner {
-    status: ModuleStatus::Loading,
-    imports: Vec<ModuleId>,
-}
-```
-
-也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
-
----
-
-```rust
-pub stopped_modules: HashSet<ModuleId>
-```
-
-对应现在的：
-
-```litex
-stop import Nat
-```
-
-它表示：
-
-```text
-Nat 已经加载过，但当前不可参与隐式查找
-```
-
-这和删除 module 不同：
-
-```text
-loaded_modules 中仍然保留 Nat
-Nat 的环境仍然保留
-只是 lookup 时暂时跳过 Nat
-```
-
-之后再次：
-
-```litex
-import Nat
-```
-
-就可以重新激活，而不需要重新执行文件。
-
-不过也可以把这个状态直接放到 `ModuleRunner`：
-
-```rust
-pub enum ModuleStatus {
-    Loading,
-    Loaded,
-    Stopped,
-}
-```
-
-这样就不需要单独的：
-
-```rust
-HashSet<ModuleId>
-```
-
-我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
-
----
-
-```rust
-pub next_module_id: usize
-```
-
-用于生成新的 `ModuleId`：
-
-```rust
-let id = ModuleId(self.next_module_id);
-self.next_module_id += 1;
-```
-
-这样 module 不依赖名字或路径作为内部身份：
-
-```text
-ModuleId(0) = main
-ModuleId(1) = Nat
-ModuleId(2) = Int
-```
-
-名字和路径可以变化，但内部引用仍然稳定。
-
-后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
-
-我会把字段稍微整理成这样：
-
-```rust
-pub struct ModuleManager {
-    pub builtin_environment: Environment,
-
-    pub modules: HashMap<ModuleId, ModuleRunner>,
-    pub module_by_name: HashMap<String, ModuleId>,
-    pub module_by_path: HashMap<String, ModuleId>,
-
-    pub loading_import_stack: Vec<ModuleId>,
-    pub next_module_id: usize,
-}
-```
-
-然后把这两个状态放进 `ModuleRunner`：
-
-```rust
-pub struct ModuleRunner {
-    pub id: ModuleId,
-    pub module_name: String,
-    pub module_root_path: String,
-
-    pub main_environment: Environment,
-    pub file_environments: Vec<FileEnvironment>,
-    pub imports: Vec<ModuleId>,
-
-    pub status: ModuleStatus,
-}
-```
-
-这样：
-
-- `module_by_name/path` 是索引；
-- `loading_import_stack` 是当前加载调用栈；
-- `ModuleRunner.imports` 是最终依赖关系；
-- `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
-- `next_module_id` 是内部 ID 分配器。
-
-这比把所有状态都集中在 `ModuleManager` 里更清楚。
-
-===== 问题 3 (jsonl line 2586) =====
-太棒了，你的设计真的非常好 解决了我长期觉得的 litex 的引用和 run_file 之类的很混乱的点。你思考一下，如果现在有一本书，比如 analysis-one 好了。它放在 repo analysis-one 里。然后 main 文件是 run_file 
-"./chap11.lit" 然后里面有chap1.lit, chap2.lit, ... chap11.lit。每个 lit 文件的开头，都有一个 trust_file "chapx.lit" 的东西，比如 chap10开头就是 chap9。那就是整个书都运行了是吧。这样的组织方式也比较合理。
-
-===== 回答 3 (jsonl line 2591) =====
-对，这个例子正好说明了为什么要把 `module` 和 `run_file/trust_file` 分开。
-
-假设：
-
-```text
-analysis-one/
-├── main.lit
-├── chap1.lit
-├── chap2.lit
-...
-├── chap11.lit
-```
-
-`main.lit`：
-
-```litex
-run_file "./chap11.lit"
-```
-
-`chap11.lit`：
-
-```litex
-trust_file "./chap10.lit"
-```
-
-`chap10.lit`：
-
-```litex
-trust_file "./chap9.lit"
-```
-
-依次类推。
-
-执行结构就是：
-
-```text
-main module
-└── main.lit
-    └── run_file chap11.lit
-        └── trust_file chap10.lit
-            └── trust_file chap9.lit
-                └── ...
-                    └── trust_file chap1.lit
-```
-
-所有这些 chapter 都属于同一个 `ModuleRunner`，只是拥有不同的 `FileEnvironment`：
-
-```text
-AnalysisOne ModuleRunner
-├── main_environment
-├── file_environment(chap11.lit, Run)
-├── file_environment(chap10.lit, Trust)
-├── file_environment(chap9.lit, Trust)
-├── ...
-└── file_environment(chap1.lit, Trust)
-```
-
-所以：
-
-- `chap10` 可以使用 `chap9` 产生的事实；
-- `chap11` 可以使用 `chap1` 到 `chap10` 的事实；
-- 所有章节仍然处在同一个数学命名空间里；
-- 不需要写 `Chap9.some_theorem`；
-- 每个事实仍然可以记录它来自哪个文件；
-- 当前执行位置通过 `ExecutionFrame` 保存，进入 `chap10` 后，执行结束再返回 `chap11`。
-
-这和“把所有文本复制到 `main.lit` 里执行”不同。它们是独立的 `FileEnvironment`，只是 lookup 时按照依赖关系可见。
-
-不过这里必须区分：
-
-```litex
-run_file "./chap10.lit"
-```
-
-和：
-
-```litex
-trust_file "./chap10.lit"
-```
-
-如果使用 `trust_file`，那么整个书的内容确实会被递归加载，但前面章节的证明不会被普通 verifier 完整检查。它们会作为可信环境进入后续章节。
-
-因此上面的结构表达的是：
-
-```text
-chap1 ... chap10 是 trusted background
-chap11 在这个 background 上被验证
-```
-
-如果希望整本书每一章都严格验证，可以改成：
-
-```litex
-// chap11.lit
-run_file "./chap10.lit"
-```
-
-然后：
-
-```text
-chap11
-└── run_file chap10
-    └── run_file chap9
-        └── ...
-```
-
-这样整条链都会执行普通 proof verification。
-
-所以我建议对 Analysis One 采用这样的约定：
-
-```text
-main.lit
-  └── run_file 最后一个章节
-
-每个章节：
-  ├── run_file 前置章节   // 前置章节要求已经可验证
-  └── trust_file 前置章节 // 前置章节暂时作为可信背景
-```
-
-这样可以渐进开发：
-
-```text
-早期：
-chap11 trust_file chap10
-
-完成 chap10 后：
-chap11 run_file chap10
-```
-
-而不需要修改 module 结构。
-
-另外，`FileEnvironment` 最好再记录来源关系：
-
-```rust
-pub struct FileEnvironment {
-    pub id: FileEnvId,
-    pub source_path: String,
-    pub mode: FileLoadMode,
-
-    // 哪个文件加载了这个文件
-    pub loaded_from: Option<FileEnvId>,
-
-    // 该文件产生的数学环境
-    pub environment: Environment,
-}
-```
-
-于是可以得到清晰的 provenance：
-
-```text
-chap11.lit
-  loaded chap10.lit
-    loaded chap9.lit
-      loaded chap8.lit
-```
-
-这对以后编译成 Lean 也非常有用：生成的 Lean 文件可以知道某个 theorem 来自哪个 chapter、依赖哪些前置 chapter，以及哪些依赖是 `run_file`、哪些是 `trust_file`。
-
-所以，是的：你描述的 Analysis One 组织方式不仅合理，而且很可能是新 Runtime/ModuleRunner 架构最自然的第一个真实用例。
-
-"""
+1 = 1
+#
+#
+# Historical Codex Q&A: three user turns after the runtime/module_runner prompt
+# Source session: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
+# Anchor: line 2497
+# Count rule: the three user turns immediately after the anchor prompt are included; assistant progress replies in the same turn are kept before the final reply.
+#
+# Question 1 — user line 2537, timestamp 2026-07-10T08:13:39.049Z
+# User:
+# 我只是想问你一下。如果是C++的话，那好办，我全局有个变量，用来存所有的 module 了。但现在的话，rust好像没有这种全局的性质；然后 rust 也不支持互相cite。反正就有点搞不明白了。我不知道怎么办了
+#
+# Assistant:
+# [line 2545, timestamp 2026-07-10T08:14:50.564Z]
+# 你这个困惑其实很正常，但 Rust 没有“全局变量”并不是问题。这里不应该真的做一个进程级全局变量；那样反而会让不同 top-level run 之间互相污染。
+#
+# 你现在已经有一个正确的雏形了：
+#
+# ```rust
+# Rc<RefCell<ModuleManager>>
+# ```
+#
+# 它其实就是“本次运行中的全局 module registry”。只不过现在 `ModuleManager` 里面存的是 `ImportedModule { environment }`，还没有真正存完整的 `ModuleRunner`。
+#
+# 我建议的结构是：
+#
+# ```text
+# Runtime                         // 一次 top-level 执行
+# ├── ModuleGraph / ModuleManager // 本次执行中的所有模块
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   └── ...
+# └── execution_stack             // 当前正在执行哪个 module/file
+# ```
+#
+# 其中：
+#
+# ```rust
+# struct ModuleRunner {
+#     id: ModuleId,
+#     name: String,
+#     path: String,
+#
+#     main_env: Environment,
+#     file_envs: Vec<FileEnvironment>,
+#
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 不要让 `ModuleRunner` 反过来持有 `Runtime`，也不要让它持有其他 `ModuleRunner` 的引用。它只保存 `ModuleId`。这样就没有 Rust 的循环引用问题。
+#
+# 关键点是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 应该保留为主入口，而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# 因为一个 statement 的验证可能需要：
+#
+# - 当前 module 的环境；
+# - 当前 module 的 `run_file` 环境；
+# - 其他 imported module；
+# - module 名称解析；
+# - stopped/import cycle 状态；
+# - 全局 builtin 环境。
+#
+# 这些都属于 `Runtime` 的职责，不属于单个 `ModuleRunner`。
+#
+# 所以更合理的职责分工是：
+#
+# ```text
+# Runtime
+#   负责调度、module lookup、跨 module 解析、当前执行位置
+#
+# ModuleRunner
+#   负责保存一个 module 的 main_env、file_envs、imports
+#
+# Environment
+#   只负责保存事实、定义、索引和缓存
+# ```
+#
+# `run_file` 可以这样理解：
+#
+# ```text
+# 当前 ModuleRunner
+# ├── main_env
+# ├── run_file_env(path_a)
+# └── run_file_env(path_b)
+# ```
+#
+# 执行 `run_file` 时，不复制到 `main_env`，而是在当前 `ModuleRunner.file_envs` 中创建一个新的 `FileEnvironment`，然后让后续 lookup 按顺序查看：
+#
+# ```text
+# 当前 file env
+# → 其他 file env
+# → module main env
+# → builtin env
+# → 显式引用的 imported module
+# ```
+#
+# `trust_file` 也使用同一种结构，只是：
+#
+# ```rust
+# enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# ```
+#
+# 这样它不需要通过 `only_exec_affect_environment` 这种 Runtime 全局 flag 来表达，而是文件环境自己带有来源和信任模式。
+#
+# `import` 则不是把一个 module 压缩成一个 `Environment`，而是：
+#
+# 1. 创建一个新的 `ModuleRunner`；
+# 2. 把它注册到 `Runtime.module_manager`；
+# 3. 切换当前执行 frame；
+# 4. 执行它的 `main.lit`；
+# 5. 执行结束后保留这个 runner；
+# 6. 主 module 通过 `ModuleId` 访问它。
+#
+# 也就是说，Rust 不需要 C++ 式的全局变量。正确的模型是：
+#
+# ```rust
+# struct Runtime {
+#     modules: ModuleGraph,
+#     current_module: ModuleId,
+#     execution_stack: Vec<ExecutionFrame>,
+# }
+# ```
+#
+# 每一次 top-level run 都有自己的 `Runtime`。所有 imported module 都归这个 Runtime 管理，但不同 Runtime 之间完全隔离。
+#
+# 我会特别建议你不要一次性把所有 verifier 方法都搬进 `ModuleRunner`。那样很容易遇到 Rust 的借用冲突：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 这里会同时借用 `runtime` 和 `runtime` 内部的 module。
+#
+# 更好的做法是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 由 Runtime 先构造一个只读的 lookup 视图，再修改当前 ModuleRunner。也就是把执行拆成：
+#
+# ```text
+# 读取 Runtime/module graph
+# → 验证 statement
+# → 产生 environment effect
+# → 应用 effect 到当前 ModuleRunner
+# ```
+#
+# 所以结论是：
+#
+# > 不要寻找 C++ 式的全局变量。把 `Runtime` 设计成“一次运行中的世界”，把所有 `ModuleRunner` 放进它拥有的 `ModuleGraph`；`ModuleRunner` 只保存自己的环境和 module ID，跨模块访问统一由 Runtime 完成。
+#
+# 你现在的 `ModuleManager + Rc<RefCell<...>>` 已经是这条路的雏形，下一步不是重写成全局状态，而是把 `ImportedModule { environment }` 升级成真正的 `ModuleRunner`，并把 `run_file` 的环境从 Runtime 的 `environment_stack` 中移出来。
+#
+# Question 2 — user line 2551, timestamp 2026-07-10T08:17:36.191Z
+# User:
+# 给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
+#
+# Assistant:
+# [Assistant message 1: line 2555, timestamp 2026-07-10T08:17:49.715Z]
+# 我先把当前真正参与这条链路的类型和入口补齐：`Runtime`、`ModuleManager`、`ImportedModule`、`Environment`、文件加载 statement、解析/执行入口，以及当前 import 如何创建子 runtime。然后我会给你一版“目标架构的完整 struct 草图”和一次运行从入口到 module/file 的调用流程，区分哪些是现有字段、哪些是建议新增。
+#
+# ---
+#
+# [Assistant message 2: line 2568, timestamp 2026-07-10T08:20:13.121Z]
+# <proposed_plan>
+# # Litex Runtime / ModuleRunner 目标架构
+#
+# ## 1. 总体原则
+#
+# 不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
+#
+# 一次 top-level 执行对应一个 `Runtime`：
+#
+# ```text
+# Runtime
+# ├── ModuleManager                  // 本次运行中的所有 module
+# │   ├── builtin environment
+# │   ├── main module runner
+# │   ├── imported module runner
+# │   └── ...
+# └── execution_stack                // 当前执行位置
+# ```
+#
+# Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
+#
+# `ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
+#
+# ---
+#
+# ## 2. 基础 ID 和模式类型
+#
+# ```rust
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct ModuleId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct FileEnvId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 使用 `ModuleId` 而不是互相引用：
+#
+# ```text
+# ModuleRunner A  --imports--> ModuleId(B)
+# ModuleRunner B  --imports--> ModuleId(C)
+# ```
+#
+# 真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
+#
+# ---
+#
+# ## 3. Environment：保持为事实存储层
+#
+# 现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
+#
+# 它继续保存：
+#
+# ```rust
+# pub struct Environment {
+#     // definitions
+#     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
+#     pub defined_def_props: HashMap<PropName, DefPropStmt>,
+#     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+#     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+#     pub defined_structs: HashMap<StructName, DefStructStmt>,
+#     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+#     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+#     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
+#
+#     // equality and fact indexes
+#     pub known_equality: ...,
+#     pub known_atomic_facts_with_1_arg: ...,
+#     pub known_atomic_facts_with_2_args: ...,
+#     pub known_exist_facts: ...,
+#     pub known_or_facts: ...,
+#     pub known_atomic_facts_in_forall_facts: ...,
+#
+#     // object-shape caches
+#     pub known_objs_equal_to_tuple: ...,
+#     pub known_objs_equal_to_cart: ...,
+#     pub known_obj_values: ...,
+#     pub known_objs_equal_to_set_builder: ...,
+#
+#     // verifier caches
+#     pub cache_well_defined_obj: ...,
+#     pub cache_known_fact: ...,
+#     pub cache_known_fact_trust: ...,
+#
+#     // strategy registrations
+#     pub known_transitive_props: ...,
+#     pub known_symmetric_props: ...,
+#     pub known_reflexive_props: ...,
+#     pub known_antisymmetric_props: ...,
+# }
+# ```
+#
+# 这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
+#
+# `Environment` 的职责只有：
+#
+# ```text
+# 保存事实
+# 保存定义
+# 保存索引
+# 保存 verifier cache
+# ```
+#
+# 它不负责：
+#
+# ```text
+# module import
+# 文件读取
+# 当前执行位置
+# 跨 module 查找
+# ```
+#
+# ---
+#
+# ## 4. FileEnvironment：run_file / trust_file 的独立环境
+#
+# `run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
+#
+# ```rust
+# pub struct FileEnvironment {
+#     pub id: FileEnvId,
+#     pub source_path: String,
+#     pub mode: FileLoadMode,
+#     pub environment: Environment,
+# }
+# ```
+#
+# 一个 module 的结构变成：
+#
+# ```text
+# ModuleRunner
+# ├── main_env
+# ├── file_envs[0]  // run_file "a.lit"
+# ├── file_envs[1]  // trust_file "b.lit"
+# └── file_envs[2]  // run_file "c.lit"
+# ```
+#
+# `run_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Run)
+# 执行文件
+# 成功后保留 FileEnvironment
+# ```
+#
+# `trust_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Trust)
+# 跳过普通 proof verification，但执行环境效果
+# 成功后保留 FileEnvironment
+# ```
+#
+# 如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
+#
+# ---
+#
+# ## 5. ModuleRunner：单个 module 的本地状态
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#
+#     pub module_name: String,
+#     pub module_root_path: String,
+#     pub main_file_path: String,
+#     pub is_std: bool,
+#
+#     // module 自己的主环境
+#     pub main_environment: Environment,
+#
+#     // run_file / trust_file 产生的持久环境
+#     pub file_environments: Vec<FileEnvironment>,
+#
+#     // module graph 中的依赖
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# `ModuleRunner` 只负责本地状态：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn main_environment(&self) -> &Environment;
+#     pub fn main_environment_mut(&mut self) -> &mut Environment;
+#
+#     pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
+#     pub fn file_environment_mut(&mut self, id: FileEnvId)
+#         -> Option<&mut FileEnvironment>;
+#
+#     pub fn create_file_environment(
+#         &mut self,
+#         path: String,
+#         mode: FileLoadMode,
+#     ) -> FileEnvId;
+# }
+# ```
+#
+# 不建议写成：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
+# }
+# ```
+#
+# 因为这样会导致：
+#
+# ```text
+# ModuleRunner 借用了 Runtime 内部的一部分
+# 同时又需要完整借用 Runtime
+# ```
+#
+# 这正是 Rust 借用检查器最容易卡住的地方。
+#
+# 正确的入口仍然是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# ---
+#
+# ## 6. ModuleManager：本次运行中的 module world
+#
+# 现在的 `ModuleManager` 可以演化为：
+#
+# ```rust
+# pub struct ModuleManager {
+#     // builtin background
+#     pub builtin_environment: Environment,
+#
+#     // 所有 module runner
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#
+#     // lookup indexes
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     // import lifecycle
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub pending_import_dependencies:
+#         HashMap<ModuleId, Vec<ModuleId>>,
+#
+#     // stop import
+#     pub stopped_modules: HashSet<ModuleId>,
+#
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 主要方法：
+#
+# ```rust
+# impl ModuleManager {
+#     pub fn create_entry_module(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> ModuleId;
+#
+#     pub fn begin_import(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> Result<ModuleId, RuntimeError>;
+#
+#     pub fn finish_import(
+#         &mut self,
+#         module_id: ModuleId,
+#     );
+#
+#     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
+#
+#     pub fn module_mut(
+#         &mut self,
+#         id: ModuleId,
+#     ) -> Option<&mut ModuleRunner>;
+#
+#     pub fn module_by_name(
+#         &self,
+#         name: &str,
+#     ) -> Option<&ModuleRunner>;
+#
+#     pub fn resolve_module_name(
+#         &self,
+#         name: &str,
+#     ) -> Result<ModuleId, RuntimeError>;
+# }
+# ```
+#
+# 原来的：
+#
+# ```rust
+# ImportedModule {
+#     absolute_path,
+#     environment,
+#     is_std,
+#     import_dependencies,
+# }
+# ```
+#
+# 可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
+#
+# ---
+#
+# ## 7. ExecutionFrame：当前正在执行什么
+#
+# `Runtime` 需要知道当前正在执行：
+#
+# - 哪个 module；
+# - module 的 main file 还是某个 run_file；
+# - 当前 source path；
+# - 当前局部 proof environment；
+# - 当前解析时的 free parameters。
+#
+# ```rust
+# pub enum ExecutionLayer {
+#     Main,
+#     File(FileEnvId),
+# }
+#
+# pub struct SourceContext {
+#     pub source_path: String,
+#     pub layer: ExecutionLayer,
+# }
+#
+# pub struct ExecutionFrame {
+#     pub module_id: ModuleId,
+#     pub source: SourceContext,
+#
+#     // claim / forall / exist / cases 等局部环境
+#     pub local_environment_stack: Vec<Environment>,
+#
+#     // 当前 source 的解析状态
+#     pub parsing_free_param_collection: FreeParamCollection,
+# }
+# ```
+#
+# 这里要区分两种 environment：
+#
+# ```text
+# ModuleRunner.main_environment
+# ModuleRunner.file_environments
+#     └── 持久的文件环境
+#
+# ExecutionFrame.local_environment_stack
+#     └── 临时的 proof/local scope
+# ```
+#
+# 例如：
+#
+# ```text
+# main_env
+# file_envs[0]
+# file_envs[1]
+# local_env_stack[0]   // claim
+# local_env_stack[1]   // forall body
+# ```
+#
+# 局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
+#
+# ---
+#
+# ## 8. Runtime：一次完整执行的总协调者
+#
+# 目标结构：
+#
+# ```rust
+# pub struct Runtime {
+#     // 本次 top-level run 的 module 世界
+#     pub module_manager: ModuleManager,
+#
+#     // 当前执行位置
+#     pub execution_stack: Vec<ExecutionFrame>,
+#
+#     // output / execution options
+#     pub detail_output: bool,
+#     pub strict_mode: bool,
+#     pub output_language: OutputLanguage,
+#     pub loading_builtin_code: bool,
+# }
+# ```
+#
+# 最终不再需要：
+#
+# ```rust
+# pub environment_stack: Vec<Box<Environment>>;
+# pub only_exec_affect_environment: bool;
+# ```
+#
+# 因为：
+#
+# ```text
+# environment_stack
+#     → 拆成 ModuleRunner 的 main/file env
+#       + ExecutionFrame 的 local env stack
+#
+# only_exec_affect_environment
+#     → 改成 FileLoadMode::Trust
+# ```
+#
+# Runtime 的核心接口：
+#
+# ```rust
+# impl Runtime {
+#     pub fn new() -> Self;
+#
+#     pub fn run_entry_file(
+#         &mut self,
+#         path: &str,
+#     ) -> RunResult;
+#
+#     pub fn run_source_code(
+#         &mut self,
+#         source: &str,
+#         context: SourceContext,
+#     ) -> RunResult;
+#
+#     pub fn run_stmt(
+#         &mut self,
+#         stmt: &Stmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_import_stmt(
+#         &mut self,
+#         stmt: &ImportStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_file_stmt(
+#         &mut self,
+#         stmt: &RunFileStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn current_module_id(&self) -> ModuleId;
+#
+#     pub fn current_module(&self) -> &ModuleRunner;
+#
+#     pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
+#
+#     pub fn lookup_environment(
+#         &self,
+#         reference: &Obj,
+#     ) -> LookupResult;
+# }
+# ```
+#
+# 但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
+#
+# ---
+#
+# ## 9. LookupResult：跨 environment / module 查找
+#
+# 现在很多 verifier 直接遍历：
+#
+# ```rust
+# self.environment_stack.iter().rev()
+# ```
+#
+# 目标是把这件事集中到 Runtime：
+#
+# ```rust
+# pub enum EnvironmentSource {
+#     LocalScope,
+#     CurrentFile,
+#     CurrentModuleMain,
+#     Builtin,
+#     ImportedModule(ModuleId),
+# }
+#
+# pub struct EnvironmentRef<'a> {
+#     pub source: EnvironmentSource,
+#     pub environment: &'a Environment,
+# }
+#
+# pub struct LookupResult<'a> {
+#     pub environments: Vec<EnvironmentRef<'a>>,
+# }
+# ```
+#
+# 逻辑顺序可以是：
+#
+# ```text
+# 1. 当前 execution frame 的 local_environment_stack
+# 2. 当前 file environment
+# 3. 当前 module 的其他 file environments
+# 4. 当前 module 的 main_environment
+# 5. builtin_environment
+# 6. 被明确引用的 imported module
+# ```
+#
+# 重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
+#
+# ---
+#
+# ## 10. 一次执行的完整入口
+#
+# ### 入口文件
+#
+# ```text
+# run_source_code_in_file(path)
+#     ↓
+# 创建 Runtime
+#     ↓
+# 初始化 builtin_environment
+#     ↓
+# 创建 entry ModuleRunner
+#     ↓
+# push ExecutionFrame {
+#     module_id: entry_module,
+#     layer: Main,
+#     source_path: entry_path,
+# }
+#     ↓
+# tokenizer.parse_blocks
+#     ↓
+# runtime.parse_stmt
+#     ↓
+# runtime.run_stmt
+# ```
+#
+# ### 普通 statement
+#
+# ```text
+# Runtime::run_stmt(stmt)
+#     ↓
+# 读取 current ExecutionFrame
+#     ↓
+# Runtime 构造 lookup view
+#     ↓
+# 执行 well-definedness
+#     ↓
+# 执行 verifier
+#     ↓
+# 执行 infer
+#     ↓
+# 把新事实写入当前 layer 的 Environment
+#     ↓
+# 返回 StmtResult
+# ```
+#
+# ### import
+#
+# ```text
+# Runtime::run_stmt(import M)
+#     ↓
+# ModuleManager.resolve_import
+#     ↓
+# 创建 ModuleRunner(M)
+#     ↓
+# 注册 ModuleId(M)
+#     ↓
+# push ExecutionFrame(module = M, layer = Main)
+#     ↓
+# 执行 M/main.lit
+#     ↓
+# 递归处理 M 的 imports
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 将 M 标记为 Loaded
+#     ↓
+# 回到原 module
+# ```
+#
+# 这里不再创建：
+#
+# ```rust
+# Runtime::new_for_import_from_parent(...)
+# ```
+#
+# 所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
+#
+# ### run_file
+#
+# ```text
+# Runtime::run_stmt(run_file "a.lit")
+#     ↓
+# 当前 ModuleRunner 创建 FileEnvironment
+#     ↓
+# push ExecutionFrame {
+#     module_id: current_module,
+#     layer: File(file_env_id),
+#     source_path: "a.lit",
+# }
+#     ↓
+# 执行 a.lit
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 保留 file_env
+# ```
+#
+# ### trust_file
+#
+# 流程相同，只是：
+#
+# ```rust
+# FileEnvironment {
+#     mode: FileLoadMode::Trust,
+#     ...
+# }
+# ```
+#
+# 执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
+#
+# ---
+#
+# ## 11. Rust 借用问题的处理方式
+#
+# 不要写：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 建议由 Runtime 统一调度：
+#
+# ```rust
+# impl Runtime {
+#     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+#         let current_module_id = self.current_module_id();
+#         let lookup_view = self.build_lookup_view(current_module_id)?;
+#
+#         let result = self.verify_stmt(stmt, &lookup_view)?;
+#
+#         self.apply_stmt_effect(
+#             current_module_id,
+#             self.current_layer(),
+#             result,
+#         )
+#     }
+# }
+# ```
+#
+# 也就是：
+#
+# ```text
+# 先读取 module graph 和 lookup 信息
+# 再验证
+# 最后单独修改当前 runner
+# ```
+#
+# 如果未来确实需要跨 module 的可变访问，使用：
+#
+# ```rust
+# ModuleId
+# ```
+#
+# 重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
+#
+# 不要使用：
+#
+# ```rust
+# struct ModuleRunner<'a> {
+#     runtime: &'a Runtime,
+# }
+# ```
+#
+# 也不要使用：
+#
+# ```rust
+# Rc<RefCell<Runtime>> inside ModuleRunner
+# ```
+#
+# 这两种写法都会让生命周期或循环所有权变得非常复杂。
+#
+# ---
+#
+# ## 12. 迁移顺序
+#
+# 建议分阶段迁移，而不是一次性改掉所有 verifier：
+#
+# 1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
+# 2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
+# 3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
+# 4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
+# 5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
+# 6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
+# 7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
+# 8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
+#
+# 这样最终得到的模型是：
+#
+# ```text
+# 一个 Runtime
+#     管理所有 ModuleRunner
+#         每个 ModuleRunner 有 main_env
+#         每个 ModuleRunner 有 file_envs
+#     Runtime 用 execution_stack 管理当前执行位置
+#     Runtime 负责跨 module lookup
+#     Environment 只保存数学事实和定义
+# ```
+#
+# 这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
+# </proposed_plan>
+#
+# Question 3 — user line 2574, timestamp 2026-07-10T08:32:00.040Z
+# User:
+# 大思路完全没有问题，很厉害，但是      // lookup indexes
+#       pub module_by_name: HashMap<String, ModuleId>,
+#       pub module_by_path: HashMap<String, ModuleId>,
+#
+#       // import lifecycle
+#       pub loading_import_stack: Vec<ModuleId>,
+#       pub pending_import_dependencies:
+#           HashMap<ModuleId, Vec<ModuleId>>,
+#
+#       // stop import
+#       pub stopped_modules: HashSet<ModuleId>,
+#
+#       pub next_module_id: usize, 这些field 有什么用呢
+#
+# Assistant:
+# [line 2578, timestamp 2026-07-10T08:32:28.148Z]
+# 这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
+#
+# ```rust
+# pub module_by_name: HashMap<String, ModuleId>
+# ```
+#
+# 用于把：
+#
+# ```text
+# import Nat
+# M.x
+# stop import Nat
+# ```
+#
+# 中的模块名解析成 `ModuleId`。
+#
+# 同时防止：
+#
+# ```text
+# 两个不同路径都叫 Nat
+# ```
+#
+# 造成模块名冲突。
+#
+# ---
+#
+# ```rust
+# pub module_by_path: HashMap<String, ModuleId>
+# ```
+#
+# 用于根据规范化后的绝对路径查找 module。
+#
+# 例如：
+#
+# ```text
+# import "./math"
+# import "/project/math"
+# ```
+#
+# 如果它们最终是同一个路径，就不能重复加载两次。
+#
+# 它也支持：
+#
+# ```text
+# 模块已经加载过 → 直接复用
+# 模块只是 stop 了 → 重新激活
+# ```
+#
+# ---
+#
+# ```rust
+# pub loading_import_stack: Vec<ModuleId>
+# ```
+#
+# 用于检测循环 import。
+#
+# 例如：
+#
+# ```text
+# A imports B
+# B imports C
+# C imports A
+# ```
+#
+# 执行时：
+#
+# ```text
+# loading_import_stack = [A, B, C]
+# ```
+#
+# 发现 A 已经在 stack 中，就可以报告：
+#
+# ```text
+# cyclic import: A -> B -> C -> A
+# ```
+#
+# 它是执行中的调用栈，不是最终的依赖列表。
+#
+# ---
+#
+# ```rust
+# pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
+# ```
+#
+# 这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
+#
+# 例如：
+#
+# ```text
+# Int/main.lit:
+#     import Nat
+# ```
+#
+# 加载 Int 时：
+#
+# ```text
+# Int 还没有进入 loaded modules
+# ```
+#
+# 但已经需要记录：
+#
+# ```text
+# Int -> Nat
+# ```
+#
+# 因此暂存在：
+#
+# ```rust
+# pending_import_dependencies[Int] = vec![Nat]
+# ```
+#
+# 等 Int 完整执行成功后，再把它放进：
+#
+# ```rust
+# ModuleRunner {
+#     imports: vec![Nat],
+# }
+# ```
+#
+# 如果加载失败，则丢弃 pending 记录。
+#
+# 实际上，后面也可以把这个字段简化成：
+#
+# ```rust
+# ModuleRunner {
+#     status: ModuleStatus::Loading,
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
+#
+# ---
+#
+# ```rust
+# pub stopped_modules: HashSet<ModuleId>
+# ```
+#
+# 对应现在的：
+#
+# ```litex
+# stop import Nat
+# ```
+#
+# 它表示：
+#
+# ```text
+# Nat 已经加载过，但当前不可参与隐式查找
+# ```
+#
+# 这和删除 module 不同：
+#
+# ```text
+# loaded_modules 中仍然保留 Nat
+# Nat 的环境仍然保留
+# 只是 lookup 时暂时跳过 Nat
+# ```
+#
+# 之后再次：
+#
+# ```litex
+# import Nat
+# ```
+#
+# 就可以重新激活，而不需要重新执行文件。
+#
+# 不过也可以把这个状态直接放到 `ModuleRunner`：
+#
+# ```rust
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 这样就不需要单独的：
+#
+# ```rust
+# HashSet<ModuleId>
+# ```
+#
+# 我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
+#
+# ---
+#
+# ```rust
+# pub next_module_id: usize
+# ```
+#
+# 用于生成新的 `ModuleId`：
+#
+# ```rust
+# let id = ModuleId(self.next_module_id);
+# self.next_module_id += 1;
+# ```
+#
+# 这样 module 不依赖名字或路径作为内部身份：
+#
+# ```text
+# ModuleId(0) = main
+# ModuleId(1) = Nat
+# ModuleId(2) = Int
+# ```
+#
+# 名字和路径可以变化，但内部引用仍然稳定。
+#
+# 后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
+#
+# 我会把字段稍微整理成这样：
+#
+# ```rust
+# pub struct ModuleManager {
+#     pub builtin_environment: Environment,
+#
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 然后把这两个状态放进 `ModuleRunner`：
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#     pub module_name: String,
+#     pub module_root_path: String,
+#
+#     pub main_environment: Environment,
+#     pub file_environments: Vec<FileEnvironment>,
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# 这样：
+#
+# - `module_by_name/path` 是索引；
+# - `loading_import_stack` 是当前加载调用栈；
+# - `ModuleRunner.imports` 是最终依赖关系；
+# - `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
+# - `next_module_id` 是内部 ID 分配器。
+#
+# 这比把所有状态都集中在 `ModuleManager` 里更清楚。
+#
+# --- Codex session excerpt: next 3 Q/A after runtime/module prompt ---
+# Source: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
+#
+# Pair 1
+# turn_id: 019f4b16-dac1-7891-9979-ef5ce65834bc
+# user_line: 2537
+# assistant_line: 2545
+#
+# Question
+# 我只是想问你一下。如果是C++的话，那好办，我全局有个变量，用来存所有的 module 了。但现在的话，rust好像没有这种全局的性质；然后 rust 也不支持互相cite。反正就有点搞不明白了。我不知道怎么办了
+#
+# Answer
+# 你这个困惑其实很正常，但 Rust 没有“全局变量”并不是问题。这里不应该真的做一个进程级全局变量；那样反而会让不同 top-level run 之间互相污染。
+#
+# 你现在已经有一个正确的雏形了：
+#
+# ```rust
+# Rc<RefCell<ModuleManager>>
+# ```
+#
+# 它其实就是“本次运行中的全局 module registry”。只不过现在 `ModuleManager` 里面存的是 `ImportedModule { environment }`，还没有真正存完整的 `ModuleRunner`。
+#
+# 我建议的结构是：
+#
+# ```text
+# Runtime                         // 一次 top-level 执行
+# ├── ModuleGraph / ModuleManager // 本次执行中的所有模块
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   └── ...
+# └── execution_stack             // 当前正在执行哪个 module/file
+# ```
+#
+# 其中：
+#
+# ```rust
+# struct ModuleRunner {
+#     id: ModuleId,
+#     name: String,
+#     path: String,
+#
+#     main_env: Environment,
+#     file_envs: Vec<FileEnvironment>,
+#
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 不要让 `ModuleRunner` 反过来持有 `Runtime`，也不要让它持有其他 `ModuleRunner` 的引用。它只保存 `ModuleId`。这样就没有 Rust 的循环引用问题。
+#
+# 关键点是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 应该保留为主入口，而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# 因为一个 statement 的验证可能需要：
+#
+# - 当前 module 的环境；
+# - 当前 module 的 `run_file` 环境；
+# - 其他 imported module；
+# - module 名称解析；
+# - stopped/import cycle 状态；
+# - 全局 builtin 环境。
+#
+# 这些都属于 `Runtime` 的职责，不属于单个 `ModuleRunner`。
+#
+# 所以更合理的职责分工是：
+#
+# ```text
+# Runtime
+#   负责调度、module lookup、跨 module 解析、当前执行位置
+#
+# ModuleRunner
+#   负责保存一个 module 的 main_env、file_envs、imports
+#
+# Environment
+#   只负责保存事实、定义、索引和缓存
+# ```
+#
+# `run_file` 可以这样理解：
+#
+# ```text
+# 当前 ModuleRunner
+# ├── main_env
+# ├── run_file_env(path_a)
+# └── run_file_env(path_b)
+# ```
+#
+# 执行 `run_file` 时，不复制到 `main_env`，而是在当前 `ModuleRunner.file_envs` 中创建一个新的 `FileEnvironment`，然后让后续 lookup 按顺序查看：
+#
+# ```text
+# 当前 file env
+# → 其他 file env
+# → module main env
+# → builtin env
+# → 显式引用的 imported module
+# ```
+#
+# `trust_file` 也使用同一种结构，只是：
+#
+# ```rust
+# enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# ```
+#
+# 这样它不需要通过 `only_exec_affect_environment` 这种 Runtime 全局 flag 来表达，而是文件环境自己带有来源和信任模式。
+#
+# `import` 则不是把一个 module 压缩成一个 `Environment`，而是：
+#
+# 1. 创建一个新的 `ModuleRunner`；
+# 2. 把它注册到 `Runtime.module_manager`；
+# 3. 切换当前执行 frame；
+# 4. 执行它的 `main.lit`；
+# 5. 执行结束后保留这个 runner；
+# 6. 主 module 通过 `ModuleId` 访问它。
+#
+# 也就是说，Rust 不需要 C++ 式的全局变量。正确的模型是：
+#
+# ```rust
+# struct Runtime {
+#     modules: ModuleGraph,
+#     current_module: ModuleId,
+#     execution_stack: Vec<ExecutionFrame>,
+# }
+# ```
+#
+# 每一次 top-level run 都有自己的 `Runtime`。所有 imported module 都归这个 Runtime 管理，但不同 Runtime 之间完全隔离。
+#
+# 我会特别建议你不要一次性把所有 verifier 方法都搬进 `ModuleRunner`。那样很容易遇到 Rust 的借用冲突：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 这里会同时借用 `runtime` 和 `runtime` 内部的 module。
+#
+# 更好的做法是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 由 Runtime 先构造一个只读的 lookup 视图，再修改当前 ModuleRunner。也就是把执行拆成：
+#
+# ```text
+# 读取 Runtime/module graph
+# → 验证 statement
+# → 产生 environment effect
+# → 应用 effect 到当前 ModuleRunner
+# ```
+#
+# 所以结论是：
+#
+# > 不要寻找 C++ 式的全局变量。把 `Runtime` 设计成“一次运行中的世界”，把所有 `ModuleRunner` 放进它拥有的 `ModuleGraph`；`ModuleRunner` 只保存自己的环境和 module ID，跨模块访问统一由 Runtime 完成。
+#
+# 你现在的 `ModuleManager + Rc<RefCell<...>>` 已经是这条路的雏形，下一步不是重写成全局状态，而是把 `ImportedModule { environment }` 升级成真正的 `ModuleRunner`，并把 `run_file` 的环境从 Runtime 的 `environment_stack` 中移出来。
+#
+# Pair 2
+# turn_id: 019f4b1a-81b1-7ed3-814f-67782b5a1a43
+# user_line: 2551
+# assistant_line: 2568
+#
+# Question
+# 给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
+#
+# Answer
+# <proposed_plan>
+# # Litex Runtime / ModuleRunner 目标架构
+#
+# ## 1. 总体原则
+#
+# 不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
+#
+# 一次 top-level 执行对应一个 `Runtime`：
+#
+# ```text
+# Runtime
+# ├── ModuleManager                  // 本次运行中的所有 module
+# │   ├── builtin environment
+# │   ├── main module runner
+# │   ├── imported module runner
+# │   └── ...
+# └── execution_stack                // 当前执行位置
+# ```
+#
+# Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
+#
+# `ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
+#
+# ---
+#
+# ## 2. 基础 ID 和模式类型
+#
+# ```rust
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct ModuleId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct FileEnvId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 使用 `ModuleId` 而不是互相引用：
+#
+# ```text
+# ModuleRunner A  --imports--> ModuleId(B)
+# ModuleRunner B  --imports--> ModuleId(C)
+# ```
+#
+# 真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
+#
+# ---
+#
+# ## 3. Environment：保持为事实存储层
+#
+# 现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
+#
+# 它继续保存：
+#
+# ```rust
+# pub struct Environment {
+#     // definitions
+#     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
+#     pub defined_def_props: HashMap<PropName, DefPropStmt>,
+#     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+#     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+#     pub defined_structs: HashMap<StructName, DefStructStmt>,
+#     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+#     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+#     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
+#
+#     // equality and fact indexes
+#     pub known_equality: ...,
+#     pub known_atomic_facts_with_1_arg: ...,
+#     pub known_atomic_facts_with_2_args: ...,
+#     pub known_exist_facts: ...,
+#     pub known_or_facts: ...,
+#     pub known_atomic_facts_in_forall_facts: ...,
+#
+#     // object-shape caches
+#     pub known_objs_equal_to_tuple: ...,
+#     pub known_objs_equal_to_cart: ...,
+#     pub known_obj_values: ...,
+#     pub known_objs_equal_to_set_builder: ...,
+#
+#     // verifier caches
+#     pub cache_well_defined_obj: ...,
+#     pub cache_known_fact: ...,
+#     pub cache_known_fact_trust: ...,
+#
+#     // strategy registrations
+#     pub known_transitive_props: ...,
+#     pub known_symmetric_props: ...,
+#     pub known_reflexive_props: ...,
+#     pub known_antisymmetric_props: ...,
+# }
+# ```
+#
+# 这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
+#
+# `Environment` 的职责只有：
+#
+# ```text
+# 保存事实
+# 保存定义
+# 保存索引
+# 保存 verifier cache
+# ```
+#
+# 它不负责：
+#
+# ```text
+# module import
+# 文件读取
+# 当前执行位置
+# 跨 module 查找
+# ```
+#
+# ---
+#
+# ## 4. FileEnvironment：run_file / trust_file 的独立环境
+#
+# `run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
+#
+# ```rust
+# pub struct FileEnvironment {
+#     pub id: FileEnvId,
+#     pub source_path: String,
+#     pub mode: FileLoadMode,
+#     pub environment: Environment,
+# }
+# ```
+#
+# 一个 module 的结构变成：
+#
+# ```text
+# ModuleRunner
+# ├── main_env
+# ├── file_envs[0]  // run_file "a.lit"
+# ├── file_envs[1]  // trust_file "b.lit"
+# └── file_envs[2]  // run_file "c.lit"
+# ```
+#
+# `run_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Run)
+# 执行文件
+# 成功后保留 FileEnvironment
+# ```
+#
+# `trust_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Trust)
+# 跳过普通 proof verification，但执行环境效果
+# 成功后保留 FileEnvironment
+# ```
+#
+# 如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
+#
+# ---
+#
+# ## 5. ModuleRunner：单个 module 的本地状态
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#
+#     pub module_name: String,
+#     pub module_root_path: String,
+#     pub main_file_path: String,
+#     pub is_std: bool,
+#
+#     // module 自己的主环境
+#     pub main_environment: Environment,
+#
+#     // run_file / trust_file 产生的持久环境
+#     pub file_environments: Vec<FileEnvironment>,
+#
+#     // module graph 中的依赖
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# `ModuleRunner` 只负责本地状态：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn main_environment(&self) -> &Environment;
+#     pub fn main_environment_mut(&mut self) -> &mut Environment;
+#
+#     pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
+#     pub fn file_environment_mut(&mut self, id: FileEnvId)
+#         -> Option<&mut FileEnvironment>;
+#
+#     pub fn create_file_environment(
+#         &mut self,
+#         path: String,
+#         mode: FileLoadMode,
+#     ) -> FileEnvId;
+# }
+# ```
+#
+# 不建议写成：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
+# }
+# ```
+#
+# 因为这样会导致：
+#
+# ```text
+# ModuleRunner 借用了 Runtime 内部的一部分
+# 同时又需要完整借用 Runtime
+# ```
+#
+# 这正是 Rust 借用检查器最容易卡住的地方。
+#
+# 正确的入口仍然是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# ---
+#
+# ## 6. ModuleManager：本次运行中的 module world
+#
+# 现在的 `ModuleManager` 可以演化为：
+#
+# ```rust
+# pub struct ModuleManager {
+#     // builtin background
+#     pub builtin_environment: Environment,
+#
+#     // 所有 module runner
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#
+#     // lookup indexes
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     // import lifecycle
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub pending_import_dependencies:
+#         HashMap<ModuleId, Vec<ModuleId>>,
+#
+#     // stop import
+#     pub stopped_modules: HashSet<ModuleId>,
+#
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 主要方法：
+#
+# ```rust
+# impl ModuleManager {
+#     pub fn create_entry_module(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> ModuleId;
+#
+#     pub fn begin_import(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> Result<ModuleId, RuntimeError>;
+#
+#     pub fn finish_import(
+#         &mut self,
+#         module_id: ModuleId,
+#     );
+#
+#     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
+#
+#     pub fn module_mut(
+#         &mut self,
+#         id: ModuleId,
+#     ) -> Option<&mut ModuleRunner>;
+#
+#     pub fn module_by_name(
+#         &self,
+#         name: &str,
+#     ) -> Option<&ModuleRunner>;
+#
+#     pub fn resolve_module_name(
+#         &self,
+#         name: &str,
+#     ) -> Result<ModuleId, RuntimeError>;
+# }
+# ```
+#
+# 原来的：
+#
+# ```rust
+# ImportedModule {
+#     absolute_path,
+#     environment,
+#     is_std,
+#     import_dependencies,
+# }
+# ```
+#
+# 可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
+#
+# ---
+#
+# ## 7. ExecutionFrame：当前正在执行什么
+#
+# `Runtime` 需要知道当前正在执行：
+#
+# - 哪个 module；
+# - module 的 main file 还是某个 run_file；
+# - 当前 source path；
+# - 当前局部 proof environment；
+# - 当前解析时的 free parameters。
+#
+# ```rust
+# pub enum ExecutionLayer {
+#     Main,
+#     File(FileEnvId),
+# }
+#
+# pub struct SourceContext {
+#     pub source_path: String,
+#     pub layer: ExecutionLayer,
+# }
+#
+# pub struct ExecutionFrame {
+#     pub module_id: ModuleId,
+#     pub source: SourceContext,
+#
+#     // claim / forall / exist / cases 等局部环境
+#     pub local_environment_stack: Vec<Environment>,
+#
+#     // 当前 source 的解析状态
+#     pub parsing_free_param_collection: FreeParamCollection,
+# }
+# ```
+#
+# 这里要区分两种 environment：
+#
+# ```text
+# ModuleRunner.main_environment
+# ModuleRunner.file_environments
+#     └── 持久的文件环境
+#
+# ExecutionFrame.local_environment_stack
+#     └── 临时的 proof/local scope
+# ```
+#
+# 例如：
+#
+# ```text
+# main_env
+# file_envs[0]
+# file_envs[1]
+# local_env_stack[0]   // claim
+# local_env_stack[1]   // forall body
+# ```
+#
+# 局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
+#
+# ---
+#
+# ## 8. Runtime：一次完整执行的总协调者
+#
+# 目标结构：
+#
+# ```rust
+# pub struct Runtime {
+#     // 本次 top-level run 的 module 世界
+#     pub module_manager: ModuleManager,
+#
+#     // 当前执行位置
+#     pub execution_stack: Vec<ExecutionFrame>,
+#
+#     // output / execution options
+#     pub detail_output: bool,
+#     pub strict_mode: bool,
+#     pub output_language: OutputLanguage,
+#     pub loading_builtin_code: bool,
+# }
+# ```
+#
+# 最终不再需要：
+#
+# ```rust
+# pub environment_stack: Vec<Box<Environment>>;
+# pub only_exec_affect_environment: bool;
+# ```
+#
+# 因为：
+#
+# ```text
+# environment_stack
+#     → 拆成 ModuleRunner 的 main/file env
+#       + ExecutionFrame 的 local env stack
+#
+# only_exec_affect_environment
+#     → 改成 FileLoadMode::Trust
+# ```
+#
+# Runtime 的核心接口：
+#
+# ```rust
+# impl Runtime {
+#     pub fn new() -> Self;
+#
+#     pub fn run_entry_file(
+#         &mut self,
+#         path: &str,
+#     ) -> RunResult;
+#
+#     pub fn run_source_code(
+#         &mut self,
+#         source: &str,
+#         context: SourceContext,
+#     ) -> RunResult;
+#
+#     pub fn run_stmt(
+#         &mut self,
+#         stmt: &Stmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_import_stmt(
+#         &mut self,
+#         stmt: &ImportStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_file_stmt(
+#         &mut self,
+#         stmt: &RunFileStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn current_module_id(&self) -> ModuleId;
+#
+#     pub fn current_module(&self) -> &ModuleRunner;
+#
+#     pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
+#
+#     pub fn lookup_environment(
+#         &self,
+#         reference: &Obj,
+#     ) -> LookupResult;
+# }
+# ```
+#
+# 但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
+#
+# ---
+#
+# ## 9. LookupResult：跨 environment / module 查找
+#
+# 现在很多 verifier 直接遍历：
+#
+# ```rust
+# self.environment_stack.iter().rev()
+# ```
+#
+# 目标是把这件事集中到 Runtime：
+#
+# ```rust
+# pub enum EnvironmentSource {
+#     LocalScope,
+#     CurrentFile,
+#     CurrentModuleMain,
+#     Builtin,
+#     ImportedModule(ModuleId),
+# }
+#
+# pub struct EnvironmentRef<'a> {
+#     pub source: EnvironmentSource,
+#     pub environment: &'a Environment,
+# }
+#
+# pub struct LookupResult<'a> {
+#     pub environments: Vec<EnvironmentRef<'a>>,
+# }
+# ```
+#
+# 逻辑顺序可以是：
+#
+# ```text
+# 1. 当前 execution frame 的 local_environment_stack
+# 2. 当前 file environment
+# 3. 当前 module 的其他 file environments
+# 4. 当前 module 的 main_environment
+# 5. builtin_environment
+# 6. 被明确引用的 imported module
+# ```
+#
+# 重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
+#
+# ---
+#
+# ## 10. 一次执行的完整入口
+#
+# ### 入口文件
+#
+# ```text
+# run_source_code_in_file(path)
+#     ↓
+# 创建 Runtime
+#     ↓
+# 初始化 builtin_environment
+#     ↓
+# 创建 entry ModuleRunner
+#     ↓
+# push ExecutionFrame {
+#     module_id: entry_module,
+#     layer: Main,
+#     source_path: entry_path,
+# }
+#     ↓
+# tokenizer.parse_blocks
+#     ↓
+# runtime.parse_stmt
+#     ↓
+# runtime.run_stmt
+# ```
+#
+# ### 普通 statement
+#
+# ```text
+# Runtime::run_stmt(stmt)
+#     ↓
+# 读取 current ExecutionFrame
+#     ↓
+# Runtime 构造 lookup view
+#     ↓
+# 执行 well-definedness
+#     ↓
+# 执行 verifier
+#     ↓
+# 执行 infer
+#     ↓
+# 把新事实写入当前 layer 的 Environment
+#     ↓
+# 返回 StmtResult
+# ```
+#
+# ### import
+#
+# ```text
+# Runtime::run_stmt(import M)
+#     ↓
+# ModuleManager.resolve_import
+#     ↓
+# 创建 ModuleRunner(M)
+#     ↓
+# 注册 ModuleId(M)
+#     ↓
+# push ExecutionFrame(module = M, layer = Main)
+#     ↓
+# 执行 M/main.lit
+#     ↓
+# 递归处理 M 的 imports
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 将 M 标记为 Loaded
+#     ↓
+# 回到原 module
+# ```
+#
+# 这里不再创建：
+#
+# ```rust
+# Runtime::new_for_import_from_parent(...)
+# ```
+#
+# 所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
+#
+# ### run_file
+#
+# ```text
+# Runtime::run_stmt(run_file "a.lit")
+#     ↓
+# 当前 ModuleRunner 创建 FileEnvironment
+#     ↓
+# push ExecutionFrame {
+#     module_id: current_module,
+#     layer: File(file_env_id),
+#     source_path: "a.lit",
+# }
+#     ↓
+# 执行 a.lit
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 保留 file_env
+# ```
+#
+# ### trust_file
+#
+# 流程相同，只是：
+#
+# ```rust
+# FileEnvironment {
+#     mode: FileLoadMode::Trust,
+#     ...
+# }
+# ```
+#
+# 执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
+#
+# ---
+#
+# ## 11. Rust 借用问题的处理方式
+#
+# 不要写：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 建议由 Runtime 统一调度：
+#
+# ```rust
+# impl Runtime {
+#     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+#         let current_module_id = self.current_module_id();
+#         let lookup_view = self.build_lookup_view(current_module_id)?;
+#
+#         let result = self.verify_stmt(stmt, &lookup_view)?;
+#
+#         self.apply_stmt_effect(
+#             current_module_id,
+#             self.current_layer(),
+#             result,
+#         )
+#     }
+# }
+# ```
+#
+# 也就是：
+#
+# ```text
+# 先读取 module graph 和 lookup 信息
+# 再验证
+# 最后单独修改当前 runner
+# ```
+#
+# 如果未来确实需要跨 module 的可变访问，使用：
+#
+# ```rust
+# ModuleId
+# ```
+#
+# 重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
+#
+# 不要使用：
+#
+# ```rust
+# struct ModuleRunner<'a> {
+#     runtime: &'a Runtime,
+# }
+# ```
+#
+# 也不要使用：
+#
+# ```rust
+# Rc<RefCell<Runtime>> inside ModuleRunner
+# ```
+#
+# 这两种写法都会让生命周期或循环所有权变得非常复杂。
+#
+# ---
+#
+# ## 12. 迁移顺序
+#
+# 建议分阶段迁移，而不是一次性改掉所有 verifier：
+#
+# 1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
+# 2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
+# 3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
+# 4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
+# 5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
+# 6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
+# 7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
+# 8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
+#
+# 这样最终得到的模型是：
+#
+# ```text
+# 一个 Runtime
+#     管理所有 ModuleRunner
+#         每个 ModuleRunner 有 main_env
+#         每个 ModuleRunner 有 file_envs
+#     Runtime 用 execution_stack 管理当前执行位置
+#     Runtime 负责跨 module lookup
+#     Environment 只保存数学事实和定义
+# ```
+#
+# 这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
+# </proposed_plan>
+#
+# Pair 3
+# turn_id: 019f4b27-a634-76c1-b67c-7ed0ccb54bb6
+# user_line: 2574
+# assistant_line: 2578
+#
+# Question
+# 大思路完全没有问题，很厉害，但是      // lookup indexes
+#       pub module_by_name: HashMap<String, ModuleId>,
+#       pub module_by_path: HashMap<String, ModuleId>,
+#
+#       // import lifecycle
+#       pub loading_import_stack: Vec<ModuleId>,
+#       pub pending_import_dependencies:
+#           HashMap<ModuleId, Vec<ModuleId>>,
+#
+#       // stop import
+#       pub stopped_modules: HashSet<ModuleId>,
+#
+#       pub next_module_id: usize, 这些field 有什么用呢
+#
+# Answer
+# 这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
+#
+# ```rust
+# pub module_by_name: HashMap<String, ModuleId>
+# ```
+#
+# 用于把：
+#
+# ```text
+# import Nat
+# M.x
+# stop import Nat
+# ```
+#
+# 中的模块名解析成 `ModuleId`。
+#
+# 同时防止：
+#
+# ```text
+# 两个不同路径都叫 Nat
+# ```
+#
+# 造成模块名冲突。
+#
+# ---
+#
+# ```rust
+# pub module_by_path: HashMap<String, ModuleId>
+# ```
+#
+# 用于根据规范化后的绝对路径查找 module。
+#
+# 例如：
+#
+# ```text
+# import "./math"
+# import "/project/math"
+# ```
+#
+# 如果它们最终是同一个路径，就不能重复加载两次。
+#
+# 它也支持：
+#
+# ```text
+# 模块已经加载过 → 直接复用
+# 模块只是 stop 了 → 重新激活
+# ```
+#
+# ---
+#
+# ```rust
+# pub loading_import_stack: Vec<ModuleId>
+# ```
+#
+# 用于检测循环 import。
+#
+# 例如：
+#
+# ```text
+# A imports B
+# B imports C
+# C imports A
+# ```
+#
+# 执行时：
+#
+# ```text
+# loading_import_stack = [A, B, C]
+# ```
+#
+# 发现 A 已经在 stack 中，就可以报告：
+#
+# ```text
+# cyclic import: A -> B -> C -> A
+# ```
+#
+# 它是执行中的调用栈，不是最终的依赖列表。
+#
+# ---
+#
+# ```rust
+# pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
+# ```
+#
+# 这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
+#
+# 例如：
+#
+# ```text
+# Int/main.lit:
+#     import Nat
+# ```
+#
+# 加载 Int 时：
+#
+# ```text
+# Int 还没有进入 loaded modules
+# ```
+#
+# 但已经需要记录：
+#
+# ```text
+# Int -> Nat
+# ```
+#
+# 因此暂存在：
+#
+# ```rust
+# pending_import_dependencies[Int] = vec![Nat]
+# ```
+#
+# 等 Int 完整执行成功后，再把它放进：
+#
+# ```rust
+# ModuleRunner {
+#     imports: vec![Nat],
+# }
+# ```
+#
+# 如果加载失败，则丢弃 pending 记录。
+#
+# 实际上，后面也可以把这个字段简化成：
+#
+# ```rust
+# ModuleRunner {
+#     status: ModuleStatus::Loading,
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
+#
+# ---
+#
+# ```rust
+# pub stopped_modules: HashSet<ModuleId>
+# ```
+#
+# 对应现在的：
+#
+# ```litex
+# stop import Nat
+# ```
+#
+# 它表示：
+#
+# ```text
+# Nat 已经加载过，但当前不可参与隐式查找
+# ```
+#
+# 这和删除 module 不同：
+#
+# ```text
+# loaded_modules 中仍然保留 Nat
+# Nat 的环境仍然保留
+# 只是 lookup 时暂时跳过 Nat
+# ```
+#
+# 之后再次：
+#
+# ```litex
+# import Nat
+# ```
+#
+# 就可以重新激活，而不需要重新执行文件。
+#
+# 不过也可以把这个状态直接放到 `ModuleRunner`：
+#
+# ```rust
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 这样就不需要单独的：
+#
+# ```rust
+# HashSet<ModuleId>
+# ```
+#
+# 我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
+#
+# ---
+#
+# ```rust
+# pub next_module_id: usize
+# ```
+#
+# 用于生成新的 `ModuleId`：
+#
+# ```rust
+# let id = ModuleId(self.next_module_id);
+# self.next_module_id += 1;
+# ```
+#
+# 这样 module 不依赖名字或路径作为内部身份：
+#
+# ```text
+# ModuleId(0) = main
+# ModuleId(1) = Nat
+# ModuleId(2) = Int
+# ```
+#
+# 名字和路径可以变化，但内部引用仍然稳定。
+#
+# 后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
+#
+# 我会把字段稍微整理成这样：
+#
+# ```rust
+# pub struct ModuleManager {
+#     pub builtin_environment: Environment,
+#
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 然后把这两个状态放进 `ModuleRunner`：
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#     pub module_name: String,
+#     pub module_root_path: String,
+#
+#     pub main_environment: Environment,
+#     pub file_environments: Vec<FileEnvironment>,
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# 这样：
+#
+# - `module_by_name/path` 是索引；
+# - `loading_import_stack` 是当前加载调用栈；
+# - `ModuleRunner.imports` 是最终依赖关系；
+# - `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
+# - `next_module_id` 是内部 ID 分配器。
+#
+# 这比把所有状态都集中在 `ModuleManager` 里更清楚。
+
+# -----------------------------------------------------------------------------
+# Codex session excerpt: three Q&A pairs after the original Runtime/ModuleRunner prompt
+# Source: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
+# Original prompt line: 2497
+#
+# Q1 user line 2537 timestamp 2026-07-10T08:13:39.049Z
+# 我只是想问你一下。如果是C++的话，那好办，我全局有个变量，用来存所有的 module 了。但现在的话，rust好像没有这种全局的性质；然后 rust 也不支持互相cite。反正就有点搞不明白了。我不知道怎么办了
+#
+# A1 assistant line 2545 timestamp 2026-07-10T08:14:50.564Z
+# 你这个困惑其实很正常，但 Rust 没有“全局变量”并不是问题。这里不应该真的做一个进程级全局变量；那样反而会让不同 top-level run 之间互相污染。
+# 
+# 你现在已经有一个正确的雏形了：
+# 
+# ```rust
+# Rc<RefCell<ModuleManager>>
+# ```
+# 
+# 它其实就是“本次运行中的全局 module registry”。只不过现在 `ModuleManager` 里面存的是 `ImportedModule { environment }`，还没有真正存完整的 `ModuleRunner`。
+# 
+# 我建议的结构是：
+# 
+# ```text
+# Runtime                         // 一次 top-level 执行
+# ├── ModuleGraph / ModuleManager // 本次执行中的所有模块
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   └── ...
+# └── execution_stack             // 当前正在执行哪个 module/file
+# ```
+# 
+# 其中：
+# 
+# ```rust
+# struct ModuleRunner {
+#     id: ModuleId,
+#     name: String,
+#     path: String,
+# 
+#     main_env: Environment,
+#     file_envs: Vec<FileEnvironment>,
+# 
+#     imports: Vec<ModuleId>,
+# }
+# ```
+# 
+# 不要让 `ModuleRunner` 反过来持有 `Runtime`，也不要让它持有其他 `ModuleRunner` 的引用。它只保存 `ModuleId`。这样就没有 Rust 的循环引用问题。
+# 
+# 关键点是：
+# 
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+# 
+# 应该保留为主入口，而不是：
+# 
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+# 
+# 因为一个 statement 的验证可能需要：
+# 
+# - 当前 module 的环境；
+# - 当前 module 的 `run_file` 环境；
+# - 其他 imported module；
+# - module 名称解析；
+# - stopped/import cycle 状态；
+# - 全局 builtin 环境。
+# 
+# 这些都属于 `Runtime` 的职责，不属于单个 `ModuleRunner`。
+# 
+# 所以更合理的职责分工是：
+# 
+# ```text
+# Runtime
+#   负责调度、module lookup、跨 module 解析、当前执行位置
+# 
+# ModuleRunner
+#   负责保存一个 module 的 main_env、file_envs、imports
+# 
+# Environment
+#   只负责保存事实、定义、索引和缓存
+# ```
+# 
+# `run_file` 可以这样理解：
+# 
+# ```text
+# 当前 ModuleRunner
+# ├── main_env
+# ├── run_file_env(path_a)
+# └── run_file_env(path_b)
+# ```
+# 
+# 执行 `run_file` 时，不复制到 `main_env`，而是在当前 `ModuleRunner.file_envs` 中创建一个新的 `FileEnvironment`，然后让后续 lookup 按顺序查看：
+# 
+# ```text
+# 当前 file env
+# → 其他 file env
+# → module main env
+# → builtin env
+# → 显式引用的 imported module
+# ```
+# 
+# `trust_file` 也使用同一种结构，只是：
+# 
+# ```rust
+# enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# ```
+# 
+# 这样它不需要通过 `only_exec_affect_environment` 这种 Runtime 全局 flag 来表达，而是文件环境自己带有来源和信任模式。
+# 
+# `import` 则不是把一个 module 压缩成一个 `Environment`，而是：
+# 
+# 1. 创建一个新的 `ModuleRunner`；
+# 2. 把它注册到 `Runtime.module_manager`；
+# 3. 切换当前执行 frame；
+# 4. 执行它的 `main.lit`；
+# 5. 执行结束后保留这个 runner；
+# 6. 主 module 通过 `ModuleId` 访问它。
+# 
+# 也就是说，Rust 不需要 C++ 式的全局变量。正确的模型是：
+# 
+# ```rust
+# struct Runtime {
+#     modules: ModuleGraph,
+#     current_module: ModuleId,
+#     execution_stack: Vec<ExecutionFrame>,
+# }
+# ```
+# 
+# 每一次 top-level run 都有自己的 `Runtime`。所有 imported module 都归这个 Runtime 管理，但不同 Runtime 之间完全隔离。
+# 
+# 我会特别建议你不要一次性把所有 verifier 方法都搬进 `ModuleRunner`。那样很容易遇到 Rust 的借用冲突：
+# 
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+# 
+# 这里会同时借用 `runtime` 和 `runtime` 内部的 module。
+# 
+# 更好的做法是：
+# 
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+# 
+# 由 Runtime 先构造一个只读的 lookup 视图，再修改当前 ModuleRunner。也就是把执行拆成：
+# 
+# ```text
+# 读取 Runtime/module graph
+# → 验证 statement
+# → 产生 environment effect
+# → 应用 effect 到当前 ModuleRunner
+# ```
+# 
+# 所以结论是：
+# 
+# > 不要寻找 C++ 式的全局变量。把 `Runtime` 设计成“一次运行中的世界”，把所有 `ModuleRunner` 放进它拥有的 `ModuleGraph`；`ModuleRunner` 只保存自己的环境和 module ID，跨模块访问统一由 Runtime 完成。
+# 
+# 你现在的 `ModuleManager + Rc<RefCell<...>>` 已经是这条路的雏形，下一步不是重写成全局状态，而是把 `ImportedModule { environment }` 升级成真正的 `ModuleRunner`，并把 `run_file` 的环境从 Runtime 的 `environment_stack` 中移出来。
+#
+# Q2 user line 2551 timestamp 2026-07-10T08:17:36.191Z
+# 给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
+#
+# A2 assistant line 2568 timestamp 2026-07-10T08:20:13.121Z
+# <proposed_plan>
+# # Litex Runtime / ModuleRunner 目标架构
+# 
+# ## 1. 总体原则
+# 
+# 不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
+# 
+# 一次 top-level 执行对应一个 `Runtime`：
+# 
+# ```text
+# Runtime
+# ├── ModuleManager                  // 本次运行中的所有 module
+# │   ├── builtin environment
+# │   ├── main module runner
+# │   ├── imported module runner
+# │   └── ...
+# └── execution_stack                // 当前执行位置
+# ```
+# 
+# Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
+# 
+# `ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
+# 
+# ---
+# 
+# ## 2. 基础 ID 和模式类型
+# 
+# ```rust
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct ModuleId(pub usize);
+# 
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct FileEnvId(pub usize);
+# 
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# 
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+# 
+# 使用 `ModuleId` 而不是互相引用：
+# 
+# ```text
+# ModuleRunner A  --imports--> ModuleId(B)
+# ModuleRunner B  --imports--> ModuleId(C)
+# ```
+# 
+# 真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
+# 
+# ---
+# 
+# ## 3. Environment：保持为事实存储层
+# 
+# 现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
+# 
+# 它继续保存：
+# 
+# ```rust
+# pub struct Environment {
+#     // definitions
+#     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
+#     pub defined_def_props: HashMap<PropName, DefPropStmt>,
+#     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+#     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+#     pub defined_structs: HashMap<StructName, DefStructStmt>,
+#     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+#     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+#     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
+# 
+#     // equality and fact indexes
+#     pub known_equality: ...,
+#     pub known_atomic_facts_with_1_arg: ...,
+#     pub known_atomic_facts_with_2_args: ...,
+#     pub known_exist_facts: ...,
+#     pub known_or_facts: ...,
+#     pub known_atomic_facts_in_forall_facts: ...,
+# 
+#     // object-shape caches
+#     pub known_objs_equal_to_tuple: ...,
+#     pub known_objs_equal_to_cart: ...,
+#     pub known_obj_values: ...,
+#     pub known_objs_equal_to_set_builder: ...,
+# 
+#     // verifier caches
+#     pub cache_well_defined_obj: ...,
+#     pub cache_known_fact: ...,
+#     pub cache_known_fact_trust: ...,
+# 
+#     // strategy registrations
+#     pub known_transitive_props: ...,
+#     pub known_symmetric_props: ...,
+#     pub known_reflexive_props: ...,
+#     pub known_antisymmetric_props: ...,
+# }
+# ```
+# 
+# 这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
+# 
+# `Environment` 的职责只有：
+# 
+# ```text
+# 保存事实
+# 保存定义
+# 保存索引
+# 保存 verifier cache
+# ```
+# 
+# 它不负责：
+# 
+# ```text
+# module import
+# 文件读取
+# 当前执行位置
+# 跨 module 查找
+# ```
+# 
+# ---
+# 
+# ## 4. FileEnvironment：run_file / trust_file 的独立环境
+# 
+# `run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
+# 
+# ```rust
+# pub struct FileEnvironment {
+#     pub id: FileEnvId,
+#     pub source_path: String,
+#     pub mode: FileLoadMode,
+#     pub environment: Environment,
+# }
+# ```
+# 
+# 一个 module 的结构变成：
+# 
+# ```text
+# ModuleRunner
+# ├── main_env
+# ├── file_envs[0]  // run_file "a.lit"
+# ├── file_envs[1]  // trust_file "b.lit"
+# └── file_envs[2]  // run_file "c.lit"
+# ```
+# 
+# `run_file`：
+# 
+# ```text
+# 创建 FileEnvironment(mode = Run)
+# 执行文件
+# 成功后保留 FileEnvironment
+# ```
+# 
+# `trust_file`：
+# 
+# ```text
+# 创建 FileEnvironment(mode = Trust)
+# 跳过普通 proof verification，但执行环境效果
+# 成功后保留 FileEnvironment
+# ```
+# 
+# 如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
+# 
+# ---
+# 
+# ## 5. ModuleRunner：单个 module 的本地状态
+# 
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+# 
+#     pub module_name: String,
+#     pub module_root_path: String,
+#     pub main_file_path: String,
+#     pub is_std: bool,
+# 
+#     // module 自己的主环境
+#     pub main_environment: Environment,
+# 
+#     // run_file / trust_file 产生的持久环境
+#     pub file_environments: Vec<FileEnvironment>,
+# 
+#     // module graph 中的依赖
+#     pub imports: Vec<ModuleId>,
+# 
+#     pub status: ModuleStatus,
+# }
+# ```
+# 
+# `ModuleRunner` 只负责本地状态：
+# 
+# ```rust
+# impl ModuleRunner {
+#     pub fn main_environment(&self) -> &Environment;
+#     pub fn main_environment_mut(&mut self) -> &mut Environment;
+# 
+#     pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
+#     pub fn file_environment_mut(&mut self, id: FileEnvId)
+#         -> Option<&mut FileEnvironment>;
+# 
+#     pub fn create_file_environment(
+#         &mut self,
+#         path: String,
+#         mode: FileLoadMode,
+#     ) -> FileEnvId;
+# }
+# ```
+# 
+# 不建议写成：
+# 
+# ```rust
+# impl ModuleRunner {
+#     pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
+# }
+# ```
+# 
+# 因为这样会导致：
+# 
+# ```text
+# ModuleRunner 借用了 Runtime 内部的一部分
+# 同时又需要完整借用 Runtime
+# ```
+# 
+# 这正是 Rust 借用检查器最容易卡住的地方。
+# 
+# 正确的入口仍然是：
+# 
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+# 
+# 而不是：
+# 
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+# 
+# ---
+# 
+# ## 6. ModuleManager：本次运行中的 module world
+# 
+# 现在的 `ModuleManager` 可以演化为：
+# 
+# ```rust
+# pub struct ModuleManager {
+#     // builtin background
+#     pub builtin_environment: Environment,
+# 
+#     // 所有 module runner
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+# 
+#     // lookup indexes
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+# 
+#     // import lifecycle
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub pending_import_dependencies:
+#         HashMap<ModuleId, Vec<ModuleId>>,
+# 
+#     // stop import
+#     pub stopped_modules: HashSet<ModuleId>,
+# 
+#     pub next_module_id: usize,
+# }
+# ```
+# 
+# 主要方法：
+# 
+# ```rust
+# impl ModuleManager {
+#     pub fn create_entry_module(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> ModuleId;
+# 
+#     pub fn begin_import(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> Result<ModuleId, RuntimeError>;
+# 
+#     pub fn finish_import(
+#         &mut self,
+#         module_id: ModuleId,
+#     );
+# 
+#     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
+# 
+#     pub fn module_mut(
+#         &mut self,
+#         id: ModuleId,
+#     ) -> Option<&mut ModuleRunner>;
+# 
+#     pub fn module_by_name(
+#         &self,
+#         name: &str,
+#     ) -> Option<&ModuleRunner>;
+# 
+#     pub fn resolve_module_name(
+#         &self,
+#         name: &str,
+#     ) -> Result<ModuleId, RuntimeError>;
+# }
+# ```
+# 
+# 原来的：
+# 
+# ```rust
+# ImportedModule {
+#     absolute_path,
+#     environment,
+#     is_std,
+#     import_dependencies,
+# }
+# ```
+# 
+# 可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
+# 
+# ---
+# 
+# ## 7. ExecutionFrame：当前正在执行什么
+# 
+# `Runtime` 需要知道当前正在执行：
+# 
+# - 哪个 module；
+# - module 的 main file 还是某个 run_file；
+# - 当前 source path；
+# - 当前局部 proof environment；
+# - 当前解析时的 free parameters。
+# 
+# ```rust
+# pub enum ExecutionLayer {
+#     Main,
+#     File(FileEnvId),
+# }
+# 
+# pub struct SourceContext {
+#     pub source_path: String,
+#     pub layer: ExecutionLayer,
+# }
+# 
+# pub struct ExecutionFrame {
+#     pub module_id: ModuleId,
+#     pub source: SourceContext,
+# 
+#     // claim / forall / exist / cases 等局部环境
+#     pub local_environment_stack: Vec<Environment>,
+# 
+#     // 当前 source 的解析状态
+#     pub parsing_free_param_collection: FreeParamCollection,
+# }
+# ```
+# 
+# 这里要区分两种 environment：
+# 
+# ```text
+# ModuleRunner.main_environment
+# ModuleRunner.file_environments
+#     └── 持久的文件环境
+# 
+# ExecutionFrame.local_environment_stack
+#     └── 临时的 proof/local scope
+# ```
+# 
+# 例如：
+# 
+# ```text
+# main_env
+# file_envs[0]
+# file_envs[1]
+# local_env_stack[0]   // claim
+# local_env_stack[1]   // forall body
+# ```
+# 
+# 局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
+# 
+# ---
+# 
+# ## 8. Runtime：一次完整执行的总协调者
+# 
+# 目标结构：
+# 
+# ```rust
+# pub struct Runtime {
+#     // 本次 top-level run 的 module 世界
+#     pub module_manager: ModuleManager,
+# 
+#     // 当前执行位置
+#     pub execution_stack: Vec<ExecutionFrame>,
+# 
+#     // output / execution options
+#     pub detail_output: bool,
+#     pub strict_mode: bool,
+#     pub output_language: OutputLanguage,
+#     pub loading_builtin_code: bool,
+# }
+# ```
+# 
+# 最终不再需要：
+# 
+# ```rust
+# pub environment_stack: Vec<Box<Environment>>;
+# pub only_exec_affect_environment: bool;
+# ```
+# 
+# 因为：
+# 
+# ```text
+# environment_stack
+#     → 拆成 ModuleRunner 的 main/file env
+#       + ExecutionFrame 的 local env stack
+# 
+# only_exec_affect_environment
+#     → 改成 FileLoadMode::Trust
+# ```
+# 
+# Runtime 的核心接口：
+# 
+# ```rust
+# impl Runtime {
+#     pub fn new() -> Self;
+# 
+#     pub fn run_entry_file(
+#         &mut self,
+#         path: &str,
+#     ) -> RunResult;
+# 
+#     pub fn run_source_code(
+#         &mut self,
+#         source: &str,
+#         context: SourceContext,
+#     ) -> RunResult;
+# 
+#     pub fn run_stmt(
+#         &mut self,
+#         stmt: &Stmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+# 
+#     pub fn run_import_stmt(
+#         &mut self,
+#         stmt: &ImportStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+# 
+#     pub fn run_file_stmt(
+#         &mut self,
+#         stmt: &RunFileStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+# 
+#     pub fn current_module_id(&self) -> ModuleId;
+# 
+#     pub fn current_module(&self) -> &ModuleRunner;
+# 
+#     pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
+# 
+#     pub fn lookup_environment(
+#         &self,
+#         reference: &Obj,
+#     ) -> LookupResult;
+# }
+# ```
+# 
+# 但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
+# 
+# ---
+# 
+# ## 9. LookupResult：跨 environment / module 查找
+# 
+# 现在很多 verifier 直接遍历：
+# 
+# ```rust
+# self.environment_stack.iter().rev()
+# ```
+# 
+# 目标是把这件事集中到 Runtime：
+# 
+# ```rust
+# pub enum EnvironmentSource {
+#     LocalScope,
+#     CurrentFile,
+#     CurrentModuleMain,
+#     Builtin,
+#     ImportedModule(ModuleId),
+# }
+# 
+# pub struct EnvironmentRef<'a> {
+#     pub source: EnvironmentSource,
+#     pub environment: &'a Environment,
+# }
+# 
+# pub struct LookupResult<'a> {
+#     pub environments: Vec<EnvironmentRef<'a>>,
+# }
+# ```
+# 
+# 逻辑顺序可以是：
+# 
+# ```text
+# 1. 当前 execution frame 的 local_environment_stack
+# 2. 当前 file environment
+# 3. 当前 module 的其他 file environments
+# 4. 当前 module 的 main_environment
+# 5. builtin_environment
+# 6. 被明确引用的 imported module
+# ```
+# 
+# 重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
+# 
+# ---
+# 
+# ## 10. 一次执行的完整入口
+# 
+# ### 入口文件
+# 
+# ```text
+# run_source_code_in_file(path)
+#     ↓
+# 创建 Runtime
+#     ↓
+# 初始化 builtin_environment
+#     ↓
+# 创建 entry ModuleRunner
+#     ↓
+# push ExecutionFrame {
+#     module_id: entry_module,
+#     layer: Main,
+#     source_path: entry_path,
+# }
+#     ↓
+# tokenizer.parse_blocks
+#     ↓
+# runtime.parse_stmt
+#     ↓
+# runtime.run_stmt
+# ```
+# 
+# ### 普通 statement
+# 
+# ```text
+# Runtime::run_stmt(stmt)
+#     ↓
+# 读取 current ExecutionFrame
+#     ↓
+# Runtime 构造 lookup view
+#     ↓
+# 执行 well-definedness
+#     ↓
+# 执行 verifier
+#     ↓
+# 执行 infer
+#     ↓
+# 把新事实写入当前 layer 的 Environment
+#     ↓
+# 返回 StmtResult
+# ```
+# 
+# ### import
+# 
+# ```text
+# Runtime::run_stmt(import M)
+#     ↓
+# ModuleManager.resolve_import
+#     ↓
+# 创建 ModuleRunner(M)
+#     ↓
+# 注册 ModuleId(M)
+#     ↓
+# push ExecutionFrame(module = M, layer = Main)
+#     ↓
+# 执行 M/main.lit
+#     ↓
+# 递归处理 M 的 imports
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 将 M 标记为 Loaded
+#     ↓
+# 回到原 module
+# ```
+# 
+# 这里不再创建：
+# 
+# ```rust
+# Runtime::new_for_import_from_parent(...)
+# ```
+# 
+# 所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
+# 
+# ### run_file
+# 
+# ```text
+# Runtime::run_stmt(run_file "a.lit")
+#     ↓
+# 当前 ModuleRunner 创建 FileEnvironment
+#     ↓
+# push ExecutionFrame {
+#     module_id: current_module,
+#     layer: File(file_env_id),
+#     source_path: "a.lit",
+# }
+#     ↓
+# 执行 a.lit
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 保留 file_env
+# ```
+# 
+# ### trust_file
+# 
+# 流程相同，只是：
+# 
+# ```rust
+# FileEnvironment {
+#     mode: FileLoadMode::Trust,
+#     ...
+# }
+# ```
+# 
+# 执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
+# 
+# ---
+# 
+# ## 11. Rust 借用问题的处理方式
+# 
+# 不要写：
+# 
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+# 
+# 建议由 Runtime 统一调度：
+# 
+# ```rust
+# impl Runtime {
+#     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+#         let current_module_id = self.current_module_id();
+#         let lookup_view = self.build_lookup_view(current_module_id)?;
+# 
+#         let result = self.verify_stmt(stmt, &lookup_view)?;
+# 
+#         self.apply_stmt_effect(
+#             current_module_id,
+#             self.current_layer(),
+#             result,
+#         )
+#     }
+# }
+# ```
+# 
+# 也就是：
+# 
+# ```text
+# 先读取 module graph 和 lookup 信息
+# 再验证
+# 最后单独修改当前 runner
+# ```
+# 
+# 如果未来确实需要跨 module 的可变访问，使用：
+# 
+# ```rust
+# ModuleId
+# ```
+# 
+# 重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
+# 
+# 不要使用：
+# 
+# ```rust
+# struct ModuleRunner<'a> {
+#     runtime: &'a Runtime,
+# }
+# ```
+# 
+# 也不要使用：
+# 
+# ```rust
+# Rc<RefCell<Runtime>> inside ModuleRunner
+# ```
+# 
+# 这两种写法都会让生命周期或循环所有权变得非常复杂。
+# 
+# ---
+# 
+# ## 12. 迁移顺序
+# 
+# 建议分阶段迁移，而不是一次性改掉所有 verifier：
+# 
+# 1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
+# 2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
+# 3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
+# 4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
+# 5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
+# 6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
+# 7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
+# 8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
+# 
+# 这样最终得到的模型是：
+# 
+# ```text
+# 一个 Runtime
+#     管理所有 ModuleRunner
+#         每个 ModuleRunner 有 main_env
+#         每个 ModuleRunner 有 file_envs
+#     Runtime 用 execution_stack 管理当前执行位置
+#     Runtime 负责跨 module lookup
+#     Environment 只保存数学事实和定义
+# ```
+# 
+# 这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
+# </proposed_plan>
+#
+# Q3 user line 2574 timestamp 2026-07-10T08:32:00.040Z
+# 大思路完全没有问题，很厉害，但是      // lookup indexes
+#       pub module_by_name: HashMap<String, ModuleId>,
+#       pub module_by_path: HashMap<String, ModuleId>,
+# 
+#       // import lifecycle
+#       pub loading_import_stack: Vec<ModuleId>,
+#       pub pending_import_dependencies:
+#           HashMap<ModuleId, Vec<ModuleId>>,
+# 
+#       // stop import
+#       pub stopped_modules: HashSet<ModuleId>,
+# 
+#       pub next_module_id: usize, 这些field 有什么用呢
+#
+# A3 assistant line 2578 timestamp 2026-07-10T08:32:28.148Z
+# 这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
+# 
+# ```rust
+# pub module_by_name: HashMap<String, ModuleId>
+# ```
+# 
+# 用于把：
+# 
+# ```text
+# import Nat
+# M.x
+# stop import Nat
+# ```
+# 
+# 中的模块名解析成 `ModuleId`。
+# 
+# 同时防止：
+# 
+# ```text
+# 两个不同路径都叫 Nat
+# ```
+# 
+# 造成模块名冲突。
+# 
+# ---
+# 
+# ```rust
+# pub module_by_path: HashMap<String, ModuleId>
+# ```
+# 
+# 用于根据规范化后的绝对路径查找 module。
+# 
+# 例如：
+# 
+# ```text
+# import "./math"
+# import "/project/math"
+# ```
+# 
+# 如果它们最终是同一个路径，就不能重复加载两次。
+# 
+# 它也支持：
+# 
+# ```text
+# 模块已经加载过 → 直接复用
+# 模块只是 stop 了 → 重新激活
+# ```
+# 
+# ---
+# 
+# ```rust
+# pub loading_import_stack: Vec<ModuleId>
+# ```
+# 
+# 用于检测循环 import。
+# 
+# 例如：
+# 
+# ```text
+# A imports B
+# B imports C
+# C imports A
+# ```
+# 
+# 执行时：
+# 
+# ```text
+# loading_import_stack = [A, B, C]
+# ```
+# 
+# 发现 A 已经在 stack 中，就可以报告：
+# 
+# ```text
+# cyclic import: A -> B -> C -> A
+# ```
+# 
+# 它是执行中的调用栈，不是最终的依赖列表。
+# 
+# ---
+# 
+# ```rust
+# pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
+# ```
+# 
+# 这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
+# 
+# 例如：
+# 
+# ```text
+# Int/main.lit:
+#     import Nat
+# ```
+# 
+# 加载 Int 时：
+# 
+# ```text
+# Int 还没有进入 loaded modules
+# ```
+# 
+# 但已经需要记录：
+# 
+# ```text
+# Int -> Nat
+# ```
+# 
+# 因此暂存在：
+# 
+# ```rust
+# pending_import_dependencies[Int] = vec![Nat]
+# ```
+# 
+# 等 Int 完整执行成功后，再把它放进：
+# 
+# ```rust
+# ModuleRunner {
+#     imports: vec![Nat],
+# }
+# ```
+# 
+# 如果加载失败，则丢弃 pending 记录。
+# 
+# 实际上，后面也可以把这个字段简化成：
+# 
+# ```rust
+# ModuleRunner {
+#     status: ModuleStatus::Loading,
+#     imports: Vec<ModuleId>,
+# }
+# ```
+# 
+# 也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
+# 
+# ---
+# 
+# ```rust
+# pub stopped_modules: HashSet<ModuleId>
+# ```
+# 
+# 对应现在的：
+# 
+# ```litex
+# stop import Nat
+# ```
+# 
+# 它表示：
+# 
+# ```text
+# Nat 已经加载过，但当前不可参与隐式查找
+# ```
+# 
+# 这和删除 module 不同：
+# 
+# ```text
+# loaded_modules 中仍然保留 Nat
+# Nat 的环境仍然保留
+# 只是 lookup 时暂时跳过 Nat
+# ```
+# 
+# 之后再次：
+# 
+# ```litex
+# import Nat
+# ```
+# 
+# 就可以重新激活，而不需要重新执行文件。
+# 
+# 不过也可以把这个状态直接放到 `ModuleRunner`：
+# 
+# ```rust
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+# 
+# 这样就不需要单独的：
+# 
+# ```rust
+# HashSet<ModuleId>
+# ```
+# 
+# 我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
+# 
+# ---
+# 
+# ```rust
+# pub next_module_id: usize
+# ```
+# 
+# 用于生成新的 `ModuleId`：
+# 
+# ```rust
+# let id = ModuleId(self.next_module_id);
+# self.next_module_id += 1;
+# ```
+# 
+# 这样 module 不依赖名字或路径作为内部身份：
+# 
+# ```text
+# ModuleId(0) = main
+# ModuleId(1) = Nat
+# ModuleId(2) = Int
+# ```
+# 
+# 名字和路径可以变化，但内部引用仍然稳定。
+# 
+# 后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
+# 
+# 我会把字段稍微整理成这样：
+# 
+# ```rust
+# pub struct ModuleManager {
+#     pub builtin_environment: Environment,
+# 
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+# 
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub next_module_id: usize,
+# }
+# ```
+# 
+# 然后把这两个状态放进 `ModuleRunner`：
+# 
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#     pub module_name: String,
+#     pub module_root_path: String,
+# 
+#     pub main_environment: Environment,
+#     pub file_environments: Vec<FileEnvironment>,
+#     pub imports: Vec<ModuleId>,
+# 
+#     pub status: ModuleStatus,
+# }
+# ```
+# 
+# 这样：
+# 
+# - `module_by_name/path` 是索引；
+# - `loading_import_stack` 是当前加载调用栈；
+# - `ModuleRunner.imports` 是最终依赖关系；
+# - `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
+# - `next_module_id` 是内部 ID 分配器。
+# 
+# 这比把所有状态都集中在 `ModuleManager` 里更清楚。
+
+# ============================================================
+# Codex history excerpt: anchor question 后面的 3 个问题和回答
+# Source: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
+# Anchor question: line 2497, timestamp 2026-07-10T08:10:37.416Z
+# ============================================================
+#
+# --- Q1: user, line 2537, timestamp 2026-07-10T08:13:39.049Z ---
+# 我只是想问你一下。如果是C++的话，那好办，我全局有个变量，用来存所有的 module 了。但现在的话，rust好像没有这种全局的性质；然后 rust 也不支持互相cite。反正就有点搞不明白了。我不知道怎么办了
+#
+# --- A1: assistant, line 2545, timestamp 2026-07-10T08:14:50.564Z ---
+# 你这个困惑其实很正常，但 Rust 没有“全局变量”并不是问题。这里不应该真的做一个进程级全局变量；那样反而会让不同 top-level run 之间互相污染。
+#
+# 你现在已经有一个正确的雏形了：
+#
+# ```rust
+# Rc<RefCell<ModuleManager>>
+# ```
+#
+# 它其实就是“本次运行中的全局 module registry”。只不过现在 `ModuleManager` 里面存的是 `ImportedModule { environment }`，还没有真正存完整的 `ModuleRunner`。
+#
+# 我建议的结构是：
+#
+# ```text
+# Runtime                         // 一次 top-level 执行
+# ├── ModuleGraph / ModuleManager // 本次执行中的所有模块
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   └── ...
+# └── execution_stack             // 当前正在执行哪个 module/file
+# ```
+#
+# 其中：
+#
+# ```rust
+# struct ModuleRunner {
+#     id: ModuleId,
+#     name: String,
+#     path: String,
+#
+#     main_env: Environment,
+#     file_envs: Vec<FileEnvironment>,
+#
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 不要让 `ModuleRunner` 反过来持有 `Runtime`，也不要让它持有其他 `ModuleRunner` 的引用。它只保存 `ModuleId`。这样就没有 Rust 的循环引用问题。
+#
+# 关键点是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 应该保留为主入口，而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# 因为一个 statement 的验证可能需要：
+#
+# - 当前 module 的环境；
+# - 当前 module 的 `run_file` 环境；
+# - 其他 imported module；
+# - module 名称解析；
+# - stopped/import cycle 状态；
+# - 全局 builtin 环境。
+#
+# 这些都属于 `Runtime` 的职责，不属于单个 `ModuleRunner`。
+#
+# 所以更合理的职责分工是：
+#
+# ```text
+# Runtime
+#   负责调度、module lookup、跨 module 解析、当前执行位置
+#
+# ModuleRunner
+#   负责保存一个 module 的 main_env、file_envs、imports
+#
+# Environment
+#   只负责保存事实、定义、索引和缓存
+# ```
+#
+# `run_file` 可以这样理解：
+#
+# ```text
+# 当前 ModuleRunner
+# ├── main_env
+# ├── run_file_env(path_a)
+# └── run_file_env(path_b)
+# ```
+#
+# 执行 `run_file` 时，不复制到 `main_env`，而是在当前 `ModuleRunner.file_envs` 中创建一个新的 `FileEnvironment`，然后让后续 lookup 按顺序查看：
+#
+# ```text
+# 当前 file env
+# → 其他 file env
+# → module main env
+# → builtin env
+# → 显式引用的 imported module
+# ```
+#
+# `trust_file` 也使用同一种结构，只是：
+#
+# ```rust
+# enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# ```
+#
+# 这样它不需要通过 `only_exec_affect_environment` 这种 Runtime 全局 flag 来表达，而是文件环境自己带有来源和信任模式。
+#
+# `import` 则不是把一个 module 压缩成一个 `Environment`，而是：
+#
+# 1. 创建一个新的 `ModuleRunner`；
+# 2. 把它注册到 `Runtime.module_manager`；
+# 3. 切换当前执行 frame；
+# 4. 执行它的 `main.lit`；
+# 5. 执行结束后保留这个 runner；
+# 6. 主 module 通过 `ModuleId` 访问它。
+#
+# 也就是说，Rust 不需要 C++ 式的全局变量。正确的模型是：
+#
+# ```rust
+# struct Runtime {
+#     modules: ModuleGraph,
+#     current_module: ModuleId,
+#     execution_stack: Vec<ExecutionFrame>,
+# }
+# ```
+#
+# 每一次 top-level run 都有自己的 `Runtime`。所有 imported module 都归这个 Runtime 管理，但不同 Runtime 之间完全隔离。
+#
+# 我会特别建议你不要一次性把所有 verifier 方法都搬进 `ModuleRunner`。那样很容易遇到 Rust 的借用冲突：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 这里会同时借用 `runtime` 和 `runtime` 内部的 module。
+#
+# 更好的做法是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 由 Runtime 先构造一个只读的 lookup 视图，再修改当前 ModuleRunner。也就是把执行拆成：
+#
+# ```text
+# 读取 Runtime/module graph
+# → 验证 statement
+# → 产生 environment effect
+# → 应用 effect 到当前 ModuleRunner
+# ```
+#
+# 所以结论是：
+#
+# > 不要寻找 C++ 式的全局变量。把 `Runtime` 设计成“一次运行中的世界”，把所有 `ModuleRunner` 放进它拥有的 `ModuleGraph`；`ModuleRunner` 只保存自己的环境和 module ID，跨模块访问统一由 Runtime 完成。
+#
+# 你现在的 `ModuleManager + Rc<RefCell<...>>` 已经是这条路的雏形，下一步不是重写成全局状态，而是把 `ImportedModule { environment }` 升级成真正的 `ModuleRunner`，并把 `run_file` 的环境从 Runtime 的 `environment_stack` 中移出来。
+#
+# --- Q2: user, line 2551, timestamp 2026-07-10T08:17:36.191Z ---
+# 给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
+#
+# --- A2 part 1: assistant, line 2555, timestamp 2026-07-10T08:17:49.715Z ---
+# 我先把当前真正参与这条链路的类型和入口补齐：`Runtime`、`ModuleManager`、`ImportedModule`、`Environment`、文件加载 statement、解析/执行入口，以及当前 import 如何创建子 runtime。然后我会给你一版“目标架构的完整 struct 草图”和一次运行从入口到 module/file 的调用流程，区分哪些是现有字段、哪些是建议新增。
+#
+# --- A2 part 2: assistant, line 2568, timestamp 2026-07-10T08:20:13.121Z ---
+# <proposed_plan>
+# # Litex Runtime / ModuleRunner 目标架构
+#
+# ## 1. 总体原则
+#
+# 不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
+#
+# 一次 top-level 执行对应一个 `Runtime`：
+#
+# ```text
+# Runtime
+# ├── ModuleManager                  // 本次运行中的所有 module
+# │   ├── builtin environment
+# │   ├── main module runner
+# │   ├── imported module runner
+# │   └── ...
+# └── execution_stack                // 当前执行位置
+# ```
+#
+# Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
+#
+# `ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
+#
+# ---
+#
+# ## 2. 基础 ID 和模式类型
+#
+# ```rust
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct ModuleId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct FileEnvId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 使用 `ModuleId` 而不是互相引用：
+#
+# ```text
+# ModuleRunner A  --imports--> ModuleId(B)
+# ModuleRunner B  --imports--> ModuleId(C)
+# ```
+#
+# 真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
+#
+# ---
+#
+# ## 3. Environment：保持为事实存储层
+#
+# 现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
+#
+# 它继续保存：
+#
+# ```rust
+# pub struct Environment {
+#     // definitions
+#     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
+#     pub defined_def_props: HashMap<PropName, DefPropStmt>,
+#     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+#     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+#     pub defined_structs: HashMap<StructName, DefStructStmt>,
+#     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+#     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+#     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
+#
+#     // equality and fact indexes
+#     pub known_equality: ...,
+#     pub known_atomic_facts_with_1_arg: ...,
+#     pub known_atomic_facts_with_2_args: ...,
+#     pub known_exist_facts: ...,
+#     pub known_or_facts: ...,
+#     pub known_atomic_facts_in_forall_facts: ...,
+#
+#     // object-shape caches
+#     pub known_objs_equal_to_tuple: ...,
+#     pub known_objs_equal_to_cart: ...,
+#     pub known_obj_values: ...,
+#     pub known_objs_equal_to_set_builder: ...,
+#
+#     // verifier caches
+#     pub cache_well_defined_obj: ...,
+#     pub cache_known_fact: ...,
+#     pub cache_known_fact_trust: ...,
+#
+#     // strategy registrations
+#     pub known_transitive_props: ...,
+#     pub known_symmetric_props: ...,
+#     pub known_reflexive_props: ...,
+#     pub known_antisymmetric_props: ...,
+# }
+# ```
+#
+# 这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
+#
+# `Environment` 的职责只有：
+#
+# ```text
+# 保存事实
+# 保存定义
+# 保存索引
+# 保存 verifier cache
+# ```
+#
+# 它不负责：
+#
+# ```text
+# module import
+# 文件读取
+# 当前执行位置
+# 跨 module 查找
+# ```
+#
+# ---
+#
+# ## 4. FileEnvironment：run_file / trust_file 的独立环境
+#
+# `run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
+#
+# ```rust
+# pub struct FileEnvironment {
+#     pub id: FileEnvId,
+#     pub source_path: String,
+#     pub mode: FileLoadMode,
+#     pub environment: Environment,
+# }
+# ```
+#
+# 一个 module 的结构变成：
+#
+# ```text
+# ModuleRunner
+# ├── main_env
+# ├── file_envs[0]  // run_file "a.lit"
+# ├── file_envs[1]  // trust_file "b.lit"
+# └── file_envs[2]  // run_file "c.lit"
+# ```
+#
+# `run_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Run)
+# 执行文件
+# 成功后保留 FileEnvironment
+# ```
+#
+# `trust_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Trust)
+# 跳过普通 proof verification，但执行环境效果
+# 成功后保留 FileEnvironment
+# ```
+#
+# 如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
+#
+# ---
+#
+# ## 5. ModuleRunner：单个 module 的本地状态
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#
+#     pub module_name: String,
+#     pub module_root_path: String,
+#     pub main_file_path: String,
+#     pub is_std: bool,
+#
+#     // module 自己的主环境
+#     pub main_environment: Environment,
+#
+#     // run_file / trust_file 产生的持久环境
+#     pub file_environments: Vec<FileEnvironment>,
+#
+#     // module graph 中的依赖
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# `ModuleRunner` 只负责本地状态：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn main_environment(&self) -> &Environment;
+#     pub fn main_environment_mut(&mut self) -> &mut Environment;
+#
+#     pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
+#     pub fn file_environment_mut(&mut self, id: FileEnvId)
+#         -> Option<&mut FileEnvironment>;
+#
+#     pub fn create_file_environment(
+#         &mut self,
+#         path: String,
+#         mode: FileLoadMode,
+#     ) -> FileEnvId;
+# }
+# ```
+#
+# 不建议写成：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
+# }
+# ```
+#
+# 因为这样会导致：
+#
+# ```text
+# ModuleRunner 借用了 Runtime 内部的一部分
+# 同时又需要完整借用 Runtime
+# ```
+#
+# 这正是 Rust 借用检查器最容易卡住的地方。
+#
+# 正确的入口仍然是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# ---
+#
+# ## 6. ModuleManager：本次运行中的 module world
+#
+# 现在的 `ModuleManager` 可以演化为：
+#
+# ```rust
+# pub struct ModuleManager {
+#     // builtin background
+#     pub builtin_environment: Environment,
+#
+#     // 所有 module runner
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#
+#     // lookup indexes
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     // import lifecycle
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub pending_import_dependencies:
+#         HashMap<ModuleId, Vec<ModuleId>>,
+#
+#     // stop import
+#     pub stopped_modules: HashSet<ModuleId>,
+#
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 主要方法：
+#
+# ```rust
+# impl ModuleManager {
+#     pub fn create_entry_module(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> ModuleId;
+#
+#     pub fn begin_import(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> Result<ModuleId, RuntimeError>;
+#
+#     pub fn finish_import(
+#         &mut self,
+#         module_id: ModuleId,
+#     );
+#
+#     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
+#
+#     pub fn module_mut(
+#         &mut self,
+#         id: ModuleId,
+#     ) -> Option<&mut ModuleRunner>;
+#
+#     pub fn module_by_name(
+#         &self,
+#         name: &str,
+#     ) -> Option<&ModuleRunner>;
+#
+#     pub fn resolve_module_name(
+#         &self,
+#         name: &str,
+#     ) -> Result<ModuleId, RuntimeError>;
+# }
+# ```
+#
+# 原来的：
+#
+# ```rust
+# ImportedModule {
+#     absolute_path,
+#     environment,
+#     is_std,
+#     import_dependencies,
+# }
+# ```
+#
+# 可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
+#
+# ---
+#
+# ## 7. ExecutionFrame：当前正在执行什么
+#
+# `Runtime` 需要知道当前正在执行：
+#
+# - 哪个 module；
+# - module 的 main file 还是某个 run_file；
+# - 当前 source path；
+# - 当前局部 proof environment；
+# - 当前解析时的 free parameters。
+#
+# ```rust
+# pub enum ExecutionLayer {
+#     Main,
+#     File(FileEnvId),
+# }
+#
+# pub struct SourceContext {
+#     pub source_path: String,
+#     pub layer: ExecutionLayer,
+# }
+#
+# pub struct ExecutionFrame {
+#     pub module_id: ModuleId,
+#     pub source: SourceContext,
+#
+#     // claim / forall / exist / cases 等局部环境
+#     pub local_environment_stack: Vec<Environment>,
+#
+#     // 当前 source 的解析状态
+#     pub parsing_free_param_collection: FreeParamCollection,
+# }
+# ```
+#
+# 这里要区分两种 environment：
+#
+# ```text
+# ModuleRunner.main_environment
+# ModuleRunner.file_environments
+#     └── 持久的文件环境
+#
+# ExecutionFrame.local_environment_stack
+#     └── 临时的 proof/local scope
+# ```
+#
+# 例如：
+#
+# ```text
+# main_env
+# file_envs[0]
+# file_envs[1]
+# local_env_stack[0]   // claim
+# local_env_stack[1]   // forall body
+# ```
+#
+# 局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
+#
+# ---
+#
+# ## 8. Runtime：一次完整执行的总协调者
+#
+# 目标结构：
+#
+# ```rust
+# pub struct Runtime {
+#     // 本次 top-level run 的 module 世界
+#     pub module_manager: ModuleManager,
+#
+#     // 当前执行位置
+#     pub execution_stack: Vec<ExecutionFrame>,
+#
+#     // output / execution options
+#     pub detail_output: bool,
+#     pub strict_mode: bool,
+#     pub output_language: OutputLanguage,
+#     pub loading_builtin_code: bool,
+# }
+# ```
+#
+# 最终不再需要：
+#
+# ```rust
+# pub environment_stack: Vec<Box<Environment>>;
+# pub only_exec_affect_environment: bool;
+# ```
+#
+# 因为：
+#
+# ```text
+# environment_stack
+#     → 拆成 ModuleRunner 的 main/file env
+#       + ExecutionFrame 的 local env stack
+#
+# only_exec_affect_environment
+#     → 改成 FileLoadMode::Trust
+# ```
+#
+# Runtime 的核心接口：
+#
+# ```rust
+# impl Runtime {
+#     pub fn new() -> Self;
+#
+#     pub fn run_entry_file(
+#         &mut self,
+#         path: &str,
+#     ) -> RunResult;
+#
+#     pub fn run_source_code(
+#         &mut self,
+#         source: &str,
+#         context: SourceContext,
+#     ) -> RunResult;
+#
+#     pub fn run_stmt(
+#         &mut self,
+#         stmt: &Stmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_import_stmt(
+#         &mut self,
+#         stmt: &ImportStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_file_stmt(
+#         &mut self,
+#         stmt: &RunFileStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn current_module_id(&self) -> ModuleId;
+#
+#     pub fn current_module(&self) -> &ModuleRunner;
+#
+#     pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
+#
+#     pub fn lookup_environment(
+#         &self,
+#         reference: &Obj,
+#     ) -> LookupResult;
+# }
+# ```
+#
+# 但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
+#
+# ---
+#
+# ## 9. LookupResult：跨 environment / module 查找
+#
+# 现在很多 verifier 直接遍历：
+#
+# ```rust
+# self.environment_stack.iter().rev()
+# ```
+#
+# 目标是把这件事集中到 Runtime：
+#
+# ```rust
+# pub enum EnvironmentSource {
+#     LocalScope,
+#     CurrentFile,
+#     CurrentModuleMain,
+#     Builtin,
+#     ImportedModule(ModuleId),
+# }
+#
+# pub struct EnvironmentRef<'a> {
+#     pub source: EnvironmentSource,
+#     pub environment: &'a Environment,
+# }
+#
+# pub struct LookupResult<'a> {
+#     pub environments: Vec<EnvironmentRef<'a>>,
+# }
+# ```
+#
+# 逻辑顺序可以是：
+#
+# ```text
+# 1. 当前 execution frame 的 local_environment_stack
+# 2. 当前 file environment
+# 3. 当前 module 的其他 file environments
+# 4. 当前 module 的 main_environment
+# 5. builtin_environment
+# 6. 被明确引用的 imported module
+# ```
+#
+# 重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
+#
+# ---
+#
+# ## 10. 一次执行的完整入口
+#
+# ### 入口文件
+#
+# ```text
+# run_source_code_in_file(path)
+#     ↓
+# 创建 Runtime
+#     ↓
+# 初始化 builtin_environment
+#     ↓
+# 创建 entry ModuleRunner
+#     ↓
+# push ExecutionFrame {
+#     module_id: entry_module,
+#     layer: Main,
+#     source_path: entry_path,
+# }
+#     ↓
+# tokenizer.parse_blocks
+#     ↓
+# runtime.parse_stmt
+#     ↓
+# runtime.run_stmt
+# ```
+#
+# ### 普通 statement
+#
+# ```text
+# Runtime::run_stmt(stmt)
+#     ↓
+# 读取 current ExecutionFrame
+#     ↓
+# Runtime 构造 lookup view
+#     ↓
+# 执行 well-definedness
+#     ↓
+# 执行 verifier
+#     ↓
+# 执行 infer
+#     ↓
+# 把新事实写入当前 layer 的 Environment
+#     ↓
+# 返回 StmtResult
+# ```
+#
+# ### import
+#
+# ```text
+# Runtime::run_stmt(import M)
+#     ↓
+# ModuleManager.resolve_import
+#     ↓
+# 创建 ModuleRunner(M)
+#     ↓
+# 注册 ModuleId(M)
+#     ↓
+# push ExecutionFrame(module = M, layer = Main)
+#     ↓
+# 执行 M/main.lit
+#     ↓
+# 递归处理 M 的 imports
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 将 M 标记为 Loaded
+#     ↓
+# 回到原 module
+# ```
+#
+# 这里不再创建：
+#
+# ```rust
+# Runtime::new_for_import_from_parent(...)
+# ```
+#
+# 所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
+#
+# ### run_file
+#
+# ```text
+# Runtime::run_stmt(run_file "a.lit")
+#     ↓
+# 当前 ModuleRunner 创建 FileEnvironment
+#     ↓
+# push ExecutionFrame {
+#     module_id: current_module,
+#     layer: File(file_env_id),
+#     source_path: "a.lit",
+# }
+#     ↓
+# 执行 a.lit
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 保留 file_env
+# ```
+#
+# ### trust_file
+#
+# 流程相同，只是：
+#
+# ```rust
+# FileEnvironment {
+#     mode: FileLoadMode::Trust,
+#     ...
+# }
+# ```
+#
+# 执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
+#
+# ---
+#
+# ## 11. Rust 借用问题的处理方式
+#
+# 不要写：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 建议由 Runtime 统一调度：
+#
+# ```rust
+# impl Runtime {
+#     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+#         let current_module_id = self.current_module_id();
+#         let lookup_view = self.build_lookup_view(current_module_id)?;
+#
+#         let result = self.verify_stmt(stmt, &lookup_view)?;
+#
+#         self.apply_stmt_effect(
+#             current_module_id,
+#             self.current_layer(),
+#             result,
+#         )
+#     }
+# }
+# ```
+#
+# 也就是：
+#
+# ```text
+# 先读取 module graph 和 lookup 信息
+# 再验证
+# 最后单独修改当前 runner
+# ```
+#
+# 如果未来确实需要跨 module 的可变访问，使用：
+#
+# ```rust
+# ModuleId
+# ```
+#
+# 重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
+#
+# 不要使用：
+#
+# ```rust
+# struct ModuleRunner<'a> {
+#     runtime: &'a Runtime,
+# }
+# ```
+#
+# 也不要使用：
+#
+# ```rust
+# Rc<RefCell<Runtime>> inside ModuleRunner
+# ```
+#
+# 这两种写法都会让生命周期或循环所有权变得非常复杂。
+#
+# ---
+#
+# ## 12. 迁移顺序
+#
+# 建议分阶段迁移，而不是一次性改掉所有 verifier：
+#
+# 1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
+# 2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
+# 3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
+# 4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
+# 5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
+# 6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
+# 7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
+# 8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
+#
+# 这样最终得到的模型是：
+#
+# ```text
+# 一个 Runtime
+#     管理所有 ModuleRunner
+#         每个 ModuleRunner 有 main_env
+#         每个 ModuleRunner 有 file_envs
+#     Runtime 用 execution_stack 管理当前执行位置
+#     Runtime 负责跨 module lookup
+#     Environment 只保存数学事实和定义
+# ```
+#
+# 这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
+# </proposed_plan>
+#
+# --- Q3: user, line 2574, timestamp 2026-07-10T08:32:00.040Z ---
+# 大思路完全没有问题，很厉害，但是      // lookup indexes
+#       pub module_by_name: HashMap<String, ModuleId>,
+#       pub module_by_path: HashMap<String, ModuleId>,
+#
+#       // import lifecycle
+#       pub loading_import_stack: Vec<ModuleId>,
+#       pub pending_import_dependencies:
+#           HashMap<ModuleId, Vec<ModuleId>>,
+#
+#       // stop import
+#       pub stopped_modules: HashSet<ModuleId>,
+#
+#       pub next_module_id: usize, 这些field 有什么用呢
+#
+# --- A3: assistant, line 2578, timestamp 2026-07-10T08:32:28.148Z ---
+# 这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
+#
+# ```rust
+# pub module_by_name: HashMap<String, ModuleId>
+# ```
+#
+# 用于把：
+#
+# ```text
+# import Nat
+# M.x
+# stop import Nat
+# ```
+#
+# 中的模块名解析成 `ModuleId`。
+#
+# 同时防止：
+#
+# ```text
+# 两个不同路径都叫 Nat
+# ```
+#
+# 造成模块名冲突。
+#
+# ---
+#
+# ```rust
+# pub module_by_path: HashMap<String, ModuleId>
+# ```
+#
+# 用于根据规范化后的绝对路径查找 module。
+#
+# 例如：
+#
+# ```text
+# import "./math"
+# import "/project/math"
+# ```
+#
+# 如果它们最终是同一个路径，就不能重复加载两次。
+#
+# 它也支持：
+#
+# ```text
+# 模块已经加载过 → 直接复用
+# 模块只是 stop 了 → 重新激活
+# ```
+#
+# ---
+#
+# ```rust
+# pub loading_import_stack: Vec<ModuleId>
+# ```
+#
+# 用于检测循环 import。
+#
+# 例如：
+#
+# ```text
+# A imports B
+# B imports C
+# C imports A
+# ```
+#
+# 执行时：
+#
+# ```text
+# loading_import_stack = [A, B, C]
+# ```
+#
+# 发现 A 已经在 stack 中，就可以报告：
+#
+# ```text
+# cyclic import: A -> B -> C -> A
+# ```
+#
+# 它是执行中的调用栈，不是最终的依赖列表。
+#
+# ---
+#
+# ```rust
+# pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
+# ```
+#
+# 这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
+#
+# 例如：
+#
+# ```text
+# Int/main.lit:
+#     import Nat
+# ```
+#
+# 加载 Int 时：
+#
+# ```text
+# Int 还没有进入 loaded modules
+# ```
+#
+# 但已经需要记录：
+#
+# ```text
+# Int -> Nat
+# ```
+#
+# 因此暂存在：
+#
+# ```rust
+# pending_import_dependencies[Int] = vec![Nat]
+# ```
+#
+# 等 Int 完整执行成功后，再把它放进：
+#
+# ```rust
+# ModuleRunner {
+#     imports: vec![Nat],
+# }
+# ```
+#
+# 如果加载失败，则丢弃 pending 记录。
+#
+# 实际上，后面也可以把这个字段简化成：
+#
+# ```rust
+# ModuleRunner {
+#     status: ModuleStatus::Loading,
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
+#
+# ---
+#
+# ```rust
+# pub stopped_modules: HashSet<ModuleId>
+# ```
+#
+# 对应现在的：
+#
+# ```litex
+# stop import Nat
+# ```
+#
+# 它表示：
+#
+# ```text
+# Nat 已经加载过，但当前不可参与隐式查找
+# ```
+#
+# 这和删除 module 不同：
+#
+# ```text
+# loaded_modules 中仍然保留 Nat
+# Nat 的环境仍然保留
+# 只是 lookup 时暂时跳过 Nat
+# ```
+#
+# 之后再次：
+#
+# ```litex
+# import Nat
+# ```
+#
+# 就可以重新激活，而不需要重新执行文件。
+#
+# 不过也可以把这个状态直接放到 `ModuleRunner`：
+#
+# ```rust
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 这样就不需要单独的：
+#
+# ```rust
+# HashSet<ModuleId>
+# ```
+#
+# 我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
+#
+# ---
+#
+# ```rust
+# pub next_module_id: usize
+# ```
+#
+# 用于生成新的 `ModuleId`：
+#
+# ```rust
+# let id = ModuleId(self.next_module_id);
+# self.next_module_id += 1;
+# ```
+#
+# 这样 module 不依赖名字或路径作为内部身份：
+#
+# ```text
+# ModuleId(0) = main
+# ModuleId(1) = Nat
+# ModuleId(2) = Int
+# ```
+#
+# 名字和路径可以变化，但内部引用仍然稳定。
+#
+# 后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
+#
+# 我会把字段稍微整理成这样：
+#
+# ```rust
+# pub struct ModuleManager {
+#     pub builtin_environment: Environment,
+#
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 然后把这两个状态放进 `ModuleRunner`：
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#     pub module_name: String,
+#     pub module_root_path: String,
+#
+#     pub main_environment: Environment,
+#     pub file_environments: Vec<FileEnvironment>,
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# 这样：
+#
+# - `module_by_name/path` 是索引；
+# - `loading_import_stack` 是当前加载调用栈；
+# - `ModuleRunner.imports` 是最终依赖关系；
+# - `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
+# - `next_module_id` 是内部 ID 分配器。
+#
+# 这比把所有状态都集中在 `ModuleManager` 里更清楚。
+# ============================================================
+
+# ============================================================
+# Codex session excerpt: three Q&A pairs after the runtime/module_runner prompt
+# Source: /Users/shenjiachen/.codex/sessions/2026/07/10/rollout-2026-07-10T10-42-03-019f49e7-4fd2-7981-a905-ca76ad60e8ff.jsonl
+# Original prompt line: 2497
+#
+# --- Q1 user jsonl:2537 ---
+# 我只是想问你一下。如果是C++的话，那好办，我全局有个变量，用来存所有的 module 了。但现在的话，rust好像没有这种全局的性质；然后 rust 也不支持互相cite。反正就有点搞不明白了。我不知道怎么办了
+#
+# --- A1 assistant jsonl:2545 ---
+# 你这个困惑其实很正常，但 Rust 没有“全局变量”并不是问题。这里不应该真的做一个进程级全局变量；那样反而会让不同 top-level run 之间互相污染。
+#
+# 你现在已经有一个正确的雏形了：
+#
+# ```rust
+# Rc<RefCell<ModuleManager>>
+# ```
+#
+# 它其实就是“本次运行中的全局 module registry”。只不过现在 `ModuleManager` 里面存的是 `ImportedModule { environment }`，还没有真正存完整的 `ModuleRunner`。
+#
+# 我建议的结构是：
+#
+# ```text
+# Runtime                         // 一次 top-level 执行
+# ├── ModuleGraph / ModuleManager // 本次执行中的所有模块
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   ├── ModuleRunner(main_env, file_envs, imports)
+# │   └── ...
+# └── execution_stack             // 当前正在执行哪个 module/file
+# ```
+#
+# 其中：
+#
+# ```rust
+# struct ModuleRunner {
+#     id: ModuleId,
+#     name: String,
+#     path: String,
+#
+#     main_env: Environment,
+#     file_envs: Vec<FileEnvironment>,
+#
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 不要让 `ModuleRunner` 反过来持有 `Runtime`，也不要让它持有其他 `ModuleRunner` 的引用。它只保存 `ModuleId`。这样就没有 Rust 的循环引用问题。
+#
+# 关键点是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 应该保留为主入口，而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# 因为一个 statement 的验证可能需要：
+#
+# - 当前 module 的环境；
+# - 当前 module 的 `run_file` 环境；
+# - 其他 imported module；
+# - module 名称解析；
+# - stopped/import cycle 状态；
+# - 全局 builtin 环境。
+#
+# 这些都属于 `Runtime` 的职责，不属于单个 `ModuleRunner`。
+#
+# 所以更合理的职责分工是：
+#
+# ```text
+# Runtime
+#   负责调度、module lookup、跨 module 解析、当前执行位置
+#
+# ModuleRunner
+#   负责保存一个 module 的 main_env、file_envs、imports
+#
+# Environment
+#   只负责保存事实、定义、索引和缓存
+# ```
+#
+# `run_file` 可以这样理解：
+#
+# ```text
+# 当前 ModuleRunner
+# ├── main_env
+# ├── run_file_env(path_a)
+# └── run_file_env(path_b)
+# ```
+#
+# 执行 `run_file` 时，不复制到 `main_env`，而是在当前 `ModuleRunner.file_envs` 中创建一个新的 `FileEnvironment`，然后让后续 lookup 按顺序查看：
+#
+# ```text
+# 当前 file env
+# → 其他 file env
+# → module main env
+# → builtin env
+# → 显式引用的 imported module
+# ```
+#
+# `trust_file` 也使用同一种结构，只是：
+#
+# ```rust
+# enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+# ```
+#
+# 这样它不需要通过 `only_exec_affect_environment` 这种 Runtime 全局 flag 来表达，而是文件环境自己带有来源和信任模式。
+#
+# `import` 则不是把一个 module 压缩成一个 `Environment`，而是：
+#
+# 1. 创建一个新的 `ModuleRunner`；
+# 2. 把它注册到 `Runtime.module_manager`；
+# 3. 切换当前执行 frame；
+# 4. 执行它的 `main.lit`；
+# 5. 执行结束后保留这个 runner；
+# 6. 主 module 通过 `ModuleId` 访问它。
+#
+# 也就是说，Rust 不需要 C++ 式的全局变量。正确的模型是：
+#
+# ```rust
+# struct Runtime {
+#     modules: ModuleGraph,
+#     current_module: ModuleId,
+#     execution_stack: Vec<ExecutionFrame>,
+# }
+# ```
+#
+# 每一次 top-level run 都有自己的 `Runtime`。所有 imported module 都归这个 Runtime 管理，但不同 Runtime 之间完全隔离。
+#
+# 我会特别建议你不要一次性把所有 verifier 方法都搬进 `ModuleRunner`。那样很容易遇到 Rust 的借用冲突：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 这里会同时借用 `runtime` 和 `runtime` 内部的 module。
+#
+# 更好的做法是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 由 Runtime 先构造一个只读的 lookup 视图，再修改当前 ModuleRunner。也就是把执行拆成：
+#
+# ```text
+# 读取 Runtime/module graph
+# → 验证 statement
+# → 产生 environment effect
+# → 应用 effect 到当前 ModuleRunner
+# ```
+#
+# 所以结论是：
+#
+# > 不要寻找 C++ 式的全局变量。把 `Runtime` 设计成“一次运行中的世界”，把所有 `ModuleRunner` 放进它拥有的 `ModuleGraph`；`ModuleRunner` 只保存自己的环境和 module ID，跨模块访问统一由 Runtime 完成。
+#
+# 你现在的 `ModuleManager + Rc<RefCell<...>>` 已经是这条路的雏形，下一步不是重写成全局状态，而是把 `ImportedModule { environment }` 升级成真正的 `ModuleRunner`，并把 `run_file` 的环境从 Runtime 的 `environment_stack` 中移出来。
+#
+# --- Q2 user jsonl:2551 ---
+# 给我看下所有的涉及到的 struct 的具体的样子，从runtime到它包含的所有的东西，以及整个运行的入口怎么样，
+#
+# --- A2 assistant jsonl:2555 message 1 ---
+# 我先把当前真正参与这条链路的类型和入口补齐：`Runtime`、`ModuleManager`、`ImportedModule`、`Environment`、文件加载 statement、解析/执行入口，以及当前 import 如何创建子 runtime。然后我会给你一版“目标架构的完整 struct 草图”和一次运行从入口到 module/file 的调用流程，区分哪些是现有字段、哪些是建议新增。
+#
+# --- A2 assistant jsonl:2568 message 2 ---
+# <proposed_plan>
+# # Litex Runtime / ModuleRunner 目标架构
+#
+# ## 1. 总体原则
+#
+# 不要做 C++ 式的进程级全局变量，也不要让 `ModuleRunner` 互相持有引用。
+#
+# 一次 top-level 执行对应一个 `Runtime`：
+#
+# ```text
+# Runtime
+# ├── ModuleManager                  // 本次运行中的所有 module
+# │   ├── builtin environment
+# │   ├── main module runner
+# │   ├── imported module runner
+# │   └── ...
+# └── execution_stack                // 当前执行位置
+# ```
+#
+# Rust 中的“全局 module 表”就是 `Runtime` 持有的 `ModuleManager`。不同次运行拥有不同的 Runtime，因此不会互相污染。
+#
+# `ModuleRunner` 只保存自己的状态和其他 module 的 `ModuleId`，不保存 `Runtime` 引用，也不保存其他 runner 的引用。
+#
+# ---
+#
+# ## 2. 基础 ID 和模式类型
+#
+# ```rust
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct ModuleId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# pub struct FileEnvId(pub usize);
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum FileLoadMode {
+#     Run,
+#     Trust,
+# }
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 使用 `ModuleId` 而不是互相引用：
+#
+# ```text
+# ModuleRunner A  --imports--> ModuleId(B)
+# ModuleRunner B  --imports--> ModuleId(C)
+# ```
+#
+# 真正查找 B、C 的动作由 `Runtime.module_manager` 完成。
+#
+# ---
+#
+# ## 3. Environment：保持为事实存储层
+#
+# 现有的 `Environment` 不应该变成 module，也不应该知道 Runtime。
+#
+# 它继续保存：
+#
+# ```rust
+# pub struct Environment {
+#     // definitions
+#     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
+#     pub defined_def_props: HashMap<PropName, DefPropStmt>,
+#     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+#     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+#     pub defined_structs: HashMap<StructName, DefStructStmt>,
+#     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+#     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+#     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
+#
+#     // equality and fact indexes
+#     pub known_equality: ...,
+#     pub known_atomic_facts_with_1_arg: ...,
+#     pub known_atomic_facts_with_2_args: ...,
+#     pub known_exist_facts: ...,
+#     pub known_or_facts: ...,
+#     pub known_atomic_facts_in_forall_facts: ...,
+#
+#     // object-shape caches
+#     pub known_objs_equal_to_tuple: ...,
+#     pub known_objs_equal_to_cart: ...,
+#     pub known_obj_values: ...,
+#     pub known_objs_equal_to_set_builder: ...,
+#
+#     // verifier caches
+#     pub cache_well_defined_obj: ...,
+#     pub cache_known_fact: ...,
+#     pub cache_known_fact_trust: ...,
+#
+#     // strategy registrations
+#     pub known_transitive_props: ...,
+#     pub known_symmetric_props: ...,
+#     pub known_reflexive_props: ...,
+#     pub known_antisymmetric_props: ...,
+# }
+# ```
+#
+# 这里的 `...` 代表现在已有的大量具体索引，不需要因为 module 重构而重新设计。
+#
+# `Environment` 的职责只有：
+#
+# ```text
+# 保存事实
+# 保存定义
+# 保存索引
+# 保存 verifier cache
+# ```
+#
+# 它不负责：
+#
+# ```text
+# module import
+# 文件读取
+# 当前执行位置
+# 跨 module 查找
+# ```
+#
+# ---
+#
+# ## 4. FileEnvironment：run_file / trust_file 的独立环境
+#
+# `run_file` 和 `trust_file` 不再把内容复制到当前环境，也不再通过全局 flag 表达信任状态。
+#
+# ```rust
+# pub struct FileEnvironment {
+#     pub id: FileEnvId,
+#     pub source_path: String,
+#     pub mode: FileLoadMode,
+#     pub environment: Environment,
+# }
+# ```
+#
+# 一个 module 的结构变成：
+#
+# ```text
+# ModuleRunner
+# ├── main_env
+# ├── file_envs[0]  // run_file "a.lit"
+# ├── file_envs[1]  // trust_file "b.lit"
+# └── file_envs[2]  // run_file "c.lit"
+# ```
+#
+# `run_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Run)
+# 执行文件
+# 成功后保留 FileEnvironment
+# ```
+#
+# `trust_file`：
+#
+# ```text
+# 创建 FileEnvironment(mode = Trust)
+# 跳过普通 proof verification，但执行环境效果
+# 成功后保留 FileEnvironment
+# ```
+#
+# 如果文件执行失败，建议不要把半成品环境挂进 module，而是先在临时环境中运行，成功后再提交。
+#
+# ---
+#
+# ## 5. ModuleRunner：单个 module 的本地状态
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#
+#     pub module_name: String,
+#     pub module_root_path: String,
+#     pub main_file_path: String,
+#     pub is_std: bool,
+#
+#     // module 自己的主环境
+#     pub main_environment: Environment,
+#
+#     // run_file / trust_file 产生的持久环境
+#     pub file_environments: Vec<FileEnvironment>,
+#
+#     // module graph 中的依赖
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# `ModuleRunner` 只负责本地状态：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn main_environment(&self) -> &Environment;
+#     pub fn main_environment_mut(&mut self) -> &mut Environment;
+#
+#     pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment>;
+#     pub fn file_environment_mut(&mut self, id: FileEnvId)
+#         -> Option<&mut FileEnvironment>;
+#
+#     pub fn create_file_environment(
+#         &mut self,
+#         path: String,
+#         mode: FileLoadMode,
+#     ) -> FileEnvId;
+# }
+# ```
+#
+# 不建议写成：
+#
+# ```rust
+# impl ModuleRunner {
+#     pub fn run_stmt(&mut self, stmt: &Stmt, runtime: &mut Runtime);
+# }
+# ```
+#
+# 因为这样会导致：
+#
+# ```text
+# ModuleRunner 借用了 Runtime 内部的一部分
+# 同时又需要完整借用 Runtime
+# ```
+#
+# 这正是 Rust 借用检查器最容易卡住的地方。
+#
+# 正确的入口仍然是：
+#
+# ```rust
+# runtime.run_stmt(stmt)
+# ```
+#
+# 而不是：
+#
+# ```rust
+# runtime.current_module().run_stmt(stmt)
+# ```
+#
+# ---
+#
+# ## 6. ModuleManager：本次运行中的 module world
+#
+# 现在的 `ModuleManager` 可以演化为：
+#
+# ```rust
+# pub struct ModuleManager {
+#     // builtin background
+#     pub builtin_environment: Environment,
+#
+#     // 所有 module runner
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#
+#     // lookup indexes
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     // import lifecycle
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub pending_import_dependencies:
+#         HashMap<ModuleId, Vec<ModuleId>>,
+#
+#     // stop import
+#     pub stopped_modules: HashSet<ModuleId>,
+#
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 主要方法：
+#
+# ```rust
+# impl ModuleManager {
+#     pub fn create_entry_module(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> ModuleId;
+#
+#     pub fn begin_import(
+#         &mut self,
+#         name: String,
+#         path: String,
+#     ) -> Result<ModuleId, RuntimeError>;
+#
+#     pub fn finish_import(
+#         &mut self,
+#         module_id: ModuleId,
+#     );
+#
+#     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner>;
+#
+#     pub fn module_mut(
+#         &mut self,
+#         id: ModuleId,
+#     ) -> Option<&mut ModuleRunner>;
+#
+#     pub fn module_by_name(
+#         &self,
+#         name: &str,
+#     ) -> Option<&ModuleRunner>;
+#
+#     pub fn resolve_module_name(
+#         &self,
+#         name: &str,
+#     ) -> Result<ModuleId, RuntimeError>;
+# }
+# ```
+#
+# 原来的：
+#
+# ```rust
+# ImportedModule {
+#     absolute_path,
+#     environment,
+#     is_std,
+#     import_dependencies,
+# }
+# ```
+#
+# 可以被 `ModuleRunner` 直接替代，不再只保存一个压缩后的 `Environment`。
+#
+# ---
+#
+# ## 7. ExecutionFrame：当前正在执行什么
+#
+# `Runtime` 需要知道当前正在执行：
+#
+# - 哪个 module；
+# - module 的 main file 还是某个 run_file；
+# - 当前 source path；
+# - 当前局部 proof environment；
+# - 当前解析时的 free parameters。
+#
+# ```rust
+# pub enum ExecutionLayer {
+#     Main,
+#     File(FileEnvId),
+# }
+#
+# pub struct SourceContext {
+#     pub source_path: String,
+#     pub layer: ExecutionLayer,
+# }
+#
+# pub struct ExecutionFrame {
+#     pub module_id: ModuleId,
+#     pub source: SourceContext,
+#
+#     // claim / forall / exist / cases 等局部环境
+#     pub local_environment_stack: Vec<Environment>,
+#
+#     // 当前 source 的解析状态
+#     pub parsing_free_param_collection: FreeParamCollection,
+# }
+# ```
+#
+# 这里要区分两种 environment：
+#
+# ```text
+# ModuleRunner.main_environment
+# ModuleRunner.file_environments
+#     └── 持久的文件环境
+#
+# ExecutionFrame.local_environment_stack
+#     └── 临时的 proof/local scope
+# ```
+#
+# 例如：
+#
+# ```text
+# main_env
+# file_envs[0]
+# file_envs[1]
+# local_env_stack[0]   // claim
+# local_env_stack[1]   // forall body
+# ```
+#
+# 局部 proof 结束后，`local_environment_stack` 弹出；`file_envs` 不弹出。
+#
+# ---
+#
+# ## 8. Runtime：一次完整执行的总协调者
+#
+# 目标结构：
+#
+# ```rust
+# pub struct Runtime {
+#     // 本次 top-level run 的 module 世界
+#     pub module_manager: ModuleManager,
+#
+#     // 当前执行位置
+#     pub execution_stack: Vec<ExecutionFrame>,
+#
+#     // output / execution options
+#     pub detail_output: bool,
+#     pub strict_mode: bool,
+#     pub output_language: OutputLanguage,
+#     pub loading_builtin_code: bool,
+# }
+# ```
+#
+# 最终不再需要：
+#
+# ```rust
+# pub environment_stack: Vec<Box<Environment>>;
+# pub only_exec_affect_environment: bool;
+# ```
+#
+# 因为：
+#
+# ```text
+# environment_stack
+#     → 拆成 ModuleRunner 的 main/file env
+#       + ExecutionFrame 的 local env stack
+#
+# only_exec_affect_environment
+#     → 改成 FileLoadMode::Trust
+# ```
+#
+# Runtime 的核心接口：
+#
+# ```rust
+# impl Runtime {
+#     pub fn new() -> Self;
+#
+#     pub fn run_entry_file(
+#         &mut self,
+#         path: &str,
+#     ) -> RunResult;
+#
+#     pub fn run_source_code(
+#         &mut self,
+#         source: &str,
+#         context: SourceContext,
+#     ) -> RunResult;
+#
+#     pub fn run_stmt(
+#         &mut self,
+#         stmt: &Stmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_import_stmt(
+#         &mut self,
+#         stmt: &ImportStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn run_file_stmt(
+#         &mut self,
+#         stmt: &RunFileStmt,
+#     ) -> Result<StmtResult, RuntimeError>;
+#
+#     pub fn current_module_id(&self) -> ModuleId;
+#
+#     pub fn current_module(&self) -> &ModuleRunner;
+#
+#     pub fn current_module_mut(&mut self) -> &mut ModuleRunner;
+#
+#     pub fn lookup_environment(
+#         &self,
+#         reference: &Obj,
+#     ) -> LookupResult;
+# }
+# ```
+#
+# 但是 `ModuleRunner` 不负责调用 `Runtime::run_stmt`。所有 execution dispatch 都从 Runtime 开始。
+#
+# ---
+#
+# ## 9. LookupResult：跨 environment / module 查找
+#
+# 现在很多 verifier 直接遍历：
+#
+# ```rust
+# self.environment_stack.iter().rev()
+# ```
+#
+# 目标是把这件事集中到 Runtime：
+#
+# ```rust
+# pub enum EnvironmentSource {
+#     LocalScope,
+#     CurrentFile,
+#     CurrentModuleMain,
+#     Builtin,
+#     ImportedModule(ModuleId),
+# }
+#
+# pub struct EnvironmentRef<'a> {
+#     pub source: EnvironmentSource,
+#     pub environment: &'a Environment,
+# }
+#
+# pub struct LookupResult<'a> {
+#     pub environments: Vec<EnvironmentRef<'a>>,
+# }
+# ```
+#
+# 逻辑顺序可以是：
+#
+# ```text
+# 1. 当前 execution frame 的 local_environment_stack
+# 2. 当前 file environment
+# 3. 当前 module 的其他 file environments
+# 4. 当前 module 的 main_environment
+# 5. builtin_environment
+# 6. 被明确引用的 imported module
+# ```
+#
+# 重要的是：`ModuleRunner` 不需要知道所有 module。它只需要自己的 `imports: Vec<ModuleId>`；真正遍历和解析由 `Runtime` / `ModuleManager` 完成。
+#
+# ---
+#
+# ## 10. 一次执行的完整入口
+#
+# ### 入口文件
+#
+# ```text
+# run_source_code_in_file(path)
+#     ↓
+# 创建 Runtime
+#     ↓
+# 初始化 builtin_environment
+#     ↓
+# 创建 entry ModuleRunner
+#     ↓
+# push ExecutionFrame {
+#     module_id: entry_module,
+#     layer: Main,
+#     source_path: entry_path,
+# }
+#     ↓
+# tokenizer.parse_blocks
+#     ↓
+# runtime.parse_stmt
+#     ↓
+# runtime.run_stmt
+# ```
+#
+# ### 普通 statement
+#
+# ```text
+# Runtime::run_stmt(stmt)
+#     ↓
+# 读取 current ExecutionFrame
+#     ↓
+# Runtime 构造 lookup view
+#     ↓
+# 执行 well-definedness
+#     ↓
+# 执行 verifier
+#     ↓
+# 执行 infer
+#     ↓
+# 把新事实写入当前 layer 的 Environment
+#     ↓
+# 返回 StmtResult
+# ```
+#
+# ### import
+#
+# ```text
+# Runtime::run_stmt(import M)
+#     ↓
+# ModuleManager.resolve_import
+#     ↓
+# 创建 ModuleRunner(M)
+#     ↓
+# 注册 ModuleId(M)
+#     ↓
+# push ExecutionFrame(module = M, layer = Main)
+#     ↓
+# 执行 M/main.lit
+#     ↓
+# 递归处理 M 的 imports
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 将 M 标记为 Loaded
+#     ↓
+# 回到原 module
+# ```
+#
+# 这里不再创建：
+#
+# ```rust
+# Runtime::new_for_import_from_parent(...)
+# ```
+#
+# 所有 module 都在同一个 Runtime 中执行，只是当前的 `ExecutionFrame.module_id` 发生变化。
+#
+# ### run_file
+#
+# ```text
+# Runtime::run_stmt(run_file "a.lit")
+#     ↓
+# 当前 ModuleRunner 创建 FileEnvironment
+#     ↓
+# push ExecutionFrame {
+#     module_id: current_module,
+#     layer: File(file_env_id),
+#     source_path: "a.lit",
+# }
+#     ↓
+# 执行 a.lit
+#     ↓
+# pop ExecutionFrame
+#     ↓
+# 保留 file_env
+# ```
+#
+# ### trust_file
+#
+# 流程相同，只是：
+#
+# ```rust
+# FileEnvironment {
+#     mode: FileLoadMode::Trust,
+#     ...
+# }
+# ```
+#
+# 执行器根据当前 frame 的 mode 决定是否跳过普通 proof verification。
+#
+# ---
+#
+# ## 11. Rust 借用问题的处理方式
+#
+# 不要写：
+#
+# ```rust
+# runtime.current_module_mut().run_stmt(stmt, runtime)
+# ```
+#
+# 建议由 Runtime 统一调度：
+#
+# ```rust
+# impl Runtime {
+#     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+#         let current_module_id = self.current_module_id();
+#         let lookup_view = self.build_lookup_view(current_module_id)?;
+#
+#         let result = self.verify_stmt(stmt, &lookup_view)?;
+#
+#         self.apply_stmt_effect(
+#             current_module_id,
+#             self.current_layer(),
+#             result,
+#         )
+#     }
+# }
+# ```
+#
+# 也就是：
+#
+# ```text
+# 先读取 module graph 和 lookup 信息
+# 再验证
+# 最后单独修改当前 runner
+# ```
+#
+# 如果未来确实需要跨 module 的可变访问，使用：
+#
+# ```rust
+# ModuleId
+# ```
+#
+# 重新从 `ModuleManager` 查询，而不是保存 Rust 引用。
+#
+# 不要使用：
+#
+# ```rust
+# struct ModuleRunner<'a> {
+#     runtime: &'a Runtime,
+# }
+# ```
+#
+# 也不要使用：
+#
+# ```rust
+# Rc<RefCell<Runtime>> inside ModuleRunner
+# ```
+#
+# 这两种写法都会让生命周期或循环所有权变得非常复杂。
+#
+# ---
+#
+# ## 12. 迁移顺序
+#
+# 建议分阶段迁移，而不是一次性改掉所有 verifier：
+#
+# 1. 新增 `ModuleId`、`ModuleRunner`、`FileEnvironment`、`ExecutionFrame`。
+# 2. 把现有 `ImportedModule` 的字段迁移到 `ModuleRunner`。
+# 3. 保留旧的 `Runtime::top_level_env()`，让它暂时映射到当前 runner 的当前 environment。
+# 4. 把 `run_file` 从 `environment_stack` 改为创建 `FileEnvironment`。
+# 5. 把 `trust_file` 从 `only_exec_affect_environment` 改为 `FileLoadMode::Trust`。
+# 6. 把 verifier 中直接访问 `environment_stack` 的逻辑统一改成 Runtime lookup API。
+# 7. 消除 `Runtime::new_for_import_from_parent`，改成同一个 Runtime 的 `execution_stack`。
+# 8. 最后删除旧的 `environment_stack`、`ImportedModule.environment` 和 `only_exec_affect_environment`。
+#
+# 这样最终得到的模型是：
+#
+# ```text
+# 一个 Runtime
+#     管理所有 ModuleRunner
+#         每个 ModuleRunner 有 main_env
+#         每个 ModuleRunner 有 file_envs
+#     Runtime 用 execution_stack 管理当前执行位置
+#     Runtime 负责跨 module lookup
+#     Environment 只保存数学事实和定义
+# ```
+#
+# 这比“全局变量”更适合 Rust，也比让每个 `ModuleRunner` 互相引用更清晰。
+# </proposed_plan>
+#
+# --- Q3 user jsonl:2574 ---
+# 大思路完全没有问题，很厉害，但是      // lookup indexes
+#       pub module_by_name: HashMap<String, ModuleId>,
+#       pub module_by_path: HashMap<String, ModuleId>,
+#
+#       // import lifecycle
+#       pub loading_import_stack: Vec<ModuleId>,
+#       pub pending_import_dependencies:
+#           HashMap<ModuleId, Vec<ModuleId>>,
+#
+#       // stop import
+#       pub stopped_modules: HashSet<ModuleId>,
+#
+#       pub next_module_id: usize, 这些field 有什么用呢
+#
+# --- A3 assistant jsonl:2578 ---
+# 这些字段都是为了让 `ModuleManager` 管理 module graph，而不是单纯保存几个环境。逐个解释：
+#
+# ```rust
+# pub module_by_name: HashMap<String, ModuleId>
+# ```
+#
+# 用于把：
+#
+# ```text
+# import Nat
+# M.x
+# stop import Nat
+# ```
+#
+# 中的模块名解析成 `ModuleId`。
+#
+# 同时防止：
+#
+# ```text
+# 两个不同路径都叫 Nat
+# ```
+#
+# 造成模块名冲突。
+#
+# ---
+#
+# ```rust
+# pub module_by_path: HashMap<String, ModuleId>
+# ```
+#
+# 用于根据规范化后的绝对路径查找 module。
+#
+# 例如：
+#
+# ```text
+# import "./math"
+# import "/project/math"
+# ```
+#
+# 如果它们最终是同一个路径，就不能重复加载两次。
+#
+# 它也支持：
+#
+# ```text
+# 模块已经加载过 → 直接复用
+# 模块只是 stop 了 → 重新激活
+# ```
+#
+# ---
+#
+# ```rust
+# pub loading_import_stack: Vec<ModuleId>
+# ```
+#
+# 用于检测循环 import。
+#
+# 例如：
+#
+# ```text
+# A imports B
+# B imports C
+# C imports A
+# ```
+#
+# 执行时：
+#
+# ```text
+# loading_import_stack = [A, B, C]
+# ```
+#
+# 发现 A 已经在 stack 中，就可以报告：
+#
+# ```text
+# cyclic import: A -> B -> C -> A
+# ```
+#
+# 它是执行中的调用栈，不是最终的依赖列表。
+#
+# ---
+#
+# ```rust
+# pub pending_import_dependencies: HashMap<ModuleId, Vec<ModuleId>>
+# ```
+#
+# 这个字段是为了解决“模块还没加载完成，但它已经 import 了其他模块”的问题。
+#
+# 例如：
+#
+# ```text
+# Int/main.lit:
+#     import Nat
+# ```
+#
+# 加载 Int 时：
+#
+# ```text
+# Int 还没有进入 loaded modules
+# ```
+#
+# 但已经需要记录：
+#
+# ```text
+# Int -> Nat
+# ```
+#
+# 因此暂存在：
+#
+# ```rust
+# pending_import_dependencies[Int] = vec![Nat]
+# ```
+#
+# 等 Int 完整执行成功后，再把它放进：
+#
+# ```rust
+# ModuleRunner {
+#     imports: vec![Nat],
+# }
+# ```
+#
+# 如果加载失败，则丢弃 pending 记录。
+#
+# 实际上，后面也可以把这个字段简化成：
+#
+# ```rust
+# ModuleRunner {
+#     status: ModuleStatus::Loading,
+#     imports: Vec<ModuleId>,
+# }
+# ```
+#
+# 也就是 loading 期间直接把依赖写进尚未完成的 runner。那样就不一定需要独立的 `pending_import_dependencies`。它主要是当前“加载完成后才注册 runner”模型下的过渡状态。
+#
+# ---
+#
+# ```rust
+# pub stopped_modules: HashSet<ModuleId>
+# ```
+#
+# 对应现在的：
+#
+# ```litex
+# stop import Nat
+# ```
+#
+# 它表示：
+#
+# ```text
+# Nat 已经加载过，但当前不可参与隐式查找
+# ```
+#
+# 这和删除 module 不同：
+#
+# ```text
+# loaded_modules 中仍然保留 Nat
+# Nat 的环境仍然保留
+# 只是 lookup 时暂时跳过 Nat
+# ```
+#
+# 之后再次：
+#
+# ```litex
+# import Nat
+# ```
+#
+# 就可以重新激活，而不需要重新执行文件。
+#
+# 不过也可以把这个状态直接放到 `ModuleRunner`：
+#
+# ```rust
+# pub enum ModuleStatus {
+#     Loading,
+#     Loaded,
+#     Stopped,
+# }
+# ```
+#
+# 这样就不需要单独的：
+#
+# ```rust
+# HashSet<ModuleId>
+# ```
+#
+# 我更推荐把状态放入 `ModuleRunner`，因为“是否 stopped”本来就是该 module 自己的属性。
+#
+# ---
+#
+# ```rust
+# pub next_module_id: usize
+# ```
+#
+# 用于生成新的 `ModuleId`：
+#
+# ```rust
+# let id = ModuleId(self.next_module_id);
+# self.next_module_id += 1;
+# ```
+#
+# 这样 module 不依赖名字或路径作为内部身份：
+#
+# ```text
+# ModuleId(0) = main
+# ModuleId(1) = Nat
+# ModuleId(2) = Int
+# ```
+#
+# 名字和路径可以变化，但内部引用仍然稳定。
+#
+# 后面如果需要处理 module 删除、重新加载、缓存失效，可以把它换成 generation-based ID 或 `slotmap`。MVP 阶段使用递增整数就够了。
+#
+# 我会把字段稍微整理成这样：
+#
+# ```rust
+# pub struct ModuleManager {
+#     pub builtin_environment: Environment,
+#
+#     pub modules: HashMap<ModuleId, ModuleRunner>,
+#     pub module_by_name: HashMap<String, ModuleId>,
+#     pub module_by_path: HashMap<String, ModuleId>,
+#
+#     pub loading_import_stack: Vec<ModuleId>,
+#     pub next_module_id: usize,
+# }
+# ```
+#
+# 然后把这两个状态放进 `ModuleRunner`：
+#
+# ```rust
+# pub struct ModuleRunner {
+#     pub id: ModuleId,
+#     pub module_name: String,
+#     pub module_root_path: String,
+#
+#     pub main_environment: Environment,
+#     pub file_environments: Vec<FileEnvironment>,
+#     pub imports: Vec<ModuleId>,
+#
+#     pub status: ModuleStatus,
+# }
+# ```
+#
+# 这样：
+#
+# - `module_by_name/path` 是索引；
+# - `loading_import_stack` 是当前加载调用栈；
+# - `ModuleRunner.imports` 是最终依赖关系；
+# - `ModuleRunner.status` 表示 Loaded/Stopped/Loading；
+# - `next_module_id` 是内部 ID 分配器。
+#
+# 这比把所有状态都集中在 `ModuleManager` 里更清楚。
+#
+# ============================================================

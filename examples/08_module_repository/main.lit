@@ -1,0 +1,5 @@
+import A
+
+A::chap3::z = 1
+
+have answer R = 1

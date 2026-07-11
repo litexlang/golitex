@@ -73,7 +73,7 @@ Examples:
 ```bash
 litex -e "1 = 1"
 litex -f examples/tmp.lit
-litex -r examples
+litex -r examples/08_module_repository
 ```
 
 This means source code beginning with `-` should usually be put in a `.lit`
@@ -89,8 +89,14 @@ those flags. `-lang` also consumes the next token globally.
 |---------|----------|
 | `litex` | Start the interactive verifier REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run one Litex file as an isolated script. It does not read `mod.lit`; `export` and `local_import` are unavailable. |
-| `litex -r <repo>` | Discover and validate `<repo>/mod.lit` recursively, then run `<repo>/main.lit`. |
+| `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
+| `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
+| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its `[entrance]` file. |
+
+In isolated file mode, `import "./Demo" as Demo` may still load a module
+directory containing `main.lit`. It cannot load a `.lit` file. In a project,
+declare local sources in `[export]` in `litex.config` and bind them with
+`local_import`.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -186,6 +192,20 @@ JSON error object.
 
 Unknown commands print an error and the help message, then exit with code `2`.
 
+## Module Migration
+
+Litex no longer has `run_file`, `trust_file`, or `stop import` statements.
+There is no Litex statement that directly loads an arbitrary `.lit` path. Use
+`litex.config` instead:
+
+- set `[entrance] file = "..."` for the project entry;
+- declare files and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
+- use `local_import name` inside registered sources;
+- run the entry with `litex -r <project>` or a registered chapter with `litex -f <file>`.
+
+Ordinary `import` loads module directories or registered global modules. A
+direct `import "./x.lit" as X` is rejected.
+
 ## Reserved Helper Commands
 
 These commands are parsed by the Rust CLI but are not implemented as functional
@@ -216,10 +236,10 @@ Run a file with fuller output:
 litex -detail -f examples/tmp.lit
 ```
 
-Run a repository entry file:
+Run a project entrance file:
 
 ```bash
-litex -r examples
+litex -r examples/08_module_repository
 ```
 
 Run a strict CI-style check:

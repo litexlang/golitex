@@ -162,7 +162,7 @@ impl Runtime {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         for module_name in module_names.iter() {
             let candidates = self
-                .active_imported_module_environments(module_name)
+                .imported_module_environments(module_name)
                 .into_iter()
                 .filter_map(|env| env.known_atomic_facts_in_forall_facts.get(&lookup_key))
                 .flat_map(|facts| facts.iter().rev().cloned())
@@ -325,7 +325,7 @@ impl Runtime {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         for module_name in module_names.iter() {
             let mut arg_shape_keys = self
-                .active_imported_module_environments(module_name)
+                .imported_module_environments(module_name)
                 .into_iter()
                 .filter_map(|env| {
                     env.known_atomic_facts_in_forall_facts_by_arg_shape
@@ -422,7 +422,7 @@ impl Runtime {
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let candidates = self
-            .active_imported_module_environments(module_name)
+            .imported_module_environments(module_name)
             .into_iter()
             .filter_map(|env| {
                 env.known_atomic_facts_in_forall_facts_by_arg_shape
@@ -458,10 +458,11 @@ impl Runtime {
         &mut self,
         atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
-        arg_map: HashMap<String, Obj>,
+        mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        self.complete_known_forall_arg_map_from_known_dom_facts(known_forall.as_ref(), &mut arg_map)?;
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
@@ -489,6 +490,93 @@ impl Runtime {
             Vec::new(),
         );
         Ok(Some(fact_verified))
+    }
+
+    fn complete_known_forall_arg_map_from_known_dom_facts(
+        &mut self,
+        known_forall: &KnownForallFactParamsAndDom,
+        arg_map: &mut HashMap<String, Obj>,
+    ) -> Result<(), RuntimeError> {
+        let param_names = known_forall.params_def.collect_param_names();
+        for _ in 0..param_names.len() {
+            if param_names
+                .iter()
+                .all(|param_name| arg_map.contains_key(param_name))
+            {
+                return Ok(());
+            }
+
+            let mut changed = false;
+            for dom_fact in known_forall.dom.iter() {
+                let Fact::AtomicFact(dom_atomic_fact) = dom_fact else {
+                    continue;
+                };
+                let candidates =
+                    self.known_atomic_fact_candidates_for_forall_dom_fact(dom_atomic_fact);
+                for candidate in candidates {
+                    let Some(candidate_arg_map) = self
+                        .match_atomic_fact_args_against_known_forall_ordered_args(
+                            dom_atomic_fact,
+                            &candidate,
+                        )?
+                    else {
+                        continue;
+                    };
+                    let mut merged = arg_map.clone();
+                    if !self.merge_arg_match_map_into(&mut merged, candidate_arg_map) {
+                        continue;
+                    }
+                    if merged.len() > arg_map.len() {
+                        *arg_map = merged;
+                        changed = true;
+                        break;
+                    }
+                }
+                if changed {
+                    break;
+                }
+            }
+
+            if !changed {
+                return Ok(());
+            }
+        }
+        Ok(())
+    }
+
+    fn known_atomic_fact_candidates_for_forall_dom_fact(
+        &self,
+        dom_atomic_fact: &AtomicFact,
+    ) -> Vec<AtomicFact> {
+        let lookup_key = (dom_atomic_fact.key(), dom_atomic_fact.is_true());
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            match dom_atomic_fact.number_of_args() {
+                1 => {
+                    if let Some(known_facts) =
+                        environment.known_atomic_facts_with_1_arg.get(&lookup_key)
+                    {
+                        candidates.extend(known_facts.values().cloned());
+                    }
+                }
+                2 => {
+                    if let Some(known_facts) =
+                        environment.known_atomic_facts_with_2_args.get(&lookup_key)
+                    {
+                        candidates.extend(known_facts.values().cloned());
+                    }
+                }
+                _ => {
+                    if let Some(known_facts) = environment
+                        .known_atomic_facts_with_0_or_more_than_2_args
+                        .get(&lookup_key)
+                    {
+                        candidates.extend(known_facts.iter().cloned());
+                    }
+                }
+            }
+        }
+        candidates
     }
 
     fn match_atomic_fact_args_against_known_forall_ordered_args(

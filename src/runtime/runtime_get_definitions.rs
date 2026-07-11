@@ -26,7 +26,7 @@ impl Runtime {
                     .cloned();
             }
             return get_prop_definition_from_environments(
-                self.active_imported_module_environments(module_name),
+                self.imported_module_environments(module_name),
                 local_name,
             );
         }

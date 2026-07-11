@@ -51,7 +51,6 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
-            Stmt::Command(CommandStmt::ExportStmt(s)) => self.exec_export_stmt(s),
             Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),

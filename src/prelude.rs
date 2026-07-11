@@ -90,7 +90,8 @@ pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::graph::{
     run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
     run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
-    run_graph_for_file_with_strict_and_language, run_graph_for_repo,
+    run_graph_for_file_with_strict_and_language,
+    run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
 pub use crate::infer::{
@@ -98,8 +99,9 @@ pub use crate::infer::{
     StoreFactOutput,
 };
 pub use crate::module_manager::{
-    discover_repository, ExportEntry, FileEnvId, FileEnvironment, FileStatus, ImportTarget,
-    ModuleId, ModuleManager, ModuleRunner, ModuleStatus, BUILTIN_CODE_PATH,
+    discover_repository, discover_repository_for_file, parse_project_config, ExportEntry, FileId,
+    FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
+    ProjectConfig, ProjectExport, RepositoryFileTarget, BUILTIN_CODE_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -193,7 +195,9 @@ pub use crate::pipeline::{
     run_source_code, run_source_code_in_file, run_source_code_in_file_for_cli,
     run_source_code_in_file_for_cli_with_strict,
     run_source_code_in_file_for_cli_with_strict_and_language,
-    run_source_code_in_file_for_cli_with_summary_and_language, run_source_code_in_file_with_ok,
+    run_source_code_in_file_for_cli_with_summary_and_language,
+    run_source_code_in_file_for_cli_with_summary_and_language_and_isolation,
+    run_source_code_in_file_with_ok,
     run_source_code_in_repository_for_cli_with_summary_and_language, run_stmt_at_global_env,
     RunSummary,
 };
@@ -262,7 +266,8 @@ pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
     run_runner_for_code_strict_with_language, run_runner_for_code_with_language,
     run_runner_for_file, run_runner_for_file_with_strict,
-    run_runner_for_file_with_strict_and_language, run_runner_for_repo,
+    run_runner_for_file_with_strict_and_language,
+    run_runner_for_file_with_strict_language_and_isolation, run_runner_for_repo,
     run_runner_for_repo_with_strict, run_runner_for_repo_with_strict_and_language,
 };
 pub use crate::runtime::FreeParamCollection;
@@ -323,8 +328,6 @@ pub use crate::stmt::proof_debt_stmt::ProofDebtStmt;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
-pub use crate::stmt::tooling_stmt::ExportKind;
-pub use crate::stmt::tooling_stmt::ExportStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
@@ -427,8 +430,6 @@ pub use crate::common::keywords::EVAL;
 pub use crate::common::keywords::EXIST;
 pub use crate::common::keywords::EXIST_BANG;
 pub use crate::common::keywords::EXPORT;
-pub use crate::common::keywords::EXPORT_FILE;
-pub use crate::common::keywords::EXPORT_MODULE;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;

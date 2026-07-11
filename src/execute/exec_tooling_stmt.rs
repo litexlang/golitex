@@ -1,20 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_export_stmt(&mut self, stmt: &ExportStmt) -> Result<StmtResult, RuntimeError> {
-        let message = if self.run_mode == RunMode::File {
-            "export is unavailable in isolated file mode; declare exports in mod.lit and run the project with -r"
-        } else {
-            "export is declarative and can only appear in mod.lit"
-        };
-        Err(short_exec_error(
-            stmt.clone().into(),
-            message.to_string(),
-            None,
-            vec![],
-        ))
-    }
-
     pub fn exec_local_import_stmt(
         &mut self,
         stmt: &LocalImportStmt,

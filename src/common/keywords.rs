@@ -142,8 +142,6 @@ pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
 pub const LOCAL_IMPORT: &str = "local_import";
 pub const EXPORT: &str = "export";
-pub const EXPORT_FILE: &str = "file";
-pub const EXPORT_MODULE: &str = "mod";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
 pub const OBTAIN: &str = "obtain";
@@ -309,8 +307,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         IMPORT,
         LOCAL_IMPORT,
         EXPORT,
-        EXPORT_FILE,
-        EXPORT_MODULE,
         AS,
         ENUMERATE,
         HAVE,

@@ -1,9 +1,11 @@
 use crate::prelude::*;
 use crate::to_latex::{
-    to_latex_from_repository_after_builtins, to_latex_from_source_after_builtins,
+    to_latex_from_file_after_builtins, to_latex_from_repository_after_builtins,
+    to_latex_from_source_after_builtins,
 };
 use crate::to_python::{
-    to_python_from_repository_after_builtins, to_python_from_source_after_builtins,
+    to_python_from_file_after_builtins, to_python_from_repository_after_builtins,
+    to_python_from_source_after_builtins,
 };
 use std::env;
 use std::fs;
@@ -15,12 +17,14 @@ const DETAIL_FLAG: &str = "-detail";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
+const ISOLATED_FLAG: &str = "-isolated";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let detail_output = remove_flag(&mut args, DETAIL_FLAG);
     let strict_mode = remove_flag(&mut args, STRICT_FLAG);
     let summarize_output = remove_flag(&mut args, SUMMARIZE_FLAG);
+    let force_isolated = remove_flag(&mut args, ISOLATED_FLAG);
     let output_language = match remove_language_flag(&mut args) {
         Ok(language) => language,
         Err(message) => {
@@ -99,6 +103,7 @@ pub fn run_cli() {
                     strict_mode,
                     output_language,
                     summarize_output,
+                    force_isolated,
                 );
                 return;
             }
@@ -129,6 +134,7 @@ pub fn run_cli() {
                     detail_output,
                     strict_mode,
                     output_language,
+                    force_isolated,
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -151,6 +157,7 @@ pub fn run_cli() {
                     detail_output,
                     strict_mode,
                     output_language,
+                    force_isolated,
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -212,7 +219,7 @@ pub fn run_cli() {
                                     process::exit(2);
                                 }
                             };
-                        compile_file_to_latex(file_path.as_str(), output_language)
+                        compile_file_to_latex(file_path.as_str(), output_language, force_isolated)
                     }
                     "-e" => {
                         let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
@@ -270,7 +277,7 @@ pub fn run_cli() {
                                     process::exit(2);
                                 }
                             };
-                        compile_file_to_python(file_path.as_str(), output_language)
+                        compile_file_to_python(file_path.as_str(), output_language, force_isolated)
                     }
                     "-e" => {
                         let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
@@ -453,6 +460,7 @@ fn main_flag_file(
     strict_mode: bool,
     output_language: OutputLanguage,
     summarize_output: bool,
+    force_isolated: bool,
 ) {
     let path = remove_windows_carriage_return(file_flag);
 
@@ -483,12 +491,13 @@ fn main_flag_file(
         }
     };
 
-    let output = run_source_code_in_file_for_cli_with_summary_and_language(
+    let output = run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
         path_string.as_str(),
         detail_output,
         strict_mode,
         output_language,
         summarize_output,
+        force_isolated,
     );
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
@@ -517,6 +526,7 @@ fn main_flag_runner(
     detail_output: bool,
     strict_mode: bool,
     output_language: OutputLanguage,
+    force_isolated: bool,
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-runner")?;
     let hide_file_paths = !detail_output;
@@ -542,11 +552,12 @@ fn main_flag_runner(
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            Ok(run_runner_for_file_with_strict_and_language(
+            Ok(run_runner_for_file_with_strict_language_and_isolation(
                 file_path.as_str(),
                 hide_file_paths,
                 strict_mode,
                 output_language,
+                force_isolated,
             ))
         }
         "-r" => {
@@ -568,6 +579,7 @@ fn main_flag_graph(
     detail_output: bool,
     strict_mode: bool,
     output_language: OutputLanguage,
+    force_isolated: bool,
 ) -> Result<(bool, String, Option<String>), String> {
     let target_flag = read_any_value_after_flag(args, index, "-graph")?;
     let hide_file_paths = !detail_output;
@@ -595,11 +607,12 @@ fn main_flag_graph(
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
             let save_path = read_optional_graph_save_path(args, index)?;
-            let output = run_graph_for_file_with_strict_and_language(
+            let output = run_graph_for_file_with_strict_language_and_isolation(
                 file_path.as_str(),
                 hide_file_paths,
                 strict_mode,
                 output_language,
+                force_isolated,
             );
             Ok((output.0, output.1, save_path))
         }
@@ -659,7 +672,21 @@ fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String 
     }
 }
 
-fn compile_file_to_latex(file_path: &str, output_language: OutputLanguage) -> String {
+fn compile_file_to_latex(
+    file_path: &str,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+) -> String {
+    if !force_isolated {
+        return match to_latex_from_file_after_builtins(file_path) {
+            Ok(s) => s,
+            Err(e) => {
+                let mut runtime = Runtime::new();
+                runtime.output_language = output_language;
+                display_runtime_error_json(&runtime, &e, true)
+            }
+        };
+    }
     let source = match fs::read_to_string(file_path) {
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
@@ -697,7 +724,21 @@ fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String
     }
 }
 
-fn compile_file_to_python(file_path: &str, output_language: OutputLanguage) -> String {
+fn compile_file_to_python(
+    file_path: &str,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+) -> String {
+    if !force_isolated {
+        return match to_python_from_file_after_builtins(file_path) {
+            Ok(s) => s,
+            Err(e) => {
+                let mut runtime = Runtime::new();
+                runtime.output_language = output_language;
+                display_runtime_error_json(&runtime, &e, true)
+            }
+        };
+    }
     let source = match fs::read_to_string(file_path) {
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
@@ -786,22 +827,23 @@ fn upgrade_message(version: &str) -> String {
 
 fn help_message() -> String {
     let result = r#"litex : run Litex interactively in your terminal
-litex -f <file> : run the given file
-litex -r <repo> : run the given repository
+litex -f <file> : run a registered project file, or an isolated file when no project registers it
+litex -isolated -f <file> : force isolated file mode
+litex -r <project> : discover project/litex.config, then run its entrance file
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
-litex -runner -r <repo> : run a repository and return one wrapper JSON object
+litex -runner -r <project> : run a project and return one wrapper JSON object
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
-litex -graph -r <repo> <json> : run a repository and save a prop/function/fact relation graph JSON object
+litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
-litex -latex -r <repo> : compile the given repository to LaTeX
+litex -latex -r <project> : compile the given project to LaTeX
 litex -python -f <file> : compile supported verified Litex definitions to Python
 litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <repo> : compile supported definitions in the repository main.lit to Python
+litex -python -r <project> : compile supported definitions in the project entrance file to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
@@ -851,6 +893,14 @@ mod tests {
     fn help_lists_graph_command() {
         let message = help_message();
         assert!(message.contains("litex -graph -f <file> <json>"));
+    }
+
+    #[test]
+    fn help_explains_project_file_and_entrance_modes() {
+        let message = help_message();
+        assert!(message.contains("run a registered project file"));
+        assert!(message.contains("litex -isolated -f <file>"));
+        assert!(message.contains("project/litex.config"));
     }
 
     #[test]

@@ -4517,6 +4517,46 @@ a = b
 }
 
 #[test]
+fn known_forall_instantiation_fills_middle_param_from_dom_facts() {
+    run_with_large_stack(
+        "known_forall_instantiation_fills_middle_param_from_dom_facts",
+        || {
+            let source_code = r#"
+abstract_prop rel(X, x, y)
+
+proof_debt forall X set, x, y, z X:
+    $rel(X, x, y)
+    $rel(X, y, z)
+    =>:
+        $rel(X, x, z)
+
+thm use_rel_trans_like:
+    ? forall X set, a, b, c X:
+        $rel(X, a, b)
+        $rel(X, b, c)
+        =>:
+            $rel(X, a, c)
+    $rel(X, a, c)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "known_forall_instantiation_fills_middle_param_from_dom_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "known forall instantiation should infer a middle parameter from known premises:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn zero_product_cancellation_does_not_recursively_reenter_equality() {
     let source_code = r#"
 have a, b, k1, k2 N

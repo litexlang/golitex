@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
-use std::fs;
 
 const GRAPH_NAME: &str = "litex-relation-graph";
 const GRAPH_VERSION: &str = "0.1";
@@ -89,7 +88,23 @@ pub fn run_graph_for_file_with_strict_and_language(
     file_path: &str,
     hide_file_paths: bool,
     strict_mode: bool,
+    output_language: OutputLanguage,
+) -> (bool, String) {
+    run_graph_for_file_with_strict_language_and_isolation(
+        file_path,
+        hide_file_paths,
+        strict_mode,
+        output_language,
+        false,
+    )
+}
+
+pub fn run_graph_for_file_with_strict_language_and_isolation(
+    file_path: &str,
+    hide_file_paths: bool,
+    strict_mode: bool,
     _output_language: OutputLanguage,
+    force_isolated: bool,
 ) -> (bool, String) {
     let resolved_path = match resolve_litex_file_path(file_path) {
         Ok(path) => path,
@@ -98,29 +113,21 @@ pub fn run_graph_for_file_with_strict_and_language(
         }
     };
 
-    let source_code = match fs::read_to_string(resolved_path.as_str()) {
-        Ok(content) => content,
-        Err(error) => {
-            let message = if hide_file_paths {
-                format!("could not read entry file: {}", error)
-            } else {
-                format!("could not read file {:?}: {}", resolved_path, error)
-            };
-            return graph_target_error_output(
-                "file",
-                resolved_path.as_str(),
-                hide_file_paths,
-                message,
-            );
-        }
-    };
-
-    run_graph_on_source(
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = !hide_file_paths;
+    runtime.strict_mode = strict_mode;
+    let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
+        resolved_path.as_str(),
+        &mut runtime,
+        force_isolated,
+    );
+    render_graph_result(
         "file",
         resolved_path.as_str(),
-        source_code.as_str(),
         hide_file_paths,
-        strict_mode,
+        runtime,
+        stmt_results,
+        runtime_error,
     )
 }
 
@@ -150,7 +157,7 @@ pub fn run_graph_for_repo_with_strict_and_language(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
-    let main_file_path = match discover_repository(&mut runtime, repo_path) {
+    match discover_repository(&mut runtime, repo_path) {
         Ok(path) => path,
         Err(error) => {
             return render_graph_result(
@@ -163,19 +170,11 @@ pub fn run_graph_for_repo_with_strict_and_language(
             );
         }
     };
-    let source_code = match fs::read_to_string(&main_file_path) {
-        Ok(content) => content,
-        Err(error) => {
-            return graph_target_error_output(
-                "repo",
-                repo_path,
-                hide_file_paths,
-                format!("could not read repository main.lit: {}", error),
-            );
-        }
-    };
-    let normalized_source = remove_windows_carriage_return(&source_code);
-    let (stmt_results, runtime_error) = run_source_code(&normalized_source, &mut runtime);
+    let entry_module_id = runtime.current_module_id();
+    let (stmt_results, runtime_error) = crate::pipeline::run_repository_file_target(
+        &mut runtime,
+        RepositoryFileTarget::Entrance(entry_module_id),
+    );
     render_graph_result(
         "repo",
         repo_path,

@@ -1,0 +1,3 @@
+local_import chap3
+
+chap3::z = 1

@@ -1211,7 +1211,6 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("evaluation by statement", "按等式求值语句"),
     ("algorithm definition", "算法定义"),
     ("template definition", "模板定义"),
-    ("run file statement", "运行文件语句"),
     ("import statement", "导入语句"),
     ("no-op statement", "空操作语句"),
     ("clear statement", "清空语句"),

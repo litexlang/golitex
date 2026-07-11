@@ -303,7 +303,7 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            let environments = self.active_imported_module_environments(module_name);
+            let environments = self.imported_module_environments(module_name);
             if environments.is_empty() {
                 continue;
             }

@@ -290,11 +290,12 @@ Basic behavior:
 | `-version` | Print the Litex version and exit. |
 | `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
-| `-f <file>` | Run a file. The path may be relative to the current working directory or absolute. |
-| `-r <repo>` | Same as running `<repo>/main.lit`. Place `main.lit` at the repo root. |
+| `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
+| `-isolated -f <file>` | Force a file to run without project discovery. |
+| `-r <project>` | Run the `[entrance]` file declared by `<project>/litex.config`. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
+| `-runner -r <project>` | Run a project and return one wrapper JSON object. |
 | `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |

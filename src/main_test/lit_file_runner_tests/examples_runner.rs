@@ -10,7 +10,7 @@ use super::helper::{
     collect_markdown_files_under_dir_sorted, format_litex_failure_location,
     litex_snippets_from_markdown_files, print_known_forall_profile_summary,
     print_slowest_run_labels, run_with_large_stack, spawn_with_large_stack,
-    CITE_STD_EXAMPLES_SUBDIR,
+    CITE_STD_EXAMPLES_SUBDIR, REPOSITORY_EXAMPLES_SUBDIR,
 };
 use super::mechanics_markdown_runner::run_the_mechanics_markdown_files_impl;
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
@@ -700,12 +700,16 @@ fn collect_examples_phase1_groups(
     include_manual_docs: bool,
 ) -> Vec<LitexRunGroup> {
     let lit_file_paths = if include_std_examples {
-        collect_lit_files_recursive_under(manifest_dir, "examples")
+        collect_lit_files_recursive_under_excluding(
+            manifest_dir,
+            "examples",
+            &[REPOSITORY_EXAMPLES_SUBDIR],
+        )
     } else {
         collect_lit_files_recursive_under_excluding(
             manifest_dir,
             "examples",
-            &[CITE_STD_EXAMPLES_SUBDIR],
+            &[CITE_STD_EXAMPLES_SUBDIR, REPOSITORY_EXAMPLES_SUBDIR],
         )
     };
     if include_std_examples {
