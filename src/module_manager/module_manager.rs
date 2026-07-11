@@ -183,9 +183,10 @@ impl ModuleManager {
                 .map(|module| module.module_name.as_str()),
             ImportTarget::File { module_id, file_id } => self
                 .module(module_id)?
-                .file_environment(file_id)?
+                .file(file_id)?
                 .canonical_name
-                .as_deref(),
+                .as_str()
+                .into(),
         }
     }
 

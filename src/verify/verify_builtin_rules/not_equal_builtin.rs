@@ -340,7 +340,7 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            for environment in self.active_imported_module_environments(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 Self::collect_known_sets_containing_obj_in_environment(
                     environment,
                     &lookup_key,

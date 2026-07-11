@@ -6,7 +6,7 @@ use std::rc::Rc;
 pub enum ExecutionLayer {
     Builtin,
     Main,
-    File(FileEnvId),
+    File(FileId),
 }
 
 #[derive(Clone)]

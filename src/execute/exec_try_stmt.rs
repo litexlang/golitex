@@ -161,7 +161,6 @@ fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
     match stmt {
         Stmt::Command(CommandStmt::ClearStmt(_)) => Some("clear"),
         Stmt::Command(CommandStmt::ImportStmt(_)) => Some("import"),
-        Stmt::Command(CommandStmt::ExportStmt(_)) => Some("export"),
         Stmt::Command(CommandStmt::LocalImportStmt(_)) => Some("local_import"),
         _ => None,
     }

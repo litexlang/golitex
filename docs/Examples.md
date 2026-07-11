@@ -3687,8 +3687,8 @@ Purpose: run checked exploratory code without committing it, or run a checked
 batch that commits only if every nested statement succeeds.
 
 - Well-definedness / structural checks: each nested statement performs its own
-  checks; `try` rejects control statements such as `clear`, `import`, `export`,
-  and `local_import`.
+  checks; `try` rejects control statements such as `clear`, `import`, and
+  `local_import`.
 - Truth verification: nested statements verify normally.
 - Environment effects: `sketch` has no outer effect; `try` commits the child
   environment into the parent environment on success.
@@ -3804,17 +3804,17 @@ do_nothing
 
 #### 25. Module Commands
 
-Purpose: declare repository interfaces, load modules, bind exported sources,
+Purpose: load modules, bind sources declared in `litex.config`,
 or clear the current environment. These examples are syntax only because they
 depend on local files or installed modules.
 
-- Well-definedness / structural checks: repository `export` declarations and
+- Well-definedness / structural checks: `litex.config` declarations and
   `local_import` bindings are validated during discovery; `import` resolves a
   module; `clear` has no structural checks.
-- Truth verification: imported modules and exported files verify normally when
+- Truth verification: imported modules and declared files verify normally when
   loaded.
 - Environment effects: module commands update the module manager; `clear`
-  removes the current user environment. Imported modules and manifest export
+  removes the current user environment. Imported modules and project export
   nodes remain registered.
 
 <!-- litex:skip-test -->

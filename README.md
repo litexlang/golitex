@@ -279,8 +279,7 @@ a larger trusted mathematical background and a narrower interface goal. Litex an
 We are also developing a partial Litex-to-Lean compiler. The longer-term
 experiment is not to make Litex a Lean-based language, but to let it serve as a
 fact-oriented, set-theory-based, intuitive, and simple-to-write interface for
-Lean. Litex remains an independent formal language, designed around a
-set-theoretic mathematical surface and explicit fact growth. Lean is not its
+Lean. Lean is not its
 foundation; it is an important backend: Litex can compile verified
 developments into independently checkable Lean code and reuse the Mathlib
 ecosystem. This is ongoing work; see

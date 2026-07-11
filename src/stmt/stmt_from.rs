@@ -162,12 +162,6 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
-impl From<ExportStmt> for Stmt {
-    fn from(v: ExportStmt) -> Self {
-        CommandStmt::ExportStmt(v).into()
-    }
-}
-
 impl From<LocalImportStmt> for Stmt {
     fn from(v: LocalImportStmt) -> Self {
         CommandStmt::LocalImportStmt(v).into()

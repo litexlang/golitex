@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub struct ModuleId(pub usize);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct FileEnvId(pub usize);
+pub struct FileId(pub usize);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileStatus {
@@ -25,14 +25,14 @@ pub enum ModuleStatus {
 pub enum ImportTarget {
     File {
         module_id: ModuleId,
-        file_id: FileEnvId,
+        file_id: FileId,
     },
     Module(ModuleId),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExportEntry {
-    File { name: String, file_id: FileEnvId },
+    File { name: String, file_id: FileId },
     Module { name: String, module_id: ModuleId },
 }
 
@@ -49,21 +49,21 @@ impl ExportEntry {
 }
 
 #[derive(Clone)]
-pub struct FileEnvironment {
-    pub id: FileEnvId,
+pub struct FileRunner {
+    pub id: FileId,
     pub source_path: String,
-    pub canonical_name: Option<String>,
+    pub canonical_name: String,
     pub environment: Box<Environment>,
     pub local_imports: HashMap<String, ImportTarget>,
     pub status: FileStatus,
 }
 
-impl FileEnvironment {
-    pub fn new(id: FileEnvId, source_path: String, canonical_name: String) -> Self {
-        FileEnvironment {
+impl FileRunner {
+    pub fn new(id: FileId, source_path: String, canonical_name: String) -> Self {
+        FileRunner {
             id,
             source_path,
-            canonical_name: Some(canonical_name),
+            canonical_name,
             environment: Box::new(Environment::new_empty_env()),
             local_imports: HashMap::new(),
             status: FileStatus::Unloaded,
@@ -79,7 +79,7 @@ pub struct ModuleRunner {
     pub main_file_path: String,
     pub is_std: bool,
     pub main_environment: Box<Environment>,
-    pub file_environments: Vec<FileEnvironment>,
+    pub files: Vec<FileRunner>,
     pub exports: HashMap<String, ExportEntry>,
     pub main_local_imports: HashMap<String, ImportTarget>,
     pub imports: Vec<ModuleId>,
@@ -102,7 +102,7 @@ impl ModuleRunner {
             main_file_path,
             is_std,
             main_environment: Box::new(Environment::new_empty_env()),
-            file_environments: vec![],
+            files: vec![],
             exports: HashMap::new(),
             main_local_imports: HashMap::new(),
             imports: vec![],
@@ -110,23 +110,19 @@ impl ModuleRunner {
         }
     }
 
-    pub fn create_exported_file_environment(
-        &mut self,
-        source_path: String,
-        canonical_name: String,
-    ) -> FileEnvId {
-        let id = FileEnvId(self.file_environments.len());
-        self.file_environments
-            .push(FileEnvironment::new(id, source_path, canonical_name));
+    pub fn create_exported_file(&mut self, source_path: String, canonical_name: String) -> FileId {
+        let id = FileId(self.files.len());
+        self.files
+            .push(FileRunner::new(id, source_path, canonical_name));
         id
     }
 
-    pub fn file_environment(&self, id: FileEnvId) -> Option<&FileEnvironment> {
-        self.file_environments.get(id.0)
+    pub fn file(&self, id: FileId) -> Option<&FileRunner> {
+        self.files.get(id.0)
     }
 
-    pub fn file_environment_mut(&mut self, id: FileEnvId) -> Option<&mut FileEnvironment> {
-        self.file_environments.get_mut(id.0)
+    pub fn file_mut(&mut self, id: FileId) -> Option<&mut FileRunner> {
+        self.files.get_mut(id.0)
     }
 
     pub fn record_import(&mut self, module_id: ModuleId) {
@@ -139,7 +135,7 @@ impl ModuleRunner {
         match layer {
             ExecutionLayer::Main => self.main_local_imports.get(name).copied(),
             ExecutionLayer::File(file_id) => self
-                .file_environment(file_id)
+                .file(file_id)
                 .and_then(|file| file.local_imports.get(name))
                 .copied(),
             ExecutionLayer::Builtin => None,

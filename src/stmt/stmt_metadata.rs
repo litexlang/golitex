@@ -331,7 +331,6 @@ impl CommandStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.line_file(),
-            CommandStmt::ExportStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::LocalImportStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::ClearStmt(stmt) => stmt.line_file.clone(),
@@ -345,7 +344,6 @@ impl CommandStmt {
     pub fn stmt_type_name(&self) -> String {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.stmt_type_name(),
-            CommandStmt::ExportStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::LocalImportStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::ClearStmt(stmt) => stmt.stmt_type_name(),
@@ -359,7 +357,6 @@ impl CommandStmt {
     pub fn output_type_string(&self) -> String {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.output_type_string(),
-            CommandStmt::ExportStmt(_) => ExportStmt::output_type_string(),
             CommandStmt::LocalImportStmt(_) => LocalImportStmt::output_type_string(),
             CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
             CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),

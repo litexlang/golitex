@@ -51,7 +51,7 @@ impl Runtime {
             }
             ExecutionLayer::File(current_file_id) => {
                 let module = self.module_manager.module(frame.module_id?)?;
-                let current_file = module.file_environment(current_file_id)?;
+                let current_file = module.file(current_file_id)?;
                 if layer_index == 0 {
                     return Some(current_file.environment.as_ref());
                 }
@@ -331,7 +331,7 @@ impl Runtime {
                 .cloned();
         }
 
-        self.active_imported_module_environments(module_name)
+        self.imported_module_environments(module_name)
             .into_iter()
             .find_map(|env| env.known_objs_in_fn_sets.get(local_name).cloned())
     }
@@ -373,7 +373,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(local_name) {
                     return Some(known_cart_obj.clone());
                 }
@@ -394,7 +394,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
                 {
                     return Some(set_builder.clone());
@@ -411,7 +411,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((Some(known_tuple_obj), _, _)) =
                     env.known_objs_equal_to_tuple.get(local_name)
                 {
@@ -429,7 +429,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((known_list, _, _)) =
                     env.known_objs_equal_to_finite_seq_list.get(local_name)
                 {
@@ -447,7 +447,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((_, member_of, _)) =
                     env.known_objs_equal_to_finite_seq_list.get(local_name)
                 {
@@ -465,7 +465,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((known_matrix, _, _)) =
                     env.known_objs_equal_to_matrix_list.get(local_name)
                 {
@@ -483,7 +483,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(local_name)
                 {
                     return member_of.clone();
@@ -500,7 +500,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some(cart) = env.known_objs_equal_to_tuple.get(local_name) {
                     return cart.1.clone();
                 }
@@ -517,7 +517,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some(KnownObjValue::SimplifiedNumber(number)) =
                     env.known_obj_values.get(local_name)
                 {
@@ -538,7 +538,7 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            for env in self.active_imported_module_environments(module_name) {
+            for env in self.imported_module_environments(module_name) {
                 if let Some(known_value) = env.known_obj_values.get(local_name) {
                     return match known_value {
                         KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
@@ -566,7 +566,7 @@ impl Runtime {
         );
 
         if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
-            let environments = self.active_imported_module_environments(module_name);
+            let environments = self.imported_module_environments(module_name);
             Self::extend_obj_representatives_equal_to_given_in_environments(
                 &mut result,
                 &environments,
@@ -669,17 +669,13 @@ impl Runtime {
                 }
                 self.module_manager
                     .module(module_id)
-                    .and_then(|module| module.file_environment(file_id))
+                    .and_then(|module| module.file(file_id))
                     .filter(|file| file.status == FileStatus::Loaded)
                     .map(|file| vec![file.environment.as_ref()])
                     .unwrap_or_default()
             }
             None => vec![],
         }
-    }
-
-    pub fn active_imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
-        self.imported_module_environments(module_name)
     }
 
     pub fn is_current_parse_module(&self, module_name: &str) -> bool {
@@ -696,8 +692,8 @@ impl Runtime {
                 (!module.module_name.is_empty()).then_some(module.module_name.as_str())
             }
             ExecutionLayer::File(file_id) => module
-                .file_environment(file_id)
-                .and_then(|file| file.canonical_name.as_deref())
+                .file(file_id)
+                .map(|file| file.canonical_name.as_str())
                 .or_else(|| {
                     (!module.module_name.is_empty()).then_some(module.module_name.as_str())
                 }),

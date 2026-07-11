@@ -47,10 +47,9 @@ fn display_source_label_for_line_file(
     }
 
     for module in runtime.module_manager.modules.values() {
-        for file in module.file_environments.iter() {
+        for file in module.files.iter() {
             if file.source_path == path {
-                let source = file.canonical_name.as_deref().unwrap_or(SOURCE_KIND_FILE);
-                return Some((SOURCE_KIND_FILE.to_string(), source.to_string()));
+                return Some((SOURCE_KIND_FILE.to_string(), file.canonical_name.clone()));
             }
         }
     }

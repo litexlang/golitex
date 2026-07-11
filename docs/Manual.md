@@ -2081,7 +2081,7 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `local_import`, and `export` are
+Control statements such as `clear`, `import`, and `local_import` are
 not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
@@ -2106,57 +2106,55 @@ x = 1
 
 Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same module again is an idempotent no-op.
 
-There are two deliberately separate top-level modes:
+There are two project-aware top-level modes:
 
-- **`litex -f file.lit`** treats one file as an isolated script. It does not
-  read `mod.lit`, and `export` and `local_import` are unavailable. Running a
-  `mod.lit` directly reports that the project must be run with `-r`.
-- **`litex -r project/`** first discovers `project/mod.lit` and all recursively
-  exported modules, validates paths and names, scans import graphs, rejects
-  local and module cycles, and only then executes `project/main.lit`.
+- **`litex -f file.lit`** finds the outermost enclosing `litex.config` project
+  that registers the file, then runs that file with its `local_import`
+  dependency closure. A file not registered by a project stays isolated. Use
+  **`litex -isolated -f file.lit`** to force that old isolated behavior.
+- **`litex -r project/`** first discovers `project/litex.config` and recursively
+  declared child projects, validates paths and names, scans import graphs, rejects
+  local and module cycles, and only then executes the `[entrance]` file.
 
-`mod.lit` is a declaration file, not a knowledge file. It accepts only explicit
-file and directory exports:
+`litex.config` is project configuration, not Litex source and not a knowledge
+file. It contains exactly an entrance table and an optional export table:
 
-<!-- litex:skip-test -->
-```litex
-export file "./chap2.lit" as chap2
-export mod "./chapters" as chapters
+```ini
+[entrance]
+file = "./book.lit"
+
+[export]
+chap2 = "./chap2.lit"
+chapters = "./chapters"
 ```
 
-An `export file` target must be a `.lit` file. An `export mod` target must be a
-directory containing both `mod.lit` and `main.lit`; its own manifest is
-discovered recursively. Export declarations build the public interface but do
-not themselves produce mathematical facts.
+An `[export]` target ending in a `.lit` file is a local source. A directory
+target is a child project and must contain its own `litex.config`. Configuration
+declares names and paths but does not itself produce mathematical facts.
 
-Inside a module-owned `main.lit` or exported source, **`local_import name`**
-can name only an export declared by that module's `mod.lit`. It cannot contain
-a path or `as` alias. The binding is local to that source, but it resolves to
-the export's canonical identity:
+Inside an entrance or registered source, **`local_import name`** can name only
+an entry declared by that module's `[export]` table. It cannot contain a path or
+an alias. The binding is local to that source, but it resolves to the export's
+canonical identity:
 
 <!-- litex:skip-test -->
 ```litex
-# A/mod.lit
-export file "./chap2.lit" as chap2
-export file "./chap3.lit" as chap3
-
 # A/chap3.lit
 local_import chap2
 chap2::some_fact
 ```
 
 The canonical external name is hierarchical, for example
-`A::chap2::some_fact` or `A::chapters::algebra::Group`. Importing a root module
-executes its `main.lit`, completes the recursively exported module/file graph,
-and caches every loaded environment. A `local_import` encountered in
-`main.lit` can load its target earlier at that exact statement.
+`A::chap2::some_fact` or `A::chapters::algebra::Group`. A `local_import` loads
+its target once per top-level run and caches that target environment in memory;
+an unrelated export is not executed merely because it was declared.
 
-In repository mode, **`import A`** names a module exported by the root
-`mod.lit`, or an already registered global/standard module. Relative imports
-are not the repository dependency mechanism. In isolated file mode,
+In project mode, **`import A`** names a module exported by the root
+`litex.config`, or an already registered global/standard module. Relative imports
+are not the project dependency mechanism. In isolated file mode,
 **`import "path/to/module" as M`** remains available for a local module
 directory containing `main.lit`. Ordinary `import` never loads a `.lit` file;
-declare a file with `export file` and access it with `local_import` instead.
+declare that file in `[export]` and access it with `local_import` instead.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2165,10 +2163,10 @@ book is building a concept. Extract repeated interfaces into std later; do not
 hide the main derivation by importing a large package and citing a synonym
 theorem.
 
-There is no statement that loads an arbitrary `.lit` path. Isolated `-f` runs
-exactly one source file. Multi-file developments must use `-r`, declare every
-source in `mod.lit`, and load declared sources with `local_import`. Litex does
-not provide a file-loading statement that bypasses verification.
+There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
+developments declare their entry and sources in `litex.config`, then use
+`local_import`; Litex does not provide a file-loading statement that bypasses
+verification.
 
 ---
 
@@ -2720,7 +2718,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `proof_debt` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
-| `export` / `import` / `local_import` | Declare and load repository module interfaces |
+| `import` / `local_import` | Load project module interfaces declared in `litex.config` |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -2996,7 +2994,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | disable a strategy | `stop strategy positive_nonzero` |
 | import a standard-library module | `import Nat` |
 | import a local module directory | `import "local_module" as L` |
-| declare a repository file export | `export file "./local.lit" as local` in `mod.lit` |
+| declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | bind a declared export inside a module source | `local_import local` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |

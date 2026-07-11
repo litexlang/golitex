@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `export`, and `local_import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, and `local_import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -124,9 +124,9 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `export file` / `export mod` | Allowed only in repository `mod.lit`; validates explicit file/module targets, names, duplicate paths, and recursive manifests. | None during discovery. | Declares the module interface and canonical export graph. |
-| `import` | In repository mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs recursively exported knowledge and the imported module `main.lit` once. | Registers import dependencies and reuses cached modules. |
-| `local_import` | Repository-only; the bare name must be declared by the current module's `mod.lit`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity. |
+| `litex.config` | `[entrance]` selects one `.lit` entry; `[export]` declares local files and child projects. Paths, names, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface and canonical import graph. |
+| `import` | In project mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs the imported module entrance once. | Registers import dependencies and reuses cached modules. |
+| `local_import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |

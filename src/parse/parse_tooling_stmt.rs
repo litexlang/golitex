@@ -1,58 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_export_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(EXPORT)?;
-        let kind = match tb.current()? {
-            EXPORT_FILE => {
-                tb.skip_token(EXPORT_FILE)?;
-                ExportKind::File
-            }
-            EXPORT_MODULE => {
-                tb.skip_token(EXPORT_MODULE)?;
-                ExportKind::Module
-            }
-            _ => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "export expects `file` or `mod`".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )))
-            }
-        };
-        if !tb.current_token_is_equal_to(DOUBLE_QUOTE) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "export path must be quoted".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        tb.skip_token(DOUBLE_QUOTE)?;
-        let mut path_parts = vec![];
-        while tb.current()? != DOUBLE_QUOTE {
-            path_parts.push(tb.advance()?);
-        }
-        tb.skip_token(DOUBLE_QUOTE)?;
-        tb.skip_token(AS)?;
-        let name = tb.advance()?;
-        is_valid_litex_name(&name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "export: unexpected token after export name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(ExportStmt::new(kind, path_parts.join(""), name, tb.line_file.clone()).into())
-    }
-
     pub fn parse_local_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(LOCAL_IMPORT)?;
         let name = tb.advance()?;

@@ -2,6 +2,7 @@ use crate::pipeline::run_source_code;
 use crate::prelude::*;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+use std::rc::Rc;
 
 fn resolve_relative_path(user_path: &str, current_lit_file_path: &str) -> String {
     let user = Path::new(user_path);
@@ -100,7 +101,7 @@ fn run_import_stmt(
             ImportStmt::ImportRelativePath(_) => {
                 return Err(import_stmt_error(
                     import_stmt,
-                    "repository mode import must name a root export or globally registered module; use mod.lit and local_import for module-local dependencies"
+                    "project mode import must name a root export or globally registered module; use litex.config and local_import for module-local dependencies"
                         .to_string(),
                 ));
             }
@@ -212,7 +213,7 @@ fn run_local_import_stmt(
             short_exec_error(
                 local_import_stmt.clone().into(),
                 format!(
-                    "local_import `{}` was not declared for this source by its module's mod.lit",
+                    "local_import `{}` was not declared for this source by its module's litex.config",
                     local_import_stmt.name
                 ),
                 None,
@@ -285,20 +286,12 @@ fn load_discovered_module(
         .module_manager
         .begin_loading_discovered_module(module_id)
         .map_err(|message| short_exec_error(cause_stmt.clone(), message, None, vec![]))?;
-    let (module_name, main_lit_path, exports) = {
+    let (module_name, main_lit_path) = {
         let module = runtime
             .module_manager
             .module(module_id)
             .expect("discovered module should exist");
-        (
-            module.module_name.clone(),
-            module.main_file_path.clone(),
-            module
-                .exports
-                .values()
-                .cloned()
-                .collect::<Vec<ExportEntry>>(),
-        )
+        (module.module_name.clone(), module.main_file_path.clone())
     };
 
     let content = fs::read_to_string(&main_lit_path).map_err(|error| {
@@ -329,41 +322,25 @@ fn load_discovered_module(
         ));
     }
 
-    for export in exports {
-        let load_result = match export.target(module_id) {
-            ImportTarget::File { module_id, file_id } => {
-                load_exported_file(module_id, file_id, cause_stmt.clone(), runtime)
-            }
-            ImportTarget::Module(child_module_id) => {
-                load_discovered_module(child_module_id, cause_stmt.clone(), runtime)
-            }
-        };
-        if let Err(error) = load_result {
-            runtime.module_manager = module_manager_before;
-            runtime.parsing_free_param_collection = parsing_free_params_before;
-            return Err(error);
-        }
-    }
-
     runtime.module_manager.finish_loading_import(module_id);
     Ok(())
 }
 
 fn load_exported_file(
     module_id: ModuleId,
-    file_id: FileEnvId,
+    file_id: FileId,
     cause_stmt: Stmt,
     runtime: &mut Runtime,
 ) -> Result<(), RuntimeError> {
     let (status, source_path, canonical_name) = runtime
         .module_manager
         .module(module_id)
-        .and_then(|module| module.file_environment(file_id))
+        .and_then(|module| module.file(file_id))
         .map(|file| {
             (
                 file.status,
                 file.source_path.clone(),
-                file.canonical_name.clone().unwrap_or_default(),
+                file.canonical_name.clone(),
             )
         })
         .ok_or_else(|| {
@@ -392,7 +369,7 @@ fn load_exported_file(
     runtime
         .module_manager
         .module_mut(module_id)
-        .and_then(|module| module.file_environment_mut(file_id))
+        .and_then(|module| module.file_mut(file_id))
         .expect("exported file should exist")
         .status = FileStatus::Loading;
     let content = fs::read_to_string(&source_path).map_err(|error| {
@@ -421,10 +398,151 @@ fn load_exported_file(
     runtime
         .module_manager
         .module_mut(module_id)
-        .and_then(|module| module.file_environment_mut(file_id))
+        .and_then(|module| module.file_mut(file_id))
         .expect("exported file should exist")
         .status = FileStatus::Loaded;
     Ok(())
+}
+
+pub fn run_repository_file_target(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    match target {
+        RepositoryFileTarget::Entrance(module_id) => {
+            run_repository_entrance_target(runtime, module_id)
+        }
+        RepositoryFileTarget::File { module_id, file_id } => {
+            run_repository_exported_file_target(runtime, module_id, file_id)
+        }
+    }
+}
+
+fn run_repository_entrance_target(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return (
+            vec![],
+            Some(repository_target_error("project entrance is missing")),
+        );
+    };
+    let main_lit_path = module.main_file_path.clone();
+
+    if runtime.current_module_id() == module_id {
+        return run_repository_source_file(runtime, main_lit_path.as_str());
+    }
+
+    let module_manager_before = runtime.module_manager.clone();
+    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
+    if let Err(message) = runtime
+        .module_manager
+        .begin_loading_discovered_module(module_id)
+    {
+        return (vec![], Some(repository_target_error(message.as_str())));
+    }
+    runtime.parsing_free_param_collection = FreeParamCollection::new();
+    runtime.push_module_execution_frame(module_id, main_lit_path.as_str());
+    let result = run_repository_source_file(runtime, main_lit_path.as_str());
+    runtime.pop_execution_frame();
+    runtime.parsing_free_param_collection = parsing_free_params_before;
+    if result.1.is_some() {
+        runtime.module_manager = module_manager_before;
+        return result;
+    }
+    runtime.module_manager.finish_loading_import(module_id);
+    result
+}
+
+fn run_repository_exported_file_target(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    file_id: FileId,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let Some(file) = runtime
+        .module_manager
+        .module(module_id)
+        .and_then(|module| module.file(file_id))
+    else {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "registered project file is missing",
+            )),
+        );
+    };
+    let source_path = file.source_path.clone();
+    let status = file.status;
+    if status == FileStatus::Loaded {
+        return (vec![], None);
+    }
+    if status == FileStatus::Loading {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "cyclic local import while running project file",
+            )),
+        );
+    }
+
+    let module_manager_before = runtime.module_manager.clone();
+    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .and_then(|module| module.file_mut(file_id))
+        .expect("registered project file should exist")
+        .status = FileStatus::Loading;
+    runtime.parsing_free_param_collection = FreeParamCollection::new();
+    runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
+    let result = run_repository_source_file(runtime, source_path.as_str());
+    runtime.pop_execution_frame();
+    runtime.parsing_free_param_collection = parsing_free_params_before;
+    if result.1.is_some() {
+        runtime.module_manager = module_manager_before;
+        return result;
+    }
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .and_then(|module| module.file_mut(file_id))
+        .expect("registered project file should exist")
+        .status = FileStatus::Loaded;
+    result
+}
+
+fn run_repository_source_file(
+    runtime: &mut Runtime,
+    source_path: &str,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let source_code = match fs::read_to_string(source_path) {
+        Ok(content) => content,
+        Err(error) => {
+            return (
+                vec![],
+                Some(
+                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("failed to read project source `{}`: {}", source_path, error),
+                        (0, Rc::from(source_path)),
+                    ))
+                    .into(),
+                ),
+            )
+        }
+    };
+    run_source_code(
+        remove_windows_carriage_return(source_code.as_str()).as_str(),
+        runtime,
+    )
+}
+
+fn repository_target_error(message: &str) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        message.to_string(),
+        (0, Rc::from("litex.config")),
+    ))
+    .into()
 }
 
 struct ImportModuleInfo {
@@ -514,7 +632,7 @@ fn relative_import_entry(
     if module_root.extension().and_then(|ext| ext.to_str()) == Some("lit") {
         return Err(import_stmt_error(
             import_stmt,
-            "import cannot load a .lit file; declare it with `export file` in mod.lit and use `local_import` inside that module"
+            "import cannot load a .lit file; declare it in [export] in litex.config and use `local_import` inside that module"
                 .to_string(),
         ));
     }

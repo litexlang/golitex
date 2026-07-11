@@ -94,7 +94,7 @@ impl Runtime {
     pub fn push_file_execution_frame(
         &mut self,
         module_id: ModuleId,
-        file_id: FileEnvId,
+        file_id: FileId,
         source_path: &str,
     ) {
         self.execution_stack.push(ExecutionFrame::new(
@@ -302,7 +302,7 @@ impl Runtime {
             ExecutionLayer::File(file_id) => self
                 .module_manager
                 .module_mut(module_id.expect("file execution requires a module"))
-                .and_then(|module| module.file_environment_mut(file_id))
+                .and_then(|module| module.file_mut(file_id))
                 .map(|file| file.environment.as_mut())
                 .expect("current file environment should exist"),
         }
@@ -357,7 +357,7 @@ impl Runtime {
                             module.main_environment = Box::new(Environment::new_empty_env());
                         }
                         ExecutionLayer::File(file_id) => {
-                            if let Some(file) = module.file_environment_mut(file_id) {
+                            if let Some(file) = module.file_mut(file_id) {
                                 file.environment = Box::new(Environment::new_empty_env());
                             }
                         }
