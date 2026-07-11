@@ -13,6 +13,22 @@ impl Runtime {
         )
     }
 
+    pub(crate) fn exec_have_exist_obj_stmt_affect_environment_only(
+        &mut self,
+        have_exist_obj_stmt: &HaveByExistStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
+            have_exist_obj_stmt.clone().into(),
+            &have_exist_obj_stmt.equal_tos,
+            &have_exist_obj_stmt.exist_fact_in_have_obj_st,
+            have_exist_obj_stmt.line_file.clone(),
+        )?;
+        Ok(
+            NonFactualStmtSuccess::new(have_exist_obj_stmt.clone().into(), infer_result, vec![])
+                .into(),
+        )
+    }
+
     pub fn exec_have_obj_by_exist_facts_stmt(
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
@@ -31,6 +47,27 @@ impl Runtime {
             &exist_fact,
             stmt.line_file.clone(),
         )
+    }
+
+    pub(crate) fn exec_have_obj_by_exist_facts_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveObjByExistFactsStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let body = ExistFactBody::new(
+            stmt.param_def.clone(),
+            stmt.facts.clone(),
+            stmt.line_file.clone(),
+        )
+        .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        let exist_fact = ExistFactEnum::ExistFact(body);
+        let equal_tos = stmt.param_def.collect_param_names();
+        let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
+            stmt.clone().into(),
+            &equal_tos,
+            &exist_fact,
+            stmt.line_file.clone(),
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     fn exec_have_exist_obj_core(

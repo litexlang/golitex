@@ -1231,9 +1231,34 @@ have fn f as set:
                     "`have fn <name> as set:` has been removed",
                 ),
                 (
-                    "old_anonymous_fn_prefix",
-                    "'(x R) R {x} = fn(y R) R {y}",
-                    "apostrophe anonymous functions have been removed",
+                    "legacy_open_open_interval",
+                    "have I set = oo(0, 1)",
+                    "two-sided interval spelling `oo` has been removed; use `'(a, b)`",
+                ),
+                (
+                    "legacy_open_closed_interval",
+                    "have I set = oc(0, 1)",
+                    "two-sided interval spelling `oc` has been removed; use `'(a, b]`",
+                ),
+                (
+                    "legacy_closed_open_interval",
+                    "have I set = co(0, 1)",
+                    "two-sided interval spelling `co` has been removed; use `'[a, b)`",
+                ),
+                (
+                    "legacy_closed_closed_interval",
+                    "have I set = cc(0, 1)",
+                    "two-sided interval spelling `cc` has been removed; use `'[a, b]`",
+                ),
+                (
+                    "interval_prefix_requires_delimiter",
+                    "have I set = 'invalid",
+                    "interval literal after `'` expects `(` or `[`",
+                ),
+                (
+                    "interval_literal_requires_two_endpoints",
+                    "have I set = '(0, 1, 2)",
+                    "interval literal expects exactly two endpoints",
                 ),
             ];
 
@@ -3945,26 +3970,29 @@ forall a R:
 #[test]
 fn real_interval_membership_rules() {
     let source_code = r#"
-have I set = oo(0, 1)
+have pair cart(R, R) = (0, 1)
+have entries finite_seq(R, 2) = [0, 1]
+
+have I set = '(0, 1)
 
 have a R
-proof_debt a $in oo(0, 1)
+proof_debt a $in '(0, 1)
 a $in R
 0 < a
 a < 1
 
 have b R
-proof_debt b $in oc(0, 1)
+proof_debt b $in '(0, 1]
 0 < b
 b <= 1
 
 have c R
-proof_debt c $in co(0, 1)
+proof_debt c $in '[0, 1)
 0 <= c
 c < 1
 
 have d R
-proof_debt d $in cc(0, 1)
+proof_debt d $in '[0, 1]
 0 <= d
 d <= 1
 
@@ -3992,14 +4020,14 @@ have x R
 proof_debt:
     0 < x
     x <= 1
-x $in oc(0, 1)
+x $in '(0, 1]
 
 have y R
 proof_debt:
     0 <= y
 y $in cinf(0)
 
-have phi fn(t oo(0, 1)) R
+have phi fn(t '(0, 1)) R
 phi(a) $in R
 "#;
 
@@ -4019,27 +4047,27 @@ phi(a) $in R
 #[test]
 fn real_interval_nonempty_and_well_defined_rules() {
     let source_code = r#"
-have empty_like set = cc(1, 0)
+have empty_like set = '[1, 0]
 
 have a, b R
 proof_debt:
     a <= b
     a < b
 
-$is_nonempty_set(cc(a, b))
-$is_nonempty_set(oo(a, b))
-$is_nonempty_set(oc(a, b))
-$is_nonempty_set(co(a, b))
+$is_nonempty_set('[a, b])
+$is_nonempty_set('(a, b))
+$is_nonempty_set('(a, b])
+$is_nonempty_set('[a, b))
 $is_nonempty_set(info(a))
 $is_nonempty_set(infc(a))
 $is_nonempty_set(oinf(a))
 $is_nonempty_set(cinf(a))
 
-have x cc(a, b)
-x $in cc(a, b)
+have x '[a, b]
+x $in '[a, b]
 
-have y oo(a, b)
-y $in oo(a, b)
+have y '(a, b)
+y $in '(a, b)
 
 have left cinf(a)
 left $in cinf(a)

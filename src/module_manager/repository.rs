@@ -357,10 +357,18 @@ fn scan_source_dependencies(
                 block.line_file.0,
             ));
         }
-        if first_token == Some(IMPORT) {
-            let statement = runtime.parse_import_stmt(&mut block)?;
-            let Stmt::Command(CommandStmt::ImportStmt(import)) = statement else {
-                unreachable!("import parser should produce an import statement")
+        let is_trust_import =
+            first_token == Some(TRUST) && block.header.get(1).map(String::as_str) == Some(IMPORT);
+        if first_token == Some(IMPORT) || is_trust_import {
+            let statement = if is_trust_import {
+                runtime.parse_trust_stmt(&mut block)?
+            } else {
+                runtime.parse_import_stmt(&mut block)?
+            };
+            let import = match statement {
+                Stmt::Command(CommandStmt::ImportStmt(import)) => import,
+                Stmt::Command(CommandStmt::TrustImportStmt(trust_import)) => trust_import.import,
+                _ => unreachable!("import parser should produce an import statement"),
             };
             match import {
                 ImportStmt::ImportRelativePath(_) => {
@@ -393,19 +401,29 @@ fn scan_source_dependencies(
             }
             continue;
         }
-        if first_token != Some(LOCAL_IMPORT) {
+        let is_trust_local_import = first_token == Some(TRUST)
+            && block.header.get(1).map(String::as_str) == Some(LOCAL_IMPORT);
+        if first_token != Some(LOCAL_IMPORT) && !is_trust_local_import {
             continue;
         }
         if !block.body.is_empty() {
             return Err(repository_error(
-                "local_import cannot have a body".to_string(),
+                "local_import and trust local_import cannot have a body".to_string(),
                 source_path,
                 block.line_file.0,
             ));
         }
-        let statement = runtime.parse_local_import_stmt(&mut block)?;
-        let Stmt::Command(CommandStmt::LocalImportStmt(local_import)) = statement else {
-            unreachable!("local_import parser should produce a local import statement")
+        let statement = if is_trust_local_import {
+            runtime.parse_trust_stmt(&mut block)?
+        } else {
+            runtime.parse_local_import_stmt(&mut block)?
+        };
+        let local_import = match statement {
+            Stmt::Command(CommandStmt::LocalImportStmt(local_import)) => local_import,
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(trust_local_import)) => {
+                trust_local_import.local_import
+            }
+            _ => unreachable!("local import parser should produce a local import statement"),
         };
         let target = runtime
             .module_manager
@@ -440,9 +458,13 @@ fn scan_source_dependencies(
 
 fn reject_nested_local_imports(blocks: &[TokenBlock]) -> Result<(), RuntimeError> {
     for block in blocks {
-        if block.header.first().map(String::as_str) == Some(LOCAL_IMPORT) {
+        let first_token = block.header.first().map(String::as_str);
+        let is_trust_local_import = first_token == Some(TRUST)
+            && block.header.get(1).map(String::as_str) == Some(LOCAL_IMPORT);
+        if first_token == Some(LOCAL_IMPORT) || is_trust_local_import {
             return Err(repository_error(
-                "local_import is only allowed as a top-level source statement".to_string(),
+                "local_import and trust local_import are only allowed as top-level source statements"
+                    .to_string(),
                 block.line_file.1.as_ref(),
                 block.line_file.0,
             ));
@@ -1119,6 +1141,159 @@ mod tests {
             )
             .unwrap_or_else(|error| panic!("project chapter Python failed: {error:?}"));
             assert_eq!(python_output, "answer = 1.0");
+        });
+    }
+
+    #[test]
+    fn trust_local_import_skips_checks_but_strict_mode_rejects_it() {
+        run_repository_test_with_large_stack("trust_local_import", || {
+            let root = repository_test_dir("trust-local-import");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(&root, "./book.lit", &[("chap10", "./chap10.lit")]);
+            write_file(&root.join("chap10.lit"), "have bad N = -1\n");
+
+            write_file(
+                &root.join("book.lit"),
+                "local_import chap10\nchap10::bad = -1\n",
+            );
+            let (ordinary_ok, ordinary_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!ordinary_ok, "{ordinary_output}");
+
+            write_file(
+                &root.join("book.lit"),
+                "trust local_import chap10\nchap10::bad = -1\n",
+            );
+            let (trusted_ok, trusted_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                true,
+            );
+            assert!(trusted_ok, "{trusted_output}");
+            assert!(
+                trusted_output.contains("\"trust_dependencies\"")
+                    && trusted_output.contains("\"trust_local_import\": 1"),
+                "{trusted_output}"
+            );
+
+            let (strict_ok, strict_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                true,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!strict_ok, "{strict_output}");
+            assert!(
+                strict_output.contains("strict mode does not allow trusted imports"),
+                "{strict_output}"
+            );
+        });
+    }
+
+    #[test]
+    fn project_module_tuple_definitions_and_proof_bindings_keep_their_scope() {
+        run_repository_test_with_large_stack("project_module_tuple_scope", || {
+            let root = repository_test_dir("project-module-tuple-scope");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(&root, "./book.lit", &[("chapter", "./chapter.lit")]);
+            write_file(
+                &root.join("chapter.lit"),
+                r#"
+have n N_pos = 3
+have tuple index_tuple for i <= n, index_tuple[i] = i
+
+prop has_self_witness(x R):
+    exist y R st {y = x}
+
+thm self_witness_can_be_obtained:
+    ? forall x R:
+        $has_self_witness(x)
+        =>:
+            x = x
+    obtain y from exist y R st {y = x}
+    y = x
+    x = y = x
+"#,
+            );
+            write_file(&root.join("book.lit"), "local_import chapter\n");
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+        });
+    }
+
+    #[test]
+    fn trust_import_is_transitive_and_cannot_be_reused_as_verified() {
+        run_repository_test_with_large_stack("trust_import", || {
+            let root = repository_test_dir("trust-import");
+            let a = root.join("A");
+            fs::create_dir_all(&a).expect("create repository fixture");
+            write_project_config(&root, "./book.lit", &[("A", "./A")]);
+            write_project_config(&a, "./main.lit", &[("chap10", "./chap10.lit")]);
+            write_file(&a.join("main.lit"), "local_import chap10\n");
+            write_file(
+                &a.join("chap10.lit"),
+                "abstract_prop trusted_prop(x)\n\nthm trusted_all:\n    prove:\n        forall x R:\n            =>:\n                $trusted_prop(x)\n",
+            );
+
+            write_file(
+                &root.join("book.lit"),
+                "trust import A\nby thm A::chap10::trusted_all(2)\n$A::chap10::trusted_prop(2)\n",
+            );
+            let (trusted_ok, trusted_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(trusted_ok, "{trusted_output}");
+
+            write_file(&root.join("book.lit"), "trust import A\nimport A\n");
+            let (mixed_ok, mixed_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!mixed_ok, "{mixed_output}");
+            assert!(
+                mixed_output.contains("already loaded through trust import"),
+                "{mixed_output}"
+            );
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            discover_repository(&mut runtime, root.to_str().expect("fixture path is UTF-8"))
+                .expect("discover trusted fixture");
+            let entry = runtime.current_module_id();
+            let (results, error) = crate::pipeline::run_repository_file_target(
+                &mut runtime,
+                RepositoryFileTarget::Entrance(entry),
+            );
+            assert!(error.is_some(), "mixed fixture should fail");
+            let trust_summary = runtime.proof_trust_summary_from_stmt_results(&results);
+            assert!(
+                trust_summary
+                    .dependencies
+                    .iter()
+                    .any(|dependency| dependency.kind == "trust_import"),
+                "trusted import must taint the run summary"
+            );
         });
     }
 

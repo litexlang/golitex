@@ -710,7 +710,7 @@ have q set = 0 ... 1
 
 #### Real intervals as sets
 
-Two-sided real intervals use `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)`. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
+Two-sided real intervals use `'(a, b)`, `'(a, b]`, `'[a, b)`, and `'[a, b]`. The leading apostrophe distinguishes these literals from tuples and finite sequences. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
 
 ```litex
 have left set = info(1)
@@ -886,7 +886,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
 | `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
-| Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
+| Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
 | Matrix operators `A ++ B`, `A -- B`, `A ** B`, `c *. A`, `A ^^ n` | The scalar in `c *. A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
@@ -2081,7 +2081,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, and `local_import` are
+Control statements such as `clear`, `import`, `local_import`, `trust import`,
+and `trust local_import` are
 not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
@@ -2149,6 +2150,14 @@ The canonical external name is hierarchical, for example
 its target once per top-level run and caches that target environment in memory;
 an unrelated export is not executed merely because it was declared.
 
+Within the importing source, a bare shared name resolves to a local definition
+first.  If the name is not local or builtin and exactly one active
+`local_import` exports it, Litex resolves that bare name to the imported
+chapter.  This lets a later textbook chapter read naturally after, for example,
+`trust local_import chap9`.  If two imports provide the same name, write the
+provenance explicitly, such as `chap9::is_continuous_at`; do not rely on an
+arbitrary import order.
+
 In project mode, **`import A`** names a module exported by the root
 `litex.config`, or an already registered global/standard module. Relative imports
 are not the project dependency mechanism. In isolated file mode,
@@ -2166,7 +2175,25 @@ theorem.
 There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
 developments declare their entry and sources in `litex.config`, then use
 `local_import`; Litex does not provide a file-loading statement that bypasses
-verification.
+verification for an arbitrary path.
+
+When a declared module or chapter is intentionally trusted, use an explicit
+source-level import policy instead of putting trust in `litex.config`:
+
+<!-- litex:skip-test -->
+```litex
+# chap11.lit
+trust local_import chap10
+
+# project entrance file
+trust import Algebra
+```
+
+Trusted imports still resolve the same declared target, parse its source, and
+reject configuration or dependency cycles. They skip well-definedness and proof
+processing in that target and its nested imports, applying direct environment
+effects only. They are rejected by `-strict`, and every conclusion from that
+top-level run is conservatively marked with the trusted-import dependency.
 
 ---
 
@@ -2718,7 +2745,8 @@ The sections above explain the common use cases. This table is a quick map of th
 | `proof_debt` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
-| `import` / `local_import` | Load project module interfaces declared in `litex.config` |
+| `import` / `local_import` | Verify and load project module interfaces declared in `litex.config` |
+| `trust import` / `trust local_import` | Load a declared dependency's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -2857,10 +2885,10 @@ bound variable in a set builder.
 | matrix multiplication | `A ** B` |
 | scalar-matrix multiplication | `2 *. A` |
 | matrix power | `A ^^ 2` |
-| open real interval | `oo(0, 1)` |
-| left-open, right-closed real interval | `oc(0, 1)` |
-| left-closed, right-open real interval | `co(0, 1)` |
-| closed real interval | `cc(0, 1)` |
+| open real interval | `'(0, 1)` |
+| left-open, right-closed real interval | `'(0, 1]` |
+| left-closed, right-open real interval | `'[0, 1)` |
+| closed real interval | `'[0, 1]` |
 | open lower-bounded ray | `oinf(0)` |
 | closed lower-bounded ray | `cinf(0)` |
 | open upper-bounded ray | `info(0)` |
@@ -2996,6 +3024,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | import a local module directory | `import "local_module" as L` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | bind a declared export inside a module source | `local_import local` |
+| bind a declared export without running its proof process | `trust local_import local` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |
@@ -4565,12 +4594,12 @@ sketch:
 
 ```litex
 sketch:
-    $is_nonempty_set(cc(0, 0))
+    $is_nonempty_set('[0, 0])
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(oo(0, 2))
+    $is_nonempty_set('(0, 2))
 ```
 
 ```litex

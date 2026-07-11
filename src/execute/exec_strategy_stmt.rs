@@ -155,6 +155,25 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 
+    pub(crate) fn exec_def_strategy_stmt_affect_environment_only(
+        &mut self,
+        stmt: &DefStrategyStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.store_def_strategy(stmt)
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            Fact::ForallFact(stmt.forall_fact.clone()),
+            InferReason::VerifiedStatement,
+        )?;
+
+        for name in stmt.names.iter() {
+            self.activate_strategy(stmt, name, stmt.clone().into())?;
+        }
+
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn activate_strategy(
         &mut self,
         strategy: &DefStrategyStmt,

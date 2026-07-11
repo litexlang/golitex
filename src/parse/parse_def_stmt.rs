@@ -460,6 +460,10 @@ impl Runtime {
                 &have_param_names,
                 tb.line_file.clone(),
             )?;
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             return Ok(
                 HaveObjByExistFactsStmt::new(param_defs, facts, tb.line_file.clone()).into(),
             );
@@ -478,6 +482,10 @@ impl Runtime {
                 self.parsing_free_param_collection
                     .end_scope(ParamObjType::Identifier, &have_param_names);
             }
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()).into())
         } else {
             tb.skip_token(EQUAL)?;
@@ -492,6 +500,10 @@ impl Runtime {
             self.parsing_free_param_collection
                 .end_scope(ParamObjType::Identifier, &have_param_names);
             let objs_equal_to = objs_result?;
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
     }
@@ -1271,6 +1283,7 @@ impl Runtime {
         }
 
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
+        self.register_local_identifier_bindings_for_parse(&equal_tos, tb.line_file.clone())?;
 
         Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
     }
@@ -1337,6 +1350,7 @@ impl Runtime {
         };
 
         self.register_collected_param_names_for_def_parse(&preimage_names, tb.line_file.clone())?;
+        self.register_local_identifier_bindings_for_parse(&preimage_names, tb.line_file.clone())?;
 
         Ok(HaveByPreimageStmt::new(preimage_names, range_membership, tb.line_file.clone()).into())
     }
@@ -1695,10 +1709,12 @@ fn validate_have_matrix_lhs(
 
 fn is_fn_head_identifier_named(head: &FnObjHead, name: &str) -> bool {
     matches!(head, FnObjHead::Identifier(identifier) if identifier.name == name)
+        || matches!(head, FnObjHead::IdentifierWithMod(identifier) if identifier.name == name)
 }
 
 fn is_identifier_named(obj: &Obj, name: &str) -> bool {
     matches!(obj, Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == name)
+        || matches!(obj, Obj::Atom(AtomObj::IdentifierWithMod(identifier)) if identifier.name == name)
 }
 
 fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {

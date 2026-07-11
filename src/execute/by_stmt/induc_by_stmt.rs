@@ -64,6 +64,27 @@ impl Runtime {
 
         Ok(non_err_after_body.with_infers(infer_after_store))
     }
+
+    pub(crate) fn exec_by_induc_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let corresponding_forall_fact =
+            self.by_induc_stmt_stored_forall_fact(stmt)
+                .map_err(|runtime_error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "by induc: failed to build concluding forall fact".to_string(),
+                        Some(runtime_error),
+                        vec![],
+                    )
+                })?;
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            corresponding_forall_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
 }
 
 impl Runtime {

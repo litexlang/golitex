@@ -192,4 +192,51 @@ impl Runtime {
         }
         Ok(infer_result)
     }
+
+    pub fn define_params_with_type_trusted(
+        &mut self,
+        param_defs: &ParamDefWithType,
+        binding_kind: ParamObjType,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        for param_def in param_defs.groups.iter() {
+            for name in param_def.params.iter() {
+                self.store_free_param_or_identifier_name(name, binding_kind)?;
+                let param_obj = param_binding_element_obj_for_store(name.to_string(), binding_kind);
+                let fact: Fact = match &param_def.param_type {
+                    ParamType::Obj(obj) => InFact::new(
+                        param_obj,
+                        match obj {
+                            Obj::FiniteSeqSet(fs) => self
+                                .finite_seq_set_to_fn_set(fs, default_line_file())
+                                .into(),
+                            Obj::SeqSet(ss) => {
+                                self.seq_set_to_fn_set(ss, default_line_file()).into()
+                            }
+                            Obj::MatrixSet(ms) => {
+                                self.matrix_set_to_fn_set(ms, default_line_file()).into()
+                            }
+                            _ => obj.clone(),
+                        },
+                        default_line_file(),
+                    )
+                    .into(),
+                    ParamType::Set(_) => IsSetFact::new(param_obj, default_line_file()).into(),
+                    ParamType::NonemptySet(_) => {
+                        IsNonemptySetFact::new(param_obj, default_line_file()).into()
+                    }
+                    ParamType::FiniteSet(_) => {
+                        IsFiniteSetFact::new(param_obj, default_line_file()).into()
+                    }
+                };
+                infer_result.new_infer_result_inside(
+                    self.store_trusted_fact_and_infer_with_reason(
+                        fact,
+                        InferReason::ParameterDefinition,
+                    )?,
+                );
+            }
+        }
+        Ok(infer_result)
+    }
 }

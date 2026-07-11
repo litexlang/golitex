@@ -273,25 +273,25 @@ proof_debt:
     $single_valued_on(R, sin)
     $single_valued_on(R, cos)
 
-    $strictly_increasing_on(cc(-pi / 2, pi / 2), sin)
-    $strictly_decreasing_on(cc(pi / 2, 3 * pi / 2), sin)
-    $injective_on(cc(-pi / 2, pi / 2), sin)
-    $injective_on(cc(pi / 2, 3 * pi / 2), sin)
-    $one_to_one_on(cc(-pi / 2, pi / 2), sin)
-    $one_to_one_on(cc(pi / 2, 3 * pi / 2), sin)
+    $strictly_increasing_on('[-pi / 2, pi / 2], sin)
+    $strictly_decreasing_on('[pi / 2, 3 * pi / 2], sin)
+    $injective_on('[-pi / 2, pi / 2], sin)
+    $injective_on('[pi / 2, 3 * pi / 2], sin)
+    $one_to_one_on('[-pi / 2, pi / 2], sin)
+    $one_to_one_on('[pi / 2, 3 * pi / 2], sin)
 
-    $strictly_decreasing_on(cc(0, pi), cos)
-    $strictly_increasing_on(cc(pi, 2 * pi), cos)
-    $injective_on(cc(0, pi), cos)
-    $injective_on(cc(pi, 2 * pi), cos)
-    $one_to_one_on(cc(0, pi), cos)
-    $one_to_one_on(cc(pi, 2 * pi), cos)
+    $strictly_decreasing_on('[0, pi], cos)
+    $strictly_increasing_on('[pi, 2 * pi], cos)
+    $injective_on('[0, pi], cos)
+    $injective_on('[pi, 2 * pi], cos)
+    $one_to_one_on('[0, pi], cos)
+    $one_to_one_on('[pi, 2 * pi], cos)
 
     forall k Z:
-        $strictly_increasing_on(cc(-pi / 2 + 2 * k * pi, pi / 2 + 2 * k * pi), sin)
-        $strictly_decreasing_on(cc(pi / 2 + 2 * k * pi, 3 * pi / 2 + 2 * k * pi), sin)
-        $strictly_decreasing_on(cc(2 * k * pi, (2 * k + 1) * pi), cos)
-        $strictly_increasing_on(cc((2 * k - 1) * pi, 2 * k * pi), cos)
+        $strictly_increasing_on('[-pi / 2 + 2 * k * pi, pi / 2 + 2 * k * pi], sin)
+        $strictly_decreasing_on('[pi / 2 + 2 * k * pi, 3 * pi / 2 + 2 * k * pi], sin)
+        $strictly_decreasing_on('[2 * k * pi, (2 * k + 1) * pi], cos)
+        $strictly_increasing_on('[(2 * k - 1) * pi, 2 * k * pi], cos)
 
     forall x R:
         -pi / 2 < x < pi / 2

@@ -15,10 +15,12 @@ pub struct Runtime {
     pub execution_stack: Vec<ExecutionFrame>,
     pub run_mode: RunMode,
     pub parsing_free_param_collection: FreeParamCollection,
+    pub parsing_local_binding_scope_depth: usize,
     pub detail_output: bool,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
     pub loading_builtin_code: bool,
+    pub trusted_import_summary: ProofTrustSummary,
 }
 
 impl Runtime {
@@ -28,10 +30,12 @@ impl Runtime {
             execution_stack: vec![ExecutionFrame::new_builtin()],
             run_mode: RunMode::File,
             parsing_free_param_collection: FreeParamCollection::new(),
+            parsing_local_binding_scope_depth: 0,
             detail_output: false,
             strict_mode: false,
             output_language: OutputLanguage::English,
             loading_builtin_code: false,
+            trusted_import_summary: ProofTrustSummary::new(),
         }
     }
 
@@ -84,10 +88,20 @@ impl Runtime {
     }
 
     pub fn push_module_execution_frame(&mut self, module_id: ModuleId, source_path: &str) {
-        self.execution_stack.push(ExecutionFrame::new(
+        self.push_module_execution_frame_with_mode(module_id, source_path, ExecutionMode::Verified);
+    }
+
+    pub fn push_module_execution_frame_with_mode(
+        &mut self,
+        module_id: ModuleId,
+        source_path: &str,
+        execution_mode: ExecutionMode,
+    ) {
+        self.execution_stack.push(ExecutionFrame::new_with_mode(
             module_id,
             ExecutionLayer::Main,
             source_path,
+            execution_mode,
         ));
     }
 
@@ -97,10 +111,26 @@ impl Runtime {
         file_id: FileId,
         source_path: &str,
     ) {
-        self.execution_stack.push(ExecutionFrame::new(
+        self.push_file_execution_frame_with_mode(
+            module_id,
+            file_id,
+            source_path,
+            ExecutionMode::Verified,
+        );
+    }
+
+    pub fn push_file_execution_frame_with_mode(
+        &mut self,
+        module_id: ModuleId,
+        file_id: FileId,
+        source_path: &str,
+        execution_mode: ExecutionMode,
+    ) {
+        self.execution_stack.push(ExecutionFrame::new_with_mode(
             module_id,
             ExecutionLayer::File(file_id),
             source_path,
+            execution_mode,
         ));
     }
 
@@ -129,6 +159,63 @@ impl Runtime {
             .to_string()
     }
 
+    pub fn unique_active_local_import_member_namespace(&self, name: &str) -> Option<String> {
+        let current_has_name = self.iter_environments_from_top().any(|environment| {
+            environment.defined_identifiers.contains_key(name)
+                || environment.defined_def_props.contains_key(name)
+                || environment.defined_abstract_props.contains_key(name)
+                || environment.defined_algorithms.contains_key(name)
+                || environment.defined_structs.contains_key(name)
+                || environment.defined_templates.contains_key(name)
+                || environment.defined_thm_stmts.contains_key(name)
+                || environment.defined_strategy_stmts.contains_key(name)
+        });
+        if current_has_name {
+            return None;
+        }
+
+        let import_names = self
+            .execution_stack
+            .last()
+            .map(|frame| {
+                frame
+                    .active_local_imports
+                    .keys()
+                    .cloned()
+                    .collect::<Vec<String>>()
+            })
+            .unwrap_or_default();
+        let mut matching_namespaces = vec![];
+        for import_name in import_names {
+            let imported_has_name = self
+                .imported_module_environments(import_name.as_str())
+                .iter()
+                .any(|environment| {
+                    environment.defined_identifiers.contains_key(name)
+                        || environment.defined_def_props.contains_key(name)
+                        || environment.defined_abstract_props.contains_key(name)
+                        || environment.defined_algorithms.contains_key(name)
+                        || environment.defined_structs.contains_key(name)
+                        || environment.defined_templates.contains_key(name)
+                        || environment.defined_thm_stmts.contains_key(name)
+                        || environment.defined_strategy_stmts.contains_key(name)
+                });
+            if !imported_has_name {
+                continue;
+            }
+            let namespace = self.canonical_module_name_for_parse(import_name.as_str());
+            if !matching_namespaces.contains(&namespace) {
+                matching_namespaces.push(namespace);
+            }
+        }
+
+        if matching_namespaces.len() == 1 {
+            matching_namespaces.pop()
+        } else {
+            None
+        }
+    }
+
     pub fn pop_execution_frame(&mut self) {
         if self.execution_stack.len() <= 1 {
             unreachable!("cannot pop the builtin execution frame")
@@ -150,6 +237,22 @@ impl Runtime {
             .last()
             .map(|frame| frame.layer)
             .expect("an execution frame should always exist")
+    }
+
+    pub fn current_execution_mode(&self) -> ExecutionMode {
+        self.execution_stack
+            .last()
+            .map(|frame| frame.execution_mode)
+            .unwrap_or(ExecutionMode::Verified)
+    }
+
+    pub fn current_execution_is_trusted_file(&self) -> bool {
+        self.current_execution_mode() == ExecutionMode::Trusted
+    }
+
+    pub fn record_trusted_import(&mut self, kind: &str, name: String, line_file: LineFile) {
+        self.trusted_import_summary
+            .add_dependency(kind, Some(name), line_file);
     }
 
     fn current_execution_target(&self) -> (Option<ModuleId>, ExecutionLayer) {
@@ -272,6 +375,7 @@ impl Runtime {
         self.module_manager = module_manager;
         self.execution_stack = vec![ExecutionFrame::new_builtin()];
         self.parsing_free_param_collection.clear();
+        self.trusted_import_summary = ProofTrustSummary::new();
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
 }
@@ -424,6 +528,29 @@ impl Runtime {
         result
     }
 
+    /// Keeps object names introduced by `have` or `obtain` local to one parsed proof body.
+    pub fn run_in_local_proof_parsing_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.parsing_local_binding_scope_depth += 1;
+        let result = self.run_in_local_parsing_time_name_scope(f);
+        self.parsing_local_binding_scope_depth -= 1;
+        result
+    }
+
+    pub fn register_local_identifier_bindings_for_parse(
+        &mut self,
+        names: &[String],
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if self.parsing_local_binding_scope_depth == 0 || names.is_empty() {
+            return Ok(());
+        }
+        self.parsing_free_param_collection
+            .begin_scope(ParamObjType::Identifier, names, line_file)
+    }
+
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
     pub fn parse_in_local_free_param_scope<T, F>(
         &mut self,
@@ -470,7 +597,9 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
     {
-        self.with_optional_free_param_scope(kind, names, line_file, parse_body)
+        self.run_in_local_proof_parsing_scope(|this| {
+            this.with_optional_free_param_scope(kind, names, line_file, parse_body)
+        })
     }
 }
 

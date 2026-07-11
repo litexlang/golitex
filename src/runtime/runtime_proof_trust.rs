@@ -9,6 +9,7 @@ impl Runtime {
         for result in results {
             self.collect_stmt_result_trust(result, &mut summary);
         }
+        summary.merge(&self.trusted_import_summary);
         summary
     }
 

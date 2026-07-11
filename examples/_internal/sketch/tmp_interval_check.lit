@@ -1,15 +1,15 @@
 sketch:
-    have s set = oc(2, 12)
-    have t set = oc(12, 102)
-    have u set = union(oc(2, 12), oc(12, 102))
+    have s set = '(2, 12]
+    have t set = '(12, 102]
+    have u set = union('(2, 12], '(12, 102])
 
 sketch:
     have x R
     proof_debt:
         2 < x
         x < 12
-    x $in oc(2, 12)
-    x $in union(oc(2, 12), oc(12, 102))
+    x $in '(2, 12]
+    x $in union('(2, 12], '(12, 102])
 
 sketch:
     have y R
@@ -24,6 +24,6 @@ sketch:
     z $in oinf(3)
 
 sketch:
-    oc(2, 12) = oc(2, 12)
+    '(2, 12] = '(2, 12]
     info(3) = info(3)
-    union(oc(2, 12), oc(12, 102)) = union(oc(2, 12), oc(12, 102))
+    union('(2, 12], '(12, 102]) = union('(2, 12], '(12, 102])

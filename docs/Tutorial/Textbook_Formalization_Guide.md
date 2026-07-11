@@ -30,7 +30,7 @@ This section is the core rulebook for turning textbook content into a Litex form
 
 - `narrative`: Use this for chapter transitions, motivation, and explanatory text. In the Litex chapter file, narrative items should not become global `claim`, `prop`, `have`, or theorem interfaces. If the narrative contains a useful runnable mathematical illustration, write it as a local `sketch:` block under the explanatory comment. If it is only ordinary explanation, keep it as comments only.
 
-- `object definition`: Use this when the book defines a mathematical object, function, set, template, or notation. If the object already corresponds to a Litex keyword or built-in object, do not define a new wrapper. Use a local `sketch:` to show the built-in object's characteristic properties. For example, intervals can correspond to `cc(a, b)`, `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `oinf(a)`, `info(a)`, and related interval forms, and their endpoint/order facts can be shown inside `sketch:`. If the object is not built in, define it with `have` or the appropriate Litex definition form. If the textbook immediately states key properties of the new object that later arguments depend on, promote those properties to `thm`; if the properties are ordinary sanity checks or examples, keep them inside `sketch:`.
+- `object definition`: Use this when the book defines a mathematical object, function, set, template, or notation. If the object already corresponds to a Litex keyword or built-in object, do not define a new wrapper. Use a local `sketch:` to show the built-in object's characteristic properties. For example, intervals can correspond to `'[a, b]`, `'(a, b)`, `'(a, b]`, `'[a, b)`, `oinf(a)`, `info(a)`, and related interval forms, and their endpoint/order facts can be shown inside `sketch:`. If the object is not built in, define it with `have` or the appropriate Litex definition form. If the textbook immediately states key properties of the new object that later arguments depend on, promote those properties to `thm`; if the properties are ordinary sanity checks or examples, keep them inside `sketch:`.
 
 - `prop definition`: Use this when the book defines a property, predicate, or relation. Some passages look like object definitions but are really prop definitions. For example, "x is an adherent point of X" is essentially a predicate. For naming, predicates without an obvious existential structure can use `is_xxx`; properties with an existential structure can use `has_xxx`.
 
@@ -44,7 +44,7 @@ For simple built-in facts inside `sketch:`, prefer the direct mathematical state
 
 ```litex
 sketch:
-    forall a, b R, x cc(a, b):
+    forall a, b R, x '[a, b]:
         x $in R
         a <= x
         x <= b

@@ -132,21 +132,35 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for then_fact in stmt.then_facts.iter() {
-            let one_then_fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            let one_then_fact_infer_result = if self.current_execution_is_trusted_file() {
+                self.store_trusted_fact_and_infer_with_reason(
+                    then_fact.clone(),
+                    InferReason::VerifiedStatement,
+                )
+            } else {
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                     then_fact.clone(),
                 )
-                .map_err(|store_fact_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!("by cases: failed to release `{}`", then_fact),
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })?;
+            }
+            .map_err(|store_fact_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by cases: failed to release `{}`", then_fact),
+                    Some(store_fact_error),
+                    vec![],
+                )
+            })?;
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
         Ok(infer_result)
+    }
+
+    pub(crate) fn exec_by_cases_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByCasesStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
