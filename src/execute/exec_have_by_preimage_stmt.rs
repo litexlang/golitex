@@ -11,6 +11,14 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
+    pub(crate) fn exec_have_by_preimage_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn exec_have_by_preimage_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveByPreimageStmt,

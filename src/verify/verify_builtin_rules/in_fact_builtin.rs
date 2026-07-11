@@ -2528,7 +2528,7 @@ impl Runtime {
         let mut step_results = Vec::new();
 
         // Real interval membership requires a real element and the endpoint inequalities.
-        // Example: `x $in oc(a,b)` follows from `x $in R`, `a < x`, and `x <= b`.
+        // Example: `x $in '(a, b]` follows from `x $in R`, `a < x`, and `x <= b`.
         let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
         let in_r_result =
             self.verify_non_equational_known_then_builtin_rules_only(&in_r, verify_state)?;

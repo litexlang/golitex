@@ -92,8 +92,8 @@ impl Runtime {
             }
             // Real interval nonempty rules depend on the endpoint openness.
             // Closed/closed is nonempty from `a <= b`; the other three require `a < b`.
-            // Example: `$is_nonempty_set(cc(a, b))` from `a <= b`.
-            // Example: `$is_nonempty_set(oo(a, b))` from `a < b`.
+            // Example: `$is_nonempty_set('[a, b])` from `a <= b`.
+            // Example: `$is_nonempty_set('(a, b))` from `a < b`.
             Obj::IntervalObj(interval) => {
                 let order_fact: AtomicFact = if interval.left_closed() && interval.right_closed() {
                     LessEqualFact::new(
@@ -117,16 +117,16 @@ impl Runtime {
                 if order_ok.is_true() {
                     let rule = match interval {
                         IntervalObj::LeftOpenRightOpen(_) => {
-                            "oo_interval_nonempty_when_start_lt_end"
+                            "open_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftOpenRightClosed(_) => {
-                            "oc_interval_nonempty_when_start_lt_end"
+                            "left_open_right_closed_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftClosedRightOpen(_) => {
-                            "co_interval_nonempty_when_start_lt_end"
+                            "left_closed_right_open_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftClosedRightClosed(_) => {
-                            "cc_interval_nonempty_when_start_le_end"
+                            "closed_interval_nonempty_when_start_le_end"
                         }
                     };
                     Ok(

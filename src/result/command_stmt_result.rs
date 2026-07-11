@@ -3,7 +3,9 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum CommandStmtResult {
     ImportStmt(NonFactualStmtSuccess),
+    TrustImportStmt(NonFactualStmtSuccess),
     LocalImportStmt(NonFactualStmtSuccess),
+    TrustLocalImportStmt(NonFactualStmtSuccess),
     DoNothingStmt(NonFactualStmtSuccess),
     ClearStmt(NonFactualStmtSuccess),
     EvalStmt(NonFactualStmtSuccess),
@@ -16,8 +18,14 @@ impl CommandStmtResult {
     pub fn new(success: NonFactualStmtSuccess) -> Self {
         match &success.stmt {
             Stmt::Command(CommandStmt::ImportStmt(_)) => CommandStmtResult::ImportStmt(success),
+            Stmt::Command(CommandStmt::TrustImportStmt(_)) => {
+                CommandStmtResult::TrustImportStmt(success)
+            }
             Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
                 CommandStmtResult::LocalImportStmt(success)
+            }
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
+                CommandStmtResult::TrustLocalImportStmt(success)
             }
             Stmt::Command(CommandStmt::DoNothingStmt(_)) => {
                 CommandStmtResult::DoNothingStmt(success)
@@ -38,7 +46,9 @@ impl CommandStmtResult {
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::TrustImportStmt(success)
             | CommandStmtResult::LocalImportStmt(success)
+            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
@@ -51,7 +61,9 @@ impl CommandStmtResult {
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::TrustImportStmt(success)
             | CommandStmtResult::LocalImportStmt(success)
+            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
@@ -64,7 +76,9 @@ impl CommandStmtResult {
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
             CommandStmtResult::ImportStmt(success)
+            | CommandStmtResult::TrustImportStmt(success)
             | CommandStmtResult::LocalImportStmt(success)
+            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)

@@ -462,7 +462,10 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        self.complete_known_forall_arg_map_from_known_dom_facts(known_forall.as_ref(), &mut arg_map)?;
+        self.complete_known_forall_arg_map_from_known_dom_facts(
+            known_forall.as_ref(),
+            &mut arg_map,
+        )?;
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
@@ -678,8 +681,12 @@ impl Runtime {
         match known_arg {
             // Only `*FreeParamObj` bind; plain identifiers are fixed names.
             Obj::Atom(AtomObj::Identifier(ref id_known)) => {
-                if id_known.to_string() != given_arg.to_string() {
-                    return Ok(None);
+                match given_arg {
+                    Obj::Atom(AtomObj::Identifier(id_given)) if id_known.name == id_given.name => {}
+                    Obj::Atom(AtomObj::IdentifierWithMod(id_given))
+                        if self.is_current_parse_module(&id_given.mod_name)
+                            && id_known.name == id_given.name => {}
+                    _ => return Ok(None),
                 }
                 Ok(Some(HashMap::new()))
             }
@@ -958,6 +965,12 @@ impl Runtime {
                 } else {
                     Ok(None)
                 }
+            }
+            Obj::Atom(AtomObj::Identifier(id_given))
+                if self.is_current_parse_module(&id_known.mod_name)
+                    && id_known.name == id_given.name =>
+            {
+                Ok(Some(HashMap::new()))
             }
             _ => Ok(None),
         }

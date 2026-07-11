@@ -77,6 +77,14 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    pub(crate) fn exec_have_tuple_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveTupleStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
     fn exec_have_cart_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveCartStmt,
@@ -137,6 +145,14 @@ impl Runtime {
         );
 
         Ok(infer_result)
+    }
+
+    pub(crate) fn exec_have_cart_stmt_affect_environment_only(
+        &mut self,
+        stmt: &HaveCartStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     fn verify_tuple_or_cart_name_available(

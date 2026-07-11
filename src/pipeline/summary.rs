@@ -76,6 +76,12 @@ impl RunSummary {
         runtime_error: &Option<RuntimeError>,
     ) -> RunSummary {
         let mut summary = Self::from_run(stmt_results, runtime_error);
+        for dependency in runtime.trusted_import_summary.dependencies.iter() {
+            bump_count(
+                &mut summary.trust_dependency_counts,
+                dependency.kind.as_str(),
+            );
+        }
         if let Some(entry_module_id) = runtime.module_manager.entry_module_id {
             if let Some(module) = runtime.module_manager.module(entry_module_id) {
                 summary.main_environment = Some(EnvironmentSummary::from_environment(
@@ -154,7 +160,11 @@ impl RunSummary {
                 self.proof_blocks += 1;
             }
             Stmt::Command(CommandStmt::ImportStmt(_))
+            | Stmt::Command(CommandStmt::TrustImportStmt(_))
             | Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
+                self.import_statements += 1;
+            }
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
                 self.import_statements += 1;
             }
             _ => {}
@@ -386,6 +396,10 @@ impl RunSummary {
             (
                 "proof_method_counts".to_string(),
                 count_map_json_value(&self.proof_method_counts),
+            ),
+            (
+                "trust_dependencies".to_string(),
+                count_map_json_value(&self.trust_dependency_counts),
             ),
             (
                 "main_environment".to_string(),

@@ -212,6 +212,8 @@ impl Runtime {
                 }
                 Ok(result)
             }
+        } else if tb.current_token_is_equal_to(INTERVAL_LITERAL_PREFIX) {
+            self.parse_two_sided_interval_literal(tb)
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
             let fn_set = self.parse_fn_set(tb)?;
@@ -252,14 +254,6 @@ impl Runtime {
                 }
             }
             Ok(result)
-        } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
-            Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "apostrophe anonymous functions have been removed; use `fn(x S) T {body}`"
-                        .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
@@ -911,42 +905,27 @@ impl Runtime {
             })?;
             return Ok(ClosedRange::new(left, right).into());
         }
-        if tok == OO || tok == OC || tok == CO || tok == CC {
-            let interval_kind = tok.to_string();
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return match interval_kind.as_str() {
-                OO => Ok(IntervalObj::new_left_open_right_open(left, right).into()),
-                OC => Ok(IntervalObj::new_left_open_right_closed(left, right).into()),
-                CO => Ok(IntervalObj::new_left_closed_right_open(left, right).into()),
-                CC => Ok(IntervalObj::new_left_closed_right_closed(left, right).into()),
+        if tok == LEGACY_OPEN_OPEN_INTERVAL
+            || tok == LEGACY_OPEN_CLOSED_INTERVAL
+            || tok == LEGACY_CLOSED_OPEN_INTERVAL
+            || tok == LEGACY_CLOSED_CLOSED_INTERVAL
+        {
+            let replacement = match tok {
+                LEGACY_OPEN_OPEN_INTERVAL => "'(a, b)",
+                LEGACY_OPEN_CLOSED_INTERVAL => "'(a, b]",
+                LEGACY_CLOSED_OPEN_INTERVAL => "'[a, b)",
+                LEGACY_CLOSED_CLOSED_INTERVAL => "'[a, b]",
                 _ => unreachable!(),
             };
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "two-sided interval spelling `{}` has been removed; use `{}`",
+                        tok, replacement
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         if tok == INFO || tok == INFC || tok == OINF || tok == CINF {
             let interval_kind = tok.to_string();
@@ -1430,9 +1409,15 @@ impl Runtime {
                 if let Some(standard) = standard_set_from_bare_identifier_name(&id.name) {
                     return Ok(standard);
                 }
+                let is_bound_in_parse_scope = self
+                    .parsing_free_param_collection
+                    .name_is_in_any_free_param_map(&id.name);
                 let resolved = self
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name);
+                if is_bound_in_parse_scope {
+                    return Ok(resolved);
+                }
                 match resolved {
                     Obj::Atom(AtomObj::Identifier(id)) => {
                         Ok(self.qualify_bare_identifier_if_needed(id))
@@ -1464,6 +1449,57 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
+    }
+
+    fn parse_two_sided_interval_literal(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        tb.skip_token(INTERVAL_LITERAL_PREFIX)?;
+        let left_closed = match tb.current()? {
+            LEFT_BRACE => false,
+            LEFT_BRACKET => true,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal after `'` expects `(` or `[`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip()?;
+        let left = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let right = self.parse_obj(tb)?;
+        if tb.current_token_is_equal_to(COMMA) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "interval literal expects exactly two endpoints".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let right_closed = match tb.current()? {
+            RIGHT_BRACE => false,
+            RIGHT_BRACKET => true,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal expects `)` or `]` after its right endpoint".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip()?;
+
+        Ok(match (left_closed, right_closed) {
+            (false, false) => IntervalObj::new_left_open_right_open(left, right).into(),
+            (false, true) => IntervalObj::new_left_open_right_closed(left, right).into(),
+            (true, false) => IntervalObj::new_left_closed_right_open(left, right).into(),
+            (true, true) => IntervalObj::new_left_closed_right_closed(left, right).into(),
+        })
     }
 
     fn parse_angle_bracketed_objs(
@@ -1821,8 +1857,10 @@ impl Runtime {
                 .expect("qualified name should have a local name");
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
+        } else if let Some(module_name) = self.unique_active_local_import_member_namespace(&left) {
+            Ok(AtomicName::WithMod(module_name, left))
         } else if let Some(module_name) = self.current_parse_module_name() {
-            Ok(AtomicName::WithMod(module_name.to_string(), left))
+            Ok(AtomicName::WithMod(module_name, left))
         } else {
             Ok(AtomicName::WithoutMod(left))
         }
@@ -1855,23 +1893,29 @@ impl Runtime {
     }
 
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
-        let Some(module_name) = self.current_parse_module_name() else {
-            return id.into();
-        };
+        if let Some(module_name) = self.unique_active_local_import_member_namespace(&id.name) {
+            return IdentifierWithMod::new(module_name, id.name).into();
+        }
         if self.name_is_in_builtin_identifier_layer(&id.name) {
             return id.into();
         }
-        IdentifierWithMod::new(module_name.to_string(), id.name).into()
+        let Some(module_name) = self.current_parse_module_name() else {
+            return id.into();
+        };
+        IdentifierWithMod::new(module_name, id.name).into()
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
-        let Some(module_name) = self.current_parse_module_name() else {
-            return AtomicName::WithoutMod(name);
-        };
+        if let Some(module_name) = self.unique_active_local_import_member_namespace(&name) {
+            return AtomicName::WithMod(module_name, name);
+        }
         if self.name_is_in_builtin_prop_layer(&name) {
             return AtomicName::WithoutMod(name);
         }
-        AtomicName::WithMod(module_name.to_string(), name)
+        let Some(module_name) = self.current_parse_module_name() else {
+            return AtomicName::WithoutMod(name);
+        };
+        AtomicName::WithMod(module_name, name)
     }
 }
 

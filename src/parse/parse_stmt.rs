@@ -64,6 +64,7 @@ impl Runtime {
                     tb.line_file.clone(),
                 ),
             ))),
+            TRUST => self.parse_trust_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
             EXPORT => Err(parse_stmt_error(
                 tb,
@@ -132,5 +133,11 @@ mod parse_stmt_diagnostic_tests {
                 "{source_code:?} leaked a token-index error: {message}",
             );
         }
+    }
+
+    #[test]
+    fn trust_requires_an_import_form() {
+        let message = parse_one_stmt_error_message("trust theorem");
+        assert_eq!(message, "trust: expected `import` or `local_import`");
     }
 }

@@ -206,6 +206,13 @@ There is no Litex statement that directly loads an arbitrary `.lit` path. Use
 Ordinary `import` loads module directories or registered global modules. A
 direct `import "./x.lit" as X` is rejected.
 
+For an explicitly trusted project dependency, write `trust import Name` or
+`trust local_import name` in a registered `.lit` source. Litex still resolves
+the declared project target, reads it, parses it, and checks dependency cycles,
+but skips its well-definedness and proof processing and keeps only its
+environment effects. Trusted imports are rejected by `-strict`; their presence
+is recorded as a `trust_import` or `trust_local_import` dependency in the run.
+
 ## Reserved Helper Commands
 
 These commands are parsed by the Rust CLI but are not implemented as functional

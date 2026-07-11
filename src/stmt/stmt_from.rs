@@ -162,9 +162,21 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
+impl From<TrustImportStmt> for Stmt {
+    fn from(v: TrustImportStmt) -> Self {
+        CommandStmt::TrustImportStmt(v).into()
+    }
+}
+
 impl From<LocalImportStmt> for Stmt {
     fn from(v: LocalImportStmt) -> Self {
         CommandStmt::LocalImportStmt(v).into()
+    }
+}
+
+impl From<TrustLocalImportStmt> for Stmt {
+    fn from(v: TrustLocalImportStmt) -> Self {
+        CommandStmt::TrustLocalImportStmt(v).into()
     }
 }
 

@@ -22,6 +22,7 @@ struct LitexRunItem {
     report_label: String,
     source: String,
     path_for_runtime: String,
+    run_in_project_context: bool,
 }
 
 #[derive(Clone)]
@@ -255,6 +256,7 @@ fn run_analysis_one_chapters_impl() {
                 report_label: file_label_for_report,
                 source: source_code,
                 path_for_runtime: lit_file_path_str.to_string(),
+                run_in_project_context: true,
             }],
         });
     }
@@ -756,6 +758,7 @@ fn collect_examples_phase1_groups(
                 report_label: file_label_for_report,
                 source: source_code,
                 path_for_runtime: lit_file_path_str.to_string(),
+                run_in_project_context: false,
             }],
         });
     }
@@ -785,6 +788,7 @@ fn push_markdown_run_groups(
                 report_label: label,
                 source: block,
                 path_for_runtime: md_path_str,
+                run_in_project_context: false,
             });
         }
         let group_index = groups.len();
@@ -803,6 +807,24 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
     let mut failure_outputs: Vec<String> = Vec::new();
 
     for (item_index, item) in group.items.iter().enumerate() {
+        if item.run_in_project_context {
+            let start_time_for_one_file = Instant::now();
+            let (run_succeeded, run_output) =
+                run_source_code_in_file_with_ok(item.path_for_runtime.as_str());
+            let duration_ms = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
+            run_durations_ms.push((item.report_label.clone(), duration_ms));
+
+            if !run_succeeded {
+                failure_outputs.push(format!(
+                    "=== [FAILED] {} ({:.2} ms) ===\n{}\n>>> FAILED project file: {}\n",
+                    item.report_label, duration_ms, run_output, item.report_label
+                ));
+                failed_labels.push(item.report_label.clone());
+                break;
+            }
+            continue;
+        }
+
         if item_index == 0 {
             runtime.new_file_path_new_env_new_name_scope(item.path_for_runtime.as_str());
         } else {

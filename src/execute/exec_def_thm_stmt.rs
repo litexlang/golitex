@@ -161,11 +161,36 @@ impl Runtime {
         self.store_def_thm_with_trust(stmt, trust_summary)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
+        if self.current_execution_is_trusted_file() {
+            return self.store_trusted_fact_and_infer_with_reason_and_trust(
+                Fact::ForallFact(stmt.forall_fact.clone()),
+                InferReason::Other(stmt.store_reason_with_trust(trust_summary)),
+                trust_summary.clone(),
+            );
+        }
+
         self.verify_well_defined_and_store_and_infer_with_reason_and_trust(
             Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
             InferReason::Other(stmt.store_reason_with_trust(trust_summary)),
             trust_summary.clone(),
         )
+    }
+
+    pub(crate) fn exec_def_thm_stmt_affect_environment_only(
+        &mut self,
+        stmt: &DefThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let trust_summary = if stmt.is_axiom() {
+            ProofTrustSummary::from_dependency(
+                "axiom",
+                stmt.names.first().cloned(),
+                stmt.line_file.clone(),
+            )
+        } else {
+            ProofTrustSummary::new()
+        };
+        let infer_result = self.exec_def_thm_stmt_affect_environment(stmt, &trust_summary)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

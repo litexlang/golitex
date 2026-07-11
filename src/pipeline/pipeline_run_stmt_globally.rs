@@ -14,16 +14,57 @@ fn resolve_relative_path(user_path: &str, current_lit_file_path: &str) -> String
     base_dir.join(user).to_string_lossy().into_owned()
 }
 
+fn trusted_import_not_allowed_in_strict_mode(stmt: Stmt) -> RuntimeError {
+    short_exec_error(
+        stmt,
+        "strict mode does not allow trusted imports".to_string(),
+        None,
+        vec![],
+    )
+}
+
 pub fn run_stmt_at_global_env(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
         Stmt::Command(CommandStmt::ImportStmt(import_stmt)) => {
-            return run_import_stmt(import_stmt, runtime);
+            return run_import_stmt(import_stmt, runtime, runtime.current_execution_mode());
+        }
+        Stmt::Command(CommandStmt::TrustImportStmt(trust_import_stmt)) => {
+            if runtime.strict_mode {
+                return Err(trusted_import_not_allowed_in_strict_mode(stmt.clone()));
+            }
+            runtime.record_trusted_import(
+                "trust_import",
+                trust_import_stmt.import.to_string(),
+                trust_import_stmt.line_file(),
+            );
+            run_import_stmt(&trust_import_stmt.import, runtime, ExecutionMode::Trusted)?;
+            return Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
         }
         Stmt::Command(CommandStmt::LocalImportStmt(local_import_stmt)) => {
-            return run_local_import_stmt(local_import_stmt, runtime);
+            return run_local_import_stmt(
+                local_import_stmt,
+                runtime,
+                runtime.current_execution_mode(),
+            );
+        }
+        Stmt::Command(CommandStmt::TrustLocalImportStmt(trust_local_import_stmt)) => {
+            if runtime.strict_mode {
+                return Err(trusted_import_not_allowed_in_strict_mode(stmt.clone()));
+            }
+            runtime.record_trusted_import(
+                "trust_local_import",
+                trust_local_import_stmt.local_import.name.clone(),
+                trust_local_import_stmt.line_file(),
+            );
+            run_local_import_stmt(
+                &trust_local_import_stmt.local_import,
+                runtime,
+                ExecutionMode::Trusted,
+            )?;
+            return Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
         }
         _ => {
             return runtime.exec_stmt(stmt);
@@ -95,6 +136,7 @@ fn push_std_root_if_new(roots: &mut Vec<PathBuf>, candidate: PathBuf) {
 fn run_import_stmt(
     import_stmt: &ImportStmt,
     runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
 ) -> Result<StmtResult, RuntimeError> {
     if runtime.run_mode == RunMode::Repository {
         match import_stmt {
@@ -121,6 +163,7 @@ fn run_import_stmt(
                         imported_module_id,
                         import_stmt.clone().into(),
                         runtime,
+                        execution_mode,
                     )?;
                     runtime
                         .module_manager
@@ -140,6 +183,20 @@ fn run_import_stmt(
         .imported_module_can_be_loaded(&import_info.module_name, &import_info.module_root_path)
         .map_err(|msg| import_name_already_used_error(import_stmt, msg))?;
     if let Some(imported_module_id) = existing_module {
+        let loaded_mode = runtime
+            .module_manager
+            .module(imported_module_id)
+            .map(|module| module.execution_mode)
+            .unwrap_or(ExecutionMode::Verified);
+        if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
+            return Err(short_exec_error(
+                import_stmt.clone().into(),
+                "module was already loaded through trust import; restart the run before importing it normally"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
         runtime
             .module_manager
             .record_import_dependency(importing_module_id, imported_module_id);
@@ -168,8 +225,17 @@ fn run_import_stmt(
         )
     })?;
 
+    runtime
+        .module_manager
+        .module_mut(imported_module_id)
+        .expect("imported module should exist")
+        .execution_mode = execution_mode;
     runtime.parsing_free_param_collection = FreeParamCollection::new();
-    runtime.push_module_execution_frame(imported_module_id, import_info.main_lit_path.as_str());
+    runtime.push_module_execution_frame_with_mode(
+        imported_module_id,
+        import_info.main_lit_path.as_str(),
+        execution_mode,
+    );
     let (_stmt_results, runtime_error) = run_source_code(content.as_str(), runtime);
     runtime.pop_execution_frame();
     runtime.parsing_free_param_collection = parsing_free_params_before;
@@ -199,6 +265,7 @@ fn run_import_stmt(
 fn run_local_import_stmt(
     local_import_stmt: &LocalImportStmt,
     runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
 ) -> Result<StmtResult, RuntimeError> {
     if runtime.run_mode != RunMode::Repository {
         return runtime.exec_local_import_stmt(local_import_stmt);
@@ -228,6 +295,7 @@ fn run_local_import_stmt(
                 file_id,
                 local_import_stmt.clone().into(),
                 runtime,
+                execution_mode,
             )?;
         }
         ImportTarget::Module(imported_module_id) => {
@@ -235,6 +303,7 @@ fn run_local_import_stmt(
                 imported_module_id,
                 local_import_stmt.clone().into(),
                 runtime,
+                execution_mode,
             )?;
             runtime
                 .module_manager
@@ -249,11 +318,12 @@ fn load_discovered_module(
     module_id: ModuleId,
     cause_stmt: Stmt,
     runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
 ) -> Result<(), RuntimeError> {
-    let status = runtime
+    let (status, loaded_mode) = runtime
         .module_manager
         .module(module_id)
-        .map(|module| module.status)
+        .map(|module| (module.status, module.execution_mode))
         .ok_or_else(|| {
             short_exec_error(
                 cause_stmt.clone(),
@@ -263,7 +333,18 @@ fn load_discovered_module(
             )
         })?;
     match status {
-        ModuleStatus::Loaded => return Ok(()),
+        ModuleStatus::Loaded => {
+            if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
+                return Err(short_exec_error(
+                    cause_stmt,
+                    "module was already loaded through trust import; restart the run before importing it normally"
+                        .to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+            return Ok(());
+        }
         ModuleStatus::Loading => {
             let module_name = runtime
                 .module_manager
@@ -286,6 +367,11 @@ fn load_discovered_module(
         .module_manager
         .begin_loading_discovered_module(module_id)
         .map_err(|message| short_exec_error(cause_stmt.clone(), message, None, vec![]))?;
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .expect("discovered module should exist")
+        .execution_mode = execution_mode;
     let (module_name, main_lit_path) = {
         let module = runtime
             .module_manager
@@ -308,7 +394,7 @@ fn load_discovered_module(
         )
     })?;
     runtime.parsing_free_param_collection = FreeParamCollection::new();
-    runtime.push_module_execution_frame(module_id, &main_lit_path);
+    runtime.push_module_execution_frame_with_mode(module_id, &main_lit_path, execution_mode);
     let (_, runtime_error) = run_source_code(&content, runtime);
     runtime.pop_execution_frame();
     runtime.parsing_free_param_collection = parsing_free_params_before.clone();
@@ -331,8 +417,9 @@ fn load_exported_file(
     file_id: FileId,
     cause_stmt: Stmt,
     runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
 ) -> Result<(), RuntimeError> {
-    let (status, source_path, canonical_name) = runtime
+    let (status, source_path, canonical_name, loaded_mode) = runtime
         .module_manager
         .module(module_id)
         .and_then(|module| module.file(file_id))
@@ -341,6 +428,7 @@ fn load_exported_file(
                 file.status,
                 file.source_path.clone(),
                 file.canonical_name.clone(),
+                file.execution_mode,
             )
         })
         .ok_or_else(|| {
@@ -352,7 +440,18 @@ fn load_exported_file(
             )
         })?;
     match status {
-        FileStatus::Loaded => return Ok(()),
+        FileStatus::Loaded => {
+            if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
+                return Err(short_exec_error(
+                    cause_stmt,
+                    "file was already loaded through trust local_import; restart the run before importing it normally"
+                        .to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+            return Ok(());
+        }
         FileStatus::Loading => {
             return Err(short_exec_error(
                 cause_stmt,
@@ -372,6 +471,12 @@ fn load_exported_file(
         .and_then(|module| module.file_mut(file_id))
         .expect("exported file should exist")
         .status = FileStatus::Loading;
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .and_then(|module| module.file_mut(file_id))
+        .expect("exported file should exist")
+        .execution_mode = execution_mode;
     let content = fs::read_to_string(&source_path).map_err(|error| {
         runtime.module_manager = module_manager_before.clone();
         short_exec_error(
@@ -382,7 +487,7 @@ fn load_exported_file(
         )
     })?;
     runtime.parsing_free_param_collection = FreeParamCollection::new();
-    runtime.push_file_execution_frame(module_id, file_id, &source_path);
+    runtime.push_file_execution_frame_with_mode(module_id, file_id, &source_path, execution_mode);
     let (_, runtime_error) = run_source_code(&content, runtime);
     runtime.pop_execution_frame();
     runtime.parsing_free_param_collection = parsing_free_params_before;

@@ -56,6 +56,7 @@ pub struct FileRunner {
     pub environment: Box<Environment>,
     pub local_imports: HashMap<String, ImportTarget>,
     pub status: FileStatus,
+    pub execution_mode: ExecutionMode,
 }
 
 impl FileRunner {
@@ -67,6 +68,7 @@ impl FileRunner {
             environment: Box::new(Environment::new_empty_env()),
             local_imports: HashMap::new(),
             status: FileStatus::Unloaded,
+            execution_mode: ExecutionMode::Verified,
         }
     }
 }
@@ -84,6 +86,7 @@ pub struct ModuleRunner {
     pub main_local_imports: HashMap<String, ImportTarget>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
+    pub execution_mode: ExecutionMode,
 }
 
 impl ModuleRunner {
@@ -107,6 +110,7 @@ impl ModuleRunner {
             main_local_imports: HashMap::new(),
             imports: vec![],
             status,
+            execution_mode: ExecutionMode::Verified,
         }
     }
 

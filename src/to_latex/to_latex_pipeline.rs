@@ -36,7 +36,9 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
         if matches!(
             stmt,
             Stmt::Command(CommandStmt::ImportStmt(_))
+                | Stmt::Command(CommandStmt::TrustImportStmt(_))
                 | Stmt::Command(CommandStmt::LocalImportStmt(_))
+                | Stmt::Command(CommandStmt::TrustLocalImportStmt(_))
         ) {
             run_stmt_at_global_env(&stmt, runtime)?;
         }

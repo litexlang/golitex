@@ -1,6 +1,30 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_trust_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(TRUST)?;
+        if tb.current_token_is_equal_to(IMPORT) {
+            let stmt = self.parse_import_stmt(tb)?;
+            let Stmt::Command(CommandStmt::ImportStmt(import)) = stmt else {
+                unreachable!("import parser should produce an import statement")
+            };
+            return Ok(TrustImportStmt::new(import).into());
+        }
+        if tb.current_token_is_equal_to(LOCAL_IMPORT) {
+            let stmt = self.parse_local_import_stmt(tb)?;
+            let Stmt::Command(CommandStmt::LocalImportStmt(local_import)) = stmt else {
+                unreachable!("local import parser should produce a local import statement")
+            };
+            return Ok(TrustLocalImportStmt::new(local_import).into());
+        }
+        Err(RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(
+                "trust: expected `import` or `local_import`".to_string(),
+                tb.line_file.clone(),
+            ),
+        )))
+    }
+
     pub fn parse_local_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(LOCAL_IMPORT)?;
         let name = tb.advance()?;

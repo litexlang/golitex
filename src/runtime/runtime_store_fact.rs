@@ -53,6 +53,14 @@ impl Runtime {
         reason_text: String,
         trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
+        if self.current_execution_is_trusted_file() {
+            return self
+                .store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(
+                    fact,
+                    reason_text,
+                    trust_summary,
+                );
+        }
         if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
@@ -91,6 +99,34 @@ impl Runtime {
             _ => VerifyState::new_with_final_round(false),
         };
         self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
+    }
+
+    pub fn store_trusted_fact_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.store_reason();
+        let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
+        self.store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(
+            fact,
+            reason_text,
+            trust_summary,
+        )
+    }
+
+    pub fn store_trusted_fact_and_infer_with_reason_and_trust(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+        trust_summary: ProofTrustSummary,
+    ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.store_reason();
+        self.store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(
+            fact,
+            reason_text,
+            trust_summary,
+        )
     }
 
     fn store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(

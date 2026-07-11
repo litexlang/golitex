@@ -95,6 +95,18 @@ impl Runtime {
         )
         .into())
     }
+
+    pub(crate) fn exec_by_axiom_of_choice_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByAxiomOfChoiceStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
+        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+            choice_fact,
+            InferReason::VerifiedStatement,
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
 }
 
 fn axiom_of_choice_obligations(

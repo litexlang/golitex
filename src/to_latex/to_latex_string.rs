@@ -2197,7 +2197,11 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::TrustImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::LocalImportStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),

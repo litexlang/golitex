@@ -2329,20 +2329,20 @@ claim:
 
 ```litex
 ## real interval sanity checks
-have a oo(0, 1)
+have a '(0, 1)
 a $in R
 0 < a
 a < 1
 
-have b  oc(0, 1)
+have b  '(0, 1]
 0 < b
 b <= 1
 
-have c co(0, 1)
+have c '[0, 1)
 0 <= c
 c < 1
 
-have d cc(0, 1)
+have d '[0, 1]
 0 <= d
 d <= 1
 
@@ -2370,12 +2370,12 @@ forall x R:
 
 ```litex
 sketch:
-    $is_nonempty_set(cc(0, 0))
+    $is_nonempty_set('[0, 0])
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(oo(0, 1))
+    $is_nonempty_set('(0, 1))
 ```
 
 ```litex
@@ -3810,9 +3810,11 @@ depend on local files or installed modules.
 
 - Well-definedness / structural checks: `litex.config` declarations and
   `local_import` bindings are validated during discovery; `import` resolves a
-  module; `clear` has no structural checks.
+  module; `clear` has no structural checks. `trust import` and
+  `trust local_import` use the same declared targets and validation.
 - Truth verification: imported modules and declared files verify normally when
-  loaded.
+  loaded. A trusted import deliberately skips this phase for its target and
+  transitive imports, and is rejected by strict mode.
 - Environment effects: module commands update the module manager; `clear`
   removes the current user environment. Imported modules and project export
   nodes remain registered.

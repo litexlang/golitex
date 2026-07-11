@@ -183,8 +183,11 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = stmt.exist_fact_in_witness.clone().into();
-        let store_result =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact);
+        let store_result = if self.current_execution_is_trusted_file() {
+            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+        } else {
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact)
+        };
         match store_result {
             Ok(infer_result) => Ok(infer_result),
             Err(store_error) => Err(short_exec_error(
@@ -194,6 +197,14 @@ impl Runtime {
                 vec![],
             )),
         }
+    }
+
+    pub(crate) fn exec_witness_exist_fact_stmt_affect_environment_only(
+        &mut self,
+        stmt: &WitnessExistFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_witness_exist_fact_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
     pub fn exec_witness_nonempty_set(
@@ -308,8 +319,11 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
-        let store_result =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact);
+        let store_result = if self.current_execution_is_trusted_file() {
+            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+        } else {
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact)
+        };
         match store_result {
             Ok(infer_result) => Ok(infer_result),
             Err(store_error) => Err(short_exec_error(
@@ -319,5 +333,13 @@ impl Runtime {
                 vec![],
             )),
         }
+    }
+
+    pub(crate) fn exec_witness_nonempty_set_stmt_affect_environment_only(
+        &mut self,
+        stmt: &WitnessNonemptySet,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_witness_nonempty_set_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

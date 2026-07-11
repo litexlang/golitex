@@ -125,6 +125,12 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
         let to_prove_fact_display_string = to_prove_fact.to_string();
+        if self.current_execution_is_trusted_file() {
+            return self.store_trusted_fact_and_infer_with_reason(
+                to_prove_fact,
+                InferReason::VerifiedStatement,
+            );
+        }
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(to_prove_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
@@ -137,6 +143,14 @@ impl Runtime {
                     vec![],
                 )
             })
+    }
+
+    pub(crate) fn exec_by_contra_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByContraStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.exec_by_contra_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }
 
