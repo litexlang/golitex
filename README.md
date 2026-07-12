@@ -6,7 +6,7 @@
 
 # Litex: The Language Where Mathematics Verifies Itself
 
-*by Jiachen Shen and The Litex Team, version 0.9.101-beta*
+*by Jiachen Shen and The Litex Team, version 0.9.102-beta*
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -122,8 +122,16 @@ Line 3 succeeded: verified x + 1 = 3 from x = 2 and arithmetic.
 Line 4 succeeded: verified x^2 = 4 from x = 2 and arithmetic.
 ```
 
-The JSON output contains more structure. In `-detail` mode, the important
-execution phases have this shape:
+Litex executes once and then projects the same trace into three views:
+
+- `-compact` prints only `result`, `type`, `line`, and `statement`.
+- Ordinary output is the default reading view. It keeps `inside_results`,
+  assumptions, conclusions, and direct `why_verified` reasons, without audit
+  duplication.
+- `-detail` adds full recursive verification data, execution phases, effects,
+  and raw source paths for auditing.
+
+In `-detail` mode, the important execution phases have this shape:
 
 ```json
 {

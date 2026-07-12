@@ -88,9 +88,9 @@ pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::graph::{
-    run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
-    run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
-    run_graph_for_file_with_strict_and_language,
+    render_graph_from_stmt_results, run_graph_for_code, run_graph_for_code_strict,
+    run_graph_for_code_strict_with_language, run_graph_for_code_with_language, run_graph_for_file,
+    run_graph_for_file_with_strict, run_graph_for_file_with_strict_and_language,
     run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
@@ -191,13 +191,18 @@ pub use crate::pipeline::{
     display_run_summary_json, display_run_summary_json_with_runtime, display_runtime_error_json,
     display_stmt_exec_result_json, render_run_source_code_output, run_latex_repl, run_repl,
     run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language, run_repository_with_output,
+    run_repl_with_detail_output_and_strict_and_language,
+    run_repl_with_output_style_and_strict_and_language,
+    run_repl_with_output_style_and_strict_and_language_and_isolation, run_repository_with_output,
+    run_repository_with_output_style, run_session_with_output_style_and_strict_and_language,
     run_source_code, run_source_code_in_file, run_source_code_in_file_for_cli,
+    run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation,
     run_source_code_in_file_for_cli_with_strict,
     run_source_code_in_file_for_cli_with_strict_and_language,
     run_source_code_in_file_for_cli_with_summary_and_language,
     run_source_code_in_file_for_cli_with_summary_and_language_and_isolation,
     run_source_code_in_file_with_ok,
+    run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language,
     run_source_code_in_repository_for_cli_with_summary_and_language, run_stmt_at_global_env,
     RunSummary,
 };
@@ -277,7 +282,7 @@ pub use crate::runner::{
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::RunMode;
-pub use crate::runtime::{ExecutionFrame, ExecutionLayer, Runtime};
+pub use crate::runtime::{ExecutionFrame, ExecutionLayer, OutputStyle, Runtime};
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
 pub use crate::stmt::by_stmt::ByCasesStmt;

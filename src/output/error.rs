@@ -21,7 +21,42 @@ pub fn display_runtime_error_json(
     error: &RuntimeError,
     strip_free_param_tags: bool,
 ) -> String {
+    if runtime.is_compact_output() {
+        return display_compact_runtime_error_json(runtime, error, strip_free_param_tags);
+    }
     let raw = build_display_error_json_object(runtime, error, 0, true, None);
+    finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
+}
+
+fn display_compact_runtime_error_json(
+    runtime: &Runtime,
+    error: &RuntimeError,
+    strip_free_param_tags: bool,
+) -> String {
+    let mut fields = vec![
+        (
+            JSON_KEY_ERROR_TYPE.to_string(),
+            JsonValue::JsonString(error.display_label().to_string()),
+        ),
+        (
+            JSON_KEY_RESULT.to_string(),
+            JsonValue::JsonString(JSON_VALUE_ERROR.to_string()),
+        ),
+    ];
+    fields.extend(source_ref_json_fields(runtime, &error.line_file(), None));
+    fields.push((
+        JSON_KEY_MESSAGE.to_string(),
+        JsonValue::JsonString(user_visible_stmt_or_msg_text(
+            error.trace_message().as_str(),
+        )),
+    ));
+    if let Some(statement) = error_own_statement(error) {
+        if let JsonValue::Object(statement_fields) = stmt_json_value(runtime, statement) {
+            fields.extend(statement_fields);
+        }
+    }
+    let value = localize_json_value(runtime, JsonValue::Object(fields));
+    let raw = render_json_value(&value, 0);
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 

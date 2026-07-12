@@ -9,9 +9,9 @@ use std::rc::Rc;
 pub use crate::result::StmtResult;
 
 pub fn run_source_code_in_file(entry_file_path: &str) -> String {
-    run_file_with_output(
+    run_file_with_output_style(
         entry_file_path,
-        false,
+        OutputStyle::Normal,
         false,
         OutputLanguage::English,
         false,
@@ -59,9 +59,9 @@ pub fn run_source_code_in_file_for_cli_with_summary_and_language(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> String {
-    run_file_with_output(
+    run_file_with_output_style(
         entry_file_path,
-        detail_output,
+        output_style_from_detail_output(detail_output),
         strict_mode,
         output_language,
         summarize,
@@ -78,9 +78,28 @@ pub fn run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
     summarize: bool,
     force_isolated: bool,
 ) -> String {
-    run_file_with_output(
+    run_file_with_output_style(
         entry_file_path,
-        detail_output,
+        output_style_from_detail_output(detail_output),
+        strict_mode,
+        output_language,
+        summarize,
+        force_isolated,
+    )
+    .1
+}
+
+pub fn run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation(
+    entry_file_path: &str,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+    force_isolated: bool,
+) -> String {
+    run_file_with_output_style(
+        entry_file_path,
+        output_style,
         strict_mode,
         output_language,
         summarize,
@@ -90,9 +109,9 @@ pub fn run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
 }
 
 pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) {
-    run_file_with_output(
+    run_file_with_output_style(
         entry_file_path,
-        false,
+        OutputStyle::Normal,
         false,
         OutputLanguage::English,
         false,
@@ -107,9 +126,26 @@ pub fn run_source_code_in_repository_for_cli_with_summary_and_language(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> String {
-    run_repository_with_output(
+    run_repository_with_output_style(
         repository_path,
-        detail_output,
+        output_style_from_detail_output(detail_output),
+        strict_mode,
+        output_language,
+        summarize,
+    )
+    .1
+}
+
+pub fn run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language(
+    repository_path: &str,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> String {
+    run_repository_with_output_style(
+        repository_path,
+        output_style,
         strict_mode,
         output_language,
         summarize,
@@ -124,8 +160,24 @@ pub fn run_repository_with_output(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
+    run_repository_with_output_style(
+        repository_path,
+        output_style_from_detail_output(detail_output),
+        strict_mode,
+        output_language,
+        summarize,
+    )
+}
+
+pub fn run_repository_with_output_style(
+    repository_path: &str,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> (bool, String) {
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.detail_output = detail_output;
+    runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
     match discover_repository(&mut runtime, repository_path) {
@@ -151,16 +203,16 @@ pub fn run_repository_with_output(
     (ok, output)
 }
 
-fn run_file_with_output(
+fn run_file_with_output_style(
     entry_file_path: &str,
-    detail_output: bool,
+    output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
     summarize: bool,
     force_isolated: bool,
 ) -> (bool, String) {
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.detail_output = detail_output;
+    runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
     let (stmt_results, runtime_error) =
@@ -175,6 +227,14 @@ fn run_file_with_output(
         output.push('\n');
     }
     (ok, output)
+}
+
+fn output_style_from_detail_output(detail_output: bool) -> OutputStyle {
+    if detail_output {
+        OutputStyle::Detailed
+    } else {
+        OutputStyle::Normal
+    }
 }
 
 pub fn run_file_with_project_context(

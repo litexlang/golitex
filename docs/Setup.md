@@ -234,6 +234,11 @@ Start REPL:
 litex
 ```
 
+When run directly inside a project directory containing `litex.config`, the
+REPL discovers its exports without executing the project's entrance file. You
+can then enter `local import chapter_name` and continue entering statements in
+the same environment. Use `litex -isolated` when you need a standalone REPL.
+
 Typical successful output:
 
 ```text
@@ -280,7 +285,7 @@ litex [OPTION...]
 
 Basic behavior:
 
-- **No arguments**: starts the interactive REPL.
+- **No arguments**: starts the interactive REPL; a `litex.config` directly in the current directory enables its root `local import` exports without running the entrance file.
 - **With options**: runs code, files, repositories, or helper commands as described below.
 - **Unknown options**: print an error message and exit.
 
@@ -292,10 +297,13 @@ Basic behavior:
 | `-e <code>` | Run a Litex source string. |
 | `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
 | `-isolated -f <file>` | Force a file to run without project discovery. |
+| `-isolated` | Force the interactive REPL to ignore a `litex.config` in the current directory. |
 | `-r <project>` | Run the `[entrance]` file declared by `<project>/litex.config`. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <project>` | Run a project and return one wrapper JSON object. |
+| `-session` | Start a framed, machine-readable persistent verifier session; see `docs/cli.md` for its input protocol. |
+| `-compact` | Show only result, statement type, line, and source statement. |
 | `-detail` | Include full proof details, execution phases, empty fields, and raw paths for cross-source references. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
@@ -321,10 +329,13 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 ## Command output format
 
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
-By default, Litex omits empty arrays and empty strings, and it does not print
-raw file paths. Cross-source references still keep safe provenance labels such
-as `builtin_code`, `std/Trig`, or an exported file's canonical name. Use
-`-detail` when you need full trace details and raw paths for debugging. Detailed statement output includes `phases.verify_well_definedness`, `phases.verify_process`, and `phases.affect_environment`; facts added to the environment appear as `affect_environment.effects`, not as a top-level `store_facts` field.
+By default, Litex prints the normal reading view: internal statements,
+assumptions, conclusions, and direct `why_verified` reasons, without audit
+duplication. Use `-compact` to scan only the four base fields, or `-detail`
+for full trace details and raw paths. Detailed statement output includes
+`phases.verify_well_definedness`, `phases.verify_process`, and
+`phases.affect_environment`; facts added to the environment appear as
+`affect_environment.effects`, not as a top-level `store_facts` field.
 
 If the whole run succeeds:
 
