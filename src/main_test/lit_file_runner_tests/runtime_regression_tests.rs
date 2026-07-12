@@ -5039,8 +5039,8 @@ witness exist z R st {z = 1} from 1:
 }
 
 #[test]
-fn normal_output_folds_proof_level_inside_results() {
-    run_with_large_stack("normal_output_folds_proof_level_inside_results", || {
+fn normal_output_projects_proof_level_inside_results() {
+    run_with_large_stack("normal_output_projects_proof_level_inside_results", || {
         let source_code = r#"
 sketch:
     1 = 1
@@ -5077,11 +5077,54 @@ witness exist x R st {x = 1} from 1:
         assert!(run_output.contains("\"type\": \"existence witness\""));
         assert_no_legacy_acceptance_field(&run_output, "normal");
         assert!(
-            !run_output.contains("\"inside_results\": ["),
-            "normal output should fold raw recursive inside_results:\n{}",
+            run_output.contains("\"inside_results\": ["),
+            "normal output should retain one readable internal-statement tree:\n{}",
             run_output
         );
+        assert!(run_output.contains("\"why_verified\": {"));
+        assert!(!run_output.contains("\"phases\": {"));
+        assert!(!run_output.contains("\"proof_steps\": ["));
     });
+}
+
+#[test]
+fn output_styles_project_one_full_execution_trace() {
+    let source_code = r#"
+sketch:
+    forall y R, z N:
+        $is_set(y)
+        $is_set(z)
+    $is_set(1)
+"#;
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("output_styles_project_full_trace");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+
+    assert!(runtime_error.is_none());
+    assert!(stmt_results[0].execution_trace().is_some());
+
+    let (_, normal_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(normal_output.contains("\"inside_results\": ["));
+    assert!(normal_output.contains("Every object is a set."));
+    assert!(normal_output.contains("\"why_verified\": {"));
+    assert!(!normal_output.contains("\"phases\": {"));
+    assert!(!normal_output.contains("\"effects\": ["));
+
+    runtime.set_output_style(OutputStyle::Compact);
+    let (_, compact_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(compact_output.contains("\"type\": \"proof sketch\""));
+    assert!(!compact_output.contains("\"inside_results\": ["));
+    assert!(!compact_output.contains("\"why_verified\": {"));
+
+    runtime.set_output_style(OutputStyle::Detailed);
+    let (_, detailed_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(detailed_output.contains("\"inside_results\": ["));
+    assert!(detailed_output.contains("\"phases\": {"));
+    assert!(detailed_output.contains("\"affect_environment\": {"));
+    assert!(detailed_output.contains("\"effects\": ["));
 }
 
 #[test]
@@ -5113,13 +5156,13 @@ thm theorem_trace_self_eq:
             assert!(run_output.contains("\"parameters\": ["));
             assert!(run_output.contains("\"x\""));
             assert!(run_output.contains("\"assumptions\": ["));
-            assert!(run_output.contains("\"proof_steps\": ["));
             assert!(run_output.contains("\"conclusions\": ["));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal theorem output should expose structured route without raw inside_results:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal theorem output should expose its readable internal route:\n{}",
                 run_output
             );
+            assert!(!run_output.contains("\"proof_steps\": ["));
         },
     );
 }
@@ -5204,8 +5247,8 @@ by induc n from 0:
     );
     assert!(run_output.contains("\"type\": \"proof by induction\""));
     assert!(
-        !run_output.contains("\"inside_results\": ["),
-        "normal by induc output should fold raw inside_results:\n{}",
+        run_output.contains("\"inside_results\": ["),
+        "normal by induc output should retain its readable internal route:\n{}",
         run_output
     );
 
@@ -5376,7 +5419,7 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
         "Chinese citation run failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"验证\""));
+    assert!(run_output.contains("\"验证依据\""));
     assert!(run_output.contains("\"类型\": \"引用 prop 定义\""));
     assert!(run_output.contains("\"被引用语句\": \"prop is_one_tmp(t R):\\n"));
     assert!(run_output.contains("\"语句\": \"$is_one_tmp(1)\""));
@@ -5413,7 +5456,8 @@ forall:
     assert!(run_output.contains("\"结论\": ["));
     assert!(run_output.contains("\"类型\": \"引用 forall 事实\""));
     assert!(run_output.contains("\"被引用语句\": \"forall x human:\\n    $mortal(x)\""));
-    assert!(run_output.contains("\"原因\": \"已证明语句\""));
+    assert!(run_output.contains("\"原因\": \"forall 前提\""));
+    assert!(run_output.contains("\"验证依据\""));
     assert!(!run_output.contains("\"带验证的结论\""));
     assert!(!run_output.contains("\"原因\": \"推导事实\""));
     assert!(!run_output.contains("\"实例化\""));
@@ -6617,8 +6661,8 @@ claim:
             assert!(run_output.contains("\"statement\": \"x = 1\""));
             assert!(run_output.contains("\"type\": \"local assumption\""));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal claim output should retain its readable internal route:\n{}",
                 run_output
             );
         },
@@ -6653,8 +6697,8 @@ claim 1 = 1:
             assert!(run_output.contains("\"conclusion\": {"));
             assert!(run_output.contains("\"type\": \"cite equality fact\""));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal claim output should keep raw inside_results folded:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal claim output should retain its readable internal route:\n{}",
                 run_output
             );
         },
@@ -6770,9 +6814,9 @@ by cases 1 = 1:
 }
 
 #[test]
-fn by_cases_normal_output_lists_multiple_proved_goals_per_case() {
+fn by_cases_normal_output_lists_readable_internal_results() {
     run_with_large_stack(
-        "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+        "by_cases_normal_output_lists_readable_internal_results",
         || {
             let source_code = r#"
 by cases:
@@ -6787,7 +6831,7 @@ by cases:
 
             let mut runtime = Runtime::new_with_builtin_code();
             runtime.new_file_path_new_env_new_name_scope(
-                "by_cases_normal_output_lists_multiple_proved_goals_per_case",
+                "by_cases_normal_output_lists_readable_internal_results",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -6800,14 +6844,10 @@ by cases:
             );
             assert!(run_output.contains("\"type\": \"proof by cases\""));
             assert!(run_output.contains("\"type\": \"by cases proof\""));
-            assert!(run_output.contains("\"prove_goals\": ["));
-            assert!(run_output.contains("\"case_coverage\": {"));
-            assert!(run_output.contains("\"cases\": ["));
-            assert!(run_output.contains("\"reason\": \"case assumption\""));
-            assert!(run_output.contains("\"conclusions\": ["));
-            assert!(run_output.contains("\"impossible\": {"));
-            assert!(run_output.contains("\"role\": \"impossible fact\""));
-            assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
+            assert!(run_output.contains("\"inside_results\": ["));
+            assert!(run_output.contains("\"why_verified\": {"));
+            assert!(!run_output.contains("\"phases\": {"));
+            assert!(!run_output.contains("\"case_coverage\": {"));
             assert_no_legacy_acceptance_field(&run_output, "by cases");
             assert!(run_output.contains("\"1 = 1\""));
             assert!(run_output.contains("\"2 = 2\""));
@@ -6880,8 +6920,8 @@ by contra 1 = 1:
             assert!(run_output.contains("\"role\": \"reversed impossible fact\""));
             assert!(run_output.contains("\"statement\": \"1 = 1\""));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal by contra output should keep raw inside_results folded:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal by contra output should retain its readable internal route:\n{}",
                 run_output
             );
         },
@@ -6954,8 +6994,8 @@ by extension {1} = {1}
             assert!(run_output.contains("\"subset_checks\": ["));
             assert!(run_output.contains("\"reason\": \"set extensionality\""));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal output should keep raw by traces folded:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal output should retain its readable internal route:\n{}",
                 run_output
             );
         },
@@ -7059,8 +7099,8 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             assert!(run_output.contains("\"label\": \"chain_upper_bound\""));
             assert!(run_output.contains("\"trusted_conclusion\":"));
             assert!(
-                !run_output.contains("\"inside_results\": ["),
-                "normal output should keep raw by traces folded:\n{}",
+                run_output.contains("\"inside_results\": ["),
+                "normal output should retain its readable internal route:\n{}",
                 run_output
             );
         },

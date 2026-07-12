@@ -14,6 +14,7 @@ use std::process;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DETAIL_FLAG: &str = "-detail";
+const COMPACT_FLAG: &str = "-compact";
 const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
@@ -22,6 +23,19 @@ const ISOLATED_FLAG: &str = "-isolated";
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let detail_output = remove_flag(&mut args, DETAIL_FLAG);
+    let compact_output = remove_flag(&mut args, COMPACT_FLAG);
+    if detail_output && compact_output {
+        eprintln!("-compact and -detail cannot be used together");
+        print_help_message();
+        process::exit(2);
+    }
+    let output_style = if compact_output {
+        OutputStyle::Compact
+    } else if detail_output {
+        OutputStyle::Detailed
+    } else {
+        OutputStyle::Normal
+    };
     let strict_mode = remove_flag(&mut args, STRICT_FLAG);
     let summarize_output = remove_flag(&mut args, SUMMARIZE_FLAG);
     let force_isolated = remove_flag(&mut args, ISOLATED_FLAG);
@@ -65,7 +79,7 @@ pub fn run_cli() {
                 };
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
-                runtime.detail_output = detail_output;
+                runtime.set_output_style(output_style);
                 runtime.strict_mode = strict_mode;
                 runtime.output_language = output_language;
 
@@ -99,7 +113,7 @@ pub fn run_cli() {
                 };
                 main_flag_file(
                     file_path.as_str(),
-                    detail_output,
+                    output_style,
                     strict_mode,
                     output_language,
                     summarize_output,
@@ -119,7 +133,7 @@ pub fn run_cli() {
                 };
                 main_flag_repo(
                     repo_path.as_str(),
-                    detail_output,
+                    output_style,
                     strict_mode,
                     output_language,
                     summarize_output,
@@ -131,7 +145,7 @@ pub fn run_cli() {
                 let (ok, output) = match main_flag_runner(
                     &args,
                     &mut index,
-                    detail_output,
+                    output_style,
                     strict_mode,
                     output_language,
                     force_isolated,
@@ -154,7 +168,7 @@ pub fn run_cli() {
                 let (ok, output, save_path) = match main_flag_graph(
                     &args,
                     &mut index,
-                    detail_output,
+                    output_style,
                     strict_mode,
                     output_language,
                     force_isolated,
@@ -191,6 +205,21 @@ pub fn run_cli() {
                 if !ok {
                     process::exit(1);
                 }
+                return;
+            }
+            "-session" => {
+                index += 1;
+                if index != args.len() {
+                    eprintln!("-session does not accept positional arguments");
+                    print_help_message();
+                    process::exit(2);
+                }
+                run_session_with_output_style_and_strict_and_language(
+                    output_style,
+                    strict_mode,
+                    output_language,
+                    force_isolated,
+                );
                 return;
             }
             "-latex" => {
@@ -384,11 +413,12 @@ pub fn run_cli() {
         }
     }
 
-    run_repl_with_detail_output_and_strict_and_language(
+    run_repl_with_output_style_and_strict_and_language_and_isolation(
         VERSION,
-        detail_output,
+        output_style,
         strict_mode,
         output_language,
+        force_isolated,
     );
 }
 
@@ -456,7 +486,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
 
 fn main_flag_file(
     file_flag: &str,
-    detail_output: bool,
+    output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
     summarize_output: bool,
@@ -491,28 +521,29 @@ fn main_flag_file(
         }
     };
 
-    let output = run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
-        path_string.as_str(),
-        detail_output,
-        strict_mode,
-        output_language,
-        summarize_output,
-        force_isolated,
-    );
+    let output =
+        run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation(
+            path_string.as_str(),
+            output_style,
+            strict_mode,
+            output_language,
+            summarize_output,
+            force_isolated,
+        );
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
 fn main_flag_repo(
     repo_path: &str,
-    detail_output: bool,
+    output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
     summarize_output: bool,
 ) {
     let path = remove_windows_carriage_return(repo_path);
-    let output = run_source_code_in_repository_for_cli_with_summary_and_language(
+    let output = run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language(
         path.as_str(),
-        detail_output,
+        output_style,
         strict_mode,
         output_language,
         summarize_output,
@@ -523,13 +554,13 @@ fn main_flag_repo(
 fn main_flag_runner(
     args: &[String],
     index: &mut usize,
-    detail_output: bool,
+    output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
     force_isolated: bool,
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-runner")?;
-    let hide_file_paths = !detail_output;
+    let hide_file_paths = !output_style.is_detailed();
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
@@ -576,13 +607,13 @@ fn main_flag_runner(
 fn main_flag_graph(
     args: &[String],
     index: &mut usize,
-    detail_output: bool,
+    output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
     force_isolated: bool,
 ) -> Result<(bool, String, Option<String>), String> {
     let target_flag = read_any_value_after_flag(args, index, "-graph")?;
-    let hide_file_paths = !detail_output;
+    let hide_file_paths = !output_style.is_detailed();
     match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
@@ -826,7 +857,7 @@ fn upgrade_message(version: &str) -> String {
 }
 
 fn help_message() -> String {
-    let result = r#"litex : run Litex interactively in your terminal
+    let result = r#"litex : run Litex interactively in your terminal; use cwd/litex.config for local imports
 litex -f <file> : run a registered project file, or an isolated file when no project registers it
 litex -isolated -f <file> : force isolated file mode
 litex -r <project> : discover project/litex.config, then run its entrance file
@@ -834,6 +865,7 @@ litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <project> : run a project and return one wrapper JSON object
+litex -session : run a machine-readable project REPL for framed code blocks
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
 litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
@@ -847,7 +879,9 @@ litex -python -r <project> : compile supported definitions in the project entran
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
-litex -detail : include full trace details and raw source paths in JSON output
+litex -compact : show only result, type, line, and statement for each result
+litex : show normal output with internal statements and direct verification reasons
+litex -detail : include full audit trace details and raw source paths in JSON output
 litex -strict : reject user trust, trust have, and axiom statements after builtin initialization
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
@@ -881,6 +915,18 @@ mod tests {
     fn help_lists_summarize_command() {
         let message = help_message();
         assert!(message.contains("litex -summarize"));
+    }
+
+    #[test]
+    fn help_lists_compact_output() {
+        let message = help_message();
+        assert!(message.contains("litex -compact"));
+    }
+
+    #[test]
+    fn help_lists_session_command() {
+        let message = help_message();
+        assert!(message.contains("litex -session"));
     }
 
     #[test]

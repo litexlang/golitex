@@ -1191,7 +1191,7 @@ fn inside_results_value(
     _stmt: &Stmt,
     inside_results: &[StmtResult],
 ) -> JsonValue {
-    let should_show_inside_results = runtime.detail_output;
+    let should_show_inside_results = !runtime.is_compact_output();
     if !should_show_inside_results {
         return JsonValue::Array(vec![]);
     }

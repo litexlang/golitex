@@ -1,9 +1,12 @@
 # Litex Output Is Your Friend
 
-Current Litex output keeps ordinary results compact. Run with `-detail` to see
-`phases.verify_well_definedness`, `phases.verify_process`, and
-`phases.affect_environment`; environment changes are reported as
-`affect_environment.effects` rather than a top-level `store_facts` field.
+Litex has three views over the same recorded execution trace. `-compact` is
+for scanning code, ordinary output is the default reading view with internal
+statements and direct `why_verified` reasons, and `-detail` is for auditing.
+Detailed output additionally exposes `phases.verify_well_definedness`,
+`phases.verify_process`, and `phases.affect_environment`; environment changes
+appear as `affect_environment.effects` rather than a top-level `store_facts`
+field.
 
 ### Litex Supports Multiple Output Languages
 

@@ -8,6 +8,19 @@ pub enum RunMode {
     Repository,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OutputStyle {
+    Compact,
+    Normal,
+    Detailed,
+}
+
+impl OutputStyle {
+    pub fn is_detailed(self) -> bool {
+        self == OutputStyle::Detailed
+    }
+}
+
 pub struct Runtime {
     /// The module world for this top-level run. Imported modules execute in
     /// this Runtime and are selected by `execution_stack` frames.
@@ -17,6 +30,7 @@ pub struct Runtime {
     pub parsing_free_param_collection: FreeParamCollection,
     pub parsing_local_binding_scope_depth: usize,
     pub detail_output: bool,
+    pub output_style: OutputStyle,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
     pub loading_builtin_code: bool,
@@ -32,6 +46,7 @@ impl Runtime {
             parsing_free_param_collection: FreeParamCollection::new(),
             parsing_local_binding_scope_depth: 0,
             detail_output: false,
+            output_style: OutputStyle::Normal,
             strict_mode: false,
             output_language: OutputLanguage::English,
             loading_builtin_code: false,
@@ -60,6 +75,31 @@ impl Runtime {
 }
 
 impl Runtime {
+    pub fn set_output_style(&mut self, output_style: OutputStyle) {
+        self.output_style = output_style;
+        self.detail_output = output_style == OutputStyle::Detailed;
+    }
+
+    pub fn effective_output_style(&self) -> OutputStyle {
+        if self.detail_output {
+            OutputStyle::Detailed
+        } else {
+            self.output_style
+        }
+    }
+
+    pub fn is_compact_output(&self) -> bool {
+        self.effective_output_style() == OutputStyle::Compact
+    }
+
+    pub fn is_normal_output(&self) -> bool {
+        self.effective_output_style() == OutputStyle::Normal
+    }
+
+    pub fn is_detailed_output(&self) -> bool {
+        self.effective_output_style() == OutputStyle::Detailed
+    }
+
     pub fn current_file_path_rc(&self) -> Rc<str> {
         self.execution_stack
             .last()
@@ -361,6 +401,22 @@ impl Runtime {
                 module.main_file_path = path.to_string();
             }
         }
+    }
+
+    /// Make the discovered repository's root module the persistent environment for an
+    /// interactive REPL without executing its entrance file.
+    pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
+        let root_exports = self.module_manager.root_exports.clone();
+        let module_id = self.current_module_id();
+        let module = self
+            .module_manager
+            .module_mut(module_id)
+            .expect("repository entry module should exist");
+        module.main_local_imports = root_exports;
+        self.execution_stack
+            .last_mut()
+            .expect("repository REPL should have an execution frame")
+            .source_path = Rc::from(source_label);
     }
 
     /// Rebuild the module registry between independent runner items while reusing builtins.

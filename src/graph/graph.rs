@@ -217,6 +217,26 @@ fn render_graph_result(
     stmt_results: Vec<StmtResult>,
     runtime_error: Option<RuntimeError>,
 ) -> (bool, String) {
+    render_graph_from_stmt_results(
+        target_kind,
+        target_label,
+        hide_file_paths,
+        &runtime,
+        stmt_results.as_slice(),
+        runtime_error.as_ref(),
+    )
+}
+
+/// Render a relation graph from statements that have already run in one runtime.
+/// This lets interactive sessions expose their graph without replaying source.
+pub fn render_graph_from_stmt_results(
+    target_kind: &str,
+    target_label: &str,
+    hide_file_paths: bool,
+    runtime: &Runtime,
+    stmt_results: &[StmtResult],
+    runtime_error: Option<&RuntimeError>,
+) -> (bool, String) {
     let ok = runtime_error.is_none();
     let graph = GraphBuilder::from_stmt_results(&stmt_results);
     let mut fields = vec![
@@ -242,10 +262,10 @@ fn render_graph_result(
             target_json_value(target_kind, target_label, hide_file_paths),
         ),
     ];
-    if let Some(error) = runtime_error.as_ref() {
+    if let Some(error) = runtime_error {
         fields.push((
             "error".to_string(),
-            JsonValue::JsonString(display_runtime_error_json(&runtime, error, true)),
+            JsonValue::JsonString(display_runtime_error_json(runtime, error, true)),
         ));
     } else {
         fields.push(("error".to_string(), JsonValue::Null));

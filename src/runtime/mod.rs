@@ -14,5 +14,5 @@ mod runtime_store_arg_satisfy_param_type_when_not_defining_new_identifiers;
 mod runtime_store_fact;
 
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
-pub use runtime::{RunMode, Runtime};
+pub use runtime::{OutputStyle, RunMode, Runtime};
 pub use runtime_parsing_free_param_collection::{FreeParamCollection, FreeParamTypeAndLineFile};

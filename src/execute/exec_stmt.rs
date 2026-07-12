@@ -16,10 +16,6 @@ impl Runtime {
         result: Result<StmtResult, RuntimeError>,
         trusted: bool,
     ) -> Result<StmtResult, RuntimeError> {
-        if !self.detail_output {
-            return result;
-        }
-
         match result {
             Ok(result) => {
                 let trace = if trusted {

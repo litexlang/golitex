@@ -9,7 +9,12 @@ binary.
 litex [global options] [command]
 ```
 
-With no command, `litex` starts the interactive verifier REPL.
+With no command, `litex` starts the interactive verifier REPL. If the current
+directory directly contains `litex.config`, it discovers that project without
+running its entrance file. The persistent REPL environment can then load any
+root `[export]` on demand with `local import name`. Use `litex -isolated` to
+force the ordinary isolated REPL. Litex does not search parent directories for
+a project configuration.
 
 The CLI has one primary command per invocation. Global options are removed
 before the primary command is parsed, so they may appear before or after the
@@ -29,6 +34,8 @@ is command-oriented, not a general argument parser.
 
 | Option | Meaning |
 |--------|---------|
+| `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
+| *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
 | `-strict` | Reject user `trust`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
@@ -59,7 +66,7 @@ Current mappings:
 | `vi` | Vietnamese |
 | `id` | Indonesian |
 
-`-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
+`-compact` affects ordinary verifier commands. `-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
 `-summarize` affects ordinary verifier commands.
 They do not make module-management or tutorial placeholder commands functional.
 
@@ -79,7 +86,7 @@ litex -r examples/08_module_repository
 This means source code beginning with `-` should usually be put in a `.lit`
 file and run with `-f`.
 
-Because `-detail`, `-strict`, and `-summarize` are removed globally before
+Because `-compact`, `-detail`, `-strict`, and `-summarize` are removed globally before
 command parsing, do not use a standalone command value exactly equal to any of
 those flags. `-lang` also consumes the next token globally.
 
@@ -87,7 +94,8 @@ those flags. `-lang` also consumes the next token globally.
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start the interactive verifier REPL. |
+| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its entrance file. |
+| `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
 | `litex -e <code>` | Run a Litex source string. |
 | `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
@@ -145,6 +153,25 @@ Runner exit behavior:
 - exits with code `0` when `ok` is true;
 - exits with code `1` when the checked run fails or the target cannot be loaded;
 - exits with code `2` for CLI usage errors, such as a missing value.
+
+## Session Command
+
+`litex -session` starts a persistent, machine-readable verifier process. It
+uses the current directory's `litex.config` with the same no-entrance project
+startup as the ordinary REPL; `litex -isolated -session` disables that project
+context. It writes one JSON object per event and accepts these stdin frames:
+
+```text
+run <id> <utf8-byte-count>\n<source bytes>
+artifacts <id>
+close
+```
+
+`run` executes exactly one arbitrary, including multiline, source block in the
+same persistent Runtime. `artifacts` returns the accumulated summary and graph
+after successful blocks. The event values are `ready`, `block`, `artifacts`,
+`skipped`, and `protocol_error`; textual verifier output is returned in the
+JSON-string `trace` field so a client never has to parse terminal prompts.
 
 ## Graph Commands
 
