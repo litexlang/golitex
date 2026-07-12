@@ -1,7 +1,7 @@
 // Integers strictly above 0 are at least 1 (uses Z and order on R).
 
 pub const FUNDAMENTAL_NUMBER_PROPERTIES: &str = r#"
-proof_debt:
+trust:
     forall x Z, y Z:
         y < x
         =>:
@@ -58,7 +58,7 @@ thm has_rational_between, exists_rat_between, exists_rat_btwn:
             a < b
             =>:
                 exist q Q st {a < q < b}
-    proof_debt:
+    trust:
         exist q Q st {a < q < b}
 
 # Rational representation by integer numerator and nonzero integer denominator.

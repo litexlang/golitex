@@ -40,7 +40,7 @@ by thm Real::exists_seq_converging_to_real(sqrt(2))
 exist b seq(R) st {$Real::seq_converges(b, sqrt(2)), $Real::cauchy(b)}
 
 have E set
-proof_debt:
+trust:
     $Real::nonempty_subset(E)
     $Real::has_upper_bound(E)
 

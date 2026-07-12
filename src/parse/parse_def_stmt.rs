@@ -6,7 +6,7 @@ impl Runtime {
         if !tb.current_token_is_equal_to(LESS) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "template definition expects `template<...>:`; define the template name in the single body `have` or `suppose` statement".to_string(),
+                    "template definition expects `template<...>:`; define the template name in the single body `have` or `trust have` statement".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -369,8 +369,8 @@ impl Runtime {
         Ok(stmt_ok.into())
     }
 
-    pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(SUPPOSE)?;
+    pub fn parse_trust_have_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
         let mut param_def: Vec<ParamGroupWithParamType> = vec![];
         loop {
             match tb.current() {
@@ -394,7 +394,7 @@ impl Runtime {
             } else {
                 Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "`suppose ...:` facts must be written in an indented body".to_string(),
+                        "`trust have ...:` facts must be written in an indented body".to_string(),
                         tb.line_file.clone(),
                     ),
                 )))
@@ -1547,7 +1547,7 @@ impl Runtime {
             }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "template body only supports `have` and `suppose` definition statements"
+                    "template body only supports `have` and `trust have` definition statements"
                         .to_string(),
                     tb.line_file.clone(),
                 ),

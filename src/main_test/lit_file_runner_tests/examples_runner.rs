@@ -12,10 +12,10 @@ use super::helper::{
     print_slowest_run_labels, run_with_large_stack, spawn_with_large_stack,
     CITE_STD_EXAMPLES_SUBDIR, REPOSITORY_EXAMPLES_SUBDIR,
 };
-use super::mechanics_markdown_runner::run_the_mechanics_markdown_files_impl;
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
-const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "scripts/analysis-one/chapters_in_litex";
+const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
+const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -133,14 +133,14 @@ fn run_all_parallel_impl(include_std_examples: bool) {
             "--- run_all: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
         );
         run_examples_impl(include_std_examples);
-        run_the_mechanics_markdown_files_impl();
         run_analysis_one_chapters_impl();
+        run_mechanics_textbook_chapters_impl();
         run_runtime_contract_suite_impl();
         return;
     }
 
     println!(
-        "--- run_all: running examples, docs, Mechanics markdown, Analysis I chapters, and runtime contracts in parallel ---"
+        "--- run_all: running examples, docs, and runtime contracts in parallel; then textbook chapter suites ---"
     );
     let wall_start = Instant::now();
     let mut handles = Vec::new();
@@ -155,20 +155,6 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         spawn_with_large_stack("run_all_docs_large_stack", || run_docs_markdown_impl(true)),
     ));
     handles.push((
-        "Mechanics",
-        spawn_with_large_stack(
-            "run_all_mechanics_large_stack",
-            run_the_mechanics_markdown_files_impl,
-        ),
-    ));
-    handles.push((
-        "Analysis I chapters",
-        spawn_with_large_stack(
-            "run_all_analysis_one_chapters_large_stack",
-            run_analysis_one_chapters_impl,
-        ),
-    ));
-    handles.push((
         "runtime contracts",
         spawn_with_large_stack(
             "run_all_runtime_contracts_large_stack",
@@ -178,20 +164,24 @@ fn run_all_parallel_impl(include_std_examples: bool) {
 
     let mut failed_dataset_labels: Vec<&str> = Vec::new();
     for (label, handle) in handles {
-        match handle.join() {
-            Ok(()) => {
-                println!("--- run_all: {} dataset OK ---", label);
-            }
-            Err(panic_payload) => {
-                let panic_message = panic_payload_to_string(panic_payload);
-                println!(
-                    "--- run_all: {} dataset panicked ---\n{}",
-                    label, panic_message
-                );
-                failed_dataset_labels.push(label);
-            }
-        }
+        collect_run_all_dataset_result(label, handle, &mut failed_dataset_labels);
     }
+    collect_run_all_dataset_result(
+        "Analysis I chapters",
+        spawn_with_large_stack(
+            "run_all_analysis_one_chapters_large_stack",
+            run_analysis_one_chapters_impl,
+        ),
+        &mut failed_dataset_labels,
+    );
+    collect_run_all_dataset_result(
+        "Mechanics textbook chapters",
+        spawn_with_large_stack(
+            "run_all_mechanics_textbook_chapters_large_stack",
+            run_mechanics_textbook_chapters_impl,
+        ),
+        &mut failed_dataset_labels,
+    );
 
     println!(
         "--- run_all: parallel dataset wall time {:.2} ms ---",
@@ -204,16 +194,24 @@ fn run_all_parallel_impl(include_std_examples: bool) {
     );
 }
 
-#[test]
-fn run_the_mechanics_of_litex_proof() {
-    run_with_large_stack(
-        "run_the_mechanics_of_litex_proof_large_stack",
-        run_the_mechanics_of_litex_proof_impl,
-    );
-}
-
-fn run_the_mechanics_of_litex_proof_impl() {
-    run_the_mechanics_markdown_files_impl();
+fn collect_run_all_dataset_result(
+    label: &'static str,
+    handle: std::thread::JoinHandle<()>,
+    failed_dataset_labels: &mut Vec<&'static str>,
+) {
+    match handle.join() {
+        Ok(()) => {
+            println!("--- run_all: {} dataset OK ---", label);
+        }
+        Err(panic_payload) => {
+            let panic_message = panic_payload_to_string(panic_payload);
+            println!(
+                "--- run_all: {} dataset panicked ---\n{}",
+                label, panic_message
+            );
+            failed_dataset_labels.push(label);
+        }
+    }
 }
 
 #[test]
@@ -225,13 +223,31 @@ fn run_analysis_one_chapters() {
 }
 
 fn run_analysis_one_chapters_impl() {
+    run_textbook_chapters_impl(ANALYSIS_ONE_CHAPTERS_SUBDIR, "Analysis I chapters");
+}
+
+#[test]
+fn run_mechanics_textbook_chapters() {
+    run_with_large_stack(
+        "run_mechanics_textbook_chapters_large_stack",
+        run_mechanics_textbook_chapters_impl,
+    );
+}
+
+fn run_mechanics_textbook_chapters_impl() {
+    run_textbook_chapters_impl(
+        MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR,
+        "Mechanics textbook chapters",
+    );
+}
+
+fn run_textbook_chapters_impl(chapters_subdir: &'static str, textbook_name: &'static str) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let lit_file_paths =
-        collect_lit_files_recursive_under(&manifest_dir, ANALYSIS_ONE_CHAPTERS_SUBDIR);
+    let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, chapters_subdir);
     assert!(
         !lit_file_paths.is_empty(),
         "{} must contain at least one .lit file",
-        ANALYSIS_ONE_CHAPTERS_SUBDIR
+        chapters_subdir
     );
 
     let mut groups = Vec::new();
@@ -263,13 +279,13 @@ fn run_analysis_one_chapters_impl() {
 
     let group_count = groups.len();
     println!(
-        "--- Analysis I chapters: running {} .lit file(s) in parallel ---",
-        group_count
+        "--- {}: running {} .lit file(s) in parallel ---",
+        textbook_name, group_count
     );
     let wall_start = Instant::now();
     let mut handles = Vec::new();
     for group in groups {
-        let thread_name = format!("run_analysis_one_chapter_group_{}", group.group_index);
+        let thread_name = format!("run_textbook_chapter_group_{}", group.group_index);
         handles.push(spawn_with_large_stack(thread_name.as_str(), move || {
             run_litex_run_group(group)
         }));
@@ -284,10 +300,10 @@ fn run_analysis_one_chapters_impl() {
                 group_summaries.push(LitexRunGroupSummary {
                     group_index: usize::MAX,
                     run_durations_ms: Vec::new(),
-                    failed_labels: vec!["Analysis I chapters worker panic".to_string()],
+                    failed_labels: vec![format!("{} worker panic", textbook_name)],
                     failure_outputs: vec![format!(
-                        "=== [PANICKED] Analysis I chapters worker ===\n{}",
-                        panic_message
+                        "=== [PANICKED] {} worker ===\n{}",
+                        textbook_name, panic_message
                     )],
                 });
             }
@@ -306,17 +322,21 @@ fn run_analysis_one_chapters_impl() {
 
     if failed_labels.is_empty() {
         println!(
-            "--- Analysis I chapters: {} .lit file(s), all OK ({:.2} ms wall) ---",
+            "--- {}: {} .lit file(s), all OK ({:.2} ms wall) ---",
+            textbook_name,
             run_durations_ms.len(),
-            wall_start.elapsed().as_secs_f64() * 1000.0
+            wall_start.elapsed().as_secs_f64() * 1000.0,
         );
-        print_slowest_run_labels("Analysis I chapter runs", run_durations_ms.as_slice());
+        print_slowest_run_labels(
+            format!("{} runs", textbook_name).as_str(),
+            run_durations_ms.as_slice(),
+        );
         for (label, duration_ms) in run_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
     } else {
         print_slowest_run_labels(
-            "Analysis I chapter runs before failure",
+            format!("{} runs before failure", textbook_name).as_str(),
             run_durations_ms.as_slice(),
         );
         for output in failure_outputs.iter() {
@@ -326,7 +346,8 @@ fn run_analysis_one_chapters_impl() {
 
     assert!(
         failed_labels.is_empty(),
-        "Analysis I chapter run(s) failed: {}",
+        "{} run(s) failed: {}",
+        textbook_name,
         failed_labels.join(", ")
     );
 }

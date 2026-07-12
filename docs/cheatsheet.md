@@ -57,7 +57,7 @@ object-introduction family of `have` statements listed below.
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `fact` | The fact must be well-defined. | The fact must be verified as true. | Stores the fact and runs inference. |
-| `proof_debt` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
+| `trust` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
 | `axiom name` | Rejected in strict mode; the `? forall ...` fact must be well-defined. | None. | Stores a named theorem-like `forall` fact for matching and `by thm`. |
 | `suppose` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stores names, parameter type facts, attached facts, and inferred consequences. |
 | `have a R` | `a` must be unused; `R` must be a well-defined object. | Checks `R` is nonempty, for example `$is_nonempty_set(R)`. | Stores the object name `a`, stores `a $in R`, and runs inference. |
@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `local_import`, `trust import`, and `trust local_import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, `local import`, `trust import`, and `trust local import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -126,8 +126,8 @@ object-introduction family of `have` statements listed below.
 |---|---|---|---|
 | `litex.config` | `[entrance]` selects one `.lit` entry; `[export]` declares local files and child projects. Paths, names, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface and canonical import graph. |
 | `import` | In project mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs the imported module entrance once. | Registers import dependencies and reuses cached modules. |
-| `local_import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity; a uniquely supplied imported member may then be used bare, while local definitions shadow imports and ambiguous members need `module::name`. |
-| `trust import` / `trust local_import` | Use the same declared targets, parsing, path validation, and cycle checks as their ordinary forms. They are rejected in strict mode. | Skip well-definedness and proof processing for the loaded target and its nested dependency closure. | Apply direct environment effects only, and mark the whole top-level run with an explicit trusted-import dependency. |
+| `local import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity; a uniquely supplied imported member may then be used bare, while local definitions shadow imports and ambiguous members need `module::name`. |
+| `trust import` / `trust local import` | Use the same declared targets, parsing, path validation, and cycle checks as their ordinary forms. They are rejected in strict mode. | Skip well-definedness and proof processing for the loaded target and its nested dependency closure. | Apply direct environment effects only, and mark the whole top-level run with an explicit trusted-import dependency. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |

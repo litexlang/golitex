@@ -1,4 +1,4 @@
-proof_debt:
+trust:
     forall a R, b R:
         a + b = b + a
 

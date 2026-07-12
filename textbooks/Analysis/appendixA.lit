@@ -1,0 +1,422 @@
+# Appendix A
+
+"""
+This file is a Litex-facing translation of Tao's Appendix A, "The basics of
+mathematical logic".
+
+The appendix has two jobs here.  First, it should teach the logical ideas that
+ordinary mathematical writing relies on: factual statements, implication,
+proof by contradiction, quantifiers, and equality.  Second, it should show how
+Litex expresses those ideas.  For that reason this file does not quote the
+source paragraph by paragraph.  It follows the source order where that is
+helpful, but uses its own narrative: the mathematical principle is stated
+directly, and the nearby Litex code shows the corresponding proof pattern.
+"""
+
+# A.0 How to read Litex proof steps
+
+"""
+In this appendix, and in the Analysis I chapter files, most Litex proof steps
+should be read as a small number of ordinary mathematical moves.  Objects are
+numbers, sets, functions, and expressions.  A `prop` defines a predicate or
+relation.  A statement asserts a fact about objects.  Once a statement is
+accepted, it becomes a fact that later lines can reuse.
+
+The verifier then tries familiar proof routes: builtin mathematical rules,
+matching an already known fact, matching a known `forall` fact, unfolding a
+definition, calling a named theorem, proving a local `claim`, giving a witness,
+or using the standard patterns of contradiction, cases, and induction.
+
+The point is compression without opacity: the chapter files keep the number of
+proof moves small, but the output can still say which route accepted a fact and
+which inferred facts entered the later context.
+"""
+
+2 + 3 = 5
+
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+
+"""
+The first fact is closed by ordinary arithmetic.  The `forall` fact says that
+under the local assumption `x = 2`, the conclusion `x + 1 = 3` follows.  Later
+sections use the same style for larger logical patterns, but the reading is
+the same: introduce objects and assumptions, assert facts, and let accepted
+facts grow the context.
+"""
+
+# A.1 Mathematical statements
+
+"""
+A mathematical proof is built from factual statements about objects and
+relations.  Numbers, sets, functions, vectors, and expressions such as
+`2 + 3 * 5` are objects or object-forming expressions.  A factual statement is
+formed only after a relation or predicate is applied to such objects: equality,
+order, membership, subsethood, or a user-defined `prop`.
+
+This distinction matters in Litex.  A definition is not true or false; it adds
+an object, predicate, or theorem interface to the context.  A factual statement
+is the thing the verifier tries to prove.  If the statement is ill-formed, the
+result is an error.  If it is well-formed but not justified by the current
+context and builtin rules, the verifier reports failure rather than treating it
+as a proved fact.
+"""
+
+2 + 2 = 4
+not 2 + 2 = 5
+
+"""
+Built-in relations such as `=`, `<`, `>=`, `$in`, and `$subset` are not the
+only relations available.  A `prop` defines a named predicate or relation.  The
+definition below says that `larger_than(x,y)` is exactly the ordinary order
+relation `x > y` on real numbers.
+"""
+
+prop larger_than(x, y R):
+    x > y
+
+$larger_than(3, 2)
+
+"""
+Compound factual statements use logical connectives.  In Litex, `and` requires
+all conjuncts to be proved.  `or` requires at least one branch to be proved.
+`not` negates a factual statement.  These are not decorative words; they change
+the shape of the proof obligation.
+"""
+
+2 + 2 = 4 and 3 + 3 = 6
+
+2 + 2 = 4 or 2 + 3 = 6
+
+not 2 + 2 = 12
+
+"""
+An implication is written in Litex as a `forall` fact with assumptions before
+`=>:` and conclusions after it.  A parameter-free implication uses `forall:`.
+Most mathematical implications have parameters, as in "for every real number
+`x`, if `x > 0`, then `x + 1 > 1`".
+"""
+
+forall:
+    2 + 2 = 4
+    =>:
+        3 + 3 = 6
+
+forall x R:
+    x > 0
+    =>:
+        x + 1 > 1
+
+"""
+Equivalence, or "if and only if", is written with `<=>:`.  The left side is
+placed under `=>:` and the right side under `<=>:`.  The verifier checks both
+implication directions.
+"""
+
+forall:
+    =>:
+        2 + 2 = 4
+    <=>:
+        3 + 3 = 6
+
+# A.2 Implication
+
+"""
+Implication is conditional.  The statement "if X, then Y" does not assert that
+X is true.  It says that if X is available as an assumption, then Y can be
+deduced.  When the hypothesis is false, the implication is vacuous: it may be
+true while giving no useful information about the conclusion.
+
+The following example says that every integer satisfying `x = 2` also satisfies
+`x^2 = 4`.  It does not say that every integer is equal to `2`.
+"""
+
+forall x Z:
+    x = 2
+    =>:
+        x^2 = 4
+
+"""
+A false hypothesis can still appear as the hypothesis of a valid implication.
+Inside the implication, Litex reasons under the assumption `2 + 2 = 5`, so the
+equality chain may rewrite `4 + 4` as `10`.  The example is not claiming that
+`2 + 2 = 5`; it is showing that a conditional statement can be true because
+its hypothesis is never actually satisfied.
+"""
+
+forall x Z:
+    2 + 2 = 5
+    =>:
+        4 + 4 = (2 + 2) + (2 + 2) = 5 + 5 = 10
+
+"""
+A direct implication proof usually starts from the hypotheses and rewrites or
+deduces the desired conclusion.  Here the hypothesis `2*x + 3 = 7` determines
+the value of the real number `x`.
+"""
+
+forall x R:
+    2 * x + 3 = 7
+    =>:
+        x = (2 * x) / 2 = (7 - 3) / 2 = 2
+
+"""
+Theorem A.2.4. For every integer `n`, the product `n(n+1)` is even.
+
+Litex uses the usual definition: an integer is even when it is twice another
+integer.  The proof splits into the two parity cases.  If `n` is even, the
+factor `n` supplies the factor of `2`; if `n` is odd, then `n+1` is even.
+"""
+
+prop is_even(x Z):
+    exist k Z st {x = 2 * k}
+
+thm integer_product_successor_even:
+    ? forall n Z:
+        $is_even(n * (n + 1))
+    claim:
+        prove:
+            exist k Z st {n * (n + 1) = 2 * k}
+        by cases:
+            prove:
+                exist k Z st {n * (n + 1) = 2 * k}
+            case n % 2 = 0:
+                obtain m from exist m Z st {n = 2 * m}
+                witness exist k Z st {n * (n + 1) = 2 * k} from m * (n + 1):
+                    n * (n + 1) = (2 * m) * (n + 1)
+                    (2 * m) * (n + 1) = 2 * (m * (n + 1))
+                    n * (n + 1) = 2 * (m * (n + 1))
+            case n % 2 = 1:
+                (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
+                obtain m from exist m Z st {n + 1 = 2 * m}
+                witness exist k Z st {n * (n + 1) = 2 * k} from n * m:
+                    n * (n + 1) = n * (2 * m)
+                    n * (2 * m) = 2 * (n * m)
+                    n * (n + 1) = 2 * (n * m)
+    $is_even(n * (n + 1))
+
+"""
+Corollary A.2.5. A specific large integer also has even product with its
+successor.  The point is not to compute the integer's parity by hand; the
+general theorem already handles both cases.
+"""
+
+have some_number Z = (253 + 142) * 123 - (423 + 198) * 342 + 538 - 213
+by thm integer_product_successor_even(some_number)
+$is_even(some_number * (some_number + 1))
+
+"""
+Proof by contradiction is the contrapositive idea in action: if an assumption
+would imply something false, then the assumption itself must be false.  A
+standard example is that there is no largest integer.  If `M` were largest,
+then the integer `M + 1` would still have to be at most `M`, contradicting the
+basic order fact `M < M + 1`.
+"""
+
+prop is_largest_integer(M Z):
+    forall n Z:
+        n <= M
+
+thm no_largest_integer:
+    ? forall :
+        not exist M Z st {$is_largest_integer(M)}
+    by contra:
+        ? not exist M Z st {$is_largest_integer(M)}
+        obtain M from exist M Z st {$is_largest_integer(M)}
+        M + 1 $in Z
+        M + 1 <= M
+        M < M + 1
+        impossible M + 1 <= M
+
+# A.3 The structure of proofs
+
+"""
+Section A.3 is mostly about how to think through and write proofs fluently:
+working forward from hypotheses, working backward from a desired conclusion,
+splitting into cases, and arranging the finished argument so that it is easy to
+read.  This is important mathematical training, but it is not a new
+mathematical object with a one-to-one Litex definition.
+
+The Litex counterpart is proof style itself.  The same ideas appear as
+explicit assumptions, short local `claim` blocks, case splits, contradiction
+blocks, theorem calls, witnesses, and equality chains.  The file therefore
+records the proof-writing lesson in this prose note rather than inventing a
+fake formal predicate for "good proof structure".
+"""
+
+# A.4 Variables and quantifiers
+
+"""
+Tao uses the standard word "variable".  Litex deliberately thinks in terms of
+introduced objects.  The word "variable" can suggest that a value keeps
+changing, but in a proof context that is not what is happening.  When a name is
+introduced, it denotes one fixed object whose exact value may be unknown.
+
+Thus in `forall x R:`, `exist x R st {...}`, and `prop is_even(x Z):`, the name
+`x` is an introduced object with a declared type or domain.  A universal object
+is arbitrary; the proof must work no matter which object was introduced.  An
+existential object is a witness to be produced or extracted.  A predicate
+parameter is the object whose property the predicate describes.
+
+This is the Litex version of the usual free/bound variable distinction.  A
+formula such as `x + 3 = 5` is not meaningful until `x` has been introduced
+with a type.  Quantifiers introduce the object and determine who chooses it:
+for `forall`, the proof must handle an arbitrary object; for `exist`, the
+proof may provide one suitable witness.
+"""
+
+# A.5 Nested quantifiers
+
+"""
+Nested quantifiers record the order in which objects are introduced.  In
+`forall n Z: exist m Z st {m > n}`, the witness `m` may depend on the already
+introduced arbitrary integer `n`; choosing `m = n + 1` works.  Reversing the
+order would ask for one fixed integer that is larger than every integer, which
+is false.
+"""
+
+thm every_integer_has_larger_integer:
+    ? forall n Z:
+        exist m Z st {m > n}
+    witness exist m Z st {m > n} from n + 1:
+        n + 1 $in Z
+        n < n + 1
+
+prop is_larger_than_every_integer(m Z):
+    forall n Z:
+        m > n
+
+thm no_integer_larger_than_every_integer:
+    ? forall :
+        not exist m Z st {$is_larger_than_every_integer(m)}
+    by contra:
+        ? not exist m Z st {$is_larger_than_every_integer(m)}
+        obtain m from exist m Z st {$is_larger_than_every_integer(m)}
+        m + 1 $in Z
+        m > m + 1
+        m < m + 1
+        impossible m > m + 1
+
+"""
+Negating quantifiers also changes their shape.  The negation of a universal
+statement is the existence of a counterexample, while the negation of an
+existential statement says every candidate fails.  Litex keeps these forms
+explicit as `not forall ...` and `not exist ...`; when a proof needs an actual
+counterexample or an actual witness, it must introduce that object in the
+corresponding proof context.
+"""
+
+# A.7 Equality
+
+"""
+Equality is the central relation between two objects of the same kind.  Litex
+keeps ordinary equality `=` as a builtin factual relation, so the reflexive,
+symmetric, transitive, and substitution rules are not added as user-level
+axioms.  The following checked statements show those rules in the style of this
+appendix.
+"""
+
+thm equality_reflexive_demo:
+    ? forall x R:
+        x = x
+
+thm equality_symmetric_demo:
+    ? forall x, y R:
+        x = y
+        =>:
+            y = x
+
+thm equality_transitive_demo:
+    ? forall x, y, z R:
+        x = y
+        y = z
+        =>:
+            x = z
+
+"""
+Equality may be substituted through operations and functions.  Tao gives
+examples such as `2x = 2y`, `sin(x) = sin(y)`, and `x+z = y+z`.  This appendix
+does not import the trigonometry module just to mention `sin`; the generic
+function statement below is the same substitution principle for any real-valued
+function, including `sin` once that function is in scope.
+"""
+
+thm equality_substitution_for_real_operations:
+    ? forall x, y, z R:
+        x = y
+        =>:
+            2 * x = 2 * y
+            x + z = y + z
+
+thm equality_substitution_for_real_function:
+    ? forall f fn(t R) R, x, y R:
+        x = y
+        =>:
+            f(x) = f(y)
+
+"""
+Substitution also applies to properties and relations.  If an integer `n` is
+odd and `n = m`, then `m` is odd.  If also `n > k`, then the same equality lets
+us conclude `m > k`.
+"""
+
+prop is_odd_integer(n Z):
+    n % 2 = 1
+
+thm equality_substitution_for_oddness_and_order:
+    ? forall n, m, k Z:
+        $is_odd_integer(n)
+        n = m
+        n > k
+        =>:
+            $is_odd_integer(m)
+            m > k
+    m % 2 = n % 2
+    n % 2 = 1
+    m % 2 = 1
+    $is_odd_integer(m)
+    m > k
+
+"""
+Chained equalities combine substitution with transitivity.  Tao's example has
+`x = sin(y)` and `y = z^2`, then concludes `x = sin(z^2)`.  The generic
+function version below captures the same proof shape without adding a
+trigonometry dependency to Appendix A.
+"""
+
+thm equality_substitution_chain_for_function:
+    ? forall f fn(t R) R, x, y, z R:
+        x = f(y)
+        y = z^2
+        =>:
+            f(y) = f(z^2)
+            x = f(z^2)
+
+"""
+The source also mentions modular arithmetic, where one may treat `12` and `2`
+as equal modulo `10`.  Litex keeps ordinary integer equality fixed: `12 = 2`
+is false as an integer statement.  The modular idea is instead represented by
+a relation saying that two integers have the same remainder modulo `10`, and
+operations must respect that relation.
+"""
+
+prop has_same_remainder_mod_10(a, b Z):
+    a % 10 = b % 10
+
+thm modular_remainder_equality_example:
+    ? forall :
+        $has_same_remainder_mod_10(12, 2)
+        $has_same_remainder_mod_10(12 + 5, 2 + 5)
+    12 % 10 = 2
+    2 % 10 = 2
+    12 % 10 = 2 % 10
+    $has_same_remainder_mod_10(12, 2)
+    (12 + 5) % 10 = 17 % 10 = 7
+    (2 + 5) % 10 = 7 % 10 = 7
+    (12 + 5) % 10 = (2 + 5) % 10
+    $has_same_remainder_mod_10(12 + 5, 2 + 5)
+
+# Final audit (2026-07-12): no direct non-exercise `trust` or `abstract_prop`
+# marker occurs in Appendix A.

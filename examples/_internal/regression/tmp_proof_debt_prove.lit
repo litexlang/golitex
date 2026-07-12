@@ -4,4 +4,4 @@ claim:
             x = 1
             =>:
                 x = 1
-        proof_debt x = 1
+        trust x = 1

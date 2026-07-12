@@ -1476,7 +1476,7 @@ mod tests {
     #[test]
     fn theorem_backed_function_records_justification_fact() {
         let output = graph_output(
-            "thm self_eq:\n    ? forall x R:\n        x = x\n    x = x\nhave fn identity by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n    proof_debt exist! y R st {y = x}\n    by thm self_eq(x)\n    exist! y R st {y = x}\n",
+            "thm self_eq:\n    ? forall x R:\n        x = x\n    x = x\nhave fn identity by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n    trust exist! y R st {y = x}\n    by thm self_eq(x)\n    exist! y R st {y = x}\n",
         );
 
         assert!(output.contains(r#""from": "fact:thm:self_eq""#));

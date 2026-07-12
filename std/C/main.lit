@@ -17,13 +17,13 @@ have fn conj(a &C) &C = (&C{a}.re, -&C{a}.im)
 have fn normSq(z &C) R = &C{z}.re^2 + &C{z}.im^2
 have fn ofReal(x R) &C = (x, 0)
 
-proof_debt:
+trust:
     forall z &C:
         0 <= normSq(z)
 
 have fn norm(z &C) R = sqrt(normSq(z))
 
-proof_debt:
+trust:
     forall z &C:
         0 <= norm(z)
         norm(z)^2 = normSq(z)

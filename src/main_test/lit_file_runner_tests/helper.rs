@@ -1,13 +1,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 const SLOWEST_RUNS_TO_PRINT: usize = 10;
-pub(super) const THE_MECHANICS_SUBDIR: &str = "scripts/The-Mechanics-of-Litex-Proof";
 pub(super) const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/_internal/std_imports";
 pub(super) const REPOSITORY_EXAMPLES_SUBDIR: &str = "examples/08_module_repository";
 pub(super) const SKETCH_EXAMPLES_SUBDIR: &str = "examples/_internal/sketch";
@@ -111,10 +108,6 @@ fn runtime_error_line_and_previous(error: &RuntimeError) -> (usize, Option<&Runt
             (error.line_file.0, error.previous_error.as_deref())
         }
     }
-}
-
-pub(super) fn the_mechanics_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join(THE_MECHANICS_SUBDIR)
 }
 
 /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
@@ -226,72 +219,6 @@ pub(super) fn litex_snippets_from_markdown_files(
         }
     }
     out
-}
-
-pub(super) fn run_single_the_mechanics_chapter_markdown_file_impl(
-    chapter_filename: &str,
-    chapter_label: &str,
-) {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let chapter_path = the_mechanics_dir(&manifest_dir).join(chapter_filename);
-    assert!(
-        chapter_path.is_file(),
-        "{} markdown file must exist at {:?}",
-        chapter_label,
-        chapter_path
-    );
-
-    let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_path.clone()]);
-    assert!(
-        !snippets.is_empty(),
-        "{} markdown file must contain ```litex``` blocks",
-        chapter_label
-    );
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
-
-    let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
-    let wall_start = Instant::now();
-    for (snippet_index, (label, source_code, source_path)) in snippets.iter().enumerate() {
-        if snippet_index > 0 {
-            runtime.reset_for_isolated_runner_item();
-            runtime.set_current_user_lit_file_path(source_path.as_str());
-        }
-
-        let normalized_source = remove_windows_carriage_return(source_code);
-        let start_snippet = Instant::now();
-        let (stmt_results, runtime_error) =
-            run_source_code(normalized_source.as_str(), &mut runtime);
-        let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
-
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        if !run_succeeded {
-            let failure_location = format_litex_failure_location(label, &runtime_error);
-            panic!(
-                "{} markdown litex snippet FAILED at {}:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                chapter_label, failure_location, run_output, failure_location
-            );
-        }
-
-        snippet_durations_ms.push((label.clone(), duration_ms));
-    }
-
-    println!(
-        "--- {} markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
-        chapter_label,
-        snippets.len(),
-        wall_start.elapsed().as_secs_f64() * 1000.0
-    );
-    print_slowest_run_labels(
-        format!("{} markdown snippets", chapter_label).as_str(),
-        snippet_durations_ms.as_slice(),
-    );
-    for (label, duration_ms) in snippet_durations_ms.iter() {
-        println!("  OK  {:.2} ms  {}", duration_ms, label);
-    }
 }
 
 /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).

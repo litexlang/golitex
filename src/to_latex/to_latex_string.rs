@@ -695,13 +695,13 @@ impl DefLetStmt {
         match self.facts.len() {
             0 => format!(
                 r"\operatorname{{{}}}\, {}",
-                SUPPOSE,
+                format!("{} {}", TRUST, HAVE),
                 self.param_def.to_latex_string()
             ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}",
-                    SUPPOSE,
+                    format!("{} {}", TRUST, HAVE),
                     self.param_def.to_latex_string()
                 )];
                 for fact in &self.facts {
@@ -1283,7 +1283,7 @@ impl ProofDebtStmt {
         if self.facts.len() == 1 {
             format!(
                 r"\operatorname{{{}}} {}",
-                PROOF_DEBT,
+                TRUST,
                 self.facts[0].to_latex_string()
             )
         } else {
@@ -1295,7 +1295,7 @@ impl ProofDebtStmt {
                 .join(" \\\\\n");
             format!(
                 r"\operatorname{{{}}}\colon \begin{{aligned}}{}\end{{aligned}}",
-                PROOF_DEBT, rows
+                TRUST, rows
             )
         }
     }

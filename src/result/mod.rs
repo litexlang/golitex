@@ -4,6 +4,7 @@ mod def_alias_stmt_result;
 mod def_interface_stmt_result;
 mod def_obj_stmt_result;
 mod def_predicate_stmt_result;
+mod execution_trace;
 mod fact_result;
 mod fact_unknown;
 mod proof_block_stmt_result;
@@ -20,6 +21,9 @@ pub use def_alias_stmt_result::DefAliasStmtResult;
 pub use def_interface_stmt_result::DefInterfaceStmtResult;
 pub use def_obj_stmt_result::DefObjStmtResult;
 pub use def_predicate_stmt_result::DefPredicateStmtResult;
+pub use execution_trace::{
+    ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,
+};
 pub use fact_result::{FactResult, FactStmtResult};
 pub use fact_unknown::{
     AndFactUnknown, AtomicFactUnknown, ChainFactUnknown, ExistFactUnknown, FactUnknown,

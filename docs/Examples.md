@@ -181,7 +181,7 @@ have I set
 have s nonempty_set
 have g fn(alpha I) s
 
-proof_debt forall X s:
+trust forall X s:
     $is_nonempty_set(X)
 
 $is_nonempty_set(general_cart(I, s, g))
@@ -1728,7 +1728,7 @@ forall n N:
 - Purpose: Shows the trusted regularity/foundation step for a nonempty set.
 
 ```litex
-proof_debt $is_nonempty_set({1, 2})
+trust $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -3330,7 +3330,7 @@ or a background interface.
 
 ```litex
 abstract_prop p(x)
-proof_debt $p(0)
+trust $p(0)
 $p(0)
 ```
 
@@ -3345,7 +3345,7 @@ Purpose: introduce local names together with assumed facts about them.
   and inferred consequences.
 
 ```litex
-suppose a R:
+trust have a R:
     a = 1
 
 a $in R
@@ -3580,7 +3580,7 @@ prop is_one(x R):
 $is_one(1)
 
 abstract_prop related(x, y)
-proof_debt $related(1, 1)
+trust $related(1, 1)
 $related(1, 1)
 ```
 
@@ -3688,7 +3688,7 @@ batch that commits only if every nested statement succeeds.
 
 - Well-definedness / structural checks: each nested statement performs its own
   checks; `try` rejects control statements such as `clear`, `import`, and
-  `local_import`.
+  `local import`.
 - Truth verification: nested statements verify normally.
 - Environment effects: `sketch` has no outer effect; `try` commits the child
   environment into the parent environment on success.
@@ -3809,9 +3809,9 @@ or clear the current environment. These examples are syntax only because they
 depend on local files or installed modules.
 
 - Well-definedness / structural checks: `litex.config` declarations and
-  `local_import` bindings are validated during discovery; `import` resolves a
+  `local import` bindings are validated during discovery; `import` resolves a
   module; `clear` has no structural checks. `trust import` and
-  `trust local_import` use the same declared targets and validation.
+  `trust local import` use the same declared targets and validation.
 - Truth verification: imported modules and declared files verify normally when
   loaded. A trusted import deliberately skips this phase for its target and
   transitive imports, and is rejected by strict mode.

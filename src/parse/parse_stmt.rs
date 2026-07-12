@@ -6,10 +6,9 @@ impl Runtime {
             ALIAS => self.parse_alias_stmt(tb),
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
-            SUPPOSE => self.parse_def_let_stmt(tb),
             LET => Err(parse_stmt_error(
                 tb,
-                "`let` has been removed; use `suppose` for unproved local object assumptions",
+                "`let` has been removed; use `trust have` for trusted local object assumptions",
             )),
             HAVE => match tb.token_at_add_index(1) {
                 TUPLE => self.parse_have_tuple_stmt(tb),
@@ -33,7 +32,6 @@ impl Runtime {
                 _ => self.parse_have_obj_stmt(tb),
             },
             OBTAIN => self.parse_obtain_exist_stmt(tb),
-            PROOF_DEBT => self.parse_proof_debt_stmt(tb),
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
@@ -70,7 +68,7 @@ impl Runtime {
                 tb,
                 "`export` is configured in litex.config and is not a Litex statement",
             )),
-            LOCAL_IMPORT => self.parse_local_import_stmt(tb),
+            LOCAL => self.parse_local_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
@@ -114,6 +112,16 @@ mod parse_stmt_diagnostic_tests {
         parse_error.msg
     }
 
+    fn parse_one_stmt(source_code: &str) -> Result<Stmt, RuntimeError> {
+        let mut runtime = Runtime::new();
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
+            .expect("tokenize statement");
+        assert_eq!(blocks.len(), 1, "{source_code:?}");
+        runtime.parse_stmt(&mut blocks[0])
+    }
+
     #[test]
     fn incomplete_have_and_stop_dispatch_report_syntax_errors() {
         let cases = [
@@ -136,8 +144,22 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
-    fn trust_requires_an_import_form() {
-        let message = parse_one_stmt_error_message("trust theorem");
-        assert_eq!(message, "trust: expected `import` or `local_import`");
+    fn trust_and_local_import_use_the_canonical_forms() {
+        for source_code in [
+            "trust 1 = 1",
+            "trust:\n    1 = 1",
+            "trust have x R:\n    x = 1",
+            "local import chapter",
+            "trust local import chapter",
+        ] {
+            assert!(parse_one_stmt(source_code).is_ok(), "{source_code:?}");
+        }
+
+        for legacy_source in ["proof_debt 1 = 1", "suppose x R", "local_import chapter"] {
+            assert!(
+                parse_one_stmt(legacy_source).is_err(),
+                "legacy syntax unexpectedly parsed: {legacy_source:?}"
+            );
+        }
     }
 }

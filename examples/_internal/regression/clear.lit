@@ -2,12 +2,12 @@
 # so the second `suppose` is parsed after `clear` runs (parse-time names from the first block remain
 # only until that block finishes executing).
 sketch:
-    suppose a R:
+    trust have a R:
         a = 1
     a = 1
 
 clear
 
-suppose a R:
+trust have a R:
     a = 2
 a = 2

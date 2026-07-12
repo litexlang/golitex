@@ -18,10 +18,10 @@ pub struct RunSummary {
     pub function_definitions: usize,
     pub alias_statements: usize,
     pub import_statements: usize,
-    pub direct_proof_debt: usize,
-    pub indirect_proof_debt: usize,
+    pub direct_trust: usize,
+    pub indirect_trust: usize,
     pub axioms: usize,
-    pub supposes: usize,
+    pub trusted_object_assumptions: usize,
     pub abstract_interfaces: usize,
     pub stack_runner_warnings: usize,
     pub top_level_fact_statements: usize,
@@ -29,7 +29,7 @@ pub struct RunSummary {
     pub nested_fact_statements: usize,
     pub stored_fact_outputs: usize,
     pub inferred_fact_outputs: usize,
-    indirect_proof_debt_reasons: Vec<String>,
+    indirect_trust_reasons: Vec<String>,
     statement_type_counts: BTreeMap<String, usize>,
     output_type_counts: BTreeMap<String, usize>,
     proof_method_counts: BTreeMap<String, usize>,
@@ -66,7 +66,7 @@ impl RunSummary {
         if let Some(error) = runtime_error {
             summary.visit_runtime_error(error);
         }
-        summary.indirect_proof_debt = summary.indirect_proof_debt_reasons.len();
+        summary.indirect_trust = summary.indirect_trust_reasons.len();
         summary
     }
 
@@ -118,10 +118,10 @@ impl RunSummary {
                 self.fact_statements += 1;
             }
             Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(_)) => {
-                self.direct_proof_debt += 1;
+                self.direct_trust += 1;
             }
             Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
-                self.supposes += 1;
+                self.trusted_object_assumptions += 1;
             }
             Stmt::DefObjStmt(def_obj) => {
                 self.object_definitions += 1;
@@ -239,13 +239,13 @@ impl RunSummary {
                 bump_count(&mut self.inferred_infer_rule_counts, rule.as_str());
             }
             if reason.contains("depends_on_unproved_assumptions")
-                && reason.contains("proof_debt")
+                && reason.contains("trust")
                 && !self
-                    .indirect_proof_debt_reasons
+                    .indirect_trust_reasons
                     .iter()
                     .any(|existing| existing == reason)
             {
-                self.indirect_proof_debt_reasons.push(reason.clone());
+                self.indirect_trust_reasons.push(reason.clone());
             }
         }
     }
@@ -363,10 +363,10 @@ impl RunSummary {
     fn visit_stmt_trust_dependencies(&mut self, stmt: &Stmt) {
         match stmt {
             Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(_)) => {
-                bump_count(&mut self.trust_dependency_counts, "proof_debt");
+                bump_count(&mut self.trust_dependency_counts, "trust");
             }
             Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
-                bump_count(&mut self.trust_dependency_counts, "suppose");
+                bump_count(&mut self.trust_dependency_counts, "trust_have");
             }
             Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {
                 bump_count(&mut self.trust_dependency_counts, "axiom");
@@ -396,6 +396,18 @@ impl RunSummary {
             (
                 "proof_method_counts".to_string(),
                 count_map_json_value(&self.proof_method_counts),
+            ),
+            (
+                "direct_trust".to_string(),
+                JsonValue::Number(self.direct_trust),
+            ),
+            (
+                "indirect_trust".to_string(),
+                JsonValue::Number(self.indirect_trust),
+            ),
+            (
+                "trusted_object_assumptions".to_string(),
+                JsonValue::Number(self.trusted_object_assumptions),
             ),
             (
                 "trust_dependencies".to_string(),

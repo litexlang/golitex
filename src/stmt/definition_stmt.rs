@@ -301,11 +301,11 @@ impl DefLetStmt {
     }
 
     pub fn store_reason() -> &'static str {
-        "warning: unproved object definition"
+        "unproved object definition"
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user suppose statements; use have/claim/thm/prove or move trusted background into an imported module"
+        "strict mode rejects user trust have statements; use have/claim/thm/prove or move trusted background into an imported module"
     }
 }
 
@@ -313,11 +313,11 @@ impl fmt::Display for DefLetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let param_str = self.param_def.to_string();
         match self.facts.len() {
-            0 => write!(f, "{} {}", SUPPOSE, param_str),
+            0 => write!(f, "{} {} {}", TRUST, HAVE, param_str),
             _ => write!(
                 f,
                 "{} {}{}\n{}",
-                SUPPOSE,
+                format!("{} {}", TRUST, HAVE),
                 param_str,
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)

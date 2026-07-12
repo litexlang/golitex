@@ -1,0 +1,79 @@
+# Analysis I, Chapter 1: Introduction.
+
+"""
+This folder is a Litex reading of Terry Tao's Analysis I.  It is not a
+replacement for the book; it follows the book's order and uses the text as a
+pressure test for writing ordinary undergraduate analysis in a small formal
+language.
+
+Interactive textbook.
+
+- These `.lit` files are meant to be read as an interactive textbook, not only
+  as a static translation.  A reader can run a chapter, see which mathematical
+  statements are checked, inspect what each statement introduces or proves, and
+  locate the remaining `trust`.
+- Because definitions, facts, claims, theorems, proof steps, and chapter-order
+  dependencies are all written in structured Litex files, the same source can
+  support generated views: a concept-nebula graph of the mathematical ideas, a
+  per-statement summary of each line's role, dependency traces showing which
+  earlier facts a statement uses, and proof-gap lists for unfinished work.
+
+Starting point.
+
+- Inspired by Professor Terence Tao's Analysis I and his Lean companion
+  `github.com/teorth/analysis`.
+- Different constraint: no imported analysis package, set-theory package, or
+  other prebuilt mathematical library; the development proceeds in book order,
+  as if for a reader beginning real analysis.
+- Current status: many definitions, examples, and theorem steps are checkable;
+  most `trust` marks material that the book leaves as exercises or omits
+  as routine, and the rest records work we intend to finish.  This is a test
+  release of the roughly 95% version, published so the remaining gaps can guide
+  the language feedback loop.
+
+Representative slices.
+
+- Start here: this file explains the project framing and how to read the
+  chapter files.
+- Early chapters build the book-order foundations: natural numbers, sets,
+  rationals, reals, sequences, and limits.
+- Chapter 7 is the main series demo: partial sums, Cauchy tails, absolute and
+  conditional convergence, rearrangements, alternating series, condensation,
+  and root/ratio tests.
+- Chapter 11 is the integration demo: interval length, partitions,
+  piecewise-constant integrals, upper/lower Riemann integrals, integrability
+  criteria, and examples.
+
+Representative runs.
+
+Run a file with `target/debug/litex -f <file>`.  Useful first checks are:
+
+- `textbooks/Analysis/chap7.lit`
+- `textbooks/Analysis/chap11.lit`
+
+What "checked" means.
+
+A successful run means Litex verified the checkable statements in the file,
+relative to Litex's builtin rules and any explicit assumptions in that file.
+`trust` is not a proof; it is an explicit marker for a proof step that
+has not yet been formalized.  Keeping those markers visible is part of the
+point of this test release.
+
+This is not a claim that Litex currently has the maturity of Lean and Mathlib.
+Lean and Mathlib have a much stronger ecosystem, automation, and checked
+library.  The point here is narrower: to see how far a self-contained,
+book-order Litex development can go, and where it honestly gets stuck.
+
+Most later chapters pair a short source-facing paraphrase with the
+mathematical idea and the corresponding Litex code.  In Litex, `prop` means a
+predicate or relation, not a textbook "Proposition"; textbook facts are
+usually written as `thm` or local `claim`.
+
+Chapter 1 of the original textbook is mostly motivational.  It reminds the
+reader that familiar operations with limits, sums, integrals, derivatives, and
+lengths need precise hypotheses, which is exactly the discipline Litex is
+meant to make visible.
+"""
+
+# Final audit (2026-07-12): no direct non-exercise `trust` or `abstract_prop`
+# marker occurs in this introductory chapter.

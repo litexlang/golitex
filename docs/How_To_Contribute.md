@@ -38,7 +38,7 @@ MiniF2F and MATH500:
 
 There are two useful kinds of dataset work:
 
-1. Finish unfinished problems by removing or reducing `proof_debt`.
+1. Finish unfinished problems by removing or reducing `trust`.
 2. Improve already finished problems when the code is too long, unclear, or
    semantically weaker than the source problem.
 
@@ -47,16 +47,16 @@ more useful than a large set of broad suggestions.
 
 ### Finish Unfinished Problems
 
-A strong result is a fully checkable `.lit` file with no non-background `proof_debt`.
+A strong result is a fully checkable `.lit` file with no non-background `trust`.
 A useful partial result is also acceptable: if the original proof had one broad
-`proof_debt`, split it into several smaller mathematical steps, prove the steps you
-can, and leave only the precise blocked step as `proof_debt`.
+`trust`, split it into several smaller mathematical steps, prove the steps you
+can, and leave only the precise blocked step as `trust`.
 
-For any remaining `proof_debt`, add a short comment in the `.lit` file explaining:
+For any remaining `trust`, add a short comment in the `.lit` file explaining:
 
 - what exact mathematical step is still missing;
 - why the current proof attempt does not close it;
-- whether it looks like `proof_debt` or `kernel_problem`.
+- whether it looks like `trust` or `kernel_problem`.
 
 ### Improve Finished Problems
 
@@ -116,11 +116,11 @@ broader verifier test suite before treating it as complete.
 
 Some small facts may be intuitive but hard to formalize because Litex's
 standard library is still missing supporting lemmas. For now, collect these
-cases and mark them uniformly with `proof_debt`. For example, many files use
+cases and mark them uniformly with `trust`. For example, many files use
 `finite_set_sum`, and a common fact is that permuting the same finite set should
-not change the result. It is acceptable to leave such facts as `proof_debt` for now:
+not change the result. It is acceptable to leave such facts as `trust` for now:
 they are tedious to prove and do not block the main translation work. After the
-main line is complete, clean up these `proof_debt` steps together; some should become
+main line is complete, clean up these `trust` steps together; some should become
 standard-library facts, and others should be proved locally.
 
 ## Help Make Litex Easier to Understand
