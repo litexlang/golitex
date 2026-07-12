@@ -1,4 +1,4 @@
-# Analysis I, Chapter 3: Set theory.
+# Chapter 3: Set theory.
 
 """
 Definition 3.1.1 (Informal). We define a set A to be any unordered collection
@@ -20,14 +20,6 @@ sketch:
 
 
 """
-Example 3.1.2 (Informal). A set may contain another set as one of its
-elements, for instance {3, {3, 4}, 4}. Not every object has to be regarded as
-a set.
-Remark 3.1.3. Pure set theory identifies every object with a set; this text
-takes an agnostic position between pure and impure set theories.
-"""
-
-"""
 Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 """
 
@@ -42,8 +34,14 @@ sketch:
     $is_set(1)
 
 """
-Example 3.1.5. Sets with the same members are equal even if the display order
-or repeated entries differ.
+Example 3.1.2 (Informal). A set may contain another set as one of its
+elements, for instance {3, {3, 4}, 4}. Not every object has to be regarded as
+a set.
+"""
+
+"""
+Remark 3.1.3. Pure set theory identifies every object with a set; this text
+takes an agnostic position between pure and impure set theories.
 """
 
 """
@@ -51,15 +49,22 @@ Definition 3.1.4 (Equality of sets). Two sets A and B are equal iff every
 element of A is an element of B and vice versa.
 """
 
-sketch:
+# Set equality is extensional: both directions of membership imply equality.
+# Litex's `by extension` form proves the same principle for arbitrary sets.
+claim:
+    ? forall A, B set:
+        forall x A:
+            x $in B
+        forall y B:
+            y $in A
+        =>:
+            A = B
     by extension:
-        ? {1, 2, 3, 4, 5} = {3, 4, 2, 1, 5}
-        by enumerate finite_set:
-            ? forall x {1, 2, 3, 4, 5}:
-                x $in {3, 4, 2, 1, 5}
-        by enumerate finite_set:
-            ? forall y {3, 4, 2, 1, 5}:
-                y $in {1, 2, 3, 4, 5}
+        ? A = B
+        forall x A:
+            x $in B
+        forall y B:
+            y $in A
 
 forall A set:
     A = A
@@ -75,17 +80,34 @@ forall A, B, C set:
     =>:
         A = C
 
+"""
+Example 3.1.5. Sets with the same members are equal even if the display order
+or repeated entries differ.
+"""
+
+sketch:
+    by extension:
+        ? {1, 2, 3, 4, 5} = {3, 4, 2, 1, 5}
+        by enumerate finite_set:
+            ? forall x {1, 2, 3, 4, 5}:
+                x $in {3, 4, 2, 1, 5}
+        by enumerate finite_set:
+            ? forall y {3, 4, 2, 1, 5}:
+                y $in {1, 2, 3, 4, 5}
 
 """
 Axiom 3.2 (Empty set). There exists a set emptyset which contains no elements.
-Lemma 3.1.6 (Single choice). Let A be a non-empty set. Then there exists an
-object x such that x in A.
 """
 
 not $is_nonempty_set({})
 
 forall x set:
     not x $in {}
+
+"""
+Lemma 3.1.6 (Single choice). Let A be a non-empty set. Then there exists an
+object x such that x in A.
+"""
 
 claim:
     ? forall A nonempty_set:
@@ -97,6 +119,9 @@ claim:
 """
 Remark 3.1.7. Single choice lets us choose one element from one non-empty set;
 finite choice and the full axiom of choice are stronger later principles.
+"""
+
+"""
 Remark 3.1.8. The empty set is not the natural number 0, though its
 cardinality is 0.
 """
@@ -202,8 +227,6 @@ sketch:
 
 """
 Axiom 3.4 (Pairwise union). x in A union B iff x in A or x in B.
-Lemma 3.1.13. Union is commutative, associative, idempotent, and has empty set
-as identity. If a and b are objects, then {a, b} = {a} union {b}.
 """
 
 # Union is written `union(A, B)`.  Its meaning is the familiar membership rule:
@@ -235,7 +258,18 @@ sketch:
 
 """
 Example 3.1.11. {1, 2} union {2, 3} is {1, 2, 3}.
+"""
+
+"""
 Remark 3.1.12. Union is well-defined under equality of sets.
+"""
+
+"""
+Lemma 3.1.13. Union is commutative, associative, idempotent, and has empty set
+as identity. If a and b are objects, then {a, b} = {a} union {b}.
+"""
+
+"""
 Remark 3.1.14. Union resembles addition in some ways, but it is a set
 operation, not numerical addition.
 """
@@ -348,6 +382,9 @@ sketch:
 """
 Definition 3.1.15 (Subsets). A subset of B iff every element of A is also an
 element of B.
+"""
+
+"""
 Proposition 3.1.18. Sets are partially ordered by set inclusion.
 """
 
@@ -401,6 +438,9 @@ sketch:
 
 """
 Remark 3.1.16. Subset is also well-defined under equality of sets.
+"""
+
+"""
 Examples 3.1.17. {1, 2, 4} is a proper subset of {1, 2, 3, 4, 5}; every set
 is a subset of itself, and the empty set is a subset of every set.
 """
@@ -607,8 +647,14 @@ forall A, B set, x set:
 """
 Remark 3.1.24. Intersection is well-defined because it is defined by
 membership and equality.
+"""
+
+"""
 Examples 3.1.25. Concrete intersections include {1, 2, 4} intersect
 {2, 3, 4} = {2, 4}, and disjoint intersections are empty.
+"""
+
+"""
 Remark 3.1.26. The English word "and" can mean union, intersection, or
 addition depending on context; mathematical symbols remove that ambiguity.
 """
@@ -631,6 +677,9 @@ sketch:
 """
 Definition 3.1.27 (Difference sets). An element is in A minus B iff it is in A
 and not in B.
+"""
+
+"""
 Proposition 3.1.28. Intersections, differences, and unions obey the usual
 Boolean set laws.
 """
@@ -669,6 +718,9 @@ forall A, B, C set:
 
 """
 Remark 3.1.29. The de Morgan laws are basic Boolean/set laws.
+"""
+
+"""
 Remark 3.1.30. Complementation exchanges unions with intersections and
 reveals a duality between the whole ambient set and the empty set.
 """
@@ -868,23 +920,28 @@ forall n N:
     n + 1 $in N
 
 """
-Axiom 3.9 (Restriction on universal specification). Specification forms
-subsets of an already-given set; there is no unrestricted universal set of
-all objects.
+Axiom 3.8 (Universal specification, dangerous). If every object satisfies a
+property P(x), universal specification would form the set of all such objects.
+This axiom is inconsistent because the Russell set would have to belong to
+itself exactly when it does not belong to itself.
 """
 
-# Bounded set builders have the same discipline as Tao's specification axiom:
-# `{x A: ...}` forms a subset of an already available ambient set `A`.  The
-# no-universal-set principle is illustrated by contradiction rather than by
-# pretending that an unrestricted `{x set: ...}` builder exists.
+# Bounded set builders retain the useful part of specification: `{x A: ...}`
+# forms a subset of an already available ambient set `A`.  An unrestricted
+# builder is recorded only as the dangerous source axiom, never as Litex code.
+
+"""
+Axiom 3.9 (Regularity). Every non-empty set has a member that is either not a
+set or is disjoint from the original set.  In particular, no set is a member
+of itself.
+"""
 
 prop is_universal_set(U set):
     forall x set:
         x $in U
 
-# Axiom 3.9 rules out the universal-set idea behind unrestricted
-# specification.  If U contained every set, then U would contain itself; applying
-# regularity to the singleton {U} gives a disjoint member, contradiction.
+# A universal set would contain itself.  Applying regularity to its singleton
+# then gives a member that must both contain and avoid that same point.
 
 claim:
     prove:
@@ -930,7 +987,7 @@ sketch:
             impossible 5 + 1 < 5
 
 
-# Analysis I, Chapter 3, Section 3.3: Functions.
+# Chapter 3, Section 3.3: Functions.
 
 
 
@@ -1602,51 +1659,7 @@ output; that is just being a function.
 # unique output for each input, while a bijection also gives each target element
 # a unique preimage.
 
-"""
-Exercise 3.3.6. For a bijection, each y in Y has a unique preimage x in X,
-defining f^{-1}:Y->X, and the two cancellation laws hold.
-"""
-
-# For a bijection, every target point has a unique preimage.  The construction
-# below turns that unique-preimage statement into an inverse function and then
-# proves the two cancellation laws.  No nonempty hypothesis is needed: the empty
-# function from `{}` to `{}` should also have an inverse.
-template<X set, Y set, f fn(x X) Y: $is_bijective_fn(X, Y, f)>:
-    have fn inverse_of_bijection by exist!:
-        ? forall y Y:
-            exist! x X st {y = f(x)}
-        $is_injective_fn(X, Y, f)
-        $is_surjective_fn(X, Y, f)
-        exist x X st {y = f(x)}
-        forall x1, x2 X:
-            y = f(x1)
-            y = f(x2)
-            =>:
-                f(x1) = y
-                f(x2) = y
-                f(x1) = f(x2)
-                x1 = x2
-        exist! x X st {y = f(x)}
-
-# The source leaves this inverse construction to Exercise 3.3.6.  The current
-# template instantiator cannot yet execute `have fn ... by exist!` inside a
-# template body, so retain the two cancellation laws as narrow interfaces.
-trust forall X, Y set, f fn(x X) Y, x X:
-    $is_bijective_fn(X, Y, f)
-    =>:
-        \inverse_of_bijection<X, Y, f>(f(x)) = x
-
-trust forall X, Y set, f fn(x X) Y, y Y:
-    $is_bijective_fn(X, Y, f)
-    =>:
-        f(\inverse_of_bijection<X, Y, f>(y)) = y
-
-# Follow-up for later reuse: the inverse construction above proves the basic
-# cancellation laws, but the later composition laws from Exercise 3.3.7 still
-# need a short reusable theorem.
-
-
-# Analysis I, Chapter 3, Section 3.4: Images and inverse images.
+# Chapter 3, Section 3.4: Images and inverse images.
 
 
 """
@@ -1700,24 +1713,6 @@ template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
                 f(x1) = f(x2)
                 x1 = x2
         exist! x X st {y = f(x)}
-
-# Evaluation law for the image-level inverse: applying f and then the inverse
-# returns the original source point.
-claim:
-    ? forall X, Y set, f fn(x X) Y, x X:
-        $is_injective_fn(X, Y, f)
-        =>:
-            f(x) $in \function_range<X, Y, f>
-            \inverse_function<X, Y, f>(f(x)) = x
-    witness exist u X st {f(x) = f(u)} from x:
-        f(x) = f(x)
-    $has_preimage(X, Y, f, f(x))
-    f(x) $in {y Y: $has_preimage(X, Y, f, y)}
-    f(x) $in \function_range<X, Y, f>
-    # trust: instantiate the unique-existence inverse template and use
-    # the uniqueness direction.  This is the same current template-runtime
-    # limitation recorded for Exercise 3.3.6 above.
-    trust \inverse_function<X, Y, f>(f(x)) = x
 
 """
 Definition 3.4.1. The forward image f(A) consists exactly of values f(x) with
@@ -2455,7 +2450,7 @@ Remark 3.4.12. The axioms in this section, except unrestricted comprehension,
 are the Zermelo-Fraenkel set-theory package.
 """
 
-# Analysis I, Chapter 3, Section 3.5: Cartesian products.
+# Chapter 3, Section 3.5: Cartesian products.
 
 
 """
@@ -2637,7 +2632,9 @@ sketch:
 """
 Remark 3.5.8 constructs finite products from function spaces and
 specification.
+"""
 
+"""
 Example 3.5.9. If X1={a1,b1}, X2={a2,b2}, and X3={a3,b3}, then the flat
 product X1 x X2 x X3 contains triples, while the iterated binary products
 (X1 x X2) x X3 and X1 x (X2 x X3) contain nested pairs.
@@ -2753,7 +2750,7 @@ automatic; it requires the axiom of choice, discussed later in Section 8.4.
 # number of factors.
 
 
-# Analysis I, Chapter 3, Section 3.6: Cardinality of sets.
+# Chapter 3, Section 3.6: Cardinality of sets.
 
 """
 Definition 3.6.1. Two sets have equal cardinality iff there exists a bijection

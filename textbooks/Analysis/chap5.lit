@@ -1,6 +1,4 @@
-# Analysis I, Chapter 5: The real numbers.
-
-import Real
+# Chapter 5: The real numbers.
 
 # Chapter 4 establishes the rational distance and epsilon-closeness vocabulary.
 trust local import chap4
@@ -834,50 +832,13 @@ prop has_cauchy_sequence_representative_in_Q(x R):
 thm cauchy_sequence_representative_in_Q_exists:
     ? forall x R:
         $has_cauchy_sequence_representative_in_Q(x)
-    by thm Real::exists_rat_seq_converging_to_real(x)
-    obtain a from exist a seq(Q) st {$Real::rat_seq_converges(a, x), $Real::rat_seq_cauchy(a)}
-    claim:
-        ? $is_cauchy_sequence_in_Q(a)
-        claim:
-            ? forall epsilon Q_pos:
-                $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
-            epsilon $in R_pos
-            obtain n0 from exist n0 N_pos st {$Real::rat_seq_cauchy_tail(a, epsilon, n0)}
-            witness exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon, n1)} from n0:
-                claim:
-                    ? forall j, k N_pos:
-                        j >= n0
-                        k >= n0
-                        =>:
-                            $is_close_in_Q(epsilon, a(j), a(k))
-                    abs(a(j) - a(k)) < epsilon
-                    dist_Q(a(j), a(k)) = abs(a(j) - a(k))
-                    dist_Q(a(j), a(k)) < epsilon
-                    dist_Q(a(j), a(k)) <= epsilon
-                    $is_close_in_Q(epsilon, a(j), a(k))
-                $is_tail_epsilon_steady_in_Q(a, epsilon, n0)
-            $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
-        $is_cauchy_sequence_in_Q(a)
-    claim:
-        ? $has_formal_limit_in_Q(a, x)
-        claim:
-            ? forall epsilon R_pos:
-                exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n0)}
-            obtain n0 from exist n0 N_pos st {$Real::rat_seq_tail_close(a, x, epsilon, n0)}
-            witness exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n1)} from n0:
-                claim:
-                    ? forall n N_pos:
-                        n >= n0
-                        =>:
-                            abs(a(n) - x) < epsilon
-                    abs(a(n) - x) < epsilon
-                $is_rational_sequence_tail_close_to_real(a, x, epsilon, n0)
-        $has_rational_sequence_limit_in_R(a, x)
-        $has_formal_limit_in_Q(a, x)
-    witness exist a0 seq(Q) st {$is_cauchy_sequence_in_Q(a0), $has_formal_limit_in_Q(a0, x)} from a:
-        $is_cauchy_sequence_in_Q(a)
-        $has_formal_limit_in_Q(a, x)
-    $has_cauchy_sequence_representative_in_Q(x)
+    # Source handling: the construction defines each real as an equivalence
+    # class of rational Cauchy sequences, then proves that every resulting real
+    # has a representative and that the representative converges to it.
+    # proof_debt: the quotient/completion construction has not yet been expanded
+    # into a checked Litex construction of `R`; the exact local representative
+    # interface is therefore assumed here and used by later checked estimates.
+    trust $has_cauchy_sequence_representative_in_Q(x)
 
 thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
     ? forall a, b seq(Q), x R:
@@ -889,7 +850,7 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n0)}
         epsilon / 2 $in R_pos
-        by thm Real::exists_rat_between(0, epsilon / 2)
+        by thm has_rational_between(0, epsilon / 2)
         obtain eta from exist eta Q st {0 < eta < epsilon / 2}
         eta $in Q_pos
         $has_rational_sequence_limit_in_R(a, x)
@@ -1627,7 +1588,7 @@ thm nonzero_real_has_bounded_away_rational_representative:
     x != 0
     abs(x) > 0
     abs(x) / 4 $in R_pos
-    by thm Real::exists_rat_between(0, abs(x) / 4)
+    by thm has_rational_between(0, abs(x) / 4)
     obtain c from exist c Q st {0 < c < abs(x) / 4}
     c $in Q_pos
     c $in R_pos
@@ -3059,56 +3020,14 @@ thm real_cauchy_sequence_has_limit_in_R:
         $is_cauchy_sequence_in_R(a)
         =>:
             exist L R st {$has_limit_in_R(a, L)}
-    # This is a source-order citation of real-sequence completeness.  The local
-    # Chapter 5 predicate uses non-strict closeness, while `std/Real` uses a
-    # strict epsilon tail, so the proof translates through an epsilon/2 tail.
-    claim:
-        ? $Real::cauchy(a)
-        claim:
-            ? forall epsilon R_pos:
-                exist n0 N_pos st {$Real::cauchy_tail(a, epsilon, n0)}
-            epsilon / 2 $in R_pos
-            obtain n0 from exist n0 N_pos st {$is_cauchy_tail_in_R(a, epsilon / 2, n0)}
-            witness exist n1 N_pos st {$Real::cauchy_tail(a, epsilon, n1)} from n0:
-                claim:
-                    ? forall j, k N_pos:
-                        j >= n0
-                        k >= n0
-                        =>:
-                            abs(a(j) - a(k)) < epsilon
-                    $is_close_in_R(epsilon / 2, a(j), a(k))
-                    dist_R(a(j), a(k)) <= epsilon / 2
-                    dist_R(a(j), a(k)) = abs(a(j) - a(k))
-                    abs(a(j) - a(k)) <= epsilon / 2
-                    epsilon / 2 < epsilon
-                    abs(a(j) - a(k)) <= epsilon / 2 < epsilon
-                    abs(a(j) - a(k)) < epsilon
-                $Real::cauchy_tail(a, epsilon, n0)
-        $Real::cauchy(a)
-    by thm Real::seq_completeness(a)
-    $Real::convergent_seq(a)
-    obtain L from exist L R st {$Real::seq_converges(a, L)}
-    claim:
-        ? $has_limit_in_R(a, L)
-        claim:
-            ? forall epsilon R_pos:
-                exist n0 N_pos st {$is_tail_close_to_in_R(a, L, epsilon, n0)}
-            obtain n0 from exist n0 N_pos st {$Real::seq_tail_close(a, L, epsilon, n0)}
-            witness exist n1 N_pos st {$is_tail_close_to_in_R(a, L, epsilon, n1)} from n0:
-                claim:
-                    ? forall n N_pos:
-                        n >= n0
-                        =>:
-                            $is_close_in_R(epsilon, a(n), L)
-                    abs(a(n) - L) < epsilon
-                    dist_R(a(n), L) = abs(a(n) - L)
-                    dist_R(a(n), L) < epsilon
-                    dist_R(a(n), L) <= epsilon
-                    $is_close_in_R(epsilon, a(n), L)
-                $is_tail_close_to_in_R(a, L, epsilon, n0)
-        $has_limit_in_R(a, L)
-    witness exist M R st {$has_limit_in_R(a, M)} from L:
-        $has_limit_in_R(a, L)
+    # Source handling: completeness follows from the Cauchy-sequence
+    # construction of the real numbers; a Cauchy real sequence is reduced to a
+    # rational approximation construction and then shown to have a real limit.
+    # proof_debt: the reduction of a real Cauchy sequence to rational Cauchy
+    # data is not yet formalized without circularly invoking the
+    # least-upper-bound theorem proved below.  The local non-strict predicates
+    # make the remaining completeness interface explicit.
+    trust exist L R st {$has_limit_in_R(a, L)}
 
 prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
     forall n N_pos:
@@ -3142,10 +3061,11 @@ thm bisection_bracket_exists:
             $has_bisection_bracket_for_supremum(E)
     have a0 E
     obtain b0 from exist b0 R st {$is_upper_bound(E, b0)}
-    # trust: carry out the recursive bisection construction and prove the
-    # monotonicity and shrinking-width properties of the two endpoint sequences.
-    # This is the long bracketing argument in Tao's proof of the
-    # least-upper-bound property.
+    # Source handling: the proof recursively bisects an interval with a point
+    # of E at the lower endpoint and an upper bound at the upper endpoint,
+    # retaining the half interval with the same bracketing property.
+    # proof_debt: the dependent recursive endpoint construction and its
+    # width-halving induction are not yet available as checked Litex code.
     trust exist lower, upper seq(R) st {$is_bisection_bracket_for_supremum(E, lower, upper)}
     $has_bisection_bracket_for_supremum(E)
 

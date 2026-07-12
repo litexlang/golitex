@@ -1,4 +1,4 @@
-# Analysis I, Chapter 2: Starting at the beginning: the natural numbers.
+# Chapter 2: Starting at the beginning: the natural numbers.
 
 """
 Definition 2.1.1. (Informal) A natural number is any element of the set
@@ -7,11 +7,18 @@ which is the set of all the numbers created by starting with 0 and then
 counting forward indefinitely. We call N the set of natural numbers.
 """
 
+# This is notation-only: Litex takes `N` as its builtin natural-number set.
+# The following axioms and induction examples express the source's two ways of
+# generating its elements: start at `0`, then repeatedly take a successor.
+
 """
 Remark 2.1.2. In some texts the natural numbers start at 1 instead of 0, but
 this is a notational convention.  In this text {1,2,3,...} is called the
 positive integers rather than the natural numbers.
 """
+
+# This is a comment-only convention.  The later type `N_pos` denotes precisely
+# the nonzero natural numbers, while `N` includes `0`.
 
 """
 Axiom 2.1. 0 is a natural number.
@@ -30,22 +37,35 @@ forall n N:
 Definition 2.1.3. We define 1 to be the number 0++, 2 to be the number (0++)++, 3 to be the number ((0++)++)++, etc. (In other words,1:=0++,2:=1++,3:=2++,etc. InthistextIuse“x:=y” to denote the statement that x is defined to equal y.)
 """
 
+# The ordinary numerals are the successive applications of the builtin
+# successor operation `n + 1`.
+
+1 = 0 + 1
+2 = 1 + 1
+3 = 2 + 1
+
 """
 Proposition 2.1.4. 3 is a natural number.
 """
 
 3 $in N
 
-# Example 2.1.5 is an informal nonstandard model with wrap-around successor.
-# Its purpose is to show why Peano's axioms must forbid any successor from
-# being zero.
+"""
+Example 2.1.5. A finite number system can satisfy the first two axioms while
+successor wraps from 3 back to 0.  This models the overflow behavior of a
+fixed-width counter, but it is not the intended natural-number system.
+"""
+
+# This is a comment-only countermodel: Litex's builtin successor on `N` cannot
+# be redefined to wrap around.  Its mathematical role is to show why Axiom 2.3
+# must rule out a successor equal to zero.
 
 """
 Axiom 2.3. 0 is not the successor of any natural number; i.e., we have n++ ̸= 0 for every natural number n.
 """
 
-# The successor `n + 1` is never `0`.  Tao introduces this as Peano Axiom 2.3,
-# but with Litex's builtin naturals it is an ordinary checked arithmetic fact.
+# The successor `n + 1` is never `0`.  For builtin natural numbers this is a
+# checked arithmetic fact, and the positive type records the same conclusion.
 
 forall n N:
     n + 1 $in N_pos
@@ -62,10 +82,9 @@ Example 2.1.7. Consider a number system consisting of five numbers 0,1,2,3,4, in
 
 """
 
-sketch:
-    0 + 1 = 1
-    1 + 1 = 2
-    2 + 1 = 3
+# This is a comment-only countermodel.  It satisfies the nonzero-successor
+# requirement but fails injectivity of successor, which is exactly what Axiom
+# 2.4 excludes.
 
 """
 Axiom 2.4. Different natural numbers must have different successors; i.e., if n, m are natural numbers and n ̸= m, then n++ ̸= m++. Equiv- alently2, if n++ = m++, then we must have n = m.
@@ -83,12 +102,21 @@ Proposition 2.1.8. 6 is not equal to 2.
 6 != 2
 
 """
+Example 2.1.9. The set of nonnegative integers and half-integers satisfies
+Axioms 2.1-2.4, but has a rogue element 0.5 that cannot be reached by starting
+at 0 and repeatedly taking successors.
+"""
+
+# This is comment-only because half-integers have not yet been constructed in
+# the chapter.  The example explains that induction excludes elements outside
+# the successor chain from `0`.
+
+"""
 Axiom 2.5 (Principle of mathematical induction). Let P(n) be any property pertaining to a natural number n. Suppose that P(0) is true, and suppose that whenever P(n) is true, P(n++) is also true. Then P(n) is true for every natural number n.
 """
 
-# Example 2.1.9 is an informal nonstandard model using half-integers before
-# integers and rationals have been constructed.  It motivates why induction is
-# needed.
+# Axiom 2.5 is expressed by `by induc`: a base case at `0` and a successor step
+# establish a property for every builtin natural number.
 
 sketch:
     abstract_prop induction_demo(n)
@@ -129,16 +157,23 @@ sketch:
 Assumption 2.6. (Informal) There exists a number system N, whose elements we will call natural numbers, for which Axioms 2.1-2.5 are true.
 """
 
+# This is a comment-only background assumption.  The chapter uses Litex's
+# builtin `N` as a concrete natural-number system satisfying these axioms.
+
 """
 Remark 2.1.12. We will refer to this number system N as the natural number system. One could of course consider the possibility that there is more than one natural number system, e.g., we could have the Hindu- Arabic number system {0,1,2,3,...} ....
 """
+
+# This is a comment-only observation about isomorphic notations for the same
+# successor structure; no new Litex object is introduced.
 
 """
 Remark 2.1.13. (Informal) One interesting feature about the natural numbers is that while each individual natural number is finite, the set of natural numbers is infinite
 """
 
-# The formal content is that `N` is not finite.  Litex uses `finite_set` for
-# finite sets, so the proof argues by contradiction from a finite cardinality.
+# The source contrasts finite individual numbers with their infinite collection.
+# The formal statement here is that the set `N` is not finite; it uses Litex's
+# finite-set and cardinality interfaces.
 
 by contra:
     ? not $is_finite_set(N)
@@ -152,6 +187,9 @@ by contra:
 """
 Remark 2.1.14. Note that our definition of the natural numbers is ax- iomatic rather than constructive. We have not told you what the natural numbers are (so we do not address such questions as what the numbers are made of, are they physical objects, what do they measure, etc.) - we have only listed some things you can do with them (in fact, the only operation we have defined on them right now is the increment one) and some of the properties that they have. This is how mathematics works - it treats its objects abstractly, caring only about what properties the objects have, not what the objects are or what they mean. If one wants to do mathematics, it does not matter whether a natural number means a certain arrangement of beads on an abacus, or a certain organization of bits in a computer’s memory, or some more abstract concept with no physical substance; as long as you can increment them, see if two of them are equal, and later on do other arithmetic operations such as add and multiply, they qualify as numbers for mathematical purposes (provided they obey the requisite axioms, of course). It is possible to construct the natural numbers from other mathematical objects - from sets, for instance - but there are multiple ways to construct a working model of the natural numbers, and it is pointless, at least from a mathematician’s standpoint, as to argue about which model is the “true” one - as long as it obeys all the axioms and does all the right things, that’s good enough to do maths.
 """
+
+# This is a comment-only foundations remark: the chapter uses the behavior of
+# `N` through its arithmetic and induction laws, not a particular construction.
 
 """
 Proposition 2.1.16 (Recursive definitions). Suppose for each natural number n, we have some function fn : N → N from the natural numbers to the natural numbers. Let c be a natural number. Then we can assign a unique natural number an to each natural number n, such that a0 = c and an++ = fn(an) for each natural number n.
@@ -226,25 +264,6 @@ forall a, b, c N:
         b = (a + b) - a = (a + c) - a = c
 
 
-# The same ring-style arithmetic identities are useful over the ambient real
-# numbers, where later chapters will do most sequence estimates.
-
-forall a, b R:
-    a + b = b + a
-
-forall a, b, c R:
-    (a + b) + c = a + (b + c)
-
-forall a, b, c R:
-    a + b = a + c
-    =>:
-        b = (a + b) - a = (a + c) - a = c
-
-# Commutativity and associativity also give this three-term rearrangement.
-
-forall a, b, c R:
-    (a + b) + c = (a + c) + b
-
 """
 Definition 2.2.7 (Positive natural numbers). A natural number n is said to be positive iff it is not equal to 0. (“iff” is shorthand for “if and only if” - see Section A.1).
 """
@@ -256,6 +275,11 @@ forall n N:
     n != 0
     =>:
         n $in N_pos
+
+forall n N:
+    n $in N_pos
+    =>:
+        n != 0
 
 """
 Proposition 2.2.8. If a is positive and b is a natural number, then a+b is positive (and hence b + a is also, by Proposition 2.2.4).
@@ -304,16 +328,38 @@ claim:
 Definition 2.2.11 (Ordering of the natural numbers). Let n and m be natural numbers. We say that n is greater than or equal to m, and write n >= m or m <= n, iff n=m+a for some natural number a. We say that n is strictly greater than m, and write n>m or m<n, iff n=m+a for some positive natural number a.
 """
 
-# Tao defines order by additive witnesses.  Litex lets us use the usual order
-# symbols directly; the small example still displays the successor witness
-# behind the idea that every natural number has a larger one.
+# The builtin order symbols express the source definition by additive
+# witnesses: a nonnegative difference witnesses `n >= m`, and a positive
+# difference witnesses `n > m`.
 
 sketch:
     claim:
-        ? forall n N:
-            exist m N st {m > n}
-        witness exist m N st {m > n} from n + 1:
-            n + 1 > n
+        ? forall n, m N:
+            n >= m
+            =>:
+                exist a N st {n = m + a}
+        witness exist a N st {n = m + a} from n - m:
+            n = m + (n - m)
+
+    claim:
+        ? forall n, m N:
+            n > m
+            =>:
+                exist a N_pos st {n = m + a}
+        witness exist a N_pos st {n = m + a} from n - m:
+            n = m + (n - m)
+
+    forall n, m, a N:
+        n = m + a
+        =>:
+            m + a >= m
+            n >= m
+
+    forall n, m N, a N_pos:
+        n = m + a
+        =>:
+            m + a > m
+            n > m
 
 """
 Proposition 2.2.12 (Basic properties of order for natural numbers). Let a,b,c be natural numbers. Then order is reflexive, transitive, antisymmetric, and compatible with addition.
@@ -342,16 +388,19 @@ forall a, b, c N:
     =>:
         a = (a + c) - c <= (b + c) - c = b
 
-# Strict order on naturals can also be recovered as a positive additive
-# difference.
+# The remaining two source clauses characterize strict order by successor and
+# by a positive additive difference.
 
-claim:
-    ? forall a, b N:
+forall a, b N:
+    a < b
+    =>:
+        a + 1 <= b
+
+forall a, b N:
+    a + 1 <= b
+    =>:
+        a < a + 1 <= b
         a < b
-        =>:
-            exist d N_pos st {b = a + d}
-    witness exist d N_pos st {b = a + d} from b - a:
-        a + (b - a) = b
 
 """
 Proposition 2.2.13 (Trichotomy of order for natural numbers). Let a and b be natural numbers. Then exactly one of a<b, a=b, or a>b is true.
@@ -436,19 +485,26 @@ sketch:
                 $strong_induction_demo(n + 1)
 
 """
+Remark 2.2.15. In applications, strong induction is usually started at 0 or at
+1; the starting index records the first case supplied by the argument.
+"""
+
+# This is a comment-only application note.  The preceding sketch starts at 0,
+# while the source statement permits any natural starting index.
+
+"""
 Definition 2.3.1 (Multiplication of natural numbers). Let m be a natural number. To multiply zero to m, define 0*m:=0. Suppose inductively that n*m has been defined. Then define (n++)*m := (n*m)+m.
 """
 
-# Multiplication is written with `*`.  The sketch records Tao's recursive
-# clauses: zero times anything is zero, and multiplying by a successor adds one
-# more copy of `m`.
+# Multiplication is written with `*`.  These are the two recursive clauses of
+# the source definition: zero times anything is zero, and a successor adds one
+# further copy of the second factor.
 
-sketch:
-    forall m N:
-        0 * m = 0
+forall m N:
+    0 * m = 0
 
-    forall n, m N:
-        (n + 1) * m = n * m + m
+forall n, m N:
+    (n + 1) * m = n * m + m
 
 """
 Lemma 2.3.2 (Multiplication is commutative). Let n,m be natural numbers. Then n*m=m*n.
@@ -461,13 +517,23 @@ forall n, m N:
 Lemma 2.3.3. If n and m are natural numbers, then n*m=0 iff at least one of n,m is equal to zero. In particular, if n and m are both positive, then nm is positive.
 """
 
-# The zero-product direction uses `or`; the positive-product conclusion says
-# multiplication preserves membership in `N_pos`.
+# The two zero clauses provide the reverse direction of the iff; the final
+# statement says that a product of positive natural numbers is positive.
 
 forall n, m N:
     n * m = 0
     =>:
         n = 0 or m = 0
+
+forall n, m N:
+    n = 0
+    =>:
+        n * m = 0
+
+forall n, m N:
+    m = 0
+    =>:
+        n * m = 0
 
 forall n, m N_pos:
     n * m $in N_pos
@@ -488,8 +554,12 @@ forall a, b, c N:
     (a * b) * c = a * (b * c)
 
 """
-Proposition 2.3.6 (Multiplication preserves order). If a,b are natural numbers and c is positive, then a<b iff ac<bc.
+Proposition 2.3.6 (Multiplication preserves order). If a,b are natural numbers
+with a<b, and c is positive, then ac<bc.
 """
+
+# Writing `b = a + d` with `d` positive makes the proof immediate: distribute
+# the product, then observe that the added term `d*c` is positive.
 
 forall a, b N, c N_pos:
     a < b
@@ -506,11 +576,21 @@ forall a, b N, c N_pos:
         a = (a * c) / c = (b * c) / c = b
 
 """
+Remark 2.3.8. Cancellation gives a virtual division operation: a common
+nonzero factor may be cancelled even though division has not yet been defined
+as an operation on natural numbers.
+"""
+
+# This is comment-only terminology.  The cancellation equation above is the
+# formal content that will later support genuine division constructions.
+
+"""
 Proposition 2.3.9 (Euclidean algorithm). Let n be a natural number, and let q be a positive natural number. Then there exist natural numbers m,r such that 0 <= r < q and n = mq + r.
 """
 
-# This predicate packages the quotient-remainder conditions for reuse in the
-# Euclidean algorithm proof.
+# This predicate packages quotient and remainder.  The binder `r N` supplies
+# the source condition `0 <= r`, while the body records `r < q` and
+# `n = m*q + r`.
 
 prop is_euclidean_division(n N, q N_pos, m N, r N):
     r < q
@@ -556,6 +636,15 @@ claim:
 forall n N, q N_pos:
     exist m, r N st {$is_euclidean_division(n, q, m, r)}
 
+"""
+Remark 2.3.10. Dividing a natural number by a positive natural number produces
+a natural quotient and a remainder smaller than the divisor; this is the entry
+point to elementary number theory.
+"""
+
+# This is a comment-only interpretation of Proposition 2.3.9.  The quotient
+# and remainder equations are formalized immediately above.
+
 # The remainder operation `%` captures the same quotient-remainder idea.
 
 forall a N, b N_pos:
@@ -566,15 +655,11 @@ forall a N, b N_pos:
 Definition 2.3.11 (Exponentiation for natural numbers). Let m be a natural number. We define m^0:=1, and recursively define m^(n++) := m^n * m.
 """
 
-# Exponentiation is written with `^`.  As with addition and multiplication, the
-# chapter records the recursive clauses from the source definition.
+# Exponentiation is written with `^`.  Its two recursive clauses are the base
+# value at exponent zero and multiplication by the base at a successor exponent.
 
-sketch:
-    forall m N:
-        m^0 = 1
+forall m N:
+    m^0 = 1
 
-    forall m, n N:
-        m^(n + 1) = m^n * m
-
-# Final audit (2026-07-12): 2 non-exercise abstract interfaces remain: Axiom
-# 2.5 induction and Proposition 2.2.14 strong induction.
+forall m, n N:
+    m^(n + 1) = m^n * m

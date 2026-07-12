@@ -6,7 +6,7 @@ Always apply these rules when working in this repository.
 
 The main project direction through September is to use real mathematical
 translation work as a pressure test for Litex. The target sources include
-Mathematics in Lean, Terry Tao's Analysis I, miniF2F, MATH500, high-school
+Mathematics in Lean, Terry Tao's miniF2F, MATH500, high-school
 mathematics datasets, and Weil's Number Theory for Beginners.
 
 The purpose is twofold:
@@ -122,6 +122,19 @@ blocks the work, remove it from that `todo.md`. For example, if work in
 `scripts/minif2f_tmp/` hits a missing feature, record it in
 `scripts/minif2f_tmp/todo.md`; if the feature is later added, delete the
 completed item.
+
+## Textbook Artifact Boundaries
+
+Treat `textbooks/<Book>/` as the final-product surface. For Analysis I,
+`textbooks/Analysis/` contains the final chapter `.lit` files and
+`litex.config`; do not create Markdown todos, audits, experience notes,
+generated Markdown, verifier captures, or other working artifacts there.
+
+Put all Analysis I working artifacts under `scripts/Analysis/`. Chapter
+tracking belongs in `scripts/Analysis/todo/`, and generated or temporary
+artifacts belong in an appropriate subfolder of `scripts/Analysis/` (or
+`/private/tmp` when they are disposable). Move a file into
+`textbooks/Analysis/` only when it is a final textbook artifact.
 
 ## Dataset And Textbook Problem-Solving Loop
 

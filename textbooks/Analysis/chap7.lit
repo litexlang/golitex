@@ -1,4 +1,4 @@
-# Analysis I, Chapter 7: Series.
+# Chapter 7: Series.
 
 # 7.1 Finite series
 
@@ -757,10 +757,10 @@ thm geometric_series_from_one_formula:
         1 - x != 0
         =>:
             $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
-    # trust: compute finite geometric partial sums and use the Chapter 6
-    # limit of the geometric sequence, here indexed as x^1, x^2, ...
-    # Examples 7.2.4 use this as the standard geometric-series computation;
-    # Lemma 7.3.3 later records the full convergence test.
+    # Source handling: Example 7.2.4 derives the finite geometric-sum formula
+    # and then takes the geometric-sequence limit.
+    # proof_debt: the chapter still lacks that finite partial-sum identity and
+    # its bridge to the Chapter 6 geometric limit.
     trust $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
 
 thm geometric_series_from_one_diverges_when_abs_ge_one:
@@ -768,9 +768,10 @@ thm geometric_series_from_one_diverges_when_abs_ge_one:
         abs(x) >= 1
         =>:
             not $is_convergent_series(geometric_series_terms_from_one(x))
-    # trust: use the zero test and the Chapter 6 behavior of x^n.
-    # When `abs(x) >= 1`, the terms do not tend to zero, so the series cannot
-    # converge.  Lemma 7.3.3 later records the full divergence statement.
+    # Source handling: Example 7.2.4 displays unbounded partial sums; Lemma
+    # 7.3.3 later gives the full geometric-series divergence criterion.
+    # proof_debt: the local geometric-term limit package has not yet supplied
+    # the zero-test argument for every `abs(x) >= 1`.
     trust not $is_convergent_series(geometric_series_terms_from_one(x))
 
 """
@@ -969,9 +970,10 @@ thm series_cauchy_criterion_reverse:
         $has_cauchy_series_tails(a)
         =>:
             $is_convergent_series(a)
-    # trust: show the partial sums are Cauchy from the small-tail
-    # hypothesis, then use completeness of real sequences.  This is the reverse
-    # direction of the same exercise.
+    # Source handling: Exercise 7.2.2 proves the converse Cauchy-tail
+    # criterion from Cauchy convergence of the partial sums.
+    # proof_debt: the local chapter has no expanded real-sequence completeness
+    # proof turning these tail estimates into a partial-sum limit.
     trust $is_convergent_series(a)
 
 """
@@ -1546,7 +1548,10 @@ thm alternating_series_tail_bound:
         q >= n0
         =>:
             abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
-    # trust: finite even/odd partial-sum induction from Tao's proof.
+    # Source handling: the alternating-series proof compares successive even
+    # and odd partial sums by a finite induction.
+    # proof_debt: that finite even/odd tail induction is not yet a local
+    # theorem package.
     trust abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
 
 thm alternating_series_test:
@@ -1633,9 +1638,10 @@ sketch:
 
     claim:
         ? $is_decreasing_sequence(harmonic_terms)
-        # Monotonicity of reciprocal positive integers follows by clearing the
-        # positive denominator `n(n+1)`.  The example only needs this standard
-        # hypothesis of the alternating-series test.
+        # Source handling: the example applies the alternating-series test to
+        # the decreasing reciprocal sequence.
+        # proof_debt: clearing the positive denominator `n(n+1)` to prove
+        # reciprocal monotonicity has not been expanded locally.
         trust $is_decreasing_sequence(harmonic_terms)
 
     claim:
@@ -1678,9 +1684,10 @@ sketch:
 
     claim:
         ? not $is_convergent_series(harmonic_terms)
-        # trust: this follows later from Corollary 7.3.7.
-        # In the source: Tao flags the harmonic series as divergent here and
-        # proves the general p-series criterion later in Corollary 7.3.7.
+        # Source handling: this forward reference is justified later by
+        # Corollary 7.3.7, the p-series criterion.
+        # proof_debt: the later harmonic-series divergence theorem is not
+        # available at this source position.
         trust not $is_convergent_series(harmonic_terms)
 
     claim:
@@ -2180,8 +2187,10 @@ thm nonnegative_series_bounded_partial_sums_converge:
         $has_bounded_partial_sums(a)
         =>:
             $is_convergent_series(a)
-    # trust: apply monotone convergence to the increasing partial sums.
-    # This is the reverse direction of the same monotone-partial-sum argument.
+    # Source handling: Proposition 7.3.1 applies monotone convergence to the
+    # increasing sequence of partial sums.
+    # proof_debt: the local monotone-convergence bridge from bounded partial
+    # sums to a series limit remains unexpanded.
     trust $is_convergent_series(a)
 
 """
@@ -2839,6 +2848,11 @@ thm cauchy_condensation_partial_sum_upper_strong:
             partial_sum(condensed_terms(a), K + 1) <= 2 * partial_sum(a, 2^((K + 1) - 1))
 
 """
+Remark 7.3.5. Cauchy's criterion only samples the terms whose indices are
+powers of two, yet it decides convergence for monotone non-negative series.
+"""
+
+"""
 Lemma 7.3.6. The dyadic partial sums used in Cauchy's criterion bound each
 other: ordinary partial sums up to a dyadic endpoint are below the condensed
 partial sums, and condensed partial sums are below twice an ordinary partial
@@ -2948,11 +2962,6 @@ thm cauchy_condensation_test_reverse:
     $is_convergent_series(a)
 
 """
-Remark 7.3.5. Cauchy's criterion only samples the terms whose indices are
-powers of two, yet it decides convergence for monotone non-negative series.
-"""
-
-"""
 Corollary 7.3.7. The p-series sum 1/n^q converges exactly when q > 1.
 """
 
@@ -2971,10 +2980,10 @@ thm p_series_converges_when_exponent_gt_one:
         q > 1
         =>:
             $is_convergent_series(p_series_terms(q))
-    # trust: apply Cauchy's condensation test and reduce to a geometric
-    # series with ratio `2^(1-q)`.
-    # In the source: Tao proves Corollary 7.3.7 in the text by condensation
-    # and a geometric-series comparison.
+    # Source handling: the text uses Cauchy condensation and the geometric
+    # ratio `2^(1-q)`.
+    # proof_debt: the local bridge from the condensed p-series to that
+    # geometric convergence test remains unproved.
     trust $is_convergent_series(p_series_terms(q))
 
 thm p_series_diverges_when_exponent_le_one:
@@ -2982,9 +2991,9 @@ thm p_series_diverges_when_exponent_le_one:
         q <= 1
         =>:
             not $is_convergent_series(p_series_terms(q))
-    # trust: the condensed series reduces to a divergent geometric series.
-    # In the source: this is the divergent half of Corollary 7.3.7, proved in
-    # the source by the same condensation reduction.
+    # Source handling: the divergent half uses the same condensation reduction
+    # to a geometric series.
+    # proof_debt: the corresponding local divergence bridge is not expanded.
     trust not $is_convergent_series(p_series_terms(q))
 
 """
@@ -3173,12 +3182,10 @@ thm rearranged_partial_sum_le_original_at_bounded_prefix:
         $has_bounded_prefix_image(phi, n, M)
         =>:
             partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
-    # trust: rewrite both partial sums as finite sums.  The left sum is
-    # over the distinct image indices phi(1), ..., phi(n), all lying in 1..M;
-    # the missing terms in the full prefix sum are non-negative.
-    # In the source: Proposition 7.4.3 proves rearrangement invariance by
-    # comparing finite prefixes; this is one of the finite-prefix comparison
-    # steps in that proof.
+    # Source handling: Proposition 7.4.1 compares a finite rearranged prefix
+    # with an ordinary prefix containing all of its indices.
+    # proof_debt: the finite-set substitution and non-negative missing-term
+    # comparison have not been combined into this local prefix lemma.
     trust partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
 
 thm original_partial_sum_le_rearranged_at_bounded_preimage:
@@ -3188,11 +3195,10 @@ thm original_partial_sum_le_rearranged_at_bounded_preimage:
         $has_bounded_prefix_preimage(phi, n, M)
         =>:
             partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
-    # trust: every original index j <= n occurs among phi(1), ..., phi(M).
-    # After finite-sum substitution, the rearranged prefix contains all terms
-    # from the original prefix plus only non-negative extra terms.
-    # In the source: this is the converse finite-prefix containment used in
-    # Tao's proof of Proposition 7.4.3.
+    # Source handling: Proposition 7.4.1 applies the same finite-prefix
+    # containment to the inverse bijection.
+    # proof_debt: the finite-set substitution proof for that containment is
+    # not expanded locally.
     trust partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
 
 thm rearranged_series_partial_sums_cofinal:
@@ -3231,11 +3237,10 @@ thm nonnegative_series_same_sum_from_cofinal_partial_sums:
         $has_mutually_cofinal_partial_sums(a, b)
         =>:
             $has_series_sum(b, L)
-    # trust: use monotone partial sums and the cofinal inequalities to
-    # show the two partial-sum sequences have the same least upper bound, then
-    # cite uniqueness of the limit.
-    # In the source: Tao's rearrangement proof passes from cofinal finite
-    # prefix comparisons to equality of the non-negative series sums.
+    # Source handling: Proposition 7.4.1 passes from cofinal finite-prefix
+    # inequalities to equality of the two suprema of partial sums.
+    # proof_debt: the local least-upper-bound comparison and limit bridge has
+    # not been expanded.
     trust $has_series_sum(b, L)
 
 thm nonnegative_rearrangement:
@@ -3699,7 +3704,7 @@ thm absolute_rearrangement:
 
 """
 Example 7.4.4. A conditionally convergent series can change value under
-rearrangement.  Tao's example starts from the tail
+rearrangement.  This example starts from the tail
 1/3 - 1/4 + 1/5 - 1/6 + ... and rearranges it so that each positive term is
 followed by two negative terms.
 """
@@ -4170,7 +4175,7 @@ thm positive_sequence_term_positive:
     c(n) > 0
 
 # This is the sequence with kth term `c(k+1)/c(k)`.  The evaluation rule below
-# records Tao's ratio notation explicitly.
+# records the ratio notation explicitly.
 have fn ratio_terms(c seq(R): $is_positive_sequence(c)) fn(i N_pos) R = fn(k N_pos: c(k) > 0) R {c(k + 1) / c(k)}
 
 thm ratio_terms_eval:
@@ -4179,7 +4184,7 @@ thm ratio_terms_eval:
         c(n) > 0
         =>:
             ratio_terms(c)(n) = c(n + 1) / c(n)
-    # Source handling: Tao writes this sequence simply as `c_{n+1}/c_n`.
+    # Source handling: the ratio is written simply as `c_{n+1}/c_n`.
 
 thm eventual_ratio_upper_bound_gives_root_limsup_bound:
     ? forall c seq(R), r, A R, n0 N_pos:
@@ -4188,8 +4193,9 @@ thm eventual_ratio_upper_bound_gives_root_limsup_bound:
         $has_finite_limit_superior(root_test_terms(c), A)
         =>:
             A <= r
-    # trust: expand the product identity for consecutive ratios and take
-    # nth roots; this is the product-estimate core of Tao's Lemma 7.5.2.
+    # Source handling: Lemma 7.5.2 expands consecutive ratios into a product
+    # and then takes nth roots.
+    # proof_debt: this product-to-root limsup estimate is not yet proved.
     trust A <= r
 
 thm eventual_ratio_lower_bound_gives_root_liminf_bound:
@@ -4199,9 +4205,9 @@ thm eventual_ratio_lower_bound_gives_root_liminf_bound:
         $has_finite_limit_inferior(root_test_terms(c), A)
         =>:
             r <= A
-    # trust: expand the product identity for consecutive ratios and take
-    # nth roots; this is the lower-bound product-estimate core of Tao's Lemma
-    # 7.5.2.
+    # Source handling: Lemma 7.5.2 uses the same product estimate for the
+    # lower ratio bound.
+    # proof_debt: this product-to-root liminf estimate is not yet proved.
     trust r <= A
 
 thm ratio_limsup_bounds_root_limsup:
@@ -4260,11 +4266,10 @@ thm ratio_limsup_less_than_one_gives_root_limsup_below_one:
         alpha < 1
         =>:
             exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
-    # trust: combine the upper product estimate in Lemma 7.5.2 with the
-    # finite-limsup existence for the positive root sequence.
-    # In the source: Lemma 7.5.2 supplies the product-estimate comparison
-    # between ratios and nth roots; this theorem packages the `limsup < 1`
-    # consequence used by the ratio test.
+    # Source handling: Lemma 7.5.2 transfers an upper ratio bound to the
+    # limsup of the nth roots.
+    # proof_debt: the chapter lacks the combined product-estimate and
+    # finite-limsup-existence bridge needed for this consequence.
     trust exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
 
 thm ratio_liminf_greater_than_one_gives_root_limsup_above_one:
@@ -4274,10 +4279,9 @@ thm ratio_liminf_greater_than_one_gives_root_limsup_above_one:
         beta > 1
         =>:
             exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
-    # trust: combine the lower product estimate in Lemma 7.5.2 with
-    # liminf <= limsup for the positive root sequence.
-    # In the source: this is the `liminf > 1` consequence of Tao's Lemma
-    # 7.5.2, used in the divergent half of the ratio test.
+    # Source handling: Lemma 7.5.2 and `liminf <= limsup` transfer the lower
+    # ratio bound to a root limsup above one.
+    # proof_debt: the local product-estimate/liminf-limsup bridge is missing.
     trust exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
 
 thm positive_sequence_ratio_limit_one_gives_root_limit_one:
@@ -4286,10 +4290,10 @@ thm positive_sequence_ratio_limit_one_gives_root_limit_one:
         $has_limit(ratio_terms(c), 1)
         =>:
             $has_limit(root_test_terms(c), 1)
-    # trust: this is the equality case of the product estimate in Lemma
-    # 7.5.2, obtained by applying upper and lower ratio bounds tending to 1.
-    # In the source: Tao records the equality case as part of Lemma 7.5.2;
-    # it is a product-estimate consequence rather than a new series test.
+    # Source handling: Lemma 7.5.2 applies upper and lower ratio bounds
+    # tending to one.
+    # proof_debt: the equality case of this product estimate remains a local
+    # theorem-package gap.
     trust $has_limit(root_test_terms(c), 1)
 
 """
@@ -4323,8 +4327,8 @@ thm absolute_ratio_terms_eval:
         abs(a(n)) > 0
         =>:
             absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
-    # In the source: Corollary 7.5.3 applies Lemma 7.5.2 to the positive
-    # sequence `abs(a_n)`, so the source writes this ratio directly.
+    # Source handling: Corollary 7.5.3 applies Lemma 7.5.2 to the positive
+    # sequence `abs(a_n)`, and writes this ratio directly.
 
 have fn absolute_value_sequence(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {abs(a(j))}
 
@@ -4533,7 +4537,3 @@ belongs with integration in Chapter 11.
 """
 
 # The integral test is postponed until integration has been developed.
-
-# Final audit (2026-07-12): 16 non-exercise markers remain for the series
-# definition, alternating/non-negative tests, the p-series, rearrangements,
-# and the root/ratio comparison lemma.  One source-exercise marker is excluded.

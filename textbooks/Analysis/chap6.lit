@@ -1,141 +1,8 @@
-# Analysis I, Chapter 6: Limits of sequences.
+# Chapter 6: Limits of sequences.
 
-import Real
-
-# Chapter 5 supplies the real-line completeness vocabulary used here.
+# Chapter 5 supplies the locally developed completeness vocabulary used here.
 trust local import chap5
-
-# Concept graph annotations for the Chapter 6 spine.  These comments are the
-# semantic layer for `litex -kg`; the verifier ignores them.
-# kg: node concept distance_on_R label="distance on the real line"
-# kg: node concept epsilon_closeness label="epsilon-closeness on R"
-# kg: node concept cauchy_sequence label="Cauchy sequence of reals"
-# kg: node concept rational_epsilon_cauchy label="rational-epsilon Cauchy criterion"
-# kg: node concept sequence_limit label="limit of a real sequence"
-# kg: node concept sequence_limit_unique label="uniqueness of sequence limits"
-# kg: node concept lim_notation label="lim notation for convergent sequences"
-# kg: node concept bounded_sequence label="bounded real sequence"
-# kg: node concept extended_real_line label="extended real line" status="comment_only"
-# kg: node concept extended_supremum_infimum label="extended suprema and infima" status="comment_only"
-# kg: node concept supremum_infimum label="least upper and greatest lower bounds"
-# kg: node concept tail_supremum label="tail supremum of a sequence"
-# kg: node concept tail_infimum label="tail infimum of a sequence"
-# kg: node concept monotone_convergence label="monotone convergence for real sequences"
-# kg: node concept least_upper_bound_property label="least upper bound property"
-# kg: node concept limit_point label="limit point of a sequence"
-# kg: node concept limsup label="limit superior"
-# kg: node concept liminf label="limit inferior"
-# kg: node concept finite_limsup label="finite limsup theorem package"
-# kg: node concept finite_liminf label="finite liminf theorem package"
-# kg: node concept squeeze_test label="squeeze test"
-# kg: node concept real_sequence_completeness label="real sequence completeness"
-# kg: node concept subsequence label="subsequence"
-# kg: node concept limit_point_subsequence_equivalence label="limit point and convergent subsequence equivalence"
-# kg: node concept bolzano_weierstrass label="Bolzano-Weierstrass theorem for sequences"
-# kg: node concept real_exponentiation label="real exponentiation"
-# kg: bind concept:distance_on_R formal:fn:dist_R
-# kg: bind concept:epsilon_closeness formal:prop:is_epsilon_close_in_R
-# kg: bind concept:cauchy_sequence formal:prop:is_cauchy_sequence
-# kg: bind concept:rational_epsilon_cauchy formal:prop:is_cauchy_sequence_with_rational_epsilon
-# kg: bind concept:sequence_limit formal:prop:has_limit
-# kg: bind concept:sequence_limit_unique formal:thm:sequence_limit_unique
-# kg: bind concept:lim_notation formal:fn:lim
-# kg: bind concept:bounded_sequence formal:prop:is_bounded_sequence
-# kg: bind concept:supremum_infimum formal:prop:is_least_upper_bound
-# kg: bind concept:least_upper_bound_property formal:prop:has_least_upper_bound
-# kg: bind concept:tail_supremum formal:prop:is_tail_supremum
-# kg: bind concept:tail_infimum formal:prop:is_tail_infimum
-# kg: bind concept:monotone_convergence formal:thm:bounded_increasing_sequence_converges
-# kg: bind concept:limit_point formal:prop:is_limit_point
-# kg: bind concept:limsup formal:prop:has_finite_limit_superior
-# kg: bind concept:liminf formal:prop:has_finite_limit_inferior
-# kg: bind concept:finite_limsup formal:thm:bounded_sequence_has_finite_limsup
-# kg: bind concept:finite_liminf formal:thm:finite_liminf_le_finite_limsup
-# kg: bind concept:squeeze_test formal:thm:squeeze_converges_to
-# kg: bind concept:real_sequence_completeness formal:thm:real_sequence_cauchy_implies_convergent_for_completeness_theorem
-# kg: bind concept:subsequence formal:prop:has_subsequence
-# kg: bind concept:limit_point_subsequence_equivalence formal:thm:limit_point_has_convergent_subsequence
-# kg: bind concept:bolzano_weierstrass formal:thm:bolzano_weierstrass_convergent_subsequence
-# kg: bind concept:real_exponentiation formal:thm:real_power_is_rational_approximation_limit
-# kg: edge depends_on concept:sequence_limit concept:epsilon_closeness source="Definition 6.1.5"
-# kg: edge depends_on concept:cauchy_sequence concept:epsilon_closeness source="Definition 6.1.3"
-# kg: edge equivalent_to concept:cauchy_sequence concept:rational_epsilon_cauchy source="Proposition 6.1.4"
-# kg: edge depends_on concept:lim_notation concept:sequence_limit_unique source="Definition 6.1.8"
-# kg: edge depends_on concept:bounded_sequence concept:cauchy_sequence source="Corollary 6.1.17"
-# kg: edge depends_on concept:monotone_convergence concept:least_upper_bound_property source="Proposition 6.3.8"
-# kg: edge depends_on concept:tail_supremum concept:supremum_infimum source="Definition 6.3.1"
-# kg: edge depends_on concept:tail_infimum concept:supremum_infimum source="Definition 6.3.1"
-# kg: edge depends_on concept:limsup concept:tail_supremum source="Definition 6.4.6"
-# kg: edge depends_on concept:liminf concept:tail_infimum source="Definition 6.4.6"
-# kg: edge depends_on concept:squeeze_test concept:limsup source="Corollary 6.4.14"
-# kg: edge depends_on concept:squeeze_test concept:liminf source="Corollary 6.4.14"
-# kg: edge depends_on concept:real_sequence_completeness concept:least_upper_bound_property source="Proposition 6.4.18"
-# kg: edge depends_on concept:limit_point_subsequence_equivalence concept:limit_point source="Proposition 6.6.6"
-# kg: edge depends_on concept:limit_point_subsequence_equivalence concept:subsequence source="Proposition 6.6.6"
-# kg: edge depends_on concept:bolzano_weierstrass concept:finite_limsup source="Theorem 6.6.8"
-# kg: edge depends_on concept:bolzano_weierstrass concept:limit_point_subsequence_equivalence source="Theorem 6.6.8"
-# kg: edge depends_on concept:real_exponentiation concept:sequence_limit source="Definition 6.7.2"
-
-# Least-upper-bound background
-
-thm least_upper_bound_existence:
-    ? forall E power_set(R):
-        $is_nonempty_set(E)
-        $has_upper_bound(E)
-        =>:
-            exist! M R st {$is_least_upper_bound(E, M)}
-            $has_least_upper_bound(E)
-    # Chapter 6 reuses the completeness/LUB theorem developed in Chapter 5.
-    # `std/Real` exposes the same real-line completeness interface; this bridge
-    # translates between the std upper-bound vocabulary and this chapter's
-    # local source-facing predicates.
-    E $subset R
-    claim:
-        ? $Real::nonempty_subset(E)
-        $is_nonempty_set(E)
-        E $subset R
-    claim:
-        ? $Real::has_upper_bound(E)
-        obtain B from exist B R st {$is_upper_bound(E, B)}
-        claim:
-            ? $Real::is_upper_bound(E, B)
-            forall x E:
-                x <= B
-        witness exist C R st {$Real::is_upper_bound(E, C)} from B:
-            $Real::is_upper_bound(E, B)
-    by thm Real::exists_least_upper_bound(E)
-    $Real::has_least_upper_bound(E)
-    obtain M from exist M R st {$Real::is_least_upper_bound(E, M)}
-    claim:
-        ? $is_least_upper_bound(E, M)
-        E $subset R
-        claim:
-            ? $is_upper_bound(E, M)
-            E $subset R
-            forall x E:
-                x <= M
-        claim:
-            ? forall B R:
-                $is_upper_bound(E, B)
-                =>:
-                    M <= B
-            claim:
-                ? $Real::is_upper_bound(E, B)
-                forall x E:
-                    x <= B
-            M <= B
-    witness exist M0 R st {$is_least_upper_bound(E, M0)} from M:
-        $is_least_upper_bound(E, M)
-    $has_least_upper_bound(E)
-    claim:
-        ? forall M1, M2 R:
-            $is_least_upper_bound(E, M1)
-            $is_least_upper_bound(E, M2)
-            =>:
-                M1 = M2
-        M1 <= M2 <= M1
-        M1 = M2
-    exist! M R st {$is_least_upper_bound(E, M)}
+trust local import chap4
 
 # 6.1 Convergence and limit laws
 
@@ -5089,51 +4956,10 @@ and x^q'_n converge and have the same limit.
 
 have fn rational_power_approx_seq(x R_pos, q seq(R)) fn(k N_pos) R = fn(n N_pos) R {x^(q(n))}
 
-# Chapter 5 constructs real numbers from rational Cauchy sequences.  This
-# bridge is placed here because rational powers are the first later use.
-
 prop is_rational_approximation_sequence(q seq(R), alpha R):
     forall n N_pos:
         q(n) $in Q
     $has_limit(q, alpha)
-
-thm chapter5_rational_approximation_sequence_exists:
-    ? forall alpha R:
-        exist q seq(R) st {$is_rational_approximation_sequence(q, alpha)}
-    # Chapter 5 constructs reals from rational Cauchy approximants.  The std
-    # real-line interface gives the rational sequence; this proof views its
-    # rational terms as real terms and translates its limit predicate to chap6.
-    by thm Real::exists_rat_seq_converging_to_real(alpha)
-    obtain a from exist a seq(Q) st {$Real::rat_seq_converges(a, alpha), $Real::rat_seq_cauchy(a)}
-    have fn q(n N_pos) R = a(n)
-    claim:
-        ? forall n N_pos:
-            q(n) $in Q
-        q(n) = a(n)
-        a(n) $in Q
-        q(n) $in Q
-    claim:
-        ? $has_limit(q, alpha)
-        claim:
-            ? forall epsilon R_pos:
-                $has_eventual_closeness_to(q, alpha, epsilon)
-            obtain n0 from exist n0 N_pos st {$Real::rat_seq_tail_close(a, alpha, epsilon, n0)}
-            witness exist N0 N_pos st {$is_tail_close_to(q, alpha, epsilon, N0)} from n0:
-                claim:
-                    ? forall n N_pos:
-                        n >= n0
-                        =>:
-                            abs(q(n) - alpha) < epsilon
-                    q(n) = a(n)
-                    abs(q(n) - alpha) = abs(a(n) - alpha) < epsilon
-                $is_tail_close_to(q, alpha, epsilon, n0)
-            $has_eventual_closeness_to(q, alpha, epsilon)
-        $has_limit(q, alpha)
-    witness exist q0 seq(R) st {$is_rational_approximation_sequence(q0, alpha)} from q:
-        forall n N_pos:
-            q(n) $in Q
-        $has_limit(q, alpha)
-        $is_rational_approximation_sequence(q, alpha)
 
 thm positive_base_power_preserves_sequence_limit:
     ? forall x R_pos, a seq(R), L R:
@@ -5207,7 +5033,42 @@ converging to alpha.
 thm rational_approximation_sequence_exists:
     ? forall alpha R:
         exist q seq(R) st {$is_rational_approximation_sequence(q, alpha)}
-    by thm chapter5_rational_approximation_sequence_exists(alpha)
+    # Each real has a rational Cauchy representative.  Regard its rational
+    # values as real values and translate the same tail estimate into the
+    # present convergence vocabulary.
+    by thm cauchy_sequence_representative_in_Q_exists(alpha)
+    obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, alpha)}
+    have fn q(n N_pos) R = a(n)
+    claim:
+        ? forall n N_pos:
+            q(n) $in Q
+        q(n) = a(n)
+        a(n) $in Q
+        q(n) $in Q
+    claim:
+        ? $has_limit(q, alpha)
+        claim:
+            ? forall epsilon R_pos:
+                $has_eventual_closeness_to(q, alpha, epsilon)
+            $has_formal_limit_in_Q(a, alpha)
+            $has_rational_sequence_limit_in_R(a, alpha)
+            obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, alpha, epsilon, n0)}
+            witness exist N0 N_pos st {$is_tail_close_to(q, alpha, epsilon, N0)} from n0:
+                claim:
+                    ? forall n N_pos:
+                        n >= n0
+                        =>:
+                            abs(q(n) - alpha) < epsilon
+                    q(n) = a(n)
+                    abs(q(n) - alpha) = abs(a(n) - alpha) < epsilon
+                $is_tail_close_to(q, alpha, epsilon, n0)
+            $has_eventual_closeness_to(q, alpha, epsilon)
+        $has_limit(q, alpha)
+    witness exist q0 seq(R) st {$is_rational_approximation_sequence(q0, alpha)} from q:
+        forall n N_pos:
+            q(n) $in Q
+        $has_limit(q, alpha)
+        $is_rational_approximation_sequence(q, alpha)
 
 thm real_power_is_rational_approximation_limit:
     ? forall x R_pos, alpha R, q seq(R):
@@ -5322,6 +5183,74 @@ thm real_power_exponent_strict_antimono_below_one:
     x^q = x^(r + (q - r)) = x^r * x^(q - r)
     x^q < x^r
 
-# Final audit (2026-07-12): no direct non-exercise `trust` or `abstract_prop`
-# marker remains.  The Chapter 5 `trust local import` is a reuse dependency,
-# not a mathematical proof hole.
+# Machine-readable concept-graph annotations for the formal chapter spine.
+# They are kept after the textbook material so ordinary reading follows the
+# source order above.
+# kg: node concept distance_on_R label="distance on the real line"
+# kg: node concept epsilon_closeness label="epsilon-closeness on R"
+# kg: node concept cauchy_sequence label="Cauchy sequence of reals"
+# kg: node concept rational_epsilon_cauchy label="rational-epsilon Cauchy criterion"
+# kg: node concept sequence_limit label="limit of a real sequence"
+# kg: node concept sequence_limit_unique label="uniqueness of sequence limits"
+# kg: node concept lim_notation label="lim notation for convergent sequences"
+# kg: node concept bounded_sequence label="bounded real sequence"
+# kg: node concept extended_real_line label="extended real line" status="comment_only"
+# kg: node concept extended_supremum_infimum label="extended suprema and infima" status="comment_only"
+# kg: node concept supremum_infimum label="least upper and greatest lower bounds"
+# kg: node concept tail_supremum label="tail supremum of a sequence"
+# kg: node concept tail_infimum label="tail infimum of a sequence"
+# kg: node concept monotone_convergence label="monotone convergence for real sequences"
+# kg: node concept least_upper_bound_property label="least upper bound property"
+# kg: node concept limit_point label="limit point of a sequence"
+# kg: node concept limsup label="limit superior"
+# kg: node concept liminf label="limit inferior"
+# kg: node concept finite_limsup label="finite limsup theorem package"
+# kg: node concept finite_liminf label="finite liminf theorem package"
+# kg: node concept squeeze_test label="squeeze test"
+# kg: node concept real_sequence_completeness label="real sequence completeness"
+# kg: node concept subsequence label="subsequence"
+# kg: node concept limit_point_subsequence_equivalence label="limit point and convergent subsequence equivalence"
+# kg: node concept bolzano_weierstrass label="Bolzano-Weierstrass theorem for sequences"
+# kg: node concept real_exponentiation label="real exponentiation"
+# kg: bind concept:distance_on_R formal:fn:dist_R
+# kg: bind concept:epsilon_closeness formal:prop:is_epsilon_close_in_R
+# kg: bind concept:cauchy_sequence formal:prop:is_cauchy_sequence
+# kg: bind concept:rational_epsilon_cauchy formal:prop:is_cauchy_sequence_with_rational_epsilon
+# kg: bind concept:sequence_limit formal:prop:has_limit
+# kg: bind concept:sequence_limit_unique formal:thm:sequence_limit_unique
+# kg: bind concept:lim_notation formal:fn:lim
+# kg: bind concept:bounded_sequence formal:prop:is_bounded_sequence
+# kg: bind concept:supremum_infimum formal:prop:is_least_upper_bound
+# kg: bind concept:least_upper_bound_property formal:prop:has_least_upper_bound
+# kg: bind concept:tail_supremum formal:prop:is_tail_supremum
+# kg: bind concept:tail_infimum formal:prop:is_tail_infimum
+# kg: bind concept:monotone_convergence formal:thm:bounded_increasing_sequence_converges
+# kg: bind concept:limit_point formal:prop:is_limit_point
+# kg: bind concept:limsup formal:prop:has_finite_limit_superior
+# kg: bind concept:liminf formal:prop:has_finite_limit_inferior
+# kg: bind concept:finite_limsup formal:thm:bounded_sequence_has_finite_limsup
+# kg: bind concept:finite_liminf formal:thm:finite_liminf_le_finite_limsup
+# kg: bind concept:squeeze_test formal:thm:squeeze_converges_to
+# kg: bind concept:real_sequence_completeness formal:thm:real_sequence_cauchy_implies_convergent_for_completeness_theorem
+# kg: bind concept:subsequence formal:prop:has_subsequence
+# kg: bind concept:limit_point_subsequence_equivalence formal:thm:limit_point_has_convergent_subsequence
+# kg: bind concept:bolzano_weierstrass formal:thm:bolzano_weierstrass_convergent_subsequence
+# kg: bind concept:real_exponentiation formal:thm:real_power_is_rational_approximation_limit
+# kg: edge depends_on concept:sequence_limit concept:epsilon_closeness source="Definition 6.1.5"
+# kg: edge depends_on concept:cauchy_sequence concept:epsilon_closeness source="Definition 6.1.3"
+# kg: edge equivalent_to concept:cauchy_sequence concept:rational_epsilon_cauchy source="Proposition 6.1.4"
+# kg: edge depends_on concept:lim_notation concept:sequence_limit_unique source="Definition 6.1.8"
+# kg: edge depends_on concept:bounded_sequence concept:cauchy_sequence source="Corollary 6.1.17"
+# kg: edge depends_on concept:monotone_convergence concept:least_upper_bound_property source="Proposition 6.3.8"
+# kg: edge depends_on concept:tail_supremum concept:supremum_infimum source="Definition 6.3.1"
+# kg: edge depends_on concept:tail_infimum concept:supremum_infimum source="Definition 6.3.1"
+# kg: edge depends_on concept:limsup concept:tail_supremum source="Definition 6.4.6"
+# kg: edge depends_on concept:liminf concept:tail_infimum source="Definition 6.4.6"
+# kg: edge depends_on concept:squeeze_test concept:limsup source="Corollary 6.4.14"
+# kg: edge depends_on concept:squeeze_test concept:liminf source="Corollary 6.4.14"
+# kg: edge depends_on concept:real_sequence_completeness concept:least_upper_bound_property source="Proposition 6.4.18"
+# kg: edge depends_on concept:limit_point_subsequence_equivalence concept:limit_point source="Proposition 6.6.6"
+# kg: edge depends_on concept:limit_point_subsequence_equivalence concept:subsequence source="Proposition 6.6.6"
+# kg: edge depends_on concept:bolzano_weierstrass concept:finite_limsup source="Theorem 6.6.8"
+# kg: edge depends_on concept:bolzano_weierstrass concept:limit_point_subsequence_equivalence source="Theorem 6.6.8"
+# kg: edge depends_on concept:real_exponentiation concept:sequence_limit source="Definition 6.7.2"
