@@ -28,8 +28,8 @@ prop bounded_above_seq(a seq(R)):
 prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
 
-proof_debt:
-    # proof_debt: prove from the real least-upper-bound interface by
+trust:
+    # trust: prove from the real least-upper-bound interface by
     # taking the supremum of the sequence range.
     forall a seq(R):
         $increasing_seq(a)
@@ -37,7 +37,7 @@ proof_debt:
         =>:
             $Real::convergent_seq(a)
 
-    # proof_debt: dual bounded monotone convergence theorem, using the
+    # trust: dual bounded monotone convergence theorem, using the
     # infimum of the sequence range.
     forall a seq(R):
         $decreasing_seq(a)

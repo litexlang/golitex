@@ -1,5 +1,5 @@
 pub const COMMON_FACTS: &str = r#"
-proof_debt:
+trust:
     + $in fn(a, b R) R
     - $in fn(a, b R) R
     * $in fn(a, b R) R
@@ -9,9 +9,9 @@ proof_debt:
 
 # A nonempty family of nonempty sets is available as a basic set-theoretic
 # witness. Example: `have X nonempty_set: forall! x X => {$is_nonempty_set(x)}`.
-proof_debt exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
+trust exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
 
-proof_debt:
+trust:
     forall a, b R:
         =>:
             a = 0 and b = 0
@@ -106,10 +106,10 @@ thm archimedean_property:
     prove:
         forall e R_pos:
             exist n N_pos st {1/n < e}
-    proof_debt:
+    trust:
         exist n N_pos st {1/n < e}
 
-proof_debt:
+trust:
     forall s set:
         seq(s) = fn(x N_pos) s
 
@@ -230,7 +230,7 @@ thm even_power_abs_bound:
             x^k <= y^k
             =>:
                 abs(x) <= abs(y)
-    proof_debt:
+    trust:
         abs(x) <= abs(y)
 
 thm even_power_bound_by_nonnegative_rhs:
@@ -242,7 +242,7 @@ thm even_power_bound_by_nonnegative_rhs:
             =>:
                 -y <= x
                 x <= y
-    proof_debt:
+    trust:
         -y <= x
         x <= y
 
@@ -255,18 +255,18 @@ thm even_power_bound_by_nonpositive_rhs:
             =>:
                 y <= x
                 x <= -y
-    proof_debt:
+    trust:
         y <= x
         x <= -y
 
 
-let pi R:
+trust have pi R:
     pi > 0
 
-let euler_e R:
+trust have euler_e R:
     euler_e > 0
         
-proof_debt:
+trust:
     forall a, b R_pos:
         a^2 < b^2 or a^3 < b^3 or a^4 < b^4 or a^5 < b^5
         =>:
@@ -284,7 +284,7 @@ thm pos_pow_strict_order_reflects:
             k >= 1
             =>:
                 a < b
-    proof_debt:
+    trust:
         a < b
 
 thm pos_pow_order_reflects:
@@ -294,10 +294,10 @@ thm pos_pow_order_reflects:
             k >= 1
             =>:
                 a <= b
-    proof_debt:
+    trust:
         a <= b
 
-proof_debt forall s set:
+trust forall s set:
     s $in power_set(s)
     {} $in power_set(s)
 

@@ -1,269 +1,380 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 // Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
 pub const BUILTIN_CODE_PATH: &str = "builtin_code";
 
-#[derive(Clone)]
-pub struct ImportedModule {
-    pub absolute_path: String,
-    pub environment: Rc<Environment>,
-    pub is_std: bool,
-    /// Modules imported while this module was loaded.
-    ///
-    /// This is not a textual include list for display. It is runtime state used
-    /// when a cached module is reactivated after `stop import`. For example,
-    /// reimporting `Int` should reactivate the cached `Nat` module that `Int`
-    /// imports.
-    pub import_dependencies: Vec<String>,
-}
-
-impl ImportedModule {
-    pub fn new(
-        absolute_path: String,
-        environment: Environment,
-        is_std: bool,
-        import_dependencies: Vec<String>,
-    ) -> Self {
-        ImportedModule {
-            absolute_path,
-            environment: Rc::new(environment),
-            is_std,
-            import_dependencies,
-        }
-    }
-}
-
-/// Tracks module/import state for one top-level run.
+/// Owns every module participating in one top-level Runtime.
 ///
-/// The entry runtime and all imported-module runtimes hold the same
-/// `Rc<RefCell<ModuleManager>>`, so nested imports update the state visible to
-/// the original runtime.
+/// Module runners refer to dependencies by `ModuleId`; they never hold Runtime
+/// or runner references. This keeps all cross-module lookup and lifecycle state
+/// inside one per-run registry.
 #[derive(Clone)]
 pub struct ModuleManager {
-    pub current_source_path_rc: Rc<str>,
-    /// Dependencies collected for modules that are still loading.
-    ///
-    /// Example: while loading `Int`, the statement `import Nat` is seen before
-    /// `Int` can be registered as an `ImportedModule`. We temporarily store
-    /// `Int -> Nat` here, then move that list into `ImportedModule.import_dependencies`
-    /// when `Int` finishes loading. If loading fails, the import rollback restores
-    /// this map with the rest of the module-manager snapshot.
-    pub pending_import_dependencies: HashMap<String, Vec<String>>,
-    pub loading_import_stack: Vec<(String, String)>,
-    pub current_module_path: String,
-    pub current_module_name: String,
+    pub builtin_environment: Box<Environment>,
+    pub modules: HashMap<ModuleId, ModuleRunner>,
+    pub module_by_name: HashMap<String, ModuleId>,
+    pub module_by_path: HashMap<String, ModuleId>,
+    pub root_exports: HashMap<String, ImportTarget>,
+    pub exported_files_by_name: HashMap<String, ImportTarget>,
+    pub exported_file_by_path: HashMap<String, ImportTarget>,
+    pub loading_import_stack: Vec<ModuleId>,
+    pub next_module_id: usize,
+    pub entry_module_id: Option<ModuleId>,
     pub entry_path_rc: Rc<str>,
-    pub imported_modules: HashMap<String, ImportedModule>,
-    pub stopped_module: HashSet<String>,
 }
 
 impl ModuleManager {
-    pub fn new_empty_module_manager(initial_path: &str) -> Self {
-        let initial_path_rc: Rc<str> = Rc::from(initial_path);
+    pub fn new(initial_path: &str) -> Self {
         ModuleManager {
-            current_source_path_rc: initial_path_rc.clone(),
-            pending_import_dependencies: HashMap::new(),
+            builtin_environment: Box::new(Environment::new_empty_env()),
+            modules: HashMap::new(),
+            module_by_name: HashMap::new(),
+            module_by_path: HashMap::new(),
+            root_exports: HashMap::new(),
+            exported_files_by_name: HashMap::new(),
+            exported_file_by_path: HashMap::new(),
             loading_import_stack: vec![],
-            current_module_path: String::new(),
-            current_module_name: String::new(),
-            entry_path_rc: initial_path_rc,
-            imported_modules: HashMap::new(),
-            stopped_module: HashSet::new(),
+            next_module_id: 0,
+            entry_module_id: None,
+            entry_path_rc: Rc::from(initial_path),
         }
     }
 
-    pub fn current_file_path_rc(&self) -> Rc<str> {
-        self.current_source_path_rc.clone()
+    pub fn create_entry_module(&mut self, main_file_path: &str) -> ModuleId {
+        let id = self.allocate_module_id();
+        let module_root_path = module_root_path_for_main_file(main_file_path);
+        let runner = ModuleRunner::new(
+            id,
+            String::new(),
+            module_root_path,
+            main_file_path.to_string(),
+            false,
+            ModuleStatus::Loaded,
+        );
+        self.modules.insert(id, runner);
+        self.entry_module_id = Some(id);
+        self.entry_path_rc = Rc::from(main_file_path);
+        id
     }
 
-    pub fn validate_imported_module_is_new(
-        &self,
-        module_name: &str,
-        absolute_path: &str,
-    ) -> Result<(), String> {
-        if self.imported_modules.contains_key(module_name) {
+    pub fn create_repository_entry_module(
+        &mut self,
+        module_root_path: String,
+        main_file_path: String,
+    ) -> Result<ModuleId, String> {
+        if self.entry_module_id.is_some() {
+            return Err("entry module has already been created".to_string());
+        }
+        let id = self.allocate_module_id();
+        let runner = ModuleRunner::new(
+            id,
+            String::new(),
+            module_root_path.clone(),
+            main_file_path.clone(),
+            false,
+            ModuleStatus::Loaded,
+        );
+        self.modules.insert(id, runner);
+        self.module_by_path.insert(module_root_path, id);
+        self.entry_module_id = Some(id);
+        self.entry_path_rc = Rc::from(main_file_path);
+        Ok(id)
+    }
+
+    pub fn create_discovered_module(
+        &mut self,
+        module_name: String,
+        module_root_path: String,
+        main_file_path: String,
+    ) -> Result<ModuleId, String> {
+        if self.module_by_name.contains_key(&module_name) {
             return Err(format!(
                 "module name `{}` has already been used",
                 module_name
             ));
         }
-        if let Some((used_module_name, _)) = self
-            .imported_modules
-            .iter()
-            .find(|(_, imported)| imported.absolute_path == absolute_path)
+        if let Some(existing_id) = self.module_by_path.get(&module_root_path) {
+            let existing_name = self
+                .modules
+                .get(existing_id)
+                .map(|module| module.module_name.as_str())
+                .unwrap_or("");
+            return Err(format!(
+                "module path `{}` has already been registered as module `{}`",
+                module_root_path, existing_name
+            ));
+        }
+
+        let id = self.allocate_module_id();
+        let runner = ModuleRunner::new(
+            id,
+            module_name.clone(),
+            module_root_path.clone(),
+            main_file_path,
+            false,
+            ModuleStatus::Discovered,
+        );
+        self.modules.insert(id, runner);
+        self.module_by_name.insert(module_name, id);
+        self.module_by_path.insert(module_root_path, id);
+        Ok(id)
+    }
+
+    pub fn register_root_export(
+        &mut self,
+        name: String,
+        target: ImportTarget,
+    ) -> Result<(), String> {
+        if self.root_exports.insert(name.clone(), target).is_some() {
+            return Err(format!("duplicate root export name `{}`", name));
+        }
+        Ok(())
+    }
+
+    pub fn register_exported_file(
+        &mut self,
+        canonical_name: String,
+        source_path: String,
+        target: ImportTarget,
+    ) -> Result<(), String> {
+        if self
+            .exported_files_by_name
+            .insert(canonical_name.clone(), target)
+            .is_some()
         {
             return Err(format!(
-                "module path `{}` has already been imported as module name `{}`",
-                absolute_path, used_module_name
+                "duplicate canonical exported file name `{}`",
+                canonical_name
+            ));
+        }
+        if let Some(existing_target) = self
+            .exported_file_by_path
+            .insert(source_path.clone(), target)
+        {
+            self.exported_files_by_name.remove(&canonical_name);
+            let existing_name = self
+                .canonical_name_for_target(existing_target)
+                .unwrap_or("");
+            return Err(format!(
+                "exported file path `{}` has already been registered as `{}`",
+                source_path, existing_name
             ));
         }
         Ok(())
     }
 
-    pub fn imported_module_can_be_loaded_or_reactivated(
+    pub fn root_export(&self, name: &str) -> Option<ImportTarget> {
+        self.root_exports.get(name).copied()
+    }
+
+    pub fn import_target_by_canonical_name(&self, name: &str) -> Option<ImportTarget> {
+        if let Some(module_id) = self.module_id_by_name(name) {
+            return Some(ImportTarget::Module(module_id));
+        }
+        self.exported_files_by_name.get(name).copied()
+    }
+
+    pub fn canonical_name_for_target(&self, target: ImportTarget) -> Option<&str> {
+        match target {
+            ImportTarget::Module(module_id) => self
+                .module(module_id)
+                .map(|module| module.module_name.as_str()),
+            ImportTarget::File { module_id, file_id } => self
+                .module(module_id)?
+                .file(file_id)?
+                .canonical_name
+                .as_str()
+                .into(),
+        }
+    }
+
+    pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner> {
+        self.modules.get(&id)
+    }
+
+    pub fn module_mut(&mut self, id: ModuleId) -> Option<&mut ModuleRunner> {
+        self.modules.get_mut(&id)
+    }
+
+    pub fn module_id_by_name(&self, module_name: &str) -> Option<ModuleId> {
+        self.module_by_name.get(module_name).copied()
+    }
+
+    pub fn module_by_import_name(&self, module_name: &str) -> Option<&ModuleRunner> {
+        let id = self.module_id_by_name(module_name)?;
+        self.module(id)
+    }
+
+    pub fn imported_module_can_be_loaded(
         &self,
         module_name: &str,
         absolute_path: &str,
-    ) -> Result<bool, String> {
-        if let Some(imported_module) = self.imported_modules.get(module_name) {
-            if imported_module.absolute_path == absolute_path {
-                return Ok(true);
+    ) -> Result<Option<ModuleId>, String> {
+        if let Some(module_id) = self.module_by_name.get(module_name).copied() {
+            let Some(module) = self.modules.get(&module_id) else {
+                unreachable!("module name index points to a missing module")
+            };
+            if module.module_root_path == absolute_path {
+                if module.status == ModuleStatus::Loading {
+                    let cycle_start_index = self
+                        .loading_import_stack
+                        .iter()
+                        .position(|loading_id| *loading_id == module_id)
+                        .unwrap_or(0);
+                    let mut cycle_names = self.loading_import_stack[cycle_start_index..]
+                        .iter()
+                        .filter_map(|loading_id| self.modules.get(loading_id))
+                        .map(|loading_module| loading_module.module_name.clone())
+                        .collect::<Vec<String>>();
+                    cycle_names.push(module_name.to_string());
+                    return Err(format!("cyclic import: {}", cycle_names.join(" -> ")));
+                }
+                return Ok(Some(module_id));
             }
             return Err(format!(
                 "module name `{}` has already been used",
                 module_name
             ));
         }
-        if let Some((used_module_name, _)) = self
-            .imported_modules
-            .iter()
-            .find(|(_, imported)| imported.absolute_path == absolute_path)
-        {
+
+        if let Some(module_id) = self.module_by_path.get(absolute_path).copied() {
+            let Some(module) = self.modules.get(&module_id) else {
+                unreachable!("module path index points to a missing module")
+            };
             return Err(format!(
                 "module path `{}` has already been imported as module name `{}`",
-                absolute_path, used_module_name
+                absolute_path, module.module_name
             ));
         }
-        Ok(false)
+
+        Ok(None)
     }
 
     pub fn begin_loading_import(
         &mut self,
-        module_name: &str,
-        absolute_path: &str,
-    ) -> Result<(), String> {
-        if let Some(cycle_start_index) = self
-            .loading_import_stack
-            .iter()
-            .position(|(_, loading_path)| loading_path == absolute_path)
-        {
+        module_name: String,
+        module_root_path: String,
+        main_file_path: String,
+        is_std: bool,
+    ) -> Result<ModuleId, String> {
+        if let Some(cycle_start_index) = self.loading_import_stack.iter().position(|module_id| {
+            self.modules
+                .get(module_id)
+                .is_some_and(|module| module.module_root_path == module_root_path)
+        }) {
             let mut cycle_names = self.loading_import_stack[cycle_start_index..]
                 .iter()
-                .map(|(loading_name, _)| loading_name.clone())
+                .filter_map(|module_id| self.modules.get(module_id))
+                .map(|module| module.module_name.clone())
                 .collect::<Vec<String>>();
-            cycle_names.push(module_name.to_string());
+            cycle_names.push(module_name);
             return Err(format!("cyclic import: {}", cycle_names.join(" -> ")));
         }
 
-        if self
-            .loading_import_stack
-            .iter()
-            .any(|(loading_name, _)| loading_name == module_name)
-        {
+        if self.module_by_name.contains_key(&module_name) {
             return Err(format!(
-                "module name `{}` is already being imported",
+                "module name `{}` has already been used",
                 module_name
             ));
         }
-
-        self.loading_import_stack
-            .push((module_name.to_string(), absolute_path.to_string()));
-        self.pending_import_dependencies
-            .entry(module_name.to_string())
-            .or_default();
-        Ok(())
-    }
-
-    pub fn finish_loading_import(&mut self, module_name: &str, absolute_path: &str) {
-        if self
-            .loading_import_stack
-            .last()
-            .is_some_and(|(loading_name, loading_path)| {
-                loading_name == module_name && loading_path == absolute_path
-            })
-        {
-            self.loading_import_stack.pop();
-            return;
+        if let Some(existing_id) = self.module_by_path.get(&module_root_path) {
+            let existing_name = self
+                .modules
+                .get(existing_id)
+                .map(|module| module.module_name.as_str())
+                .unwrap_or("");
+            return Err(format!(
+                "module path `{}` has already been imported as module name `{}`",
+                module_root_path, existing_name
+            ));
         }
 
-        if let Some(index) =
-            self.loading_import_stack
-                .iter()
-                .rposition(|(loading_name, loading_path)| {
-                    loading_name == module_name && loading_path == absolute_path
-                })
+        let id = self.allocate_module_id();
+        let runner = ModuleRunner::new(
+            id,
+            module_name.clone(),
+            module_root_path.clone(),
+            main_file_path,
+            is_std,
+            ModuleStatus::Loading,
+        );
+        self.modules.insert(id, runner);
+        self.module_by_name.insert(module_name, id);
+        self.module_by_path.insert(module_root_path, id);
+        self.loading_import_stack.push(id);
+        Ok(id)
+    }
+
+    pub fn finish_loading_import(&mut self, module_id: ModuleId) {
+        if let Some(module) = self.modules.get_mut(&module_id) {
+            module.status = ModuleStatus::Loaded;
+        }
+        if self.loading_import_stack.last() == Some(&module_id) {
+            self.loading_import_stack.pop();
+        } else if let Some(index) = self
+            .loading_import_stack
+            .iter()
+            .rposition(|loading_id| *loading_id == module_id)
         {
             self.loading_import_stack.remove(index);
         }
     }
 
-    pub fn register_imported_module(
-        &mut self,
-        module_name: String,
-        absolute_path: String,
-        environment: Environment,
-        is_std: bool,
-    ) -> Result<(), String> {
-        self.validate_imported_module_is_new(&module_name, &absolute_path)?;
-        let import_dependencies = self
-            .pending_import_dependencies
-            .remove(&module_name)
-            .unwrap_or_default();
-        self.imported_modules.insert(
-            module_name.clone(),
-            ImportedModule::new(absolute_path, environment, is_std, import_dependencies),
-        );
-        self.stopped_module.remove(&module_name);
-        Ok(())
-    }
-
-    pub fn record_import_dependency(&mut self, module_name: &str, imported_module_name: &str) {
-        if module_name.is_empty() || module_name == imported_module_name {
-            return;
-        }
-        let dependencies = self
-            .pending_import_dependencies
-            .entry(module_name.to_string())
-            .or_default();
-        if dependencies
-            .iter()
-            .any(|existing| existing == imported_module_name)
-        {
-            return;
-        }
-        dependencies.push(imported_module_name.to_string());
-    }
-
-    pub fn reactivate_imported_module(&mut self, module_name: &str) {
-        let mut visited_modules = HashSet::new();
-        self.reactivate_imported_module_with_dependencies(module_name, &mut visited_modules);
-    }
-
-    fn reactivate_imported_module_with_dependencies(
-        &mut self,
-        module_name: &str,
-        visited_modules: &mut HashSet<String>,
-    ) {
-        if !visited_modules.insert(module_name.to_string()) {
-            return;
-        }
-        self.stopped_module.remove(module_name);
-        let dependencies = match self.imported_modules.get(module_name) {
-            Some(imported_module) => imported_module.import_dependencies.clone(),
-            None => return,
+    pub fn begin_loading_discovered_module(&mut self, module_id: ModuleId) -> Result<(), String> {
+        let Some(module) = self.modules.get(&module_id) else {
+            return Err("discovered module is missing".to_string());
         };
-        for dependency_name in dependencies.iter() {
-            self.reactivate_imported_module_with_dependencies(dependency_name, visited_modules);
+        if module.status == ModuleStatus::Loading {
+            let cycle_start_index = self
+                .loading_import_stack
+                .iter()
+                .position(|loading_id| *loading_id == module_id)
+                .unwrap_or(0);
+            let mut cycle_names = self.loading_import_stack[cycle_start_index..]
+                .iter()
+                .filter_map(|loading_id| self.modules.get(loading_id))
+                .map(|loading_module| loading_module.module_name.clone())
+                .collect::<Vec<String>>();
+            cycle_names.push(module.module_name.clone());
+            return Err(format!(
+                "cyclic module import: {}",
+                cycle_names.join(" -> ")
+            ));
         }
-    }
+        if module.status == ModuleStatus::Loaded {
+            return Ok(());
+        }
 
-    pub fn stop_imported_module(&mut self, module_name: &str) -> Result<(), String> {
-        if !self.imported_modules.contains_key(module_name) {
-            return Err(format!("module `{}` has not been imported", module_name));
-        }
-        self.stopped_module.insert(module_name.to_string());
+        self.modules
+            .get_mut(&module_id)
+            .expect("discovered module should exist")
+            .status = ModuleStatus::Loading;
+        self.loading_import_stack.push(module_id);
         Ok(())
     }
 
-    pub fn stop_all_imported_modules(&mut self) {
-        for module_name in self.imported_modules.keys() {
-            self.stopped_module.insert(module_name.clone());
+    pub fn record_import_dependency(&mut self, importing: ModuleId, imported: ModuleId) {
+        if importing == imported {
+            return;
+        }
+        if let Some(module) = self.modules.get_mut(&importing) {
+            module.record_import(imported);
         }
     }
 
-    pub fn imported_module_is_stopped(&self, module_name: &str) -> bool {
-        self.stopped_module.contains(module_name)
+    fn allocate_module_id(&mut self) -> ModuleId {
+        let id = ModuleId(self.next_module_id);
+        self.next_module_id += 1;
+        id
     }
+}
+
+fn module_root_path_for_main_file(main_file_path: &str) -> String {
+    let path = std::path::Path::new(main_file_path);
+    path.parent()
+        .unwrap_or_else(|| std::path::Path::new(""))
+        .to_string_lossy()
+        .into_owned()
 }

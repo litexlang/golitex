@@ -695,13 +695,13 @@ impl DefLetStmt {
         match self.facts.len() {
             0 => format!(
                 r"\operatorname{{{}}}\, {}",
-                LET,
+                format!("{} {}", TRUST, HAVE),
                 self.param_def.to_latex_string()
             ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}",
-                    LET,
+                    format!("{} {}", TRUST, HAVE),
                     self.param_def.to_latex_string()
                 )];
                 for fact in &self.facts {
@@ -763,17 +763,6 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\mathrm{{{}}}", CLEAR)
-    }
-}
-
-impl StopImportStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \operatorname{{{}}}\ {}",
-            STOP,
-            IMPORT,
-            latex_local_ident(&self.module_name)
-        )
     }
 }
 
@@ -1294,7 +1283,7 @@ impl ProofDebtStmt {
         if self.facts.len() == 1 {
             format!(
                 r"\operatorname{{{}}} {}",
-                PROOF_DEBT,
+                TRUST,
                 self.facts[0].to_latex_string()
             )
         } else {
@@ -1306,7 +1295,7 @@ impl ProofDebtStmt {
                 .join(" \\\\\n");
             format!(
                 r"\operatorname{{{}}}\colon \begin{{aligned}}{}\end{{aligned}}",
-                PROOF_DEBT, rows
+                TRUST, rows
             )
         }
     }
@@ -1789,16 +1778,6 @@ impl RestrictFact {
     }
 }
 
-impl RunFileStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \texttt{{{}}}",
-            self.keyword(),
-            latex_texttt_escape(&self.file_path)
-        )
-    }
-}
-
 impl SeqSet {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2218,10 +2197,13 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::TrustImportStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Command(CommandStmt::LocalImportStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::StopImportStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::RunFileStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalByStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),

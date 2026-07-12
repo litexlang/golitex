@@ -25,8 +25,7 @@ fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
 
 pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: running selected runtime/output smoke tests ---");
-    runtime_contract_import_run_file_and_clear();
-    unquoted_run_file_is_rejected();
+    runtime_contract_import_and_clear();
     unknown_fact_failure_has_structured_output_fields();
     latex_output_is_fragment_without_default_packages();
     python_extractor_outputs_supported_have_subset();
@@ -34,14 +33,14 @@ pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: all selected smoke tests OK ---");
 }
 
-fn runtime_contract_import_run_file_and_clear() {
+fn runtime_contract_import_and_clear() {
     let suffix = std::process::id();
 
     let module_dir = std::env::temp_dir().join(format!("litex-run-all-contract-import-{}", suffix));
     fs::create_dir_all(&module_dir).expect("create runtime contract import module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nproof_debt forall x R:\n    $imported_prop(x)\n",
+        "abstract_prop imported_prop(x)\ntrust forall x R:\n    $imported_prop(x)\n",
     )
     .expect("write runtime contract import module");
     let import_source_code = format!(
@@ -67,50 +66,21 @@ fn runtime_contract_import_run_file_and_clear() {
         import_run_output
     );
 
-    let run_file_path =
-        std::env::temp_dir().join(format!("litex-run-all-contract-run-file-{}.lit", suffix));
-    fs::write(
-        &run_file_path,
-        "abstract_prop run_file_prop(x)\nproof_debt forall x R:\n    $run_file_prop(x)\n",
-    )
-    .expect("write runtime contract run_file fixture");
-    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
-    let run_file_source_code = format!("run_file \"{}\"\n$run_file_prop(2)", run_file_path_string);
-
-    let mut run_file_runtime = Runtime::new_with_builtin_code();
-    run_file_runtime.new_file_path_new_env_new_name_scope("runtime_contract_run_file");
-    let (run_file_stmt_results, run_file_runtime_error) =
-        run_source_code(run_file_source_code.as_str(), &mut run_file_runtime);
-    let (run_file_succeeded, run_file_output) = render_run_source_code_output(
-        &run_file_runtime,
-        &run_file_stmt_results,
-        &run_file_runtime_error,
-        false,
-    );
-    assert!(
-        run_file_succeeded,
-        "runtime contract run_file fixture failed:\n{}",
-        run_file_output
-    );
-
-    let clear_source_code = format!(
-        "run_file \"{}\"\nclear\n$run_file_prop(2)",
-        run_file_path_string
-    );
+    let clear_source_code =
+        "abstract_prop local_prop(x)\ntrust $local_prop(2)\nclear\n$local_prop(2)";
     let mut clear_runtime = Runtime::new_with_builtin_code();
     clear_runtime.new_file_path_new_env_new_name_scope("runtime_contract_clear");
     let (clear_stmt_results, clear_runtime_error) =
-        run_source_code(clear_source_code.as_str(), &mut clear_runtime);
+        run_source_code(clear_source_code, &mut clear_runtime);
     let (clear_succeeded, clear_output) = render_run_source_code_output(
         &clear_runtime,
         &clear_stmt_results,
         &clear_runtime_error,
         false,
     );
-    let _ = fs::remove_file(&run_file_path);
     assert!(
         !clear_succeeded,
-        "runtime contract clear fixture should drop run_file facts:\n{}",
+        "runtime contract clear fixture should drop local facts:\n{}",
         clear_output
     );
 }
@@ -636,7 +606,7 @@ fn subset_fact_proves_power_set_membership() {
         let source_code = r#"
 have A set
 have B set
-proof_debt A $subset B
+trust A $subset B
 A $in power_set(B)
 "#;
 
@@ -885,7 +855,7 @@ forall a set:
 fn sketch_stmt_is_checked_and_local() {
     let source_code = r#"
 sketch:
-    proof_debt:
+    trust:
         2 = 3
 2 = 3
 "#;
@@ -991,7 +961,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -1017,10 +987,7 @@ try:
                 run_output
             );
 
-            let env = runtime
-                .environment_stack
-                .last()
-                .expect("runtime should have a current environment");
+            let env = &runtime.current_module().main_environment;
             assert_eq!(
                 env.used_strategy_stmts
                     .get(&("target_strategy_prop".to_string(), true)),
@@ -1109,7 +1076,7 @@ fn try_stmt_unknown_is_reported_and_local() {
     run_with_large_stack("try_stmt_unknown_is_reported_and_local", || {
         let source_code = r#"
 try:
-    proof_debt:
+    trust:
         2 = 3
     4 = 5
 "#;
@@ -1238,6 +1205,88 @@ prove:
 }
 
 #[test]
+fn removed_surface_syntax_is_rejected_with_migration_hints() {
+    run_with_large_stack(
+        "removed_surface_syntax_is_rejected_with_migration_hints",
+        || {
+            let cases = [
+                (
+                    "old_let",
+                    "let x R",
+                    "`let` has been removed; use `trust have`",
+                ),
+                (
+                    "old_have_by_exist",
+                    "have by exist x R st {x = 1}: a",
+                    "`have by exist ...: name` has been removed",
+                ),
+                (
+                    "old_have_fn_as_set",
+                    r#"
+have fn f as set:
+    prove:
+        forall x R:
+            exist! y R st {y = x}
+"#,
+                    "`have fn <name> as set:` has been removed",
+                ),
+                (
+                    "legacy_open_open_interval",
+                    "have I set = oo(0, 1)",
+                    "two-sided interval spelling `oo` has been removed; use `'(a, b)`",
+                ),
+                (
+                    "legacy_open_closed_interval",
+                    "have I set = oc(0, 1)",
+                    "two-sided interval spelling `oc` has been removed; use `'(a, b]`",
+                ),
+                (
+                    "legacy_closed_open_interval",
+                    "have I set = co(0, 1)",
+                    "two-sided interval spelling `co` has been removed; use `'[a, b)`",
+                ),
+                (
+                    "legacy_closed_closed_interval",
+                    "have I set = cc(0, 1)",
+                    "two-sided interval spelling `cc` has been removed; use `'[a, b]`",
+                ),
+                (
+                    "interval_prefix_requires_delimiter",
+                    "have I set = 'invalid",
+                    "interval literal after `'` expects `(` or `[`",
+                ),
+                (
+                    "interval_literal_requires_two_endpoints",
+                    "have I set = '(0, 1, 2)",
+                    "interval literal expects exactly two endpoints",
+                ),
+            ];
+
+            for (label, source_code, expected_message) in cases {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    !run_succeeded,
+                    "{} should reject removed syntax:\n{}",
+                    label, run_output
+                );
+                assert!(
+                    run_output.contains(expected_message),
+                    "{} should include migration hint `{}`:\n{}",
+                    label,
+                    expected_message,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn internal_claim_prove_block_remains_supported() {
     run_with_large_stack("internal_claim_prove_block_remains_supported", || {
         let source_code = r#"
@@ -1274,7 +1323,7 @@ claim:
             x = 1
             =>:
                 x = 1
-        proof_debt x = 1
+        trust x = 1
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -1314,14 +1363,14 @@ thm qgoal_self_eq_extra:
         x = x
     x = x
 
-have fn qgoal_identity as set:
+have fn qgoal_identity by exist!:
     ? forall x R:
         exist! y R st {y = x}
-    proof_debt exist! y R st {y = x}
+    trust exist! y R st {y = x}
     exist! y R st {y = x}
 
 abstract_prop qgoal_p(x)
-proof_debt forall x R:
+trust forall x R:
     $qgoal_p(x)
 
 strategy qgoal_strategy:
@@ -1363,8 +1412,8 @@ by symmetric_prop:
     y = x
 
 abstract_prop qgoal_induc_p(a)
-proof_debt $qgoal_induc_p(0)
-proof_debt forall m N:
+trust $qgoal_induc_p(0)
+trust forall m N:
     $qgoal_induc_p(m)
     =>:
         $qgoal_induc_p(m + 1)
@@ -1510,7 +1559,7 @@ prop is_injective_fn(S, T set, f fn(x S) T):
             x1 = x2
 
 template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
-    have fn inverse_function as set:
+    have fn inverse_function by exist!:
         prove:
             forall y fn_range_on(f, X):
                 exist! x X st {y = f(x)}
@@ -1707,7 +1756,7 @@ fn replacement_membership_infers_preimage_and_preimage_stmt_works() {
             let source_code = r#"
 abstract_prop rel(x, y)
 
-proof_debt forall x {3, 5, 9}, y, y2 set:
+trust forall x {3, 5, 9}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
@@ -1719,7 +1768,7 @@ forall y B:
     exist x {3, 5, 9} st {$rel(x, y)}
 
 have y set
-proof_debt y $in replacement(rel, {3, 5, 9})
+trust y $in replacement(rel, {3, 5, 9})
 have by preimage x from y $in replacement(rel, {3, 5, 9})
 x $in {3, 5, 9}
 $rel(x, y)
@@ -1748,14 +1797,14 @@ fn replacement_membership_intro_from_relation_witness() {
         let source_code = r#"
 abstract_prop rel(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
         y = y2
 
 have y set
-proof_debt $rel(1, y)
+trust $rel(1, y)
 
 y $in replacement(rel, {1, 2})
 "#;
@@ -1877,8 +1926,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
-    proof_debt:
+    trust $is_nonempty_set(s)
+    trust:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -1945,7 +1994,7 @@ have s set
 abstract_prop leq(x)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
+    trust $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -1970,8 +2019,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
-    proof_debt:
+    trust $is_nonempty_set(s)
+    trust:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -2037,7 +2086,7 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma s from leq:
-    proof_debt $is_nonempty_set(s)
+    trust $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -2068,7 +2117,7 @@ fn by_axiom_of_choice_stores_choice_function_exist_fact() {
 have S set
 
 by axiom_of_choice: set S:
-    proof_debt forall A S:
+    trust forall A S:
         $is_nonempty_set(A)
 
 exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
@@ -2090,7 +2139,7 @@ exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
     let source_code = r#"
 have S set
-proof_debt forall A S:
+trust forall A S:
     $is_nonempty_set(A)
 
 by axiom_of_choice: set S
@@ -2168,7 +2217,7 @@ fn by_axiom_of_choice_rejects_old_set_syntax() {
 have S set
 
 by axiom_of_choice S:
-    proof_debt forall A S:
+    trust forall A S:
         $is_nonempty_set(A)
 "#;
 
@@ -2192,7 +2241,7 @@ by axiom_of_choice S:
 #[test]
 fn choose_object_is_no_longer_builtin() {
     let source_code = r#"
-let s nonempty_set:
+trust have s nonempty_set:
     forall x s:
         $is_nonempty_set(x)
 
@@ -2227,7 +2276,7 @@ fn by_regularity_axiom_stores_foundation_witness_exist_fact() {
         "by_regularity_axiom_stores_foundation_witness_exist_fact",
         || {
             let source_code = r#"
-proof_debt $is_nonempty_set({1, 2})
+trust $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2279,8 +2328,11 @@ by regularity_axiom({})
 }
 
 #[test]
-fn have_by_exist_body_well_defined_can_use_forall_domain_fact() {
-    let source_code = r#"
+fn obtain_body_well_defined_can_use_forall_domain_fact() {
+    run_with_large_stack(
+        "obtain_body_well_defined_can_use_forall_domain_fact",
+        || {
+            let source_code = r#"
 prop image_like(S, T set, f fn(x S) T, A, B set):
     A $subset S
     forall y B:
@@ -2299,36 +2351,38 @@ claim:
             forall a A:
                 a $in S
         a $in S
-    have by exist a A st {f(x) = f(a)}: a
+    obtain a from exist a A st {f(x) = f(a)}
     a $in S
     f(x) = f(a)
     x = x
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_by_exist_body_well_defined_can_use_forall_domain_fact",
-    );
-    runtime.detail_output = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "obtain_body_well_defined_can_use_forall_domain_fact",
+            );
+            runtime.detail_output = true;
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have_by_exist_body_well_defined_can_use_forall_domain_fact failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"type\": \"object definition by existence\""),
-        "have by exist should report the semantic statement type:\n{}",
-        run_output
-    );
-    assert_no_legacy_acceptance_field(&run_output, "have by exist");
-    assert!(
-        !run_output.contains("HaveExistObjStmt"),
-        "have by exist should not report the legacy statement type:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "obtain_body_well_defined_can_use_forall_domain_fact failed:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"type\": \"object definition by existence\""),
+                "obtain from exist should report the semantic statement type\n{}",
+                run_output
+            );
+            assert_no_legacy_acceptance_field(&run_output, "have by exist");
+            assert!(
+                !run_output.contains("HaveExistObjStmt"),
+                "obtain from exist should not report the legacy statement type\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2345,10 +2399,10 @@ fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
 
 fn anonymous_fn_restrict_positive_cases_impl() {
     let positive_source_code = r#"
-$restricts_to('R(x){x}, fn(x closed_range(1, 2)) R)
-$restricts_to('R(x){x + 1}, fn(x closed_range(1, 2)) R)
-$restricts_to('(x R: x > 0) R {x}, fn(x N_pos) R)
-$restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
+$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) R)
+$restricts_to(fn(x R) R {x + 1}, fn(x closed_range(1, 2)) R)
+$restricts_to(fn(x R: x > 0) R {x}, fn(x N_pos) R)
+$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) N)
 "#;
 
     let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -2370,7 +2424,7 @@ $restricts_to('R(x){x}, fn(x closed_range(1, 2)) N)
 
 fn anonymous_fn_restrict_negative_case_impl() {
     let negative_source_code = r#"
-$restricts_to('(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
+$restricts_to(fn(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
 "#;
 
     let mut negative_runtime = Runtime::new_with_builtin_code();
@@ -2402,7 +2456,7 @@ fn anonymous_fn_restriction_over_abstract_subset_is_well_defined() {
         || {
             let source_code = r#"
 forall E2 set, E power_set(E2), f fn(x E2) R:
-    fn_range('(x E) R {f(x)}) $subset R
+    fn_range(fn(x E) R {f(x)}) $subset R
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -2423,63 +2477,68 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
 
 #[test]
 fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
-    let positive_source_code = r#"
-'R(x){x} = 'R(y){y}
+    run_with_large_stack(
+        "anonymous_fn_direct_equality_uses_pointwise_extensionality",
+        || {
+            let positive_source_code = r#"
+fn(x R) R {x} = fn(y R) R {y}
 
 forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){g(x) + f(x)}
+    fn(x R) R {f(x) + g(x)} = fn(x R) R {g(x) + f(x)}
 
 forall f, g fn(x R) R:
-    'R(x){f(x) + g(x)} = 'R(x){'R(y){f(y)}(x) + 'R(y){g(y)}(x)}
+    fn(x R) R {f(x) + g(x)} = fn(x R) R {fn(y R) R {f(y)}(x) + fn(y R) R {g(y)}(x)}
 
-'(x R: x > 0) R {x} = '(y R: y > 0) R {y}
+fn(x R: x > 0) R {x} = fn(y R: y > 0) R {y}
 "#;
 
-    let mut positive_runtime = Runtime::new_with_builtin_code();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
-    );
-    let (positive_stmt_results, positive_runtime_error) =
-        run_source_code(positive_source_code, &mut positive_runtime);
-    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
-        &positive_runtime,
-        &positive_stmt_results,
-        &positive_runtime_error,
-        false,
-    );
-    assert!(
-        positive_run_succeeded,
-        "anonymous fn direct equality should use pointwise extensionality:\n{}",
-        positive_run_output
-    );
+            let mut positive_runtime = Runtime::new_with_builtin_code();
+            positive_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
+            );
+            let (positive_stmt_results, positive_runtime_error) =
+                run_source_code(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_stmt_results,
+                &positive_runtime_error,
+                false,
+            );
+            assert!(
+                positive_run_succeeded,
+                "anonymous fn direct equality should use pointwise extensionality:\n{}",
+                positive_run_output
+            );
 
-    let negative_source_code = r#"
-'(x N) R {x} = 'R(x){x}
+            let negative_source_code = r#"
+fn(x N) R {x} = fn(x R) R {x}
 "#;
 
-    let mut negative_runtime = Runtime::new_with_builtin_code();
-    negative_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
-    );
-    let (negative_stmt_results, negative_runtime_error) =
-        run_source_code(negative_source_code, &mut negative_runtime);
-    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
-        &negative_runtime,
-        &negative_stmt_results,
-        &negative_runtime_error,
-        false,
-    );
-    assert!(
-        !negative_run_succeeded,
-        "anonymous fn direct equality should not ignore domain differences:\n{}",
-        negative_run_output
+            let mut negative_runtime = Runtime::new_with_builtin_code();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
+            );
+            let (negative_stmt_results, negative_runtime_error) =
+                run_source_code(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_stmt_results,
+                &negative_runtime_error,
+                false,
+            );
+            assert!(
+                !negative_run_succeeded,
+                "anonymous fn direct equality should not ignore domain differences:\n{}",
+                negative_run_output
+            );
+        },
     );
 }
 
 #[test]
 fn curried_have_fn_equal_unfolds_pointwise() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = '(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
 
 forall a, b seq(R), k N_pos:
     seq_add(a, b)(k) = a(k) + b(k)
@@ -2501,7 +2560,7 @@ forall a, b seq(R), k N_pos:
 #[test]
 fn fn_application_returning_fn_set_verifies_sequence_membership() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = '(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
 
 forall a, b seq(R):
     seq_add(a, b) $in seq(R)
@@ -2608,14 +2667,14 @@ fn iterated_operator_equality_uses_fn_eq_for_function_arg() {
         "iterated_operator_equality_uses_fn_eq_for_function_arg_large_stack",
         || {
             let positive_source_code = r#"
-sum(1, 3, 'Z(x){x}) = sum(1, 3, 'Z(y){y})
-product(1, 3, 'Z(x){x}) = product(1, 3, 'Z(y){y})
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 3, fn(y Z) Z {y})
+product(1, 3, fn(x Z) Z {x}) = product(1, 3, fn(y Z) Z {y})
 
 forall f, g fn(x Z) Z:
-    sum(1, 3, 'Z(x){f(x) + g(x)}) = sum(1, 3, 'Z(y){g(y) + f(y)})
+    sum(1, 3, fn(x Z) Z {f(x) + g(x)}) = sum(1, 3, fn(y Z) Z {g(y) + f(y)})
 
 forall f, g fn(x Z) Z:
-    product(1, 3, 'Z(x){f(x) * g(x)}) = product(1, 3, 'Z(y){g(y) * f(y)})
+    product(1, 3, fn(x Z) Z {f(x) * g(x)}) = product(1, 3, fn(y Z) Z {g(y) * f(y)})
 "#;
 
             let mut positive_runtime = Runtime::new_with_builtin_code();
@@ -2636,7 +2695,7 @@ forall f, g fn(x Z) Z:
             );
 
             let negative_source_code = r#"
-product(1, 3, 'Z(x){x}) = product(1, 4, 'Z(y){y})
+product(1, 3, fn(x Z) Z {x}) = product(1, 4, fn(y Z) Z {y})
 "#;
 
             let mut negative_runtime = Runtime::new_with_builtin_code();
@@ -2672,9 +2731,9 @@ thm finite_series_comparison_test:
                 =>:
                     a(i) <= b(i)
             =>:
-                sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+                sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
-    sum(m, n, '(i Z) R {a(i)}) <= sum(m, n, '(i Z) R {b(i)})
+    sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
 thm finite_series_comparison_n_pos_index_test:
     prove:
@@ -2685,27 +2744,27 @@ thm finite_series_comparison_n_pos_index_test:
                 =>:
                     a(i) <= b(i)
             =>:
-                sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+                sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
-    sum(m, n, '(i N_pos) R {a(i)}) <= sum(m, n, '(i N_pos) R {b(i)})
+    sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
 thm finite_series_triangle_test:
     prove:
         forall a fn(i Z) R, m, n Z:
             m <= n
             =>:
-                abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+                abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
-    abs(sum(m, n, '(i Z) R {a(i)})) <= sum(m, n, '(i Z) R {abs(a(i))})
+    abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
 thm finite_series_scalar_mul_test:
     prove:
         forall a fn(i Z) R, c R, m, n Z:
             m <= n
             =>:
-                sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+                sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 
-    sum(m, n, '(i Z) R {c * a(i)}) = c * sum(m, n, '(i Z) R {a(i)})
+    sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2734,10 +2793,10 @@ fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
 thm bad_symbolic_empty_sum:
     prove:
         forall a fn(i Z) R, m Z:
-            sum(m, m - 1, '(i Z) R {a(i)}) = 0
+            sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 
-    proof_debt:
-        sum(m, m - 1, '(i Z) R {a(i)}) = 0
+    trust:
+        sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 "#,
                     "sum: cannot verify start <= end for the summation range",
                 ),
@@ -2747,10 +2806,10 @@ thm bad_symbolic_empty_sum:
 thm bad_symbolic_empty_product:
     prove:
         forall a fn(i Z) R, m Z:
-            product(m, m - 1, '(i Z) R {a(i)}) = 1
+            product(m, m - 1, fn(i Z) R {a(i)}) = 1
 
-    proof_debt:
-        product(m, m - 1, '(i Z) R {a(i)}) = 1
+    trust:
+        product(m, m - 1, fn(i Z) R {a(i)}) = 1
 "#,
                     "product: cannot verify start <= end for the product range",
                 ),
@@ -2785,7 +2844,7 @@ fn nested_iterated_operator_with_positive_index_is_well_defined() {
         "nested_iterated_operator_with_positive_index_is_well_defined_large_stack",
         || {
             let source_code = r#"
-eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
+eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -2809,21 +2868,21 @@ eval sum(1, 3, 'N_pos(x){sum(1, x, 'N_pos(y){x + y})})
 fn finite_set_sum_core_rules() {
     run_with_large_stack("finite_set_sum_core_rules", || {
         let source_code = r#"
-finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-finite_set_sum({}, 'Z(x){x}) = 0
-finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
-finite_set_sum({1, 2}, 'Z(x){x}) $in Z
-finite_set_sum({1, 2}, 'N_pos(x){x}) $in N_pos
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, '(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
 
 sketch:
     have X power_set(Z)
-    proof_debt $is_finite_set(X)
-    finite_set_sum(X, '(x X) Z {x + 0}) = finite_set_sum(X, '(x X) Z {x})
+    trust $is_finite_set(X)
+    finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 
 thm finite_set_sum_substitution_tmp:
     prove:
@@ -2831,36 +2890,36 @@ thm finite_set_sum_substitution_tmp:
             forall x X:
                 exist! y Y st {g(y) = x}
             =>:
-                finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
-    finite_set_sum(X, f) = finite_set_sum(Y, '(y Y) R {f(g(y))})
+                finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_matches_series_tmp:
     prove:
         forall a fn(i Z) R, m, n Z:
             m <= n
             =>:
-                sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
-    sum(m, n, '(i Z) R {a(i)}) = finite_set_sum(m...n, '(i m...n) R {a(i)})
+                sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+    sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
 
 thm finite_set_sum_disjoint_union_tmp:
     prove:
         forall X, Y finite_set, f fn(z union(X, Y)) R:
             intersect(X, Y) = {}
             =>:
-                finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
-    finite_set_sum(union(X, Y), f) = finite_set_sum(X, '(x X) R {f(x)}) + finite_set_sum(Y, '(y Y) R {f(y)})
+                finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 
 thm finite_set_sum_add_tmp:
     prove:
         forall X finite_set, f, g fn(x X) R:
-            finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
-    finite_set_sum(X, '(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+            finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
 
 thm finite_set_sum_scalar_mul_tmp:
     prove:
         forall X finite_set, f fn(x X) R, c R:
-            finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
-    finite_set_sum(X, '(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+            finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
 
 thm finite_set_sum_monotone_tmp:
     prove:
@@ -2874,8 +2933,8 @@ thm finite_set_sum_monotone_tmp:
 thm finite_set_sum_triangle_tmp:
     prove:
         forall X finite_set, f fn(x X) R:
-            abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
-    abs(finite_set_sum(X, f)) <= finite_set_sum(X, '(x X) R {abs(f(x))})
+            abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
+    abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2899,20 +2958,20 @@ fn finite_set_sum_cartesian_product_and_fubini() {
 thm finite_double_sum_over_cartesian_product_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_double_sum_over_cartesian_product_reversed_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_tmp:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -2940,7 +2999,7 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
         exist! i closed_range(1, count(X)) st {g(i) = x}
 
 template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
     prove:
@@ -2949,8 +3008,8 @@ thm finite_set_sum_raw_enumeration_well_defined:
             $is_bijection_from_index_range_to_finite_set(X, g)
             $is_bijection_from_index_range_to_finite_set(X, h)
             =>:
-                sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
-    sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), '(i closed_range(1, count(X))) R {f(h(i))})
+                sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
+    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
 
 thm finite_set_sum_template_enumeration_well_defined:
     prove:
@@ -2983,22 +3042,22 @@ thm finite_set_sum_template_enumeration_well_defined:
 #[test]
 fn finite_set_product_core_rules() {
     let source_code = r#"
-finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-finite_set_product({}, 'Z(x){x}) = 1
-finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
-finite_set_product({1, 2}, 'Z(x){x}) $in Z
-finite_set_product({1, 2}, 'N_pos(x){x}) $in N_pos
-finite_set_product({}, 'N_pos(x){x}) $in N_pos
+finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
+finite_set_product({}, fn(x Z) Z {x}) = 1
+finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
+finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_product({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, '(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
 
 sketch:
     have X power_set(Z)
-    proof_debt $is_finite_set(X)
-    finite_set_product(X, '(x X) Z {x + 0}) = finite_set_product(X, '(x X) Z {x})
+    trust $is_finite_set(X)
+    finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3068,7 +3127,7 @@ have f fn(n N_pos) closed_range(1, n)
 fn known_equality_implies_weak_order() {
     let source_code = r#"
 have a, b R
-proof_debt a = b
+trust a = b
 a <= b
 a >= b
 "#;
@@ -3091,12 +3150,12 @@ fn known_forall_membership_uses_standard_set_subset_direction() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-proof_debt:
+trust:
     forall u set:
         $p(u)
         =>:
             u $in Z
-proof_debt $p(x)
+trust $p(x)
 x $in Q
 x $in R
 "#;
@@ -3121,12 +3180,12 @@ fn known_forall_membership_narrowing_requires_known_fact() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-proof_debt:
+trust:
     forall u set:
         $p(u)
         =>:
         u $in R
-proof_debt $p(x)
+trust $p(x)
 x $in Z
 "#;
 
@@ -3149,7 +3208,7 @@ x $in Z
 fn known_forall_equality_uses_indexed_function_head() {
     let source_code = r#"
 have f fn(x R) R
-proof_debt forall a R:
+trust forall a R:
     f(a) = a
 f(1) = 1
 "#;
@@ -3172,7 +3231,7 @@ f(1) = 1
 fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
     let source_code = r#"
 have f fn(x R) R
-proof_debt forall a R:
+trust forall a R:
     a = f(a)
 1 + 1 = f(1 + 1)
 "#;
@@ -3196,7 +3255,7 @@ proof_debt forall a R:
 fn known_forall_equality_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 have g fn(x R) R
-proof_debt forall f fn(x R) R, a R:
+trust forall f fn(x R) R, a R:
     f(a) = a
 g(1) = 1
 "#;
@@ -3220,7 +3279,7 @@ g(1) = 1
 fn known_forall_prop_indexes_forall_param_arg_as_wildcard() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x)
 $p(1)
 "#;
@@ -3244,7 +3303,7 @@ $p(1)
 fn known_forall_prop_indexes_expression_arg_shape() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x + 1)
 $p(1 + 1)
 "#;
@@ -3266,7 +3325,7 @@ $p(1 + 1)
 fn known_forall_prop_indexes_multi_arg_shape() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt forall a, b R:
+trust forall a, b R:
     $p(a, b + 1)
 $p(2, 3 + 1)
 "#;
@@ -3289,7 +3348,7 @@ fn known_forall_prop_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 abstract_prop p(x)
 have g fn(x R) R
-proof_debt forall f fn(x R) R:
+trust forall f fn(x R) R:
     $p(f(2))
 $p(g(2))
 "#;
@@ -3314,11 +3373,11 @@ fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
     let source_code = r#"
 abstract_prop p(x)
 
-proof_debt forall f, g fn(x R) R:
+trust forall f, g fn(x R) R:
     $p(f)
     $p(g)
     =>:
-        $p('R(x){f(x) + g(x)})
+        $p(fn(x R) R {f(x) + g(x)})
 
 claim:
     prove:
@@ -3327,8 +3386,8 @@ claim:
             $p(b)
             $p(c)
             =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
+                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    $p(fn(x R) R {b(x) + c(x)})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3351,11 +3410,11 @@ fn known_forall_does_not_infer_function_from_single_point_application() {
     let source_code = r#"
 abstract_prop p(x)
 
-proof_debt forall g fn(x R) R:
-    $p('R(x){g(0)})
+trust forall g fn(x R) R:
+    $p(fn(x R) R {g(0)})
 
 have h fn(x R) R
-$p('R(x){h(x)})
+$p(fn(x R) R {h(x)})
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3382,7 +3441,7 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
 sketch:
     have fib fn(x R) R
 
-    proof_debt:
+    trust:
         forall x R:
             x = 0
             =>:
@@ -3802,16 +3861,16 @@ forall a, b R:
 fn known_obj_values_store_simplified_fraction_for_nonfinite_decimal() {
     let source_code = r#"
 have a R
-proof_debt a = 1 / 2 / 3
+trust a = 1 / 2 / 3
 
 have b R
-proof_debt b = 1 / 2
+trust b = 1 / 2
 
 have c R
-proof_debt c = 2 / -6
+trust c = 2 / -6
 
 have d R
-proof_debt d = 1 / (2 / 3 * 4)
+trust d = 1 / (2 / 3 * 4)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3828,7 +3887,7 @@ proof_debt d = 1 / (2 / 3 * 4)
         run_output
     );
 
-    let env = runtime.environment_stack.last().expect("top environment");
+    let env = &runtime.current_module().main_environment;
     match env.known_obj_values.get("a") {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "1");
@@ -3911,61 +3970,64 @@ forall a R:
 #[test]
 fn real_interval_membership_rules() {
     let source_code = r#"
-have I set = oo(0, 1)
+have pair cart(R, R) = (0, 1)
+have entries finite_seq(R, 2) = [0, 1]
+
+have I set = '(0, 1)
 
 have a R
-proof_debt a $in oo(0, 1)
+trust a $in '(0, 1)
 a $in R
 0 < a
 a < 1
 
 have b R
-proof_debt b $in oc(0, 1)
+trust b $in '(0, 1]
 0 < b
 b <= 1
 
 have c R
-proof_debt c $in co(0, 1)
+trust c $in '[0, 1)
 0 <= c
 c < 1
 
 have d R
-proof_debt d $in cc(0, 1)
+trust d $in '[0, 1]
 0 <= d
 d <= 1
 
 have e R
-proof_debt e $in info(1)
+trust e $in info(1)
 e $in R
 e < 1
 
 have f R
-proof_debt f $in infc(1)
+trust f $in infc(1)
 f $in R
 f <= 1
 
 have g R
-proof_debt g $in oinf(0)
+trust g $in oinf(0)
 g $in R
 0 < g
 
 have h R
-proof_debt h $in cinf(0)
+trust h $in cinf(0)
 h $in R
 0 <= h
 
 have x R
-proof_debt:
+trust:
     0 < x
     x <= 1
-x $in oc(0, 1)
+x $in '(0, 1]
 
 have y R
-proof_debt:
+trust:
     0 <= y
 y $in cinf(0)
 
-have phi fn(t oo(0, 1)) R
+have phi fn(t '(0, 1)) R
 phi(a) $in R
 "#;
 
@@ -3985,27 +4047,27 @@ phi(a) $in R
 #[test]
 fn real_interval_nonempty_and_well_defined_rules() {
     let source_code = r#"
-have empty_like set = cc(1, 0)
+have empty_like set = '[1, 0]
 
 have a, b R
-proof_debt:
+trust:
     a <= b
     a < b
 
-$is_nonempty_set(cc(a, b))
-$is_nonempty_set(oo(a, b))
-$is_nonempty_set(oc(a, b))
-$is_nonempty_set(co(a, b))
+$is_nonempty_set('[a, b])
+$is_nonempty_set('(a, b))
+$is_nonempty_set('(a, b])
+$is_nonempty_set('[a, b))
 $is_nonempty_set(info(a))
 $is_nonempty_set(infc(a))
 $is_nonempty_set(oinf(a))
 $is_nonempty_set(cinf(a))
 
-have x cc(a, b)
-x $in cc(a, b)
+have x '[a, b]
+x $in '[a, b]
 
-have y oo(a, b)
-y $in oo(a, b)
+have y '(a, b)
+y $in '(a, b)
 
 have left cinf(a)
 left $in cinf(a)
@@ -4118,13 +4180,13 @@ $is_nonempty_set(union({1}, {}))
 $is_nonempty_set(union({}, {2}))
 
 have A, B set
-proof_debt:
+trust:
     $is_nonempty_set(A)
 
 $is_nonempty_set(union(A, B))
 
 have C, D set
-proof_debt:
+trust:
     $is_nonempty_set(D)
 
 $is_nonempty_set(union(C, D))
@@ -4312,31 +4374,6 @@ fn one_side_infinity_interval_parse_arity_errors() {
 }
 
 #[test]
-#[ignore = "std run_file was removed; import currently registers modules without executing them"]
-fn typed_function_applications_return_real() {
-    let source_code = r#"
-run_file Trig
-
-sin(0) $in R
-cos(pi / 3) $in R
-arcsin(1 / 2) $in R
-arctan(sqrt(3)) $in R
-"#;
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("typed_function_applications_return_real");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "typed_function_applications_return_real failed:\n{}",
-        run_output
-    );
-}
-
-#[test]
 fn template_instantiation_prefers_angle_brackets() {
     let source_code = r#"
 template<s set: s = s>:
@@ -4490,7 +4527,7 @@ A(1, 2, 3) $in R
 fn weak_order_does_not_recursively_prove_equality() {
     let source_code = r#"
 have a, b R
-proof_debt a <= b
+trust a <= b
 a = b
 "#;
 
@@ -4508,10 +4545,50 @@ a = b
 }
 
 #[test]
+fn known_forall_instantiation_fills_middle_param_from_dom_facts() {
+    run_with_large_stack(
+        "known_forall_instantiation_fills_middle_param_from_dom_facts",
+        || {
+            let source_code = r#"
+abstract_prop rel(X, x, y)
+
+trust forall X set, x, y, z X:
+    $rel(X, x, y)
+    $rel(X, y, z)
+    =>:
+        $rel(X, x, z)
+
+thm use_rel_trans_like:
+    ? forall X set, a, b, c X:
+        $rel(X, a, b)
+        $rel(X, b, c)
+        =>:
+            $rel(X, a, c)
+    $rel(X, a, c)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "known_forall_instantiation_fills_middle_param_from_dom_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "known forall instantiation should infer a middle parameter from known premises:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn zero_product_cancellation_does_not_recursively_reenter_equality() {
     let source_code = r#"
 have a, b, k1, k2 N
-proof_debt:
+trust:
     k1 = 0
     b = a * k1
 b = a * k1 = a * 0 = 0
@@ -4537,7 +4614,7 @@ b = a * k1 = a * 0 = 0
 fn exist_unique_infers_component_uniqueness_forall() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt exist! a, b R st {$p(a, b)}
+trust exist! a, b R st {$p(a, b)}
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -4563,7 +4640,7 @@ proof_debt exist! a, b R st {$p(a, b)}
 fn exist_unique_component_uniqueness_proves_split_then_facts() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt exist! a, b R st {$p(a, b)}
+trust exist! a, b R st {$p(a, b)}
 forall a1, b1, a2, b2 R:
     $p(a1, b1)
     $p(a2, b2)
@@ -4592,7 +4669,7 @@ fn exist_unique_still_accepts_tuple_uniqueness_forall() {
     let source_code = r#"
 sketch:
     abstract_prop p(a, b)
-    proof_debt:
+    trust:
         exist a, b R st {$p(a, b)}
         forall a1, b1, a2, b2 R:
             $p(a1, b1)
@@ -4617,15 +4694,16 @@ sketch:
 }
 
 #[test]
-fn have_fn_as_set_accepts_prove_block_target() {
-    let source_code = r#"
+fn have_fn_by_exist_accepts_prove_block_target() {
+    run_with_large_stack("have_fn_by_exist_accepts_prove_block_target", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
-proof_debt forall x A:
+trust forall x A:
     exist! y B st {$F(x, y)}
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
@@ -4634,61 +4712,67 @@ forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_accepts_prove_block_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_prove_block_target");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set prove target should succeed:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! prove target should succeed:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_prove_body_can_establish_target() {
-    let source_code = r#"
+fn have_fn_by_exist_prove_body_can_establish_target() {
+    run_with_large_stack("have_fn_by_exist_prove_body_can_establish_target", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    proof_debt exist! y B st {$F(x, y)}
+    trust exist! y B st {$F(x, y)}
 
 forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_fn_as_set_prove_body_can_establish_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_prove_body_can_establish_target",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set proof body should establish the target forall:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! proof body should establish the target forall:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_releases_unique_witness_direction() {
-    let source_code = r#"
+fn have_fn_by_exist_releases_unique_witness_direction() {
+    run_with_large_stack("have_fn_by_exist_releases_unique_witness_direction", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    proof_debt exist! y B st {$F(x, y)}
+    trust exist! y B st {$F(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4696,33 +4780,38 @@ forall x A, y B:
         y = f(x)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime
-        .new_file_path_new_env_new_name_scope("have_fn_as_set_releases_unique_witness_direction");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_releases_unique_witness_direction",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set should release the unique witness direction:\n{}",
-        run_output
-    );
+        assert!(
+            run_succeeded,
+            "have fn by exist! should release the unique witness direction:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_unique_witness_direction_keeps_all_body_facts() {
-    let source_code = r#"
+fn have_fn_by_exist_unique_witness_direction_keeps_all_body_facts() {
+    run_with_large_stack(
+        "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
+        || {
+            let source_code = r#"
 abstract_prop F(x, y)
 abstract_prop G(x, y)
 have A set
 have B set
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y), $G(x, y)}
-    proof_debt exist! y B st {$F(x, y), $G(x, y)}
+    trust exist! y B st {$F(x, y), $G(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4731,31 +4820,34 @@ forall x A, y B:
         y = f(x)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_fn_as_set_unique_witness_direction_keeps_all_body_facts",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "have fn as set uniqueness direction should keep every exist! body fact:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "have fn by exist! uniqueness direction should keep every exist! body fact:\n{}",
+                run_output
+            );
+        },
     );
 }
 
 #[test]
-fn have_fn_as_set_still_accepts_direct_forall_compatibility_form() {
-    let source_code = r#"
+fn have_fn_by_exist_rejects_direct_forall_legacy_form() {
+    run_with_large_stack("have_fn_by_exist_rejects_direct_forall_legacy_form", || {
+        let source_code = r#"
 abstract_prop F(x, y)
 have A set
 have B set
-proof_debt forall x A:
+trust forall x A:
     exist! y B st {$F(x, y)}
 
-have fn f as set:
+have fn f by exist!:
     forall x A:
         exist! y B st {$F(x, y)}
 
@@ -4763,45 +4855,57 @@ forall x A:
     $F(x, f(x))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_fn_as_set_still_accepts_direct_forall_compatibility_form",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "have_fn_by_exist_rejects_direct_forall_legacy_form",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "legacy direct forall form should remain accepted:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "legacy direct forall form should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("expects a `prove:` or `?` goal block"),
+            "legacy direct forall rejection should point to the new goal block shape:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn have_fn_as_set_prove_block_requires_forall_target() {
-    let source_code = r#"
-have fn f as set:
+fn have_fn_by_exist_prove_block_requires_forall_target() {
+    run_with_large_stack(
+        "have_fn_by_exist_prove_block_requires_forall_target",
+        || {
+            let source_code = r#"
+have fn f by exist!:
     prove:
         1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime
-        .new_file_path_new_env_new_name_scope("have_fn_as_set_prove_block_requires_forall_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_prove_block_requires_forall_target",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "non-forall prove target should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("`prove:` must contain a single `forall` fact"),
-        "non-forall prove target should report the expected shape:\n{}",
-        run_output
+            assert!(
+                !run_succeeded,
+                "non-forall prove target should fail:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("goal must be a single `forall` fact"),
+                "non-forall prove target should report the expected shape:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -4856,6 +4960,85 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
 }
 
 #[test]
+fn run_summary_counts_direct_unproved_interfaces() {
+    run_with_large_stack("run_summary_counts_direct_unproved_interfaces", || {
+        let source_code = r#"
+1 = 1
+trust 1 = 0
+trust have x R
+abstract_prop summary_prop(x)
+prop summary_concrete_prop(x R):
+    x = x
+axiom summary_axiom:
+    ? forall y R:
+        y = y
+thm summary_theorem:
+    ? forall y R:
+        y = y
+    y = y
+claim:
+    prove:
+        1 = 1
+    1 = 1
+witness exist z R st {z = 1} from 1:
+    1 = 1
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("run_summary_counts");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let summary = RunSummary::from_run(&stmt_results, &runtime_error);
+        let summary_output =
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error);
+
+        assert!(
+            runtime_error.is_none(),
+            "summary fixture failed:\n{}",
+            summary_output
+        );
+        assert_eq!(summary.direct_trust, 1);
+        assert_eq!(summary.trusted_object_assumptions, 1);
+        assert_eq!(summary.prop_definitions, 1);
+        assert_eq!(summary.abstract_prop_definitions, 1);
+        assert_eq!(summary.theorem_statements, 1);
+        assert_eq!(summary.abstract_interfaces, 1);
+        assert_eq!(summary.axioms, 1);
+        assert!(summary_output.contains("\"output_type\": \"run summary\""));
+        assert!(summary_output.contains("\"proof_method_counts\""));
+        assert!(summary_output.contains("\"claim\""));
+        assert!(!summary_output.contains("\"claim fact proof\""));
+        assert!(!summary_output.contains("\"claim forall proof\""));
+        assert!(summary_output.contains("\"witness\": 1"));
+        assert!(!summary_output.contains("\"by_method_counts\""));
+        assert!(!summary_output.contains("\"witness_counts\""));
+        assert!(!summary_output.contains("\"existence\": 1"));
+        assert!(!summary_output.contains("\"total\": 1"));
+        assert!(summary_output.contains("\"main_environment\""));
+        assert!(summary_output.contains("\"overview_counts\""));
+        assert!(summary_output.contains("\"objects\""));
+        assert!(summary_output.contains("\"props\""));
+        assert!(summary_output.contains("\"environment_field_counts\""));
+        assert!(summary_output.contains("\"map_keys\""));
+        assert!(summary_output.contains("\"stored_items\""));
+        assert!(summary_output.contains("\"known_fact_counts\""));
+        assert!(summary_output.contains("\"known_facts\""));
+        assert!(summary_output.contains("\"trust_summary\""));
+        assert!(summary_output.contains("\"unproved_dependency_counts\""));
+        assert!(!summary_output.contains("\"category_counts\""));
+        assert!(!summary_output.contains("\"field_key_counts\""));
+        assert!(!summary_output.contains("\"field_item_counts\""));
+        assert!(!summary_output.contains("\"fact_origin_counts\""));
+        assert!(!summary_output.contains("\"cache_fact_trust_dependency_counts\""));
+        assert!(!summary_output.contains("\"theorem_trust_dependency_counts\""));
+        assert!(!summary_output.contains("\"statement_type_counts\""));
+        assert!(!summary_output.contains("\"output_type_counts\""));
+        assert!(!summary_output.contains("\"stored_fact_reason_counts\""));
+        assert!(!summary_output.contains("\"unique_equality_facts\""));
+        assert!(!summary_output.contains("\"statements\""));
+    });
+}
+
+#[test]
 fn normal_output_folds_proof_level_inside_results() {
     run_with_large_stack("normal_output_folds_proof_level_inside_results", || {
         let source_code = r#"
@@ -4899,6 +5082,46 @@ witness exist x R st {x = 1} from 1:
             run_output
         );
     });
+}
+
+#[test]
+fn normal_theorem_output_exposes_structured_proof_route() {
+    run_with_large_stack(
+        "normal_theorem_output_exposes_structured_proof_route",
+        || {
+            let source_code = r#"
+thm theorem_trace_self_eq:
+    prove:
+        forall x R:
+            x = x
+    x = x
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope("normal_theorem_output_proof_route");
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "normal theorem proof-route fixture failed:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("\"type\": \"theorem proof\""));
+            assert!(run_output.contains("\"theorem_trace_self_eq\""));
+            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"x\""));
+            assert!(run_output.contains("\"assumptions\": ["));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(
+                !run_output.contains("\"inside_results\": ["),
+                "normal theorem output should expose structured route without raw inside_results:\n{}",
+                run_output
+            );
+        },
+    );
 }
 
 #[test]
@@ -4951,8 +5174,8 @@ witness exist x R st {x = 1} from 1:
 fn by_induc_output_uses_same_trace_for_normal_and_detail() {
     let source_code = r#"
 abstract_prop p(a)
-proof_debt $p(0)
-proof_debt forall m Z:
+trust $p(0)
+trust forall m Z:
     m >= 0
     $p(m)
     =>:
@@ -5067,71 +5290,6 @@ fn builtin_citation_source_uses_safe_builtin_label() {
 }
 
 #[test]
-#[ignore = "std run_file was removed; import currently registers modules without executing them"]
-fn std_citation_source_uses_safe_module_label() {
-    let source_code = "run_file Trig\nsin(0) = 0";
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("std_citation_source");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(run_succeeded, "std citation run failed:\n{}", run_output);
-    assert!(run_output.contains("\"source_kind\": \"std\""));
-    assert!(run_output.contains("\"source\": \"std/Trig\""));
-    assert!(!run_output.contains("\"path\""));
-}
-
-#[test]
-fn run_file_citation_source_uses_safe_label_and_detail_path() {
-    let run_file_path = std::env::temp_dir().join("litex-run-file-citation-source-test.lit");
-    fs::write(
-        &run_file_path,
-        "abstract_prop p(x)\nproof_debt forall x R:\n    $p(x)\n",
-    )
-    .unwrap();
-    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
-    let source_code = format!("run_file \"{}\"\n$p(2)", run_file_path_string);
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "run_file citation run failed:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"source_kind\": \"run_file\""));
-    assert!(run_output.contains("\"source\": \"external_file\""));
-    assert!(!run_output.contains(run_file_path_string.as_str()));
-
-    let mut detail_runtime = Runtime::new_with_builtin_code();
-    detail_runtime.new_file_path_new_env_new_name_scope("run_file_citation_source");
-    detail_runtime.detail_output = true;
-    let (detail_stmt_results, detail_runtime_error) =
-        run_source_code(source_code.as_str(), &mut detail_runtime);
-    let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
-        &detail_runtime,
-        &detail_stmt_results,
-        &detail_runtime_error,
-        false,
-    );
-
-    let _ = fs::remove_file(&run_file_path);
-    assert!(
-        detail_run_succeeded,
-        "detail run_file citation run failed:\n{}",
-        detail_run_output
-    );
-    assert!(detail_run_output.contains("\"path\""));
-    assert!(detail_run_output.contains(run_file_path_string.as_str()));
-}
-
-#[test]
 fn runner_success_returns_trace() {
     let (ok, output) = run_runner_for_code("1 + 1 = 2", "-runner-test", true);
 
@@ -5161,124 +5319,32 @@ fn runner_target_error_returns_message() {
 }
 
 #[test]
-fn runner_accepts_proof_debt_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("proof_debt 1 = 0", "-runner-test", true);
+fn runner_accepts_trust_as_normal_execution() {
+    let (ok, output) = run_runner_for_code("trust 1 = 0", "-runner-test", true);
 
-    assert!(
-        ok,
-        "runner should not reject proof_debt statements:\n{}",
-        output
-    );
+    assert!(ok, "runner should not reject trust statements:\n{}", output);
     assert!(output.contains("\"result\": \"success\""));
 }
 
 #[test]
-fn runner_accepts_let_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("let x R", "-runner-test", true);
+fn runner_accepts_trust_have_as_normal_execution() {
+    run_with_large_stack("runner_accepts_trust_have_as_normal_execution", || {
+        let (ok, output) = run_runner_for_code("trust have x R", "-runner-test", true);
 
-    assert!(ok, "runner should not reject let statements:\n{}", output);
-    assert!(output.contains("\"result\": \"success\""));
-}
-
-#[test]
-fn dependency_graph_tracks_fact_citation() {
-    run_with_large_stack("dependency_graph_tracks_fact_citation", || {
-        let (ok, output) =
-            run_dependency_graph_json_for_code("1 = 1\n1 = 1", "-depgraph-test", true, false);
-
-        assert!(ok, "dependency graph run failed:\n{}", output);
-        assert!(output.contains("\"kind\": \"verifies\""));
-        assert!(output.contains("\"from\": \"fact:1\""));
-        assert!(output.contains("\"to\": \"fact:2\""));
+        assert!(
+            ok,
+            "runner should not reject trust have statements:\n{}",
+            output
+        );
+        assert!(output.contains("\"result\": \"success\""));
     });
 }
 
 #[test]
-fn dependency_graph_tracks_prop_definition_dependencies() {
-    run_with_large_stack(
-        "dependency_graph_tracks_prop_definition_dependencies",
-        || {
-            let source_code = r#"
-prop is_even(x Z):
-    exist k Z st {x = 2 * k}
-
-prop is_multiple_of_four(x Z):
-    exist k Z st {x = 4 * k}
-    $is_even(x)
-"#;
-            let (ok, output) =
-                run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
-
-            assert!(ok, "dependency graph prop run failed:\n{}", output);
-            assert!(output.contains("\"kind\": \"uses_definition\""));
-            assert!(output.contains("prop is_even(x Z)"));
-            assert!(output.contains("prop is_multiple_of_four(x Z)"));
-            assert!(
-                !output.contains("~2x"),
-                "dependency graph output should hide internal free-param tags:\n{}",
-                output
-            );
-        },
-    );
-}
-
-#[test]
-fn dependency_graph_dot_outputs_graphviz_edges() {
-    run_with_large_stack("dependency_graph_dot_outputs_graphviz_edges", || {
-        let (ok, output) =
-            run_dependency_graph_dot_for_code("1 + 1 = 2", "-depgraph-test", true, false);
-
-        assert!(ok, "dependency graph dot run failed:\n{}", output);
-        assert!(output.contains("digraph litex_dependency_graph"));
-        assert!(output.contains("\"builtin_rule:1\" -> \"fact:1\""));
-        assert!(output.contains("verifies"));
-    });
-}
-
-#[test]
-fn dependency_graph_tracks_by_thm_dependency() {
-    run_with_large_stack("dependency_graph_tracks_by_thm_dependency", || {
-        let source_code = r#"
-thm one_eq_one:
-    prove:
-        forall:
-            1 = 1
-    1 = 1
-
-by thm one_eq_one()
-"#;
-        let (ok, output) =
-            run_dependency_graph_json_for_code(source_code, "-depgraph-test", true, false);
-
-        assert!(ok, "dependency graph by-thm run failed:\n{}", output);
-        assert!(output.contains("\"kind\": \"theorem\""));
-        assert!(output.contains("\"kind\": \"uses_theorem\""));
-        assert!(output.contains("\"detail\": \"theorem instantiation\""));
-    });
-}
-
-#[test]
-fn dependency_graph_reports_successful_prefix_on_error() {
-    run_with_large_stack(
-        "dependency_graph_reports_successful_prefix_on_error",
-        || {
-            let (ok, output) =
-                run_dependency_graph_json_for_code("1 = 1\n1 = 0", "-depgraph-test", true, false);
-
-            assert!(!ok, "dependency graph error run should fail:\n{}", output);
-            assert!(output.contains("\"result\": \"error\""));
-            assert!(output.contains("\"kind\": \"error\""));
-            assert!(output.contains("\"text\": \"1 = 1\""));
-            assert!(output.contains("\"error_type\": \"VerifyError\""));
-        },
-    );
-}
-
-#[test]
-fn zh_output_localizes_unproved_proof_debt_labels() {
-    let source_code = "abstract_prop tmp_rel(m, n)\nproof_debt exist! m, n R st {$tmp_rel(m, n)}\n";
+fn zh_output_localizes_unproved_trust_labels() {
+    let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_proof_debt_labels");
+    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_trust_labels");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -5288,8 +5354,7 @@ fn zh_output_localizes_unproved_proof_debt_labels() {
     assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
     assert!(run_output.contains("\"结果\": \"成功\""));
     assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
-    assert!(run_output.contains("\"原因\": \"警告：未经证明的 proof_debt 假设\""));
-    assert!(run_output.contains("\"事实\": \"exist! m, n R st {$tmp_rel("));
+    assert!(run_output.contains("\"语句\": \"trust exist! m, n R st {$tmp_rel("));
     assert!(!run_output.contains("\"result\": \"success\""));
 }
 
@@ -5358,7 +5423,7 @@ forall:
 #[test]
 fn zh_runner_localizes_wrapper_and_trace() {
     let (ok, output) = run_runner_for_code_with_language(
-        "proof_debt 1 = 1",
+        "trust 1 = 1",
         "-runner-test",
         true,
         OutputLanguage::SimplifiedChinese,
@@ -5399,7 +5464,7 @@ fn output_language_parses_supported_cli_codes() {
 }
 
 #[test]
-fn non_english_languages_localize_unproved_proof_debt_labels() {
+fn non_english_languages_localize_unproved_trust_labels() {
     let cases = vec![
         (
             OutputLanguage::SimplifiedChinese,
@@ -5410,7 +5475,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "语句",
             "事实",
             "原因",
-            "警告：未经证明的 proof_debt 假设",
+            "未经证明的假设",
         ),
         (
             OutputLanguage::TraditionalChinese,
@@ -5421,7 +5486,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "語句",
             "事實",
             "原因",
-            "警告：未經證明的 proof_debt 假設",
+            "未經證明的假設",
         ),
         (
             OutputLanguage::Japanese,
@@ -5432,7 +5497,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "文",
             "事実",
             "理由",
-            "警告：証明されていない proof_debt 仮定",
+            "証明されていない仮定",
         ),
         (
             OutputLanguage::Korean,
@@ -5443,7 +5508,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "문장",
             "사실",
             "이유",
-            "경고: 증명되지 않은 proof_debt 가정",
+            "증명되지 않은 가정",
         ),
         (
             OutputLanguage::Spanish,
@@ -5454,7 +5519,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "enunciado",
             "hecho",
             "razón",
-            "advertencia: suposición proof_debt no demostrada",
+            "suposición no demostrada",
         ),
         (
             OutputLanguage::French,
@@ -5465,7 +5530,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "énoncé",
             "fait",
             "raison",
-            "avertissement : hypothèse proof_debt non prouvée",
+            "hypothèse non prouvée",
         ),
         (
             OutputLanguage::German,
@@ -5476,7 +5541,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "Anweisung",
             "Fakt",
             "Grund",
-            "Warnung: unbewiesene proof_debt-Annahme",
+            "unbewiesene Annahme",
         ),
         (
             OutputLanguage::Portuguese,
@@ -5487,7 +5552,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "declaração",
             "fato",
             "razão",
-            "aviso: suposição proof_debt não provada",
+            "suposição não provada",
         ),
         (
             OutputLanguage::Russian,
@@ -5498,7 +5563,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "утверждение",
             "факт",
             "причина",
-            "предупреждение: недоказанное предположение proof_debt",
+            "недоказанное предположение",
         ),
         (
             OutputLanguage::Arabic,
@@ -5509,7 +5574,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "العبارة",
             "الحقيقة",
             "السبب",
-            "تحذير: افتراض proof_debt غير مبرهن",
+            "افتراض غير مبرهن",
         ),
         (
             OutputLanguage::Hindi,
@@ -5520,7 +5585,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "कथन",
             "तथ्य",
             "कारण",
-            "चेतावनी: अप्रमाणित proof_debt मान्यता",
+            "अप्रमाणित मान्यता",
         ),
         (
             OutputLanguage::Vietnamese,
@@ -5531,7 +5596,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "mệnh_đề",
             "sự_kiện",
             "lý_do",
-            "cảnh báo: giả thiết proof_debt chưa chứng minh",
+            "giả thiết chưa chứng minh",
         ),
         (
             OutputLanguage::Indonesian,
@@ -5542,7 +5607,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "pernyataan",
             "fakta",
             "alasan",
-            "peringatan: asumsi proof_debt belum terbukti",
+            "asumsi belum terbukti",
         ),
     ];
 
@@ -5553,18 +5618,18 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
         type_key,
         type_text,
         statement_key,
-        fact_key,
-        reason_key,
-        reason_text,
+        _fact_key,
+        _reason_key,
+        _reason_text,
     ) in cases
     {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "non_english_languages_localize_unproved_proof_debt_labels",
+            "non_english_languages_localize_unproved_trust_labels",
         );
         runtime.output_language = language;
 
-        let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 1", &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code("trust 1 = 1", &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
@@ -5575,9 +5640,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
         );
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
-        assert!(run_output.contains(&format!("\"{}\": \"proof_debt 1 = 1\"", statement_key)));
-        assert!(run_output.contains(&format!("\"{}\": \"1 = 1\"", fact_key)));
-        assert!(run_output.contains(&format!("\"{}\": \"{}\"", reason_key, reason_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"trust 1 = 1\"", statement_key)));
         assert!(!run_output.contains("\"result\": \"success\""));
     }
 }
@@ -5706,7 +5769,7 @@ fn non_english_runner_localizes_wrapper_keys() {
 
     for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
         let (ok, output) =
-            run_runner_for_code_with_language("proof_debt 1 = 1", "-runner-test", true, language);
+            run_runner_for_code_with_language("trust 1 = 1", "-runner-test", true, language);
 
         assert!(ok, "localized runner should succeed:\n{}", output);
         assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
@@ -5795,7 +5858,7 @@ abstract_prop axiom_body_prop(x)
 axiom bad_axiom:
     ? forall x R:
         $axiom_body_prop(x)
-    proof_debt $axiom_body_prop(1)
+    trust $axiom_body_prop(1)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -5844,47 +5907,49 @@ axiom bad_axiom:
 }
 
 #[test]
-fn strict_mode_rejects_user_proof_debt() {
+fn strict_mode_rejects_user_trust() {
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_proof_debt");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_trust");
     runtime.strict_mode = true;
 
-    let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 0", &mut runtime);
+    let (stmt_results, runtime_error) = run_source_code("trust 1 = 0", &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         !run_succeeded,
-        "strict mode should reject user proof_debt statements:\n{}",
+        "strict mode should reject user trust statements:\n{}",
         run_output
     );
     assert!(
         run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
-        "strict mode should report the proof_debt boundary:\n{}",
+        "strict mode should report the trust boundary:\n{}",
         run_output
     );
 }
 
 #[test]
-fn strict_mode_rejects_user_let() {
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_let");
-    runtime.strict_mode = true;
+fn strict_mode_rejects_user_trust_have() {
+    run_with_large_stack("strict_mode_rejects_user_trust_have", || {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_trust_have");
+        runtime.strict_mode = true;
 
-    let (stmt_results, runtime_error) = run_source_code("let x R", &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let (stmt_results, runtime_error) = run_source_code("trust have x R", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "strict mode should reject user let statements:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
-        "strict mode should report the let boundary:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "strict mode should reject user trust have statements:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+            "strict mode should report the trust have boundary:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -5915,12 +5980,12 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_proof_debt() {
-    let (ok, output) = run_runner_for_code_strict("proof_debt 1 = 0", "-runner-test", true);
+fn strict_runner_rejects_user_trust() {
+    let (ok, output) = run_runner_for_code_strict("trust 1 = 0", "-runner-test", true);
 
     assert!(
         !ok,
-        "strict runner should reject proof_debt statements:\n{}",
+        "strict runner should reject trust statements:\n{}",
         output
     );
     assert!(output.contains("\"result\": \"error\""));
@@ -5946,26 +6011,28 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_let() {
-    let (ok, output) = run_runner_for_code_strict("let x R", "-runner-test", true);
+fn strict_runner_rejects_user_trust_have() {
+    run_with_large_stack("strict_runner_rejects_user_trust_have", || {
+        let (ok, output) = run_runner_for_code_strict("trust have x R", "-runner-test", true);
 
-    assert!(
-        !ok,
-        "strict runner should reject let statements:\n{}",
-        output
-    );
-    assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
+        assert!(
+            !ok,
+            "strict runner should reject trust have statements:\n{}",
+            output
+        );
+        assert!(output.contains("\"result\": \"error\""));
+        assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
+    });
 }
 
 #[test]
-fn strict_mode_allows_imported_module_proof_debt() {
+fn strict_mode_allows_imported_module_trust() {
     let module_dir =
         std::env::temp_dir().join(format!("litex-strict-import-{}", std::process::id()));
     fs::create_dir_all(&module_dir).expect("create strict import test module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nproof_debt $imported_prop(2)\n",
+        "abstract_prop imported_prop(x)\ntrust $imported_prop(2)\n",
     )
     .expect("write strict import test module");
     let source_code = format!(
@@ -5974,7 +6041,7 @@ fn strict_mode_allows_imported_module_proof_debt() {
     );
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_proof_debt");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust");
     runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
@@ -5983,168 +6050,48 @@ fn strict_mode_allows_imported_module_proof_debt() {
     let _ = fs::remove_dir_all(&module_dir);
     assert!(
         run_succeeded,
-        "strict mode should allow proof_debt inside imported modules:\n{}",
+        "strict mode should allow trust inside imported modules:\n{}",
         run_output
     );
 }
 
 #[test]
-fn strict_mode_allows_imported_module_let() {
-    let module_dir =
-        std::env::temp_dir().join(format!("litex-strict-import-let-{}", std::process::id()));
-    fs::create_dir_all(&module_dir).expect("create strict import let test module");
-    fs::write(module_dir.join("main.lit"), "let imported_value R\n")
-        .expect("write strict import let test module");
-    let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
+fn strict_mode_allows_imported_module_trust_have() {
+    run_with_large_stack("strict_mode_allows_imported_module_trust_have", || {
+        let module_dir = std::env::temp_dir().join(format!(
+            "litex-strict-import-trust-have-{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&module_dir).expect("create strict import trust have test module");
+        fs::write(module_dir.join("main.lit"), "trust have imported_value R\n")
+            .expect("write strict import trust have test module");
+        let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_let");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust_have");
+        runtime.strict_mode = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    let _ = fs::remove_dir_all(&module_dir);
-    assert!(
-        run_succeeded,
-        "strict mode should allow let inside imported modules:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn strict_mode_rejects_run_file_proof_debt() {
-    let run_file_path =
-        std::env::temp_dir().join(format!("litex-strict-run-file-{}.lit", std::process::id()));
-    fs::write(&run_file_path, "proof_debt 1 = 0\n").expect("write strict run_file test file");
-    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_proof_debt");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    let _ = fs::remove_file(&run_file_path);
-    assert!(
-        !run_succeeded,
-        "strict mode should reject proof_debt inside run_file:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
-        "strict run_file failure should report the proof_debt boundary:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn strict_mode_rejects_run_file_let() {
-    let run_file_path = std::env::temp_dir().join(format!(
-        "litex-strict-run-file-let-{}.lit",
-        std::process::id()
-    ));
-    fs::write(&run_file_path, "let x R\n").expect("write strict run_file let test file");
-    let source_code = format!("run_file \"{}\"", run_file_path.to_string_lossy());
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_run_file_let");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    let _ = fs::remove_file(&run_file_path);
-    assert!(
-        !run_succeeded,
-        "strict mode should reject let inside run_file:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(DefLetStmt::strict_mode_rejection_message()),
-        "strict run_file failure should report the let boundary:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn hidden_file_path_run_file_output_omits_run_file_path() {
-    let run_file_path = std::env::temp_dir().join("litex-hidden-run-file-test.lit");
-    fs::write(&run_file_path, "1 = 1\n").unwrap();
-    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
-    let source_code = format!("run_file \"{}\"", run_file_path_string);
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("repl");
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    let _ = fs::remove_file(&run_file_path);
-    assert!(run_succeeded, "run_file failed:\n{}", run_output);
-    assert!(run_output.contains("\"statement\": \"run_file"));
-    assert!(!run_output.contains(run_file_path_string.as_str()));
-    assert!(!run_output.contains("\"source\""));
-}
-
-#[test]
-fn run_file_read_error_hides_path_unless_detail_output() {
-    let run_file_path = std::env::temp_dir().join("litex-missing-run-file-output-test.lit");
-    let _ = fs::remove_file(&run_file_path);
-    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
-    let source_code = format!("run_file \"{}\"", run_file_path_string);
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("repl");
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(!run_succeeded);
-    assert!(run_output.contains("Failed to read file: external_file"));
-    assert!(!run_output.contains(run_file_path_string.as_str()));
-
-    let mut detail_runtime = Runtime::new_with_builtin_code();
-    detail_runtime.new_file_path_new_env_new_name_scope("repl");
-    detail_runtime.detail_output = true;
-    let (detail_stmt_results, detail_runtime_error) =
-        run_source_code(source_code.as_str(), &mut detail_runtime);
-    let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
-        &detail_runtime,
-        &detail_stmt_results,
-        &detail_runtime_error,
-        false,
-    );
-
-    assert!(!detail_run_succeeded);
-    assert!(detail_run_output.contains(run_file_path_string.as_str()));
-}
-
-#[test]
-fn unquoted_run_file_is_rejected() {
-    let source_code = "run_file Trig";
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("repl");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(!run_succeeded);
-    assert!(run_output.contains(
-        "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules"
-    ));
+        let _ = fs::remove_dir_all(&module_dir);
+        assert!(
+            run_succeeded,
+            "strict mode should allow trust have inside imported modules:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
 fn citation_verified_by_type_reflects_cited_stmt_kind() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x)
 $p(2)
-let a R:
+trust have a R:
     a = 1
 a = 1
 prop q(x R):
@@ -6227,11 +6174,11 @@ fn atomic_fact_verification_output_omits_method_and_reports_route_types() {
 1 = 1
 
 abstract_prop known_p(x)
-proof_debt $known_p(1)
+trust $known_p(1)
 $known_p(1)
 
 abstract_prop forall_p(x)
-proof_debt:
+trust:
     forall x R:
         x = 1
         =>:
@@ -6254,7 +6201,7 @@ by symmetric_prop:
     y = x
 have A set
 have B set
-proof_debt $sym_p(A, B)
+trust $sym_p(A, B)
 $sym_p(B, A)
 "#;
 
@@ -6357,16 +6304,23 @@ forall x R_pos:
 }
 
 #[test]
-fn output_store_facts_explain_context_changes() {
+fn detail_output_moves_store_facts_into_environment_effects() {
+    run_with_large_stack(
+        "detail_output_moves_store_facts_into_environment_effects_large_stack",
+        detail_output_moves_store_facts_into_environment_effects_impl,
+    );
+}
+
+fn detail_output_moves_store_facts_into_environment_effects_impl() {
     let source_code = r#"
 1 = 1
 claim:
     prove:
         2 = 2
     2 = 2
-proof_debt:
+trust:
     3 = 3
-let a R:
+trust have a R:
     a = a
 prop q(x R):
     x = 1
@@ -6374,26 +6328,118 @@ $q(1)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("output_store_facts_explain_context_changes");
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_moves_store_facts_into_environment_effects",
+    );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "output_store_facts_explain_context_changes failed:\n{}",
+        "normal output fixture failed:\n{}",
         run_output
     );
     assert!(!run_output.contains("\"infer_facts\""));
     assert!(!run_output.contains("\"effects\""));
-    assert!(run_output.contains("\"store_facts\": ["));
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
-    assert!(
-        run_output.contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str())
-    );
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str()));
+    assert!(!run_output.contains("\"store_facts\""));
     assert!(!run_output.contains("\"trust\""));
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
+
+    let mut detail_runtime = Runtime::new_with_builtin_code();
+    detail_runtime.detail_output = true;
+    detail_runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_moves_store_facts_into_environment_effects_detail",
+    );
+    let (detail_results, detail_error) = run_source_code(source_code, &mut detail_runtime);
+    let (detail_succeeded, detail_output) =
+        render_run_source_code_output(&detail_runtime, &detail_results, &detail_error, false);
+    assert!(
+        detail_succeeded,
+        "detail output fixture failed:\n{}",
+        detail_output
+    );
+    assert!(!detail_output.contains("\"store_facts\""));
+    assert!(detail_output.contains("\"phases\": {"));
+    assert!(detail_output.contains("\"affect_environment\": {"));
+    assert!(detail_output.contains("\"effects\": ["));
+    assert!(
+        detail_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str())
+    );
+    assert!(detail_output
+        .contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str()));
+    assert!(
+        detail_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str())
+    );
+    assert!(detail_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
+}
+
+#[test]
+fn detail_output_exposes_statement_execution_phases() {
+    run_with_large_stack(
+        "detail_output_exposes_statement_execution_phases_large_stack",
+        detail_output_exposes_statement_execution_phases_impl,
+    );
+}
+
+fn detail_output_exposes_statement_execution_phases_impl() {
+    let source_code = r#"
+have a R = 1
+forall b R:
+    b = 2
+    =>:
+        b^2 = 4
+"#;
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = true;
+    runtime
+        .new_file_path_new_env_new_name_scope("detail_output_exposes_statement_execution_phases");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "execution phase fixture failed:\n{}",
+        run_output
+    );
+    assert_eq!(run_output.matches("\"phases\": {").count(), 2);
+    assert!(run_output.contains("\"verify_well_definedness\": {"));
+    assert!(run_output.contains("\"verify_process\": {"));
+    assert!(run_output.contains("\"affect_environment\": {"));
+    assert!(run_output.contains("\"kind\": \"parameter_binding\""));
+    assert!(run_output.contains("\"statement\": \"1 $in R\""));
+    assert!(run_output.contains("\"rule\": \"calculation\""));
+    assert!(run_output.contains("\"kind\": \"declare_object\""));
+    assert!(run_output.contains("\"kind\": \"store_fact\""));
+    assert!(!run_output.contains("\"store_facts\""));
+}
+
+#[test]
+fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
+    run_with_large_stack(
+        "detail_output_marks_failed_phase_and_does_not_claim_environment_effects_large_stack",
+        detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl,
+    );
+}
+
+fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = true;
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_marks_failed_phase_and_does_not_claim_environment_effects",
+    );
+    let (stmt_results, runtime_error) = run_source_code("have a N = -1", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "invalid object definition should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"verify_process\": {\n      \"status\": \"error\""));
+    assert!(run_output.contains("\"affect_environment\": {\n      \"status\": \"not_run\""));
+    assert!(!run_output.contains("\"effects\": ["));
 }
 
 #[test]
@@ -6405,11 +6451,12 @@ fn object_definition_output_exposes_checks_and_defined_facts() {
 have a R
 have b R = a
 have S set
-proof_debt exist x R st {x = x}
-have by exist x R st {x = x}: c
+trust exist x R st {x = x}
+obtain c from exist x R st {x = x}
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
+            runtime.detail_output = true;
             runtime.new_file_path_new_env_new_name_scope(
                 "object_definition_output_exposes_checks_and_defined_facts",
             );
@@ -6922,8 +6969,8 @@ fn by_induc_prop_bridge_and_trusted_outputs_explain_processes() {
         || {
             let source_code = r#"
 abstract_prop local_induc_p(a)
-proof_debt $local_induc_p(0)
-proof_debt forall m Z:
+trust $local_induc_p(0)
+trust forall m Z:
     m >= 0
     $local_induc_p(m)
     =>:
@@ -6958,14 +7005,14 @@ by symmetric_prop:
 
 have local_family set
 by axiom_of_choice: set local_family:
-    proof_debt forall A local_family:
+    trust forall A local_family:
         $is_nonempty_set(A)
 
 have local_ordered_set set
 abstract_prop local_leq(x, y)
 by zorn_lemma: set local_ordered_set, prop local_leq:
-    proof_debt $is_nonempty_set(local_ordered_set)
-    proof_debt:
+    trust $is_nonempty_set(local_ordered_set)
+    trust:
         forall x local_ordered_set:
             $local_leq(x, x)
         forall x, y, z local_ordered_set:
@@ -7701,7 +7748,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    proof_debt $target_thm_prop(x)
+    trust $target_thm_prop(x)
 
 $target_thm_prop(1)
 "#;
@@ -7773,7 +7820,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    proof_debt $target_thm_prop(x)
+    trust $target_thm_prop(x)
 
 by thm use_target_thm(1)
 $target_thm_prop(1)
@@ -7806,7 +7853,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7827,10 +7874,7 @@ $target_strategy_prop(1)
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.used_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -7851,7 +7895,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7911,10 +7955,7 @@ stop strategy use_target_strategy
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert!(env
         .defined_strategy_stmts
         .contains_key("use_target_strategy"));
@@ -7978,7 +8019,7 @@ strategy use_positive_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7991,7 +8032,7 @@ strategy use_negative_strategy:
             =>:
                 not $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y != 1
             =>:
@@ -8016,10 +8057,7 @@ stop strategy use_negative_strategy
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.used_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8054,7 +8092,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -8111,7 +8149,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -8136,10 +8174,7 @@ $target_strategy_prop(1)
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.stopped_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8159,7 +8194,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -8187,10 +8222,7 @@ claim:
         run_output
     );
 
-    let env = runtime
-        .environment_stack
-        .last()
-        .expect("runtime should have a current environment");
+    let env = &runtime.current_module().main_environment;
     assert_eq!(
         env.stopped_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
@@ -8340,426 +8372,14 @@ have fn as algo bad_algo_case(x, y R) R by cases:
 }
 
 #[test]
-fn run_file_from_path() {
-    run_with_large_stack("run_file_from_path_large_stack", run_file_from_path_impl);
-}
-
-#[test]
-fn run_file_std_module_form_is_rejected() {
-    let source_code = "run_file Trig";
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("run_file_std_module_form_is_rejected");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(!run_succeeded);
-    assert!(run_output.contains("run_file expects a quoted relative or absolute file path"));
-}
-
-#[test]
-fn trust_file_std_module_form_is_rejected() {
-    run_with_large_stack("trust_file_std_module_form_is_rejected", || {
-        let source_code = "trust_file Trig";
-
-        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
-            source_code,
-            "trust_file_std_module_form_is_rejected",
-            false,
-        );
-
-        assert!(!run_succeeded);
-        assert!(run_output.contains("trust_file expects a quoted relative or absolute file path"));
-    });
-}
-
-#[test]
-fn trust_file_loads_failed_theorem_interface_for_by_thm() {
+fn run_isolated_file_from_path() {
     run_with_large_stack(
-        "trust_file_loads_failed_theorem_interface_for_by_thm",
-        || {
-            let trust_file_path =
-                std::env::temp_dir().join("litex-trust-file-failed-theorem-interface-test.lit");
-            fs::write(
-                &trust_file_path,
-                r#"
-abstract_prop trusted_load_prop(x)
-
-thm trusted_load_all:
-    prove:
-        forall x R:
-            =>:
-                $trusted_load_prop(x)
-"#,
-            )
-            .unwrap();
-            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-            let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
-            let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
-                run_file_source_code.as_str(),
-                "trust_file_failed_theorem_run_file_path",
-                false,
-            );
-            assert!(
-                !run_file_succeeded,
-                "ordinary run_file should fail on the unproved theorem:\n{}",
-                run_file_output
-            );
-
-            let trust_file_source_code = format!(
-                "trust_file \"{}\"\nby thm trusted_load_all(2)\n$trusted_load_prop(2)",
-                trust_file_path_string
-            );
-            let (trust_file_succeeded, trust_file_output, runtime) =
-                run_trust_file_regression_source(
-                    trust_file_source_code.as_str(),
-                    "trust_file_failed_theorem_trusted_path",
-                    false,
-                );
-            let _ = fs::remove_file(&trust_file_path);
-
-            assert!(
-                trust_file_succeeded,
-                "trust_file should load the theorem interface and let by thm use it:\n{}",
-                trust_file_output
-            );
-            assert!(runtime
-                .get_thm_definition_by_name("trusted_load_all")
-                .is_some());
-            assert!(trust_file_output.contains("\"statement\": \"trust_file\""));
-            assert!(!trust_file_output.contains(trust_file_path_string.as_str()));
-        },
+        "run_isolated_file_from_path_large_stack",
+        run_isolated_file_from_path_impl,
     );
 }
 
-#[test]
-fn trust_file_loads_have_object_environment_effects() {
-    run_with_large_stack("trust_file_loads_have_object_environment_effects", || {
-        let trust_file_path =
-            std::env::temp_dir().join("litex-trust-file-have-object-effects-test.lit");
-        fs::write(&trust_file_path, "have trusted_bad N = -1\n").unwrap();
-        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
-        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
-            run_file_source_code.as_str(),
-            "trust_file_have_object_effects_run_file",
-            false,
-        );
-        assert!(
-            !run_file_succeeded,
-            "ordinary run_file should reject the invalid object definition:\n{}",
-            run_file_output
-        );
-
-        let trust_file_source_code = format!(
-            "trust_file \"{}\"\ntrusted_bad = -1",
-            trust_file_path_string
-        );
-        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
-            trust_file_source_code.as_str(),
-            "trust_file_have_object_effects_trust_file",
-            false,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            trust_file_succeeded,
-            "trust_file should load have-object bindings and facts:\n{}",
-            trust_file_output
-        );
-    });
-}
-
-#[test]
-fn trust_file_loads_by_extension_environment_effects() {
-    run_with_large_stack("trust_file_loads_by_extension_environment_effects", || {
-        let trust_file_path =
-            std::env::temp_dir().join("litex-trust-file-by-extension-effects-test.lit");
-        fs::write(
-            &trust_file_path,
-            "have trusted_ext_a set\nhave trusted_ext_b set\nby extension trusted_ext_a = trusted_ext_b\n",
-        )
-        .unwrap();
-        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-        let trust_file_source_code = format!(
-            "trust_file \"{}\"\ntrusted_ext_a = trusted_ext_b",
-            trust_file_path_string
-        );
-        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
-            trust_file_source_code.as_str(),
-            "trust_file_by_extension_effects",
-            false,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            trust_file_succeeded,
-            "trust_file should load by-extension equality effects:\n{}",
-            trust_file_output
-        );
-    });
-}
-
-#[test]
-fn trust_file_loads_by_for_generated_forall_effects() {
-    run_with_large_stack("trust_file_loads_by_for_generated_forall_effects", || {
-        let trust_file_path = std::env::temp_dir().join("litex-trust-file-by-for-effects-test.lit");
-        fs::write(
-            &trust_file_path,
-            r#"
-abstract_prop trusted_for_prop(n)
-
-by for:
-    prove:
-        forall n range(0, 2):
-            $trusted_for_prop(n)
-"#,
-        )
-        .unwrap();
-        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-        let trust_file_source_code = format!(
-            "trust_file \"{}\"\n$trusted_for_prop(1)",
-            trust_file_path_string
-        );
-        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
-            trust_file_source_code.as_str(),
-            "trust_file_by_for_generated_forall_effects",
-            false,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            trust_file_succeeded,
-            "trust_file should load by-for generated forall effects:\n{}",
-            trust_file_output
-        );
-    });
-}
-
-#[test]
-fn trust_file_loads_by_symmetric_prop_registry_effects() {
-    run_with_large_stack(
-        "trust_file_loads_by_symmetric_prop_registry_effects",
-        || {
-            let trust_file_path =
-                std::env::temp_dir().join("litex-trust-file-by-symmetric-prop-effects-test.lit");
-            fs::write(
-                &trust_file_path,
-                r#"
-abstract_prop trusted_sym_prop(x, y)
-
-by symmetric_prop:
-    prove:
-        forall x, y set:
-            $trusted_sym_prop(x, y)
-            =>:
-                $trusted_sym_prop(y, x)
-"#,
-            )
-            .unwrap();
-            let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-            let trust_file_source_code = format!(
-                r#"
-trust_file "{}"
-have trusted_sym_a set
-have trusted_sym_b set
-proof_debt $trusted_sym_prop(trusted_sym_a, trusted_sym_b)
-$trusted_sym_prop(trusted_sym_b, trusted_sym_a)
-"#,
-                trust_file_path_string
-            );
-            let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
-                trust_file_source_code.as_str(),
-                "trust_file_by_symmetric_prop_registry_effects",
-                false,
-            );
-            let _ = fs::remove_file(&trust_file_path);
-
-            assert!(
-                trust_file_succeeded,
-                "trust_file should load by-symmetric-prop registry effects:\n{}",
-                trust_file_output
-            );
-        },
-    );
-}
-
-#[test]
-fn trust_file_restores_affect_only_flag_after_load() {
-    run_with_large_stack("trust_file_restores_affect_only_flag_after_load", || {
-        let trust_file_path = std::env::temp_dir().join("litex-trust-file-flag-restore-test.lit");
-        fs::write(&trust_file_path, "abstract_prop flag_restore_prop(x)\n").unwrap();
-        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-        let source_code = format!(
-            "trust_file \"{}\"\n$flag_restore_prop(3)",
-            trust_file_path_string
-        );
-
-        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
-            source_code.as_str(),
-            "trust_file_restores_affect_only_flag_after_load",
-            false,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            !run_succeeded,
-            "ordinary statement after trust_file should not stay in affect-only mode:\n{}",
-            run_output
-        );
-    });
-}
-
-#[test]
-fn trust_file_keeps_duplicate_definition_errors() {
-    run_with_large_stack("trust_file_keeps_duplicate_definition_errors", || {
-        let trust_file_path =
-            std::env::temp_dir().join("litex-trust-file-duplicate-definition-test.lit");
-        fs::write(
-            &trust_file_path,
-            "abstract_prop duplicate_trusted_prop(x)\nabstract_prop duplicate_trusted_prop(x)\n",
-        )
-        .unwrap();
-        let source_code = format!("trust_file \"{}\"", trust_file_path.to_string_lossy());
-
-        let (run_succeeded, run_output, _) = run_trust_file_regression_source(
-            source_code.as_str(),
-            "trust_file_keeps_duplicate_definition_errors",
-            false,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            !run_succeeded,
-            "duplicate definition inside trust_file should still fail:\n{}",
-            run_output
-        );
-        assert!(run_output.contains("already used"));
-    });
-}
-
-#[test]
-fn strict_mode_trust_file_loads_unsafe_interfaces() {
-    run_with_large_stack("strict_mode_trust_file_loads_unsafe_interfaces", || {
-        let trust_file_path =
-            std::env::temp_dir().join("litex-trust-file-strict-unsafe-interface-test.lit");
-        fs::write(
-            &trust_file_path,
-            r#"
-abstract_prop strict_trusted_prop(x)
-
-proof_debt forall x R:
-    $strict_trusted_prop(x)
-
-axiom strict_trusted_all:
-    ? forall x R:
-        $strict_trusted_prop(x)
-"#,
-        )
-        .unwrap();
-        let trust_file_path_string = trust_file_path.to_string_lossy().into_owned();
-
-        let run_file_source_code = format!("run_file \"{}\"", trust_file_path_string);
-        let (run_file_succeeded, run_file_output, _) = run_trust_file_regression_source(
-            run_file_source_code.as_str(),
-            "strict_mode_trust_file_loads_unsafe_interfaces_run_file",
-            true,
-        );
-        assert!(
-            !run_file_succeeded,
-            "strict ordinary run_file should reject proof_debt/axiom content:\n{}",
-            run_file_output
-        );
-
-        let trust_file_source_code = format!(
-            "trust_file \"{}\"\nby thm strict_trusted_all(2)\n$strict_trusted_prop(2)",
-            trust_file_path_string
-        );
-        let (trust_file_succeeded, trust_file_output, _) = run_trust_file_regression_source(
-            trust_file_source_code.as_str(),
-            "strict_mode_trust_file_loads_unsafe_interfaces_trust_file",
-            true,
-        );
-        let _ = fs::remove_file(&trust_file_path);
-
-        assert!(
-            trust_file_succeeded,
-            "strict trust_file should load unsafe interfaces as trusted environment effects:\n{}",
-            trust_file_output
-        );
-    });
-}
-
-#[test]
-fn clear_does_not_preserve_quoted_run_file_environment() {
-    let run_file_path = std::env::temp_dir().join("litex-clear-quoted-run-file-test.lit");
-    fs::write(
-        &run_file_path,
-        "abstract_prop p(x)\nproof_debt forall x R:\n    $p(x)\n",
-    )
-    .unwrap();
-    let run_file_path_string = run_file_path.to_string_lossy().into_owned();
-    let source_code = format!("run_file \"{}\"\nclear\n$p(2)", run_file_path_string);
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "clear_does_not_preserve_quoted_run_file_environment",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    let _ = fs::remove_file(&run_file_path);
-
-    assert!(
-        !run_succeeded,
-        "quoted run_file content should be cleared:\n{}",
-        run_output
-    );
-}
-
-fn run_trust_file_regression_source(
-    source_code: &str,
-    file_label: &str,
-    strict_mode: bool,
-) -> (bool, String, Runtime) {
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(file_label);
-    runtime.strict_mode = strict_mode;
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    (run_succeeded, run_output, runtime)
-}
-
-#[test]
-#[ignore = "std run_file was removed; import currently registers modules without executing them"]
-fn std_citation_source_survives_cached_reload_after_clear() {
-    let source_code = "run_file Trig\nclear\nrun_file Trig\nsin(0) = 0";
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "std_citation_source_survives_cached_reload_after_clear",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "cached std citation run failed:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"source_kind\": \"std\""));
-    assert!(run_output.contains("\"source\": \"std/Trig\""));
-}
-
-fn run_file_from_path_impl() {
+fn run_isolated_file_from_path_impl() {
     let path: String = "./examples/_internal/regression/do_nothing.lit".to_string();
     let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
     assert!(

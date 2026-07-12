@@ -10,15 +10,15 @@ prop value(n N_pos, s power_set(N)):
         <=>:
             x < n
 
-proof_debt:
+trust:
     forall n N_pos:
         exist! s power_set(N) st {$value(n, s)}
 
-have fn ZMod as set:
-    forall n N_pos:
+have fn ZMod by exist!:
+    ? forall n N_pos:
         exist! s power_set(N) st {$value(n, s)}
 
-proof_debt:
+trust:
     forall n N_pos:
         $value(n, ZMod(n))
 
@@ -38,7 +38,7 @@ have fn sub(n N_pos, a, b Z) N = (a - b) % n
 have fn mul(n N_pos, a, b Z) N = (a * b) % n
 have fn neg(n N_pos, a Z) N = (0 - a) % n
 
-proof_debt:
+trust:
     forall n N_pos, a, b Z:
         =>:
             $congruent(n, a, b)

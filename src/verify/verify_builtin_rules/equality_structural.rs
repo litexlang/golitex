@@ -131,16 +131,8 @@ impl Runtime {
     pub fn objs_have_same_known_equality_rc_in_some_env(&self, left: &Obj, right: &Obj) -> bool {
         let left_key: ObjString = left.to_string();
         let right_key: ObjString = right.to_string();
-        for env in self.iter_environments_from_top() {
-            let left_entry = env.known_equality.get(&left_key);
-            let right_entry = env.known_equality.get(&right_key);
-            if let (Some((_, left_rc)), Some((_, right_rc))) = (left_entry, right_entry) {
-                if Rc::ptr_eq(left_rc, right_rc) {
-                    return true;
-                }
-            }
-        }
-        false
+        self.get_all_objs_equal_to_given(&left_key)
+            .contains(&right_key)
     }
 
     pub fn verify_objs_are_equal_known_only(
@@ -236,9 +228,10 @@ impl Runtime {
     }
 
     fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {
-        pairs
-            .iter()
-            .all(|(a, b)| self.objs_have_same_known_equality_rc_in_some_env(a, b))
+        pairs.iter().all(|(a, b)| {
+            verify_equality_by_they_are_the_same(a, b)
+                || self.objs_have_same_known_equality_rc_in_some_env(a, b)
+        })
     }
 
     fn boxed_obj_vecs_share_known_equality_class(
@@ -249,9 +242,10 @@ impl Runtime {
         if left.len() != right.len() {
             return false;
         }
-        left.iter()
-            .zip(right.iter())
-            .all(|(a, b)| self.objs_have_same_known_equality_rc_in_some_env(a, b))
+        left.iter().zip(right.iter()).all(|(a, b)| {
+            verify_equality_by_they_are_the_same(a, b)
+                || self.objs_have_same_known_equality_rc_in_some_env(a, b)
+        })
     }
 
     pub fn try_verify_equal_by_same_shape_and_known_equality_args(

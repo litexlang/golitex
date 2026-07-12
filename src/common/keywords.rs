@@ -47,8 +47,8 @@ pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
-/// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
-pub const ANONYMOUS_FN_PREFIX: &str = "'";
+/// Prefix for a two-sided real interval literal, such as `'(a, b)` or `'[a, b]`.
+pub const INTERVAL_LITERAL_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -70,10 +70,11 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-pub const OO: &str = "oo";
-pub const OC: &str = "oc";
-pub const CO: &str = "co";
-pub const CC: &str = "cc";
+/// Removed spellings retained as reserved words so their migration diagnostics stay precise.
+pub const LEGACY_OPEN_OPEN_INTERVAL: &str = "oo";
+pub const LEGACY_OPEN_CLOSED_INTERVAL: &str = "oc";
+pub const LEGACY_CLOSED_OPEN_INTERVAL: &str = "co";
+pub const LEGACY_CLOSED_CLOSED_INTERVAL: &str = "cc";
 pub const INFO: &str = "info";
 pub const INFC: &str = "infc";
 pub const OINF: &str = "oinf";
@@ -138,14 +139,15 @@ pub const REGULARITY_AXIOM: &str = "regularity_axiom";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
+pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
+pub const LOCAL: &str = "local";
+pub const EXPORT: &str = "export";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
-pub const PROOF_DEBT: &str = "proof_debt";
+pub const OBTAIN: &str = "obtain";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
-pub const RUN_FILE: &str = "run_file";
-pub const TRUST_FILE: &str = "trust_file";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
@@ -215,7 +217,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         RIGHT_BRACKET,
         DOUBLE_QUOTE,
         COLON,
-        ANONYMOUS_FN_PREFIX,
+        INTERVAL_LITERAL_PREFIX,
     ];
     for &s in &symbols {
         m.insert(s, s);
@@ -260,10 +262,10 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         MATRIX,
         RANGE,
         CLOSED_RANGE,
-        OO,
-        OC,
-        CO,
-        CC,
+        LEGACY_OPEN_OPEN_INTERVAL,
+        LEGACY_OPEN_CLOSED_INTERVAL,
+        LEGACY_CLOSED_OPEN_INTERVAL,
+        LEGACY_CLOSED_CLOSED_INTERVAL,
         INFO,
         INFC,
         OINF,
@@ -301,15 +303,16 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CASES,
         CONTRA,
         CASE,
+        TRUST,
         IMPORT,
+        LOCAL,
+        EXPORT,
         AS,
         ENUMERATE,
         HAVE,
-        PROOF_DEBT,
+        OBTAIN,
         CLEAR,
         DO_NOTHING,
-        RUN_FILE,
-        TRUST_FILE,
         INDUC,
         STRONG_INDUC,
         FROM,

@@ -13,7 +13,7 @@ impl Runtime {
         param_def: &ParamGroupWithSet,
         binding_scope: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self.define_params_with_set_in_scope_trusted(param_def, binding_scope);
         }
 
@@ -121,7 +121,7 @@ impl Runtime {
     /// Parameter membership bridge through already-known subset facts.
     /// When defining `x S`, if the environment already has `S $subset T`, record
     /// `x $in T` in the same local environment. This supports function bodies such
-    /// as `'(x E) R {f(x)}` when `E $subset E2` and `f fn(x E2) R`, without making
+    /// as `fn(x E) R {f(x)}` when `E $subset E2` and `f fn(x E2) R`, without making
     /// every ordinary membership fact recursively infer through all known subsets.
     fn store_param_memberships_in_known_supersets(
         &mut self,
@@ -132,14 +132,23 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let lookup_key = (SUBSET.to_string(), true);
         let source_set_key = param_set.to_string();
+        let mut source_set_keys = vec![source_set_key.clone()];
+        let mut search_environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = param_set {
+            if self.is_current_parse_module(&identifier.mod_name) {
+                source_set_keys.push(identifier.name.clone());
+            } else {
+                search_environments.extend(self.imported_module_environments(&identifier.mod_name));
+            }
+        }
         let mut target_sets: Vec<Obj> = Vec::new();
-        for env in self.iter_environments_from_top() {
+        for env in search_environments {
             let Some(known_subset_facts) = env.known_atomic_facts_with_2_args.get(&lookup_key)
             else {
                 continue;
             };
             for ((left_key, _), known_fact) in known_subset_facts.iter() {
-                if left_key != &source_set_key {
+                if !source_set_keys.iter().any(|key| key == left_key) {
                     continue;
                 }
                 let AtomicFact::SubsetFact(subset_fact) = known_fact else {

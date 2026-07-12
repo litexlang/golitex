@@ -1,6 +1,48 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_trust_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(TRUST)?;
+        if tb.current_token_is_equal_to(IMPORT) {
+            let stmt = self.parse_import_stmt(tb)?;
+            let Stmt::Command(CommandStmt::ImportStmt(import)) = stmt else {
+                unreachable!("import parser should produce an import statement")
+            };
+            return Ok(TrustImportStmt::new(import).into());
+        }
+        if tb.current_token_is_equal_to(LOCAL) {
+            let stmt = self.parse_local_import_stmt(tb)?;
+            let Stmt::Command(CommandStmt::LocalImportStmt(local_import)) = stmt else {
+                unreachable!("local import parser should produce a local import statement")
+            };
+            return Ok(TrustLocalImportStmt::new(local_import).into());
+        }
+        if tb.current_token_is_equal_to(HAVE) {
+            return self.parse_trust_have_stmt(tb);
+        }
+        self.parse_trust_fact_stmt(tb)
+    }
+
+    pub fn parse_local_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(LOCAL)?;
+        tb.skip_token(IMPORT)?;
+        let name = tb.advance()?;
+        is_valid_litex_name(&name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "local import expects one export name without a path or alias".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(LocalImportStmt::new(name, tb.line_file.clone()).into())
+    }
+
     pub fn parse_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(IMPORT)?;
         if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
@@ -64,70 +106,5 @@ impl Runtime {
     pub fn parse_clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CLEAR)?;
         Ok(ClearStmt::new(tb.line_file.clone()).into())
-    }
-
-    pub fn parse_stop_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(STOP)?;
-        tb.skip_token(IMPORT)?;
-        let module_name = tb.advance()?;
-        is_valid_litex_name(&module_name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "stop import: unexpected token after module name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(StopImportStmt::new(module_name, tb.line_file.clone()).into())
-    }
-
-    pub fn parse_run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.parse_run_or_trust_file_stmt(
-            tb,
-            RUN_FILE,
-            RunFileMode::VerifyAndExecute,
-            "run_file expects a quoted relative or absolute file path; use import <std_module> for std modules",
-        )
-    }
-
-    pub fn parse_trust_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.parse_run_or_trust_file_stmt(
-            tb,
-            TRUST_FILE,
-            RunFileMode::AffectEnvironmentOnly,
-            "trust_file expects a quoted relative or absolute file path",
-        )
-    }
-
-    fn parse_run_or_trust_file_stmt(
-        &self,
-        tb: &mut TokenBlock,
-        keyword: &str,
-        mode: RunFileMode,
-        quoted_path_error: &str,
-    ) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(keyword)?;
-        if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
-            tb.skip_token(DOUBLE_QUOTE)?;
-            let mut path_parts: Vec<String> = vec![];
-            while tb.current()? != DOUBLE_QUOTE {
-                path_parts.push(tb.advance()?);
-            }
-            tb.skip_token(DOUBLE_QUOTE)?;
-            let file_path = path_parts.join("");
-            return Ok(RunFileStmt::new_with_mode(file_path, mode, tb.line_file.clone()).into());
-        }
-
-        Err(RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(
-                quoted_path_error.to_string(),
-                tb.line_file.clone(),
-            ),
-        )))
     }
 }

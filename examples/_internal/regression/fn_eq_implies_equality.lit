@@ -1,0 +1,9 @@
+thm fn_eq_implies_equality_regression:
+    ? forall f, g fn(n N) N:
+        forall n N:
+            f(n) = g(n)
+        =>:
+            $fn_eq(f, g)
+            f = g
+    $fn_eq(f, g)
+    f = g

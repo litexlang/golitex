@@ -34,9 +34,11 @@ impl Runtime {
     > {
         let lookup_keys = known_exist_lookup_keys_for_forall_bucket(given_exist_fact);
 
-        let envs_count = self.environment_stack.len();
+        let envs_count = self.environment_count();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.environment_stack[envs_count - 1 - i];
+            let env = self
+                .environment_by_top_index(i)
+                .expect("environment index should be valid");
             let mut merged_bucket: Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)> =
                 Vec::new();
             for lk in lookup_keys.iter() {

@@ -70,8 +70,8 @@ by extension {1} = {1}
 
 # By induc: structured base and induction-step proof trace.
 abstract_prop tmp_induc_p(a)
-proof_debt $tmp_induc_p(0)
-proof_debt forall m Z:
+trust $tmp_induc_p(0)
+trust forall m Z:
     m >= 0
     $tmp_induc_p(m)
     =>:
@@ -128,14 +128,14 @@ by antisymmetric_prop:
 # Trusted preview: obligations are checked before the trusted conclusion.
 have tmp_family set
 by axiom_of_choice: set tmp_family:
-    proof_debt forall A tmp_family:
+    trust forall A tmp_family:
         $is_nonempty_set(A)
 
 have tmp_ordered_set set
 abstract_prop tmp_leq(x, y)
 by zorn_lemma: set tmp_ordered_set, prop tmp_leq:
-    proof_debt $is_nonempty_set(tmp_ordered_set)
-    proof_debt:
+    trust $is_nonempty_set(tmp_ordered_set)
+    trust:
         forall x tmp_ordered_set:
             $tmp_leq(x, x)
         forall x, y, z tmp_ordered_set:

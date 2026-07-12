@@ -1,7 +1,7 @@
 # Basic trigonometric function axioms for problem formalization.
 # This file intentionally treats trigonometry as background mathematics: the
 # functions are declared as objects, and standard identities are recorded with
-# `proof_debt` instead of being derived from limits or power series.
+# `trust` instead of being derived from limits or power series.
 #
 # The long special-angle section is problem-facing stdlib support, not a claim
 # that these are fundamental theorem interfaces. New one-off trig facts should
@@ -75,7 +75,7 @@ prop cot_periodic_with_period(p R):
         =>:
             cot(x + p) = cot(x)
 
-proof_debt:
+trust:
     # Values at the basic axis angles and immediate well-definedness facts.
     sin(0) = 0
     cos(0) = 1
@@ -273,25 +273,25 @@ proof_debt:
     $single_valued_on(R, sin)
     $single_valued_on(R, cos)
 
-    $strictly_increasing_on(cc(-pi / 2, pi / 2), sin)
-    $strictly_decreasing_on(cc(pi / 2, 3 * pi / 2), sin)
-    $injective_on(cc(-pi / 2, pi / 2), sin)
-    $injective_on(cc(pi / 2, 3 * pi / 2), sin)
-    $one_to_one_on(cc(-pi / 2, pi / 2), sin)
-    $one_to_one_on(cc(pi / 2, 3 * pi / 2), sin)
+    $strictly_increasing_on('[-pi / 2, pi / 2], sin)
+    $strictly_decreasing_on('[pi / 2, 3 * pi / 2], sin)
+    $injective_on('[-pi / 2, pi / 2], sin)
+    $injective_on('[pi / 2, 3 * pi / 2], sin)
+    $one_to_one_on('[-pi / 2, pi / 2], sin)
+    $one_to_one_on('[pi / 2, 3 * pi / 2], sin)
 
-    $strictly_decreasing_on(cc(0, pi), cos)
-    $strictly_increasing_on(cc(pi, 2 * pi), cos)
-    $injective_on(cc(0, pi), cos)
-    $injective_on(cc(pi, 2 * pi), cos)
-    $one_to_one_on(cc(0, pi), cos)
-    $one_to_one_on(cc(pi, 2 * pi), cos)
+    $strictly_decreasing_on('[0, pi], cos)
+    $strictly_increasing_on('[pi, 2 * pi], cos)
+    $injective_on('[0, pi], cos)
+    $injective_on('[pi, 2 * pi], cos)
+    $one_to_one_on('[0, pi], cos)
+    $one_to_one_on('[pi, 2 * pi], cos)
 
     forall k Z:
-        $strictly_increasing_on(cc(-pi / 2 + 2 * k * pi, pi / 2 + 2 * k * pi), sin)
-        $strictly_decreasing_on(cc(pi / 2 + 2 * k * pi, 3 * pi / 2 + 2 * k * pi), sin)
-        $strictly_decreasing_on(cc(2 * k * pi, (2 * k + 1) * pi), cos)
-        $strictly_increasing_on(cc((2 * k - 1) * pi, 2 * k * pi), cos)
+        $strictly_increasing_on('[-pi / 2 + 2 * k * pi, pi / 2 + 2 * k * pi], sin)
+        $strictly_decreasing_on('[pi / 2 + 2 * k * pi, 3 * pi / 2 + 2 * k * pi], sin)
+        $strictly_decreasing_on('[2 * k * pi, (2 * k + 1) * pi], cos)
+        $strictly_increasing_on('[(2 * k - 1) * pi, 2 * k * pi], cos)
 
     forall x R:
         -pi / 2 < x < pi / 2

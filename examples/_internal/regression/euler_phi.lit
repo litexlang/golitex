@@ -1,6 +1,6 @@
 abstract_prop prime(b)
 
-proof_debt:
+trust:
     forall a, b N_pos:
         $prime(b)
         =>:

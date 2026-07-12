@@ -45,8 +45,8 @@ object-introduction family of `have` statements listed below.
 | Tuple `(a, b, ...)` | An ordered tuple with one-based projection syntax such as `(a, b)[1]`. | Coordinates must be well-defined. |
 | `cart(A, B, ...)` | Cartesian product of the factor sets. | Factor objects must be well-defined sets; tuple membership checks each coordinate against its factor. |
 | `fn(x S) T` | Function-space object from inputs in `S` to values in `T`, possibly with domain side conditions. | Parameter sets, side conditions, and return set must be well-defined. |
-| Anonymous function `'(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
-| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; for larger-domain functions, pass an anonymous restriction such as `'(x S) T {f(x)}` when an API expects a function on `S`. |
+| Anonymous function `fn(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
+| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; for larger-domain functions, pass an anonymous restriction such as `fn(x S) T {f(x)}` when an API expects a function on `S`. |
 | `seq(S)`, `finite_seq(S, n)` | Infinite positive-integer-indexed sequences and finite length-`n` sequences with values in `S`. | `S` must be a set; finite-sequence length must be positive and match literal length when a literal is used. |
 | `matrix(S, r, c)` and matrix literals | Rectangular row-column indexed arrays with entries in `S`. | Row and column counts must be positive; literals must be rectangular and entries must belong to `S`. |
 | `&StructName` and `&StructName{obj}.field` | Struct membership as a record-shaped tuple type, and field access through a struct view. | Struct fields and equivalent facts must be well-defined; field access requires the object to be viewed as that struct. |
@@ -57,18 +57,18 @@ object-introduction family of `have` statements listed below.
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `fact` | The fact must be well-defined. | The fact must be verified as true. | Stores the fact and runs inference. |
-| `proof_debt` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
+| `trust` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
 | `axiom name` | Rejected in strict mode; the `? forall ...` fact must be well-defined. | None. | Stores a named theorem-like `forall` fact for matching and `by thm`. |
-| `let` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stores names, parameter type facts, attached facts, and inferred consequences. |
+| `suppose` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stores names, parameter type facts, attached facts, and inferred consequences. |
 | `have a R` | `a` must be unused; `R` must be a well-defined object. | Checks `R` is nonempty, for example `$is_nonempty_set(R)`. | Stores the object name `a`, stores `a $in R`, and runs inference. |
 | `have a T = x` | Parameter count must match assigned objects; declared types are instantiated; `x` must be well-defined. | Verifies each assigned object satisfies its declared type. | Stores the object name, its type fact, `a = x`, and sequence or matrix value caches when relevant. |
-| `have ... by exist` | Existential shape and parameter count must match the named witnesses. | Verifies the existential fact. | Stores witness names, witness type facts, instantiated body facts, and inference results. |
+| `obtain ... from exist` | Existential shape and parameter count must match the named witnesses. | Verifies the existential fact. | Stores witness names, witness type facts, instantiated body facts, and inference results. |
 | `have ... by preimage` | Preimage count and function/range shape must match. | Verifies the source range membership. | Stores preimage names, source-domain facts, domain facts, and value equality facts. |
 | `have fn = anonymous_fn` | Function body, function set, return set, and function name are checked. | Verifies the function value belongs to the return set. | Stores the function name, `f $in fn_set`, known function-body data, `f = anonymous_fn`, and inferred facts. |
 | `have fn case_by_case` | Function set, cases, equal-to expressions, and function name are checked. | Verifies case return values and related case obligations. | Stores the function name, function type, and generated case `forall` facts. |
 | `have fn by induc` | Function and induction shapes are checked. | Verifies base and step obligations. | Stores the function definition facts. |
 | `have fn as algo` | Function signature, generated algorithm shape, and function name are checked. | Verifies the function body or cases according to the algorithm-definition rules. | Stores the function definition and its associated algorithm so later `eval` can use it. |
-| `have fn by forall exist unique` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
+| `have fn ... by exist!` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
 | `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
 | `have cart` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores set/cart markers, dimension equality, and projection `forall` fact. |
 | `have seq` | Name must be unused; sequence set, anonymous function, and function set must be well-defined. | Verifies each generated value belongs to the return set. | Stores sequence membership, known function-body data, and equality to the anonymous function. |
@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `run_file`, `trust_file`, and `stop import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, `local import`, `trust import`, and `trust local import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -124,11 +124,11 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `import` | Resolves module path/name; checks aliases, cycles, duplicate module names, and duplicate paths. | Runs the imported module normally when it is not already cached. | Registers the module environment, import dependencies, and reactivates cached modules when applicable. |
-| `run_file` | Resolves and reads the file path. | Runs the target file normally. | Executes directly in the current user environment. |
-| `trust_file` | Resolves and reads a quoted file path like `run_file`. | Skips ordinary proof and well-definedness checking in the loaded file. | Loads trusted environment effects such as facts, definitions, theorem interfaces, object bindings, and strategy registrations. |
+| `litex.config` | `[entrance]` selects one `.lit` entry; `[export]` declares local files and child projects. Paths, names, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface and canonical import graph. |
+| `import` | In project mode resolves a root module export or global module; ordinary import does not load `.lit` files. Checks module cycles and cached status. | Runs the imported module entrance once. | Registers import dependencies and reuses cached modules. |
+| `local import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity; a uniquely supplied imported member may then be used bare, while local definitions shadow imports and ambiguous members need `module::name`. |
+| `trust import` / `trust local import` | Use the same declared targets, parsing, path validation, and cycle checks as their ordinary forms. They are rejected in strict mode. | Skip well-definedness and proof processing for the loaded target and its nested dependency closure. | Apply direct environment effects only, and mark the whole top-level run with an explicit trusted-import dependency. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
-| `stop import` | The module must already be imported. | None. | Marks the module as stopped for automatic verification in the shared module manager. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |
 | `eval by` | The left and right objects must be well-defined. | Verifies `lhs = rhs`. | Stores `lhs = rhs`, `rhs = value`, and `lhs = value`. |

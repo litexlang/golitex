@@ -25,6 +25,7 @@ pub struct RuntimeErrorStruct {
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<StmtResult>,
     pub output: Box<RuntimeErrorOutput>,
+    pub execution_trace: Option<StatementExecutionTrace>,
 }
 
 #[derive(Debug)]
@@ -158,6 +159,7 @@ impl RuntimeErrorStruct {
             previous_error: previous_error.map(Box::new),
             inside_results,
             output: Box::new(RuntimeErrorOutput::new()),
+            execution_trace: None,
         }
     }
 
@@ -176,6 +178,7 @@ impl RuntimeErrorStruct {
             previous_error: previous_error.map(Box::new),
             inside_results,
             output: Box::new(output),
+            execution_trace: None,
         }
     }
 }
@@ -272,6 +275,69 @@ pub fn exec_stmt_error_with_stmt_and_cause(stmt: Stmt, cause: RuntimeError) -> R
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
+    pub fn trace_message(&self) -> String {
+        let error = match self {
+            RuntimeError::ArithmeticError(e) => e,
+            RuntimeError::NewFactError(e) => e,
+            RuntimeError::StoreFactError(e) => e,
+            RuntimeError::ParseError(e) => e,
+            RuntimeError::ExecStmtError(e) => e,
+            RuntimeError::WellDefinedError(e) => e,
+            RuntimeError::VerifyError(e) => e,
+            RuntimeError::UnknownError(e) => e,
+            RuntimeError::InferError(e) => e,
+            RuntimeError::NameAlreadyUsedError(e) => e,
+            RuntimeError::DefineParamsError(e) => e,
+            RuntimeError::InstantiateError(e) => e,
+        };
+        if !error.msg.is_empty() {
+            return error.msg.clone();
+        }
+        if let Some(previous_error) = error.previous_error.as_ref() {
+            return previous_error.trace_message();
+        }
+        self.display_label().to_string()
+    }
+
+    pub fn with_execution_trace(mut self, trace: StatementExecutionTrace) -> Self {
+        self.execution_trace_mut().execution_trace = Some(trace);
+        self
+    }
+
+    pub fn execution_trace(&self) -> Option<&StatementExecutionTrace> {
+        match self {
+            RuntimeError::ArithmeticError(e) => e.execution_trace.as_ref(),
+            RuntimeError::NewFactError(e) => e.execution_trace.as_ref(),
+            RuntimeError::StoreFactError(e) => e.execution_trace.as_ref(),
+            RuntimeError::ParseError(e) => e.execution_trace.as_ref(),
+            RuntimeError::ExecStmtError(e) => e.execution_trace.as_ref(),
+            RuntimeError::WellDefinedError(e) => e.execution_trace.as_ref(),
+            RuntimeError::VerifyError(e) => e.execution_trace.as_ref(),
+            RuntimeError::UnknownError(e) => e.execution_trace.as_ref(),
+            RuntimeError::InferError(e) => e.execution_trace.as_ref(),
+            RuntimeError::NameAlreadyUsedError(e) => e.execution_trace.as_ref(),
+            RuntimeError::DefineParamsError(e) => e.execution_trace.as_ref(),
+            RuntimeError::InstantiateError(e) => e.execution_trace.as_ref(),
+        }
+    }
+
+    fn execution_trace_mut(&mut self) -> &mut RuntimeErrorStruct {
+        match self {
+            RuntimeError::ArithmeticError(e) => e,
+            RuntimeError::NewFactError(e) => e,
+            RuntimeError::StoreFactError(e) => e,
+            RuntimeError::ParseError(e) => e,
+            RuntimeError::ExecStmtError(e) => e,
+            RuntimeError::WellDefinedError(e) => e,
+            RuntimeError::VerifyError(e) => e,
+            RuntimeError::UnknownError(e) => e,
+            RuntimeError::InferError(e) => e,
+            RuntimeError::NameAlreadyUsedError(e) => e,
+            RuntimeError::DefineParamsError(e) => e,
+            RuntimeError::InstantiateError(e) => e,
+        }
+    }
+
     pub fn wrap_new_fact_as_store_conflict(e: RuntimeError) -> RuntimeError {
         match e {
             RuntimeError::NewFactError(s) => NewFactRuntimeError(RuntimeErrorStruct::new(

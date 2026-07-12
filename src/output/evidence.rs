@@ -571,7 +571,7 @@ fn citation_type_for_stmt(stmt: &Stmt) -> String {
         Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(_)) => {
             "cite abstract prop def".to_string()
         }
-        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite let def".to_string(),
+        Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => "cite trust have".to_string(),
         Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
         Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(_)) => "cite struct def".to_string(),
         _ => format!("cite {}", stmt.output_type_string()),

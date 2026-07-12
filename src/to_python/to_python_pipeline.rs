@@ -1,9 +1,13 @@
 use crate::prelude::*;
 use std::collections::HashSet;
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
     let mut tokenizer = Tokenizer::new();
-    let current_file_path = runtime.module_manager.borrow().current_file_path_rc();
+    let current_file_path = runtime.current_file_path_rc();
     let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
 
     let mut stmts: Vec<Stmt> = Vec::new();
@@ -24,6 +28,106 @@ pub fn to_python_from_source_after_builtins(
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_python(normalized.as_str(), &mut runtime)
+}
+
+pub fn to_python_from_file_after_builtins(file_path: &str) -> Result<String, RuntimeError> {
+    let resolved_path = resolve_file_path(file_path)?;
+    let mut runtime = Runtime::new_with_builtin_code();
+    match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
+        Some(target) => to_python_project_target(&mut runtime, target),
+        None => {
+            let source = read_source(resolved_path.as_str())?;
+            runtime.new_file_path_new_env_new_name_scope(resolved_path.as_str());
+            to_python(source.as_str(), &mut runtime)
+        }
+    }
+}
+
+pub fn to_python_from_repository_after_builtins(
+    repository_path: &str,
+) -> Result<String, RuntimeError> {
+    let mut runtime = Runtime::new_with_builtin_code();
+    discover_repository(&mut runtime, repository_path)?;
+    let entry_module_id = runtime.current_module_id();
+    to_python_project_target(
+        &mut runtime,
+        RepositoryFileTarget::Entrance(entry_module_id),
+    )
+}
+
+fn to_python_project_target(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+) -> Result<String, RuntimeError> {
+    let (source_path, pushed_frame) = match target {
+        RepositoryFileTarget::Entrance(module_id) => {
+            let source_path = runtime
+                .module_manager
+                .module(module_id)
+                .expect("discovered module should exist")
+                .main_file_path
+                .clone();
+            if runtime.current_module_id() != module_id {
+                runtime.push_module_execution_frame(module_id, source_path.as_str());
+                (source_path, true)
+            } else {
+                (source_path, false)
+            }
+        }
+        RepositoryFileTarget::File { module_id, file_id } => {
+            let source_path = runtime
+                .module_manager
+                .module(module_id)
+                .and_then(|module| module.file(file_id))
+                .expect("registered project file should exist")
+                .source_path
+                .clone();
+            runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
+            (source_path, true)
+        }
+    };
+    let source = read_source(source_path.as_str())?;
+    let output = to_python(source.as_str(), runtime);
+    if pushed_frame {
+        runtime.pop_execution_frame();
+    }
+    output
+}
+
+fn resolve_file_path(file_path: &str) -> Result<String, RuntimeError> {
+    let path = Path::new(file_path);
+    let absolute = if path.is_absolute() {
+        PathBuf::from(path)
+    } else {
+        env::current_dir()
+            .map_err(|error| {
+                file_error(
+                    file_path,
+                    format!("failed to get current directory: {}", error),
+                )
+            })?
+            .join(path)
+    };
+    let canonical = fs::canonicalize(&absolute)
+        .map_err(|error| file_error(file_path, format!("could not read file: {}", error)))?;
+    canonical
+        .to_str()
+        .map(str::to_string)
+        .ok_or_else(|| file_error(file_path, "file path is not valid UTF-8".to_string()))
+}
+
+fn read_source(path: &str) -> Result<String, RuntimeError> {
+    fs::read_to_string(path)
+        .map(|source| source.replace('\r', ""))
+        .map_err(|error| file_error(path, format!("could not read file: {}", error)))
+}
+
+fn file_error(path: &str, message: String) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        message,
+        (0, Rc::from(path)),
+    ))
+    .into()
 }
 
 struct PythonExtractor {

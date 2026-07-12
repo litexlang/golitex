@@ -290,18 +290,14 @@ Basic behavior:
 | `-version` | Print the Litex version and exit. |
 | `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
-| `-f <file>` | Run a file. The path may be relative to the current working directory or absolute. |
-| `-r <repo>` | Same as running `<repo>/main.lit`. Place `main.lit` at the repo root. |
+| `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
+| `-isolated -f <file>` | Force a file to run without project discovery. |
+| `-r <project>` | Run the `[entrance]` file declared by `<project>/litex.config`. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `-runner -r <repo>` | Run a repository and return one wrapper JSON object. |
-| `-depgraph -e <code>` | Run a source string, write a proof dependency graph JSON file under `tmp/depgraph`, and print the output path. |
-| `-depgraph -f <file>` | Run a file, write a proof dependency graph JSON file under `tmp/depgraph`, and print the output path. |
-| `-depgraph -r <repo>` | Run a repository, write a proof dependency graph JSON file under `tmp/depgraph`, and print the output path. |
-| `-depgraph-dot -e <code>` | Run a source string, write a proof dependency graph DOT file under `tmp/depgraph`, and print the output path. |
-| `-depgraph-dot -f <file>` | Run a file, write a proof dependency graph DOT file under `tmp/depgraph`, and print the output path. |
-| `-depgraph-dot -r <repo>` | Run a repository, write a proof dependency graph DOT file under `tmp/depgraph`, and print the output path. |
-| `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
+| `-runner -r <project>` | Run a project and return one wrapper JSON object. |
+| `-detail` | Include full proof details, execution phases, empty fields, and raw paths for cross-source references. |
+| `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
 | `-latex` | Start an interactive REPL that prints LaTeX output. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
@@ -313,7 +309,7 @@ Basic behavior:
 | `-update <module>` | Update a module, when available. |
 | `-tutorial` | Run the tutorial, when available. |
 
-Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-depgraph -e`, `-depgraph -f`, `-depgraph -r`, `-depgraph-dot -e`, `-depgraph-dot -f`, `-depgraph-dot -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
+Options like `-e`, `-f`, `-r`, `-runner -e`, `-runner -f`, `-runner -r`, `-lang`, `-fmt`, `-install`, `-uninstall`, and `-update` require a value that does not start with `-` immediately after the flag. After `-latex`, you may use sub-options `-f`, `-e`, or `-r` with their arguments; without a sub-option, `-latex` starts the interactive LaTeX-output REPL.
 
 Litex supports multiple output languages through `-lang <code>`. See
 [`docs/cli.md`](cli.md) for the current list of supported language codes.
@@ -327,14 +323,21 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
 By default, Litex omits empty arrays and empty strings, and it does not print
 raw file paths. Cross-source references still keep safe provenance labels such
-as `builtin_code`, `std/Trig`, or `external_file`. Use
-`-detail` when you need full trace details and raw paths for debugging.
+as `builtin_code`, `std/Trig`, or an exported file's canonical name. Use
+`-detail` when you need full trace details and raw paths for debugging. Detailed statement output includes `phases.verify_well_definedness`, `phases.verify_process`, and `phases.affect_environment`; facts added to the environment appear as `affect_environment.effects`, not as a top-level `store_facts` field.
 
 If the whole run succeeds:
 
 - The output contains one JSON object per user statement, separated by newlines; each object describes that statement's outcome.
 - Each successful statement object has `"result": "success"`.
 - The last JSON object for your source is the last statement that ran successfully.
+
+With `-summarize`, ordinary verifier commands append one extra JSON object at
+the end with `"output_type": "run summary"`. The default `-e`, `-f`, and `-r`
+output stays statement-only. The summary includes top-level and expanded
+statement counts, prop/theorem/fact counts, proof-debt and axiom counts,
+`statement_type_counts`, `output_type_counts`, and a `statements` array that
+records line numbers for editor-side selection.
 
 This is useful when another program wants to call Litex and inspect whether a proof or computation succeeded.
 
@@ -399,18 +402,6 @@ The wrapper includes:
 - `"trace"`, containing the ordinary Litex statement-by-statement JSON output.
 
 Unlike the basic `-e`, `-f`, and `-r` commands, the runner exits with a nonzero code when the checked run fails or when the target source cannot be loaded.
-
----
-
-## Dependency graph output
-
-`litex -depgraph ...` and `litex -depgraph-dot ...` run the same verifier and
-write a dependency graph artifact under `tmp/depgraph`. The command prints a
-small JSON object with `"ok"`, `"result"`, `"format"`, and `"output_path"`.
-
-Use `-depgraph` for the machine-readable JSON graph. Use `-depgraph-dot` for
-Graphviz DOT, which can be rendered with a Graphviz command such as
-`dot -Tsvg tmp/depgraph/example.dot -o tmp/depgraph/example.svg`.
 
 ---
 

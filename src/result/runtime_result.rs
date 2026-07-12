@@ -69,6 +69,25 @@ impl StmtResult {
         }
         self
     }
+
+    pub fn with_execution_trace(mut self, trace: StatementExecutionTrace) -> Self {
+        if let Some(x) = self.non_factual_success_mut() {
+            x.execution_trace = Some(trace);
+        } else if let Some(x) = self.factual_success_mut() {
+            x.execution_trace = Some(trace);
+        }
+        self
+    }
+
+    pub fn execution_trace(&self) -> Option<&StatementExecutionTrace> {
+        if let Some(x) = self.non_factual_success() {
+            x.execution_trace.as_ref()
+        } else if let Some(x) = self.factual_success() {
+            x.execution_trace.as_ref()
+        } else {
+            None
+        }
+    }
 }
 
 impl StmtResult {

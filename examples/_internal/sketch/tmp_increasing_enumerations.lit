@@ -36,7 +36,7 @@ prop least_prefix_sequence_constructed_by_min(S power_set(N), P fn(n N_pos) powe
         Nat::least_of_N_subset(remaining_N(S, P(n))) $in remaining_N(S, P(n))
         P(n + 1) = union(P(n), {Nat::least_of_N_subset(remaining_N(S, P(n)))})
 
-proof_debt:
+trust:
     # Recursive construction principle derived from well-ordering plus finite
     # set facts: an infinite subset of N remains nonempty after finitely many
     # removals, so the next least remaining element exists.
@@ -63,7 +63,7 @@ claim:
             not $is_finite_set(S)
             =>:
                 exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
-    have by exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}: P
+    obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}
     $least_prefix_sequence(S, P)
     witness exist P0 fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P0)} from P:
         $least_prefix_sequence(S, P)
@@ -90,7 +90,7 @@ prop enumeration_extracted_from_prefixes(S power_set(N), P fn(n N_pos) power_set
         a(n + 1) $in P(n + 1)
         not a(n + 1) $in P(n)
 
-proof_debt:
+trust:
     # Prefix-to-sequence extraction. This is the finite-prefix bookkeeping
     # theorem: P(n) has exactly n elements, P(n + 1) adds exactly one new least
     # element, and those new elements form the increasing enumeration.
@@ -105,8 +105,8 @@ claim:
             not $is_finite_set(S)
             =>:
                 exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
-    have by exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}: P
-    have by exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}: a
+    obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
+    obtain a from exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}
     $least_order_enumeration(S, a)
     witness exist a0 fn(n N_pos) N st {$least_order_enumeration(S, a0)} from a:
         $least_order_enumeration(S, a)
@@ -135,7 +135,7 @@ prop equal_cardinality(S, T set):
 prop countably_infinite_N_subset(S power_set(N)):
     $equal_cardinality(N_pos, S)
 
-proof_debt:
+trust:
     # Cantor-Schroeder-Bernstein, used as a cardinality interface here:
     # two sets are bijective exactly when each embeds into the other.
     forall S, T set:
@@ -173,11 +173,11 @@ claim:
             not $is_finite_set(S)
             =>:
                 $countably_infinite_N_subset(S)
-    have by exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}: a
+    obtain a from exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
     have fn enum_to_subset(n N_pos) S = a(n)
     forall n N_pos:
         enum_to_subset(n) = a(n)
-    proof_debt:
+    trust:
         # Proof debt: follows from the strict increase and no-gap property of
         # the least-order enumeration constructed from finite prefixes.
         $injective_fn(N_pos, S, enum_to_subset)

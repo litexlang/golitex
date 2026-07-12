@@ -22,6 +22,12 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(done) =
+            self.try_verify_function_equality_from_known_fn_eq(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
         let mut result =
             self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
@@ -84,6 +90,48 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
+    // Function extensionality bridge from an already proved `$fn_eq`.
+    // Example: after `$fn_eq(f, g)`, prove the ordinary equality `f = g`.
+    fn try_verify_function_equality_from_known_fn_eq(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let direct = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
+        if let Some(done) =
+            self.try_verify_function_equality_from_one_known_fn_eq(left, right, &direct)?
+        {
+            return Ok(Some(done));
+        }
+
+        let reversed = FnEqualFact::new(right.clone(), left.clone(), line_file.clone());
+        self.try_verify_function_equality_from_one_known_fn_eq(left, right, &reversed)
+    }
+
+    fn try_verify_function_equality_from_one_known_fn_eq(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        fn_eq_fact: &FnEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let fn_eq_atomic: AtomicFact = fn_eq_fact.clone().into();
+        let fn_eq_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_atomic)?;
+        if !fn_eq_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), fn_eq_fact.line_file.clone()).into(),
+                "function equality from known fn_eq".to_string(),
+                vec![fn_eq_result],
+            )
+            .into(),
+        ))
+    }
+
     fn try_verify_anonymous_functions_equal_by_fn_eq(
         &mut self,
         left: &Obj,
@@ -96,7 +144,7 @@ impl Runtime {
         }
 
         // Function extensionality for anonymous function values.
-        // Example: `'R(x){f(x) + g(x)} = 'R(y){g(y) + f(y)}` follows from
+        // Example: `fn(x R) R {f(x) + g(x)} = fn(y R) R {g(y) + f(y)}` follows from
         // the existing `$fn_eq` pointwise equality verifier.
         let fn_eq_fact = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
         let fn_eq_result =
@@ -226,7 +274,7 @@ impl Runtime {
         ))
     }
 
-    /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).
+    /// Build equality closures without merging the underlying environments.
     fn collect_known_equality_pairs_from_envs(
         &self,
         left_string: &str,
@@ -234,18 +282,17 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
-        let mut pairs = Vec::with_capacity(self.environment_stack.len());
-        for env in self.iter_environments_from_top() {
-            let known_left = env
-                .known_equality
-                .get(left_string)
-                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-            let known_right = env
-                .known_equality
-                .get(right_string)
-                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-            pairs.push((known_left, known_right));
-        }
+        let current_environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        let mut pairs = vec![(
+            known_equality_class_across_environments(
+                &current_environments,
+                &[left_string.to_string()],
+            ),
+            known_equality_class_across_environments(
+                &current_environments,
+                &[right_string.to_string()],
+            ),
+        )];
         let mut module_names = self.obj_referenced_module_names(left);
         for module_name in self.obj_referenced_module_names(right) {
             if !module_names
@@ -256,21 +303,18 @@ impl Runtime {
             }
         }
         for module_name in module_names.iter() {
-            if let Some(env) = self.active_imported_module_environment(module_name) {
-                let left_key =
-                    equality_lookup_key_for_module_env(left, left_string, module_name.as_str());
-                let right_key =
-                    equality_lookup_key_for_module_env(right, right_string, module_name.as_str());
-                let known_left = env
-                    .known_equality
-                    .get(left_key.as_str())
-                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-                let known_right = env
-                    .known_equality
-                    .get(right_key.as_str())
-                    .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
-                pairs.push((known_left, known_right));
+            let environments = self.imported_module_environments(module_name);
+            if environments.is_empty() {
+                continue;
             }
+            let left_keys =
+                equality_lookup_keys_for_module_env(left, left_string, module_name.as_str());
+            let right_keys =
+                equality_lookup_keys_for_module_env(right, right_string, module_name.as_str());
+            pairs.push((
+                known_equality_class_across_environments(&environments, &left_keys),
+                known_equality_class_across_environments(&environments, &right_keys),
+            ));
         }
         pairs
     }
@@ -333,7 +377,7 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
-        // `sum(1, n, 'Z(x){f(x)}) = sum(1, n, 'Z(y){f(y)})`.
+        // `sum(1, n, fn(x Z) Z {f(x)}) = sum(1, n, fn(y Z) Z {f(y)})`.
         let fn_eq_fact = FnEqualFact::new(
             left_func.clone(),
             right_func.clone(),
@@ -992,13 +1036,57 @@ impl Runtime {
     }
 }
 
-fn equality_lookup_key_for_module_env(obj: &Obj, default_key: &str, module_name: &str) -> String {
+fn equality_lookup_keys_for_module_env(
+    obj: &Obj,
+    default_key: &str,
+    module_name: &str,
+) -> Vec<String> {
+    let mut keys = vec![default_key.to_string()];
     if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = obj {
         if identifier.mod_name == module_name {
-            return identifier.name.clone();
+            keys.push(identifier.name.clone());
         }
     }
-    default_key.to_string()
+    keys
+}
+
+fn known_equality_class_across_environments(
+    environments: &[&Environment],
+    initial_keys: &[String],
+) -> Option<Rc<Vec<Obj>>> {
+    let mut keys = initial_keys.to_vec();
+    let mut objects = Vec::new();
+    let mut next_index = 0;
+    let mut found_equality = false;
+
+    while next_index < keys.len() {
+        let current = keys[next_index].clone();
+        next_index += 1;
+        for environment in environments {
+            let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+                continue;
+            };
+            found_equality = true;
+            for object in equivalent_objects.iter() {
+                let object_key = object.to_string();
+                if !keys.contains(&object_key) {
+                    keys.push(object_key.clone());
+                }
+                if !objects
+                    .iter()
+                    .any(|known: &Obj| known.to_string() == object_key)
+                {
+                    objects.push(object.clone());
+                }
+            }
+        }
+    }
+
+    if found_equality {
+        Some(Rc::new(objects))
+    } else {
+        None
+    }
 }
 
 fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) -> Obj {

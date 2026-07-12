@@ -142,7 +142,7 @@ claim:
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
 
 template<s nonempty_set>:
-    have fn group_quotient as set:
+    have fn group_quotient by exist!:
         prove:
             forall g &Group<s>, h power_set(s):
                 exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}

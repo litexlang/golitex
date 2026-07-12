@@ -16,11 +16,7 @@ const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_BUILTIN: &str = "builtin";
 const SOURCE_KIND_STD: &str = "std";
 const SOURCE_KIND_MODULE: &str = "module";
-const SOURCE_KIND_RUN_FILE: &str = "run_file";
-
-fn should_hide_file_paths(runtime: &Runtime) -> bool {
-    !runtime.detail_output
-}
+const SOURCE_KIND_FILE: &str = "file";
 
 fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
     Rc::ptr_eq(&left.1, &right.1) || left.1.as_ref() == right.1.as_ref()
@@ -46,18 +42,23 @@ fn display_source_label_for_line_file(
         ));
     }
 
-    if line_file_is_entry_source(line_file, &runtime.module_manager.borrow()) {
+    if line_file_is_entry_source(line_file, &runtime.module_manager) {
         return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
+    }
+
+    for module in runtime.module_manager.modules.values() {
+        for file in module.files.iter() {
+            if file.source_path == path {
+                return Some((SOURCE_KIND_FILE.to_string(), file.canonical_name.clone()));
+            }
+        }
     }
 
     if let Some(label) = imported_module_source_label_for_path(runtime, path) {
         return Some(label);
     }
 
-    Some((
-        SOURCE_KIND_RUN_FILE.to_string(),
-        "external_file".to_string(),
-    ))
+    Some((SOURCE_KIND_FILE.to_string(), SOURCE_KIND_FILE.to_string()))
 }
 
 fn imported_module_source_label_for_path(
@@ -65,11 +66,15 @@ fn imported_module_source_label_for_path(
     source_path: &str,
 ) -> Option<(String, String)> {
     let source_path = Path::new(source_path);
-    let module_manager = runtime.module_manager.borrow();
+    let module_manager = &runtime.module_manager;
     let mut best_match: Option<(usize, String, String)> = None;
 
-    for (module_name, imported_module) in module_manager.imported_modules.iter() {
-        let module_root = Path::new(imported_module.absolute_path.as_str());
+    for imported_module in module_manager.modules.values() {
+        if Some(imported_module.id) == module_manager.entry_module_id {
+            continue;
+        }
+        let module_name = imported_module.module_name.as_str();
+        let module_root = Path::new(imported_module.module_root_path.as_str());
         if !source_path.starts_with(module_root) {
             continue;
         }
@@ -84,7 +89,7 @@ fn imported_module_source_label_for_path(
         } else {
             module_display_path(module_root, &module_manager.entry_path_rc)
         };
-        let score = imported_module.absolute_path.len();
+        let score = imported_module.module_root_path.len();
 
         if best_match
             .as_ref()
@@ -125,7 +130,7 @@ pub(crate) fn source_ref_json_fields(
 
     let same_source = match current_line_file {
         Some(current_line_file) => line_files_have_same_source(source_line_file, current_line_file),
-        None => line_file_is_entry_source(source_line_file, &runtime.module_manager.borrow()),
+        None => line_file_is_entry_source(source_line_file, &runtime.module_manager),
     };
 
     if !same_source {
@@ -161,12 +166,7 @@ pub(crate) fn source_ref_json_value(
     ))
 }
 
-pub(crate) fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
-    if should_hide_file_paths(runtime) {
-        if let Stmt::Command(CommandStmt::RunFileStmt(run_file_stmt)) = stmt {
-            return run_file_stmt.keyword().to_string();
-        }
-    }
+pub(crate) fn stmt_text_for_json(_runtime: &Runtime, stmt: &Stmt) -> String {
     user_visible_stmt_or_msg_text(&stmt.to_string())
 }
 
@@ -188,7 +188,10 @@ pub(crate) fn stmt_json_field_lines(
     }
     lines.remove(0);
     lines.pop();
-    lines.into_iter().map(|line| line.to_string()).collect()
+    lines
+        .into_iter()
+        .map(|line| line.strip_suffix(',').unwrap_or(line).to_string())
+        .collect()
 }
 
 pub(crate) fn stmt_json_value(runtime: &Runtime, stmt: &Stmt) -> JsonValue {

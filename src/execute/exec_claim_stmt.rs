@@ -164,7 +164,7 @@ impl Runtime {
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<InferResult, RuntimeError> {
-        if self.only_exec_affect_environment {
+        if self.current_execution_is_trusted_file() {
             return self.store_trusted_fact_and_infer_with_reason(
                 stmt.fact.clone(),
                 InferReason::ProvedClaim,
