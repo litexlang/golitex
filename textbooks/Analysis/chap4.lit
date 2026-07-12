@@ -1,4 +1,4 @@
-# Analysis I, Chapter 4: Integers and rationals.
+# Chapter 4: Integers and rationals.
 
 
 """
@@ -684,7 +684,7 @@ exactly when x=y.
 
 # Definition 4.3.2 names `abs(x-y)` as the distance between two rationals.
 
-have fn dist_Q(x, y Q) R = abs(x - y)
+have fn dist_Q(x, y Q) Q = abs(x - y)
 
 """
 Proposition 4.3.3. Basic properties of absolute value and distance.
@@ -905,13 +905,10 @@ sketch:
         $is_close_in_Q(epsilon, 2, 2)
 
 """
-Remark 4.3.8. Epsilon-closeness behaves like approximate equality: reflexive,
-symmetric, and transitive after adding errors.
-"""
-
-"""
-Proposition 4.3.7. Closeness is reflexive, symmetric, transitive up to error,
-and stable under arithmetic estimates.
+Proposition 4.3.7. Epsilon-closeness is reflexive, symmetric, and transitive
+after adding errors. A bound remains true when the tolerance is enlarged;
+addition, subtraction, multiplication, and intermediate points obey the
+corresponding error estimates.
 """
 
 # Proposition 4.3.7(a), reflexive direction: every rational is epsilon-close to itself.
@@ -921,11 +918,6 @@ forall epsilon Q_pos, x Q:
     dist_Q(x, x) = abs(x - x) = abs(0) = 0
     0 <= epsilon
     $is_close_in_Q(epsilon, x, x)
-
-"""
-Proposition 4.3.7. If two rationals are epsilon-close, then they are also
-epsilon'-close for every larger epsilon'.
-"""
 
 # Relaxing the tolerance preserves closeness: a bound by `epsilon` is also a
 # bound by any larger positive `epsilon_prime`.
@@ -1106,11 +1098,6 @@ forall epsilon Q_pos, x, y, z, w Q:
         dist_Q(w, x) = abs(w - x)
         dist_Q(w, x) <= epsilon
         $is_close_in_Q(epsilon, w, x)
-
-"""
-Proposition 4.3.7. Epsilon-closeness is stable under multiplication by a fixed
-rational, and products of two close pairs have a controlled error.
-"""
 
 # Multiplication by a fixed rational scales the error by `abs(z)`: rewrite
 # `(x*z)-(y*z)` as `(x-y)*z`, then use multiplicativity of absolute value.
@@ -1522,10 +1509,6 @@ claim:
         x < (x + y) / 2 < y
 
 
-# Proposition 4.4.4 uses the standard rational numerator/denominator
-# bridge from the source-local cite package.
-local import chap4_cite
-
 """
 Proposition 4.4.4. There is no rational x such that x^2 = 2.
 """
@@ -1533,13 +1516,24 @@ Proposition 4.4.4. There is no rational x such that x^2 = 2.
 # The proof idea is the classical parity contradiction.  Write a rational
 # square root as a reduced fraction, show the numerator is even, then show the
 # denominator is even, contradicting reducedness.
+# Source handling: the argument uses a lowest-terms numerator and positive
+# denominator before applying the parity contradiction.
+# proof_debt: the current local development has no theorem constructing a
+# reduced numerator/denominator representative for an arbitrary rational.
+
+thm rational_reduced_fraction_parity_witness:
+    ? forall x Q:
+        x^2 = 2
+        =>:
+            exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
+    trust exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
 
 claim:
     ? forall x Q:
         x^2 != 2
     by contra x^2 != 2:
         x^2 = 2
-        by thm chap4_cite::rational_reduced_fraction_parity_witness(x)
+        by thm rational_reduced_fraction_parity_witness(x)
         obtain p, q from exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
         x = p / q
         p % 2 != 0 or q % 2 != 0
@@ -1682,7 +1676,3 @@ sketch:
     1.999396 < 2
     (1.414 + 0.001)^2 = 2.002225
     2 < 2.002225
-
-# Final audit (2026-07-12): no direct non-exercise `trust` or `abstract_prop`
-# marker occurs in this chapter.  Proposition 4.4.4's remaining bridge is in
-# `chap4_cite/main.lit`.

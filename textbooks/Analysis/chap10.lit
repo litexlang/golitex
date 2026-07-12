@@ -1,4 +1,4 @@
-# Analysis I, Chapter 10: Differentiation of functions.
+# Chapter 10: Differentiation of functions.
 
 
 # Chapter 9 background used by differentiation
@@ -7,9 +7,9 @@ trust local import chap9
 
 """
 Chapter 10 uses the Chapter 9 language of limit points, local function limits,
-continuity, extrema, and monotonicity.  After the trusted local import, bare
-shared names resolve to the unique Chapter 9 definition rather than a copied
-Chapter 10 definition.
+continuity, extrema, and monotonicity.  These earlier notions remain defined
+in their source chapter; this chapter introduces derivatives rather than
+duplicating that vocabulary.
 """
 
 thm limit_point_is_adherent_point:
@@ -321,9 +321,8 @@ thm equal_functions_have_equal_derivatives:
         $has_derivative_at(X, f, x0, L)
         =>:
             $has_derivative_at(X, g, x0, L)
-    # In the source: Tao marks this as "(why?)"; the proof is by replacing
-    # every value of g in the difference quotient with the corresponding value
-    # of f.
+    # Source handling: this is marked "(why?)"; replace every value of `g`
+    # in the difference quotient with the corresponding value of `f`.
     $is_limit_point_of_set(X, x0)
     claim:
         ? forall epsilon R_pos:
@@ -1220,8 +1219,10 @@ thm derivative_reciprocal_rule:
         g(x0) != 0
         =>:
             $has_derivative_at(X, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
-    # In the source: Proof. See Exercise 10.1.4.
-    # trust: use the reciprocal limit law and the non-vanishing hypothesis.
+    # Source handling: Exercise 10.1.4 proves the reciprocal rule from the
+    # derivative limit and non-vanishing of the denominator.
+    # proof_debt: the local reciprocal difference-quotient estimate still
+    # needs a verified non-vanishing-near-the-base-point bridge.
     trust $has_derivative_at(X, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
 
 thm derivative_quotient_rule:
@@ -1266,7 +1267,7 @@ The quotient example after Theorem 10.1.13.  For
 `f'(x0)=1/(x0-1)^2`.
 """
 
-# Tao writes the domain as `R-{1}`.  The equivalent predicate domain
+# The source writes the domain as `R-{1}`.  The equivalent predicate domain
 # `{x R: x != 1}` makes the nonzero denominator condition explicit.  The
 # computation applies the identity, constant, difference, and quotient
 # derivative laws from Theorem 10.1.13; the punctured-domain limit-point fact is
@@ -1462,8 +1463,10 @@ thm newton_approximation_chain_rule:
         $has_newton_approximation_at(Y, g, y0, Lg)
         =>:
             $has_newton_approximation_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
-    # trust: compose the two Newton approximations and control the two
-    # first-order error terms.  This is the auxiliary route to the chain rule.
+    # Source handling: Exercise 10.1.7 composes the two Newton approximations
+    # and controls their first-order errors.
+    # proof_debt: anonymous composed functions in the nested witness do not
+    # inherit the hypothesis that `f(x)` lies in the domain of `g`.
     trust $has_newton_approximation_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
 
 thm derivative_chain_rule:
@@ -1636,9 +1639,8 @@ memorable but can be misleading, especially in several variables, because the
 symbols `dx`, `dy`, and `dz` have not been assigned real-number meanings here.
 """
 
-# The Litex statements keep derivative information as facts about functions and
-# real numbers, rather than assigning independent meanings to the symbols `dx`,
-# `dy`, and `dz`.
+# Derivative information remains a fact about functions and real numbers;
+# `dx`, `dy`, and `dz` are mnemonic notation rather than separate numbers.
 
 """
 Exercise 10.1.1.  Restricting a differentiable function to a smaller domain Y
@@ -2462,8 +2464,10 @@ thm rolle_theorem:
         g(a) = g(b)
         =>:
             exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
-    # trust: apply the maximum principle, split endpoint/interior cases,
-    # and then use `local_extremum_stationary`.
+    # Source handling: Rolle's proof uses the maximum principle, separates
+    # endpoint and interior cases, and then applies Proposition 10.2.6.
+    # proof_debt: the local maximum-principle-to-interior-extremum bridge is
+    # not yet expanded.
     trust exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
 
 thm rolle_theorem_derivative_value:
@@ -2513,8 +2517,10 @@ thm mean_value_theorem:
             $is_differentiable_at('[a, b], f, x0)
         =>:
             exist x '(a, b), L R st {$has_derivative_at('[a, b], f, x, L), L = (f(b) - f(a)) / (b - a)}
-    # In the source, this is Corollary 10.2.9.
-    # trust: define `g(x)=f(x)-cx`, apply Rolle's theorem, and simplify.
+    # Source handling: Corollary 10.2.9 applies Rolle's theorem to
+    # `g(x)=f(x)-cx`, with `c` the secant slope.
+    # proof_debt: the auxiliary-function construction and its interior Rolle
+    # application remain unexpanded.
     trust exist x '(a, b), L R st {$has_derivative_at('[a, b], f, x, L), L = (f(b) - f(a)) / (b - a)}
 
 thm mean_value_theorem_derivative_value:
@@ -2715,8 +2721,9 @@ thm positive_derivative_strictly_increasing:
             df(x) > 0
         =>:
             $is_strictly_increasing_on('[a, b], f)
-    # In the source, this is the positive-derivative case of Proposition 10.3.3.
-    # trust: apply the mean value theorem on each subinterval `[x,y]`.
+    # Source handling: Proposition 10.3.3 applies the mean value theorem on
+    # every subinterval `[x,y]`.
+    # proof_debt: the required subinterval mean-value bridge is not yet local.
     trust $is_strictly_increasing_on('[a, b], f)
 
 thm negative_derivative_strictly_decreasing:
@@ -2775,9 +2782,9 @@ thm zero_derivative_constant:
             df(x) = 0
         =>:
             $is_constant_on('[a, b], f)
-    # In the source, this is the zero-derivative case of Proposition 10.3.3.
-    # trust: apply the mean value theorem on each subinterval `[x,y]` and
-    # get zero difference.
+    # Source handling: Proposition 10.3.3 applies the mean value theorem on
+    # every subinterval and obtains zero difference.
+    # proof_debt: the local subinterval mean-value bridge remains missing.
     trust $is_constant_on('[a, b], f)
 
 # 10.4 Inverse functions and derivatives
@@ -2787,7 +2794,7 @@ Lemma 10.4.1.  If f and its inverse are both differentiable at corresponding
 points x0 and y0=f(x0), then the inverse derivative is `1/f'(x0)`.
 """
 
-# Tao proves this by applying the chain rule to `f^{-1} o f`, which is the
+# The proof applies the chain rule to `f^{-1} o f`, which is the
 # identity function, and then using the identity derivative law.
 
 thm inverse_derivative_if_inverse_already_differentiable:
@@ -2813,7 +2820,7 @@ thm inverse_derivative_if_inverse_already_differentiable:
     $has_derivative_at(X, fn(z X) R {g(f(z))}, x0, 1)
     by thm derivative_value_unique(X, fn(z X) R {g(f(z))}, x0, dg * df, 1)
     dg * df = 1
-    # In the source: Tao says "The claim follows" after obtaining
+    # Source handling: after obtaining
     # `(f^{-1})'(y0) f'(x0) = 1`; the remaining step is field algebra.
     claim:
         ? df != 0
@@ -2841,7 +2848,7 @@ at x0 with nonzero derivative, and the inverse is continuous at y0=f(x0), then
 the inverse is differentiable at y0 and has derivative `1/f'(x0)`.
 """
 
-# Tao proves this using the sequential characterization of function limits:
+# The proof uses the sequential characterization of function limits:
 # send a sequence `y_n -> y0` through the continuous inverse to get
 # `x_n -> x0`, invert the nonzero difference quotients, and apply the reciprocal
 # limit law.
@@ -3031,7 +3038,7 @@ g' is nonzero, and f'/g' has a right-hand limit L at a, then g is nonzero on
 `(a,b]` and f/g has the same right-hand limit L.
 """
 
-# Tao gives an optional proof.  First use Rolle's theorem to show that g has no
+# The optional proof first uses Rolle's theorem to show that g has no
 # zero on `(a,b]`; then for every sequence `x_n -> a+`, apply Rolle's theorem
 # to `h_n(x)=f(x)g(x_n)-g(x)f(x_n)` and transfer the limit through a squeezed
 # sequence `y_n`.
@@ -3048,9 +3055,10 @@ thm lhopital_rule_second:
         $has_function_limit('(a, b], fn(x '(a, b]) R {df(x) / dg(x)}, a, L)
         =>:
             $is_nonzero_on('(a, b], fn(x '(a, b]) R {g(x)})
-    # trust: expand Tao's optional proof: use Rolle's theorem to show
-    # non-vanishing of `g`, then use the sequence-level Cauchy mean-value
-    # argument for the quotient limit.
+    # Source handling: the optional proof uses Rolle's theorem to show
+    # non-vanishing of `g`, followed by a Cauchy mean-value argument.
+    # proof_debt: this requires the still-unproved Rolle/mean-value theorem
+    # package on subintervals.
     trust $is_nonzero_on('(a, b], fn(x '(a, b]) R {g(x)})
 
 thm lhopital_rule_second_limit:
@@ -3066,9 +3074,10 @@ thm lhopital_rule_second_limit:
         $has_function_limit('(a, b], fn(x '(a, b]) R {df(x) / dg(x)}, a, L)
         =>:
             $has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
-    # trust: formalize Tao's sequence argument.  Apply Rolle's theorem to
-    # `h_n(x)=f(x)g(x_n)-g(x)f(x_n)`, obtain
-    # `f(x_n)/g(x_n)=f'(y_n)/g'(y_n)`, and send `y_n` to `a` by squeezing.
+    # Source handling: the optional sequence proof applies Rolle's theorem to
+    # `h_n(x)=f(x)g(x_n)-g(x)f(x_n)` and then squeezes the derivative quotient.
+    # proof_debt: the sequence-level Cauchy mean-value argument is unavailable
+    # until the Rolle/mean-value package is checked.
     trust $has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
 
 """
@@ -3104,8 +3113,3 @@ thm lhopital_rule_second_checked_right_hand_formula:
         g(x) != 0
     by thm lhopital_rule_second_limit(a, b, f, g, df, dg, L)
     $has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
-
-# Final audit (2026-07-12): 6 non-exercise markers remain for Rolle's theorem,
-# the mean value theorem, derivative-sign monotonicity, and L'Hopital II.
-# The 2 markers for source-exercise proofs are excluded; the Chapter 9 local
-# import is a separate reuse dependency.

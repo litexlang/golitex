@@ -1,14 +1,18 @@
-# Analysis I, Chapter 11: The Riemann integral.
+# Chapter 11: The Riemann integral.
 #
-# source: Analysis I, Chapter 11.
+# source: Chapter 11.
 #
-# This file is a standalone Litex framework for Sections 11.1-11.10.  It keeps
-# Tao's source order and the main Riemann-integration vocabulary visible.  The
-# finite partition algebra, Darboux upper/lower constructions, and fundamental
-# theorem estimates are recorded as named proof debt so later passes can remove
-# them one theorem-package at a time.
+# This chapter follows Tao's source order through Sections 11.1-11.10.  Its
+# definitions expose the finite-partition, Darboux, and Riemann-integral
+# relations directly; the remaining theorem-sized obligations stay at their
+# exact source-facing statements as explicit proof debt.
 
 # Chapter-level background interfaces
+
+# Source handling: Chapter 11 reuses the preceding textbook chapters for
+# continuity and differentiability vocabulary.
+# proof_debt: these are project-local trust boundaries only; no external
+# package is imported.
 
 trust local import chap9
 trust local import chap10
@@ -94,12 +98,17 @@ thm infimum_of_real_set_value_unique:
     s1 <= s2
     s1 = s2
 
+# Source handling: the chapter uses the Chapter 5/6 least-upper-bound
+# construction only as the `sup` selector in its own Darboux definitions.
+# proof_debt: selector existence remains a local completeness interface.
 trust have sup fn(E power_set(R)) R:
     forall E power_set(R):
         $has_supremum_of_real_set(E)
         =>:
             $is_supremum_of_real_set(E, sup(E))
 
+# Source handling: the dual `inf` selector is used for lower Darboux values.
+# proof_debt: selector existence remains a local completeness interface.
 trust have inf fn(E power_set(R)) R:
     forall E power_set(R):
         $has_infimum_of_real_set(E)
@@ -113,8 +122,10 @@ thm nonempty_bounded_real_set_has_supremum_and_infimum:
         =>:
             $has_supremum_of_real_set(E)
             $has_infimum_of_real_set(E)
-    # Chapter 5/6 background: bounded non-empty real sets have least upper and
-    # greatest lower bounds.  Chapter 11 only records the interface.
+    # Source handling: Chapter 5/6 supplies least upper and greatest lower
+    # bounds for bounded non-empty real sets; Chapter 11 uses that interface.
+    # proof_debt: the local completeness theorem has not yet been replayed in
+    # this chapter.
     trust:
         $has_supremum_of_real_set(E)
         $has_infimum_of_real_set(E)
@@ -416,7 +427,7 @@ thm bounded_connected_subsets_are_bounded_intervals:
         =>:
             $is_bounded_interval(X)
     # Source handling: Tao proves this in Exercise 11.1.1.
-    # trust: the non-empty case takes endpoints from `inf(X)` and `sup(X)`;
+    # proof_debt: the non-empty case takes endpoints from `inf(X)` and `sup(X)`;
     # the remaining work is proving the correct open/closed endpoint form.
     by cases:
         ? $is_bounded_interval(X)
@@ -424,6 +435,9 @@ thm bounded_connected_subsets_are_bounded_intervals:
             by thm nonempty_bounded_real_set_has_supremum_and_infimum(X)
             $is_supremum_of_real_set(X, sup(X))
             $is_infimum_of_real_set(X, inf(X))
+            # Source handling: this is the non-empty branch of Lemma 11.1.4.
+            # proof_debt: endpoint openness/closedness still needs the local
+            # order-case proof after choosing `inf(X)` and `sup(X)`.
             trust $is_bounded_interval(X)
         case not $is_nonempty_set(X):
             by extension X = {}:
@@ -478,7 +492,7 @@ thm bounded_intervals_are_bounded_connected:
             $is_bounded_real_set(X)
             $is_connected_subset_of_R(X)
     # Source handling: this is the reverse direction of Exercise 11.1.1.
-    # trust: check the endpoint-form cases from the Chapter 9 interval
+    # proof_debt: check the endpoint-form cases from the Chapter 9 interval
     # definition.
     trust:
         $is_bounded_real_set(X)
@@ -511,7 +525,7 @@ thm intersection_of_bounded_intervals_is_bounded_interval:
             $is_bounded_interval(intersect(I, J))
     # Source handling: Tao proves this in Exercise 11.1.2 by using Lemma
     # 11.1.4.
-    # trust: prove boundedness and connectedness of the intersection, then
+    # proof_debt: prove boundedness and connectedness of the intersection, then
     # apply the bounded-connected characterization above.
     trust $is_bounded_interval(intersect(I, J))
 
@@ -604,7 +618,7 @@ thm interval_length_value_unique:
     # Source handling: the endpoint-only definition assigns the same
     # `max(b-a,0)` value to every endpoint representation of the same
     # bounded interval.
-    # trust: split the two endpoint representations and compare their
+    # proof_debt: split the two endpoint representations and compare their
     # positive-part lengths by interval extensionality.
     trust l1 = l2
 
@@ -1279,7 +1293,9 @@ thm interval_length_is_finitely_additive_over_partition:
     claim:
         ? forall x I:
             exist! J P st {J $in power_set(R), x $in J}
-    # trust: formalize the endpoint-piece selection, the partition-minus
+    # Source handling: Tao's proof selects endpoint pieces and inducts over
+    # the finite partition.
+    # proof_debt: formalize the endpoint-piece selection, the partition-minus
     # interval identity, and the finite-set sum induction for arbitrary finite
     # partitions.
     trust interval_length(I) = finite_set_sum(P, fn(J P) R {interval_length(J)})
@@ -1544,7 +1560,7 @@ thm common_refinement_exists_for_partitions:
             exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)}
     # Source handling: the intended witness is the finite set of all
     # intersections `J intersect K` with `J in P` and `K in Qpart`.
-    # trust: formalize the finite image/product construction of this set.
+    # proof_debt: formalize the finite image/product construction of this set.
     trust exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)}
 
 
@@ -2456,7 +2472,9 @@ thm example_11_2_12_displayed_partition_piece_clauses:
         J $in power_set(R)
         $is_bounded_interval(J)
         J $subset '[1, 4]
-    # trust: expand membership in this named three-cell finite set.  The
+    # Source handling: this is the listed-partition case split in Example
+    # 11.2.12.
+    # proof_debt: expand membership in this named three-cell finite set.  The
     # current finite-set enumeration tactic accepts literal lists but does not
     # enumerate a local finite-set alias.
     trust J = '[1, 3) or J = {3} or J = '(3, 4]
@@ -2513,7 +2531,9 @@ thm example_11_2_12_refined_partition_piece_clauses:
         J $in power_set(R)
         $is_bounded_interval(J)
         J $subset '[1, 4]
-    # trust: this is the five-cell version of the named finite-set
+    # Source handling: this is the refined-partition case split in Example
+    # 11.2.12.
+    # proof_debt: this is the five-cell version of the named finite-set
     # enumeration bridge used immediately above.
     trust J = '[1, 2) or J = '[2, 3) or J = {3} or J = '(3, 4] or J = {}
     by cases:
@@ -2707,7 +2727,9 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
     claim:
         ? forall J example_11_2_12_partition_set:
             $is_constant_on_subset('[1, 4], J, f)
-        # trust: enumerate the three members of the named partition set.
+        # Source handling: this is the three-piece case split in Example
+        # 11.2.12.
+        # proof_debt: enumerate the three members of the named partition set.
         trust J = '[1, 3) or J = {3} or J = '(3, 4]
         by cases:
             ? $is_constant_on_subset('[1, 4], J, f)
@@ -2801,7 +2823,9 @@ thm example_11_2_12_refined_partition_piecewise_constant:
     claim:
         ? forall J example_11_2_12_refined_partition_set:
             $is_constant_on_subset('[1, 4], J, f)
-        # trust: enumerate the five members of the named refined
+        # Source handling: this is the refined five-piece case split in
+        # Example 11.2.12.
+        # proof_debt: enumerate the five members of the named refined
         # partition set before splitting into the displayed cases.
         trust J = '[1, 2) or J = '[2, 3) or J = {3} or J = '(3, 4] or J = {}
         by cases:
@@ -3166,7 +3190,9 @@ thm example_11_2_12_piecewise_constant_integral:
     by thm piecewise_constant_integral_piece_contribution_has_value('[1, 4], '[2, 3), f, 2)
     by thm piecewise_constant_integral_piece_contribution_has_value('[1, 4], {}, f, 0)
     piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f) = finite_set_sum(example_11_2_12_partition_set, fn(J example_11_2_12_partition_set) R {piecewise_constant_integral_piece_contribution('[1, 4], J, f)})
-    # trust: expand the two concrete finite sums over the displayed sets.
+    # Source handling: Tao's displayed rectangles in Example 11.2.12 have
+    # the same total before and after refinement.
+    # proof_debt: expand the two concrete finite sums over the displayed sets.
     # The piece contribution values have already been checked above.
     trust:
         piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f) = 10
@@ -3191,7 +3217,7 @@ thm piecewise_constant_integral_independent_of_partition:
     # Source handling: Tao proves this in Exercise 11.2.3 by moving both
     # partitions to their common refinement and using finite additivity of
     # length.
-    # trust: compare both sums with the common-refinement sum.
+    # proof_debt: compare both sums with the common-refinement sum.
     trust sP = sQ
 
 """
@@ -3252,7 +3278,7 @@ thm piecewise_constant_integral_laws:
             $has_piecewise_constant_integral(I, fn(x I) R {f(x) - g(x)}, sf - sg)
     # Source handling: Tao proves these laws in Exercise 11.2.4, using earlier
     # parts to prove later parts.
-    # trust: pass to a common refinement and use finite-set sum algebra.
+    # proof_debt: pass to a common refinement and use finite-set sum algebra.
     trust:
         $has_piecewise_constant_integral(I, fn(x I) R {f(x) + g(x)}, sf + sg)
         $has_piecewise_constant_integral(I, fn(x I) R {c * f(x)}, c * sf)
@@ -3270,7 +3296,7 @@ thm piecewise_constant_integral_order_laws:
             sg <= sf
     # Source handling: these are the positivity and monotonicity clauses of
     # Theorem 11.2.16.
-    # trust: reduce to non-negative finite sums over a common refinement.
+    # proof_debt: reduce to non-negative finite sums over a common refinement.
     trust:
         sf >= 0
         sg <= sf
@@ -3448,10 +3474,13 @@ have fn upper_riemann_integral by exist!:
             exist! U R st {$has_upper_riemann_integral(I, f, U)}
     # Source handling: this packages the infimum definition of the upper
     # Riemann integral.  Uniqueness is the infimum uniqueness argument from
-    # the completeness chapter; only existence of the infimum remains as
-    # proof debt here.
+    # the completeness chapter.
+    # proof_debt: proving existence of the infimum from the local completeness
+    # interface remains outside this selector.
     claim:
         ? exist U R st {$has_upper_riemann_integral(I, f, U)}
+        # Source handling: this is the existence branch of Definition 11.3.2.
+        # proof_debt: local completeness must produce the Darboux infimum.
         trust exist U R st {$has_upper_riemann_integral(I, f, U)}
     claim:
         ? forall U1, U2 R:
@@ -3471,8 +3500,12 @@ have fn lower_riemann_integral by exist!:
     # Source handling: this packages the supremum definition of the lower
     # Riemann integral.  Uniqueness is the supremum uniqueness argument from
     # the completeness chapter.
+    # proof_debt: proving existence of the supremum from the local completeness
+    # interface remains outside this selector.
     claim:
         ? exist L R st {$has_lower_riemann_integral(I, f, L)}
+        # Source handling: this is the existence branch of Definition 11.3.2.
+        # proof_debt: local completeness must produce the Darboux supremum.
         trust exist L R st {$has_lower_riemann_integral(I, f, L)}
     claim:
         ? forall L1, L2 R:
@@ -3721,7 +3754,7 @@ thm piecewise_constant_functions_are_riemann_integrable:
             $is_riemann_integrable_on(I, f)
             integral_on(I, f) = s
     # Source handling: Tao proves this in Exercise 11.3.3.
-    # trust: show the piecewise constant function is simultaneously an
+    # proof_debt: show the piecewise constant function is simultaneously an
     # optimal majorant and minorant.
     trust:
         $is_riemann_integrable_on(I, f)
@@ -3968,6 +4001,8 @@ prop has_lower_riemann_sum(I power_set(R), P finite_set, f fn(x I) R, L R):
     $is_bounded_function_on(I, f)
     exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
 
+# Source handling: Definition 11.3.9 names the upper Riemann sum `U(f,P)`.
+# proof_debt: the finite contribution family is an explicit selector bridge.
 trust have upper_riemann_sum fn(I power_set(R), P power_set(power_set(R)), f fn(x I) R) R:
     forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
@@ -3976,6 +4011,8 @@ trust have upper_riemann_sum fn(I power_set(R), P power_set(power_set(R)), f fn(
         =>:
             $has_upper_riemann_sum(I, P, f, upper_riemann_sum(I, P, f))
 
+# Source handling: Definition 11.3.9 names the lower Riemann sum `L(f,P)`.
+# proof_debt: the finite contribution family is an explicit selector bridge.
 trust have lower_riemann_sum fn(I power_set(R), P power_set(power_set(R)), f fn(x I) R) R:
     forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
@@ -4025,7 +4062,7 @@ thm piecewise_constant_majorant_minorant_compare_riemann_sums:
             sg >= U
             sh <= L
     # Source handling: Tao proves this in Exercise 11.3.4.
-    # trust: compare each constant piece value to the corresponding
+    # proof_debt: compare each constant piece value to the corresponding
     # supremum or infimum and sum the inequalities.
     trust:
         sg >= U
@@ -4047,7 +4084,7 @@ thm upper_integral_equals_infimum_of_riemann_sums:
             upper_riemann_integral(I, f) = inf(upper_riemann_sum_values(I, f))
     # Source handling: Tao proves this in Exercise 11.3.5, using Lemma 11.3.11
     # for half of the comparison.
-    # trust: compare the Darboux majorant-integral infimum with the
+    # proof_debt: compare the Darboux majorant-integral infimum with the
     # infimum of upper sums over all partitions.
     trust:
         $has_infimum_of_real_set(upper_riemann_sum_values(I, f))
@@ -4064,7 +4101,7 @@ thm lower_integral_equals_supremum_of_riemann_sums:
             lower_riemann_integral(I, f) = sup(lower_riemann_sum_values(I, f))
     # Source handling: Tao proves this in Exercise 11.3.5, using Lemma 11.3.11
     # for half of the comparison.
-    # trust: compare the Darboux minorant-integral supremum with the
+    # proof_debt: compare the Darboux minorant-integral supremum with the
     # supremum of lower sums over all partitions.
     trust:
         $has_supremum_of_real_set(lower_riemann_sum_values(I, f))
@@ -4089,7 +4126,7 @@ thm riemann_integral_addition_law:
             $is_riemann_integrable_on(I, fn(x I) R {f(x) + g(x)})
             integral_on(I, fn(x I) R {f(x) + g(x)}) = integral_on(I, f) + integral_on(I, g)
     # Source handling: this is Theorem 11.4.1(a).
-    # trust: approximate both functions by common piecewise constant
+    # proof_debt: approximate both functions by common piecewise constant
     # upper/lower functions and add the approximations.
     trust:
         $is_riemann_integrable_on(I, fn(x I) R {f(x) + g(x)})
@@ -4102,7 +4139,7 @@ thm riemann_integral_scalar_multiplication_law:
             $is_riemann_integrable_on(I, fn(x I) R {c * f(x)})
             integral_on(I, fn(x I) R {c * f(x)}) = c * integral_on(I, f)
     # Source handling: this is Theorem 11.4.1(b).
-    # trust: scale piecewise constant upper/lower approximations, with a
+    # proof_debt: scale piecewise constant upper/lower approximations, with a
     # sign split for `c`.
     trust:
         $is_riemann_integrable_on(I, fn(x I) R {c * f(x)})
@@ -4118,7 +4155,7 @@ thm riemann_integral_respects_pointwise_equality:
             integral_on(I, g) = integral_on(I, f)
     # Source handling: Tao freely identifies functions that agree at every
     # point of the interval.
-    # trust: show the two functions have identical upper and lower
+    # proof_debt: show the two functions have identical upper and lower
     # Darboux candidate sets, hence identical integrability and integral value.
     trust:
         $is_riemann_integrable_on(I, g)
@@ -4160,7 +4197,7 @@ thm riemann_integral_nonnegative_law:
         =>:
             integral_on(I, f) >= 0
     # Source handling: this is Theorem 11.4.1(d).
-    # trust: compare non-negative lower approximations with the zero
+    # proof_debt: compare non-negative lower approximations with the zero
     # function, then pass to the common upper/lower Riemann integral.
     trust integral_on(I, f) >= 0
 
@@ -4237,7 +4274,7 @@ thm riemann_integral_extension_by_zero:
             $is_riemann_integrable_on(J, F)
             integral_on(J, F) = integral_on(I, f)
     # Source handling: this is Theorem 11.4.1(g).
-    # trust: compare upper and lower approximations after extending
+    # proof_debt: compare upper and lower approximations after extending
     # outside `I` by zero.
     trust:
         $is_riemann_integrable_on(J, F)
@@ -4262,7 +4299,7 @@ thm riemann_integral_additive_over_two_piece_partition:
     # source partition into exactly the two pieces `J` and `K`; Tao writes the
     # same `f` on the subintervals, so the Litex statement uses explicit
     # restriction lambdas.
-    # trust: compare upper/lower sums over the two subinterval pieces.
+    # proof_debt: compare upper/lower sums over the two subinterval pieces.
     trust:
         $is_riemann_integrable_on(J, fn(x J) R {f(x)})
         $is_riemann_integrable_on(K, fn(x K) R {f(x)})
@@ -4354,7 +4391,7 @@ thm riemann_integrable_max_by_darboux_squeeze:
     # `f` and `g`, use the piecewise-constant max closure on a common
     # refinement, and bound the resulting upper-lower gap by the sum of the
     # two original gaps.
-    # trust: formalize the common-refinement Darboux squeeze estimate.
+    # proof_debt: formalize the common-refinement Darboux squeeze estimate.
     trust $is_riemann_integrable_on(I, fn(x I) R {max(f(x), g(x))})
 
 thm riemann_integrable_min_by_darboux_squeeze:
@@ -4525,7 +4562,9 @@ thm nonnegative_products_preserve_riemann_integrability_by_darboux_squeeze:
     # `f_- g_- <= fg <= f_+ g_+`, while the integral of
     # `f_+ g_+ - f_- g_-` is controlled by the upper-lower gaps for `f` and
     # `g`, with the boundedness constants absorbing the cross terms.
-    # trust: formalize this Darboux squeeze and finite-sum product
+    # Source handling: Tao proves the non-negative product case by a Darboux
+    # squeeze before reducing the general product to positive and negative parts.
+    # proof_debt: formalize this Darboux squeeze and finite-sum product
     # estimate for non-negative functions.
     trust $is_riemann_integrable_on(I, fn(x I) R {f(x) * g(x)})
 
@@ -4663,7 +4702,7 @@ thm uniformly_continuous_on_bounded_interval_is_bounded:
             $is_bounded_function_on(I, f)
     # Source handling: the proof covers the bounded interval by finitely many
     # uniform-continuity neighborhoods and bounds `f` on the finite sample set.
-    # trust: build the finite chain of points for each endpoint case.
+    # proof_debt: build the finite chain of points for each endpoint case.
     trust $is_bounded_function_on(I, f)
 
 thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
@@ -4676,7 +4715,7 @@ thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
     # the bounded interval into finitely many pieces of length below `delta`;
     # any two points in the same piece are `delta`-close, so their function
     # values differ by at most `epsilon`.
-    # trust: construct the equal-length finite partition and prove the
+    # proof_debt: construct the equal-length finite partition and prove the
     # piecewise diameter estimate in all endpoint conventions.
     trust $has_small_oscillation_partition(I, f, epsilon)
 
@@ -4693,7 +4732,9 @@ thm darbouxs_criterion_from_small_oscillation_partitions:
     # `epsilon / |I|` makes the upper and lower Riemann sums differ by at most
     # `epsilon`; Proposition 11.3.12 then gives equality of upper and lower
     # integrals.
-    # trust: compare piecewise suprema and infima on each partition piece
+    # Source handling: this is the Darboux criterion used in Tao's proof of
+    # Theorem 11.5.1.
+    # proof_debt: compare piecewise suprema and infima on each partition piece
     # and pass the bound through upper/lower Riemann sums and integrals.
     trust $is_riemann_integrable_on(I, f)
 
@@ -4729,7 +4770,7 @@ thm continuous_closed_interval_uniformly_continuous:
     # Source handling: this is Theorem 9.9.16, repeated as a local Chapter 11
     # interface because this file is standalone.  The proof uses compactness of
     # `[a,b]` and continuity to obtain one delta working for all points.
-    # trust: reuse the Chapter 9 compactness/equivalent-sequence proof.
+    # proof_debt: reuse the Chapter 9 compactness/equivalent-sequence proof.
     trust $is_uniformly_continuous_on('[a, b], f)
 
 thm continuous_closed_interval_riemann_integrable:
@@ -4775,7 +4816,7 @@ thm continuous_bounded_interval_has_integrable_closed_trims:
     # Source handling: choose a closed subinterval inside `I` whose omitted
     # endpoint tails have total length at most `eta`; continuity restricts to
     # that closed interval, so Corollary 11.5.2 makes the core integrable.
-    # trust: construct the endpoint trim for all four endpoint
+    # proof_debt: construct the endpoint trim for all four endpoint
     # conventions and prove the restricted function is continuous.
     trust $has_integrable_closed_interval_trim(I, f, eta)
 
@@ -4790,7 +4831,7 @@ thm darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails:
     # Source handling: this packages Tao's endpoint-tail estimate.  The closed
     # trimmed core has matching upper and lower integrals, while boundedness of
     # `f` makes the contribution from the omitted tails arbitrarily small.
-    # trust: compare the upper/lower Darboux sums after adjoining the
+    # proof_debt: compare the upper/lower Darboux sums after adjoining the
     # finitely many tail pieces and bound their contribution by `M * eta`.
     trust $is_riemann_integrable_on(I, f)
 
@@ -4854,7 +4895,7 @@ thm example_11_5_5_not_continuous_on_closed_interval:
     # Source handling: the left-hand values approach `4` at `2`, while the
     # function value is `7`, so the full-domain function is discontinuous at
     # the middle point.
-    # trust: formalize the one-sided approach from `[1,2)` and contradict
+    # proof_debt: formalize the one-sided approach from `[1,2)` and contradict
     # the epsilon condition at `2`.
     trust not $is_continuous_on('[1, 3], example_11_5_5_function)
 
@@ -4896,7 +4937,9 @@ thm example_11_5_5_partition_piece_clauses:
         J $in power_set(R)
         $is_bounded_interval(J)
         J $subset '[1, 3]
-    # trust: enumerate the members of this named three-cell partition.
+    # Source handling: this is the displayed three-piece partition in Example
+    # 11.5.5.
+    # proof_debt: enumerate the members of this named three-cell partition.
     trust J = '[1, 2) or J = {2} or J = '(2, 3]
     by cases:
         prove:
@@ -5005,7 +5048,7 @@ thm example_11_5_5_square_piece_continuous:
             $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
     # Source handling: on `[1,2)` the displayed function agrees with the
     # polynomial `x^2`, and polynomials are continuous on restricted domains.
-    # trust: cite the Chapter 9 arithmetic continuity rules and transport
+    # proof_debt: cite the Chapter 9 arithmetic continuity rules and transport
     # continuity across the pointwise equality on `'[1,2)`.
     trust $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
 
@@ -5047,7 +5090,9 @@ thm example_11_5_5_singleton_piece_continuous:
                         0 <= epsilon
                         abs(fn(x {2}) R {example_11_5_5_function(x)}(x) - fn(x {2}) R {example_11_5_5_function(x)}(x0)) <= epsilon
                     $is_delta_neighborhood_close_to({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0), epsilon, 1)
-            # trust: package the explicit epsilon-delta proof above as
+            # Source handling: this is the singleton continuity subcase in
+            # Example 11.5.5.
+            # proof_debt: package the explicit epsilon-delta proof above as
             # the imported Chapter 9 function-limit predicate.
             trust $has_function_limit({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0))
         $is_continuous_at({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0)
@@ -5060,7 +5105,7 @@ thm example_11_5_5_cube_piece_continuous:
             $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
     # Source handling: on `(2,3]` the displayed function agrees with the
     # polynomial `x^3`, and polynomials are continuous on restricted domains.
-    # trust: cite the Chapter 9 arithmetic continuity rules and transport
+    # proof_debt: cite the Chapter 9 arithmetic continuity rules and transport
     # continuity across the pointwise equality on `'(2,3]`.
     trust $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
 
@@ -5072,7 +5117,7 @@ thm example_11_5_5_partition_piece_continuity:
     # Source handling: the three concrete continuity facts above handle
     # `[1,2)`, `{2}`, and `(2,3]`.  The remaining formal step is transporting
     # those facts through the equality `J = '[1,2) or J = {2} or J = '(2,3]`.
-    # trust: expose equality transport for continuity facts whose function
+    # proof_debt: expose equality transport for continuity facts whose function
     # lambda is well-defined using the subset premise.
     trust:
         J $in power_set(R)
@@ -5119,7 +5164,9 @@ thm riemann_integrable_from_partition_piece_integrability:
     # 11.5.1 and 11.6.2.  Once each partition piece is integrable, iterating
     # Theorem 11.4.1(h) over the finite partition gives integrability on the
     # whole bounded interval.
-    # trust: formalize induction over finite interval partitions and
+    # Source handling: this is the finite-additivity route in Proposition
+    # 11.5.6.
+    # proof_debt: formalize induction over finite interval partitions and
     # compare the restricted piece integrals with the whole-domain Darboux
     # upper and lower sums.
     trust $is_riemann_integrable_on(I, f)
@@ -5180,7 +5227,7 @@ thm monotone_closed_interval_riemann_integrable:
     # Source handling: Tao handles the increasing case, partitions `[a,b]`
     # into equal pieces, telescopes the upper-lower sum difference, and says the
     # decreasing case follows similarly.
-    # trust: prove boundedness of monotone functions on closed intervals,
+    # proof_debt: prove boundedness of monotone functions on closed intervals,
     # construct equal partitions, and formalize the telescoping estimate.
     trust $is_riemann_integrable_on('[a, b], f)
 
@@ -5203,7 +5250,7 @@ thm bounded_monotone_bounded_interval_riemann_integrable:
             $is_riemann_integrable_on(I, f)
     # Source handling: Tao proves this in Exercise 11.6.1 by adapting the
     # trimming argument from Proposition 11.5.3.
-    # trust: trim to closed subintervals and control endpoint tails using
+    # proof_debt: trim to closed subintervals and control endpoint tails using
     # boundedness.
     trust $is_riemann_integrable_on(I, f)
 
@@ -5313,7 +5360,7 @@ thm integral_test_series_implies_finite_integral_supremum:
             $has_finite_integral_supremum_on_nonnegative_ray(f)
     # Source handling: Tao proves this in Exercise 11.6.3 by comparing
     # rectangle sums with finite integrals on `[0,N]`.
-    # trust: formalize the finite sum/integral comparison and the
+    # proof_debt: formalize the finite sum/integral comparison and the
     # monotone convergence criterion for partial sums.
     trust $has_finite_integral_supremum_on_nonnegative_ray(f)
 
@@ -5325,7 +5372,7 @@ thm integral_test_finite_integral_supremum_implies_series:
         =>:
             exist S R st {$has_series_sum_from_zero(fn(n N) R {f(n)}, S)}
     # Source handling: this is the reverse implication of Proposition 11.6.4.
-    # trust: use the same rectangle comparison to bound partial sums.
+    # proof_debt: use the same rectangle comparison to bound partial sums.
     trust exist S R st {$has_series_sum_from_zero(fn(n N) R {f(n)}, S)}
 
 """
@@ -5340,7 +5387,7 @@ thm p_series_test_by_integral_test:
             exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
     # Source handling: Tao proves this in Exercise 11.6.5 using the integral
     # test.
-    # trust: evaluate the power-function integral comparison and handle
+    # proof_debt: evaluate the power-function integral comparison and handle
     # the endpoint `p=1` divergence separately.
     trust exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
 
@@ -5351,7 +5398,7 @@ thm p_series_diverges_when_p_le_one:
             not exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
     # Source handling: Tao proves this in Exercise 11.6.5 using the integral
     # test.
-    # trust: show the corresponding improper-integral supremum is
+    # proof_debt: show the corresponding improper-integral supremum is
     # infinite, or compare with the harmonic series.
     trust not exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
 
@@ -5417,7 +5464,7 @@ thm dirichlet_rational_indicator_upper_integral_value:
     # Source handling: every non-degenerate partition piece contains a rational
     # point, so every upper Darboux sum for this function is the total length
     # of `[0,1]`.
-    # trust: formalize the rational-density witness on each partition
+    # proof_debt: formalize the rational-density witness on each partition
     # piece and the finite additivity of the displayed partition lengths.
     trust upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 1
 
@@ -5429,7 +5476,7 @@ thm dirichlet_rational_indicator_lower_integral_value:
             lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
     # Source handling: every non-degenerate partition piece contains an
     # irrational point, so every lower Darboux sum for this function is zero.
-    # trust: formalize irrational density in each partition piece and the
+    # proof_debt: formalize irrational density in each partition piece and the
     # lower-sum comparison.
     trust lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
 
@@ -5489,6 +5536,9 @@ alpha-length zero.
 # `alpha : R -> R` as a domain bridge; the source's more general ambient
 # domain is tracked in the alignment audit.
 
+# Source handling: Definition 11.8.1 selects Tao's alpha-length `alpha[I]`.
+# proof_debt: the selector remains specialized to `alpha : R -> R` while the
+# source permits a larger ambient domain.
 trust have alpha_interval_length fn(alpha fn(x R) R, I power_set(R)) R:
     forall alpha fn(x R) R:
         alpha_interval_length(alpha, {}) = 0
@@ -5686,7 +5736,7 @@ thm alpha_length_is_finitely_additive_over_partition:
             alpha_interval_length(alpha, I) = finite_set_sum(P, fn(J P) R {alpha_interval_length(alpha, J)})
     # Source handling: Tao proves this in Exercise 11.8.1 by modifying the
     # proof of Theorem 11.1.13.
-    # trust: repeat the finite additivity induction with `alpha(b)-alpha(a)`.
+    # proof_debt: repeat the finite additivity induction with `alpha(b)-alpha(a)`.
     trust:
         P $in power_set(power_set(R))
         alpha_interval_length(alpha, I) = finite_set_sum(P, fn(J P) R {alpha_interval_length(alpha, J)})
@@ -5773,7 +5823,8 @@ thm example_11_8_6_partition_piece_clauses:
         J $in power_set(R)
         $is_bounded_interval(J)
         J $subset '[1, 3]
-    # trust: expand membership in this named two-cell finite set.  The
+    # Source handling: this is the displayed two-piece split in Example 11.8.6.
+    # proof_debt: expand membership in this named two-cell finite set.  The
     # finite-set enumerator accepts a displayed literal but does not unfold a
     # local finite-set alias before case splitting.
     trust J = '[1, 2) or J = '[2, 3]
@@ -5862,7 +5913,8 @@ thm example_11_8_6_displayed_partition_piecewise_constant:
         ? forall J example_11_8_6_partition_set:
             J $in power_set(R)
             $is_constant_on_subset('[1, 3], J, f)
-        # trust: reuse the named two-cell partition enumeration bridge
+        # Source handling: this is the same two-piece split in Example 11.8.6.
+        # proof_debt: reuse the named two-cell partition enumeration bridge
         # above before checking the two constant pieces separately.
         trust J = '[1, 2) or J = '[2, 3]
         by cases:
@@ -6156,8 +6208,13 @@ have fn upper_riemann_stieltjes_integral by exist!:
     # Source handling: this packages the upper Riemann-Stieltjes infimum.
     # Existence is the same completeness argument as for the ordinary upper
     # Riemann integral; uniqueness is infimum uniqueness.
+    # proof_debt: the corresponding local completeness existence proof remains
+    # outside this selector.
     claim:
         ? exist U R st {$has_upper_riemann_stieltjes_integral(I, alpha, f, U)}
+        # Source handling: this is the upper existence branch of the
+        # Riemann-Stieltjes definition.
+        # proof_debt: local completeness must produce the Stieltjes infimum.
         trust exist U R st {$has_upper_riemann_stieltjes_integral(I, alpha, f, U)}
     claim:
         ? forall U1, U2 R:
@@ -6178,8 +6235,13 @@ have fn lower_riemann_stieltjes_integral by exist!:
     # Source handling: this packages the lower Riemann-Stieltjes supremum.
     # Existence is the same completeness argument as for the ordinary lower
     # Riemann integral; uniqueness is supremum uniqueness.
+    # proof_debt: the corresponding local completeness existence proof remains
+    # outside this selector.
     claim:
         ? exist L R st {$has_lower_riemann_stieltjes_integral(I, alpha, f, L)}
+        # Source handling: this is the lower existence branch of the
+        # Riemann-Stieltjes definition.
+        # proof_debt: local completeness must produce the Stieltjes supremum.
         trust exist L R st {$has_lower_riemann_stieltjes_integral(I, alpha, f, L)}
     claim:
         ? forall L1, L2 R:
@@ -6278,7 +6340,7 @@ thm identity_alpha_stieltjes_matches_riemann:
             stieltjes_integral_on(I, identity_alpha, f) = integral_on(I, f)
     # Source handling: Tao observes that Riemann-Stieltjes integration with
     # identity alpha is the ordinary Riemann integral.
-    # trust: rewrite alpha-length as ordinary length in the upper/lower
+    # proof_debt: rewrite alpha-length as ordinary length in the upper/lower
     # definitions.
     trust:
         $is_riemann_stieltjes_integrable_on(I, identity_alpha, f)
@@ -6308,9 +6370,10 @@ thm closed_initial_subinterval_subset_parent:
         t $in '[a, b]
     '[a, x] $subset '[a, b]
 
-# Source-facing selector for the function `x |-> integral_[a,x] f` in
-# Theorem 11.9.1.  The existence of a restricted integrand is a Litex domain
-# bridge for applying `integral_on` to the smaller interval.
+# Source handling: Theorem 11.9.1 defines the function
+# `x |-> integral_[a,x] f`.
+# proof_debt: the restriction witness is a Litex domain bridge for applying
+# `integral_on` to the smaller interval.
 
 trust have integral_from_left_endpoint fn(a, b R, f fn(t '[a, b]) R, x '[a, b]) R:
     forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
@@ -6331,7 +6394,7 @@ thm first_fundamental_theorem_integral_function_continuous:
             $is_continuous_on('[a, b], F)
     # Source handling: Tao proves continuity by bounding
     # `F(y)-F(x)` by `M|y-x|`.
-    # trust: formalize interval additivity and boundedness of integrable
+    # proof_debt: formalize interval additivity and boundedness of integrable
     # functions.
     trust $is_continuous_on('[a, b], F)
 
@@ -6345,7 +6408,7 @@ thm first_fundamental_theorem_integral_function_derivative_at_continuity_point:
             $has_derivative_at('[a, b], F, x0, f(x0))
     # Source handling: Tao compares the average integral over `[x0,y]` with
     # the continuous value `f(x0)`.
-    # trust: formalize the squeeze estimate for the difference quotient.
+    # proof_debt: formalize the squeeze estimate for the difference quotient.
     trust $has_derivative_at('[a, b], F, x0, f(x0))
 
 thm first_fundamental_theorem_of_calculus:
@@ -6403,7 +6466,7 @@ thm antiderivative_boundary_difference_between_riemann_integral_bounds:
             F(b) - F(a) <= upper_riemann_integral('[a, b], f)
     # Source handling: Tao bounds `F(b)-F(a)` between every lower and upper
     # Riemann sum using the mean-value theorem on each partition interval.
-    # trust: formalize the Riemann-sum comparison, alpha-length notation
+    # proof_debt: formalize the Riemann-sum comparison, alpha-length notation
     # for `F[J]`, and the mean-value theorem application on each piece.
     trust:
         lower_riemann_integral('[a, b], f) <= F(b) - F(a)
@@ -6444,7 +6507,7 @@ thm antiderivatives_differ_by_constant:
             exist C R st {$differs_by_constant_on(I, F, G, C)}
     # Source handling: Tao proves this in Exercise 11.9.2 using the mean-value
     # theorem applied to `F-G`.
-    # trust: show `F-G` has zero derivative and use the Chapter 10
+    # proof_debt: show `F-G` has zero derivative and use the Chapter 10
     # constant-derivative theorem on bounded intervals.
     trust exist C R st {$differs_by_constant_on(I, F, G, C)}
 
@@ -6466,7 +6529,7 @@ thm derivative_values_imply_continuous_on_closed_interval_local:
             $is_continuous_on('[a, b], F)
     # Source handling: this is Corollary 10.1.12 specialized to a concrete
     # derivative-value function on `[a,b]`.
-    # trust: expose the Chapter 10 epsilon-delta proof in this standalone
+    # proof_debt: expose the Chapter 10 epsilon-delta proof in this standalone
     # Chapter 11 file.
     trust $is_continuous_on('[a, b], F)
 
@@ -6512,7 +6575,7 @@ thm integration_by_parts_product_derivative_integral_identity:
     # Source handling: apply the product rule to `F*G`, integrate its
     # derivative with Theorem 11.9.4, and use linearity to split
     # `(FG)' = F'G + FG'`.
-    # trust: formalize the product-rule antiderivative statement and the
+    # proof_debt: formalize the product-rule antiderivative statement and the
     # pointwise equality bridge between `(FG)'` and the displayed sum.
     trust integral_on('[a, b], fn(x '[a, b]) R {F(x) * dG(x)}) + integral_on('[a, b], fn(x '[a, b]) R {dF(x) * G(x)}) = F(b) * G(b) - F(a) * G(a)
 
@@ -6560,7 +6623,7 @@ thm stieltjes_piecewise_constant_as_riemann_integral:
     # Source handling: expand the finite Stieltjes sum over the constant pieces
     # and use Theorem 11.9.4 on each piece to rewrite `alpha[J]` as the integral
     # of `alpha'`.
-    # trust: connect the piecewise-constant Stieltjes sum construction to
+    # proof_debt: connect the piecewise-constant Stieltjes sum construction to
     # the Darboux Riemann-Stieltjes integrability definition.
     trust $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
     by thm non_degenerate_interval_forms_are_bounded_intervals(a, b)
@@ -6569,7 +6632,9 @@ thm stieltjes_piecewise_constant_as_riemann_integral:
     $is_riemann_integrable_on('[a, b], f)
     by thm products_preserve_riemann_integrability('[a, b], f, dalpha)
     $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
-    # trust: formalize finite additivity over arbitrary piecewise-constant
+    # Source handling: this is the second part of Theorem 11.10.2 after the
+    # checked product-integrability substep.
+    # proof_debt: formalize finite additivity over arbitrary piecewise-constant
     # partitions and the per-piece second-FTC rewrite.
     trust stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
 
@@ -6590,7 +6655,7 @@ thm stieltjes_to_riemann_integrability_by_piecewise_approximation:
             $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
     # Source handling: approximate `f` by piecewise constant upper and lower
     # functions and use Theorem 11.10.2 on those approximants.
-    # trust: carry the Darboux squeeze through the product with
+    # proof_debt: carry the Darboux squeeze through the product with
     # non-negative `alpha'`.
     trust $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
 
@@ -6607,7 +6672,7 @@ thm stieltjes_to_riemann_identity_by_piecewise_approximation:
             stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
     # Source handling: squeeze both sides between the identities for the
     # piecewise-constant upper and lower approximants.
-    # trust: formalize the upper/lower Riemann-Stieltjes squeeze and use
+    # proof_debt: formalize the upper/lower Riemann-Stieltjes squeeze and use
     # non-negativity of `alpha'`.
     trust stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
 
@@ -6685,13 +6750,14 @@ thm change_of_variables_piecewise_constant:
     # continuous monotone map are again interval pieces; on each such preimage,
     # `h=f o phi` is constant; the Stieltjes sum over preimage pieces equals
     # the ordinary Riemann sum over the image pieces.
-    # trust: build the preimage partition and prove its interval pieces.
+    # proof_debt: build the preimage partition and prove its interval pieces.
     trust $is_piecewise_constant_on('[a, b], h)
     by thm interval_endpoint_forms_are_bounded_intervals(u, v)
     $is_bounded_interval('[u, v])
     by thm piecewise_constant_on_bounded_interval_is_riemann_integrable('[u, v], f)
     $is_riemann_integrable_on('[u, v], f)
-    # trust: prove `phi[phi^{-1}(J)]` has the same length as `J` and sum
+    # Source handling: this is the finite-sum equality in Lemma 11.10.5.
+    # proof_debt: prove `phi[phi^{-1}(J)]` has the same length as `J` and sum
     # over the preimage partition.
     trust:
         $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
@@ -6715,7 +6781,7 @@ thm change_of_variables_stieltjes_integrability_by_piecewise_approximation:
             $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
     # Source handling: transfer piecewise-constant majorants and minorants of
     # `f` along `phi` and apply Lemma 11.10.5.
-    # trust: formalize the transferred Darboux squeeze.
+    # proof_debt: formalize the transferred Darboux squeeze.
     trust $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
 
 thm change_of_variables_stieltjes_identity_by_piecewise_approximation:
@@ -6733,7 +6799,7 @@ thm change_of_variables_stieltjes_identity_by_piecewise_approximation:
             stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)
     # Source handling: squeeze the Stieltjes integral of `h` between the
     # transferred piecewise-constant upper and lower integrals.
-    # trust: carry the equality from Lemma 11.10.5 through the
+    # proof_debt: carry the equality from Lemma 11.10.5 through the
     # upper/lower approximation limit.
     trust stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)
 

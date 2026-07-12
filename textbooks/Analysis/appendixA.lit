@@ -1,16 +1,11 @@
 # Appendix A
 
 """
-This file is a Litex-facing translation of Tao's Appendix A, "The basics of
-mathematical logic".
-
-The appendix has two jobs here.  First, it should teach the logical ideas that
-ordinary mathematical writing relies on: factual statements, implication,
-proof by contradiction, quantifiers, and equality.  Second, it should show how
-Litex expresses those ideas.  For that reason this file does not quote the
-source paragraph by paragraph.  It follows the source order where that is
-helpful, but uses its own narrative: the mathematical principle is stated
-directly, and the nearby Litex code shows the corresponding proof pattern.
+Appendix A develops the logical ideas used throughout the book: statements,
+implication, proof structure, quantifiers, and equality. The source sections
+A.1--A.7 occur below in order. A source example becomes a small checked sketch
+when it is self-contained; a prose item remains prose when it only describes a
+proof layout or needs mathematics not defined in this appendix.
 """
 
 # A.0 How to read Litex proof steps
@@ -32,12 +27,13 @@ proof moves small, but the output can still say which route accepted a fact and
 which inferred facts entered the later context.
 """
 
-2 + 3 = 5
+sketch:
+    2 + 3 = 5
 
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
+    forall x R:
+        x = 2
+        =>:
+            x + 1 = 3
 
 """
 The first fact is closed by ordinary arithmetic.  The `forall` fact says that
@@ -64,8 +60,15 @@ context and builtin rules, the verifier reports failure rather than treating it
 as a proved fact.
 """
 
-2 + 2 = 4
-not 2 + 2 = 5
+"""
+Example A.1.1. The equality `2 + 2 = 4` is true, whereas `2 + 2 = 5`
+is false. Ill-formed strings and expressions with an undefined operation, such
+as division by zero, are not statements.
+"""
+
+sketch:
+    2 + 2 = 4
+    not 2 + 2 = 5
 
 """
 Built-in relations such as `=`, `<`, `>=`, `$in`, and `$subset` are not the
@@ -121,6 +124,11 @@ forall:
     <=>:
         3 + 3 = 6
 
+"""
+Remark A.1.2. This appendix uses the ordinary convention that a well-formed
+statement is true or false; other logical systems are outside its scope.
+"""
+
 # A.2 Implication
 
 """
@@ -129,38 +137,43 @@ X is true.  It says that if X is available as an assumption, then Y can be
 deduced.  When the hypothesis is false, the implication is vacuous: it may be
 true while giving no useful information about the conclusion.
 
-The following example says that every integer satisfying `x = 2` also satisfies
-`x^2 = 4`.  It does not say that every integer is equal to `2`.
+Examples A.2.1. Every integer satisfying `x = 2` also satisfies `x^2 = 4`.
+This does not say that every integer is equal to `2`.
 """
 
-forall x Z:
-    x = 2
-    =>:
-        x^2 = 4
+sketch:
+    forall x Z:
+        x = 2
+        =>:
+            x^2 = 4
 
 """
 A false hypothesis can still appear as the hypothesis of a valid implication.
-Inside the implication, Litex reasons under the assumption `2 + 2 = 5`, so the
-equality chain may rewrite `4 + 4` as `10`.  The example is not claiming that
-`2 + 2 = 5`; it is showing that a conditional statement can be true because
-its hypothesis is never actually satisfied.
+
+Proposition A.2.2. If `2 + 2 = 5`, then `4 = 10 - 4`. The displayed chain is
+valid under its false hypothesis; it is not an assertion that the hypothesis
+itself holds.
 """
 
-forall x Z:
-    2 + 2 = 5
-    =>:
-        4 + 4 = (2 + 2) + (2 + 2) = 5 + 5 = 10
+sketch:
+    forall:
+        2 + 2 = 5
+        =>:
+            4 = 2 + 2 = 5
+            4 + 4 = (2 + 2) + (2 + 2) = 5 + 5 = 10
+            4 = 10 - 4
 
 """
-A direct implication proof usually starts from the hypotheses and rewrites or
-deduces the desired conclusion.  Here the hypothesis `2*x + 3 = 7` determines
-the value of the real number `x`.
+Proposition A.2.3. If `2*x + 3 = 7`, then `x = 2`. The source warns that
+checking the converse calculation from `x = 2` is not a proof of this result.
+The checked implication starts from the hypothesis.
 """
 
-forall x R:
-    2 * x + 3 = 7
-    =>:
-        x = (2 * x) / 2 = (7 - 3) / 2 = 2
+sketch:
+    forall x R:
+        2 * x + 3 = 7
+        =>:
+            x = (2 * x) / 2 = (7 - 3) / 2 = 2
 
 """
 Theorem A.2.4. For every integer `n`, the product `n(n+1)` is even.
@@ -177,11 +190,9 @@ thm integer_product_successor_even:
     ? forall n Z:
         $is_even(n * (n + 1))
     claim:
-        prove:
-            exist k Z st {n * (n + 1) = 2 * k}
+        ? exist k Z st {n * (n + 1) = 2 * k}
         by cases:
-            prove:
-                exist k Z st {n * (n + 1) = 2 * k}
+            ? exist k Z st {n * (n + 1) = 2 * k}
             case n % 2 = 0:
                 obtain m from exist m Z st {n = 2 * m}
                 witness exist k Z st {n * (n + 1) = 2 * k} from m * (n + 1):
@@ -208,11 +219,19 @@ by thm integer_product_successor_even(some_number)
 $is_even(some_number * (some_number + 1))
 
 """
-Proof by contradiction is the contrapositive idea in action: if an assumption
-would imply something false, then the assumption itself must be false.  A
-standard example is that there is no largest integer.  If `M` were largest,
-then the integer `M + 1` would still have to be at most `M`, contradicting the
-basic order fact `M < M + 1`.
+Proposition A.2.6. A positive real number satisfying `sin(x) = 1` is at least
+`pi/2`. The source argues by contradiction using monotonicity of sine on the
+first quadrant.
+"""
+
+# Source handling: assume `x < pi/2`, obtain `0 < sin(x) < 1`, and contradict
+# the hypothesis `sin(x) = 1`.
+# proof_debt: a checked version needs self-contained sine, pi, and interval
+# monotonicity facts, which are not defined in this logic appendix.
+
+"""
+The following integer example has the same contradiction shape: a largest
+integer would have to dominate its own successor.
 """
 
 prop is_largest_integer(M Z):
@@ -246,11 +265,40 @@ records the proof-writing lesson in this prose note rather than inventing a
 fake formal predicate for "good proof structure".
 """
 
+"""
+Proposition A.3.1. A direct proof moves from a hypothesis through intermediate
+consequences to its conclusion. This is a schematic inference pattern, not a
+proposition over a fixed mathematical domain.
+"""
+
+"""
+Proposition A.3.2. The source uses `x = pi` to prove `sin(x/2) + 1 = 2`,
+illustrating a direct equality chain.
+"""
+
+"""
+Proposition A.3.3. The ratio-test proof of convergence of `sum n*r^n` for
+`0 < r < 1` illustrates working backward through sufficient conditions.
+"""
+
+"""
+Proposition A.3.4. A proof with several hypotheses and a case split must keep
+known facts, intermediate goals, and case conclusions distinct.
+"""
+
+"""
+Proposition A.3.5. A contradiction proof may assume a proposed conclusion,
+derive incompatible consequences, and discharge that assumption.
+"""
+
+# These source items describe proof layouts. The checked examples in A.2 and
+# A.5 show their direct, case, and contradiction forms without inventing a
+# predicate for a schematic proof layout.
+
 # A.4 Variables and quantifiers
 
 """
-Tao uses the standard word "variable".  Litex deliberately thinks in terms of
-introduced objects.  The word "variable" can suggest that a value keeps
+The standard word "variable" refers here to an introduced object. The word can suggest that a value keeps
 changing, but in a proof context that is not what is happening.  When a name is
 introduced, it denotes one fixed object whose exact value may be unknown.
 
@@ -308,6 +356,34 @@ counterexample or an actual witness, it must introduce that object in the
 corresponding proof context.
 """
 
+# A.6 Some examples of proofs and quantifiers
+
+"""
+Proposition A.6.1. For every positive real number `epsilon`, there is a
+positive real number `delta` such that `2*delta < epsilon`.
+"""
+
+# The universal variable is arbitrary, while the witness may depend on it.
+# Choosing `delta = epsilon/3` gives the strict inequality directly.
+thm positive_epsilon_has_smaller_delta:
+    ? forall epsilon R_pos:
+        exist delta R_pos st {2 * delta < epsilon}
+    witness exist delta R_pos st {2 * delta < epsilon} from epsilon / 3:
+        epsilon / 3 > 0
+        2 * epsilon / 3 < 3 * epsilon / 3
+        3 * epsilon / 3 = epsilon
+        2 * epsilon / 3 < epsilon
+
+"""
+Proposition A.6.2. There is a positive `epsilon` such that
+`sin(x) > x/2` for every `x` with `0 < x < epsilon`.
+"""
+
+# Source handling: choose `epsilon = pi/3`, then use the mean value theorem
+# and monotonicity of cosine on the required interval.
+# proof_debt: this self-contained logic appendix does not define the
+# trigonometric functions, pi, or the mean-value theorem needed by this proof.
+
 # A.7 Equality
 
 """
@@ -336,6 +412,9 @@ thm equality_transitive_demo:
             x = z
 
 """
+Example A.7.1. Equality may be substituted through operations and functions:
+if `x = y`, then `2*x = 2*y`, `sin(x) = sin(y)`, and `x + z = y + z`.
+
 Equality may be substituted through operations and functions.  Tao gives
 examples such as `2x = 2y`, `sin(x) = sin(y)`, and `x+z = y+z`.  This appendix
 does not import the trigonometry module just to mention `sin`; the generic
@@ -357,6 +436,9 @@ thm equality_substitution_for_real_function:
             f(x) = f(y)
 
 """
+Example A.7.2. If an integer `n` is odd and `n = m`, then `m` is odd. If also
+`n > k`, then `m > k`.
+
 Substitution also applies to properties and relations.  If an integer `n` is
 odd and `n = m`, then `m` is odd.  If also `n > k`, then the same equality lets
 us conclude `m > k`.
@@ -380,6 +462,9 @@ thm equality_substitution_for_oddness_and_order:
     m > k
 
 """
+Example A.7.3. From `x = sin(y)` and `y = z^2`, substitution followed by
+transitivity yields `x = sin(z^2)`.
+
 Chained equalities combine substitution with transitivity.  Tao's example has
 `x = sin(y)` and `y = z^2`, then concludes `x = sin(z^2)`.  The generic
 function version below captures the same proof shape without adding a
@@ -417,6 +502,3 @@ thm modular_remainder_equality_example:
     (2 + 5) % 10 = 7 % 10 = 7
     (12 + 5) % 10 = (2 + 5) % 10
     $has_same_remainder_mod_10(12 + 5, 2 + 5)
-
-# Final audit (2026-07-12): no direct non-exercise `trust` or `abstract_prop`
-# marker occurs in Appendix A.

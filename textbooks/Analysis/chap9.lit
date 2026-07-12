@@ -1,4 +1,4 @@
-# Analysis I, Chapter 9: Continuous functions on R.
+# Chapter 9: Continuous functions on R.
 
 trust local import chap6
 
@@ -87,12 +87,9 @@ forall a R, x infc(a):
     x $in R
     x <= a
 
-"""
-For the reversed-endpoint closed interval example below, `self_cc` exposes the
-set-builder convention directly.  The rest of the chapter uses Litex's builtin
-interval objects because these intervals are common enough to deserve concise
-notation.
-"""
+# For the reversed-endpoint closed interval example below, `self_cc` exposes
+# the source set-builder convention directly.  The rest of the chapter uses
+# builtin interval objects.
 
 have fn self_cc(l, r R) power_set(R) = {x R: l <= x <= r}
 
@@ -1344,7 +1341,10 @@ thm closures_of_standard_sets:
         closure_of_real_set(Q) = R
         closure_of_real_set(R) = R
         closure_of_real_set({}) = {}
-    # trust: discreteness of N and Z, and density of Q in R.
+    # Source handling: this is Exercise 9.1.3, which asks for the discrete
+    # and dense standard-subset closure computations.
+    # proof_debt: the local chapter has no checked discreteness/density package
+    # that proves the N, Z, and Q closure clauses.
     trust:
         closure_of_real_set(N) = N
         closure_of_real_set(Z) = Z
@@ -2292,9 +2292,11 @@ prop has_sequential_compactness_in_R(X power_set(R)):
         =>:
             exist b seq(R) st {$has_subsequence(a, b), $has_limit_in_set(b, X)}
 
-# trust: the forward Heine-Borel direction combines boundedness with
-# Bolzano-Weierstrass and closedness.  The reverse direction uses sequences
-# witnessing non-closedness or unboundedness.
+# Source handling: the forward Heine-Borel direction combines boundedness,
+# Bolzano-Weierstrass, and closedness; the reverse direction uses bad
+# sequences for non-closedness or unboundedness.
+# proof_debt: this chapter records the sequential-compactness interface, but
+# does not expand either direction into a checked proof.
 
 """
 Remark 9.1.25. This is the compactness principle used later for boundedness,
@@ -2715,9 +2717,10 @@ thm sequence_limit_preservation_implies_function_limit:
         $function_limit_preserves_sequences(E, f, x0, L)
         =>:
             $has_function_limit(E, f, x0, L)
-    # Source handling: Proposition 9.3.9 is stated for an adherent point of the
-    # domain; the reverse direction then chooses a bad sequence if no delta works.
-    # trust: formalize the bad-sequence construction.
+    # Source handling: the reverse direction of Proposition 9.3.9 chooses a
+    # bad sequence when no epsilon-delta witness exists.
+    # proof_debt: the required recursively chosen bad sequence has not yet been
+    # checked in the local sequence API.
     trust $has_function_limit(E, f, x0, L)
 
 """
@@ -4245,8 +4248,9 @@ thm rational_indicator_restricted_limits_at_zero:
             $is_locally_epsilon_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon)
         $has_function_limit(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1)
     $has_function_limit(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1)
-    # trust: the remaining half needs density of irrational real points
-    # near zero.
+    # Source handling: the second half uses irrational points arbitrarily close
+    # to zero, just as the first half uses rational points.
+    # proof_debt: the local library has no checked irrational-density witness.
     trust $has_function_limit(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0)
 
 thm rational_indicator_no_limit_at_zero:
@@ -4518,7 +4522,9 @@ nearby values keep switching between `1` and `0`.
 thm rational_indicator_discontinuous_everywhere:
     ? forall x0 R:
         not $is_continuous_at(R, rational_indicator_for_limit_example, x0)
-    # trust: use density of Q and of its complement in R near every x0.
+    # Source handling: the example uses rational and irrational points in every
+    # neighborhood of the chosen real point.
+    # proof_debt: the global rational/irrational density package is not checked.
     trust not $is_continuous_at(R, rational_indicator_for_limit_example, x0)
 
 """
@@ -5050,8 +5056,10 @@ base `a`, the function `x |-> a^x` is continuous on the real line.
 thm positive_base_exponentiation_continuous:
     ? forall a R_pos:
         $is_continuous_on(R, fn(x R) R {a^x})
-    # proof_debt_blocker: exponential-continuity theorem package; needs the
-    # Chapter 6 estimates controlling `a^x` under small changes of `x`.
+    # Source handling: Exercise 9.4.3 derives this from the Chapter 6
+    # exponentiation estimates.
+    # proof_debt: those local epsilon-delta estimates have not been packaged
+    # as a checked exponential-continuity theorem.
     trust $is_continuous_on(R, fn(x R) R {a^x})
 
 """
@@ -5069,8 +5077,9 @@ axis.
 thm positive_domain_power_function_continuous:
     ? forall p R:
         $is_continuous_on(R_pos, fn(x R_pos) R {x^p})
-    # proof_debt_blocker: power-function continuity theorem package; needs the
-    # local reduction to exponentiation continuity and limit laws for powers.
+    # Source handling: Exercise 9.4.4 reduces this to exponentiation
+    # continuity and the real-power limit laws.
+    # proof_debt: that positive-domain reduction is not yet checked locally.
     trust $is_continuous_on(R_pos, fn(x R_pos) R {x^p})
 
 """
@@ -5366,10 +5375,10 @@ thm example_9_4_14_powered_abs_quadratic_continuous:
         $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
     by thm example_9_4_14_abs_quadratic_continuous()
     $is_continuous_on(R, example_9_4_14_abs_quadratic)
-    # trust: finish the composition through
-    # `example_9_4_14_sqrt_two_power_on_nonnegative`.  Proposition 9.4.11
-    # gives the positive-domain power rule; this example also needs continuity
-    # at the endpoint `0`, since the absolute-value polynomial can vanish.
+    # Source handling: this example combines the real-power continuity rule
+    # with the preceding absolute-value polynomial.
+    # proof_debt: Proposition 9.4.11 only covers positive inputs, while this
+    # composition also needs the endpoint where the absolute value is zero.
     trust $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
 
 thm example_9_4_14_complex_continuous:
@@ -6067,8 +6076,10 @@ thm continuous_closed_interval_attains_maximum_nonendpoint_core:
     by thm not_maximizer_gives_larger_point('[a, b], f, b)
     obtain xb from exist xb '[a, b] st {f(b) < f(xb)}
     f(b) < f(xb)
-    # proof_debt_blocker: compactness/supremum theorem package; needs the
-    # near-maximizing sequence and subsequential-limit construction.
+    # Source handling: the non-endpoint part of Proposition 9.6.7 constructs a
+    # near-maximizing sequence and applies compactness.
+    # proof_debt: the local sequence/supremum package does not yet check that
+    # construction through to an attained maximum.
     trust $attains_maximum_on('[a, b], f)
 
 thm continuous_closed_interval_attains_maximum:
@@ -6268,8 +6279,9 @@ thm intermediate_value_theorem_strict_interior_core:
     not b $in {x '[a, b]: f(x) <= y}
     by thm ivt_left_set_bounded_in_strict_case(a, b, f, y)
     $is_bounded_real_set({x '[a, b]: f(x) <= y})
-    # proof_debt_blocker: supremum cut-point theorem package; needs Tao's IVT
-    # left-set supremum argument plus continuity at the cut point.
+    # Source handling: the strict case takes the supremum of the left set and
+    # uses continuity at that cut point.
+    # proof_debt: the local supremum cut-point construction is not checked.
     trust exist c '[a, b] st {f(c) = y}
 
 thm intermediate_value_theorem_increasing_order:
@@ -6283,9 +6295,10 @@ thm intermediate_value_theorem_increasing_order:
     # In the source: This is the endpoint-order case Tao proves explicitly
     # inside Theorem 9.7.1.
     # The endpoint cases are checked directly by taking `c=a` or `c=b`.
-    # trust: in the strict interior case, take the supremum of the left
-    # set where `f(x) <= y`, then use continuity to rule out values strictly
-    # above or below y at the cut point.
+    # Source handling: in the strict interior case, take the supremum of the
+    # left set where `f(x) <= y`, then use continuity at the cut point.
+    # proof_debt: that cut-point argument is delegated to the named strict
+    # interior core below.
     f(a) = y or f(a) < y
     by cases:
         ? exist c '[a, b] st {f(c) = y}
@@ -6367,9 +6380,10 @@ thm cubic_minus_identity_on_closed_minus_two_two_continuous:
     $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3})
     by thm continuity_closed_under_arithmetic('[-2, 2], fn(x '[-2, 2]) R {x^3}, fn(x '[-2, 2]) R {x})
     $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3 - x})
-    # trust: transport continuity across equality between the displayed
-    # anonymous polynomial and its named function.  This is a function-
-    # extensionality bridge, not an additional analytic assertion.
+    # Source handling: the example identifies the displayed cubic polynomial
+    # with its named function before applying the intermediate value theorem.
+    # proof_debt: this local function-extensionality transport is not inferred
+    # through the named-function equality in the present verifier context.
     trust $is_continuous_on('[-2, 2], cubic_minus_identity_on_closed_minus_two_two)
 
 thm cubic_minus_identity_remark_9_7_2_values:
@@ -6444,7 +6458,10 @@ thm continuous_image_of_interval_is_interval:
         $is_continuous_on('[a, b], f)
         =>:
             $is_interval_subset(fn_range(f))
-    # trust: apply the intermediate value theorem between two preimages.
+    # Source handling: apply the intermediate value theorem between two
+    # preimages of values in the image interval.
+    # proof_debt: the chapter does not yet have a checked interval-image proof
+    # that constructs those preimages and applies IVT.
     trust $is_interval_subset(fn_range(f))
 
 
@@ -6545,9 +6562,10 @@ thm continuous_strictly_increasing_inverse:
         $is_strictly_increasing_on('[a, b], f)
         =>:
             $has_continuous_inverse_on_image('[a, b], f)
-    # trust: use monotonicity for injectivity, the intermediate value
-    # theorem for surjectivity onto the image interval, and epsilon-delta
-    # monotone inverse estimates for continuity.
+    # Source handling: use monotonicity for injectivity, IVT for surjectivity
+    # onto the image, and epsilon-delta estimates for inverse continuity.
+    # proof_debt: this combined inverse-function theorem has no checked local
+    # construction yet.
     trust $has_continuous_inverse_on_image('[a, b], f)
 
 """
@@ -7458,8 +7476,10 @@ thm uniformly_continuous_has_limit_at_adherent_point:
         $is_adherent_point(X, x0)
         =>:
             exist L R st {$has_function_limit(X, f, x0, L)}
-    # trust: take any sequence in X converging to x0, map it to a Cauchy
-    # sequence, and prove the resulting limit is independent of the sequence.
+    # Source handling: map an approaching sequence to a Cauchy sequence and
+    # show the resulting value is independent of that sequence.
+    # proof_debt: the local Cauchy-completion and sequence-independence route
+    # has not been checked for an arbitrary adherent point.
     trust exist L R st {$has_function_limit(X, f, x0, L)}
 
 """
@@ -7489,8 +7509,9 @@ thm uniformly_continuous_maps_bounded_sets_to_bounded_sets:
         $is_bounded_real_set(E)
         =>:
             $function_image_of_subset_is_bounded(X, f, E)
-    # trust: combine boundedness of E with uniform continuity and a finite
-    # cover/tail or Cauchy-sequence argument.
+    # Source handling: combine boundedness with uniform continuity by a finite
+    # cover or, equivalently, a contradiction using an unbounded image sequence.
+    # proof_debt: neither compact-cover route is currently checked locally.
     trust $function_image_of_subset_is_bounded(X, f, E)
 
 """
@@ -7511,8 +7532,10 @@ thm compact_interval_continuity_preserves_equivalent_sequences:
     # compactness extraction and bad-pair construction are the remaining named
     # proof obligation; the final conversion to uniform continuity is checked
     # below.
-    # proof_debt_blocker: compactness/sequential theorem package; needs the
-    # Heine-Borel subsequence extraction and bad-pair contradiction.
+    # Source handling: Heine-Borel extracts a convergent subsequence from bad
+    # pairs, and continuity contradicts their fixed value separation.
+    # proof_debt: the compactness extraction and bad-pair construction remain
+    # unproved in the local sequence interface.
     trust $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
 
 thm continuous_closed_interval_uniformly_continuous:
@@ -7521,12 +7544,11 @@ thm continuous_closed_interval_uniformly_continuous:
         $is_continuous_on('[a, b], f)
         =>:
             $is_uniformly_continuous_on('[a, b], f)
-    # In the source: Tao proves Theorem 9.9.16 in the text using equivalent
-    # sequences, compactness, and continuity at the subsequential limit.
-    # trust: prove the equivalent-sequence preservation step by
-    # contradiction, extract a convergent subsequence by Heine-Borel, and use
-    # continuity at the subsequential limit.  The final conversion from
-    # preservation to uniform continuity is checked by Proposition 9.9.8.
+    # Source handling: the text proves equivalent-sequence preservation by
+    # contradiction, compactness, and continuity at a subsequential limit.
+    # proof_debt: that preservation step is supplied by the named theorem
+    # above; Proposition 9.9.8 checks the final conversion to uniform
+    # continuity.
     by thm compact_interval_continuity_preserves_equivalent_sequences(a, b, f)
     $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
     by thm equivalent_sequence_preservation_implies_uniform_continuity('[a, b], f)
