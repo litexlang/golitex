@@ -138,7 +138,7 @@ prop divisors_value(n N, s power_set(N)):
         <=>:
             $Dvd(d, n)
 
-proof_debt:
+trust:
     forall n N:
         exist! s power_set(N) st {$divisors_value(n, s)}
 
@@ -146,7 +146,7 @@ have fn divisors by exist!:
     ? forall n N:
         exist! s power_set(N) st {$divisors_value(n, s)}
 
-proof_debt:
+trust:
     # Current Nat stdlib backbone. Many of these are elementary number-theory
     # facts that should eventually be proved from induction, Euclidean
     # division, and gcd/lcm definitions; for now they provide stable theorem
@@ -543,7 +543,7 @@ thm Prime_dvd_of_dvd_pow:
             $Dvd(p, a^k)
             =>:
                 $Dvd(p, a)
-    proof_debt $Dvd(p, a)
+    trust $Dvd(p, a)
     $Dvd(p, a)
 
 # Mathlib: Nat.exists_prime_and_dvd

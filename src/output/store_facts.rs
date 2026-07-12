@@ -11,13 +11,6 @@ pub(crate) fn store_fact_json_values(infers: &InferResult) -> Vec<JsonValue> {
         .collect::<Vec<_>>()
 }
 
-pub(crate) fn store_fact_json_values_for_fact(
-    infers: &InferResult,
-    _primary_fact: &Fact,
-) -> Vec<JsonValue> {
-    store_fact_json_values(infers)
-}
-
 fn store_fact_json_value(output: &StoreFactOutput) -> JsonValue {
     let fact = &output.itself_and_why_itself_is_stored.0;
     let reason = &output.itself_and_why_itself_is_stored.1;

@@ -11,6 +11,7 @@ use super::normalize::{
     finalize_display_text_with_optional_strip, json_value_is_empty_in_normal_output,
     remove_empty_json_fields,
 };
+use super::phases::error_execution_phases_value;
 use super::source::{source_ref_json_fields, stmt_json_field_lines, stmt_json_value};
 use super::success::display_stmt_exec_result_json;
 use super::unknown_result_json_value;
@@ -464,6 +465,18 @@ fn build_display_error_json_object(
         indent_inner.as_str(),
         error_output(error),
     );
+
+    if runtime.detail_output {
+        if let Some(trace) = error.execution_trace() {
+            push_json_value_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
+                "phases",
+                error_execution_phases_value(trace),
+            );
+        }
+    }
 
     let context_for_child = error_own_statement(error).or(statement_context);
     let previous_error_line = build_previous_error_field_line(

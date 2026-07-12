@@ -620,12 +620,18 @@ One JSON-shaped Litex output for that statement is:
     "type": "builtin rule",
     "rule": "same expression on both sides"
   },
-  "store_facts": [
-    {
-      "fact": "1 = 1",
-      "reason": "proved statement"
+  "phases": {
+    "affect_environment": {
+      "status": "success",
+      "effects": [
+        {
+          "kind": "store_fact",
+          "fact": "1 = 1",
+          "reason": "proved statement"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 

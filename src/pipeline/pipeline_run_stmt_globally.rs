@@ -29,42 +29,53 @@ pub fn run_stmt_at_global_env(
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
         Stmt::Command(CommandStmt::ImportStmt(import_stmt)) => {
-            return run_import_stmt(import_stmt, runtime, runtime.current_execution_mode());
+            let execution_mode = runtime.current_execution_mode();
+            let result = run_import_stmt(import_stmt, runtime, execution_mode);
+            return runtime
+                .finish_statement_execution(result, execution_mode == ExecutionMode::Trusted);
         }
         Stmt::Command(CommandStmt::TrustImportStmt(trust_import_stmt)) => {
             if runtime.strict_mode {
-                return Err(trusted_import_not_allowed_in_strict_mode(stmt.clone()));
+                return runtime.finish_statement_execution(
+                    Err(trusted_import_not_allowed_in_strict_mode(stmt.clone())),
+                    false,
+                );
             }
             runtime.record_trusted_import(
                 "trust_import",
                 trust_import_stmt.import.to_string(),
                 trust_import_stmt.line_file(),
             );
-            run_import_stmt(&trust_import_stmt.import, runtime, ExecutionMode::Trusted)?;
-            return Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
+            let result =
+                run_import_stmt(&trust_import_stmt.import, runtime, ExecutionMode::Trusted)
+                    .map(|_| NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
+            return runtime.finish_statement_execution(result, true);
         }
         Stmt::Command(CommandStmt::LocalImportStmt(local_import_stmt)) => {
-            return run_local_import_stmt(
-                local_import_stmt,
-                runtime,
-                runtime.current_execution_mode(),
-            );
+            let execution_mode = runtime.current_execution_mode();
+            let result = run_local_import_stmt(local_import_stmt, runtime, execution_mode);
+            return runtime
+                .finish_statement_execution(result, execution_mode == ExecutionMode::Trusted);
         }
         Stmt::Command(CommandStmt::TrustLocalImportStmt(trust_local_import_stmt)) => {
             if runtime.strict_mode {
-                return Err(trusted_import_not_allowed_in_strict_mode(stmt.clone()));
+                return runtime.finish_statement_execution(
+                    Err(trusted_import_not_allowed_in_strict_mode(stmt.clone())),
+                    false,
+                );
             }
             runtime.record_trusted_import(
                 "trust_local_import",
                 trust_local_import_stmt.local_import.name.clone(),
                 trust_local_import_stmt.line_file(),
             );
-            run_local_import_stmt(
+            let result = run_local_import_stmt(
                 &trust_local_import_stmt.local_import,
                 runtime,
                 ExecutionMode::Trusted,
-            )?;
-            return Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
+            )
+            .map(|_| NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
+            return runtime.finish_statement_execution(result, true);
         }
         _ => {
             return runtime.exec_stmt(stmt);
@@ -143,7 +154,7 @@ fn run_import_stmt(
             ImportStmt::ImportRelativePath(_) => {
                 return Err(import_stmt_error(
                     import_stmt,
-                    "project mode import must name a root export or globally registered module; use litex.config and local_import for module-local dependencies"
+                    "project mode import must name a root export or globally registered module; use litex.config and local import for module-local dependencies"
                         .to_string(),
                 ));
             }
@@ -153,7 +164,7 @@ fn run_import_stmt(
                         return Err(import_stmt_error(
                             import_stmt,
                             format!(
-                                "root export `{}` is a file; files can only be loaded with local_import inside their owner module",
+                                "root export `{}` is a file; files can only be loaded with local import inside their owner module",
                                 stmt.mod_name
                             ),
                         ));
@@ -280,7 +291,7 @@ fn run_local_import_stmt(
             short_exec_error(
                 local_import_stmt.clone().into(),
                 format!(
-                    "local_import `{}` was not declared for this source by its module's litex.config",
+                    "local import `{}` was not declared for this source by its module's litex.config",
                     local_import_stmt.name
                 ),
                 None,
@@ -444,7 +455,7 @@ fn load_exported_file(
             if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
                 return Err(short_exec_error(
                     cause_stmt,
-                    "file was already loaded through trust local_import; restart the run before importing it normally"
+                    "file was already loaded through trust local import; restart the run before importing it normally"
                         .to_string(),
                     None,
                     vec![],
@@ -737,7 +748,7 @@ fn relative_import_entry(
     if module_root.extension().and_then(|ext| ext.to_str()) == Some("lit") {
         return Err(import_stmt_error(
             import_stmt,
-            "import cannot load a .lit file; declare it in [export] in litex.config and use `local_import` inside that module"
+            "import cannot load a .lit file; declare it in [export] in litex.config and use `local import` inside that module"
                 .to_string(),
         ));
     }
@@ -1089,7 +1100,7 @@ mod tests {
         fs::create_dir_all(&child_dir).expect("create child module dir");
         fs::write(
             nested_dir.join("main.lit"),
-            "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
+            "abstract_prop nested_prop(x)\ntrust $nested_prop(2)",
         )
         .expect("write nested module");
         fs::write(
@@ -1125,7 +1136,7 @@ mod tests {
         fs::create_dir_all(&a_dir).expect("create A module dir");
         fs::write(
             b_dir.join("main.lit"),
-            "abstract_prop b_prop(x)\nproof_debt $b_prop(2)",
+            "abstract_prop b_prop(x)\ntrust $b_prop(2)",
         )
         .expect("write B module");
         fs::write(
@@ -1173,7 +1184,7 @@ mod tests {
         fs::create_dir_all(&child_dir).expect("create child module dir");
         fs::write(
             nested_dir.join("main.lit"),
-            "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
+            "abstract_prop nested_prop(x)\ntrust $nested_prop(2)",
         )
         .expect("write nested module");
         fs::write(
@@ -1405,7 +1416,7 @@ mod tests {
                 let file_path = write_temp_lit_file(
                     "lit-file-path-registers-module",
                     "chap6_sketch.lit",
-                    "abstract_prop loaded_prop(x)\nproof_debt $loaded_prop(2)",
+                    "abstract_prop loaded_prop(x)\ntrust $loaded_prop(2)",
                 );
                 let source_code = format!(
                     "import \"{}\" as chap6\n$chap6::loaded_prop(2)",
@@ -1428,7 +1439,7 @@ mod tests {
                 assert!(!run_succeeded, "file import should fail:\n{}", run_output);
                 assert!(
                     run_output.contains("import cannot load a .lit file"),
-                    "file import should explain export file/local_import:\n{}",
+                    "file import should explain export file/local import:\n{}",
                     run_output
                 );
                 let module_manager = &runtime.module_manager;
@@ -1497,7 +1508,7 @@ mod tests {
                 fs::create_dir_all(&module_dir).expect("create temp module dir");
                 fs::write(
                     module_dir.join("Nested.lit"),
-                    "abstract_prop nested_prop(x)\nproof_debt $nested_prop(2)",
+                    "abstract_prop nested_prop(x)\ntrust $nested_prop(2)",
                 )
                 .expect("write nested .lit file");
                 fs::write(
@@ -1618,7 +1629,7 @@ prop imported_is_two(x Z):
             "known-atomic",
             r#"
 abstract_prop imported_prop(x)
-proof_debt $imported_prop(2)
+trust $imported_prop(2)
 "#,
         );
         let source_code = format!(
@@ -1653,7 +1664,7 @@ proof_debt $imported_prop(2)
             module_dir.join("main.lit"),
             r#"
 abstract_prop imported_prop(x)
-proof_debt $imported_prop(2)
+trust $imported_prop(2)
 "#,
         )
         .expect("write temp module");
@@ -1722,7 +1733,7 @@ proof_debt $imported_prop(2)
             "known-forall",
             r#"
 abstract_prop imported_prop(x)
-proof_debt forall x Z:
+trust forall x Z:
     $imported_prop(x)
 "#,
         );
@@ -1760,7 +1771,7 @@ thm imported_thm:
         forall x Z:
             $imported_prop(x)
 
-    proof_debt $imported_prop(x)
+    trust $imported_prop(x)
 "#,
         );
         let source_code = format!(
@@ -1790,7 +1801,7 @@ thm imported_thm:
         let path = write_temp_module(
             "local-exist-case",
             r#"
-proof_debt:
+trust:
     forall n N:
         exist r N st {r = n}
 
@@ -1848,7 +1859,7 @@ strategy imported_strategy:
             =>:
                 $imported_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y Z:
             y = 2
             =>:
@@ -1893,7 +1904,7 @@ strategy imported_strategy:
             =>:
                 $imported_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y Z:
             y = 2
             =>:
@@ -1942,7 +1953,7 @@ strategy imported_strategy:
             "clear-keeps-import-active",
             r#"
 abstract_prop imported_prop(x)
-proof_debt $imported_prop(2)
+trust $imported_prop(2)
 "#,
         );
         let source_code = format!(

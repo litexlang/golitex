@@ -152,7 +152,7 @@ prop finite_surjective_map_bijective(G, D set, r, f G, rho, sigma D, phi fn(x G)
 
 # Presentation universal property: if the target elements satisfy the relators,
 # there is a homomorphism sending r to rho and f to sigma.
-proof_debt forall G, D set, r, f G, rho, sigma D:
+trust forall G, D set, r, f G, rho, sigma D:
     $presentation_r8_f2_rfrf(G, r, f)
     $regular_octagon_dihedral_group(D, rho, sigma)
     =>:
@@ -160,14 +160,14 @@ proof_debt forall G, D set, r, f G, rho, sigma D:
 
 # From r f r f = 1 one gets f r = r^(-1) f. This is the rewrite rule
 # used to move every reflection letter to the right.
-proof_debt forall G set, r, f G:
+trust forall G set, r, f G:
     $presentation_r8_f2_rfrf(G, r, f)
     =>:
         $presentation_reflection_swap_rule(G, r, f)
 
 # Repeatedly applying the swap rule and then f^2 = 1 reduces every word to
 # either r^i or r^i f.
-proof_debt forall G set, r, f G:
+trust forall G set, r, f G:
     $presentation_r8_f2_rfrf(G, r, f)
     $presentation_reflection_swap_rule(G, r, f)
     =>:
@@ -175,14 +175,14 @@ proof_debt forall G set, r, f G:
 
 # Since r^8 = 1, the exponent i may be chosen from {0,...,7}. There are eight
 # rotation forms r^i and eight reflection forms r^i f.
-proof_debt forall G set, r, f G:
+trust forall G set, r, f G:
     $presentation_r8_f2_rfrf(G, r, f)
     =>:
         $presentation_normal_form_slot_bound(G, r, f)
 
 # If every element has one of those normal forms, and those normal forms occupy
 # at most sixteen slots, then the presented group has at most sixteen elements.
-proof_debt forall G set, r, f G:
+trust forall G set, r, f G:
     $presentation_normal_form_cover(G, r, f)
     $presentation_normal_form_slot_bound(G, r, f)
     =>:
@@ -200,21 +200,21 @@ claim:
     $presentation_normal_form_bound(G, r, f)
 
 # The regular-octagon dihedral group has exactly eight rotations and eight reflections.
-proof_debt forall D set, rho, sigma D:
+trust forall D set, rho, sigma D:
     $regular_octagon_dihedral_group(D, rho, sigma)
     =>:
         $regular_octagon_d8_cardinality(D, rho, sigma)
 
 # Since rho and sigma generate D8, the homomorphism produced by the presentation
 # is surjective.
-proof_debt forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+trust forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
     $regular_octagon_dihedral_group(D, rho, sigma)
     $generator_map(G, D, r, f, rho, sigma, phi)
     =>:
         $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
 
 # A surjection from a set with at most 16 elements onto a 16-element set is bijective.
-proof_debt forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+trust forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
     $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
     $presentation_normal_form_bound(G, r, f)
     $regular_octagon_d8_cardinality(D, rho, sigma)

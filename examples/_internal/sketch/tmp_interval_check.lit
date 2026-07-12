@@ -5,7 +5,7 @@ sketch:
 
 sketch:
     have x R
-    proof_debt:
+    trust:
         2 < x
         x < 12
     x $in '(2, 12]
@@ -13,13 +13,13 @@ sketch:
 
 sketch:
     have y R
-    proof_debt:
+    trust:
         y < 3
     y $in info(3)
 
 sketch:
     have z R
-    proof_debt:
+    trust:
         z > 3
     z $in oinf(3)
 

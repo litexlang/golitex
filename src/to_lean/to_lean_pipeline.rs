@@ -756,15 +756,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_verified_proof_debt_instead_of_emitting_trust() {
-        run_with_large_stack(
-            "rejects_verified_proof_debt_instead_of_emitting_trust",
-            || {
-                let result = to_lean_from_source_after_builtins("proof_debt 1 = 2", "to-lean-test");
+    fn rejects_verified_trust_instead_of_emitting_trust() {
+        run_with_large_stack("rejects_verified_trust_instead_of_emitting_trust", || {
+            let result = to_lean_from_source_after_builtins("trust 1 = 2", "to-lean-test");
 
-                assert!(result.is_err());
-            },
-        );
+            assert!(result.is_err());
+        });
     }
 
     #[test]

@@ -40,7 +40,7 @@ fn runtime_contract_import_and_clear() {
     fs::create_dir_all(&module_dir).expect("create runtime contract import module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nproof_debt forall x R:\n    $imported_prop(x)\n",
+        "abstract_prop imported_prop(x)\ntrust forall x R:\n    $imported_prop(x)\n",
     )
     .expect("write runtime contract import module");
     let import_source_code = format!(
@@ -67,7 +67,7 @@ fn runtime_contract_import_and_clear() {
     );
 
     let clear_source_code =
-        "abstract_prop local_prop(x)\nproof_debt $local_prop(2)\nclear\n$local_prop(2)";
+        "abstract_prop local_prop(x)\ntrust $local_prop(2)\nclear\n$local_prop(2)";
     let mut clear_runtime = Runtime::new_with_builtin_code();
     clear_runtime.new_file_path_new_env_new_name_scope("runtime_contract_clear");
     let (clear_stmt_results, clear_runtime_error) =
@@ -606,7 +606,7 @@ fn subset_fact_proves_power_set_membership() {
         let source_code = r#"
 have A set
 have B set
-proof_debt A $subset B
+trust A $subset B
 A $in power_set(B)
 "#;
 
@@ -855,7 +855,7 @@ forall a set:
 fn sketch_stmt_is_checked_and_local() {
     let source_code = r#"
 sketch:
-    proof_debt:
+    trust:
         2 = 3
 2 = 3
 "#;
@@ -961,7 +961,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -1076,7 +1076,7 @@ fn try_stmt_unknown_is_reported_and_local() {
     run_with_large_stack("try_stmt_unknown_is_reported_and_local", || {
         let source_code = r#"
 try:
-    proof_debt:
+    trust:
         2 = 3
     4 = 5
 "#;
@@ -1213,7 +1213,7 @@ fn removed_surface_syntax_is_rejected_with_migration_hints() {
                 (
                     "old_let",
                     "let x R",
-                    "`let` has been removed; use `suppose`",
+                    "`let` has been removed; use `trust have`",
                 ),
                 (
                     "old_have_by_exist",
@@ -1323,7 +1323,7 @@ claim:
             x = 1
             =>:
                 x = 1
-        proof_debt x = 1
+        trust x = 1
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
@@ -1366,11 +1366,11 @@ thm qgoal_self_eq_extra:
 have fn qgoal_identity by exist!:
     ? forall x R:
         exist! y R st {y = x}
-    proof_debt exist! y R st {y = x}
+    trust exist! y R st {y = x}
     exist! y R st {y = x}
 
 abstract_prop qgoal_p(x)
-proof_debt forall x R:
+trust forall x R:
     $qgoal_p(x)
 
 strategy qgoal_strategy:
@@ -1412,8 +1412,8 @@ by symmetric_prop:
     y = x
 
 abstract_prop qgoal_induc_p(a)
-proof_debt $qgoal_induc_p(0)
-proof_debt forall m N:
+trust $qgoal_induc_p(0)
+trust forall m N:
     $qgoal_induc_p(m)
     =>:
         $qgoal_induc_p(m + 1)
@@ -1756,7 +1756,7 @@ fn replacement_membership_infers_preimage_and_preimage_stmt_works() {
             let source_code = r#"
 abstract_prop rel(x, y)
 
-proof_debt forall x {3, 5, 9}, y, y2 set:
+trust forall x {3, 5, 9}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
@@ -1768,7 +1768,7 @@ forall y B:
     exist x {3, 5, 9} st {$rel(x, y)}
 
 have y set
-proof_debt y $in replacement(rel, {3, 5, 9})
+trust y $in replacement(rel, {3, 5, 9})
 have by preimage x from y $in replacement(rel, {3, 5, 9})
 x $in {3, 5, 9}
 $rel(x, y)
@@ -1797,14 +1797,14 @@ fn replacement_membership_intro_from_relation_witness() {
         let source_code = r#"
 abstract_prop rel(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $rel(x, y)
     $rel(x, y2)
     =>:
         y = y2
 
 have y set
-proof_debt $rel(1, y)
+trust $rel(1, y)
 
 y $in replacement(rel, {1, 2})
 "#;
@@ -1926,8 +1926,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
-    proof_debt:
+    trust $is_nonempty_set(s)
+    trust:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -1994,7 +1994,7 @@ have s set
 abstract_prop leq(x)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
+    trust $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -2019,8 +2019,8 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma: set s, prop leq:
-    proof_debt $is_nonempty_set(s)
-    proof_debt:
+    trust $is_nonempty_set(s)
+    trust:
         forall x s:
             $leq(x, x)
         forall x, y, z s:
@@ -2086,7 +2086,7 @@ have s set
 abstract_prop leq(x, y)
 
 by zorn_lemma s from leq:
-    proof_debt $is_nonempty_set(s)
+    trust $is_nonempty_set(s)
 "#;
 
     let (run_succeeded, run_output) =
@@ -2117,7 +2117,7 @@ fn by_axiom_of_choice_stores_choice_function_exist_fact() {
 have S set
 
 by axiom_of_choice: set S:
-    proof_debt forall A S:
+    trust forall A S:
         $is_nonempty_set(A)
 
 exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
@@ -2139,7 +2139,7 @@ exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
     let source_code = r#"
 have S set
-proof_debt forall A S:
+trust forall A S:
     $is_nonempty_set(A)
 
 by axiom_of_choice: set S
@@ -2217,7 +2217,7 @@ fn by_axiom_of_choice_rejects_old_set_syntax() {
 have S set
 
 by axiom_of_choice S:
-    proof_debt forall A S:
+    trust forall A S:
         $is_nonempty_set(A)
 "#;
 
@@ -2241,7 +2241,7 @@ by axiom_of_choice S:
 #[test]
 fn choose_object_is_no_longer_builtin() {
     let source_code = r#"
-suppose s nonempty_set:
+trust have s nonempty_set:
     forall x s:
         $is_nonempty_set(x)
 
@@ -2276,7 +2276,7 @@ fn by_regularity_axiom_stores_foundation_witness_exist_fact() {
         "by_regularity_axiom_stores_foundation_witness_exist_fact",
         || {
             let source_code = r#"
-proof_debt $is_nonempty_set({1, 2})
+trust $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2795,7 +2795,7 @@ thm bad_symbolic_empty_sum:
         forall a fn(i Z) R, m Z:
             sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 
-    proof_debt:
+    trust:
         sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 "#,
                     "sum: cannot verify start <= end for the summation range",
@@ -2808,7 +2808,7 @@ thm bad_symbolic_empty_product:
         forall a fn(i Z) R, m Z:
             product(m, m - 1, fn(i Z) R {a(i)}) = 1
 
-    proof_debt:
+    trust:
         product(m, m - 1, fn(i Z) R {a(i)}) = 1
 "#,
                     "product: cannot verify start <= end for the product range",
@@ -2881,7 +2881,7 @@ sketch:
 
 sketch:
     have X power_set(Z)
-    proof_debt $is_finite_set(X)
+    trust $is_finite_set(X)
     finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 
 thm finite_set_sum_substitution_tmp:
@@ -3056,7 +3056,7 @@ sketch:
 
 sketch:
     have X power_set(Z)
-    proof_debt $is_finite_set(X)
+    trust $is_finite_set(X)
     finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 "#;
 
@@ -3127,7 +3127,7 @@ have f fn(n N_pos) closed_range(1, n)
 fn known_equality_implies_weak_order() {
     let source_code = r#"
 have a, b R
-proof_debt a = b
+trust a = b
 a <= b
 a >= b
 "#;
@@ -3150,12 +3150,12 @@ fn known_forall_membership_uses_standard_set_subset_direction() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-proof_debt:
+trust:
     forall u set:
         $p(u)
         =>:
             u $in Z
-proof_debt $p(x)
+trust $p(x)
 x $in Q
 x $in R
 "#;
@@ -3180,12 +3180,12 @@ fn known_forall_membership_narrowing_requires_known_fact() {
     let source_code = r#"
 abstract_prop p(x)
 have x set
-proof_debt:
+trust:
     forall u set:
         $p(u)
         =>:
         u $in R
-proof_debt $p(x)
+trust $p(x)
 x $in Z
 "#;
 
@@ -3208,7 +3208,7 @@ x $in Z
 fn known_forall_equality_uses_indexed_function_head() {
     let source_code = r#"
 have f fn(x R) R
-proof_debt forall a R:
+trust forall a R:
     f(a) = a
 f(1) = 1
 "#;
@@ -3231,7 +3231,7 @@ f(1) = 1
 fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
     let source_code = r#"
 have f fn(x R) R
-proof_debt forall a R:
+trust forall a R:
     a = f(a)
 1 + 1 = f(1 + 1)
 "#;
@@ -3255,7 +3255,7 @@ proof_debt forall a R:
 fn known_forall_equality_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 have g fn(x R) R
-proof_debt forall f fn(x R) R, a R:
+trust forall f fn(x R) R, a R:
     f(a) = a
 g(1) = 1
 "#;
@@ -3279,7 +3279,7 @@ g(1) = 1
 fn known_forall_prop_indexes_forall_param_arg_as_wildcard() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x)
 $p(1)
 "#;
@@ -3303,7 +3303,7 @@ $p(1)
 fn known_forall_prop_indexes_expression_arg_shape() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x + 1)
 $p(1 + 1)
 "#;
@@ -3325,7 +3325,7 @@ $p(1 + 1)
 fn known_forall_prop_indexes_multi_arg_shape() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt forall a, b R:
+trust forall a, b R:
     $p(a, b + 1)
 $p(2, 3 + 1)
 "#;
@@ -3348,7 +3348,7 @@ fn known_forall_prop_with_forall_param_function_head_uses_fallback_bucket() {
     let source_code = r#"
 abstract_prop p(x)
 have g fn(x R) R
-proof_debt forall f fn(x R) R:
+trust forall f fn(x R) R:
     $p(f(2))
 $p(g(2))
 "#;
@@ -3373,7 +3373,7 @@ fn known_forall_matches_function_param_application_inside_anonymous_fn_body() {
     let source_code = r#"
 abstract_prop p(x)
 
-proof_debt forall f, g fn(x R) R:
+trust forall f, g fn(x R) R:
     $p(f)
     $p(g)
     =>:
@@ -3410,7 +3410,7 @@ fn known_forall_does_not_infer_function_from_single_point_application() {
     let source_code = r#"
 abstract_prop p(x)
 
-proof_debt forall g fn(x R) R:
+trust forall g fn(x R) R:
     $p(fn(x R) R {g(0)})
 
 have h fn(x R) R
@@ -3441,7 +3441,7 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
 sketch:
     have fib fn(x R) R
 
-    proof_debt:
+    trust:
         forall x R:
             x = 0
             =>:
@@ -3861,16 +3861,16 @@ forall a, b R:
 fn known_obj_values_store_simplified_fraction_for_nonfinite_decimal() {
     let source_code = r#"
 have a R
-proof_debt a = 1 / 2 / 3
+trust a = 1 / 2 / 3
 
 have b R
-proof_debt b = 1 / 2
+trust b = 1 / 2
 
 have c R
-proof_debt c = 2 / -6
+trust c = 2 / -6
 
 have d R
-proof_debt d = 1 / (2 / 3 * 4)
+trust d = 1 / (2 / 3 * 4)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -3976,54 +3976,54 @@ have entries finite_seq(R, 2) = [0, 1]
 have I set = '(0, 1)
 
 have a R
-proof_debt a $in '(0, 1)
+trust a $in '(0, 1)
 a $in R
 0 < a
 a < 1
 
 have b R
-proof_debt b $in '(0, 1]
+trust b $in '(0, 1]
 0 < b
 b <= 1
 
 have c R
-proof_debt c $in '[0, 1)
+trust c $in '[0, 1)
 0 <= c
 c < 1
 
 have d R
-proof_debt d $in '[0, 1]
+trust d $in '[0, 1]
 0 <= d
 d <= 1
 
 have e R
-proof_debt e $in info(1)
+trust e $in info(1)
 e $in R
 e < 1
 
 have f R
-proof_debt f $in infc(1)
+trust f $in infc(1)
 f $in R
 f <= 1
 
 have g R
-proof_debt g $in oinf(0)
+trust g $in oinf(0)
 g $in R
 0 < g
 
 have h R
-proof_debt h $in cinf(0)
+trust h $in cinf(0)
 h $in R
 0 <= h
 
 have x R
-proof_debt:
+trust:
     0 < x
     x <= 1
 x $in '(0, 1]
 
 have y R
-proof_debt:
+trust:
     0 <= y
 y $in cinf(0)
 
@@ -4050,7 +4050,7 @@ fn real_interval_nonempty_and_well_defined_rules() {
 have empty_like set = '[1, 0]
 
 have a, b R
-proof_debt:
+trust:
     a <= b
     a < b
 
@@ -4180,13 +4180,13 @@ $is_nonempty_set(union({1}, {}))
 $is_nonempty_set(union({}, {2}))
 
 have A, B set
-proof_debt:
+trust:
     $is_nonempty_set(A)
 
 $is_nonempty_set(union(A, B))
 
 have C, D set
-proof_debt:
+trust:
     $is_nonempty_set(D)
 
 $is_nonempty_set(union(C, D))
@@ -4527,7 +4527,7 @@ A(1, 2, 3) $in R
 fn weak_order_does_not_recursively_prove_equality() {
     let source_code = r#"
 have a, b R
-proof_debt a <= b
+trust a <= b
 a = b
 "#;
 
@@ -4552,7 +4552,7 @@ fn known_forall_instantiation_fills_middle_param_from_dom_facts() {
             let source_code = r#"
 abstract_prop rel(X, x, y)
 
-proof_debt forall X set, x, y, z X:
+trust forall X set, x, y, z X:
     $rel(X, x, y)
     $rel(X, y, z)
     =>:
@@ -4588,7 +4588,7 @@ thm use_rel_trans_like:
 fn zero_product_cancellation_does_not_recursively_reenter_equality() {
     let source_code = r#"
 have a, b, k1, k2 N
-proof_debt:
+trust:
     k1 = 0
     b = a * k1
 b = a * k1 = a * 0 = 0
@@ -4614,7 +4614,7 @@ b = a * k1 = a * 0 = 0
 fn exist_unique_infers_component_uniqueness_forall() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt exist! a, b R st {$p(a, b)}
+trust exist! a, b R st {$p(a, b)}
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -4640,7 +4640,7 @@ proof_debt exist! a, b R st {$p(a, b)}
 fn exist_unique_component_uniqueness_proves_split_then_facts() {
     let source_code = r#"
 abstract_prop p(a, b)
-proof_debt exist! a, b R st {$p(a, b)}
+trust exist! a, b R st {$p(a, b)}
 forall a1, b1, a2, b2 R:
     $p(a1, b1)
     $p(a2, b2)
@@ -4669,7 +4669,7 @@ fn exist_unique_still_accepts_tuple_uniqueness_forall() {
     let source_code = r#"
 sketch:
     abstract_prop p(a, b)
-    proof_debt:
+    trust:
         exist a, b R st {$p(a, b)}
         forall a1, b1, a2, b2 R:
             $p(a1, b1)
@@ -4700,7 +4700,7 @@ fn have_fn_by_exist_accepts_prove_block_target() {
 abstract_prop F(x, y)
 have A set
 have B set
-proof_debt forall x A:
+trust forall x A:
     exist! y B st {$F(x, y)}
 
 have fn f by exist!:
@@ -4738,7 +4738,7 @@ have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    proof_debt exist! y B st {$F(x, y)}
+    trust exist! y B st {$F(x, y)}
 
 forall x A:
     $F(x, f(x))
@@ -4772,7 +4772,7 @@ have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y)}
-    proof_debt exist! y B st {$F(x, y)}
+    trust exist! y B st {$F(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4811,7 +4811,7 @@ have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {$F(x, y), $G(x, y)}
-    proof_debt exist! y B st {$F(x, y), $G(x, y)}
+    trust exist! y B st {$F(x, y), $G(x, y)}
 
 forall x A, y B:
     $F(x, y)
@@ -4844,7 +4844,7 @@ fn have_fn_by_exist_rejects_direct_forall_legacy_form() {
 abstract_prop F(x, y)
 have A set
 have B set
-proof_debt forall x A:
+trust forall x A:
     exist! y B st {$F(x, y)}
 
 have fn f by exist!:
@@ -4964,8 +4964,8 @@ fn run_summary_counts_direct_unproved_interfaces() {
     run_with_large_stack("run_summary_counts_direct_unproved_interfaces", || {
         let source_code = r#"
 1 = 1
-proof_debt 1 = 0
-suppose x R
+trust 1 = 0
+trust have x R
 abstract_prop summary_prop(x)
 prop summary_concrete_prop(x R):
     x = x
@@ -4996,8 +4996,8 @@ witness exist z R st {z = 1} from 1:
             "summary fixture failed:\n{}",
             summary_output
         );
-        assert_eq!(summary.direct_proof_debt, 1);
-        assert_eq!(summary.supposes, 1);
+        assert_eq!(summary.direct_trust, 1);
+        assert_eq!(summary.trusted_object_assumptions, 1);
         assert_eq!(summary.prop_definitions, 1);
         assert_eq!(summary.abstract_prop_definitions, 1);
         assert_eq!(summary.theorem_statements, 1);
@@ -5174,8 +5174,8 @@ witness exist x R st {x = 1} from 1:
 fn by_induc_output_uses_same_trace_for_normal_and_detail() {
     let source_code = r#"
 abstract_prop p(a)
-proof_debt $p(0)
-proof_debt forall m Z:
+trust $p(0)
+trust forall m Z:
     m >= 0
     $p(m)
     =>:
@@ -5319,25 +5319,21 @@ fn runner_target_error_returns_message() {
 }
 
 #[test]
-fn runner_accepts_proof_debt_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("proof_debt 1 = 0", "-runner-test", true);
+fn runner_accepts_trust_as_normal_execution() {
+    let (ok, output) = run_runner_for_code("trust 1 = 0", "-runner-test", true);
 
-    assert!(
-        ok,
-        "runner should not reject proof_debt statements:\n{}",
-        output
-    );
+    assert!(ok, "runner should not reject trust statements:\n{}", output);
     assert!(output.contains("\"result\": \"success\""));
 }
 
 #[test]
-fn runner_accepts_suppose_as_normal_execution() {
-    run_with_large_stack("runner_accepts_suppose_as_normal_execution", || {
-        let (ok, output) = run_runner_for_code("suppose x R", "-runner-test", true);
+fn runner_accepts_trust_have_as_normal_execution() {
+    run_with_large_stack("runner_accepts_trust_have_as_normal_execution", || {
+        let (ok, output) = run_runner_for_code("trust have x R", "-runner-test", true);
 
         assert!(
             ok,
-            "runner should not reject suppose statements:\n{}",
+            "runner should not reject trust have statements:\n{}",
             output
         );
         assert!(output.contains("\"result\": \"success\""));
@@ -5345,10 +5341,10 @@ fn runner_accepts_suppose_as_normal_execution() {
 }
 
 #[test]
-fn zh_output_localizes_unproved_proof_debt_labels() {
-    let source_code = "abstract_prop tmp_rel(m, n)\nproof_debt exist! m, n R st {$tmp_rel(m, n)}\n";
+fn zh_output_localizes_unproved_trust_labels() {
+    let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_proof_debt_labels");
+    runtime.new_file_path_new_env_new_name_scope("zh_output_localizes_unproved_trust_labels");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -5358,8 +5354,7 @@ fn zh_output_localizes_unproved_proof_debt_labels() {
     assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
     assert!(run_output.contains("\"结果\": \"成功\""));
     assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
-    assert!(run_output.contains("\"原因\": \"警告：未经证明的 proof_debt 假设\""));
-    assert!(run_output.contains("\"事实\": \"exist! m, n R st {$tmp_rel("));
+    assert!(run_output.contains("\"语句\": \"trust exist! m, n R st {$tmp_rel("));
     assert!(!run_output.contains("\"result\": \"success\""));
 }
 
@@ -5428,7 +5423,7 @@ forall:
 #[test]
 fn zh_runner_localizes_wrapper_and_trace() {
     let (ok, output) = run_runner_for_code_with_language(
-        "proof_debt 1 = 1",
+        "trust 1 = 1",
         "-runner-test",
         true,
         OutputLanguage::SimplifiedChinese,
@@ -5469,7 +5464,7 @@ fn output_language_parses_supported_cli_codes() {
 }
 
 #[test]
-fn non_english_languages_localize_unproved_proof_debt_labels() {
+fn non_english_languages_localize_unproved_trust_labels() {
     let cases = vec![
         (
             OutputLanguage::SimplifiedChinese,
@@ -5480,7 +5475,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "语句",
             "事实",
             "原因",
-            "警告：未经证明的 proof_debt 假设",
+            "未经证明的假设",
         ),
         (
             OutputLanguage::TraditionalChinese,
@@ -5491,7 +5486,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "語句",
             "事實",
             "原因",
-            "警告：未經證明的 proof_debt 假設",
+            "未經證明的假設",
         ),
         (
             OutputLanguage::Japanese,
@@ -5502,7 +5497,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "文",
             "事実",
             "理由",
-            "警告：証明されていない proof_debt 仮定",
+            "証明されていない仮定",
         ),
         (
             OutputLanguage::Korean,
@@ -5513,7 +5508,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "문장",
             "사실",
             "이유",
-            "경고: 증명되지 않은 proof_debt 가정",
+            "증명되지 않은 가정",
         ),
         (
             OutputLanguage::Spanish,
@@ -5524,7 +5519,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "enunciado",
             "hecho",
             "razón",
-            "advertencia: suposición proof_debt no demostrada",
+            "suposición no demostrada",
         ),
         (
             OutputLanguage::French,
@@ -5535,7 +5530,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "énoncé",
             "fait",
             "raison",
-            "avertissement : hypothèse proof_debt non prouvée",
+            "hypothèse non prouvée",
         ),
         (
             OutputLanguage::German,
@@ -5546,7 +5541,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "Anweisung",
             "Fakt",
             "Grund",
-            "Warnung: unbewiesene proof_debt-Annahme",
+            "unbewiesene Annahme",
         ),
         (
             OutputLanguage::Portuguese,
@@ -5557,7 +5552,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "declaração",
             "fato",
             "razão",
-            "aviso: suposição proof_debt não provada",
+            "suposição não provada",
         ),
         (
             OutputLanguage::Russian,
@@ -5568,7 +5563,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "утверждение",
             "факт",
             "причина",
-            "предупреждение: недоказанное предположение proof_debt",
+            "недоказанное предположение",
         ),
         (
             OutputLanguage::Arabic,
@@ -5579,7 +5574,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "العبارة",
             "الحقيقة",
             "السبب",
-            "تحذير: افتراض proof_debt غير مبرهن",
+            "افتراض غير مبرهن",
         ),
         (
             OutputLanguage::Hindi,
@@ -5590,7 +5585,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "कथन",
             "तथ्य",
             "कारण",
-            "चेतावनी: अप्रमाणित proof_debt मान्यता",
+            "अप्रमाणित मान्यता",
         ),
         (
             OutputLanguage::Vietnamese,
@@ -5601,7 +5596,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "mệnh_đề",
             "sự_kiện",
             "lý_do",
-            "cảnh báo: giả thiết proof_debt chưa chứng minh",
+            "giả thiết chưa chứng minh",
         ),
         (
             OutputLanguage::Indonesian,
@@ -5612,7 +5607,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
             "pernyataan",
             "fakta",
             "alasan",
-            "peringatan: asumsi proof_debt belum terbukti",
+            "asumsi belum terbukti",
         ),
     ];
 
@@ -5623,18 +5618,18 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
         type_key,
         type_text,
         statement_key,
-        fact_key,
-        reason_key,
-        reason_text,
+        _fact_key,
+        _reason_key,
+        _reason_text,
     ) in cases
     {
         let mut runtime = Runtime::new_with_builtin_code();
         runtime.new_file_path_new_env_new_name_scope(
-            "non_english_languages_localize_unproved_proof_debt_labels",
+            "non_english_languages_localize_unproved_trust_labels",
         );
         runtime.output_language = language;
 
-        let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 1", &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code("trust 1 = 1", &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
@@ -5645,9 +5640,7 @@ fn non_english_languages_localize_unproved_proof_debt_labels() {
         );
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
         assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
-        assert!(run_output.contains(&format!("\"{}\": \"proof_debt 1 = 1\"", statement_key)));
-        assert!(run_output.contains(&format!("\"{}\": \"1 = 1\"", fact_key)));
-        assert!(run_output.contains(&format!("\"{}\": \"{}\"", reason_key, reason_text)));
+        assert!(run_output.contains(&format!("\"{}\": \"trust 1 = 1\"", statement_key)));
         assert!(!run_output.contains("\"result\": \"success\""));
     }
 }
@@ -5776,7 +5769,7 @@ fn non_english_runner_localizes_wrapper_keys() {
 
     for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
         let (ok, output) =
-            run_runner_for_code_with_language("proof_debt 1 = 1", "-runner-test", true, language);
+            run_runner_for_code_with_language("trust 1 = 1", "-runner-test", true, language);
 
         assert!(ok, "localized runner should succeed:\n{}", output);
         assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
@@ -5865,7 +5858,7 @@ abstract_prop axiom_body_prop(x)
 axiom bad_axiom:
     ? forall x R:
         $axiom_body_prop(x)
-    proof_debt $axiom_body_prop(1)
+    trust $axiom_body_prop(1)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -5914,46 +5907,46 @@ axiom bad_axiom:
 }
 
 #[test]
-fn strict_mode_rejects_user_proof_debt() {
+fn strict_mode_rejects_user_trust() {
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_proof_debt");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_trust");
     runtime.strict_mode = true;
 
-    let (stmt_results, runtime_error) = run_source_code("proof_debt 1 = 0", &mut runtime);
+    let (stmt_results, runtime_error) = run_source_code("trust 1 = 0", &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         !run_succeeded,
-        "strict mode should reject user proof_debt statements:\n{}",
+        "strict mode should reject user trust statements:\n{}",
         run_output
     );
     assert!(
         run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
-        "strict mode should report the proof_debt boundary:\n{}",
+        "strict mode should report the trust boundary:\n{}",
         run_output
     );
 }
 
 #[test]
-fn strict_mode_rejects_user_suppose() {
-    run_with_large_stack("strict_mode_rejects_user_suppose", || {
+fn strict_mode_rejects_user_trust_have() {
+    run_with_large_stack("strict_mode_rejects_user_trust_have", || {
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_suppose");
+        runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_trust_have");
         runtime.strict_mode = true;
 
-        let (stmt_results, runtime_error) = run_source_code("suppose x R", &mut runtime);
+        let (stmt_results, runtime_error) = run_source_code("trust have x R", &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             !run_succeeded,
-            "strict mode should reject user suppose statements:\n{}",
+            "strict mode should reject user trust have statements:\n{}",
             run_output
         );
         assert!(
             run_output.contains(DefLetStmt::strict_mode_rejection_message()),
-            "strict mode should report the suppose boundary:\n{}",
+            "strict mode should report the trust have boundary:\n{}",
             run_output
         );
     });
@@ -5987,12 +5980,12 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_proof_debt() {
-    let (ok, output) = run_runner_for_code_strict("proof_debt 1 = 0", "-runner-test", true);
+fn strict_runner_rejects_user_trust() {
+    let (ok, output) = run_runner_for_code_strict("trust 1 = 0", "-runner-test", true);
 
     assert!(
         !ok,
-        "strict runner should reject proof_debt statements:\n{}",
+        "strict runner should reject trust statements:\n{}",
         output
     );
     assert!(output.contains("\"result\": \"error\""));
@@ -6018,13 +6011,13 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_suppose() {
-    run_with_large_stack("strict_runner_rejects_user_suppose", || {
-        let (ok, output) = run_runner_for_code_strict("suppose x R", "-runner-test", true);
+fn strict_runner_rejects_user_trust_have() {
+    run_with_large_stack("strict_runner_rejects_user_trust_have", || {
+        let (ok, output) = run_runner_for_code_strict("trust have x R", "-runner-test", true);
 
         assert!(
             !ok,
-            "strict runner should reject suppose statements:\n{}",
+            "strict runner should reject trust have statements:\n{}",
             output
         );
         assert!(output.contains("\"result\": \"error\""));
@@ -6033,13 +6026,13 @@ fn strict_runner_rejects_user_suppose() {
 }
 
 #[test]
-fn strict_mode_allows_imported_module_proof_debt() {
+fn strict_mode_allows_imported_module_trust() {
     let module_dir =
         std::env::temp_dir().join(format!("litex-strict-import-{}", std::process::id()));
     fs::create_dir_all(&module_dir).expect("create strict import test module");
     fs::write(
         module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\nproof_debt $imported_prop(2)\n",
+        "abstract_prop imported_prop(x)\ntrust $imported_prop(2)\n",
     )
     .expect("write strict import test module");
     let source_code = format!(
@@ -6048,7 +6041,7 @@ fn strict_mode_allows_imported_module_proof_debt() {
     );
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_proof_debt");
+    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust");
     runtime.strict_mode = true;
     let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
@@ -6057,25 +6050,26 @@ fn strict_mode_allows_imported_module_proof_debt() {
     let _ = fs::remove_dir_all(&module_dir);
     assert!(
         run_succeeded,
-        "strict mode should allow proof_debt inside imported modules:\n{}",
+        "strict mode should allow trust inside imported modules:\n{}",
         run_output
     );
 }
 
 #[test]
-fn strict_mode_allows_imported_module_suppose() {
-    run_with_large_stack("strict_mode_allows_imported_module_suppose", || {
+fn strict_mode_allows_imported_module_trust_have() {
+    run_with_large_stack("strict_mode_allows_imported_module_trust_have", || {
         let module_dir = std::env::temp_dir().join(format!(
-            "litex-strict-import-suppose-{}",
+            "litex-strict-import-trust-have-{}",
             std::process::id()
         ));
-        fs::create_dir_all(&module_dir).expect("create strict import suppose test module");
-        fs::write(module_dir.join("main.lit"), "suppose imported_value R\n")
-            .expect("write strict import suppose test module");
+        fs::create_dir_all(&module_dir).expect("create strict import trust have test module");
+        fs::write(module_dir.join("main.lit"), "trust have imported_value R\n")
+            .expect("write strict import trust have test module");
         let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_suppose");
+        runtime
+            .new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust_have");
         runtime.strict_mode = true;
         let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
         let (run_succeeded, run_output) =
@@ -6084,7 +6078,7 @@ fn strict_mode_allows_imported_module_suppose() {
         let _ = fs::remove_dir_all(&module_dir);
         assert!(
             run_succeeded,
-            "strict mode should allow suppose inside imported modules:\n{}",
+            "strict mode should allow trust have inside imported modules:\n{}",
             run_output
         );
     });
@@ -6094,10 +6088,10 @@ fn strict_mode_allows_imported_module_suppose() {
 fn citation_verified_by_type_reflects_cited_stmt_kind() {
     let source_code = r#"
 abstract_prop p(x)
-proof_debt forall x R:
+trust forall x R:
     $p(x)
 $p(2)
-suppose a R:
+trust have a R:
     a = 1
 a = 1
 prop q(x R):
@@ -6180,11 +6174,11 @@ fn atomic_fact_verification_output_omits_method_and_reports_route_types() {
 1 = 1
 
 abstract_prop known_p(x)
-proof_debt $known_p(1)
+trust $known_p(1)
 $known_p(1)
 
 abstract_prop forall_p(x)
-proof_debt:
+trust:
     forall x R:
         x = 1
         =>:
@@ -6207,7 +6201,7 @@ by symmetric_prop:
     y = x
 have A set
 have B set
-proof_debt $sym_p(A, B)
+trust $sym_p(A, B)
 $sym_p(B, A)
 "#;
 
@@ -6310,16 +6304,23 @@ forall x R_pos:
 }
 
 #[test]
-fn output_store_facts_explain_context_changes() {
+fn detail_output_moves_store_facts_into_environment_effects() {
+    run_with_large_stack(
+        "detail_output_moves_store_facts_into_environment_effects_large_stack",
+        detail_output_moves_store_facts_into_environment_effects_impl,
+    );
+}
+
+fn detail_output_moves_store_facts_into_environment_effects_impl() {
     let source_code = r#"
 1 = 1
 claim:
     prove:
         2 = 2
     2 = 2
-proof_debt:
+trust:
     3 = 3
-suppose a R:
+trust have a R:
     a = a
 prop q(x R):
     x = 1
@@ -6327,26 +6328,118 @@ $q(1)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("output_store_facts_explain_context_changes");
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_moves_store_facts_into_environment_effects",
+    );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "output_store_facts_explain_context_changes failed:\n{}",
+        "normal output fixture failed:\n{}",
         run_output
     );
     assert!(!run_output.contains("\"infer_facts\""));
     assert!(!run_output.contains("\"effects\""));
-    assert!(run_output.contains("\"store_facts\": ["));
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
-    assert!(
-        run_output.contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str())
-    );
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str()));
+    assert!(!run_output.contains("\"store_facts\""));
     assert!(!run_output.contains("\"trust\""));
-    assert!(run_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
+
+    let mut detail_runtime = Runtime::new_with_builtin_code();
+    detail_runtime.detail_output = true;
+    detail_runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_moves_store_facts_into_environment_effects_detail",
+    );
+    let (detail_results, detail_error) = run_source_code(source_code, &mut detail_runtime);
+    let (detail_succeeded, detail_output) =
+        render_run_source_code_output(&detail_runtime, &detail_results, &detail_error, false);
+    assert!(
+        detail_succeeded,
+        "detail output fixture failed:\n{}",
+        detail_output
+    );
+    assert!(!detail_output.contains("\"store_facts\""));
+    assert!(detail_output.contains("\"phases\": {"));
+    assert!(detail_output.contains("\"affect_environment\": {"));
+    assert!(detail_output.contains("\"effects\": ["));
+    assert!(
+        detail_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str())
+    );
+    assert!(detail_output
+        .contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str()));
+    assert!(
+        detail_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str())
+    );
+    assert!(detail_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
+}
+
+#[test]
+fn detail_output_exposes_statement_execution_phases() {
+    run_with_large_stack(
+        "detail_output_exposes_statement_execution_phases_large_stack",
+        detail_output_exposes_statement_execution_phases_impl,
+    );
+}
+
+fn detail_output_exposes_statement_execution_phases_impl() {
+    let source_code = r#"
+have a R = 1
+forall b R:
+    b = 2
+    =>:
+        b^2 = 4
+"#;
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = true;
+    runtime
+        .new_file_path_new_env_new_name_scope("detail_output_exposes_statement_execution_phases");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "execution phase fixture failed:\n{}",
+        run_output
+    );
+    assert_eq!(run_output.matches("\"phases\": {").count(), 2);
+    assert!(run_output.contains("\"verify_well_definedness\": {"));
+    assert!(run_output.contains("\"verify_process\": {"));
+    assert!(run_output.contains("\"affect_environment\": {"));
+    assert!(run_output.contains("\"kind\": \"parameter_binding\""));
+    assert!(run_output.contains("\"statement\": \"1 $in R\""));
+    assert!(run_output.contains("\"rule\": \"calculation\""));
+    assert!(run_output.contains("\"kind\": \"declare_object\""));
+    assert!(run_output.contains("\"kind\": \"store_fact\""));
+    assert!(!run_output.contains("\"store_facts\""));
+}
+
+#[test]
+fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
+    run_with_large_stack(
+        "detail_output_marks_failed_phase_and_does_not_claim_environment_effects_large_stack",
+        detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl,
+    );
+}
+
+fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = true;
+    runtime.new_file_path_new_env_new_name_scope(
+        "detail_output_marks_failed_phase_and_does_not_claim_environment_effects",
+    );
+    let (stmt_results, runtime_error) = run_source_code("have a N = -1", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "invalid object definition should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"verify_process\": {\n      \"status\": \"error\""));
+    assert!(run_output.contains("\"affect_environment\": {\n      \"status\": \"not_run\""));
+    assert!(!run_output.contains("\"effects\": ["));
 }
 
 #[test]
@@ -6358,11 +6451,12 @@ fn object_definition_output_exposes_checks_and_defined_facts() {
 have a R
 have b R = a
 have S set
-proof_debt exist x R st {x = x}
+trust exist x R st {x = x}
 obtain c from exist x R st {x = x}
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
+            runtime.detail_output = true;
             runtime.new_file_path_new_env_new_name_scope(
                 "object_definition_output_exposes_checks_and_defined_facts",
             );
@@ -6875,8 +6969,8 @@ fn by_induc_prop_bridge_and_trusted_outputs_explain_processes() {
         || {
             let source_code = r#"
 abstract_prop local_induc_p(a)
-proof_debt $local_induc_p(0)
-proof_debt forall m Z:
+trust $local_induc_p(0)
+trust forall m Z:
     m >= 0
     $local_induc_p(m)
     =>:
@@ -6911,14 +7005,14 @@ by symmetric_prop:
 
 have local_family set
 by axiom_of_choice: set local_family:
-    proof_debt forall A local_family:
+    trust forall A local_family:
         $is_nonempty_set(A)
 
 have local_ordered_set set
 abstract_prop local_leq(x, y)
 by zorn_lemma: set local_ordered_set, prop local_leq:
-    proof_debt $is_nonempty_set(local_ordered_set)
-    proof_debt:
+    trust $is_nonempty_set(local_ordered_set)
+    trust:
         forall x local_ordered_set:
             $local_leq(x, x)
         forall x, y, z local_ordered_set:
@@ -7654,7 +7748,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    proof_debt $target_thm_prop(x)
+    trust $target_thm_prop(x)
 
 $target_thm_prop(1)
 "#;
@@ -7726,7 +7820,7 @@ thm use_target_thm:
             =>:
                 $target_thm_prop(x)
 
-    proof_debt $target_thm_prop(x)
+    trust $target_thm_prop(x)
 
 by thm use_target_thm(1)
 $target_thm_prop(1)
@@ -7759,7 +7853,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7801,7 +7895,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7925,7 +8019,7 @@ strategy use_positive_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -7938,7 +8032,7 @@ strategy use_negative_strategy:
             =>:
                 not $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y != 1
             =>:
@@ -7998,7 +8092,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -8055,7 +8149,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:
@@ -8100,7 +8194,7 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(x)
 
-    proof_debt:
+    trust:
         forall y R:
             y = 1
             =>:

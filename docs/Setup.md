@@ -296,7 +296,7 @@ Basic behavior:
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <project>` | Run a project and return one wrapper JSON object. |
-| `-detail` | Include full trace details, empty fields, and raw paths for cross-source references. |
+| `-detail` | Include full proof details, execution phases, empty fields, and raw paths for cross-source references. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Litex code inside `statement`, `fact`, and related fields stays unchanged. |
 | `-latex` | Start an interactive REPL that prints LaTeX output. |
@@ -324,7 +324,7 @@ For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prin
 By default, Litex omits empty arrays and empty strings, and it does not print
 raw file paths. Cross-source references still keep safe provenance labels such
 as `builtin_code`, `std/Trig`, or an exported file's canonical name. Use
-`-detail` when you need full trace details and raw paths for debugging.
+`-detail` when you need full trace details and raw paths for debugging. Detailed statement output includes `phases.verify_well_definedness`, `phases.verify_process`, and `phases.affect_environment`; facts added to the environment appear as `affect_environment.effects`, not as a top-level `store_facts` field.
 
 If the whole run succeeds:
 

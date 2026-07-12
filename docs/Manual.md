@@ -114,7 +114,7 @@ problems. A good workflow is:
 3. Run Litex and read the exact output.
 4. If the result is `unknown`, add a smaller mathematical step.
 5. If the result is `error`, fix syntax or well-definedness first.
-6. If the proof uses `proof_debt`, treat that line as an explicit assumption,
+6. If the proof uses `trust`, treat that line as an explicit assumption,
    not as a proved fact.
 
 ### Trust Boundary
@@ -127,7 +127,7 @@ verified context.
 This convenience has a real trust cost. Litex has a larger trusted
 mathematical background than a small proof kernel: builtin objects, builtin
 facts, verifier rules, inference rules, imported standard-library facts, and
-any explicit `proof_debt` assumptions all matter. `proof_debt` is assumption
+any explicit `trust` assumptions all matter. `trust` is assumption
 injection. It stores a fact for later use, but it does not prove that fact.
 
 For a compact discussion of trust boundaries, comparison with Lean, and project
@@ -143,17 +143,17 @@ positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
 Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
 1. Solve the theorem first in natural language, step by step.
-2. Formalize every step in Litex, using `proof_debt` as explicit assumption injection only when a step is not formalized yet.
-3. Repeatedly refine each broad `proof_debt` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
+2. Formalize every step in Litex, using `trust` as explicit assumption injection only when a step is not formalized yet.
+3. Repeatedly refine each broad `trust` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
-This turns `proof_debt` into temporary scaffolding rather than the final proof. The
+This turns `trust` into temporary scaffolding rather than the final proof. The
 same loop is used for larger Mechanics examples and benchmark-style tasks:
 first build a readable proof skeleton, then replace broad assumptions by
 smaller verified branches or record the exact language, library, rule, or
 diagnostic gap that blocks the next step.
 
-When you want to audit a file, inspect the remaining `proof_debt` facts before
+When you want to audit a file, inspect the remaining `trust` facts before
 calling the result complete. Each one should be replaced by a checked claim,
 accepted as background, or recorded as proof debt. This audit matters because
 Litex's convenience comes from a larger trusted mathematical background, not
@@ -420,7 +420,7 @@ an object expression. It is well-defined when `P` is a binary `prop` or
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
@@ -434,14 +434,14 @@ preimage witness back:
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have a set
-proof_debt $P(1, a)
+trust $P(1, a)
 a $in replacement(P, {1, 2})
 
 forall y replacement(P, {1, 2}):
@@ -916,7 +916,7 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 > Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly. `error` is different: first fix the syntax or make every object well-defined.
 
-This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `proof_debt`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
+This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `trust`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
 
 This page mainly lists the **types of facts** Litex can read and how they are shaped. For how those facts are actually proved by the checker, read [Proof Process](https://litexlang.com/doc/Manual#proof-process) and [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules).
 
@@ -1473,7 +1473,7 @@ forall x R:
         $p(x)
 ```
 
-> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `proof_debt` to give it mathematical behavior, treat that line as an explicit trusted assumption.
+> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `trust` to give it mathematical behavior, treat that line as an explicit trusted assumption.
 
 ---
 
@@ -1643,14 +1643,14 @@ sketch:
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have y set
-proof_debt y $in replacement(P, {1, 2})
+trust y $in replacement(P, {1, 2})
 have by preimage x from y $in replacement(P, {1, 2})
 
 x $in {1, 2}
@@ -1840,17 +1840,17 @@ have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
 Use **`suppose`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
 
 ```litex
-suppose a R:
+trust have a R:
     a = 1
 a = 1
 
-suppose b, c R:
+trust have b, c R:
     b < c
 
 b < c
 ```
 
-> Hint: `suppose` and `proof_debt` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `suppose` and `trust` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -2010,31 +2010,31 @@ If the run uses `-strict`, user `axiom` declarations are rejected.
 
 ### Explicit assumptions without a proof
 
-**`proof_debt:`** (or **`proof_debt`** with a block) injects explicit assumptions into the
+**`trust:`** (or **`trust`** with a block) injects explicit assumptions into the
 current environment. It may store temporary lemmas or proof-debt facts, but it
 does not call the verifier to prove those facts.
 
-`proof_debt` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
+`trust` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
 `by sorry`: it lets development continue by adding a fact whose proof is not
 present. That is sometimes exactly what you want when you are building a large
 proof skeleton or marking a precise proof-debt item. It is
 also dangerous, because every later proof may depend on the unproved fact.
 
-Read every `proof_debt` line as: "assume this fact from here onward." If later output
+Read every `trust` line as: "assume this fact from here onward." If later output
 shows a `verification` trace citing a proof-debt-injected fact or `forall`, that is a
 conditional proof route relative to the injected assumption. It does not mean
 Litex has proved the injected assumption itself.
 
-If Litex reports success on a `proof_debt` line, that means the assumption was
+If Litex reports success on a `trust` line, that means the assumption was
 accepted and stored. It is not a proof result for the injected fact.
 
-> Hint: Use `axiom name:` when a trusted background fact should be a named theorem-like interface. Use `proof_debt` when you are marking a temporary or local proof gap.
+> Hint: Use `axiom name:` when a trusted background fact should be a named theorem-like interface. Use `trust` when you are marking a temporary or local proof gap.
 
-A final artifact should not leave broad `proof_debt` facts unexplained. Either prove
+A final artifact should not leave broad `trust` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `proof_debt`, `suppose`, and `axiom` statements are rejected instead
+If the run uses `-strict`, user `trust`, `suppose`, and `axiom` statements are rejected instead
 of being stored. Facts loaded from imported modules are still trusted inputs, so
 strict mode is an audit boundary for the current run, not a claim that all
 dependencies are assumption-free.
@@ -2046,7 +2046,7 @@ have line nonempty_set
 have plane nonempty_set
 
 # All elements on a line or a plane are points (power_set: the set of all subsets of a set)
-proof_debt:
+trust:
     forall l line:
         l $in power_set(point)
     forall pl plane:
@@ -2081,8 +2081,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `local_import`, `trust import`,
-and `trust local_import` are
+Control statements such as `clear`, `import`, `local import`, `trust import`,
+and `trust local import` are
 not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
@@ -2110,7 +2110,7 @@ Use **`import Nat`** to load a standard-library module into its own imported-mod
 There are two project-aware top-level modes:
 
 - **`litex -f file.lit`** finds the outermost enclosing `litex.config` project
-  that registers the file, then runs that file with its `local_import`
+  that registers the file, then runs that file with its `local import`
   dependency closure. A file not registered by a project stays isolated. Use
   **`litex -isolated -f file.lit`** to force that old isolated behavior.
 - **`litex -r project/`** first discovers `project/litex.config` and recursively
@@ -2133,7 +2133,7 @@ An `[export]` target ending in a `.lit` file is a local source. A directory
 target is a child project and must contain its own `litex.config`. Configuration
 declares names and paths but does not itself produce mathematical facts.
 
-Inside an entrance or registered source, **`local_import name`** can name only
+Inside an entrance or registered source, **`local import name`** can name only
 an entry declared by that module's `[export]` table. It cannot contain a path or
 an alias. The binding is local to that source, but it resolves to the export's
 canonical identity:
@@ -2141,20 +2141,20 @@ canonical identity:
 <!-- litex:skip-test -->
 ```litex
 # A/chap3.lit
-local_import chap2
+local import chap2
 chap2::some_fact
 ```
 
 The canonical external name is hierarchical, for example
-`A::chap2::some_fact` or `A::chapters::algebra::Group`. A `local_import` loads
+`A::chap2::some_fact` or `A::chapters::algebra::Group`. A `local import` loads
 its target once per top-level run and caches that target environment in memory;
 an unrelated export is not executed merely because it was declared.
 
 Within the importing source, a bare shared name resolves to a local definition
 first.  If the name is not local or builtin and exactly one active
-`local_import` exports it, Litex resolves that bare name to the imported
+`local import` exports it, Litex resolves that bare name to the imported
 chapter.  This lets a later textbook chapter read naturally after, for example,
-`trust local_import chap9`.  If two imports provide the same name, write the
+`trust local import chap9`.  If two imports provide the same name, write the
 provenance explicitly, such as `chap9::is_continuous_at`; do not rely on an
 arbitrary import order.
 
@@ -2163,7 +2163,7 @@ In project mode, **`import A`** names a module exported by the root
 are not the project dependency mechanism. In isolated file mode,
 **`import "path/to/module" as M`** remains available for a local module
 directory containing `main.lit`. Ordinary `import` never loads a `.lit` file;
-declare that file in `[export]` and access it with `local_import` instead.
+declare that file in `[export]` and access it with `local import` instead.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2174,7 +2174,7 @@ theorem.
 
 There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
 developments declare their entry and sources in `litex.config`, then use
-`local_import`; Litex does not provide a file-loading statement that bypasses
+`local import`; Litex does not provide a file-loading statement that bypasses
 verification for an arbitrary path.
 
 When a declared module or chapter is intentionally trusted, use an explicit
@@ -2183,7 +2183,7 @@ source-level import policy instead of putting trust in `litex.config`:
 <!-- litex:skip-test -->
 ```litex
 # chap11.lit
-trust local_import chap10
+trust local import chap10
 
 # project entrance file
 trust import Algebra
@@ -2602,7 +2602,7 @@ See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 Use **`by regularity_axiom(A)`** when `A` is a nonempty set. Litex first checks the obligation `$is_nonempty_set(A)`. If that check passes, it stores the regularity/foundation conclusion that some member of `A` is disjoint from `A`:
 
 ```litex
-proof_debt $is_nonempty_set({1, 2})
+trust $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2742,11 +2742,11 @@ The sections above explain the common use cases. This table is a quick map of th
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
 | `axiom name` | Name a trusted `forall` fact without proof, using the same citation interface as `thm` |
 | `alias thm` | Copy a theorem under a new name |
-| `proof_debt` | Add explicit unproved assumptions to the current context |
+| `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
-| `import` / `local_import` | Verify and load project module interfaces declared in `litex.config` |
-| `trust import` / `trust local_import` | Load a declared dependency's environment without verifying its proof process |
+| `import` / `local import` | Verify and load project module interfaces declared in `litex.config` |
+| `trust import` / `trust local import` | Load a declared dependency's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -2766,7 +2766,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by regularity_axiom` | Preview trusted foundation step for nonempty sets |
 
-> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `proof_debt` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `trust` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
 ---
 
@@ -3011,7 +3011,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | Meaning | Example |
 |---------|---------|
 | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
-| inject explicit assumptions | `proof_debt x = 1` |
+| inject explicit assumptions | `trust x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
 | define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
@@ -3023,8 +3023,8 @@ code, evaluate an expression, or register a reusable proof pattern.
 | import a standard-library module | `import Nat` |
 | import a local module directory | `import "local_module" as L` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
-| bind a declared export inside a module source | `local_import local` |
-| bind a declared export without running its proof process | `trust local_import local` |
+| bind a declared export inside a module source | `local import local` |
+| bind a declared export without running its proof process | `trust local import local` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |
@@ -4703,7 +4703,7 @@ _- Kurt Gödel_
 
 Verification answers the question: **can this fact be proved now?**
 
-Builtin inference happens after that. Once a fact is verified or introduced by `proof_debt`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
+Builtin inference happens after that. Once a fact is verified or introduced by `trust`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
 
 The main purpose is usability. Inference saves the user from manually writing the obvious next facts again and again.
 

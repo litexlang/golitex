@@ -64,7 +64,7 @@ The correlation between `tuple` and `cart` and `struct` is essential, because an
 
 
 
-Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `proof_debt` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
+Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `trust` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
 
 When we were learning Euclidean geometry in middle school, our teachers would say that these so-called points, lines, planes, and circles are not actually the real ones we draw on paper. They are imagined constructs that possess specific properties. What they fundamentally are is not important; what matters is that there are certain axioms governing these objects, which form the relationships among them. Although they can be defined by using more abstract math concepts (using cartesian coordinate for example), we don't consider that since we only want to focus on properties like parallel and intersection, which those axioms already can process. Similarly, real numbers, rational numbers, and the like can also be defined using more abstract mathematical concepts—users can construct these definitions themselves using Litex code. In fact, however, what is even more important is the relationships between them, and this is precisely what Litex emphasizes.
 
@@ -81,7 +81,7 @@ As far as Litex is concerned, Litex contains and only contains standard math pro
 ## Why does Litex have this particular menu of objects and statements?
 
 Litex's grammar is intentionally finite and opinionated. The goal is not to
-suppose every possible proof-engine concept become a new surface form. The goal is
+trust have every possible proof-engine concept become a new surface form. The goal is
 to keep a small set of object and statement forms that make ordinary
 mathematical writing comfortable while remaining checkable.
 
@@ -124,7 +124,7 @@ Litex is easiest to understand through four related layers:
 - a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
   `1 + 2 = 3`, or `x = y or x < y or x > y`;
 - a `statement` is a line or block that acts on the mathematical context, such
-  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `proof_debt`;
+  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `trust`;
 - a verification rule is a checker route for deciding whether a fact follows
   from the current context.
 
@@ -307,7 +307,7 @@ This is a deliberate design trade-off. Litex's builtin `R` is a mathematical
 surface with verifier-visible properties, not a proof term saying "this object
 was constructed by this exact chain of quotients and completions." The standard
 library may record facts such as rational density or real completeness with
-`proof_debt` because, for Litex's default std interpretation, those are trusted
+`trust` because, for Litex's default std interpretation, those are trusted
 background facts about the standard numeric objects. For example, `std/Rat`
 records the reduced numerator/denominator interface for builtin `Q`, while
 `std/Real` records the usual real-line relationships. In `std/Real`, the
@@ -545,7 +545,7 @@ This does not mean Litex proves arbitrary goals by magic. It means Litex places
 more ordinary mathematical structure inside the verifier and standard library,
 then gives the user a fact-oriented interface to that structure. The trade-off
 is explicit: Litex has a larger trusted implementation than a small-kernel proof
-assistant, so builtin rules, infer rules, `proof_debt`, and standard-library facts
+assistant, so builtin rules, infer rules, `trust`, and standard-library facts
 need clear boundaries, tests, and audit-friendly output.
 
 Litex should therefore be described as complementary to Lean, Coq, and Isabelle,
@@ -628,17 +628,17 @@ often makes the proof easier to audit.
 
 ## Is proof debt a proof?
 
-No. `proof_debt` is explicit assumption injection, not a proof-producing command. It
+No. `trust` is explicit assumption injection, not a proof-producing command. It
 adds a fact to the current context after checking that the statement is
 meaningful enough to store. Later checked facts may depend on it.
 
-In documentation and audits, read `proof_debt P` as "assume P from this point onward."
+In documentation and audits, read `trust P` as "assume P from this point onward."
 If a later `verification`
-trace cites a fact that came from `proof_debt`, that trace explains why the later line
+trace cites a fact that came from `trust`, that trace explains why the later line
 follows from the injected assumption; it does not show that the injected
 assumption was proved by Litex.
 
-Likewise, success on a `proof_debt` line only means the assumption was accepted into
+Likewise, success on a `trust` line only means the assumption was accepted into
 the context. It is not a certificate that the injected fact was proved.
 
 This is useful for three narrow purposes:
@@ -648,9 +648,9 @@ This is useful for three narrow purposes:
 - temporarily stating a theorem or library fact that should later become a
   checked `claim`, `thm`, builtin rule, or standard-library result.
 
-The cost is explicit. If a false statement is introduced with `proof_debt`, later
+The cost is explicit. If a false statement is introduced with `trust`, later
 results can inherit that assumption. Serious Litex developments should keep
-remaining `proof_debt` facts visible and treat them as assumptions or proof debt, not
+remaining `trust` facts visible and treat them as assumptions or proof debt, not
 as completed proof.
 
 ## Why does Litex infer extra facts after accepting a line?
@@ -796,7 +796,7 @@ set interfaces, and algebraic proof flows.
 
 ## Soundness And Limitations
 
-A Litex success is relative to the trusted background. `proof_debt` is explicit
+A Litex success is relative to the trusted background. `trust` is explicit
 assumption injection, similar in role to Lean's `by sorry`: it adds facts to the
 context without proving them. `abstract_prop` declares an uninterpreted
 predicate name and gives it no mathematical content by itself. In final
@@ -807,7 +807,7 @@ trusted background, or recorded as remaining proof debt.
 
 The verifier pipeline has three different kinds of outcomes that should not be
 confused: proof-required facts that must verify, executor statements that update
-the environment, and store/assume-only paths such as `proof_debt` or local
+the environment, and store/assume-only paths such as `trust` or local
 assumptions. The detailed reference belongs in the Manual's proof-process
 section.
 
@@ -821,7 +821,7 @@ stay in code comments, examples, or issue notes until their behavior is clear.
 
 Quick syntax reminders are useful, but they should not become a second reference
 manual. New users should start with `have`, bare fact lines, `forall`, `claim`,
-`witness`, and `by cases`; use `proof_debt` and `abstract_prop` only when
+`witness`, and `by cases`; use `trust` and `abstract_prop` only when
 intentionally modeling axioms or proof debt.
 
 ## Tutorial Introduction
@@ -870,5 +870,5 @@ inference, kernel, or diagnostic support.
 ## Reviewer Guide
 
 Review Litex by separating the interface hypothesis from trust-boundary risks.
-A proof script can be readable and promising while builtin rules, `proof_debt`, stdlib
+A proof script can be readable and promising while builtin rules, `trust`, stdlib
 coverage, and dataset bookkeeping still need careful audit.

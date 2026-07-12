@@ -178,7 +178,7 @@ impl Runtime {
                 let defined_name = s.single_defined_name().ok_or_else(|| {
                     RuntimeError::from(InstantiateRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(
-                            "template `suppose` body must define exactly one object".to_string(),
+                            "template `trust have` body must define exactly one object".to_string(),
                         ),
                     ))
                 })?;

@@ -35,10 +35,10 @@ impl Runtime {
     fn collect_stmt_trust(&self, stmt: &Stmt, summary: &mut ProofTrustSummary) {
         match stmt {
             Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(proof_debt)) => {
-                summary.add_dependency("proof_debt", None, proof_debt.line_file.clone());
+                summary.add_dependency("trust", None, proof_debt.line_file.clone());
             }
             Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(def_let)) => {
-                summary.add_dependency("suppose", None, def_let.line_file.clone());
+                summary.add_dependency("trust_have", None, def_let.line_file.clone());
             }
             Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {
                 let name = def_thm.names.first().cloned();

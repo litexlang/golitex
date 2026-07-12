@@ -105,7 +105,6 @@ pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const ALIAS: &str = "alias";
 pub const LET: &str = "let";
-pub const SUPPOSE: &str = "suppose";
 pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
@@ -142,12 +141,11 @@ pub const TUPLE: &str = "tuple";
 pub const CASE: &str = "case";
 pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
-pub const LOCAL_IMPORT: &str = "local_import";
+pub const LOCAL: &str = "local";
 pub const EXPORT: &str = "export";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
 pub const OBTAIN: &str = "obtain";
-pub const PROOF_DEBT: &str = "proof_debt";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
 pub const FROM: &str = "from";
@@ -290,7 +288,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNKNOWN_COLON,
         ALIAS,
         LET,
-        SUPPOSE,
         PROP,
         ABSTRACT_PROP,
         CLAIM,
@@ -308,13 +305,12 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CASE,
         TRUST,
         IMPORT,
-        LOCAL_IMPORT,
+        LOCAL,
         EXPORT,
         AS,
         ENUMERATE,
         HAVE,
         OBTAIN,
-        PROOF_DEBT,
         CLEAR,
         DO_NOTHING,
         INDUC,

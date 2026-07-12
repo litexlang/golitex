@@ -29,8 +29,8 @@ is command-oriented, not a general argument parser.
 
 | Option | Meaning |
 |--------|---------|
-| `-detail` | Include fuller JSON trace details. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `proof_debt`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
+| `-strict` | Reject user `trust`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -96,7 +96,7 @@ those flags. `-lang` also consumes the next token globally.
 In isolated file mode, `import "./Demo" as Demo` may still load a module
 directory containing `main.lit`. It cannot load a `.lit` file. In a project,
 declare local sources in `[export]` in `litex.config` and bind them with
-`local_import`.
+`local import`.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -105,7 +105,7 @@ successful prefix followed by an error object.
 With `-summarize`, Litex appends one final JSON object whose `output_type` is
 `"run summary"`. The ordinary statement output before that object is unchanged.
 The summary reports top-level and expanded statement counts, fact/prop/theorem
-definition counts, proof-block and `by` counts, direct `proof_debt` statements,
+definition counts, proof-block and `by` counts, direct `trust` statements,
 indirect proof-debt dependencies, axioms, supposes, abstract interfaces, and
 stack/runner warnings. It also includes `statement_type_counts`,
 `output_type_counts`, and a `statements` array with line numbers and rendered
@@ -200,14 +200,14 @@ There is no Litex statement that directly loads an arbitrary `.lit` path. Use
 
 - set `[entrance] file = "..."` for the project entry;
 - declare files and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
-- use `local_import name` inside registered sources;
+- use `local import name` inside registered sources;
 - run the entry with `litex -r <project>` or a registered chapter with `litex -f <file>`.
 
 Ordinary `import` loads module directories or registered global modules. A
 direct `import "./x.lit" as X` is rejected.
 
 For an explicitly trusted project dependency, write `trust import Name` or
-`trust local_import name` in a registered `.lit` source. Litex still resolves
+`trust local import name` in a registered `.lit` source. Litex still resolves
 the declared project target, reads it, parses it, and checks dependency cycles,
 but skips its well-definedness and proof processing and keeps only its
 environment effects. Trusted imports are rejected by `-strict`; their presence
@@ -258,7 +258,7 @@ litex -strict -runner -f examples/tmp.lit
 Generate a relation graph:
 
 ```bash
-litex -graph -f scripts/analysis-one/chapters_in_litex/chap6.lit tmp/graphs/chap6_graph.json
+litex -graph -f textbooks/Analysis/chap6.lit tmp/graphs/chap6_graph.json
 ```
 
 Run with Chinese output labels:

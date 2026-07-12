@@ -20,7 +20,7 @@ impl ClaimStmt {
 
 impl ProofDebtStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ProofDebtStmt".to_string()
+        "TrustStmt".to_string()
     }
 }
 
@@ -257,7 +257,7 @@ impl AliasThmStmt {
 
 impl DefLetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefLetStmt".to_string()
+        "TrustHaveStmt".to_string()
     }
 }
 

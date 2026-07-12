@@ -3,6 +3,7 @@ mod evidence;
 mod fields;
 mod language;
 mod normalize;
+mod phases;
 mod source;
 mod store_facts;
 mod success;

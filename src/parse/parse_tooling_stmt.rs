@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_trust_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_trust_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TRUST)?;
         if tb.current_token_is_equal_to(IMPORT) {
             let stmt = self.parse_import_stmt(tb)?;
@@ -10,23 +10,22 @@ impl Runtime {
             };
             return Ok(TrustImportStmt::new(import).into());
         }
-        if tb.current_token_is_equal_to(LOCAL_IMPORT) {
+        if tb.current_token_is_equal_to(LOCAL) {
             let stmt = self.parse_local_import_stmt(tb)?;
             let Stmt::Command(CommandStmt::LocalImportStmt(local_import)) = stmt else {
                 unreachable!("local import parser should produce a local import statement")
             };
             return Ok(TrustLocalImportStmt::new(local_import).into());
         }
-        Err(RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(
-                "trust: expected `import` or `local_import`".to_string(),
-                tb.line_file.clone(),
-            ),
-        )))
+        if tb.current_token_is_equal_to(HAVE) {
+            return self.parse_trust_have_stmt(tb);
+        }
+        self.parse_trust_fact_stmt(tb)
     }
 
     pub fn parse_local_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(LOCAL_IMPORT)?;
+        tb.skip_token(LOCAL)?;
+        tb.skip_token(IMPORT)?;
         let name = tb.advance()?;
         is_valid_litex_name(&name).map_err(|msg| {
             RuntimeError::from(ParseRuntimeError(
@@ -36,7 +35,7 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "local_import expects one export name without a path or alias".to_string(),
+                    "local import expects one export name without a path or alias".to_string(),
                     tb.line_file.clone(),
                 ),
             )));

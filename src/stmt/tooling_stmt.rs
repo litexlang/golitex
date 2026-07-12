@@ -68,7 +68,7 @@ impl fmt::Display for TrustLocalImportStmt {
 
 impl fmt::Display for LocalImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", LOCAL_IMPORT, self.name)
+        write!(f, "{} {} {}", LOCAL, IMPORT, self.name)
     }
 }
 

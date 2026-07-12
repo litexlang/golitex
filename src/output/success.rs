@@ -5,8 +5,9 @@ use crate::prelude::{
     ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
     ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
     ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
-    ClaimVerificationResult, FactualStmtSuccess, NonFactualStmtSuccess, Runtime, Stmt, StmtResult,
-    TheoremVerificationResult, VerifiedByResult,
+    ClaimVerificationResult, CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult,
+    NonFactualStmtSuccess, ParamDefWithType, Runtime, StatementExecutionTrace,
+    StatementPhaseStatus, Stmt, StmtResult, TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -16,12 +17,13 @@ use super::evidence::{
 };
 use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_CONCLUSIONS, JSON_KEY_INSIDE_RESULTS, JSON_KEY_RESULT,
-    JSON_KEY_STMT, JSON_KEY_STMT_TYPE, JSON_KEY_STORE_FACTS, JSON_KEY_SUCCESS,
-    JSON_KEY_UNKNOWN_RESULT, JSON_KEY_VERIFICATION,
+    JSON_KEY_STMT, JSON_KEY_STMT_TYPE, JSON_KEY_SUCCESS, JSON_KEY_UNKNOWN_RESULT,
+    JSON_KEY_VERIFICATION,
 };
 use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
+use super::phases::execution_phases_value;
 use super::source::stmt_text_for_json;
-use super::store_facts::{store_fact_json_values, store_fact_json_values_for_fact};
+use super::store_facts::store_fact_json_values;
 use super::{fact_unknown_json_value, stmt_unknown_json_value};
 
 pub fn display_stmt_exec_result_json(
@@ -58,11 +60,41 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
             JSON_KEY_UNKNOWN_RESULT.to_string(),
             fact_unknown_json_value(runtime, unknown),
         ));
+        if runtime.detail_output {
+            let trace = StatementExecutionTrace::unknown();
+            fields.push((
+                "phases".to_string(),
+                execution_phases_value(
+                    &trace,
+                    well_definedness_checks_for_fact(unknown.goal()),
+                    vec![(
+                        JSON_KEY_UNKNOWN_RESULT.to_string(),
+                        fact_unknown_json_value(runtime, unknown),
+                    )],
+                    vec![],
+                ),
+            ));
+        }
     } else if let Some(unknown) = r.as_unknown() {
         fields.push((
             JSON_KEY_UNKNOWN_RESULT.to_string(),
             stmt_unknown_json_value(runtime, unknown),
         ));
+        if runtime.detail_output {
+            let trace = StatementExecutionTrace::unknown();
+            fields.push((
+                "phases".to_string(),
+                execution_phases_value(
+                    &trace,
+                    vec![],
+                    vec![(
+                        JSON_KEY_UNKNOWN_RESULT.to_string(),
+                        stmt_unknown_json_value(runtime, unknown),
+                    )],
+                    vec![],
+                ),
+            ));
+        }
     } else {
         fields.push((
             JSON_KEY_UNKNOWN_RESULT.to_string(),
@@ -78,7 +110,6 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_text = stmt_text_for_json(runtime, &x.stmt);
-    let store_fact_items = store_fact_json_values(&x.infers);
 
     let mut fields = vec![
         (
@@ -101,16 +132,47 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
     }
 
     fields.push((
-        JSON_KEY_STORE_FACTS.to_string(),
-        JsonValue::Array(store_fact_items),
-    ));
-
-    fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
         inside_results_value(runtime, &x.stmt, &x.inside_results),
     ));
 
+    if runtime.detail_output {
+        if let Some(trace) = x.execution_trace.as_ref() {
+            fields.push((
+                "phases".to_string(),
+                execution_phases_value(
+                    trace,
+                    well_definedness_checks_for_stmt(&x.stmt),
+                    non_factual_process_fields(runtime, x),
+                    environment_effect_values(&x.stmt, &x.infers, trace),
+                ),
+            ));
+        }
+    }
+
     JsonValue::Object(fields)
+}
+
+fn non_factual_process_fields(
+    runtime: &Runtime,
+    x: &NonFactualStmtSuccess,
+) -> Vec<(String, JsonValue)> {
+    let mut fields = Vec::new();
+    if let Some(verification) = non_factual_verification_value(runtime, x) {
+        fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
+    }
+    if !x.inside_results.is_empty() {
+        fields.push((
+            "checks".to_string(),
+            JsonValue::Array(
+                x.inside_results
+                    .iter()
+                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .collect::<Vec<_>>(),
+            ),
+        ));
+    }
+    fields
 }
 
 fn non_factual_verification_value(
@@ -1153,7 +1215,6 @@ fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Js
 fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let store_fact_items = store_fact_json_values_for_fact(&x.infers, &x.stmt);
 
     let mut fields = vec![
         (
@@ -1181,11 +1242,9 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             factual_success_verified_by_value(runtime, x),
         ));
     }
-    fields.push((
-        JSON_KEY_STORE_FACTS.to_string(),
-        JsonValue::Array(store_fact_items),
-    ));
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
+
+    add_factual_execution_phases(runtime, x, &mut fields);
 
     JsonValue::Object(fields)
 }
@@ -1193,7 +1252,6 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
 fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let store_fact_items = store_fact_json_values_for_fact(&x.infers, &x.stmt);
 
     let mut fields = vec![
         (
@@ -1221,13 +1279,231 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             factual_success_verified_by_value(runtime, x),
         ));
     }
-    fields.push((
-        JSON_KEY_STORE_FACTS.to_string(),
-        JsonValue::Array(store_fact_items),
-    ));
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
 
+    add_factual_execution_phases(runtime, x, &mut fields);
+
     JsonValue::Object(fields)
+}
+
+fn add_factual_execution_phases(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+    fields: &mut Vec<(String, JsonValue)>,
+) {
+    if !runtime.detail_output {
+        return;
+    }
+    let Some(trace) = x.execution_trace.as_ref() else {
+        return;
+    };
+    let mut process_fields = if factual_success_is_forall_proof(x) {
+        factual_success_forall_proof_fields(runtime, x)
+    } else {
+        vec![(
+            JSON_KEY_VERIFICATION.to_string(),
+            factual_success_verified_by_value(runtime, x),
+        )]
+    };
+    if process_fields.is_empty() {
+        process_fields.push((
+            JSON_KEY_VERIFICATION.to_string(),
+            factual_success_verified_by_value(runtime, x),
+        ));
+    }
+    fields.push((
+        "phases".to_string(),
+        execution_phases_value(
+            trace,
+            well_definedness_checks_for_fact(&x.stmt),
+            process_fields,
+            environment_effect_values(&x.stmt.clone().into(), &x.infers, trace),
+        ),
+    ));
+}
+
+fn well_definedness_checks_for_stmt(stmt: &Stmt) -> Vec<JsonValue> {
+    match stmt {
+        Stmt::Fact(fact) => well_definedness_checks_for_fact(fact),
+        Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(have_stmt)) => {
+            let mut checks = parameter_binding_checks(&have_stmt.param_def);
+            checks.push(JsonValue::Object(vec![
+                (
+                    "kind".to_string(),
+                    JsonValue::JsonString("arity".to_string()),
+                ),
+                (
+                    "expected".to_string(),
+                    JsonValue::Number(have_stmt.param_def.number_of_params()),
+                ),
+                (
+                    "actual".to_string(),
+                    JsonValue::Number(have_stmt.objs_equal_to.len()),
+                ),
+            ]));
+            checks
+        }
+        _ => vec![statement_well_defined_check(&stmt.to_string())],
+    }
+}
+
+fn well_definedness_checks_for_fact(fact: &Fact) -> Vec<JsonValue> {
+    let Fact::ForallFact(forall_fact) = fact else {
+        return vec![statement_well_defined_check(&fact.to_string())];
+    };
+    let mut checks = parameter_binding_checks(&forall_fact.params_def_with_type);
+    for premise in forall_fact.dom_facts.iter() {
+        checks.push(well_defined_fact_check(&premise.to_string()));
+    }
+    for conclusion in forall_fact.then_facts.iter() {
+        checks.push(well_defined_fact_check(&conclusion.to_string()));
+    }
+    checks
+}
+
+fn parameter_binding_checks(param_def: &ParamDefWithType) -> Vec<JsonValue> {
+    param_def
+        .collect_param_names_with_types()
+        .into_iter()
+        .map(|(name, param_type)| {
+            JsonValue::Object(vec![
+                (
+                    "kind".to_string(),
+                    JsonValue::JsonString("parameter_binding".to_string()),
+                ),
+                ("name".to_string(), JsonValue::JsonString(name)),
+                (
+                    "type".to_string(),
+                    JsonValue::JsonString(param_type.to_string()),
+                ),
+            ])
+        })
+        .collect::<Vec<_>>()
+}
+
+fn statement_well_defined_check(statement: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "kind".to_string(),
+            JsonValue::JsonString("statement_well_defined".to_string()),
+        ),
+        (
+            JSON_KEY_STMT.to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(statement)),
+        ),
+    ])
+}
+
+fn well_defined_fact_check(statement: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "kind".to_string(),
+            JsonValue::JsonString("well_defined_fact".to_string()),
+        ),
+        (
+            JSON_KEY_STMT.to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(statement)),
+        ),
+    ])
+}
+
+fn environment_effect_values(
+    stmt: &Stmt,
+    infers: &InferResult,
+    trace: &StatementExecutionTrace,
+) -> Vec<JsonValue> {
+    let mut effects = statement_environment_effects(stmt, trace);
+    for store_fact in store_fact_json_values(infers) {
+        let JsonValue::Object(mut fields) = store_fact else {
+            continue;
+        };
+        fields.insert(
+            0,
+            (
+                "kind".to_string(),
+                JsonValue::JsonString("store_fact".to_string()),
+            ),
+        );
+        effects.push(JsonValue::Object(fields));
+    }
+    effects
+}
+
+fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -> Vec<JsonValue> {
+    match stmt {
+        Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(have_stmt)) => have_stmt
+            .param_def
+            .collect_param_names_with_types()
+            .into_iter()
+            .zip(have_stmt.objs_equal_to.iter())
+            .map(|((name, param_type), value)| {
+                JsonValue::Object(vec![
+                    (
+                        "kind".to_string(),
+                        JsonValue::JsonString("declare_object".to_string()),
+                    ),
+                    ("name".to_string(), JsonValue::JsonString(name)),
+                    (
+                        "type".to_string(),
+                        JsonValue::JsonString(param_type.to_string()),
+                    ),
+                    (
+                        "value".to_string(),
+                        JsonValue::JsonString(user_visible_stmt_or_msg_text(&value.to_string())),
+                    ),
+                ])
+            })
+            .collect::<Vec<_>>(),
+        Stmt::DefObjStmt(_) => vec![statement_environment_effect("declare_object", stmt)],
+        Stmt::DefPredicateStmt(_) => vec![statement_environment_effect("define_predicate", stmt)],
+        Stmt::DefAliasStmt(_) => vec![statement_environment_effect("define_alias", stmt)],
+        Stmt::DefInterfaceStmt(_) => vec![statement_environment_effect("define_interface", stmt)],
+        Stmt::DefAlgoStmt(_) => vec![statement_environment_effect("define_algorithm", stmt)],
+        Stmt::DefThmStmt(_) => vec![statement_environment_effect("define_theorem", stmt)],
+        Stmt::DefStrategyStmt(_) => vec![statement_environment_effect("define_strategy", stmt)],
+        Stmt::Command(CommandStmt::ImportStmt(_))
+        | Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
+            vec![statement_environment_effect("load_module", stmt)]
+        }
+        Stmt::Command(CommandStmt::TrustImportStmt(_))
+        | Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
+            let mut effect = statement_environment_effect("load_module", stmt);
+            let JsonValue::Object(fields) = &mut effect else {
+                return vec![effect];
+            };
+            fields.push((
+                "mode".to_string(),
+                JsonValue::JsonString("trusted".to_string()),
+            ));
+            vec![effect]
+        }
+        Stmt::Command(CommandStmt::ClearStmt(_)) => {
+            vec![statement_environment_effect("clear_environment", stmt)]
+        }
+        Stmt::Command(CommandStmt::UseStrategyStmt(_)) => {
+            vec![statement_environment_effect("activate_strategy", stmt)]
+        }
+        Stmt::Command(CommandStmt::StopStrategyStmt(_)) => {
+            vec![statement_environment_effect("stop_strategy", stmt)]
+        }
+        _ if trace.verify_well_definedness.status == StatementPhaseStatus::Skipped => {
+            vec![statement_environment_effect(
+                "trusted_environment_load",
+                stmt,
+            )]
+        }
+        _ => vec![],
+    }
+}
+
+fn statement_environment_effect(kind: &str, stmt: &Stmt) -> JsonValue {
+    JsonValue::Object(vec![
+        ("kind".to_string(), JsonValue::JsonString(kind.to_string())),
+        (
+            JSON_KEY_STMT.to_string(),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&stmt.to_string())),
+        ),
+    ])
 }
 
 fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {

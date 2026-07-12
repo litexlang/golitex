@@ -122,8 +122,8 @@ Line 3 succeeded: verified x + 1 = 3 from x = 2 and arithmetic.
 Line 4 succeeded: verified x^2 = 4 from x = 2 and arithmetic.
 ```
 
-The JSON output contains more structure, but the important fields have this
-shape:
+The JSON output contains more structure. In `-detail` mode, the important
+execution phases have this shape:
 
 ```json
 {
@@ -133,12 +133,18 @@ shape:
     "type": "builtin verification",
     "rule": "known value substitution and arithmetic"
   },
-  "store_facts": [
-    {
-      "fact": "x + 1 = 3",
-      "reason": "proved statement"
+  "phases": {
+    "affect_environment": {
+      "status": "success",
+      "effects": [
+        {
+          "kind": "store_fact",
+          "fact": "x + 1 = 3",
+          "reason": "proved statement"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
@@ -388,12 +394,12 @@ background used in that run:
 - builtin objects and builtin mathematical facts;
 - builtin verification and inference rules;
 - imported standard-library facts;
-- explicit `axiom`, or `proof_debt` assumptions;
+- explicit `axiom`, or `trust` assumptions;
 - the current implementation of the parser, runtime, and verifier.
 
-`proof_debt` is assumption injection. It is useful for marking unfinished
+`trust` is assumption injection. It is useful for marking unfinished
 background work, but it is not a proof. When auditing a Litex file, inspect the
-remaining `proof_debt` facts before treating the development as complete.
+remaining `trust` facts before treating the development as complete.
 
 This trust boundary is part of the project design. Litex deliberately places
 many routine mathematical relationships into the checker so ordinary proofs can

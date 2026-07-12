@@ -319,7 +319,18 @@ const ZH_KEYS: &[(&str, &str)] = &[
     ("path", "路径"),
     ("statement", "语句"),
     ("verification", "验证"),
-    ("store_facts", "存储事实"),
+    ("phases", "执行阶段"),
+    ("verify_well_definedness", "良定义性验证"),
+    ("verify_process", "过程验证"),
+    ("affect_environment", "环境影响"),
+    ("checks", "检查"),
+    ("effects", "环境效果"),
+    ("status", "状态"),
+    ("expected", "期望值"),
+    ("actual", "实际值"),
+    ("name", "名称"),
+    ("value", "值"),
+    ("mode", "模式"),
     ("fact", "事实"),
     ("facts", "事实列表"),
     ("reason", "原因"),
@@ -384,7 +395,18 @@ const ZH_HANS_KEYS: &[(&str, &str)] = &[
     ("path", "路徑"),
     ("statement", "語句"),
     ("verification", "驗證"),
-    ("store_facts", "儲存事實"),
+    ("phases", "執行階段"),
+    ("verify_well_definedness", "良定義性驗證"),
+    ("verify_process", "過程驗證"),
+    ("affect_environment", "環境影響"),
+    ("checks", "檢查"),
+    ("effects", "環境效果"),
+    ("status", "狀態"),
+    ("expected", "預期值"),
+    ("actual", "實際值"),
+    ("name", "名稱"),
+    ("value", "值"),
+    ("mode", "模式"),
     ("fact", "事實"),
     ("facts", "事實"),
     ("reason", "原因"),
@@ -1257,8 +1279,8 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("structure definition", "结构定义"),
     ("proved statement", "已证明语句"),
     (
-        "warning: unproved proof_debt assumption",
-        "警告：未经证明的 proof_debt 假设",
+        "warning: unproved trust assumption",
+        "警告：未经证明的 trust 假设",
     ),
     (
         "warning: unproved object definition",
@@ -1408,8 +1430,8 @@ const ZH_HANS_TEXTS: &[(&str, &str)] = &[
     ("theorem", "定理"),
     ("proved statement", "已證明語句"),
     (
-        "warning: unproved proof_debt assumption",
-        "警告：未經證明的 proof_debt 假設",
+        "warning: unproved trust assumption",
+        "警告：未經證明的 trust 假設",
     ),
     (
         "warning: unproved object definition",
@@ -1499,8 +1521,8 @@ const AR_TEXTS: &[(&str, &str)] = &[
     ("theorem", "مبرهنة"),
     ("proved statement", "عبارة مبرهنة"),
     (
-        "warning: unproved proof_debt assumption",
-        "تحذير: افتراض proof_debt غير مبرهن",
+        "warning: unproved trust assumption",
+        "تحذير: افتراض trust غير مبرهن",
     ),
     (
         "warning: unproved object definition",
@@ -1590,8 +1612,8 @@ const HI_TEXTS: &[(&str, &str)] = &[
     ("theorem", "प्रमेय"),
     ("proved statement", "सिद्ध कथन"),
     (
-        "warning: unproved proof_debt assumption",
-        "चेतावनी: अप्रमाणित proof_debt मान्यता",
+        "warning: unproved trust assumption",
+        "चेतावनी: अप्रमाणित trust मान्यता",
     ),
     (
         "warning: unproved object definition",
@@ -1684,8 +1706,8 @@ const VI_TEXTS: &[(&str, &str)] = &[
     ("theorem", "định lý"),
     ("proved statement", "mệnh đề đã chứng minh"),
     (
-        "warning: unproved proof_debt assumption",
-        "cảnh báo: giả thiết proof_debt chưa chứng minh",
+        "warning: unproved trust assumption",
+        "cảnh báo: giả thiết trust chưa chứng minh",
     ),
     (
         "warning: unproved object definition",
@@ -1781,8 +1803,8 @@ const ID_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "pernyataan terbukti"),
     (
-        "warning: unproved proof_debt assumption",
-        "peringatan: asumsi proof_debt belum terbukti",
+        "warning: unproved trust assumption",
+        "peringatan: asumsi trust belum terbukti",
     ),
     (
         "warning: unproved object definition",
@@ -1881,8 +1903,8 @@ const JA_TEXTS: &[(&str, &str)] = &[
     ("theorem", "定理"),
     ("proved statement", "証明済み文"),
     (
-        "warning: unproved proof_debt assumption",
-        "警告：証明されていない proof_debt 仮定",
+        "warning: unproved trust assumption",
+        "警告：証明されていない trust 仮定",
     ),
     (
         "warning: unproved object definition",
@@ -1972,8 +1994,8 @@ const KO_TEXTS: &[(&str, &str)] = &[
     ("theorem", "정리"),
     ("proved statement", "증명된 문장"),
     (
-        "warning: unproved proof_debt assumption",
-        "경고: 증명되지 않은 proof_debt 가정",
+        "warning: unproved trust assumption",
+        "경고: 증명되지 않은 trust 가정",
     ),
     (
         "warning: unproved object definition",
@@ -2066,8 +2088,8 @@ const ES_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "enunciado probado"),
     (
-        "warning: unproved proof_debt assumption",
-        "advertencia: suposición proof_debt no demostrada",
+        "warning: unproved trust assumption",
+        "advertencia: suposición trust no demostrada",
     ),
     (
         "warning: unproved object definition",
@@ -2166,8 +2188,8 @@ const FR_TEXTS: &[(&str, &str)] = &[
     ("theorem", "théorème"),
     ("proved statement", "énoncé prouvé"),
     (
-        "warning: unproved proof_debt assumption",
-        "avertissement : hypothèse proof_debt non prouvée",
+        "warning: unproved trust assumption",
+        "avertissement : hypothèse trust non prouvée",
     ),
     (
         "warning: unproved object definition",
@@ -2260,8 +2282,8 @@ const DE_TEXTS: &[(&str, &str)] = &[
     ("theorem", "Satz"),
     ("proved statement", "bewiesene Anweisung"),
     (
-        "warning: unproved proof_debt assumption",
-        "Warnung: unbewiesene proof_debt-Annahme",
+        "warning: unproved trust assumption",
+        "Warnung: unbewiesene trust-Annahme",
     ),
     (
         "warning: unproved object definition",
@@ -2363,8 +2385,8 @@ const PT_TEXTS: &[(&str, &str)] = &[
     ("theorem", "teorema"),
     ("proved statement", "declaração provada"),
     (
-        "warning: unproved proof_debt assumption",
-        "aviso: suposição proof_debt não provada",
+        "warning: unproved trust assumption",
+        "aviso: suposição trust não provada",
     ),
     (
         "warning: unproved object definition",
@@ -2463,8 +2485,8 @@ const RU_TEXTS: &[(&str, &str)] = &[
     ("theorem", "теорема"),
     ("proved statement", "доказанное утверждение"),
     (
-        "warning: unproved proof_debt assumption",
-        "предупреждение: недоказанное предположение proof_debt",
+        "warning: unproved trust assumption",
+        "предупреждение: недоказанное предположение trust",
     ),
     (
         "warning: unproved object definition",

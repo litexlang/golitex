@@ -35,10 +35,10 @@ impl ProofTrustSummary {
 
     pub fn from_store_reason(reason: &str, line_file: LineFile) -> Self {
         if reason == ProofDebtStmt::store_reason() {
-            return Self::from_dependency("proof_debt", None, line_file);
+            return Self::from_dependency("trust", None, line_file);
         }
         if reason == DefLetStmt::store_reason() {
-            return Self::from_dependency("suppose", None, line_file);
+            return Self::from_dependency("trust_have", None, line_file);
         }
         if reason == DefThmStmt::axiom_store_reason() {
             return Self::from_dependency("axiom", None, line_file);

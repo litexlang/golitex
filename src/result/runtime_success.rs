@@ -6,6 +6,7 @@ pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
     pub inside_results: Vec<StmtResult>,
+    pub execution_trace: Option<StatementExecutionTrace>,
     pub theorem_verification: Option<TheoremVerificationResult>,
     pub claim_verification: Option<ClaimVerificationResult>,
     pub by_verification: Option<ByVerificationResult>,
@@ -251,6 +252,7 @@ pub struct FactualStmtSuccess {
     pub stmt: Fact,
     pub infers: InferResult,
     pub verified_by: VerifiedByResult,
+    pub execution_trace: Option<StatementExecutionTrace>,
 }
 
 impl FactualStmtSuccess {
@@ -263,6 +265,7 @@ impl FactualStmtSuccess {
             stmt,
             infers,
             verified_by,
+            execution_trace: None,
         }
     }
 
@@ -305,6 +308,7 @@ impl FactualStmtSuccess {
             stmt,
             infers,
             verified_by,
+            execution_trace: None,
         }
     }
 
@@ -567,6 +571,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
             by_verification: None,
@@ -583,6 +588,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            execution_trace: None,
             theorem_verification: Some(theorem_verification),
             claim_verification: None,
             by_verification: None,
@@ -599,6 +605,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            execution_trace: None,
             theorem_verification: None,
             claim_verification: Some(claim_verification),
             by_verification: None,
@@ -615,6 +622,7 @@ impl NonFactualStmtSuccess {
             stmt,
             infers,
             inside_results,
+            execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
             by_verification: Some(by_verification),

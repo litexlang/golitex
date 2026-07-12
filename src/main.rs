@@ -14,6 +14,14 @@
 
 use litex::prelude::*;
 
+const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
+
 fn main() {
-    run_cli();
+    std::thread::Builder::new()
+        .name("litex-cli".to_string())
+        .stack_size(CLI_STACK_SIZE)
+        .spawn(run_cli)
+        .expect("start Litex CLI thread")
+        .join()
+        .expect("Litex CLI thread panicked");
 }

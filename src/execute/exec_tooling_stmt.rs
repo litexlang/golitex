@@ -6,9 +6,9 @@ impl Runtime {
         stmt: &LocalImportStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let message = if self.run_mode == RunMode::File {
-            "local_import is unavailable in isolated file mode; run a project with -r"
+            "local import is unavailable in isolated file mode; run a project with -r"
         } else {
-            "local_import can only be run as a top-level statement"
+            "local import can only be run as a top-level statement"
         };
         Err(short_exec_error(
             stmt.clone().into(),
@@ -50,7 +50,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         Err(short_exec_error(
             stmt.clone().into(),
-            "trust local_import can only be run as a top-level statement".to_string(),
+            "trust local import can only be run as a top-level statement".to_string(),
             None,
             vec![],
         ))

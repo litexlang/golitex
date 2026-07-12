@@ -332,7 +332,7 @@ fn scan_repository_dependencies(
 }
 
 fn scan_source_dependencies(
-    runtime: &Runtime,
+    runtime: &mut Runtime,
     owner_module_id: ModuleId,
     source_path: &str,
 ) -> Result<(HashMap<String, ImportTarget>, Vec<ModuleId>), RuntimeError> {
@@ -373,7 +373,7 @@ fn scan_source_dependencies(
             match import {
                 ImportStmt::ImportRelativePath(_) => {
                     return Err(repository_error(
-                        "project mode import must name a root export or globally registered module; use litex.config and local_import for module-local dependencies"
+                        "project mode import must name a root export or globally registered module; use litex.config and local import for module-local dependencies"
                             .to_string(),
                         source_path,
                         block.line_file.0,
@@ -386,7 +386,7 @@ fn scan_source_dependencies(
                         let ImportTarget::Module(imported_module_id) = target else {
                             return Err(repository_error(
                                 format!(
-                                    "root export `{}` is a file; files can only be loaded with local_import inside their owner module",
+                                    "root export `{}` is a file; files can only be loaded with local import inside their owner module",
                                     global_import.mod_name
                                 ),
                                 source_path,
@@ -401,14 +401,17 @@ fn scan_source_dependencies(
             }
             continue;
         }
+        let is_local_import =
+            first_token == Some(LOCAL) && block.header.get(1).map(String::as_str) == Some(IMPORT);
         let is_trust_local_import = first_token == Some(TRUST)
-            && block.header.get(1).map(String::as_str) == Some(LOCAL_IMPORT);
-        if first_token != Some(LOCAL_IMPORT) && !is_trust_local_import {
+            && block.header.get(1).map(String::as_str) == Some(LOCAL)
+            && block.header.get(2).map(String::as_str) == Some(IMPORT);
+        if !is_local_import && !is_trust_local_import {
             continue;
         }
         if !block.body.is_empty() {
             return Err(repository_error(
-                "local_import and trust local_import cannot have a body".to_string(),
+                "local import and trust local import cannot have a body".to_string(),
                 source_path,
                 block.line_file.0,
             ));
@@ -433,7 +436,7 @@ fn scan_source_dependencies(
             .ok_or_else(|| {
                 repository_error(
                     format!(
-                        "local_import `{}` is not declared by this module's litex.config",
+                        "local import `{}` is not declared by this module's litex.config",
                         local_import.name
                     ),
                     source_path,
@@ -447,7 +450,7 @@ fn scan_source_dependencies(
         }
         if imports.insert(local_import.name.clone(), target).is_some() {
             return Err(repository_error(
-                format!("duplicate local_import `{}`", local_import.name),
+                format!("duplicate local import `{}`", local_import.name),
                 source_path,
                 local_import.line_file.0,
             ));
@@ -459,11 +462,14 @@ fn scan_source_dependencies(
 fn reject_nested_local_imports(blocks: &[TokenBlock]) -> Result<(), RuntimeError> {
     for block in blocks {
         let first_token = block.header.first().map(String::as_str);
+        let is_local_import =
+            first_token == Some(LOCAL) && block.header.get(1).map(String::as_str) == Some(IMPORT);
         let is_trust_local_import = first_token == Some(TRUST)
-            && block.header.get(1).map(String::as_str) == Some(LOCAL_IMPORT);
-        if first_token == Some(LOCAL_IMPORT) || is_trust_local_import {
+            && block.header.get(1).map(String::as_str) == Some(LOCAL)
+            && block.header.get(2).map(String::as_str) == Some(IMPORT);
+        if is_local_import || is_trust_local_import {
             return Err(repository_error(
-                "local_import and trust local_import are only allowed as top-level source statements"
+                "local import and trust local import are only allowed as top-level source statements"
                     .to_string(),
                 block.line_file.1.as_ref(),
                 block.line_file.0,
@@ -836,17 +842,17 @@ mod tests {
             );
             write_file(
                 &a.join("main.lit"),
-                "local_import chap3\nlocal_import chapters\n\nchap3::z = 1\n",
+                "local import chap3\nlocal import chapters\n\nchap3::z = 1\n",
             );
             write_file(&a.join("chap2.lit"), "have x R = 1\n");
             write_file(
                 &a.join("chap3.lit"),
-                "local_import chap2\n\nhave z R = chap2::x\n",
+                "local import chap2\n\nhave z R = chap2::x\n",
             );
             write_project_config(&chapters, "./main.lit", &[("leaf", "./leaf.lit")]);
             write_file(
                 &chapters.join("main.lit"),
-                "local_import leaf\n\nleaf::x = 1\n",
+                "local import leaf\n\nleaf::x = 1\n",
             );
             write_file(&chapters.join("leaf.lit"), "have x R = 1\n");
 
@@ -914,7 +920,7 @@ mod tests {
                 crate::to_latex::to_latex_from_file_after_builtins(chapter_path_string)
                     .unwrap_or_else(|error| panic!("project chapter LaTeX failed: {error:?}"));
             assert!(
-                chapter_latex.contains("local\\_import chap2"),
+                chapter_latex.contains("local import chap2"),
                 "{chapter_latex}"
             );
 
@@ -937,9 +943,9 @@ mod tests {
             let root = repository_test_dir("cycle");
             fs::create_dir_all(&root).expect("create repository fixture");
             write_project_config(&root, "./main.lit", &[("a", "./a.lit"), ("b", "./b.lit")]);
-            write_file(&root.join("main.lit"), "local_import a\n");
-            write_file(&root.join("a.lit"), "local_import b\n");
-            write_file(&root.join("b.lit"), "local_import a\n");
+            write_file(&root.join("main.lit"), "local import a\n");
+            write_file(&root.join("a.lit"), "local import b\n");
+            write_file(&root.join("b.lit"), "local import a\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1002,7 +1008,7 @@ mod tests {
             );
             write_file(
                 &root.join("main.lit"),
-                "local_import shared\nshared::root_x = 1\nimport A\n",
+                "local import shared\nshared::root_x = 1\nimport A\n",
             );
             write_file(&root.join("shared.lit"), "have root_x R = 1\n");
             write_project_config(&a, "./main.lit", &[]);
@@ -1033,7 +1039,7 @@ mod tests {
             let local_import_script = root.join("local-import-script.lit");
             write_project_config(&root, "./main.lit", &[]);
             write_file(&export_script, "export file \"./x.lit\" as x\n");
-            write_file(&local_import_script, "local_import x\n");
+            write_file(&local_import_script, "local import x\n");
 
             let (config_ok, config_output) =
                 run_source_code_in_file_with_ok(config.to_str().expect("fixture path is UTF-8"));
@@ -1057,7 +1063,7 @@ mod tests {
             );
             assert!(!local_ok, "{local_output}");
             assert!(
-                local_output.contains("local_import is unavailable in isolated file mode"),
+                local_output.contains("local import is unavailable in isolated file mode"),
                 "{local_output}"
             );
         });
@@ -1105,11 +1111,11 @@ mod tests {
             write_file(&root.join("chap6.lit"), "have base R = 1\n");
             write_file(
                 &root.join("chap7.lit"),
-                "local_import chap6\n\nhave result R = chap6::base\n",
+                "local import chap6\n\nhave result R = chap6::base\n",
             );
             write_file(
                 &root.join("python_chapter.lit"),
-                "local_import chap6\n\nhave answer R = 1\n",
+                "local import chap6\n\nhave answer R = 1\n",
             );
             write_file(&root.join("broken.lit"), "1 = 0\n");
 
@@ -1130,7 +1136,7 @@ mod tests {
             );
             assert!(chapter_ok, "{chapter_output}");
             assert!(
-                chapter_output.contains("result = chap6::base"),
+                chapter_output.contains("result R = chap6::base"),
                 "{chapter_output}"
             );
 
@@ -1154,7 +1160,7 @@ mod tests {
 
             write_file(
                 &root.join("book.lit"),
-                "local_import chap10\nchap10::bad = -1\n",
+                "local import chap10\nchap10::bad = -1\n",
             );
             let (ordinary_ok, ordinary_output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1167,7 +1173,7 @@ mod tests {
 
             write_file(
                 &root.join("book.lit"),
-                "trust local_import chap10\nchap10::bad = -1\n",
+                "trust local import chap10\nchap10::bad = -1\n",
             );
             let (trusted_ok, trusted_output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1223,7 +1229,7 @@ thm self_witness_can_be_obtained:
     x = y = x
 "#,
             );
-            write_file(&root.join("book.lit"), "local_import chapter\n");
+            write_file(&root.join("book.lit"), "local import chapter\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1244,7 +1250,7 @@ thm self_witness_can_be_obtained:
             fs::create_dir_all(&a).expect("create repository fixture");
             write_project_config(&root, "./book.lit", &[("A", "./A")]);
             write_project_config(&a, "./main.lit", &[("chap10", "./chap10.lit")]);
-            write_file(&a.join("main.lit"), "local_import chap10\n");
+            write_file(&a.join("main.lit"), "local import chap10\n");
             write_file(
                 &a.join("chap10.lit"),
                 "abstract_prop trusted_prop(x)\n\nthm trusted_all:\n    prove:\n        forall x R:\n            =>:\n                $trusted_prop(x)\n",
