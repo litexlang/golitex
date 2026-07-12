@@ -1,9 +1,0 @@
-run_file "../../../scripts/analysis-one/chapters_in_litex/chap7.lit"
-
-thm scratch_exists_positive_between_limsup_and_one:
-    ? forall alpha R:
-        alpha < 1
-        =>:
-            exist r R_pos st {alpha < r and r < 1}
-    by thm positive_number_between_below_one(alpha)
-    exist r R_pos st {alpha < r and r < 1}

@@ -1,6 +1,23 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn exec_local_import_stmt(
+        &mut self,
+        stmt: &LocalImportStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let message = if self.run_mode == RunMode::File {
+            "local import is unavailable in isolated file mode; run a project with -r"
+        } else {
+            "local import can only be run as a top-level statement"
+        };
+        Err(short_exec_error(
+            stmt.clone().into(),
+            message.to_string(),
+            None,
+            vec![],
+        ))
+    }
+
     pub fn exec_import_stmt(&mut self, stmt: &ImportStmt) -> Result<StmtResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();
@@ -13,6 +30,30 @@ impl Runtime {
                 vec![],
             )
         }));
+    }
+
+    pub fn exec_trust_import_stmt(
+        &mut self,
+        stmt: &TrustImportStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        Err(short_exec_error(
+            stmt.clone().into(),
+            "trust import can only be run as a top-level statement".to_string(),
+            None,
+            vec![],
+        ))
+    }
+
+    pub fn exec_trust_local_import_stmt(
+        &mut self,
+        stmt: &TrustLocalImportStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        Err(short_exec_error(
+            stmt.clone().into(),
+            "trust local import can only be run as a top-level statement".to_string(),
+            None,
+            vec![],
+        ))
     }
 
     pub fn exec_do_nothing_stmt(
@@ -29,16 +70,6 @@ impl Runtime {
         self.exec_clear_stmt_verify_well_definedness(stmt)?;
         let inside_results = self.exec_clear_stmt_verify_process(stmt)?;
         let infer_result = self.exec_clear_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
-    }
-
-    pub fn exec_stop_import_stmt(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.exec_stop_import_stmt_verify_well_definedness(stmt)?;
-        let inside_results = self.exec_stop_import_stmt_verify_process(stmt)?;
-        let infer_result = self.exec_stop_import_stmt_affect_environment(stmt)?;
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
@@ -83,60 +114,5 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         self.clear_current_env_and_parse_name_scope();
         Ok(InferResult::new())
-    }
-
-    fn exec_stop_import_stmt_verify_well_definedness(
-        &mut self,
-        _stmt: &StopImportStmt,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    fn exec_stop_import_stmt_verify_process(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
-        if !self
-            .module_manager
-            .borrow()
-            .imported_modules
-            .contains_key(&stmt.module_name)
-        {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!("module `{}` has not been imported", stmt.module_name),
-                None,
-                vec![],
-            ));
-        }
-        Ok(vec![])
-    }
-
-    fn exec_stop_import_stmt_affect_environment(
-        &mut self,
-        stmt: &StopImportStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        self.module_manager
-            .borrow_mut()
-            .stop_imported_module(&stmt.module_name)
-            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
-        Ok(InferResult::new())
-    }
-
-    pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                format!(
-                    "{} can only be run as a top-level statement",
-                    stmt.keyword()
-                ),
-                lf,
-                None,
-                vec![],
-            )
-        }));
     }
 }

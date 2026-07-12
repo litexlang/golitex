@@ -18,6 +18,6 @@ thm finite_set_sum_permutation_invariance:
         forall S finite_set, g fn(x S) S, f fn(x S) R:
             $Fn::bijective_fn(S, S, g)
             =>:
-                finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
-    proof_debt finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
-    finite_set_sum(S, '(x S) R {f(g(x))}) = finite_set_sum(S, f)
+                finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)
+    trust finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)
+    finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)

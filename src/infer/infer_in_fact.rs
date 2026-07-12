@@ -484,7 +484,7 @@ impl Runtime {
                 let end = (*c.end).clone();
                 self.infer_in_fact_element_in_integer_interval(in_fact, start, end, true)
             }
-            // Real interval membership: `x $in oc(a,b)` => `x $in R`, `a < x`, `x <= b`.
+            // Real interval membership: `x $in '(a, b]` => `x $in R`, `a < x`, `x <= b`.
             Obj::IntervalObj(interval) => {
                 self.infer_in_fact_element_in_real_interval(in_fact, interval)
             }

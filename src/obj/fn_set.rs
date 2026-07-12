@@ -168,21 +168,10 @@ impl fmt::Display for FnSet {
 
 impl fmt::Display for AnonymousFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let params_with_sets_display: Vec<String> = self
-            .body
-            .params_def_with_set
-            .iter()
-            .map(|g| g.to_string())
-            .collect();
         write!(
             f,
-            "{}{} {} {}{}{}",
-            ANONYMOUS_FN_PREFIX,
-            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.body.dom_facts),
-            self.body.ret_set,
-            LEFT_CURLY_BRACE,
-            self.equal_to,
-            RIGHT_CURLY_BRACE,
+            "{} {}{}{}",
+            self.body, LEFT_CURLY_BRACE, self.equal_to, RIGHT_CURLY_BRACE,
         )
     }
 }

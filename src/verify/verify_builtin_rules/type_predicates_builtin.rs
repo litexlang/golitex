@@ -92,8 +92,8 @@ impl Runtime {
             }
             // Real interval nonempty rules depend on the endpoint openness.
             // Closed/closed is nonempty from `a <= b`; the other three require `a < b`.
-            // Example: `$is_nonempty_set(cc(a, b))` from `a <= b`.
-            // Example: `$is_nonempty_set(oo(a, b))` from `a < b`.
+            // Example: `$is_nonempty_set('[a, b])` from `a <= b`.
+            // Example: `$is_nonempty_set('(a, b))` from `a < b`.
             Obj::IntervalObj(interval) => {
                 let order_fact: AtomicFact = if interval.left_closed() && interval.right_closed() {
                     LessEqualFact::new(
@@ -117,16 +117,16 @@ impl Runtime {
                 if order_ok.is_true() {
                     let rule = match interval {
                         IntervalObj::LeftOpenRightOpen(_) => {
-                            "oo_interval_nonempty_when_start_lt_end"
+                            "open_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftOpenRightClosed(_) => {
-                            "oc_interval_nonempty_when_start_lt_end"
+                            "left_open_right_closed_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftClosedRightOpen(_) => {
-                            "co_interval_nonempty_when_start_lt_end"
+                            "left_closed_right_open_interval_nonempty_when_start_lt_end"
                         }
                         IntervalObj::LeftClosedRightClosed(_) => {
-                            "cc_interval_nonempty_when_start_le_end"
+                            "closed_interval_nonempty_when_start_le_end"
                         }
                     };
                     Ok(
@@ -819,6 +819,28 @@ impl Runtime {
                 ))
                 .into(),
             );
+        }
+        if let Obj::ClosedRange(closed_range) = &not_is_nonempty_set_fact.set {
+            // Integer closed interval `{x in Z | lo <= x <= hi}` is empty from a known
+            // `hi < lo` fact.
+            // Example: under `b < a`, prove `not $is_nonempty_set(closed_range(a, b))`.
+            let lt: AtomicFact = LessFact::new(
+                closed_range.end.as_ref().clone(),
+                closed_range.start.as_ref().clone(),
+                not_is_nonempty_set_fact.line_file.clone(),
+            )
+            .into();
+            let lt_ok = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&lt)?;
+            if lt_ok.is_true() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_is_nonempty_set_fact.clone().into(),
+                        "closed_range_empty_when_end_lt_start".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
         }
         Ok((StmtUnknown::new()).into())
     }

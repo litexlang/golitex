@@ -101,7 +101,7 @@ impl Runtime {
                         RuntimeErrorStruct::new_with_output(
                             Some(proof_stmt.clone()),
                             format!(
-                                "have fn `{}` as set failed: proof step is unknown",
+                                "have fn `{}` by exist! failed: proof step is unknown",
                                 stmt.fn_name
                             ),
                             proof_stmt.line_file(),
@@ -132,7 +132,7 @@ impl Runtime {
                         RuntimeErrorStruct::new_with_output(
                             Some(then_goal.clone().into()),
                             format!(
-                                "have fn `{}` as set failed: cannot prove then-clause",
+                                "have fn `{}` by exist! failed: cannot prove then-clause",
                                 stmt.fn_name
                             ),
                             then_fact.line_file(),

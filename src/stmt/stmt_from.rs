@@ -162,6 +162,24 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
+impl From<TrustImportStmt> for Stmt {
+    fn from(v: TrustImportStmt) -> Self {
+        CommandStmt::TrustImportStmt(v).into()
+    }
+}
+
+impl From<LocalImportStmt> for Stmt {
+    fn from(v: LocalImportStmt) -> Self {
+        CommandStmt::LocalImportStmt(v).into()
+    }
+}
+
+impl From<TrustLocalImportStmt> for Stmt {
+    fn from(v: TrustLocalImportStmt) -> Self {
+        CommandStmt::TrustLocalImportStmt(v).into()
+    }
+}
+
 impl From<DoNothingStmt> for Stmt {
     fn from(v: DoNothingStmt) -> Self {
         CommandStmt::DoNothingStmt(v).into()
@@ -171,18 +189,6 @@ impl From<DoNothingStmt> for Stmt {
 impl From<ClearStmt> for Stmt {
     fn from(v: ClearStmt) -> Self {
         CommandStmt::ClearStmt(v).into()
-    }
-}
-
-impl From<StopImportStmt> for Stmt {
-    fn from(v: StopImportStmt) -> Self {
-        CommandStmt::StopImportStmt(v).into()
-    }
-}
-
-impl From<RunFileStmt> for Stmt {
-    fn from(v: RunFileStmt) -> Self {
-        CommandStmt::RunFileStmt(v).into()
     }
 }
 

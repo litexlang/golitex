@@ -22,7 +22,7 @@ impl Runtime {
         &mut self,
         proof_debt_stmt: &ProofDebtStmt,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
-        if self.strict_mode {
+        if self.strict_mode_applies_to_current_module() {
             return Err(short_exec_error(
                 proof_debt_stmt.clone().into(),
                 ProofDebtStmt::strict_mode_rejection_message(),
@@ -39,7 +39,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for fact in proof_debt_stmt.facts.iter() {
-            let fact_infer_result = if self.only_exec_affect_environment {
+            let fact_infer_result = if self.current_execution_is_trusted_file() {
                 self.store_trusted_fact_and_infer_with_reason(
                     fact.clone(),
                     InferReason::UnsafeAssumption,

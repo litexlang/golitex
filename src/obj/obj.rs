@@ -2026,21 +2026,21 @@ impl fmt::Display for ClosedRange {
 
 impl fmt::Display for IntervalObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = match self {
-            IntervalObj::LeftOpenRightOpen(_) => OO,
-            IntervalObj::LeftOpenRightClosed(_) => OC,
-            IntervalObj::LeftClosedRightOpen(_) => CO,
-            IntervalObj::LeftClosedRightClosed(_) => CC,
+        let (left_delimiter, right_delimiter) = match self {
+            IntervalObj::LeftOpenRightOpen(_) => (LEFT_BRACE, RIGHT_BRACE),
+            IntervalObj::LeftOpenRightClosed(_) => (LEFT_BRACE, RIGHT_BRACKET),
+            IntervalObj::LeftClosedRightOpen(_) => (LEFT_BRACKET, RIGHT_BRACE),
+            IntervalObj::LeftClosedRightClosed(_) => (LEFT_BRACKET, RIGHT_BRACKET),
         };
         let interval_struct = self.interval_struct();
         write!(
             f,
-            "{}{}",
-            name,
-            braced_vec_to_string(&vec![
-                interval_struct.start.as_ref(),
-                interval_struct.end.as_ref()
-            ])
+            "{}{}{}, {}{}",
+            INTERVAL_LITERAL_PREFIX,
+            left_delimiter,
+            interval_struct.start.as_ref(),
+            interval_struct.end.as_ref(),
+            right_delimiter
         )
     }
 }
@@ -2889,6 +2889,29 @@ mod tests {
         assert_eq!(divided_by_product.to_string(), "1 / (2 * 3)");
         assert_eq!(divided_by_quotient.to_string(), "1 / (2 / 3)");
         assert_eq!(left_associative_quotient.to_string(), "1 / 2 / 3");
+    }
+
+    #[test]
+    fn display_uses_two_sided_interval_literals() {
+        let zero = number("0");
+        let one = number("1");
+
+        assert_eq!(
+            IntervalObj::new_left_open_right_open(zero.clone(), one.clone()).to_string(),
+            "'(0, 1)"
+        );
+        assert_eq!(
+            IntervalObj::new_left_open_right_closed(zero.clone(), one.clone()).to_string(),
+            "'(0, 1]"
+        );
+        assert_eq!(
+            IntervalObj::new_left_closed_right_open(zero.clone(), one.clone()).to_string(),
+            "'[0, 1)"
+        );
+        assert_eq!(
+            IntervalObj::new_left_closed_right_closed(zero, one).to_string(),
+            "'[0, 1]"
+        );
     }
 
     fn number(value: &str) -> Obj {

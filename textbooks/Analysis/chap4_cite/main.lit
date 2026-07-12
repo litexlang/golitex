@@ -1,0 +1,23 @@
+# Supporting interface for Chapter 4.
+
+"""
+Proposition 4.4.4. There is no rational x such that x^2 = 2.
+"""
+
+# The standard proof writes a rational square root of 2 in lowest terms and
+# obtains a contradiction because both numerator and denominator would be even.
+# The reduced-fraction representation is a reusable arithmetic bridge for the
+# Chapter 4 proof; its construction is retained here as a narrow proof debt.
+
+thm rational_reduced_fraction_parity_witness:
+    ? forall x Q:
+        x^2 = 2
+        =>:
+            exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
+    # trust: construct a lowest-terms integer numerator and positive
+    # denominator for a rational number, then use coprimality to show that at
+    # least one of them is odd.
+    trust exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
+
+# Final audit (2026-07-12): 1 non-exercise marker remains for Proposition
+# 4.4.4: the reduced rational numerator/denominator parity witness.

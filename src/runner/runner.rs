@@ -1,11 +1,9 @@
 use crate::prelude::*;
 use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 const RUNNER_NAME: &str = "litex-runner";
 const RUNNER_VERSION: &str = "0.1";
-const MAIN_DOT_LIT: &str = "main.lit";
 
 pub fn run_runner_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
     run_runner_for_code_with_language(code, label, hide_file_paths, OutputLanguage::English)
@@ -60,6 +58,22 @@ pub fn run_runner_for_file_with_strict_and_language(
     strict_mode: bool,
     output_language: OutputLanguage,
 ) -> (bool, String) {
+    run_runner_for_file_with_strict_language_and_isolation(
+        file_path,
+        hide_file_paths,
+        strict_mode,
+        output_language,
+        false,
+    )
+}
+
+pub fn run_runner_for_file_with_strict_language_and_isolation(
+    file_path: &str,
+    hide_file_paths: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+) -> (bool, String) {
     let resolved_path = match resolve_litex_file_path(file_path) {
         Ok(path) => path,
         Err(message) => {
@@ -73,31 +87,24 @@ pub fn run_runner_for_file_with_strict_and_language(
         }
     };
 
-    let source_code = match fs::read_to_string(resolved_path.as_str()) {
-        Ok(content) => content,
-        Err(error) => {
-            let message = if hide_file_paths {
-                format!("could not read entry file: {}", error)
-            } else {
-                format!("could not read file {:?}: {}", resolved_path, error)
-            };
-            return runner_target_error_output(
-                "file",
-                resolved_path.as_str(),
-                hide_file_paths,
-                message,
-                output_language,
-            );
-        }
-    };
-
-    run_runner_on_source(
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = !hide_file_paths;
+    runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
+    let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
+        resolved_path.as_str(),
+        &mut runtime,
+        force_isolated,
+    );
+    let (ok, trace_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    runner_output_from_trace(
         "file",
         resolved_path.as_str(),
-        source_code.as_str(),
         hide_file_paths,
-        strict_mode,
         output_language,
+        ok,
+        trace_output,
     )
 }
 
@@ -124,61 +131,20 @@ pub fn run_runner_for_repo_with_strict_and_language(
     strict_mode: bool,
     output_language: OutputLanguage,
 ) -> (bool, String) {
-    let joined = Path::new(repo_path).join(MAIN_DOT_LIT);
-    let joined_string = match joined.to_str() {
-        Some(path_string) => path_string.to_string(),
-        None => {
-            return runner_target_error_output(
-                "repo",
-                repo_path,
-                hide_file_paths,
-                "repo path is not valid UTF-8".to_string(),
-                output_language,
-            );
-        }
-    };
-
-    let resolved_path = match resolve_litex_file_path(joined_string.as_str()) {
-        Ok(path) => path,
-        Err(message) => {
-            return runner_target_error_output(
-                "repo",
-                repo_path,
-                hide_file_paths,
-                message,
-                output_language,
-            );
-        }
-    };
-
-    let source_code = match fs::read_to_string(resolved_path.as_str()) {
-        Ok(content) => content,
-        Err(error) => {
-            let message = if hide_file_paths {
-                format!("could not read entry file: {}", error)
-            } else {
-                format!(
-                    "could not read repo main file {:?}: {}",
-                    resolved_path, error
-                )
-            };
-            return runner_target_error_output(
-                "repo",
-                repo_path,
-                hide_file_paths,
-                message,
-                output_language,
-            );
-        }
-    };
-
-    run_runner_on_source(
-        "repo",
-        resolved_path.as_str(),
-        source_code.as_str(),
-        hide_file_paths,
+    let (ok, trace_output) = run_repository_with_output(
+        repo_path,
+        !hide_file_paths,
         strict_mode,
         output_language,
+        false,
+    );
+    runner_output_from_trace(
+        "repo",
+        repo_path,
+        hide_file_paths,
+        output_language,
+        ok,
+        trace_output,
     )
 }
 
@@ -217,9 +183,45 @@ fn run_runner_on_source(
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
 
-    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+    let (stmt_results, runtime_error) = if target_kind == "file"
+        && Path::new(target_label)
+            .file_name()
+            .and_then(|name| name.to_str())
+            == Some("mod.lit")
+    {
+        (
+            vec![],
+            Some(
+                ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "mod.lit is obsolete; move declarations to litex.config".to_string(),
+                    (0, std::rc::Rc::from(target_label)),
+                ))
+                .into(),
+            ),
+        )
+    } else {
+        run_source_code(normalized_source.as_str(), &mut runtime)
+    };
     let (ok, trace_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    runner_output_from_trace(
+        target_kind,
+        target_label,
+        hide_file_paths,
+        output_language,
+        ok,
+        trace_output,
+    )
+}
+
+fn runner_output_from_trace(
+    target_kind: &str,
+    target_label: &str,
+    hide_file_paths: bool,
+    output_language: OutputLanguage,
+    ok: bool,
+    trace_output: String,
+) -> (bool, String) {
     let result_label = if ok { "success" } else { "error" };
 
     let fields = vec![

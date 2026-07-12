@@ -8,6 +8,22 @@ pub enum ImportStmt {
 }
 
 #[derive(Clone)]
+pub struct TrustImportStmt {
+    pub import: ImportStmt,
+}
+
+#[derive(Clone)]
+pub struct LocalImportStmt {
+    pub name: String,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct TrustLocalImportStmt {
+    pub local_import: LocalImportStmt,
+}
+
+#[derive(Clone)]
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: Option<String>,
@@ -20,71 +36,39 @@ pub struct ImportGlobalModuleStmt {
     pub line_file: LineFile,
 }
 
-#[derive(Clone, PartialEq)]
-pub enum RunFileMode {
-    VerifyAndExecute,
-    AffectEnvironmentOnly,
-}
-
-#[derive(Clone)]
-pub struct RunFileStmt {
-    pub file_path: String,
-    pub mode: RunFileMode,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct StopImportStmt {
-    pub module_name: String,
-    pub line_file: LineFile,
-}
-
-impl RunFileStmt {
-    pub fn new(file_path: String, line_file: LineFile) -> Self {
-        RunFileStmt::new_with_mode(file_path, RunFileMode::VerifyAndExecute, line_file)
-    }
-
-    pub fn new_with_mode(file_path: String, mode: RunFileMode, line_file: LineFile) -> Self {
-        RunFileStmt {
-            file_path,
-            mode,
-            line_file,
-        }
-    }
-
-    pub fn keyword(&self) -> &'static str {
-        match self.mode {
-            RunFileMode::VerifyAndExecute => RUN_FILE,
-            RunFileMode::AffectEnvironmentOnly => TRUST_FILE,
-        }
+impl LocalImportStmt {
+    pub fn new(name: String, line_file: LineFile) -> Self {
+        LocalImportStmt { name, line_file }
     }
 }
 
-impl StopImportStmt {
-    pub fn new(module_name: String, line_file: LineFile) -> Self {
-        StopImportStmt {
-            module_name,
-            line_file,
-        }
+impl TrustImportStmt {
+    pub fn new(import: ImportStmt) -> Self {
+        TrustImportStmt { import }
     }
 }
 
-impl fmt::Display for StopImportStmt {
+impl TrustLocalImportStmt {
+    pub fn new(local_import: LocalImportStmt) -> Self {
+        TrustLocalImportStmt { local_import }
+    }
+}
+
+impl fmt::Display for TrustImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", STOP, IMPORT, self.module_name)
+        write!(f, "{} {}", TRUST, self.import)
     }
 }
 
-impl fmt::Display for RunFileStmt {
+impl fmt::Display for TrustLocalImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{}",
-            self.keyword(),
-            DOUBLE_QUOTE,
-            self.file_path,
-            DOUBLE_QUOTE
-        )
+        write!(f, "{} {}", TRUST, self.local_import)
+    }
+}
+
+impl fmt::Display for LocalImportStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", LOCAL, IMPORT, self.name)
     }
 }
 
@@ -151,6 +135,18 @@ impl ImportStmt {
                 import_global_mod.line_file.clone()
             }
         }
+    }
+}
+
+impl TrustImportStmt {
+    pub fn line_file(&self) -> LineFile {
+        self.import.line_file()
+    }
+}
+
+impl TrustLocalImportStmt {
+    pub fn line_file(&self) -> LineFile {
+        self.local_import.line_file.clone()
     }
 }
 

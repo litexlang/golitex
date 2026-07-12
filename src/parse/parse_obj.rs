@@ -212,11 +212,35 @@ impl Runtime {
                 }
                 Ok(result)
             }
+        } else if tb.current_token_is_equal_to(INTERVAL_LITERAL_PREFIX) {
+            self.parse_two_sided_interval_literal(tb)
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
-            Ok(self.parse_fn_set(tb)?.into())
-        } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
-            let mut result = self.parse_anonymous_fn(tb)?;
+            let fn_set = self.parse_fn_set(tb)?;
+            let mut result: Obj = if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
+                let all_fn_names =
+                    ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
+                let equal_to = self.parse_in_local_free_param_scope(
+                    ParamObjType::FnSet,
+                    &all_fn_names,
+                    tb.line_file.clone(),
+                    |this| {
+                        tb.skip_token(LEFT_CURLY_BRACE)?;
+                        let equal_to = this.parse_obj(tb)?;
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(equal_to)
+                    },
+                )?;
+                self.new_anonymous_fn(
+                    fn_set.body.params_def_with_set.clone(),
+                    fn_set.body.dom_facts.clone(),
+                    (*fn_set.body.ret_set).clone(),
+                    equal_to,
+                )?
+                .into()
+            } else {
+                fn_set.into()
+            };
             if let Obj::AnonymousFn(anon) = &result {
                 let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
                 while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -232,117 +256,6 @@ impl Runtime {
             Ok(result)
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
-        }
-    }
-
-    /// `'` + `(param sets [: dom])` + return set + `{ body }`, or `'` + set + `(names)` + `{ body }`.
-    ///
-    /// After a comma-separated name list, if the next token is `:` (domain facts) rather than a set
-    /// expression, parameters are taken to be in `R` (same as writing `x, y R : ...`).
-    pub fn parse_anonymous_fn(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        tb.skip_token(ANONYMOUS_FN_PREFIX)?;
-        if tb.current_token_is_equal_to(LEFT_BRACE) {
-            let built = self.run_in_local_parsing_time_name_scope(|this| {
-                tb.skip_token(LEFT_BRACE)?;
-                let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
-                loop {
-                    let param = parse_synthetically_correct_identifier_string(tb)?;
-                    let mut current_params = vec![param];
-
-                    while tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        current_params.push(parse_synthetically_correct_identifier_string(tb)?);
-                    }
-
-                    let param_group = if tb.current_token_is_equal_to(COLON) {
-                        ParamGroupWithSet::new(current_params, StandardSet::R.into())
-                    } else {
-                        ParamGroupWithSet::new(current_params, this.parse_obj(tb)?)
-                    };
-                    this.parsing_free_param_collection.begin_scope(
-                        ParamObjType::FnSet,
-                        &param_group.params,
-                        tb.line_file.clone(),
-                    )?;
-
-                    params_def_with_set.push(param_group);
-
-                    if tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        continue;
-                    } else if tb.current_token_is_equal_to(COLON) {
-                        break;
-                    } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
-                        break;
-                    } else {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file("anonymous fn: expected `,`, `:`, or closing `)` after parameter group"
-                                    .to_string(), tb.line_file.clone()),
-                        )));
-                    }
-                }
-
-                let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-
-                let mut dom_facts = vec![];
-                if tb.current_token_is_equal_to(COLON) {
-                    tb.skip_token(COLON)?;
-                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
-                    dom_facts.push(cur);
-                    while tb.current_token_is_equal_to(COMMA) {
-                        tb.skip_token(COMMA)?;
-                        let cur = this.parse_or_and_chain_atomic_fact(tb)?;
-                        dom_facts.push(cur);
-                    }
-                }
-
-                tb.skip_token(RIGHT_BRACE)?;
-                // Return sets are non-dependent; parse them outside the function-parameter scope.
-                this.parsing_free_param_collection
-                    .end_scope(ParamObjType::FnSet, &all_fn_names);
-                let ret_set_parsed = this.parse_obj(tb)?;
-                let equal_to = this.parse_in_local_free_param_scope(
-                    ParamObjType::FnSet,
-                    &all_fn_names,
-                    tb.line_file.clone(),
-                    |inner| {
-                        tb.skip_token(LEFT_CURLY_BRACE)?;
-                        let equal_to = inner.parse_obj(tb)?;
-                        tb.skip_token(RIGHT_CURLY_BRACE)?;
-                        Ok(equal_to)
-                    },
-                )?;
-                let built =
-                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
-                Ok(built)
-            })?;
-            Ok(built.into())
-        } else {
-            let set_obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
-            let built = self.run_in_local_parsing_time_name_scope(|this| {
-                tb.skip_token(LEFT_BRACE)?;
-                let mut params = vec![parse_synthetically_correct_identifier_string(tb)?];
-                while tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                    params.push(parse_synthetically_correct_identifier_string(tb)?);
-                }
-                tb.skip_token(RIGHT_BRACE)?;
-                let param_group = ParamGroupWithSet::new(params, set_obj.clone());
-                let param_groups = vec![param_group.clone()];
-                let all_names = ParamGroupWithSet::collect_param_names(&param_groups);
-                this.parsing_free_param_collection.begin_scope(
-                    ParamObjType::FnSet,
-                    &all_names,
-                    tb.line_file.clone(),
-                )?;
-                tb.skip_token(LEFT_CURLY_BRACE)?;
-                let equal_to = this.parse_obj(tb)?;
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-                this.parsing_free_param_collection
-                    .end_scope(ParamObjType::FnSet, &all_names);
-                this.new_anonymous_fn(vec![param_group], vec![], set_obj, equal_to)
-            })?;
-            Ok(built.into())
         }
     }
 
@@ -992,42 +905,27 @@ impl Runtime {
             })?;
             return Ok(ClosedRange::new(left, right).into());
         }
-        if tok == OO || tok == OC || tok == CO || tok == CC {
-            let interval_kind = tok.to_string();
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 2 arguments", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return match interval_kind.as_str() {
-                OO => Ok(IntervalObj::new_left_open_right_open(left, right).into()),
-                OC => Ok(IntervalObj::new_left_open_right_closed(left, right).into()),
-                CO => Ok(IntervalObj::new_left_closed_right_open(left, right).into()),
-                CC => Ok(IntervalObj::new_left_closed_right_closed(left, right).into()),
+        if tok == LEGACY_OPEN_OPEN_INTERVAL
+            || tok == LEGACY_OPEN_CLOSED_INTERVAL
+            || tok == LEGACY_CLOSED_OPEN_INTERVAL
+            || tok == LEGACY_CLOSED_CLOSED_INTERVAL
+        {
+            let replacement = match tok {
+                LEGACY_OPEN_OPEN_INTERVAL => "'(a, b)",
+                LEGACY_OPEN_CLOSED_INTERVAL => "'(a, b]",
+                LEGACY_CLOSED_OPEN_INTERVAL => "'[a, b)",
+                LEGACY_CLOSED_CLOSED_INTERVAL => "'[a, b]",
                 _ => unreachable!(),
             };
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "two-sided interval spelling `{}` has been removed; use `{}`",
+                        tok, replacement
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         if tok == INFO || tok == INFC || tok == OINF || tok == CINF {
             let interval_kind = tok.to_string();
@@ -1511,9 +1409,15 @@ impl Runtime {
                 if let Some(standard) = standard_set_from_bare_identifier_name(&id.name) {
                     return Ok(standard);
                 }
+                let is_bound_in_parse_scope = self
+                    .parsing_free_param_collection
+                    .name_is_in_any_free_param_map(&id.name);
                 let resolved = self
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name);
+                if is_bound_in_parse_scope {
+                    return Ok(resolved);
+                }
                 match resolved {
                     Obj::Atom(AtomObj::Identifier(id)) => {
                         Ok(self.qualify_bare_identifier_if_needed(id))
@@ -1545,6 +1449,57 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
+    }
+
+    fn parse_two_sided_interval_literal(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        tb.skip_token(INTERVAL_LITERAL_PREFIX)?;
+        let left_closed = match tb.current()? {
+            LEFT_BRACE => false,
+            LEFT_BRACKET => true,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal after `'` expects `(` or `[`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip()?;
+        let left = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let right = self.parse_obj(tb)?;
+        if tb.current_token_is_equal_to(COMMA) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "interval literal expects exactly two endpoints".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let right_closed = match tb.current()? {
+            RIGHT_BRACE => false,
+            RIGHT_BRACKET => true,
+            _ => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal expects `)` or `]` after its right endpoint".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+        };
+        tb.skip()?;
+
+        Ok(match (left_closed, right_closed) {
+            (false, false) => IntervalObj::new_left_open_right_open(left, right).into(),
+            (false, true) => IntervalObj::new_left_open_right_closed(left, right).into(),
+            (true, false) => IntervalObj::new_left_closed_right_open(left, right).into(),
+            (true, true) => IntervalObj::new_left_closed_right_closed(left, right).into(),
+        })
     }
 
     fn parse_angle_bracketed_objs(
@@ -1624,18 +1579,26 @@ impl Runtime {
             )))
         })?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = tb.advance()?;
-            validate_litex_name_for_parse(&right, tb.line_file.clone()).map_err(|e| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "replacement expects its first argument to be a prop name".to_string(),
-                    tb.line_file.clone(),
-                    Some(e),
-                    vec![],
-                )))
-            })?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip()?;
+                let part = tb.advance()?;
+                validate_litex_name_for_parse(&part, tb.line_file.clone()).map_err(|e| {
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        "replacement expects its first argument to be a prop name".to_string(),
+                        tb.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+                parts.push(part);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
         } else {
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
@@ -1795,9 +1758,15 @@ impl Runtime {
     }
 
     fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let left = parse_synthetically_correct_identifier_string(tb)?;
-        tb.skip_token(MOD_SIGN)?;
-        let right = parse_synthetically_correct_identifier_string(tb)?;
+        let mut parts = vec![parse_synthetically_correct_identifier_string(tb)?];
+        while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip_token(MOD_SIGN)?;
+            parts.push(parse_synthetically_correct_identifier_string(tb)?);
+        }
+        let right = parts
+            .pop()
+            .expect("qualified name should have a local name");
+        let left = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1854,9 +1823,16 @@ impl Runtime {
     pub fn parse_atomic_name(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip()?;
+                parts.push(parse_synthetically_correct_identifier_string(tb)?);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
         } else {
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
@@ -1869,65 +1845,77 @@ impl Runtime {
         let left = tb.advance()?;
         validate_litex_name_for_parse(&left, tb.line_file.clone())?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip_token(MOD_SIGN)?;
-            let right = tb.advance()?;
-            validate_litex_name_for_parse(&right, tb.line_file.clone())?;
-            Ok(AtomicName::WithMod(left, right))
+            let mut parts = vec![left];
+            while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+                tb.skip_token(MOD_SIGN)?;
+                let part = tb.advance()?;
+                validate_litex_name_for_parse(&part, tb.line_file.clone())?;
+                parts.push(part);
+            }
+            let right = parts
+                .pop()
+                .expect("qualified name should have a local name");
+            let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
+            Ok(AtomicName::WithMod(module_name, right))
+        } else if let Some(module_name) = self.unique_active_local_import_member_namespace(&left) {
+            Ok(AtomicName::WithMod(module_name, left))
         } else if let Some(module_name) = self.current_parse_module_name() {
-            Ok(AtomicName::WithMod(module_name.to_string(), left))
+            Ok(AtomicName::WithMod(module_name, left))
         } else {
             Ok(AtomicName::WithoutMod(left))
         }
     }
 
     fn current_parse_module_name(&self) -> Option<String> {
-        let current_module_name = self.module_manager.borrow().current_module_name.clone();
-        if current_module_name.is_empty() {
-            None
-        } else {
-            Some(current_module_name)
-        }
+        self.current_parse_namespace().map(str::to_string)
     }
 
     fn name_is_in_builtin_identifier_layer(&self, name: &str) -> bool {
         if is_builtin_identifier_name(name) {
             return true;
         }
-        self.environment_stack
-            .get(FILE_INDEX_FOR_BUILTIN)
-            .map_or(false, |env| env.defined_identifiers.contains_key(name))
+        self.builtin_environment()
+            .defined_identifiers
+            .contains_key(name)
     }
 
     fn name_is_in_builtin_prop_layer(&self, name: &str) -> bool {
         if is_builtin_predicate(name) {
             return true;
         }
-        self.environment_stack
-            .get(FILE_INDEX_FOR_BUILTIN)
-            .map_or(false, |env| {
-                env.defined_def_props.contains_key(name)
-                    || env.defined_abstract_props.contains_key(name)
-            })
+        self.builtin_environment()
+            .defined_def_props
+            .contains_key(name)
+            || self
+                .builtin_environment()
+                .defined_abstract_props
+                .contains_key(name)
     }
 
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
-        let Some(module_name) = self.current_parse_module_name() else {
-            return id.into();
-        };
+        if let Some(module_name) = self.unique_active_local_import_member_namespace(&id.name) {
+            return IdentifierWithMod::new(module_name, id.name).into();
+        }
         if self.name_is_in_builtin_identifier_layer(&id.name) {
             return id.into();
         }
-        IdentifierWithMod::new(module_name.to_string(), id.name).into()
+        let Some(module_name) = self.current_parse_module_name() else {
+            return id.into();
+        };
+        IdentifierWithMod::new(module_name, id.name).into()
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
-        let Some(module_name) = self.current_parse_module_name() else {
-            return AtomicName::WithoutMod(name);
-        };
+        if let Some(module_name) = self.unique_active_local_import_member_namespace(&name) {
+            return AtomicName::WithMod(module_name, name);
+        }
         if self.name_is_in_builtin_prop_layer(&name) {
             return AtomicName::WithoutMod(name);
         }
-        AtomicName::WithMod(module_name.to_string(), name)
+        let Some(module_name) = self.current_parse_module_name() else {
+            return AtomicName::WithoutMod(name);
+        };
+        AtomicName::WithMod(module_name, name)
     }
 }
 
@@ -2053,6 +2041,13 @@ mod module_qualification_parse_tests {
         rt.parse_stmt(&mut blocks[0]).expect("parse stmt line")
     }
 
+    fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
+        if rt.current_layer() == ExecutionLayer::Builtin {
+            rt.new_file_path_new_env_new_name_scope("test.lit");
+        }
+        rt.current_module_mut().module_name = module_name.to_string();
+    }
+
     fn assert_with_mod(name: &AtomicName, expected_mod_name: &str, expected_name: &str) {
         let AtomicName::WithMod(mod_name, name) = name else {
             panic!("expected module-qualified name");
@@ -2107,7 +2102,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_definition_name_bare() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
@@ -2162,7 +2157,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "forall x Z:\n    $some_prop(x)");
 
@@ -2189,7 +2184,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_identifier() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
 
@@ -2214,7 +2209,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_builtin_identifier_bare() {
         let mut rt = Runtime::new_with_builtin_code();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
@@ -2227,7 +2222,8 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_keeps_builtin_layer_predicate_bare() {
         let mut rt = Runtime::new();
-        rt.environment_stack[FILE_INDEX_FOR_BUILTIN]
+        rt.module_manager
+            .builtin_environment
             .defined_abstract_props
             .insert(
                 "builtin_prop".to_string(),
@@ -2237,7 +2233,7 @@ mod module_qualification_parse_tests {
                     default_line_file(),
                 ),
             );
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
 
@@ -2253,7 +2249,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
@@ -2289,7 +2285,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_reference_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
@@ -2313,7 +2309,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn module_qualification_preserves_explicit_module_names() {
         let mut rt = Runtime::new();
-        rt.module_manager.borrow_mut().current_module_name = "Nat".to_string();
+        set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "Other::a");
 

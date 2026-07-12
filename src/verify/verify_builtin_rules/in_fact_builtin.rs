@@ -485,6 +485,13 @@ impl Runtime {
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
+                if let Some(result) = self.verify_in_fact_element_in_fn_set_by_known_restriction(
+                    element,
+                    expected_fn_set,
+                    in_fact,
+                )? {
+                    return Ok(result);
+                }
                 self.verify_in_fact_element_in_fn_set_by_stored_definition(
                     element,
                     expected_fn_set,
@@ -865,9 +872,9 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            if let Some(environment) = self.active_imported_module_environment(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 Self::extend_known_preimages_for_replacement_target_from_environment(
-                    environment.as_ref(),
+                    environment,
                     &lookup_key,
                     &target_keys,
                     &mut candidates,
@@ -924,9 +931,9 @@ impl Runtime {
             );
         }
         for module_name in module_names.iter() {
-            if let Some(environment) = self.active_imported_module_environment(module_name) {
+            for environment in self.imported_module_environments(module_name) {
                 Self::extend_known_member_sets_for_cup_family_from_environment(
-                    environment.as_ref(),
+                    environment,
                     &family_keys,
                     &mut candidates,
                 );
@@ -1681,7 +1688,7 @@ impl Runtime {
     }
 
     // Finite-set sum: the return set of the summand controls the numeric set of the sum.
-    // Example: `finite_set_sum({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the domain must be nonempty.
+    // Example: `finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the domain must be nonempty.
     fn verify_in_fact_finite_set_sum_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1733,7 +1740,7 @@ impl Runtime {
     }
 
     // Finite-set product: the return set of the factor controls the numeric set of the product.
-    // Example: `finite_set_product({1, 2}, 'Z(x){x}) $in Z`; for `N_pos`, the empty product is `1`.
+    // Example: `finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the empty product is `1`.
     fn verify_in_fact_finite_set_product_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1778,7 +1785,7 @@ impl Runtime {
     // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return
     // set is `Z` or `N_pos` (positive naturals are integers) and the whole iterated object is
     // well-defined on the integer interval.
-    // Example: `sum(1, n, 'Z(x){x}) $in Z`, `product(1, a, 'N_pos(x){x}) $in Z`.
+    // Example: `sum(1, n, fn(x Z) Z {x}) $in Z`, `product(1, a, fn(x N_pos) N_pos {x}) $in Z`.
     fn verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -1841,7 +1848,7 @@ impl Runtime {
 
     // `sum(start, end, f)` / `product(start, end, f)` in `N_pos` when the iterand's declared
     // return set is `N_pos` and the whole iterated object is well-defined on the integer interval.
-    // Example: `product(1, a, 'N_pos(x){x}) $in N_pos`.
+    // Example: `product(1, a, fn(x N_pos) N_pos {x}) $in N_pos`.
     fn verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -2521,7 +2528,7 @@ impl Runtime {
         let mut step_results = Vec::new();
 
         // Real interval membership requires a real element and the endpoint inequalities.
-        // Example: `x $in oc(a,b)` follows from `x $in R`, `a < x`, and `x <= b`.
+        // Example: `x $in '(a, b]` follows from `x $in R`, `a < x`, and `x <= b`.
         let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
         let in_r_result =
             self.verify_non_equational_known_then_builtin_rules_only(&in_r, verify_state)?;
@@ -3218,6 +3225,36 @@ impl Runtime {
             ]),
             _ => None,
         }
+    }
+
+    // Restriction-to-membership bridge for function spaces.
+    // Example: after `f $restricts_to fn(x S) T`, prove `f $in fn(x S) T`.
+    fn verify_in_fact_element_in_fn_set_by_known_restriction(
+        &mut self,
+        element: &Obj,
+        expected_fn_set: &FnSet,
+        in_fact: &InFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let restriction_fact: AtomicFact = RestrictFact::new(
+            element.clone(),
+            Obj::FnSet(expected_fn_set.clone()),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let restriction_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&restriction_fact)?;
+        if !restriction_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn membership from known restricts_to".to_string(),
+                vec![restriction_result],
+            )
+            .into(),
+        ))
     }
 
     // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.

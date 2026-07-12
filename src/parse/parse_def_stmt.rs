@@ -6,7 +6,7 @@ impl Runtime {
         if !tb.current_token_is_equal_to(LESS) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "template definition expects `template<...>:`; define the template name in the single body `have` or `let` statement".to_string(),
+                    "template definition expects `template<...>:`; define the template name in the single body `have` or `trust have` statement".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -369,8 +369,8 @@ impl Runtime {
         Ok(stmt_ok.into())
     }
 
-    pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(LET)?;
+    pub fn parse_trust_have_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(HAVE)?;
         let mut param_def: Vec<ParamGroupWithParamType> = vec![];
         loop {
             match tb.current() {
@@ -394,7 +394,7 @@ impl Runtime {
             } else {
                 Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "`let ...:` facts must be written in an indented body".to_string(),
+                        "`trust have ...:` facts must be written in an indented body".to_string(),
                         tb.line_file.clone(),
                     ),
                 )))
@@ -460,6 +460,10 @@ impl Runtime {
                 &have_param_names,
                 tb.line_file.clone(),
             )?;
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             return Ok(
                 HaveObjByExistFactsStmt::new(param_defs, facts, tb.line_file.clone()).into(),
             );
@@ -478,6 +482,10 @@ impl Runtime {
                 self.parsing_free_param_collection
                     .end_scope(ParamObjType::Identifier, &have_param_names);
             }
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()).into())
         } else {
             tb.skip_token(EQUAL)?;
@@ -492,6 +500,10 @@ impl Runtime {
             self.parsing_free_param_collection
                 .end_scope(ParamObjType::Identifier, &have_param_names);
             let objs_equal_to = objs_result?;
+            self.register_local_identifier_bindings_for_parse(
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
     }
@@ -795,106 +807,13 @@ impl Runtime {
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
             if tb.current_token_is_equal_to(AS) {
-                if as_algo {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn as algo` does not support `as set` function definitions"
-                                .to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                tb.skip_token(AS)?;
-                tb.skip_token(SET)?;
-                tb.skip_token(COLON)?;
-                let lf = tb.line_file.clone();
-                if tb.body.is_empty() {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> as set:` expects a direct `forall` fact, a `prove:` block, or a `?` goal block"
-                                .to_string(),
-                            lf,
-                        ),
-                    )));
-                }
-
-                if tb.body[0].current_token_is_equal_to(PROVE)
-                    || tb.body[0].current_token_is_equal_to(QUESTION_GOAL)
-                {
-                    let (forall, inline_proof_start) = {
-                        let goal_block = tb.body.get_mut(0).ok_or_else(|| {
-                            RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "`have fn <name> as set:` expects a `prove:` or `?` goal block"
-                                        .to_string(),
-                                    lf.clone(),
-                                ),
-                            ))
-                        })?;
-                        self.parse_goal_forall_fact_block_with_inline_proof(
-                            goal_block,
-                            "`have fn <name> as set:`",
-                        )?
-                    };
-                    let names = forall.params_def_with_type.collect_param_names();
-                    let prove_process: Vec<Stmt> = self
-                        .parse_stmts_with_optional_free_param_scope(
-                            ParamObjType::Forall,
-                            &names,
-                            lf.clone(),
-                            |this| {
-                                let mut proof = Vec::new();
-                                if inline_proof_start > 0 {
-                                    if let Some(goal_block) = tb.body.get_mut(0) {
-                                        for block in
-                                            goal_block.body.iter_mut().skip(inline_proof_start)
-                                        {
-                                            proof.push(this.parse_stmt(block)?);
-                                        }
-                                    }
-                                }
-                                for block in tb.body.iter_mut().skip(1) {
-                                    proof.push(this.parse_stmt(block)?);
-                                }
-                                Ok(proof)
-                            },
-                        )?;
-                    return Ok(
-                        HaveFnByForallExistUniqueStmt::new(name, forall, prove_process, lf).into(),
-                    );
-                }
-
-                if tb.body.len() != 1 {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> as set:` expects one direct `forall` fact, or a `prove:`/`?` goal followed by optional proof body"
-                                .to_string(),
-                            lf,
-                        ),
-                    )));
-                }
-                let fact = self.parse_fact(&mut tb.body[0])?;
-                let forall = match fact {
-                    Fact::ForallFact(ff) => ff,
-                    Fact::ForallFactWithIff(_) => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "`have fn <name> as set:` does not support `forall ... <=>:`"
-                                    .to_string(),
-                                tb.body[0].line_file.clone(),
-                            ),
-                        )));
-                    }
-                    _ => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "`have fn <name> as set:` expects a `forall` fact".to_string(),
-                                tb.body[0].line_file.clone(),
-                            ),
-                        )));
-                    }
-                };
-                return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, vec![], lf).into());
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "`have fn <name> as set:` has been removed; use `have fn <name> by exist!:`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             if tb.current_token_is_equal_to(BY) {
                 if as_algo {
@@ -907,28 +826,36 @@ impl Runtime {
                     )));
                 }
                 tb.skip_token(BY)?;
-                let lf = tb.line_file.clone();
-                let fact = self.parse_fact(tb)?;
-                let forall = match fact {
-                    Fact::ForallFact(ff) => ff,
-                    _ => {
+                if tb.current_token_is_equal_to(EXIST) && tb.token_at_add_index(1) == "!" {
+                    tb.skip_token(EXIST)?;
+                    tb.skip_token("!")?;
+                    tb.skip_token(COLON)?;
+                    if !tb.exceed_end_of_head() {
                         return Err(RuntimeError::from(ParseRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "have fn <name> by ... expects a `forall` fact".to_string(),
-                                lf,
+                                "unexpected token after `have fn <name> by exist!:`".to_string(),
+                                tb.line_file.clone(),
                             ),
                         )));
                     }
-                };
-                if !tb.exceed_end_of_head() {
+                    return self.parse_have_fn_by_exist_unique_body(tb, name);
+                }
+                if tb.current_token_is_equal_to(FORALL) {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "unexpected token after `have fn` `by` `forall` fact".to_string(),
+                            "`have fn <name> by forall ...` has been removed; use `have fn <name> by exist!:` with a `prove:` block"
+                                .to_string(),
                             tb.line_file.clone(),
                         ),
                     )));
                 }
-                return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, vec![], lf).into());
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "expected `by exist!:` after `have fn <name>` for unique-existence function definitions"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
 
             let fs = self.parse_fn_set_clause(tb)?;
@@ -1014,6 +941,70 @@ impl Runtime {
                 )))
             }
         }
+    }
+
+    fn parse_have_fn_by_exist_unique_body(
+        &mut self,
+        tb: &mut TokenBlock,
+        name: String,
+    ) -> Result<Stmt, RuntimeError> {
+        let lf = tb.line_file.clone();
+        if tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`have fn <name> by exist!:` expects a `prove:` or `?` goal block".to_string(),
+                    lf,
+                ),
+            )));
+        }
+
+        if !tb.body[0].current_token_is_equal_to(PROVE)
+            && !tb.body[0].current_token_is_equal_to(QUESTION_GOAL)
+        {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`have fn <name> by exist!:` expects a `prove:` or `?` goal block".to_string(),
+                    tb.body[0].line_file.clone(),
+                ),
+            )));
+        }
+
+        let (forall, inline_proof_start) = {
+            let goal_block = tb.body.get_mut(0).ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "`have fn <name> by exist!:` expects a `prove:` or `?` goal block"
+                            .to_string(),
+                        lf.clone(),
+                    ),
+                ))
+            })?;
+            self.parse_goal_forall_fact_block_with_inline_proof(
+                goal_block,
+                "`have fn <name> by exist!:`",
+            )?
+        };
+        let names = forall.params_def_with_type.collect_param_names();
+        let prove_process: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+            ParamObjType::Forall,
+            &names,
+            lf.clone(),
+            |this| {
+                let mut proof = Vec::new();
+                if inline_proof_start > 0 {
+                    if let Some(goal_block) = tb.body.get_mut(0) {
+                        for block in goal_block.body.iter_mut().skip(inline_proof_start) {
+                            proof.push(this.parse_stmt(block)?);
+                        }
+                    }
+                }
+                for block in tb.body.iter_mut().skip(1) {
+                    proof.push(this.parse_stmt(block)?);
+                }
+                Ok(proof)
+            },
+        )?;
+        Ok(HaveFnByForallExistUniqueStmt::new(name, forall, prove_process, lf).into())
     }
 
     fn parse_have_fn_case_by_case_stmt_after_colon(
@@ -1237,23 +1228,62 @@ impl Runtime {
         ))
     }
 
-    pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(HAVE)?;
-        tb.skip_token(BY)?;
-
-        let true_fact = self.parse_exist_fact(tb)?;
-
-        tb.skip_token(COLON)?;
+    pub fn parse_obtain_exist_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(OBTAIN)?;
 
         let mut equal_tos = vec![];
-        while !tb.exceed_end_of_head() {
-            equal_tos.push(tb.advance()?);
+        loop {
+            if tb.current_token_is_equal_to(FROM) {
+                if equal_tos.is_empty() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "`obtain` expects at least one name before `from`".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                break;
+            }
+            let name = tb.advance()?;
+            is_valid_litex_name(&name).map_err(|msg| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                ))
+            })?;
+            equal_tos.push(name);
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
+            } else if !tb.current_token_is_equal_to(FROM) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "`obtain` expects `,` or `from` after each name".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
         }
 
+        tb.skip_token(FROM)?;
+        if !tb.current_token_is_equal_to(EXIST) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`obtain` expects an `exist` fact after `from`".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let true_fact = self.parse_exist_fact(tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unexpected token after `obtain ... from exist ...`".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
+        self.register_local_identifier_bindings_for_parse(&equal_tos, tb.line_file.clone())?;
 
         Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
     }
@@ -1320,6 +1350,7 @@ impl Runtime {
         };
 
         self.register_collected_param_names_for_def_parse(&preimage_names, tb.line_file.clone())?;
+        self.register_local_identifier_bindings_for_parse(&preimage_names, tb.line_file.clone())?;
 
         Ok(HaveByPreimageStmt::new(preimage_names, range_membership, tb.line_file.clone()).into())
     }
@@ -1516,7 +1547,7 @@ impl Runtime {
             }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "template body only supports `have` and `let` definition statements"
+                    "template body only supports `have` and `trust have` definition statements"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
@@ -1678,10 +1709,12 @@ fn validate_have_matrix_lhs(
 
 fn is_fn_head_identifier_named(head: &FnObjHead, name: &str) -> bool {
     matches!(head, FnObjHead::Identifier(identifier) if identifier.name == name)
+        || matches!(head, FnObjHead::IdentifierWithMod(identifier) if identifier.name == name)
 }
 
 fn is_identifier_named(obj: &Obj, name: &str) -> bool {
     matches!(obj, Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == name)
+        || matches!(obj, Obj::Atom(AtomObj::IdentifierWithMod(identifier)) if identifier.name == name)
 }
 
 fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {

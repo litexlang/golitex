@@ -201,129 +201,42 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.groups.iter() {
             for name in param_def.params.iter() {
-                self.store_free_param_or_identifier_name(name, binding_kind)
-                    .map_err(|runtime_error| {
-                        RuntimeError::from(DefineParamsRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_cause(
-                                format!(
-                                    "define params with type: failed to declare parameter `{}`",
-                                    name
-                                ),
-                                runtime_error,
-                            ),
-                        ))
-                    })?;
-                let fact_infer_result = self
-                    .define_parameter_by_binding_param_type_trusted(
-                        name,
-                        &param_def.param_type,
-                        binding_kind,
+                self.store_free_param_or_identifier_name(name, binding_kind)?;
+                let param_obj = param_binding_element_obj_for_store(name.to_string(), binding_kind);
+                let fact: Fact = match &param_def.param_type {
+                    ParamType::Obj(obj) => InFact::new(
+                        param_obj,
+                        match obj {
+                            Obj::FiniteSeqSet(fs) => self
+                                .finite_seq_set_to_fn_set(fs, default_line_file())
+                                .into(),
+                            Obj::SeqSet(ss) => {
+                                self.seq_set_to_fn_set(ss, default_line_file()).into()
+                            }
+                            Obj::MatrixSet(ms) => {
+                                self.matrix_set_to_fn_set(ms, default_line_file()).into()
+                            }
+                            _ => obj.clone(),
+                        },
+                        default_line_file(),
                     )
-                    .map_err(|runtime_error| {
-                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                                "define params with type: failed to apply param type for parameter `{}` with type {}",
-                                name, param_def.param_type
-                            ), runtime_error)))
-                    })?;
-                infer_result.new_infer_result_inside(fact_infer_result);
+                    .into(),
+                    ParamType::Set(_) => IsSetFact::new(param_obj, default_line_file()).into(),
+                    ParamType::NonemptySet(_) => {
+                        IsNonemptySetFact::new(param_obj, default_line_file()).into()
+                    }
+                    ParamType::FiniteSet(_) => {
+                        IsFiniteSetFact::new(param_obj, default_line_file()).into()
+                    }
+                };
+                infer_result.new_infer_result_inside(
+                    self.store_trusted_fact_and_infer_with_reason(
+                        fact,
+                        InferReason::ParameterDefinition,
+                    )?,
+                );
             }
         }
         Ok(infer_result)
-    }
-
-    fn define_parameter_by_binding_param_type_trusted(
-        &mut self,
-        name: &str,
-        param_type: &ParamType,
-        binding_kind: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
-        match param_type {
-            ParamType::Obj(obj) => match obj {
-                Obj::FiniteSeqSet(fs) => {
-                    let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
-                    let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                        fn_set.into(),
-                        default_line_file(),
-                    )
-                    .into();
-                    self.store_trusted_fact_and_infer_with_reason(
-                        type_fact,
-                        InferReason::ParameterDefinition,
-                    )
-                }
-                Obj::SeqSet(ss) => {
-                    let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
-                    let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                        fn_set.into(),
-                        default_line_file(),
-                    )
-                    .into();
-                    self.store_trusted_fact_and_infer_with_reason(
-                        type_fact,
-                        InferReason::ParameterDefinition,
-                    )
-                }
-                Obj::MatrixSet(ms) => {
-                    let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
-                    let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                        fn_set.into(),
-                        default_line_file(),
-                    )
-                    .into();
-                    self.store_trusted_fact_and_infer_with_reason(
-                        type_fact,
-                        InferReason::ParameterDefinition,
-                    )
-                }
-                _ => {
-                    let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                        obj.clone(),
-                        default_line_file(),
-                    )
-                    .into();
-                    self.store_trusted_fact_and_infer_with_reason(
-                        type_fact,
-                        InferReason::ParameterDefinition,
-                    )
-                }
-            },
-            ParamType::Set(_) => {
-                let type_fact = IsSetFact::new(
-                    param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                    default_line_file(),
-                )
-                .into();
-                self.store_trusted_fact_and_infer_with_reason(
-                    type_fact,
-                    InferReason::ParameterDefinition,
-                )
-            }
-            ParamType::NonemptySet(_) => {
-                let type_fact = IsNonemptySetFact::new(
-                    param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                    default_line_file(),
-                )
-                .into();
-                self.store_trusted_fact_and_infer_with_reason(
-                    type_fact,
-                    InferReason::ParameterDefinition,
-                )
-            }
-            ParamType::FiniteSet(_) => {
-                let type_fact = IsFiniteSetFact::new(
-                    param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                    default_line_file(),
-                )
-                .into();
-                self.store_trusted_fact_and_infer_with_reason(
-                    type_fact,
-                    InferReason::ParameterDefinition,
-                )
-            }
-        }
     }
 }

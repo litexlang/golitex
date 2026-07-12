@@ -73,14 +73,15 @@ mod local_debug_tests {
         let detail_output = env_flag_is_set("LITEX_DEBUG_DETAIL_OUTPUT");
         runtime.detail_output = detail_output;
         let stop_on_first_failure = env_flag_is_set("LITEX_DEBUG_STOP_ON_FIRST_FAILURE");
+        let keep_env_between_snippets = env_flag_is_set("LITEX_DEBUG_KEEP_ENV");
 
         let run_wall_start = Instant::now();
         let mut durations_ms: Vec<(String, f64)> = Vec::new();
         let mut failed_labels: Vec<String> = Vec::new();
 
         for (snippet_index, snippet) in snippets.iter().enumerate() {
-            if snippet_index > 0 {
-                runtime.clear_current_env_parse_name_scope_and_stop_imports();
+            if snippet_index > 0 && !keep_env_between_snippets {
+                runtime.reset_for_isolated_runner_item();
                 runtime.set_current_user_lit_file_path(path_for_runtime);
             }
 

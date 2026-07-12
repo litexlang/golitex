@@ -5,10 +5,10 @@ claim:
         2 = 2
     2 = 2
 
-proof_debt:
+trust:
     3 = 3
 
-let a R:
+trust have a R:
     a = a
 
 have x R
@@ -25,5 +25,5 @@ thm tmp_one_eq_one:
 by thm tmp_one_eq_one()
 
 abstract_prop tmp_rel(u, v)
-proof_debt exist! m, n R st {$tmp_rel(m, n)}
+trust exist! m, n R st {$tmp_rel(m, n)}
 

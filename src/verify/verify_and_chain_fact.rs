@@ -60,11 +60,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let key = and_fact.key();
-        let envs_count = self.environment_stack.len();
-        for i in 0..envs_count {
-            let stack_idx = envs_count - 1 - i;
+        let envs_count = self.environment_count();
+        for stack_idx in 0..envs_count {
             let known_forall_facts_count = {
-                let env = &self.environment_stack[stack_idx];
+                let env = self
+                    .environment_by_top_index(stack_idx)
+                    .expect("environment index should be valid");
                 match env.known_and_facts_in_forall_facts.get(&key) {
                     Some(v) => v.len(),
                     None => continue,
@@ -73,7 +74,9 @@ impl Runtime {
             for j in 0..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let (and_fact_in_known_forall, current_known_forall) = {
-                    let env = &self.environment_stack[stack_idx];
+                    let env = self
+                        .environment_by_top_index(stack_idx)
+                        .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) =
                         env.known_and_facts_in_forall_facts.get(&key)
                     else {

@@ -119,7 +119,7 @@ thm index_function_step:
     $is_finite_set(set_minus(s, {a}))
     count(set_minus(s, {a})) = n
     exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
-    have by exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}: prev
+    obtain prev from exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
     set_minus(s, {a}) $subset s
     have fn idx(i N_pos: i <= count(s)) s by cases:
         case i <= n: prev(i)
@@ -143,7 +143,7 @@ thm index_function_step:
                 case y != a:
                     y $in set_minus(s, {a})
                     exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}
-                    have by exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}: j
+                    obtain j from exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}
                     j <= count(set_minus(s, {a}))
                     j <= n
                     n <= n + 1

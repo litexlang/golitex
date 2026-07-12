@@ -1,8 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_proof_debt_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(PROOF_DEBT)?;
+    pub fn parse_trust_fact_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let facts = self.parse_facts_in_body(tb)?;

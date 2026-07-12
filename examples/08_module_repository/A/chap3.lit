@@ -1,0 +1,3 @@
+local import chap2
+
+have z R = chap2::x

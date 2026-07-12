@@ -6,6 +6,11 @@ Try the examples in browser: https://litexlang.com/doc/Manual
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
 
+> New reader path: the Manual is a reference, not the best first reading path.
+> Start with the [examples learning path](Examples.md), especially
+> [Start Here](Examples.md#start-here), then return here when an example needs
+> syntax or verifier details.
+
 ## Manual Introduction
 
 _In science, you can say things that seem crazy, but in the long run, they can turn out to be right._
@@ -109,7 +114,7 @@ problems. A good workflow is:
 3. Run Litex and read the exact output.
 4. If the result is `unknown`, add a smaller mathematical step.
 5. If the result is `error`, fix syntax or well-definedness first.
-6. If the proof uses `proof_debt`, treat that line as an explicit assumption,
+6. If the proof uses `trust`, treat that line as an explicit assumption,
    not as a proved fact.
 
 ### Trust Boundary
@@ -122,12 +127,12 @@ verified context.
 This convenience has a real trust cost. Litex has a larger trusted
 mathematical background than a small proof kernel: builtin objects, builtin
 facts, verifier rules, inference rules, imported standard-library facts, and
-any explicit `proof_debt` assumptions all matter. `proof_debt` is assumption
+any explicit `trust` assumptions all matter. `trust` is assumption
 injection. It stores a fact for later use, but it does not prove that fact.
 
 For a compact discussion of trust boundaries, comparison with Lean, and project
 positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
-[Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
 > `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
@@ -138,17 +143,17 @@ positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
 Litex works well as an iterative proof-writing environment because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
 
 1. Solve the theorem first in natural language, step by step.
-2. Formalize every step in Litex, using `proof_debt` as explicit assumption injection only when a step is not formalized yet.
-3. Repeatedly refine each broad `proof_debt` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
+2. Formalize every step in Litex, using `trust` as explicit assumption injection only when a step is not formalized yet.
+3. Repeatedly refine each broad `trust` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
 4. After the proof works, remove lines that Litex already infers and move repeated structures into a `claim forall` or a named `prop`.
 
-This turns `proof_debt` into temporary scaffolding rather than the final proof. The
+This turns `trust` into temporary scaffolding rather than the final proof. The
 same loop is used for larger Mechanics examples and benchmark-style tasks:
 first build a readable proof skeleton, then replace broad assumptions by
 smaller verified branches or record the exact language, library, rule, or
 diagnostic gap that blocks the next step.
 
-When you want to audit a file, inspect the remaining `proof_debt` facts before
+When you want to audit a file, inspect the remaining `trust` facts before
 calling the result complete. Each one should be replaced by a checked claim,
 accepted as background, or recorded as proof debt. This audit matters because
 Litex's convenience comes from a larger trusted mathematical background, not
@@ -197,10 +202,12 @@ the common core above is enough for most early examples.
 
 ### Guidance For Reading This Manual
 
-This manual is both a tutorial and a reference. New readers should not try to
-memorize every object, statement, builtin rule, or inference rule on the first
-pass. The first goal is to understand the core loop: write a fact, make sure
-its objects are well-defined, let Litex check it, then reuse accepted facts.
+This manual is mainly a reference. New readers should not try to memorize every
+object, statement, builtin rule, or inference rule on the first pass. For a
+first path through runnable examples, start with the
+[examples learning path](Examples.md). The first goal is to understand the core
+loop: write a fact, make sure its objects are well-defined, then let Litex
+check it and reuse accepted facts.
 
 **Read first**
 
@@ -308,7 +315,7 @@ Objects are the material that facts talk about. For the full path from objects t
 
 #### Names and parameters
 
-Objects introduced by `forall`, `have`, `let`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
+Objects introduced by `forall`, `have`, `suppose`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
 
 ```litex
 forall x R:
@@ -376,7 +383,7 @@ When Litex records **`x $in intersect(A, B)`**, membership inference also stores
 
 #### Big union and big intersection (`cup`, `cap`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `examples/03_objects_and_statements.md`.
+Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `docs/Examples.md#objects-and-statements`.
 
 #### Power set
 
@@ -413,7 +420,7 @@ an object expression. It is well-defined when `P` is a binary `prop` or
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
@@ -427,14 +434,14 @@ preimage witness back:
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have a set
-proof_debt $P(1, a)
+trust $P(1, a)
 a $in replacement(P, {1, 2})
 
 forall y replacement(P, {1, 2}):
@@ -443,13 +450,13 @@ forall y replacement(P, {1, 2}):
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `fn(x R) R {...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
 
 Later parameter domains may depend on earlier parameters. The return set is not dependent on the function parameters, so a signature such as `fn(n N_pos) closed_range(1, n)` is rejected.
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
-The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `'(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `fn(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
 
 ```litex
 have g set = fn(x R) R
@@ -467,7 +474,7 @@ sketch:
 ```
 
 ```litex
-'R(x){x + 1}(2) = 3
+fn(x R) R {x + 1}(2) = 3
 ```
 
 ```litex
@@ -618,12 +625,12 @@ count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3
 `sum(start, end, f)` is a finite summation over a bounded integer index. The
 first argument is the lower bound, the second argument is the upper bound, and
 the third argument is a function that gives the summand for each index. For
-example, `sum(1, 3, '(x Z) Z {x})` passes lower bound `1`, upper bound `3`, and
-the function `'(x Z) Z {x}`; mathematically it is
+example, `sum(1, 3, fn(x Z) Z {x})` passes lower bound `1`, upper bound `3`, and
+the function `fn(x Z) Z {x}`; mathematically it is
 `\sum_{x = 1}^{3} x`.
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
 
 forall f, g fn(x Z) R:
     forall i Z:
@@ -631,32 +638,32 @@ forall f, g fn(x Z) R:
         =>:
             f(i) <= g(i)
     =>:
-        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 forall f fn(x Z) R:
-    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+    abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 ```
 
 `finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, closed integer ranges bridge to the existing `sum(start, end, f)` object, and double sums over finite Cartesian products support the usual finite Fubini swap.
 
 ```litex
-finite_set_sum({1, 2, 3}, 'Z(x){x}) = 1 + 2 + 3
-finite_set_sum({}, 'Z(x){x}) = 0
-finite_set_sum(1...3, 'Z(x){x}) = sum(1, 3, 'Z(x){x})
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
 ```
 
 ```litex
 thm finite_double_sum_over_cartesian_product_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_example:
     prove:
         forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
-    finite_set_sum(X, '(x X) R {finite_set_sum(Y, '(y Y) R {f((x, y))})}) = finite_set_sum(Y, '(y Y) R {finite_set_sum(X, '(x X) R {f((x, y))})})
+            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 ```
 
 For a nonempty finite set, an enumeration by a bijection from `1...count(X)` gives the same sum for any bijective ordering.
@@ -667,7 +674,7 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
         exist! i closed_range(1, count(X)) st {g(i) = x}
 
 template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), '(i closed_range(1, count(X))) R {f(g(i))})
+    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
     prove:
@@ -683,9 +690,9 @@ thm finite_set_sum_enumeration_well_defined:
 `finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
 
 ```litex
-finite_set_product({2, 3, 4}, 'Z(x){x}) = 2 * 3 * 4
-finite_set_product({}, 'Z(x){x}) = 1
-finite_set_product(1...3, 'Z(x){x}) = product(1, 3, 'Z(x){x})
+finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
+finite_set_product({}, fn(x Z) Z {x}) = 1
+finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
 ```
 
 #### Integer intervals as sets
@@ -703,7 +710,7 @@ have q set = 0 ... 1
 
 #### Real intervals as sets
 
-Two-sided real intervals use `oo(a, b)`, `oc(a, b)`, `co(a, b)`, and `cc(a, b)`. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
+Two-sided real intervals use `'(a, b)`, `'(a, b]`, `'[a, b)`, and `'[a, b]`. The leading apostrophe distinguishes these literals from tuples and finite sequences. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
 
 ```litex
 have left set = info(1)
@@ -865,7 +872,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Set builder `{x S: ...}` | The parameter set `S` must be well-defined. The body facts are checked for well-definedness in a local context where `x $in S` is available. |
 | `replacement(P, A)` | `P` must name a binary `prop` or `abstract_prop`, `A` must be well-defined, and Litex must verify uniqueness: `forall x A, y, y2 set: $P(x, y), $P(x, y2) => y = y2`. |
 | Function space `fn(x S: domain facts) T` | Parameter sets must be well-defined. Domain facts are checked in the local parameter context, and the return set `T` must be well-defined. Later parameter sets may depend on earlier parameters. |
-| Anonymous function `'(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
+| Anonymous function `fn(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
 | Function application `f(a)` | The function head must have a known function-space fact or be an anonymous function. The arguments must be well-defined and must satisfy the parameter sets and domain facts. Curried applications repeat this check at each layer. |
 | Finite sequence literal `[a, b, ...]` | Each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. |
 | Cartesian product `cart(A, B, ...)` and tuple `(a, b, ...)` | Each component must be well-defined. |
@@ -875,11 +882,11 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `count(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
-| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}` when an API expects a function on `S`. |
+| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}` when an API expects a function on `S`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
-| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `'(x S) T {f(x)}`. |
+| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
-| Real intervals `oo(a, b)`, `oc(a, b)`, `co(a, b)`, `cc(a, b)`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
+| Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
 | Matrix operators `A ++ B`, `A -- B`, `A ** B`, `c *. A`, `A ^^ n` | The scalar in `c *. A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
@@ -909,7 +916,7 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 > Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly. `error` is different: first fix the syntax or make every object well-defined.
 
-This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `proof_debt`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
+This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `trust`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
 
 This page mainly lists the **types of facts** Litex can read and how they are shaped. For how those facts are actually proved by the checker, read [Proof Process](https://litexlang.com/doc/Manual#proof-process) and [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules).
 
@@ -1138,13 +1145,13 @@ The body after `st` is the list of facts the witness must satisfy.
 
 > Hint: To prove an `exist` goal, Litex usually needs a concrete witness. In proof code, use `witness` when you want to tell Litex which object should be used as the witness.
 
-> Hint: To use an already known `exist` fact, use `have by exist` to give names to the witnesses and bring their body facts into the current context.
+> Hint: To use an already known `exist` fact, use `obtain ... from exist ...` to give names to the witnesses and bring their body facts into the current context.
 
 Example:
 
 ```litex
 witness exist u R st { u = 1 } from 1
-have by exist v R st { v = 1 }: h
+obtain h from exist v R st { v = 1 }
 h = 1
 ```
 
@@ -1310,7 +1317,7 @@ These predicates express inclusion between sets.
 
 ### Function Restriction
 
-This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `'(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
+This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `fn(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
 
 | Predicate | Negated form | Meaning |
 |-----------|--------------|---------|
@@ -1442,7 +1449,7 @@ by thm 自反等式(1)
 
 ---
 
-### Abstract predicate symbol (`abstract_prop`)
+### Abstract predicates
 
 Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. It only declares the name; it does not give the predicate any mathematical property by itself.
 
@@ -1466,7 +1473,7 @@ forall x R:
         $p(x)
 ```
 
-> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `proof_debt` to give it mathematical behavior, treat that line as an explicit trusted assumption.
+> Hint: use `prop` when you can give a definition. Use `abstract_prop` when you intentionally need an uninterpreted predicate. If you later use `trust` to give it mathematical behavior, treat that line as an explicit trusted assumption.
 
 ---
 
@@ -1547,7 +1554,7 @@ cannot depend on the tuple or cart currently being defined. A cart made this
 way is equal to a literal `cart(...)` when Litex can verify the cart fact,
 dimension, and each projection.
 
-### Symbolic sequence and matrix definitions (`have seq`, `have finite_seq`, `have matrix`)
+### Symbolic sequences and matrices
 
 Use **`have seq s seq(S) for i, s(i) = expr`**,
 **`have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr`**, or
@@ -1575,15 +1582,15 @@ the typed header.
 
 ---
 
-### Naming witnesses (`have by exist`)
+### Naming witnesses (`obtain ... from exist`)
 
-When an existential fact is already known, **`have by exist`** gives names to its witnesses. After that, you can use the witness properties directly.
+When an existential fact is already known, **`obtain ... from exist ...`** gives names to its witnesses. After that, you can use the witness properties directly.
 
 ```litex
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
     1 / 2 < 1
-have by exist v R st {v > 0, v < 1}: w
+obtain w from exist v R st {v > 0, v < 1}
 w > 0
 ```
 
@@ -1636,14 +1643,14 @@ sketch:
 ```litex
 abstract_prop P(x, y)
 
-proof_debt forall x {1, 2}, y, y2 set:
+trust forall x {1, 2}, y, y2 set:
     $P(x, y)
     $P(x, y2)
     =>:
         y = y2
 
 have y set
-proof_debt y $in replacement(P, {1, 2})
+trust y $in replacement(P, {1, 2})
 have by preimage x from y $in replacement(P, {1, 2})
 
 x $in {1, 2}
@@ -1765,7 +1772,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn ... as set: prove: forall ... exist!`)
+### Function from unique existence (`have fn ... by exist!: prove: forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1773,7 +1780,7 @@ Use this when mathematics tells you that for every input there exists a **unique
 have A set = R
 have B set = R
 
-have fn f as set:
+have fn f by exist!:
     prove:
         forall x A:
             exist! y B st {y = x}
@@ -1785,21 +1792,19 @@ forall x A:
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block. The older direct form `have fn f as set: forall ...` is still accepted for compatibility.
+> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block.
 
-> Hint: `as set` is the current syntax for "define a function from unique existence." It is not a return-type annotation. The return set comes from the `exist!` witness type, such as `exist! y B ...`.
+> Hint: `by exist!` means "define a function from unique existence." The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
-Classic structure example: the `group_quotient` section of
-`examples/04_structures/README.md` combines
-`struct`, `template`, and `have fn ... as set` to define the quotient set of a
-group by taking the set of left cosets. It also adds the quotient
-multiplication interface for a normal subgroup and proves the representative
-independence lemmas needed for well-definedness.
+For a short first encounter with `struct`, `template`, and small mathematical
+interfaces, see `docs/Examples.md#small-worlds`. Longer quotient-style
+developments belong in case studies and tutorial material once the basic
+building blocks are familiar.
 
 <!-- litex:skip-test -->
 ```litex
 template<s set>:
-    have fn group_quotient as set:
+    have fn group_quotient by exist!:
         prove:
             forall g &Group<s>, h power_set(s):
                 exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
@@ -1830,22 +1835,22 @@ have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
 
 ---
 
-### Local assumption block (`let`)
+### Local assumption block (`suppose`)
 
-Use **`let`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
+Use **`suppose`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
 
 ```litex
-let a R:
+trust have a R:
     a = 1
 a = 1
 
-let b, c R:
+trust have b, c R:
     b < c
 
 b < c
 ```
 
-> Hint: `let` and `proof_debt` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `suppose` and `trust` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -2003,33 +2008,33 @@ If the run uses `-strict`, user `axiom` declarations are rejected.
 
 ---
 
-### Inject explicit assumptions (`proof_debt`)
+### Explicit assumptions without a proof
 
-**`proof_debt:`** (or **`proof_debt`** with a block) injects explicit assumptions into the
+**`trust:`** (or **`trust`** with a block) injects explicit assumptions into the
 current environment. It may store temporary lemmas or proof-debt facts, but it
 does not call the verifier to prove those facts.
 
-`proof_debt` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
+`trust` is Litex's sorry-like escape hatch. In its role, it is close to Lean's
 `by sorry`: it lets development continue by adding a fact whose proof is not
 present. That is sometimes exactly what you want when you are building a large
 proof skeleton or marking a precise proof-debt item. It is
 also dangerous, because every later proof may depend on the unproved fact.
 
-Read every `proof_debt` line as: "assume this fact from here onward." If later output
+Read every `trust` line as: "assume this fact from here onward." If later output
 shows a `verification` trace citing a proof-debt-injected fact or `forall`, that is a
 conditional proof route relative to the injected assumption. It does not mean
 Litex has proved the injected assumption itself.
 
-If Litex reports success on a `proof_debt` line, that means the assumption was
+If Litex reports success on a `trust` line, that means the assumption was
 accepted and stored. It is not a proof result for the injected fact.
 
-> Hint: Use `axiom name:` when a trusted background fact should be a named theorem-like interface. Use `proof_debt` when you are marking a temporary or local proof gap.
+> Hint: Use `axiom name:` when a trusted background fact should be a named theorem-like interface. Use `trust` when you are marking a temporary or local proof gap.
 
-A final artifact should not leave broad `proof_debt` facts unexplained. Either prove
+A final artifact should not leave broad `trust` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `proof_debt`, `let`, and `axiom` statements are rejected instead
+If the run uses `-strict`, user `trust`, `suppose`, and `axiom` statements are rejected instead
 of being stored. Facts loaded from imported modules are still trusted inputs, so
 strict mode is an audit boundary for the current run, not a claim that all
 dependencies are assumption-free.
@@ -2041,7 +2046,7 @@ have line nonempty_set
 have plane nonempty_set
 
 # All elements on a line or a plane are points (power_set: the set of all subsets of a set)
-proof_debt:
+trust:
     forall l line:
         l $in power_set(point)
     forall pl plane:
@@ -2054,7 +2059,7 @@ proof_debt:
 
 **`sketch:`** opens a checked local block: a nested list of statements closed before the outer environment continues.
 
-It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... as set`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
+It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... by exist!`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
 
 `sketch:` is the canonical top-level spelling for this checked sandbox. Older
 notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
@@ -2076,8 +2081,9 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `run_file`, `trust_file`, and
-`stop import` are not allowed inside `try:`.
+Control statements such as `clear`, `import`, `local import`, `trust import`,
+and `trust local import` are
+not allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
 scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
@@ -2097,28 +2103,67 @@ x = 1
 
 ---
 
-### run file
+### Modules and manifests (preview)
 
-Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same std module again is an idempotent no-op. Re-importing after `stop import` re-enables that module.
+Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same module again is an idempotent no-op.
 
-Use **`import "path/to/module" as M`** to load a local module directory whose entry file is `main.lit`. Use **`import "path/to/file.lit" as M`** to load a local `.lit` file as a module entry file. File imports require an explicit alias so later references have a stable namespace such as `M::some_theorem`.
+There are two project-aware top-level modes:
 
-Use **`stop import name`** to stop using an imported module as an automatic verification source. After that, facts such as known atomic facts, known `forall` facts, and prop definitions from that module are ignored by ordinary verification. Explicit citations such as `by thm name::theorem(...)` can still cite the stopped module.
+- **`litex -f file.lit`** finds the outermost enclosing `litex.config` project
+  that registers the file, then runs that file with its `local import`
+  dependency closure. A file not registered by a project stays isolated. Use
+  **`litex -isolated -f file.lit`** to force that old isolated behavior.
+- **`litex -r project/`** first discovers `project/litex.config` and recursively
+  declared child projects, validates paths and names, scans import graphs, rejects
+  local and module cycles, and only then executes the `[entrance]` file.
 
-`stop import` writes to the shared module manager. This means a `stop import`
-statement inside an imported module also affects the original file for the rest
-of the current run, unless that module is imported again and reactivated.
+`litex.config` is project configuration, not Litex source and not a knowledge
+file. It contains exactly an entrance table and an optional export table:
+
+```ini
+[entrance]
+file = "./book.lit"
+
+[export]
+chap2 = "./chap2.lit"
+chapters = "./chapters"
+```
+
+An `[export]` target ending in a `.lit` file is a local source. A directory
+target is a child project and must contain its own `litex.config`. Configuration
+declares names and paths but does not itself produce mathematical facts.
+
+Inside an entrance or registered source, **`local import name`** can name only
+an entry declared by that module's `[export]` table. It cannot contain a path or
+an alias. The binding is local to that source, but it resolves to the export's
+canonical identity:
 
 <!-- litex:skip-test -->
 ```litex
-# A/main.lit
-import "../B" as B
-stop import B
-
-# main.lit
-import "./A" as A
-$B::some_prop(2) # ordinary verification no longer uses B automatically
+# A/chap3.lit
+local import chap2
+chap2::some_fact
 ```
+
+The canonical external name is hierarchical, for example
+`A::chap2::some_fact` or `A::chapters::algebra::Group`. A `local import` loads
+its target once per top-level run and caches that target environment in memory;
+an unrelated export is not executed merely because it was declared.
+
+Within the importing source, a bare shared name resolves to a local definition
+first.  If the name is not local or builtin and exactly one active
+`local import` exports it, Litex resolves that bare name to the imported
+chapter.  This lets a later textbook chapter read naturally after, for example,
+`trust local import chap9`.  If two imports provide the same name, write the
+provenance explicitly, such as `chap9::is_continuous_at`; do not rely on an
+arbitrary import order.
+
+In project mode, **`import A`** names a module exported by the root
+`litex.config`, or an already registered global/standard module. Relative imports
+are not the project dependency mechanism. In isolated file mode,
+**`import "path/to/module" as M`** remains available for a local module
+directory containing `main.lit`. Ordinary `import` never loads a `.lit` file;
+declare that file in `[export]` and access it with `local import` instead.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2127,27 +2172,32 @@ book is building a concept. Extract repeated interfaces into std later; do not
 hide the main derivation by importing a large package and citing a synonym
 theorem.
 
-**`run_file "path.lit"`** runs a quoted file in the current user environment. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects. Content loaded this way is cleared by `clear`.
+There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
+developments declare their entry and sources in `litex.config`, then use
+`local import`; Litex does not provide a file-loading statement that bypasses
+verification for an arbitrary path.
 
-**`trust_file "path.lit"`** reads a quoted file with the same path rules as
-`run_file`, but treats the file as trusted. Litex loads only persistent
-environment effects such as facts, definitions, theorem interfaces, object
-bindings, and strategy registrations. It does not run ordinary proof checking
-or well-definedness checking for the loaded file. Use this only for local files
-whose contents you intentionally trust, for example a temporary interface file
-used to speed up a large translation dependency.
+When a declared module or chapter is intentionally trusted, use an explicit
+source-level import policy instead of putting trust in `litex.config`:
 
-```text
-import Nat
-import "./chap6_sketch.lit" as chap6
-stop import Nat
-run_file "./runfile2.lit"
-trust_file "./trusted_interfaces.lit"
+<!-- litex:skip-test -->
+```litex
+# chap11.lit
+trust local import chap10
+
+# project entrance file
+trust import Algebra
 ```
+
+Trusted imports still resolve the same declared target, parse its source, and
+reject configuration or dependency cycles. They skip well-definedness and proof
+processing in that target and its nested imports, applying direct environment
+effects only. They are rejected by `-strict`, and every conclusion from that
+top-level run is conservatively marked with the trusted-import dependency.
 
 ---
 
-### No-op (`do_nothing`)
+### Empty proof steps
 
 A trivial proof step (placeholder or explicit skip). Write `do_nothing` or `...` to skip a proof step.
 
@@ -2160,7 +2210,7 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active; use `stop import` when you want to stop an imported module.
+**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active.
 
 ```litex
 have a R = 1
@@ -2184,17 +2234,6 @@ clear
 $Demo::some_prop(2) # Demo is still active after clear
 ```
 
-In contrast, `stop import` is the explicit global import-control statement.
-
-<!-- litex:skip-test -->
-```litex
-import "./Demo" as Demo
-
-stop import Demo
-
-$Demo::some_prop(2) # ordinary verification no longer uses Demo automatically
-```
-
 ---
 
 ### Evaluate an expression (`eval`)
@@ -2206,15 +2245,15 @@ eval 1 + 1 / 3 # exact rational arithmetic
 
 eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 
-eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
+eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})}) # sum of a sum
 ```
 
 Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
 
 ```litex
-have a set = sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+have a set = sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
 
-eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+eval a from sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
 ```
 
 ---
@@ -2223,7 +2262,7 @@ eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
 
 **`witness exist … from …:`** supplies explicit values and a sub-proof that they satisfy the existential body, concluding **`exist …`**.
 
-Existence proofs are often used together with `have by exist`: first prove that some object exists, then name the witness so later lines can use an object with the stated properties.
+Existence proofs are often used together with `obtain ... from exist`: first prove that some object exists, then name the witness so later lines can use an object with the stated properties.
 
 ```litex
 witness exist x, y R st {x > y} from 1, 0:
@@ -2231,13 +2270,13 @@ witness exist x, y R st {x > y} from 1, 0:
 
 exist a, b R st {a > b}
 
-have by exist x, y R st {x > y}: w, z
+obtain w, z from exist x, y R st {x > y}
 w > z
 ```
 
 ---
 
-### Witness non-emptiness (`witness $is_nonempty_set`)
+### Witnessing nonempty sets
 
 Shows a set is nonempty by naming a member and proving membership.
 
@@ -2314,7 +2353,7 @@ by contra:
 
 ---
 
-### Enumerate a finite set (`by enumerate finite_set`)
+### Enumerating finite sets
 
 Finite “for all members of this enumerated set” reasoning—useful for small domains and Cartesian products of finite sets.
 
@@ -2350,7 +2389,7 @@ sketch:
 
 ---
 
-### Induction (`by induc`, `by strong_induc`)
+### Induction and strong induction
 
 **`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment. The structured form separates the base proof from the induction-step proof.
 
@@ -2489,7 +2528,7 @@ by extension:
 
 ---
 
-### Register a reflexive predicate (`by reflexive_prop`)
+### Registering reflexivity
 
 Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
 
@@ -2511,7 +2550,7 @@ $same_obj(a, a)
 
 ---
 
-### Register a transitive predicate (`by transitive_prop`)
+### Registering transitivity
 
 Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
@@ -2543,7 +2582,7 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
-### Zorn lemma preview (`by zorn_lemma`)
+### Zorn's lemma preview
 
 Use **`by zorn_lemma: set S, prop P:`** when `P` is a binary user-defined or abstract prop representing an order on the set `S`. The body is one local proof section; if no local proof statements are needed, use **`by zorn_lemma: set S, prop P`** without the final proof-body colon. After the body runs, Litex checks that `S` is nonempty, `P` is reflexive/transitive/antisymmetric on `S`, and every totally ordered subset of `S` has an upper bound in `S`. If those checks pass, Litex stores a maximal-element fact:
 
@@ -2554,16 +2593,16 @@ exist m S st {forall! x S: $P(m, x) => {x = m}}
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet quantify over prop names as first-class relation objects.
 
-See the `by_zorn_lemma` section of `examples/01_proof_patterns/README.md`.
+See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 
 ---
 
-### Regularity/Foundation preview (`by regularity_axiom`)
+### Foundation preview
 
 Use **`by regularity_axiom(A)`** when `A` is a nonempty set. Litex first checks the obligation `$is_nonempty_set(A)`. If that check passes, it stores the regularity/foundation conclusion that some member of `A` is disjoint from `A`:
 
 ```litex
-proof_debt $is_nonempty_set({1, 2})
+trust $is_nonempty_set({1, 2})
 
 by regularity_axiom({1, 2})
 
@@ -2574,7 +2613,7 @@ This is a preview trusted statement rather than an ordinary theorem, because Lit
 
 ---
 
-### Axiom of choice preview (`by axiom_of_choice`)
+### Axiom of choice preview
 
 Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all nonempty sets. The body is one local proof section; if no local proof statements are needed, use **`by axiom_of_choice: set S`** without the final proof-body colon. After the body runs, Litex checks `$is_set(S)` and `forall A S: $is_nonempty_set(A)`. If those checks pass, Litex stores a choice-function existence fact:
 
@@ -2592,18 +2631,17 @@ claim:
 
 This is a preview trusted statement rather than an ordinary theorem, because Litex does not yet represent the axiom of choice as a first-class set-theoretic proposition.
 
-See the `by_axiom_of_choice` section of `examples/01_proof_patterns/README.md`.
+See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 
 ---
 
-### Register a symmetric predicate (`by symmetric_prop`)
+### Registering symmetry
 
 Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the ordinary goal block (`prove:` or `?`) is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See the `by_symmetric_reflexive_antisymmetric_prop` section of
-`examples/01_proof_patterns/README.md`.
+See the predicate property registration examples in `docs/Examples.md#proof-patterns`.
 
 ```litex
 prop p(x set, y set):
@@ -2626,7 +2664,7 @@ forall a, b set:
 
 ---
 
-### Register an antisymmetric predicate (`by antisymmetric_prop`)
+### Registering antisymmetry
 
 Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
 
@@ -2656,7 +2694,7 @@ forall a, b set:
 
 ---
 
-### Closed range as cases (`by closed_range as cases`)
+### Turning closed ranges into cases
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 For a one-point range, it records the single equality directly instead of a one-branch `or`.
@@ -2692,22 +2730,23 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have seq s seq(S) for i, s(i) = expr` | Define a sequence by its entries |
 | `have finite_seq f finite_seq(S, n) for i <= n, f(i) = expr` | Define a finite sequence by its entries |
 | `have matrix M matrix(S, r, c) for i <= r, j <= c, M(i, j) = expr` | Define a matrix by its entries |
-| `have by exist` | Name witnesses from a known existential fact |
+| `obtain ... from exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
-| `have fn ... as set: prove: forall ... exist!` | Define a function from unique existence |
+| `have fn ... by exist!: prove: forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
-| `let` | Introduce local names and local assumptions |
+| `suppose` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
 | `axiom name` | Name a trusted `forall` fact without proof, using the same citation interface as `thm` |
 | `alias thm` | Copy a theorem under a new name |
-| `proof_debt` | Add explicit unproved assumptions to the current context |
+| `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
-| `import` / `run_file` | Use code from another file |
+| `import` / `local import` | Verify and load project module interfaces declared in `litex.config` |
+| `trust import` / `trust local import` | Load a declared dependency's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -2727,7 +2766,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by axiom_of_choice` | Preview trusted choice-function existence step for families of nonempty sets |
 | `by regularity_axiom` | Preview trusted foundation step for nonempty sets |
 
-> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `proof_debt` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+> Hint: when learning Litex, start with `have`, bare facts, `claim`, and `by cases`. Learn `trust` as the explicit assumption/proof-debt tool, not as the default way to make a proof go through. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
 ---
 
@@ -2814,7 +2853,7 @@ bound variable in a set builder.
 | set comprehension | `{x R: x >= 0}` |
 | replacement set from a binary relation | `replacement(P, A)` |
 | function space | `fn(x R: x >= 0) R` |
-| anonymous function value | `'(x R) R {x + 1}` |
+| anonymous function value | `fn(x R) R {x + 1}` |
 | function application, possibly curried | `f(2)`, `f(x)(y)` |
 | Cartesian product | `cart(A, B)` |
 | Cartesian-product dimension | `cart_dim(cart(A, B))` |
@@ -2846,10 +2885,10 @@ bound variable in a set builder.
 | matrix multiplication | `A ** B` |
 | scalar-matrix multiplication | `2 *. A` |
 | matrix power | `A ^^ 2` |
-| open real interval | `oo(0, 1)` |
-| left-open, right-closed real interval | `oc(0, 1)` |
-| left-closed, right-open real interval | `co(0, 1)` |
-| closed real interval | `cc(0, 1)` |
+| open real interval | `'(0, 1)` |
+| left-open, right-closed real interval | `'(0, 1]` |
+| left-closed, right-open real interval | `'[0, 1)` |
+| closed real interval | `'[0, 1]` |
 | open lower-bounded ray | `oinf(0)` |
 | closed lower-bounded ray | `cinf(0)` |
 | open upper-bounded ray | `info(0)` |
@@ -2956,14 +2995,14 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a finite sequence by entries | `have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i` |
 | define a matrix by entries | `have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j` |
 | introduce witnesses with body facts | `have x R:`<br>`x = 1` |
-| name witnesses from a known existential fact | `have by exist x R st {x = 1}: a` |
+| name witnesses from a known existential fact | `obtain a from exist x R st {x = 1}` |
 | name preimages from a range-membership fact | `have by preimage x from y $in fn_range(f)` |
 | define a function by one expression | `have fn f(x R) R = x + 1` |
 | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
 | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
-| define a function from unique existence | `have fn choose as set:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| define a function from unique existence | `have fn choose by exist!:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
 | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
-| introduce local names and assumed facts | `let x R:`<br>`x = 1` |
+| introduce local names and assumed facts | `suppose x R:`<br>`x = 1` |
 | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
 | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
@@ -2972,7 +3011,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | Meaning | Example |
 |---------|---------|
 | prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
-| inject explicit assumptions | `proof_debt x = 1` |
+| inject explicit assumptions | `trust x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
 | define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
@@ -2983,9 +3022,9 @@ code, evaluate an expression, or register a reusable proof pattern.
 | disable a strategy | `stop strategy positive_nonzero` |
 | import a standard-library module | `import Nat` |
 | import a local module directory | `import "local_module" as L` |
-| import a local `.lit` file with an explicit module name | `import "local.lit" as L` |
-| stop automatic use of an imported module | `stop import Nat` |
-| run a file in the current environment | `run_file "./sketch.lit"` |
+| declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
+| bind a declared export inside a module source | `local import local` |
+| bind a declared export without running its proof process | `trust local import local` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |
@@ -3048,6 +3087,60 @@ proof routes closes it, Litex reports `unknown`. If one route closes it, Litex
 reports `true`.
 
 The exact details depend on the shape of the fact, but this loop is the main mental model.
+
+### Small Proof Workflow
+
+Most user-facing proof work in Litex reduces to a small set of mathematical
+moves:
+
+| Move | What the user writes | What Litex checks |
+| --- | --- | --- |
+| builtin reasoning | a direct fact such as `2 + 3 = 5` | arithmetic, equality, order, membership, set, function, and other builtin patterns |
+| known fact matching | a fact already present in the context | whether the same fact, possibly up to known equalities, is already known |
+| known `forall` matching | a desired conclusion of a universal fact | whether parameters and premises can be matched from the current context |
+| definition unfolding | a `prop` or definition-shaped fact | whether the target follows from the recorded meaning of the definition |
+| theorem call | `by thm name(args...)` | whether the named theorem applies to the arguments and stores its conclusions |
+| local claim | `claim:` | whether a local proof block establishes a reusable intermediate fact |
+| standard proof form | `by contra`, `by cases`, or `by induc` | whether contradiction, case split, or induction subproofs close the goal |
+| witness | `witness ...` | whether the displayed objects satisfy the existential or nonempty goal |
+
+For example, a direct mathematical fact can close by builtin reasoning:
+
+```litex
+2 + 3 = 5
+```
+
+A theorem call makes the reused theorem visible:
+
+```litex
+thm self_eq:
+    ? forall x R:
+        x = x
+    x = x
+
+by thm self_eq(1)
+```
+
+A local claim packages an intermediate fact before later lines reuse the
+expanded context:
+
+```litex
+claim:
+    ? 1 = 1
+    1 = 1
+
+1 = 1
+```
+
+This is why Litex proofs often read like ordinary mathematical derivations:
+the user writes facts, witnesses, and standard proof blocks, while the checker
+tries builtin rules, known facts, definitions, theorem calls, and local proof
+structure.
+
+The design goal is compression without opacity. Litex does not ask users to
+memorize a large proof-command vocabulary for ordinary steps, and it does not
+hide successful steps behind a silent automation box. The proof route remains
+small enough to learn, and the output remains explicit enough to inspect.
 
 ### Full Verifier Flow
 
@@ -3243,7 +3336,7 @@ If direct known facts do not close the goal, Litex searches applicable universal
 
 Object matching is structural. If the `forall` conclusion has a parameter such as `x`, that parameter may bind to the object in the goal. If the conclusion has a structured object such as `f(x)`, `x + 1`, or `(x, y)`, Litex matches the outer shape first, then recursively matches the inner objects.
 
-Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p('R(x){f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `'R(x){b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
+Inside an anonymous function body, Litex can also match a universally quantified function parameter applied to the anonymous function's full parameter list. For example, while matching a conclusion shaped like `$p(fn(x R) R {f(x) + g(x)})`, the subexpression `g(x)` may match a goal subexpression such as `b(x) + c(x)` by treating `g` as the anonymous function `fn(x R) R {b(x) + c(x)}`. This only applies when the application uses the full anonymous-function parameter list; a pointwise expression such as `g(0)` does not determine the whole function.
 
 The following example shows why this matters. The known `forall` fact says that a predicate `p` is closed under pointwise addition of real-valued functions. The proof still uses the known `forall` fact one layer at a time: first it establishes the inner sum function, then it uses that result as the second summand in the outer function.
 
@@ -3257,16 +3350,16 @@ claim:
                 $p(f)
                 $p(g)
                 =>:
-                    $p('R(x){f(x) + g(x)})
+                    $p(fn(x R) R {f(x) + g(x)})
             $p(a)
             $p(b)
             $p(c)
             =>:
-                $p('R(x){a(x) + (b(x) + c(x))})
-    $p('R(x){b(x) + c(x)})
+                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    $p(fn(x R) R {b(x) + c(x)})
 ```
 
-In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the assumed universal conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `'R(x){b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
+In the final goal, Litex matches the target body `a(x) + (b(x) + c(x))` against the assumed universal conclusion body `f(x) + g(x)`. It can bind `f` to `a` directly. For `g`, the matcher sees that `g` is applied to the full anonymous-function parameter list `x`, so it may bind `g` to the whole anonymous function `fn(x R) R {b(x) + c(x)}`. That is the extra anonymous-function matching step; it is not a pointwise rule for arbitrary calls such as `g(0)`.
 
 ```text
 known fact:
@@ -3619,6 +3712,14 @@ This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculati
 
 For most factual statements, `verification` is the stable place to read the proof route. Simple routes such as builtin rules or known facts appear directly under that object. Builtin rule evidence uses `rule` for the user-facing mathematical explanation and may include `rule_id` for the internal/debug label. Known `forall` use records the cited `forall` fact that proves the goal. Detail output can additionally show the parameter `instantiation` and the instantiated `requirements` checked before the conclusion is accepted. A successfully proved `forall` fact reports `conclusions` instead of a separate `verification` summary. Each entry in `conclusions` has a `statement` and a `verification` object. Detail output additionally expands the local `parameters` and `assumptions`. If a then-fact is available from the local forall context, its verification is shown as `type: "local assumption"` with source such as `parameter definition` or `forall premise`. Other composite facts, such as chains and conjunctions, summarize their sub-checks under `steps`; normal output lists each step's fact and nested `verification` evidence, while detail output also includes structural labels and step indexes.
 
+Output can also expose inferred facts. These are routine consequences that
+Litex adds to the context after accepting a statement, parameter, definition,
+witness, or theorem call. For example, a parameter such as `n N` may infer
+`n >= 0`, a subset fact may infer the corresponding `forall x A: x $in B`
+shape, and a proved sequence predicate may infer its function type and
+epsilon-style consequences. These inferred facts are part of the environment
+delta that later lines can reuse.
+
 When factual verification fails with an unknown result, read `unknown_result`. Its `type` is fact-specific, such as `atomic fact unknown`, `and fact unknown`, `chain fact unknown`, `forall unknown`, or `forall iff unknown`. A `forall unknown` reports the local `params`, any `requirements`, and the `failed_prove` clause that could not be verified. Conjunctions report their failed subgoal under `failed_part`; chains report the failed segment under `failed_chain_step`. Normal output keeps these failure nodes focused on the failed statement and omits positional metadata such as child indexes; detail output keeps that metadata and the full nested unknown tree for debugging.
 
 For non-factual statements such as `claim`, `thm`, definitions, and `by cases`, normal output reports the statement, its `effects`, and an empty `inside_results` array. Detail output expands `inside_results` for proof blocks and other nested checks when those results are available. `effects` records context changes after the statement, such as facts added to the context or an abstract prop interface being registered; it is not the primary proof route.
@@ -3751,7 +3852,7 @@ f(2) = 3
 Anonymous functions behave the same way: applying the function substitutes the argument into the body.
 
 ```litex
-'R(x){x + 1}(2) = 3
+fn(x R) R {x + 1}(2) = 3
 ```
 
 #### Absolute Value
@@ -3925,12 +4026,12 @@ forall a, b R_pos, c R:
 Litex has builtin rules for common finite `sum` and `product` shapes: single-term ranges, splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
 
 ```litex
-sum(1, 1, 'N_pos(x){x}) = 1
-product(1, 1, 'N_pos(x){x}) = 1
+sum(1, 1, fn(x N_pos) N_pos {x}) = 1
+product(1, 1, fn(x N_pos) N_pos {x}) = 1
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x})
 ```
 
 ```litex
@@ -3940,39 +4041,39 @@ forall f, g fn(x Z) R:
         =>:
             f(i) <= g(i)
     =>:
-        sum(1, 3, '(x Z) R {f(x)}) <= sum(1, 3, '(x Z) R {g(x)})
+        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 forall f fn(x Z) R:
-    abs(sum(1, 3, '(x Z) R {f(x)})) <= sum(1, 3, '(x Z) R {abs(f(x))})
+    abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
+sum(1, 3, fn(x Z) Z {x + x}) + sum(4, 6, fn(x Z) Z {x + x}) = sum(1, 6, fn(x Z) Z {x + x})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
 ```
 
 ```litex
-product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
+product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * fn(x Z) Z {x}(3)
 ```
 
 ```litex
-sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
+sum(1, 10, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x}) + sum(4, 8, fn(x Z) Z {x}) + sum(9, 10, fn(x Z) Z {x})
 ```
 
 ```litex
-product(1, 10, '(x Z) Z {x}) = product(1, 3, '(x Z) Z {x}) * product(4, 8, '(x Z) Z {x}) * product(9, 10, '(x Z) Z {x})
+product(1, 10, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x}) * product(4, 8, fn(x Z) Z {x}) * product(9, 10, fn(x Z) Z {x})
 ```
 
 ```litex
-sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})
+sum(1, 3, fn(x Z) Z {x}) = sum(2, 4, fn(x Z) Z {x - 1})
 ```
 
 ```litex
 have c Z
-sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
+sum(1, 3, fn(x Z) Z {c}) = ((3 - 1) + 1) * c
 ```
 
 #### Modular Arithmetic
@@ -4448,7 +4549,7 @@ A finite `sum` or `product` over an integer range is treated as a real once the 
 
 ```litex
 sketch:
-    sum(1, 3, '(x Z) Z {x}) $in R
+    sum(1, 3, fn(x Z) Z {x}) $in R
 ```
 
 If a function application is well-defined and its known return set is `R`, the application can be verified as real.
@@ -4493,12 +4594,12 @@ sketch:
 
 ```litex
 sketch:
-    $is_nonempty_set(cc(0, 0))
+    $is_nonempty_set('[0, 0])
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(oo(0, 2))
+    $is_nonempty_set('(0, 2))
 ```
 
 ```litex
@@ -4563,7 +4664,7 @@ $fn_eq_in(f, g, R)
 Anonymous function heads can be compared the same way when they denote the same map on the set.
 
 ```litex
-$fn_eq_in('R(x){x}, 'R(y){y}, R)
+$fn_eq_in(fn(x R) R {x}, fn(y R) R {y}, R)
 ```
 
 #### Equality From Function Type
@@ -4571,7 +4672,7 @@ $fn_eq_in('R(x){x}, 'R(y){y}, R)
 `$fn_eq(f, g)` is for values whose function type is given by the same `fn(...)` or `have fn` specification on both sides. After checking that the type data matches, the goal reduces to a parameterized proof that `f` and `g` agree on every argument tuple.
 
 ```litex
-$fn_eq('R(x){x}, 'R(y){y})
+$fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 ```litex
@@ -4602,7 +4703,7 @@ _- Kurt Gödel_
 
 Verification answers the question: **can this fact be proved now?**
 
-Builtin inference happens after that. Once a fact is verified or introduced by `proof_debt`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
+Builtin inference happens after that. Once a fact is verified or introduced by `trust`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
 
 The main purpose is usability. Inference saves the user from manually writing the obvious next facts again and again.
 
@@ -5019,7 +5120,7 @@ There is no matching automatic rule when `0` is on the left.
 
 ### Function Restriction
 
-For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `'(x E) R {f(x)}`.
+For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `fn(x E) R {f(x)}`.
 
 ```text
 known:

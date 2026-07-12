@@ -75,49 +75,55 @@ impl Runtime {
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
         let mut impossible_facts: Vec<Option<AtomicFact>> = Vec::with_capacity(case_block_count);
         for block in tb.body.iter_mut().skip(case_body_skip) {
-            block.skip_token(CASE)?;
-            let case = self.parse_and_chain_atomic_fact_allow_leading_not(block)?;
-            block.skip_token(COLON)?;
-            if !block.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "case: expected end of head after condition".to_string(),
-                        block.line_file.clone(),
-                    ),
-                )));
-            }
-            cases.push(case);
-            let n = block.body.len();
-            if block.body.is_empty() {
-                proofs.push(vec![]);
-                impossible_facts.push(None);
-                continue;
-            }
-            let (proof_stmts, impossible) =
-                if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
-                    let proof: Vec<Stmt> = block.body[0..n - 1]
-                        .iter_mut()
-                        .map(|b| self.parse_stmt(b))
-                        .collect::<Result<_, _>>()?;
-                    let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(
+            let (case, proof_stmts, impossible) =
+                self.run_in_local_proof_parsing_scope(|this| {
+                    block.skip_token(CASE)?;
+                    let case = this.parse_and_chain_atomic_fact_allow_leading_not(block)?;
+                    block.skip_token(COLON)?;
+                    if !block.exceed_end_of_head() {
+                        return Err(RuntimeError::from(ParseRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "Expected body".to_string(),
-                                tb.line_file.clone(),
+                                "case: expected end of head after condition".to_string(),
+                                block.line_file.clone(),
                             ),
-                        ))
-                    })?;
-                    last_block.skip_token(IMPOSSIBLE)?;
-                    let imp = self.parse_atomic_fact(last_block, true)?;
-                    (proof, Some(imp))
-                } else {
-                    let proof: Vec<Stmt> = block
-                        .body
-                        .iter_mut()
-                        .map(|b| self.parse_stmt(b))
-                        .collect::<Result<_, _>>()?;
-                    (proof, None)
-                };
+                        )));
+                    }
+                    let n = block.body.len();
+                    if block.body.is_empty() {
+                        return Ok((case, vec![], None));
+                    }
+                    let (proof_stmts, impossible) = if block.body[n - 1]
+                        .header
+                        .get(0)
+                        .map(|s| s.as_str())
+                        == Some(IMPOSSIBLE)
+                    {
+                        let proof: Vec<Stmt> = block.body[0..n - 1]
+                            .iter_mut()
+                            .map(|b| this.parse_stmt(b))
+                            .collect::<Result<_, _>>()?;
+                        let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
+                            RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    "Expected body".to_string(),
+                                    tb.line_file.clone(),
+                                ),
+                            ))
+                        })?;
+                        last_block.skip_token(IMPOSSIBLE)?;
+                        let imp = this.parse_atomic_fact(last_block, true)?;
+                        (proof, Some(imp))
+                    } else {
+                        let proof: Vec<Stmt> = block
+                            .body
+                            .iter_mut()
+                            .map(|b| this.parse_stmt(b))
+                            .collect::<Result<_, _>>()?;
+                        (proof, None)
+                    };
+                    Ok((case, proof_stmts, impossible))
+                })?;
+            cases.push(case);
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }

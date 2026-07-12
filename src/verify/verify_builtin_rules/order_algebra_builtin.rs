@@ -968,7 +968,7 @@ impl Runtime {
     // Finite sum monotonicity on a shared range, using the summand's unary
     // parameter set when it is explicit.
     // Example: from `forall i N_pos: m <= i <= n => f(i) <= g(i)`, prove
-    // `sum(m, n, '(i N_pos) R {f(i)}) <= sum(m, n, '(i N_pos) R {g(i)})`.
+    // `sum(m, n, fn(i N_pos) R {f(i)}) <= sum(m, n, fn(i N_pos) R {g(i)})`.
     fn try_less_equal_sum_pointwise_on_same_integer_range(
         &mut self,
         f: &LessEqualFact,

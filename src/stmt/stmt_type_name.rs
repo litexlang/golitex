@@ -20,7 +20,7 @@ impl ClaimStmt {
 
 impl ProofDebtStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ProofDebtStmt".to_string()
+        "TrustStmt".to_string()
     }
 }
 
@@ -48,12 +48,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl RunFileStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "RunFileStmt".to_string()
-    }
-}
-
 impl ImportRelativePathStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportRelativePathStmt".to_string()
@@ -75,6 +69,24 @@ impl ImportStmt {
     }
 }
 
+impl TrustImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "TrustImportStmt".to_string()
+    }
+}
+
+impl LocalImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "LocalImportStmt".to_string()
+    }
+}
+
+impl TrustLocalImportStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "TrustLocalImportStmt".to_string()
+    }
+}
+
 impl DoNothingStmt {
     pub fn stmt_type_name(&self) -> String {
         "DoNothingStmt".to_string()
@@ -84,12 +96,6 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClearStmt".to_string()
-    }
-}
-
-impl StopImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "StopImportStmt".to_string()
     }
 }
 
@@ -251,7 +257,7 @@ impl AliasThmStmt {
 
 impl DefLetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefLetStmt".to_string()
+        "TrustHaveStmt".to_string()
     }
 }
 
@@ -387,15 +393,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl RunFileStmt {
-    pub fn output_type_string(&self) -> String {
-        match self.mode {
-            RunFileMode::VerifyAndExecute => "run file statement".to_string(),
-            RunFileMode::AffectEnvironmentOnly => "trusted file statement".to_string(),
-        }
-    }
-}
-
 impl ImportRelativePathStmt {
     pub fn output_type_string() -> String {
         "import statement".to_string()
@@ -417,6 +414,24 @@ impl ImportStmt {
     }
 }
 
+impl LocalImportStmt {
+    pub fn output_type_string() -> String {
+        "local import statement".to_string()
+    }
+}
+
+impl TrustImportStmt {
+    pub fn output_type_string() -> String {
+        "trusted import statement".to_string()
+    }
+}
+
+impl TrustLocalImportStmt {
+    pub fn output_type_string() -> String {
+        "trusted local import statement".to_string()
+    }
+}
+
 impl DoNothingStmt {
     pub fn output_type_string() -> String {
         "no-op statement".to_string()
@@ -426,12 +441,6 @@ impl DoNothingStmt {
 impl ClearStmt {
     pub fn output_type_string() -> String {
         "clear statement".to_string()
-    }
-}
-
-impl StopImportStmt {
-    pub fn output_type_string() -> String {
-        "stop import statement".to_string()
     }
 }
 

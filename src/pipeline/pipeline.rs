@@ -1,21 +1,21 @@
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
-use crate::pipeline::run_stmt_at_global_env;
+use crate::pipeline::summary::display_run_summary_json_with_runtime;
+use crate::pipeline::{run_repository_file_target, run_stmt_at_global_env};
 use crate::prelude::*;
 use std::fs;
+use std::path::Path;
+use std::rc::Rc;
 
 pub use crate::result::StmtResult;
 
 pub fn run_source_code_in_file(entry_file_path: &str) -> String {
-    let source_code = match fs::read_to_string(entry_file_path) {
-        Ok(content) => content,
-        Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
-    };
-    run_source_code_with_output(
-        &source_code,
+    run_file_with_output(
         entry_file_path,
         false,
         false,
         OutputLanguage::English,
+        false,
+        false,
     )
     .1
 }
@@ -43,54 +43,199 @@ pub fn run_source_code_in_file_for_cli_with_strict_and_language(
     strict_mode: bool,
     output_language: OutputLanguage,
 ) -> String {
-    let source_code = match fs::read_to_string(entry_file_path) {
-        Ok(content) => content,
-        Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
-    };
-    run_source_code_with_output(
-        &source_code,
+    run_source_code_in_file_for_cli_with_summary_and_language(
         entry_file_path,
         detail_output,
         strict_mode,
         output_language,
+        false,
+    )
+}
+
+pub fn run_source_code_in_file_for_cli_with_summary_and_language(
+    entry_file_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> String {
+    run_file_with_output(
+        entry_file_path,
+        detail_output,
+        strict_mode,
+        output_language,
+        summarize,
+        false,
+    )
+    .1
+}
+
+pub fn run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
+    entry_file_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+    force_isolated: bool,
+) -> String {
+    run_file_with_output(
+        entry_file_path,
+        detail_output,
+        strict_mode,
+        output_language,
+        summarize,
+        force_isolated,
     )
     .1
 }
 
 pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) {
-    let source_code = match fs::read_to_string(entry_file_path) {
-        Ok(content) => content,
-        Err(read_error) => {
-            return (
-                false,
-                format!("Could not read file {:?}: {}", entry_file_path, read_error),
-            );
-        }
-    };
-    run_source_code_with_output(
-        &source_code,
+    run_file_with_output(
         entry_file_path,
         false,
         false,
         OutputLanguage::English,
+        false,
+        false,
     )
 }
 
-fn run_source_code_with_output(
-    source_code: &str,
-    entry_label: &str,
+pub fn run_source_code_in_repository_for_cli_with_summary_and_language(
+    repository_path: &str,
     detail_output: bool,
     strict_mode: bool,
     output_language: OutputLanguage,
+    summarize: bool,
+) -> String {
+    run_repository_with_output(
+        repository_path,
+        detail_output,
+        strict_mode,
+        output_language,
+        summarize,
+    )
+    .1
+}
+
+pub fn run_repository_with_output(
+    repository_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
 ) -> (bool, String) {
-    let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(entry_label);
     runtime.detail_output = detail_output;
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
-    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
+    match discover_repository(&mut runtime, repository_path) {
+        Ok(path) => path,
+        Err(error) => {
+            return render_run_source_code_output(&runtime, &vec![], &Some(error), true);
+        }
+    };
+    let entry_module_id = runtime.current_module_id();
+    let (stmt_results, runtime_error) = run_repository_file_target(
+        &mut runtime,
+        RepositoryFileTarget::Entrance(entry_module_id),
+    );
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if summarize {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
+        );
+        output.push('\n');
+    }
+    (ok, output)
+}
+
+fn run_file_with_output(
+    entry_file_path: &str,
+    detail_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+    force_isolated: bool,
+) -> (bool, String) {
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.detail_output = detail_output;
+    runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
+    let (stmt_results, runtime_error) =
+        run_file_with_project_context(entry_file_path, &mut runtime, force_isolated);
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if summarize {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
+        );
+        output.push('\n');
+    }
+    (ok, output)
+}
+
+pub fn run_file_with_project_context(
+    entry_file_path: &str,
+    runtime: &mut Runtime,
+    force_isolated: bool,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let path = Path::new(entry_file_path);
+    let file_name = path.file_name().and_then(|name| name.to_str());
+    if file_name == Some("litex.config") {
+        return (
+            vec![],
+            Some(file_target_error(
+                entry_file_path,
+                "litex.config is project configuration, not executable Litex source",
+            )),
+        );
+    }
+    if file_name == Some("mod.lit") {
+        return (
+            vec![],
+            Some(file_target_error(
+                entry_file_path,
+                "mod.lit is obsolete; move declarations to litex.config",
+            )),
+        );
+    }
+
+    if !force_isolated {
+        match discover_repository_for_file(runtime, entry_file_path) {
+            Ok(Some(target)) => return run_repository_file_target(runtime, target),
+            Ok(None) => {}
+            Err(error) => return (vec![], Some(error)),
+        }
+    }
+
+    let source_code = match fs::read_to_string(entry_file_path) {
+        Ok(content) => content,
+        Err(error) => {
+            return (
+                vec![],
+                Some(file_target_error(
+                    entry_file_path,
+                    format!("could not read file: {}", error).as_str(),
+                )),
+            )
+        }
+    };
+    runtime.new_file_path_new_env_new_name_scope(entry_file_path);
+    run_source_code(
+        remove_windows_carriage_return(source_code.as_str()).as_str(),
+        runtime,
+    )
+}
+
+fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        message.to_string(),
+        (0, Rc::from(entry_file_path)),
+    ))
+    .into()
 }
 
 pub fn run_source_code(
@@ -98,7 +243,7 @@ pub fn run_source_code(
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let mut tokenizer = Tokenizer::new();
-    let current_file_path = runtime.module_manager.borrow().current_file_path_rc();
+    let current_file_path = runtime.current_file_path_rc();
     let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
         Ok(b) => b,
         Err(e) => {

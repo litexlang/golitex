@@ -1,5 +1,5 @@
 use crate::common::json_value::{json_one_level_indent, render_json_value, JsonValue};
-use crate::prelude::{CommandStmt, LineFile, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
+use crate::prelude::{LineFile, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
 
 use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_ERROR_TYPE, JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP,
@@ -11,6 +11,7 @@ use super::normalize::{
     finalize_display_text_with_optional_strip, json_value_is_empty_in_normal_output,
     remove_empty_json_fields,
 };
+use super::phases::error_execution_phases_value;
 use super::source::{source_ref_json_fields, stmt_json_field_lines, stmt_json_value};
 use super::success::display_stmt_exec_result_json;
 use super::unknown_result_json_value;
@@ -100,37 +101,15 @@ fn push_exec_stmt_error_message_field_line(
     runtime: &Runtime,
     field_lines: &mut Vec<String>,
     indent_inner: &str,
-    statement: &Option<Stmt>,
     message: &str,
 ) {
-    let message = exec_stmt_error_message_text_for_json(runtime, statement, message);
     push_json_value_field_line(
         runtime,
         field_lines,
         indent_inner,
         JSON_KEY_MESSAGE,
-        JsonValue::JsonString(message),
+        JsonValue::JsonString(user_visible_stmt_or_msg_text(message)),
     );
-}
-
-fn exec_stmt_error_message_text_for_json(
-    runtime: &Runtime,
-    statement: &Option<Stmt>,
-    message: &str,
-) -> String {
-    let message = user_visible_stmt_or_msg_text(message);
-    if runtime.detail_output {
-        return message;
-    }
-
-    match statement {
-        Some(Stmt::Command(CommandStmt::RunFileStmt(_)))
-            if message.starts_with("Failed to read file:") =>
-        {
-            "Failed to read file: external_file".to_string()
-        }
-        _ => message,
-    }
 }
 
 fn push_source_ref_field_lines(
@@ -382,7 +361,6 @@ fn build_display_error_json_object(
                 runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
-                &e.statement,
                 &e.msg,
             );
             if let Some(stmt) = &e.statement {
@@ -487,6 +465,18 @@ fn build_display_error_json_object(
         indent_inner.as_str(),
         error_output(error),
     );
+
+    if runtime.detail_output {
+        if let Some(trace) = error.execution_trace() {
+            push_json_value_field_line(
+                runtime,
+                &mut field_lines,
+                indent_inner.as_str(),
+                "phases",
+                error_execution_phases_value(trace),
+            );
+        }
+    }
 
     let context_for_child = error_own_statement(error).or(statement_context);
     let previous_error_line = build_previous_error_field_line(

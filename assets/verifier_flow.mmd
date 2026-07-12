@@ -5,7 +5,7 @@
 flowchart TB
     subgraph source["1. Read The Program"]
         direction LR
-        input["User input<br/>file, command-line code,<br/>import, or run_file"]
+        input["User input<br/>file, command-line code,<br/>or module import"]
         session["Start a checking session<br/>load builtin facts/rules<br/>and shared import context"]
         blocks["Split into statements<br/>respect indentation<br/>and nested proof blocks"]
         understand["Understand each statement<br/>command, fact,<br/>or assumption"]
@@ -52,7 +52,7 @@ flowchart TB
 
         subgraph assume_path["2C. Assumptions Store Context"]
             direction TB
-            assume_input["Assumption-like input<br/>proof_debt blocks,<br/>local domain facts,<br/>or caller-checked facts"]
+            assume_input["Assumption-like input<br/>trust blocks,<br/>local domain facts,<br/>or caller-checked facts"]
             assume_check["Check it is meaningful<br/>then store it without<br/>finding a proof route here"]
             assumed["Stored as context<br/>later proof steps<br/>may depend on it"]
 

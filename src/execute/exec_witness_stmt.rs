@@ -183,7 +183,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = stmt.exist_fact_in_witness.clone().into();
-        let store_result = if self.only_exec_affect_environment {
+        let store_result = if self.current_execution_is_trusted_file() {
             self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
         } else {
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact)
@@ -319,7 +319,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
-        let store_result = if self.only_exec_affect_environment {
+        let store_result = if self.current_execution_is_trusted_file() {
             self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
         } else {
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact)

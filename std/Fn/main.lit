@@ -24,7 +24,7 @@ prop embeds_into(S, T set):
 prop equal_cardinality(S, T set):
     exist f fn(x S) T st {$bijective_fn(S, T, f)}
 
-proof_debt:
+trust:
     # Cantor-Schroeder-Bernstein interface: bijective cardinality equality is
     # equivalent to mutual embeddability by injections.
     forall S, T set:

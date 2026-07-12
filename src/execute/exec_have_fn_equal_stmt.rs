@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn exec_have_fn_equal_stmt(
@@ -235,10 +236,22 @@ impl Runtime {
                 have_fn_equal_stmt.line_file.clone(),
             )
             .into();
-            rt.verify_atomic_fact(
+            let result = rt.verify_atomic_fact(
                 &equal_to_in_ret_set_atomic_fact,
                 &VerifyState::new(0, false),
-            )
+            )?;
+            if !result.is_unknown() {
+                return Ok(result);
+            }
+
+            if let Some(result) = rt.verify_restricted_anonymous_fn_in_declared_return_fn_set(
+                have_fn_equal_stmt,
+                &VerifyState::new(0, false),
+            )? {
+                return Ok(result);
+            }
+
+            Ok(result)
         })
         .map_err(|verify_error| {
             short_exec_error(
@@ -248,5 +261,174 @@ impl Runtime {
                 vec![],
             )
         })
+    }
+
+    fn verify_restricted_anonymous_fn_in_declared_return_fn_set(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // A lambda with provable extra domain facts is a member of the broader declared fn set.
+        let Obj::AnonymousFn(value_fn) = have_fn_equal_stmt
+            .equal_to_anonymous_fn
+            .equal_to
+            .as_ref()
+            .clone()
+        else {
+            return Ok(None);
+        };
+        let Obj::FnSet(target_fn_set) = have_fn_equal_stmt
+            .equal_to_anonymous_fn
+            .body
+            .ret_set
+            .as_ref()
+            .clone()
+        else {
+            return Ok(None);
+        };
+
+        if ParamGroupWithSet::number_of_params(&value_fn.body.params_def_with_set)
+            != ParamGroupWithSet::number_of_params(&target_fn_set.body.params_def_with_set)
+        {
+            return Ok(None);
+        }
+
+        let target_flat_names =
+            ParamGroupWithSet::collect_param_names(&target_fn_set.body.params_def_with_set);
+        let generated_param_names = self.generate_random_unused_names(target_flat_names.len());
+        let ok = self.run_in_local_env(|rt| {
+            rt.verify_restricted_anonymous_fn_in_declared_return_fn_set_body(
+                &value_fn,
+                &target_fn_set,
+                &generated_param_names,
+                have_fn_equal_stmt.line_file.clone(),
+                verify_state,
+            )
+        })?;
+
+        if !ok {
+            return Ok(None);
+        }
+
+        let membership_fact: Fact = InFact::new(
+            value_fn.into(),
+            target_fn_set.into(),
+            have_fn_equal_stmt.line_file.clone(),
+        )
+        .into();
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                membership_fact,
+                "restricted anonymous fn satisfies declared return fn set".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        ))
+    }
+
+    fn verify_restricted_anonymous_fn_in_declared_return_fn_set_body(
+        &mut self,
+        value_fn: &AnonymousFn,
+        target_fn_set: &FnSet,
+        generated_param_names: &[String],
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let mut value_param_to_generated_arg_map: HashMap<String, Obj> =
+            HashMap::with_capacity(generated_param_names.len());
+        let mut target_param_to_generated_arg_map: HashMap<String, Obj> =
+            HashMap::with_capacity(generated_param_names.len());
+        let mut flat_index: usize = 0;
+
+        for (value_group, target_group) in value_fn
+            .body
+            .params_def_with_set
+            .iter()
+            .zip(target_fn_set.body.params_def_with_set.iter())
+        {
+            if value_group.params.len() != target_group.params.len() {
+                return Ok(false);
+            }
+
+            let next_flat_index = flat_index + target_group.params.len();
+            let generated_names_for_current_group =
+                generated_param_names[flat_index..next_flat_index].to_vec();
+
+            let value_set = self.inst_obj(
+                value_group.set_obj(),
+                &value_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+            )?;
+            let target_set = self.inst_obj(
+                target_group.set_obj(),
+                &target_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+            )?;
+            let set_equal_result =
+                self.verify_objs_are_equal_known_only(&value_set, &target_set, line_file.clone());
+            if !set_equal_result.is_true() {
+                return Ok(false);
+            }
+
+            let generated_param_def =
+                ParamGroupWithSet::new(generated_names_for_current_group.clone(), target_set);
+            self.define_params_with_set(&generated_param_def)?;
+
+            for ((value_param_name, target_param_name), generated_param_name) in value_group
+                .params
+                .iter()
+                .zip(target_group.params.iter())
+                .zip(generated_names_for_current_group.iter())
+            {
+                let generated_param_obj =
+                    obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet);
+                value_param_to_generated_arg_map
+                    .insert(value_param_name.clone(), generated_param_obj.clone());
+                target_param_to_generated_arg_map
+                    .insert(target_param_name.clone(), generated_param_obj);
+            }
+
+            flat_index = next_flat_index;
+        }
+
+        for dom_fact in target_fn_set.body.dom_facts.iter() {
+            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &target_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+                None,
+            )?;
+            self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                instantiated_dom_fact.into(),
+            )?;
+        }
+
+        for dom_fact in value_fn.body.dom_facts.iter() {
+            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &value_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+                None,
+            )?;
+            let verify_result =
+                self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+            if !verify_result.is_true() {
+                return Ok(false);
+            }
+        }
+
+        let value_ret_set = self.inst_obj(
+            &value_fn.body.ret_set,
+            &value_param_to_generated_arg_map,
+            ParamObjType::FnSet,
+        )?;
+        let target_ret_set = self.inst_obj(
+            &target_fn_set.body.ret_set,
+            &target_param_to_generated_arg_map,
+            ParamObjType::FnSet,
+        )?;
+        let ret_equal_result =
+            self.verify_objs_are_equal_known_only(&value_ret_set, &target_ret_set, line_file);
+        Ok(ret_equal_result.is_true())
     }
 }

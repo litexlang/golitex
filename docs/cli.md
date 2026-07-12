@@ -17,18 +17,21 @@ primary command. Prefer putting them before the command for readability:
 
 ```bash
 litex -detail -strict -f examples/tmp.lit
+litex -summarize -f examples/tmp.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
-Do not rely on extra positional tokens after a command's required values. The
-current parser is command-oriented, not a general argument parser.
+Do not rely on extra positional tokens after a command's required values, except
+for the documented graph-output path after `litex -graph`. The current parser
+is command-oriented, not a general argument parser.
 
 ## Global Options
 
 | Option | Meaning |
 |--------|---------|
-| `-detail` | Include fuller JSON trace details. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `proof_debt`, `let`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
+| `-strict` | Reject user `trust`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
 Supported language codes are:
@@ -56,7 +59,8 @@ Current mappings:
 | `vi` | Vietnamese |
 | `id` | Indonesian |
 
-`-detail`, `-strict`, and `-lang` mainly affect verifier and runner commands.
+`-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
+`-summarize` affects ordinary verifier commands.
 They do not make module-management or tutorial placeholder commands functional.
 
 ## Value Rules
@@ -69,15 +73,15 @@ Examples:
 ```bash
 litex -e "1 = 1"
 litex -f examples/tmp.lit
-litex -r examples
+litex -r examples/08_module_repository
 ```
 
 This means source code beginning with `-` should usually be put in a `.lit`
 file and run with `-f`.
 
-Because `-detail` and `-strict` are removed globally before command parsing,
-do not use a standalone command value exactly equal to either flag. `-lang`
-also consumes the next token globally.
+Because `-detail`, `-strict`, and `-summarize` are removed globally before
+command parsing, do not use a standalone command value exactly equal to any of
+those flags. `-lang` also consumes the next token globally.
 
 ## Verifier Commands
 
@@ -85,12 +89,31 @@ also consumes the next token globally.
 |---------|----------|
 | `litex` | Start the interactive verifier REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run a Litex file. Relative paths are resolved against the current working directory. |
-| `litex -r <repo>` | Run `<repo>/main.lit`. |
+| `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
+| `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
+| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its `[entrance]` file. |
+
+In isolated file mode, `import "./Demo" as Demo` may still load a module
+directory containing `main.lit`. It cannot load a `.lit` file. In a project,
+declare local sources in `[export]` in `litex.config` and bind them with
+`local import`.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
 successful prefix followed by an error object.
+
+With `-summarize`, Litex appends one final JSON object whose `output_type` is
+`"run summary"`. The ordinary statement output before that object is unchanged.
+The summary reports top-level and expanded statement counts, fact/prop/theorem
+definition counts, proof-block and `by` counts, direct `trust` statements,
+indirect proof-debt dependencies, axioms, supposes, abstract interfaces, and
+stack/runner warnings. It also includes `statement_type_counts`,
+`output_type_counts`, and a `statements` array with line numbers and rendered
+statement text for editor-side cursor selection. Prefer:
+
+```bash
+litex -summarize -f examples/tmp.lit
+```
 
 Ordinary verifier commands are designed for interactive inspection. Programs
 should read the JSON result instead of relying only on the process exit code.
@@ -103,7 +126,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Run `<repo>/main.lit` and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run `<repo>/main.lit`, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -122,6 +145,26 @@ Runner exit behavior:
 - exits with code `0` when `ok` is true;
 - exits with code `1` when the checked run fails or the target cannot be loaded;
 - exits with code `2` for CLI usage errors, such as a missing value.
+
+## Graph Commands
+
+| Command | Behavior |
+|---------|----------|
+| `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run `<repo>/main.lit`, and save one prop/function/fact relation graph JSON object. |
+
+The graph is an MVP concept map for direct Litex vocabulary references. It
+creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
+`claim`. Edges point from the referenced dependency to the later consumer:
+`uses_prop`, `uses_fn`, and `justified_by` for theorem-backed function
+construction. The wrapper includes a `summary`, machine-readable `nodes` and
+`edges`, a sorted `usage` table, and a Mermaid `flowchart LR` string for quick
+rendering. Nodes include `uses_count` and `used_by_count`; edges include
+`count`, so UI code can rank often-cited props, functions, facts, and theorems.
+If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
+quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
+artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 
 ## LaTeX Commands
 
@@ -148,6 +191,27 @@ JSON error object.
 | `litex -upgrade` | Print platform-specific upgrade instructions and exit. |
 
 Unknown commands print an error and the help message, then exit with code `2`.
+
+## Module Migration
+
+Litex no longer has `run_file`, `trust_file`, or `stop import` statements.
+There is no Litex statement that directly loads an arbitrary `.lit` path. Use
+`litex.config` instead:
+
+- set `[entrance] file = "..."` for the project entry;
+- declare files and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
+- use `local import name` inside registered sources;
+- run the entry with `litex -r <project>` or a registered chapter with `litex -f <file>`.
+
+Ordinary `import` loads module directories or registered global modules. A
+direct `import "./x.lit" as X` is rejected.
+
+For an explicitly trusted project dependency, write `trust import Name` or
+`trust local import name` in a registered `.lit` source. Litex still resolves
+the declared project target, reads it, parses it, and checks dependency cycles,
+but skips its well-definedness and proof processing and keeps only its
+environment effects. Trusted imports are rejected by `-strict`; their presence
+is recorded as a `trust_import` or `trust_local_import` dependency in the run.
 
 ## Reserved Helper Commands
 
@@ -179,16 +243,22 @@ Run a file with fuller output:
 litex -detail -f examples/tmp.lit
 ```
 
-Run a repository entry file:
+Run a project entrance file:
 
 ```bash
-litex -r examples
+litex -r examples/08_module_repository
 ```
 
 Run a strict CI-style check:
 
 ```bash
 litex -strict -runner -f examples/tmp.lit
+```
+
+Generate a relation graph:
+
+```bash
+litex -graph -f textbooks/Analysis/chap6.lit tmp/graphs/chap6_graph.json
 ```
 
 Run with Chinese output labels:

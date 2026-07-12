@@ -12,7 +12,7 @@ pub enum FnObjHead {
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
-    /// Anonymous function literal used as applied head, e.g. `'(x R) R {x}(a)`.
+    /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
     FiniteSeqListObj(FiniteSeqListObj),
     ObjAtIndex(ObjAtIndex),

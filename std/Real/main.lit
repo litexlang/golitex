@@ -124,7 +124,7 @@ prop has_greatest_lower_bound(E set):
 # They are not chapter-level theorems that every source file should reconstruct
 # from scratch. Single-use textbook facts should still stay in the source file
 # that needs them unless they become repeated proof patterns.
-proof_debt:
+trust:
     forall x R:
         0 <= x
         =>:
@@ -287,7 +287,7 @@ thm exists_nat_ge:
             exist n N_pos st {x <= n}
     1 / x $in R_pos
     by thm archimedean_property(1 / x)
-    have by exist n N_pos st {1 / n < 1 / x}: n
+    obtain n from exist n N_pos st {1 / n < 1 / x}
     1 / n < 1 / x
     x > 0
     n > 0
@@ -307,7 +307,7 @@ thm exists_nat_mul_gt:
     x / epsilon $in R_pos
     x / epsilon + 1 $in R_pos
     by thm exists_nat_ge(x / epsilon + 1)
-    have by exist n N_pos st {x / epsilon + 1 <= n}: n
+    obtain n from exist n N_pos st {x / epsilon + 1 <= n}
     x / epsilon + 1 <= n
     epsilon > 0
     (x / epsilon + 1) * epsilon <= n * epsilon
@@ -325,7 +325,7 @@ thm exists_positive_rat_le:
         forall x R_pos:
             exist q Q_pos st {q <= x}
     by thm exists_rat_between(0, x)
-    have by exist q Q st {0 < q < x}: q
+    obtain q from exist q Q st {0 < q < x}
     q $in Q_pos
     q < x
     q <= x

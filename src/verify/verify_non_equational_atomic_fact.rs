@@ -175,6 +175,7 @@ impl Runtime {
                     verified_by,
                     infers: _,
                     stmt: _,
+                    ..
                 } = inner_success;
                 Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
                     original.clone().into(),

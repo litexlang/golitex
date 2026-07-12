@@ -2,10 +2,42 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        if self.only_exec_affect_environment {
-            return self.exec_stmt_affect_environment_only(stmt);
+        let trusted = self.current_execution_is_trusted_file();
+        let result = if trusted {
+            self.exec_stmt_affect_environment_only(stmt)
+        } else {
+            self.exec_stmt_verified(stmt)
+        };
+        self.finish_statement_execution(result, trusted)
+    }
+
+    pub(crate) fn finish_statement_execution(
+        &self,
+        result: Result<StmtResult, RuntimeError>,
+        trusted: bool,
+    ) -> Result<StmtResult, RuntimeError> {
+        if !self.detail_output {
+            return result;
         }
 
+        match result {
+            Ok(result) => {
+                let trace = if trusted {
+                    StatementExecutionTrace::trusted()
+                } else {
+                    StatementExecutionTrace::verified(result.is_unknown())
+                };
+                Ok(result.with_execution_trace(trace))
+            }
+            Err(error) => {
+                let phase = execution_phase_for_error(&error);
+                let message = error.trace_message();
+                Err(error.with_execution_trace(StatementExecutionTrace::failed(phase, message)))
+            }
+        }
+    }
+
+    fn exec_stmt_verified(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.exec_fact(fact),
             Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => self.exec_proof_debt_stmt(s),
@@ -55,10 +87,13 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
+            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
+            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
+                self.exec_trust_local_import_stmt(s)
+            }
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
-            Stmt::Command(CommandStmt::StopImportStmt(s)) => self.exec_stop_import_stmt(s),
-            Stmt::Command(CommandStmt::RunFileStmt(s)) => self.exec_run_file_stmt(s),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
             Stmt::Command(CommandStmt::EvalByStmt(s)) => self.exec_eval_by_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
@@ -170,23 +205,20 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_)) => {
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
-            }
-            Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)) => {
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
+            | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))
+            | Stmt::Command(CommandStmt::EvalStmt(_))
+            | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
+            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
+            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
+            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
+                self.exec_trust_local_import_stmt(s)
+            }
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
-            Stmt::Command(CommandStmt::StopImportStmt(s)) => self.exec_stop_import_stmt(s),
-            Stmt::Command(CommandStmt::RunFileStmt(s)) => self.exec_run_file_stmt(s),
-            Stmt::Command(CommandStmt::EvalStmt(_)) => {
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
-            }
-            Stmt::Command(CommandStmt::EvalByStmt(_)) => {
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
-            }
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
@@ -236,5 +268,28 @@ impl Runtime {
             }
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt_affect_environment_only(s),
         }
+    }
+}
+
+fn execution_phase_for_error(error: &RuntimeError) -> StatementExecutionPhase {
+    match error {
+        RuntimeError::StoreFactError(_) | RuntimeError::InferError(_) => {
+            StatementExecutionPhase::AffectEnvironment
+        }
+        RuntimeError::WellDefinedError(_)
+        | RuntimeError::DefineParamsError(_)
+        | RuntimeError::InstantiateError(_)
+        | RuntimeError::NameAlreadyUsedError(_) => StatementExecutionPhase::VerifyWellDefinedness,
+        RuntimeError::ExecStmtError(error) => {
+            if let Some(previous_error) = error.previous_error.as_ref() {
+                return execution_phase_for_error(previous_error);
+            }
+            StatementExecutionPhase::VerifyProcess
+        }
+        RuntimeError::ArithmeticError(_)
+        | RuntimeError::NewFactError(_)
+        | RuntimeError::ParseError(_)
+        | RuntimeError::VerifyError(_)
+        | RuntimeError::UnknownError(_) => StatementExecutionPhase::VerifyProcess,
     }
 }

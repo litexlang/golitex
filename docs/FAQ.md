@@ -56,7 +56,7 @@ Most of the features of Litex come from the author's experience in writing mathe
 
 Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired by the discovery that when we talk about sets, we almost always are saying that `something is a set`. So the word `set` never appear independently in the language. It always shows up together with `<some_object> is a set`.
 
-Anonymous function syntax like`'(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
+Anonymous function syntax like`fn(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
 
 The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
 
@@ -64,7 +64,7 @@ The correlation between `tuple` and `cart` and `struct` is essential, because an
 
 
 
-Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `proof_debt` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
+Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `trust` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
 
 When we were learning Euclidean geometry in middle school, our teachers would say that these so-called points, lines, planes, and circles are not actually the real ones we draw on paper. They are imagined constructs that possess specific properties. What they fundamentally are is not important; what matters is that there are certain axioms governing these objects, which form the relationships among them. Although they can be defined by using more abstract math concepts (using cartesian coordinate for example), we don't consider that since we only want to focus on properties like parallel and intersection, which those axioms already can process. Similarly, real numbers, rational numbers, and the like can also be defined using more abstract mathematical concepts—users can construct these definitions themselves using Litex code. In fact, however, what is even more important is the relationships between them, and this is precisely what Litex emphasizes.
 
@@ -81,7 +81,7 @@ As far as Litex is concerned, Litex contains and only contains standard math pro
 ## Why does Litex have this particular menu of objects and statements?
 
 Litex's grammar is intentionally finite and opinionated. The goal is not to
-let every possible proof-engine concept become a new surface form. The goal is
+trust have every possible proof-engine concept become a new surface form. The goal is
 to keep a small set of object and statement forms that make ordinary
 mathematical writing comfortable while remaining checkable.
 
@@ -124,7 +124,7 @@ Litex is easiest to understand through four related layers:
 - a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
   `1 + 2 = 3`, or `x = y or x < y or x > y`;
 - a `statement` is a line or block that acts on the mathematical context, such
-  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `proof_debt`;
+  as `have`, `forall`, `claim`, `thm`, `witness`, `by cases`, or `trust`;
 - a verification rule is a checker route for deciding whether a fact follows
   from the current context.
 
@@ -307,7 +307,7 @@ This is a deliberate design trade-off. Litex's builtin `R` is a mathematical
 surface with verifier-visible properties, not a proof term saying "this object
 was constructed by this exact chain of quotients and completions." The standard
 library may record facts such as rational density or real completeness with
-`proof_debt` because, for Litex's default std interpretation, those are trusted
+`trust` because, for Litex's default std interpretation, those are trusted
 background facts about the standard numeric objects. For example, `std/Rat`
 records the reduced numerator/denominator interface for builtin `Q`, while
 `std/Real` records the usual real-line relationships. In `std/Real`, the
@@ -415,19 +415,19 @@ The explicit prefix is intentional. The same tuple may belong to several
 struct sets, and the same field name may refer to different indices in
 different struct views.
 
-## Why can an anonymous function be written as `'R(x){-x}`?
+## Why can an anonymous function be written as `fn(x R) R {-x}`?
 
 This is intentional shorthand, not a typo. The fully explicit anonymous
-function form is `'(x R) R { -x }`: the parameter `x` ranges over `R`, the
+function form is `fn(x R) R { -x }`: the parameter `x` ranges over `R`, the
 return set is `R`, and the body is `-x`.
 
 When all parameters have the same domain as the return set, Litex also accepts
-the compact form `'R(x){-x}`. Similarly, `'R(x, y){x + y}` means that both
+the compact form `fn(x R) R {-x}`. Similarly, `fn(x, y) R {x + y}` means that both
 inputs range over `R` and the return set is `R`; it is the compact version of
-`'(x R, y R) R { x + y }`.
+`fn(x R, y R) R { x + y }`.
 
 The compact form is useful in short mathematical expressions, such as passing
-`'R(x){x}` to a sum or using `'R(x){-x}` as a group inverse operation. In
+`fn(x R) R {x}` to a sum or using `fn(x R) R {-x}` as a group inverse operation. In
 explanatory documentation or when the domain and return set are easy to
 confuse, the explicit form is usually clearer. Both forms denote ordinary
 anonymous function objects and can be compared by Litex's function-equality
@@ -545,7 +545,7 @@ This does not mean Litex proves arbitrary goals by magic. It means Litex places
 more ordinary mathematical structure inside the verifier and standard library,
 then gives the user a fact-oriented interface to that structure. The trade-off
 is explicit: Litex has a larger trusted implementation than a small-kernel proof
-assistant, so builtin rules, infer rules, `proof_debt`, and standard-library facts
+assistant, so builtin rules, infer rules, `trust`, and standard-library facts
 need clear boundaries, tests, and audit-friendly output.
 
 Litex should therefore be described as complementary to Lean, Coq, and Isabelle,
@@ -626,19 +626,19 @@ The distinction is partly about performance, but mostly about readability.
 When a result is mathematically important, naming the theorem at the use site
 often makes the proof easier to audit.
 
-## Is `proof_debt` a proof?
+## Is proof debt a proof?
 
-No. `proof_debt` is explicit assumption injection, not a proof-producing command. It
+No. `trust` is explicit assumption injection, not a proof-producing command. It
 adds a fact to the current context after checking that the statement is
 meaningful enough to store. Later checked facts may depend on it.
 
-In documentation and audits, read `proof_debt P` as "assume P from this point onward."
+In documentation and audits, read `trust P` as "assume P from this point onward."
 If a later `verification`
-trace cites a fact that came from `proof_debt`, that trace explains why the later line
+trace cites a fact that came from `trust`, that trace explains why the later line
 follows from the injected assumption; it does not show that the injected
 assumption was proved by Litex.
 
-Likewise, success on a `proof_debt` line only means the assumption was accepted into
+Likewise, success on a `trust` line only means the assumption was accepted into
 the context. It is not a certificate that the injected fact was proved.
 
 This is useful for three narrow purposes:
@@ -648,9 +648,9 @@ This is useful for three narrow purposes:
 - temporarily stating a theorem or library fact that should later become a
   checked `claim`, `thm`, builtin rule, or standard-library result.
 
-The cost is explicit. If a false statement is introduced with `proof_debt`, later
+The cost is explicit. If a false statement is introduced with `trust`, later
 results can inherit that assumption. Serious Litex developments should keep
-remaining `proof_debt` facts visible and treat them as assumptions or proof debt, not
+remaining `trust` facts visible and treat them as assumptions or proof debt, not
 as completed proof.
 
 ## Why does Litex infer extra facts after accepting a line?
@@ -669,10 +669,10 @@ This is one reason Litex proofs can stay close to ordinary mathematical prose.
 The user states the meaningful structural fact once, and the checker records
 the small consequences that a human reader would normally keep in mind.
 
-## Why does `have by exist` name witnesses explicitly?
+## Why does `obtain ... from exist` name witnesses explicitly?
 
 An existential fact says that some object exists. A later proof often needs to
-choose a name for such an object and use its properties. `have by exist` is the
+choose a name for such an object and use its properties. `obtain ... from exist` is the
 Litex form of that ordinary mathematical move.
 
 For example:
@@ -681,11 +681,11 @@ For example:
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
     1 / 2 < 1
-have by exist v R st {v > 0, v < 1}: w
+obtain w from exist v R st {v > 0, v < 1}
 w > 0
 ```
 
-The first block proves an existential fact. The `have by exist` line introduces
+The first block proves an existential fact. The `obtain` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
@@ -693,7 +693,7 @@ The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current
 argument.
 
-## What are `fn_range` and `have by preimage` for?
+## How do function ranges and preimages work?
 
 `fn_range(f)` is the set of values reached by a function `f`. If Litex knows
 that a value is in this range, then ordinary mathematics allows us to choose a
@@ -718,26 +718,6 @@ parameter. This feature is small but important: it makes "since this value is
 in the range, take a point mapping to it" a checkable, named move rather than
 an implicit jump.
 
-## Why does Litex have `stop import`?
-
-Imports add useful facts, theorems, and proof routes. But a large imported
-module can also make automatic search harder to understand. `stop import Name`
-keeps the module registered while removing it from ordinary automatic
-verification.
-
-This lets users control the active proof environment. A stopped module can
-still be cited explicitly, for example with a named theorem call, but its facts
-do not silently participate in every later search.
-
-The point is not only speed. It is auditability. If a proof depends on a large
-external result, the proof is often clearer when that dependency appears as an
-explicit citation instead of an invisible background match.
-
-This is also a textbook-design issue. When a file is following a book, imports
-should not silently turn the chapter into theorem lookup. `stop import` gives
-the author a way to keep a module available for explicit citation while making
-the active proof context reflect the local derivation.
-
 ## What is `strategy` for?
 
 `strategy` is for proof patterns where the hard part is not the outer
@@ -754,7 +734,7 @@ closed under pointwise addition, subtraction, and multiplication. For a nested
 anonymous function such as:
 
 ```text
-'R(x R){f(x) + (g(x) - h(x)) * t(x)}
+fn(x R) R {f(x) + (g(x) - h(x)) * t(x)}
 ```
 
 without a strategy, the user may have to introduce the intermediate pieces by
@@ -816,7 +796,7 @@ set interfaces, and algebraic proof flows.
 
 ## Soundness And Limitations
 
-A Litex success is relative to the trusted background. `proof_debt` is explicit
+A Litex success is relative to the trusted background. `trust` is explicit
 assumption injection, similar in role to Lean's `by sorry`: it adds facts to the
 context without proving them. `abstract_prop` declares an uninterpreted
 predicate name and gives it no mathematical content by itself. In final
@@ -827,7 +807,7 @@ trusted background, or recorded as remaining proof debt.
 
 The verifier pipeline has three different kinds of outcomes that should not be
 confused: proof-required facts that must verify, executor statements that update
-the environment, and store/assume-only paths such as `proof_debt` or local
+the environment, and store/assume-only paths such as `trust` or local
 assumptions. The detailed reference belongs in the Manual's proof-process
 section.
 
@@ -841,7 +821,7 @@ stay in code comments, examples, or issue notes until their behavior is clear.
 
 Quick syntax reminders are useful, but they should not become a second reference
 manual. New users should start with `have`, bare fact lines, `forall`, `claim`,
-`witness`, and `by cases`; use `proof_debt` and `abstract_prop` only when
+`witness`, and `by cases`; use `trust` and `abstract_prop` only when
 intentionally modeling axioms or proof debt.
 
 ## Tutorial Introduction
@@ -890,5 +870,5 @@ inference, kernel, or diagnostic support.
 ## Reviewer Guide
 
 Review Litex by separating the interface hypothesis from trust-boundary risks.
-A proof script can be readable and promising while builtin rules, `proof_debt`, stdlib
+A proof script can be readable and promising while builtin rules, `trust`, stdlib
 coverage, and dataset bookkeeping still need careful audit.

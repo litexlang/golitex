@@ -69,6 +69,14 @@ impl Runtime {
     }
 
     pub fn store_def_thm(&mut self, def_thm_stmt: &DefThmStmt) -> Result<(), RuntimeError> {
+        self.store_def_thm_with_trust(def_thm_stmt, &ProofTrustSummary::new())
+    }
+
+    pub fn store_def_thm_with_trust(
+        &mut self,
+        def_thm_stmt: &DefThmStmt,
+        trust_summary: &ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
         let env = self.top_level_env();
         for (index, name) in def_thm_stmt.names.iter().enumerate() {
             if def_thm_stmt.names.iter().skip(index + 1).any(|n| n == name) {
@@ -81,6 +89,10 @@ impl Runtime {
         for name in def_thm_stmt.names.iter() {
             env.defined_thm_stmts
                 .insert(name.clone(), def_thm_stmt.clone());
+            if !trust_summary.is_empty() {
+                env.defined_thm_trust_summaries
+                    .insert(name.clone(), trust_summary.clone());
+            }
         }
         Ok(())
     }
