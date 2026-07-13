@@ -40,65 +40,58 @@ trust:
             $equal_cardinality(S, T)
 
 thm injective_of_bijective:
-    prove:
-        forall S, T set, f fn(x S) T:
-            $bijective_fn(S, T, f)
-            =>:
-                $injective_fn(S, T, f)
+    ? forall S, T set, f fn(x S) T:
+        $bijective_fn(S, T, f)
+        =>:
+            $injective_fn(S, T, f)
     $injective_fn(S, T, f)
 
 thm surjective_of_bijective:
-    prove:
-        forall S, T set, f fn(x S) T:
-            $bijective_fn(S, T, f)
-            =>:
-                $surjective_fn(S, T, f)
+    ? forall S, T set, f fn(x S) T:
+        $bijective_fn(S, T, f)
+        =>:
+            $surjective_fn(S, T, f)
     $surjective_fn(S, T, f)
 
 thm bijective_of_injective_surjective:
-    prove:
-        forall S, T set, f fn(x S) T:
-            $injective_fn(S, T, f)
-            $surjective_fn(S, T, f)
-            =>:
-                $bijective_fn(S, T, f)
+    ? forall S, T set, f fn(x S) T:
+        $injective_fn(S, T, f)
+        $surjective_fn(S, T, f)
+        =>:
+            $bijective_fn(S, T, f)
     $bijective_fn(S, T, f)
 
 thm embeds_into_of_injective:
-    prove:
-        forall S, T set, f fn(x S) T:
-            $injective_fn(S, T, f)
-            =>:
-                $embeds_into(S, T)
+    ? forall S, T set, f fn(x S) T:
+        $injective_fn(S, T, f)
+        =>:
+            $embeds_into(S, T)
     witness exist g fn(x S) T st {$injective_fn(S, T, g)} from f:
         $injective_fn(S, T, f)
     $embeds_into(S, T)
 
 thm equal_cardinality_of_bijective:
-    prove:
-        forall S, T set, f fn(x S) T:
-            $bijective_fn(S, T, f)
-            =>:
-                $equal_cardinality(S, T)
+    ? forall S, T set, f fn(x S) T:
+        $bijective_fn(S, T, f)
+        =>:
+            $equal_cardinality(S, T)
     witness exist g fn(x S) T st {$bijective_fn(S, T, g)} from f:
         $bijective_fn(S, T, f)
     $equal_cardinality(S, T)
 
 thm equal_cardinality_implies_mutual_embeds:
-    prove:
-        forall S, T set:
-            $equal_cardinality(S, T)
-            =>:
-                $embeds_into(S, T)
-                $embeds_into(T, S)
+    ? forall S, T set:
+        $equal_cardinality(S, T)
+        =>:
+            $embeds_into(S, T)
+            $embeds_into(T, S)
     $embeds_into(S, T)
     $embeds_into(T, S)
 
 thm cantor_schroeder_bernstein:
-    prove:
-        forall S, T set:
-            $embeds_into(S, T)
-            $embeds_into(T, S)
-            =>:
-                $equal_cardinality(S, T)
+    ? forall S, T set:
+        $embeds_into(S, T)
+        $embeds_into(T, S)
+        =>:
+            $equal_cardinality(S, T)
     $equal_cardinality(S, T)

@@ -1,8 +1,7 @@
 1 = 1
 
 claim:
-    prove:
-        2 = 2
+    ? 2 = 2
     2 = 2
 
 trust:
@@ -17,9 +16,8 @@ have y R = x
 have fn id_tmp(t R) R = t
 
 thm tmp_one_eq_one:
-    prove:
-        forall:
-            4 = 4
+    ? forall:
+        4 = 4
     4 = 4
 
 by thm tmp_one_eq_one()

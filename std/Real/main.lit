@@ -233,30 +233,27 @@ trust:
 # has this as builtin background so logarithm domains can be recovered from
 # facts such as `a^x = y`; the theorem gives users an explicit std name.
 thm positive_base_real_power_pos, rpow_pos_of_pos:
-    prove:
-        forall a R_pos, x R:
-            a^x $in R_pos
+    ? forall a R_pos, x R:
+        a^x $in R_pos
     a^x $in R_pos
 
 # Trusted real-background theorem: in the standard completion of `Q`, rationals
 # are dense in `R`.  Mathlib: `exists_rat_btwn`; equivalently the cast from `Q`
 # to `R` has dense range.
 thm exists_rat_between, exists_rat_btwn:
-    prove:
-        forall a, b R:
-            a < b
-            =>:
-                exist q Q st {a < q < b}
+    ? forall a, b R:
+        a < b
+        =>:
+            exist q Q st {a < q < b}
     exist q Q st {a < q < b}
 
 # The real line is dense in itself. This is an ordered-field fact, proved by
 # the midpoint `(a + b) / 2`; no completeness or rational approximation is used.
 thm exists_real_between:
-    prove:
-        forall a, b R:
-            a < b
-            =>:
-                exist x R st {a < x < b}
+    ? forall a, b R:
+        a < b
+        =>:
+            exist x R st {a < x < b}
     (a + b) / 2 $in R
     a + a < a + b
     2 * a = a + a
@@ -275,16 +272,14 @@ thm exists_real_between:
 
 # Archimedean approximation interface for the standard real line.
 thm exists_nat_inv_lt:
-    prove:
-        forall epsilon R_pos:
-            exist n N_pos st {1 / n < epsilon}
+    ? forall epsilon R_pos:
+        exist n N_pos st {1 / n < epsilon}
     by thm archimedean_property(epsilon)
     exist n N_pos st {1 / n < epsilon}
 
 thm exists_nat_ge:
-    prove:
-        forall x R_pos:
-            exist n N_pos st {x <= n}
+    ? forall x R_pos:
+        exist n N_pos st {x <= n}
     1 / x $in R_pos
     by thm archimedean_property(1 / x)
     obtain n from exist n N_pos st {1 / n < 1 / x}
@@ -301,9 +296,8 @@ thm exists_nat_ge:
         x <= n
 
 thm exists_nat_mul_gt:
-    prove:
-        forall x, epsilon R_pos:
-            exist n N_pos st {n * epsilon > x}
+    ? forall x, epsilon R_pos:
+        exist n N_pos st {n * epsilon > x}
     x / epsilon $in R_pos
     x / epsilon + 1 $in R_pos
     by thm exists_nat_ge(x / epsilon + 1)
@@ -321,9 +315,8 @@ thm exists_nat_mul_gt:
         n * epsilon > x
 
 thm exists_positive_rat_le:
-    prove:
-        forall x R_pos:
-            exist q Q_pos st {q <= x}
+    ? forall x R_pos:
+        exist q Q_pos st {q <= x}
     by thm exists_rat_between(0, x)
     obtain q from exist q Q st {0 < q < x}
     q $in Q_pos
@@ -335,18 +328,16 @@ thm exists_positive_rat_le:
 # Strict monotonicity of the positive-real power map for positive rational
 # exponents.
 thm positive_rational_power_strict_mono, pos_rat_pow_strict_mono:
-    prove:
-        forall x, y R_pos, q Q:
-            q > 0
-            x > y
-            =>:
-                x^q > y^q
+    ? forall x, y R_pos, q Q:
+        q > 0
+        x > y
+        =>:
+            x^q > y^q
     x^q > y^q
 
 thm pow_neg_eq_inv, rpow_neg_eq_inv:
-    prove:
-        forall x R_pos, q R:
-            x^(-q) = 1 / x^q
+    ? forall x R_pos, q R:
+        x^(-q) = 1 / x^q
     x^q > 0
     x^q != 0
     x^q * x^(-q) = x^(q + (-q))
@@ -359,50 +350,45 @@ thm pow_neg_eq_inv, rpow_neg_eq_inv:
 # Trusted real-background theorem: every real is represented by a rational
 # Cauchy approximation sequence in the standard completion-of-`Q` model.
 thm exists_rat_seq_converging_to_real:
-    prove:
-        forall x R:
-            exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
+    ? forall x R:
+        exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
     exist a seq(Q) st {$rat_seq_converges(a, x), $rat_seq_cauchy(a)}
 
 # Every real has a real-valued Cauchy sequence converging to it.  The intended
 # concrete witness is the constant sequence, but this theorem keeps the std
 # interface independent of sequence-construction proof details for now.
 thm exists_seq_converging_to_real, exists_cauchy_seq_converging_to_real:
-    prove:
-        forall x R:
-            exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
+    ? forall x R:
+        exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
     exist a seq(R) st {$seq_converges(a, x), $cauchy(a)}
 
 # Trusted real-background theorem: every real Cauchy sequence has a real limit.
 thm cauchy_seq_converges, seq_completeness:
-    prove:
-        forall a seq(R):
-            $cauchy(a)
-            =>:
-                $convergent_seq(a)
+    ? forall a seq(R):
+        $cauchy(a)
+        =>:
+            $convergent_seq(a)
     $convergent_seq(a)
 
 # Trusted real-background theorem: completeness of `R` in least-upper-bound
 # form.  This is the standard analysis interface used by Tao-style supremum
 # arguments.
 thm exists_least_upper_bound, supremum_existence:
-    prove:
-        forall E set:
-            $nonempty_subset(E)
-            $has_upper_bound(E)
-            =>:
-                $has_least_upper_bound(E)
+    ? forall E set:
+        $nonempty_subset(E)
+        $has_upper_bound(E)
+        =>:
+            $has_least_upper_bound(E)
     $has_least_upper_bound(E)
 
 # Least upper bounds are unique because each is an upper bound and each is
 # below every upper bound.
 thm least_upper_bound_unique:
-    prove:
-        forall E set, s, t R:
-            $is_least_upper_bound(E, s)
-            $is_least_upper_bound(E, t)
-            =>:
-                s = t
+    ? forall E set, s, t R:
+        $is_least_upper_bound(E, s)
+        $is_least_upper_bound(E, t)
+        =>:
+            s = t
     forall M R:
         $is_upper_bound(E, M)
         =>:
@@ -420,21 +406,19 @@ thm least_upper_bound_unique:
 # Supremum approximation from below: any positive distance below the supremum
 # is crossed by some element of the set.
 thm least_upper_bound_member_above_of_lt:
-    prove:
-        forall E set, s R, epsilon R_pos:
-            $is_least_upper_bound(E, s)
-            =>:
-                exist x E st {s - epsilon < x}
+    ? forall E set, s R, epsilon R_pos:
+        $is_least_upper_bound(E, s)
+        =>:
+            exist x E st {s - epsilon < x}
     exist x E st {s - epsilon < x}
 
 # Greatest lower bounds are unique by the dual argument to supremum uniqueness.
 thm greatest_lower_bound_unique:
-    prove:
-        forall E set, s, t R:
-            $is_greatest_lower_bound(E, s)
-            $is_greatest_lower_bound(E, t)
-            =>:
-                s = t
+    ? forall E set, s, t R:
+        $is_greatest_lower_bound(E, s)
+        $is_greatest_lower_bound(E, t)
+        =>:
+            s = t
     forall M R:
         $is_lower_bound(E, M)
         =>:
@@ -452,9 +436,8 @@ thm greatest_lower_bound_unique:
 # Infimum approximation from above: any positive distance above the infimum
 # contains some element of the set.
 thm greatest_lower_bound_member_below_of_lt:
-    prove:
-        forall E set, s R, epsilon R_pos:
-            $is_greatest_lower_bound(E, s)
-            =>:
-                exist x E st {x < s + epsilon}
+    ? forall E set, s R, epsilon R_pos:
+        $is_greatest_lower_bound(E, s)
+        =>:
+            exist x E st {x < s + epsilon}
     exist x E st {x < s + epsilon}

@@ -752,11 +752,10 @@ The shape is:
 
 ```text
 strategy name:
-    prove:
-        forall parameters:
-            assumptions
-            =>:
-                $target_predicate(...)
+    ? forall parameters:
+        assumptions
+        =>:
+            $target_predicate(...)
 ```
 
 After the strategy is registered, Litex can use it when it sees a matching

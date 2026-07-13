@@ -572,7 +572,7 @@ impl Runtime {
     }
 
     /// Restores [`Runtime::parsing_free_param_collection`] after `f` so parse-time bindings (e.g.
-    /// `have x …` without `=`) do not leak across sibling `prove:` blocks or out of nested parses
+    /// `have x …` without `=`) do not leak across sibling `?` goal blocks or out of nested parses
     /// that use this wrapper (`forall`, `exist`, `prove`, `prop` bodies, etc.).
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where

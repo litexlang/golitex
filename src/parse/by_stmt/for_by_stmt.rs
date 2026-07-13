@@ -82,7 +82,7 @@ impl Runtime {
         let goal_block = tb.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by for: expected `prove:` or `?` goal block".to_string(),
+                    "by for: expected a `? forall ...` goal block".to_string(),
                     tb.line_file.clone(),
                 ),
             ))

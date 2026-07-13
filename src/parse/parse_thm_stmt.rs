@@ -18,7 +18,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "{}: expects a `prove:` block and optional proof body",
+                        "{}: expects a `? forall ...` goal block and optional proof body",
                         keyword
                     ),
                     tb.line_file.clone(),
@@ -30,7 +30,7 @@ impl Runtime {
             let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{}: expected `prove:` or `?` goal block", keyword),
+                        format!("{}: expected a `? forall ...` goal block", keyword),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -95,9 +95,14 @@ impl Runtime {
             ))
         })?;
         if !goal_block.current_token_is_equal_to(QUESTION_GOAL) {
+            let message = if goal_block.current_token_is_equal_to("prove") {
+                format!("{}: `prove` was removed; use `? forall ...`", keyword)
+            } else {
+                format!("{}: expected `? forall ...` goal block", keyword)
+            };
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!("{}: expected `? forall ...` goal block", keyword),
+                    message,
                     goal_block.line_file.clone(),
                 ),
             )));

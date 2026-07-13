@@ -510,7 +510,6 @@ pub use crate::common::keywords::PREIMAGE;
 pub use crate::common::keywords::PRODUCT;
 pub use crate::common::keywords::PROJ;
 pub use crate::common::keywords::PROP;
-pub use crate::common::keywords::PROVE;
 pub use crate::common::keywords::Q;
 pub use crate::common::keywords::QUESTION_GOAL;
 pub use crate::common::keywords::Q_NEG;

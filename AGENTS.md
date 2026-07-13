@@ -312,7 +312,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 8. Avoid restating type and membership facts that Litex has already introduced. For example, `forall s finite_set:` already gives the finite-set typing for `s`, and `forall a s:` or `have a s` already gives `a $in s`. Prefer `forall s finite_set, a s:` over `forall s finite_set, a set:` plus a separate `a $in s` premise when the theorem is only about members of `s`.
 
-9. Avoid proof scaffolding that only repeats the same proposition. After `by thm ...`, do not add an identical conclusion line or wrap the call in a `claim prove` block unless the verifier needs that exact intermediate fact to fold a prop, bind a local variable, or expose a `forall`/`exist` shape. Try the direct theorem call first, then keep the extra line only when a verifier run shows it is needed.
+9. Avoid proof scaffolding that only repeats the same proposition. After `by thm ...`, do not add an identical conclusion line or wrap the call in a `claim` / `?` goal block unless the verifier needs that exact intermediate fact to fold a prop, bind a local variable, or expose a `forall`/`exist` shape. Try the direct theorem call first, then keep the extra line only when a verifier run shows it is needed.
 
 10. Avoid duplicate nearby facts such as repeating `$is_finite_set(T)` after it was just established, or writing both `count(s) >= 1` and `count(s) $in N_pos` when a typed binding such as `have n N_pos = count(s)` can be made directly. Keep these restatements only when they are the smallest verifier-checkable bridge.
 

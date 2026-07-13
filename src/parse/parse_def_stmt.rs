@@ -843,7 +843,7 @@ impl Runtime {
                 if tb.current_token_is_equal_to(FORALL) {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> by forall ...` has been removed; use `have fn <name> by exist!:` with a `prove:` block"
+                            "`have fn <name> by forall ...` has been removed; use `have fn <name> by exist!:` with a `? forall ...` goal"
                                 .to_string(),
                             tb.line_file.clone(),
                         ),
@@ -952,18 +952,21 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`have fn <name> by exist!:` expects a `prove:` or `?` goal block".to_string(),
+                    "`have fn <name> by exist!:` expects a `? forall ...` goal block".to_string(),
                     lf,
                 ),
             )));
         }
 
-        if !tb.body[0].current_token_is_equal_to(PROVE)
-            && !tb.body[0].current_token_is_equal_to(QUESTION_GOAL)
-        {
+        if !tb.body[0].current_token_is_equal_to(QUESTION_GOAL) {
+            let message = if tb.body[0].current_token_is_equal_to("prove") {
+                "`have fn <name> by exist!:`: `prove` was removed; use `? forall ...`"
+            } else {
+                "`have fn <name> by exist!:` expects a `? forall ...` goal block"
+            };
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`have fn <name> by exist!:` expects a `prove:` or `?` goal block".to_string(),
+                    message.to_string(),
                     tb.body[0].line_file.clone(),
                 ),
             )));
@@ -973,7 +976,7 @@ impl Runtime {
             let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "`have fn <name> by exist!:` expects a `prove:` or `?` goal block"
+                        "`have fn <name> by exist!:` expects a `? forall ...` goal block"
                             .to_string(),
                         lf.clone(),
                     ),

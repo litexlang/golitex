@@ -46,7 +46,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "claim: expects a `prove:` block and optional proof body".to_string(),
+                    "claim: expects a `? <fact>` goal block and optional proof body".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -55,7 +55,8 @@ impl Runtime {
             let first = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "claim: expects a `prove:` block and optional proof body".to_string(),
+                        "claim: expects a `? <fact>` goal block and optional proof body"
+                            .to_string(),
                         tb.line_file.clone(),
                     ),
                 ))

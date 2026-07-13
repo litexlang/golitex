@@ -779,12 +779,11 @@ sketch:
         y = x + 1
 
     claim:
-        prove:
-            forall x {3, 5, 9}, y, y2 set:
-                $plus_one_relation(x, y)
-                $plus_one_relation(x, y2)
-                =>:
-                    y = y2
+        ? forall x {3, 5, 9}, y, y2 set:
+            $plus_one_relation(x, y)
+            $plus_one_relation(x, y2)
+            =>:
+                y = y2
         y = x + 1
         y2 = x + 1
         y = y2
@@ -944,12 +943,10 @@ prop is_universal_set(U set):
 # then gives a member that must both contain and avoid that same point.
 
 claim:
-    prove:
-        forall U set:
-            not $is_universal_set(U)
+    ? forall U set:
+        not $is_universal_set(U)
     by contra:
-        prove:
-            not $is_universal_set(U)
+        ? not $is_universal_set(U)
         $is_universal_set(U)
         U $in U
         U $in {U}
@@ -964,8 +961,7 @@ claim:
 
 sketch:
     by contra:
-        prove:
-            not $is_universal_set({1, 2})
+        ? not $is_universal_set({1, 2})
         $is_universal_set({1, 2})
         3 $in {1, 2}
         not 3 $in {1, 2}
@@ -1005,9 +1001,8 @@ sketch:
         y = x
 
     claim:
-        prove:
-            forall x X_example:
-                exist! y Y_example st {$P_example(x, y)}
+        ? forall x X_example:
+            exist! y Y_example st {$P_example(x, y)}
         witness exist! y Y_example st {$P_example(x, y)} from x
 
     have fn f_from_relation by exist!:

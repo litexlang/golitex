@@ -33,7 +33,7 @@ impl Runtime {
         {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "by cases: `prove:` with `forall`/`iff` (forall-iff) is not supported; use a plain `forall` goal"
+                "by cases: `?` with `forall`/`iff` (forall-iff) is not supported; use a plain `forall` goal"
                     .to_string(),
                 None,
                 vec![],
@@ -48,7 +48,7 @@ impl Runtime {
         {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "by cases: `prove:` may contain at most one `forall` fact".to_string(),
+                "by cases: `?` goals may contain at most one `forall` fact".to_string(),
                 None,
                 vec![],
             ));
@@ -64,7 +64,7 @@ impl Runtime {
         {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "by cases: when `prove:` includes `forall`, the `forall` must be listed first"
+                "by cases: when `?` goals include `forall`, the `forall` must be listed first"
                     .to_string(),
                 None,
                 vec![],
@@ -78,7 +78,7 @@ impl Runtime {
         {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "by cases: `prove:` with `forall` cannot be used in the same statement as a case arm that ends with `impossible`"
+                "by cases: `?` with `forall` cannot be used in the same statement as a case arm that ends with `impossible`"
                     .to_string(),
                 None,
                 vec![],

@@ -1634,12 +1634,12 @@ claim:
         by induc n from 0:
             ? (n * epsilon)^2 < 2
 
-            prove from n = 0:
+            ? from n = 0:
                 (0 * epsilon)^2 = 0
                 0 < 2
                 (0 * epsilon)^2 < 2
 
-            prove induc:
+            ? induc:
                 n * epsilon >= 0
                 n * epsilon $in Q
                 (n * epsilon)^2 < 2

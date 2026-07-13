@@ -56,39 +56,35 @@ trust:
 pub const ORDER_TRANSITIVITY_THMS: &str = r#"
 
 thm a_lt_c:
-    prove:
-        forall a, b, c R:
-            a < b
-            b < c
-            =>:
-                a < c
+    ? forall a, b, c R:
+        a < b
+        b < c
+        =>:
+            a < c
     a < b < c
 
 thm a_le_c:
-    prove:
-        forall a, b, c R:
-            a <= b
-            b <= c
-            =>:
-                a <= c
+    ? forall a, b, c R:
+        a <= b
+        b <= c
+        =>:
+            a <= c
     a <= b <= c
 
 thm a_gt_c:
-    prove:
-        forall a, b, c R:
-            a > b
-            b > c
-            =>:
-                a > c
+    ? forall a, b, c R:
+        a > b
+        b > c
+        =>:
+            a > c
     a > b > c
 
 thm a_ge_c:
-    prove:
-        forall a, b, c R:
-            a >= b
-            b >= c
-            =>:
-                a >= c
+    ? forall a, b, c R:
+        a >= b
+        b >= c
+        =>:
+            a >= c
     a >= b >= c
 "#;
 

@@ -1,0 +1,291 @@
+# Number Theory for Beginners, Section II.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
+# problem: Formalize Euclidean division, the subgroup theorem for Z, gcd via
+# linear combinations, and the Section II exercises.
+# proof_idea: Reuse Section I's divisibility vocabulary.  State the Euclidean
+# division lemma and the subgroup theorem as source-facing interfaces, then
+# define binary gcd through divisibility plus Bezout.  Elementary consequences
+# of the gcd definition are checked directly.
+# litex_code: This file runs Section I first and then adds Section II.
+# comments: Broad theorem packages are explicit `proof_debt` debt with source
+# handling comments; no std number-theory modules are imported.
+
+trust local import section1
+
+"""
+Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
+a = dq + r with 0 <= r < d.  Equivalently, dq is the largest multiple of d
+not exceeding a.
+"""
+
+prop euclidean_division_Z(a, d, q, r Z):
+    d > 0
+    a = d * q + r
+    0 <= r < d
+
+prop is_largest_multiple_leq_Z(a, d, q Z):
+    d > 0
+    d * q <= a
+    forall z Z:
+        d * z <= a
+        =>:
+            d * z <= d * q
+
+# Source handling: The text proves this from Section I's least positive
+# integer principle.
+# trust: The checked proof needs the least-positive-element argument over
+# the set {a-dz > 0}; it is recorded here as the Section II division interface.
+trust:
+    forall a Z, d N_pos:
+        exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
+    forall a Z, d N_pos:
+        exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+
+thm lemma_II_euclidean_division:
+    ? forall a Z, d N_pos:
+        exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
+    exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
+
+"""
+Theorem II.1. A nonempty set of integers closed under subtraction is exactly
+mZ for a unique m >= 0.
+"""
+
+prop closed_under_subtraction(M power_set(Z)):
+    M $subset Z
+    forall x, y M:
+        x $in Z
+        y $in Z
+        x - y $in M
+
+prop is_integer_multiple_set(M power_set(Z), m Z):
+    M $subset Z
+    m >= 0
+    forall x Z:
+        x $in M
+        =>:
+            $divides_Z(m, x)
+    forall x Z:
+        $divides_Z(m, x)
+        =>:
+            x $in M
+
+# Source handling: This is Theorem II.1.  The book proves closure under
+# addition, all integer multiples, and then uses the least positive element.
+# trust: The full checked proof needs a finite amount of subgroup algebra
+# plus the Euclidean division lemma above.
+trust:
+    forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        =>:
+            exist! m N st {$is_integer_multiple_set(M, m)}
+
+thm theorem_II_1_subgroups_of_Z:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        =>:
+            exist! m N st {$is_integer_multiple_set(M, m)}
+    exist! m N st {$is_integer_multiple_set(M, m)}
+
+"""
+Corollary 1. The set of all integral linear combinations of finitely many
+integers is mZ for a unique m >= 0.
+"""
+
+abstract_prop integer_linear_combination_from(A, x)
+
+prop is_linear_combination_multiple_set(A finite_set, M power_set(Z)):
+    A $subset Z
+    M $subset Z
+    forall x Z:
+        x $in M
+        =>:
+            $integer_linear_combination_from(A, x)
+    forall x Z:
+        $integer_linear_combination_from(A, x)
+        =>:
+            x $in M
+
+# Source handling: Corollary 1 applies Theorem II.1 to the set of all linear
+# combinations.
+# trust: Finite linear combinations over an arbitrary finite integer set
+# need a reusable finite-sum coefficient interface.
+trust:
+    forall A finite_set:
+        A $subset Z
+        =>:
+            exist M power_set(Z), d N st {$is_linear_combination_multiple_set(A, M), $is_integer_multiple_set(M, d)}
+
+"""
+Corollary 2 and Definition. The integer d from Corollary 1 divides each of the
+given integers, every common divisor divides d, and d is called their gcd.
+"""
+
+# For later sections this file exposes the binary gcd.  The body records the
+# divisor characterization and Bezout representation used in Sections III-IV.
+
+prop is_gcd_Z(a, b Z, d N):
+    $divides_Z(d, a)
+    $divides_Z(d, b)
+    forall e Z:
+        e > 0
+        $divides_Z(e, a)
+        $divides_Z(e, b)
+        =>:
+            $divides_Z(e, d)
+    exist x, y Z st {d = a * x + b * y}
+
+# Source handling: The definition comes from Corollaries 1-2 and the statement
+# that the gcd itself is a linear combination of the original integers.
+# trust: The full proof reduces the finite linear-combination construction
+# to the binary case and is not expanded in this chapter file.
+trust:
+    forall a, b Z:
+        exist! d N st {$is_gcd_Z(a, b, d)}
+
+have fn gcd_Z by exist!:
+    ? forall a, b Z:
+        exist! d N st {$is_gcd_Z(a, b, d)}
+
+thm gcd_Z_dvd_left:
+    ? forall a, b Z:
+        $divides_Z(gcd_Z(a, b), a)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    $divides_Z(gcd_Z(a, b), a)
+
+thm gcd_Z_dvd_right:
+    ? forall a, b Z:
+        $divides_Z(gcd_Z(a, b), b)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    $divides_Z(gcd_Z(a, b), b)
+
+thm gcd_Z_bezout:
+    ? forall a, b Z:
+        exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+
+"""
+Exercise II.1. Prove associativity of gcd for three integers:
+(a,b,c)=((a,b),c)=(a,(b,c)).
+"""
+
+sketch:
+    # Source handling: This follows from the universal divisor
+    # characterization of gcd.
+    # trust: A checked proof needs a ternary gcd interface derived from
+    # finite linear combinations.
+    trust:
+        forall a, b, c Z:
+            gcd_Z(gcd_Z(a, b), c) = gcd_Z(a, gcd_Z(b, c))
+
+"""
+Exercise II.2. Consecutive Fibonacci numbers are relatively prime.
+"""
+
+sketch:
+    abstract_prop are_consecutive_fibonacci_terms(n, a, b)
+
+    # Source handling: The exercise uses the recurrence and the gcd identity
+    # gcd(u+v,u)=gcd(v,u).
+    # trust: A checked recursive Fibonacci function should be defined by
+    # induction before proving the gcd recurrence.
+    trust:
+        forall n N_pos:
+            exist a, b N_pos st {$are_consecutive_fibonacci_terms(n, a, b), gcd_Z(a, b) = 1}
+
+"""
+Exercise II.3. A unimodular linear change of two integers preserves gcd.
+"""
+
+sketch:
+    # Source handling: The hint solves the two linear equations using
+    # ps-qr = +/-1.
+    # trust: A checked proof needs the inverse integer matrix calculation.
+    trust:
+        forall p, q, r, s, a, b, a1, b1 Z:
+            p * s - q * r = 1 or p * s - q * r = -1
+            a1 = p * a + q * b
+            b1 = r * a + s * b
+            =>:
+                gcd_Z(a, b) = gcd_Z(a1, b1)
+
+"""
+Exercise II.4. The Euclidean algorithm terminates and its last nonzero
+remainder is gcd(a,b).
+"""
+
+sketch:
+    abstract_prop euclidean_algorithm_run(a, b, last)
+
+    # Source handling: The source defines the remainder sequence and asks for
+    # termination plus correctness.
+    # trust: The checked version should connect repeated Euclidean
+    # divisions with a decreasing positive remainder measure.
+    trust:
+        forall a, b N_pos:
+            exist last N_pos st {$euclidean_algorithm_run(a, b, last), last = gcd_Z(a, b)}
+
+"""
+Exercise II.5. Every Euclidean-algorithm remainder is an integral linear
+combination ax+by.
+"""
+
+sketch:
+    abstract_prop euclidean_remainder_linear_combination(a, b, n)
+
+    # Source handling: The proof is the usual back-substitution induction.
+    # trust: This should be proved together with the checked Euclidean
+    # algorithm recurrence from Exercise II.4.
+    trust:
+        forall a, b N_pos, n N:
+            $euclidean_remainder_linear_combination(a, b, n)
+
+"""
+Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
+and (1024,729).
+"""
+
+sketch:
+    # Source handling: These are concrete Euclidean-algorithm computations.
+    # trust: The equalities are recorded as calculation targets until the
+    # checked Euclidean-algorithm function is available in this file.
+    trust:
+        gcd_Z(56, 35) = 7
+        exist x, y Z st {7 = 56 * x + 35 * y}
+        gcd_Z(309, 186) = 3
+        exist x, y Z st {3 = 309 * x + 186 * y}
+        gcd_Z(1024, 729) = 1
+        exist x, y Z st {1 = 1024 * x + 729 * y}
+
+"""
+Exercise II.7. Scaling all inputs by m scales the gcd by m.
+"""
+
+sketch:
+    # Source handling: The statement follows from scaling all common divisors
+    # and all linear combinations by m.
+    # trust: The checked proof needs the finite-input gcd interface.
+    trust:
+        forall a, b Z, m N_pos:
+            gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
+
+"""
+Exercise II.8. Every rational number has a unique reduced integer numerator
+and positive denominator.
+"""
+
+prop is_reduced_fraction_for(q Q, m Z, n N_pos):
+    q = m / n
+    gcd_Z(m, n) = 1
+
+# Source handling: The exercise uses the gcd and Bezout theory above to reduce
+# an arbitrary rational representation.
+# trust: A checked proof needs a local rational numerator/denominator
+# construction without importing the Rat module.
+trust:
+    forall q Q:
+        exist! m Z, n N_pos st {$is_reduced_fraction_for(q, m, n)}

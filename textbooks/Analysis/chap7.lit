@@ -281,10 +281,9 @@ thm finite_set_size_has_index_for_all:
     ? forall n N_pos:
         $finite_set_size_has_index(n)
     by induc n from 1:
-        prove:
-            $finite_set_size_has_index(n)
+        ? $finite_set_size_has_index(n)
 
-        prove from n = 1:
+        ? from n = 1:
             claim:
                 ? forall s finite_set:
                     $is_finite_set(s)
@@ -296,7 +295,7 @@ thm finite_set_size_has_index_for_all:
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
-        prove induc:
+        ? induc:
             $finite_set_size_has_index(n)
             claim:
                 ? forall s finite_set:
@@ -617,7 +616,7 @@ thm partial_sum_matches_finite_sum:
     by induc k from 1:
         ? partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
 
-        prove from k = 1:
+        ? from k = 1:
             by thm partial_sum_successor(a, 1)
             partial_sum(a, 1) = partial_sum(a, 1 - 1) + a(1)
             1 - 1 = 0
@@ -630,7 +629,7 @@ thm partial_sum_matches_finite_sum:
             sum(1, 1, fn(i N_pos) R {a(i)}) = a(1)
             partial_sum(a, 1) = sum(1, 1, fn(i N_pos) R {a(i)})
 
-        prove induc:
+        ? induc:
             partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
             k + 1 $in N_pos
             by thm partial_sum_successor(a, k + 1)
@@ -683,14 +682,14 @@ thm partial_sum_extensional:
     by induc k from 0:
         ? partial_sum(a, k) = partial_sum(b, k)
 
-        prove from k = 0:
+        ? from k = 0:
             by thm partial_sum_zero(a)
             partial_sum(a, 0) = 0
             by thm partial_sum_zero(b)
             partial_sum(b, 0) = 0
             partial_sum(a, 0) = partial_sum(b, 0)
 
-        prove induc:
+        ? induc:
             partial_sum(a, k) = partial_sum(b, k)
             k + 1 $in N_pos
             by thm partial_sum_successor(a, k + 1)
@@ -1394,12 +1393,12 @@ thm decreasing_seq_le_add:
     by induc h from 0:
         ? a(n + h) <= a(n)
 
-        prove from h = 0:
+        ? from h = 0:
             n + 0 = n
             a(n + 0) = a(n)
             a(n + 0) <= a(n)
 
-        prove induc:
+        ? induc:
             a(n + h) <= a(n)
             n + h $in N_pos
             a(n + h + 1) <= a(n + h)
@@ -1453,12 +1452,12 @@ thm nonnegative_partial_sum_le_add:
     by induc h from 0:
         ? partial_sum(a, n) <= partial_sum(a, n + h)
 
-        prove from h = 0:
+        ? from h = 0:
             n + 0 = n
             partial_sum(a, n + 0) = partial_sum(a, n)
             partial_sum(a, n) <= partial_sum(a, n + 0)
 
-        prove induc:
+        ? induc:
             partial_sum(a, n) <= partial_sum(a, n + h)
             n + h $in N_pos
             by thm partial_sum_successor(a, n + h + 1)
@@ -1493,15 +1492,14 @@ thm alternating_sign_abs_one:
     ? forall n N_pos:
         abs((-1)^n) = 1
     by induc n from 1:
-        prove:
-            abs((-1)^n) = 1
+        ? abs((-1)^n) = 1
 
-        prove from n = 1:
+        ? from n = 1:
             (-1)^1 = -1
             abs((-1)^1) = abs(-1)
             abs(-1) = 1
 
-        prove induc:
+        ? induc:
             abs((-1)^n) = 1
             (-1)^(n + 1) = (-1)^n * (-1)
             abs((-1)^(n + 1)) = abs((-1)^n * (-1))
@@ -1879,7 +1877,7 @@ thm partial_sum_series_shift_plus_prefix:
     by induc k from 1:
         ? partial_sum(series_shift(a, h), k) + partial_sum(a, h) = partial_sum(a, k + h)
 
-        prove from k = 1:
+        ? from k = 1:
             by thm partial_sum_successor(series_shift(a, h), 1)
             partial_sum(series_shift(a, h), 1) = partial_sum(series_shift(a, h), 1 - 1) + series_shift(a, h)(1)
             1 - 1 = 0
@@ -1899,7 +1897,7 @@ thm partial_sum_series_shift_plus_prefix:
             partial_sum(series_shift(a, h), 1) + partial_sum(a, h) = partial_sum(a, h) + a(1 + h)
             partial_sum(series_shift(a, h), 1) + partial_sum(a, h) = partial_sum(a, 1 + h)
 
-        prove induc:
+        ? induc:
             partial_sum(series_shift(a, h), k) + partial_sum(a, h) = partial_sum(a, k + h)
             k + 1 $in N_pos
             by thm partial_sum_successor(series_shift(a, h), k + 1)
@@ -2058,17 +2056,16 @@ thm telescoping_partial_sum_identity:
         ? forall r N_pos:
             partial_sum(b, r) = a(1) - a(r + 1)
         by induc r from 1:
-            prove:
-                partial_sum(b, r) = a(1) - a(r + 1)
+            ? partial_sum(b, r) = a(1) - a(r + 1)
 
-            prove from r = 1:
+            ? from r = 1:
                 partial_sum(b, 1) = partial_sum(b, 0) + b(1)
                 partial_sum(b, 0) = 0
                 b(1) = telescoping_terms(a)(1)
                 telescoping_terms(a)(1) = a(1) - a(1 + 1)
                 partial_sum(b, 1) = a(1) - a(1 + 1)
 
-            prove induc:
+            ? induc:
                 partial_sum(b, r) = a(1) - a(r + 1)
                 r + 1 > 0
                 partial_sum(b, r + 1) = partial_sum(b, (r + 1) - 1) + b(r + 1)
@@ -2552,10 +2549,9 @@ thm nonnegative_partial_sums_monotone:
         ? forall r N:
             $has_monotone_partial_sums_up_to(a, r)
         by induc r from 0:
-            prove:
-                $has_monotone_partial_sums_up_to(a, r)
+            ? $has_monotone_partial_sums_up_to(a, r)
 
-            prove from r = 0:
+            ? from r = 0:
                 forall p0 N:
                     p0 <= 0
                     =>:
@@ -2564,7 +2560,7 @@ thm nonnegative_partial_sums_monotone:
                         partial_sum(a, p0) <= partial_sum(a, 0)
                 $has_monotone_partial_sums_up_to(a, 0)
 
-            prove induc:
+            ? induc:
                 claim:
                     ? forall p0 N:
                         p0 <= r + 1
@@ -2598,13 +2594,12 @@ thm two_power_ge_successor:
     ? forall n N:
         2^n >= n + 1
     by induc n from 0:
-        prove:
-            2^n >= n + 1
+        ? 2^n >= n + 1
 
-        prove from n = 0:
+        ? from n = 0:
             2^0 = 1 >= 0 + 1
 
-        prove induc:
+        ? induc:
             2^n >= n + 1
             2^n * 2^1 >= (n + 1) * 2
             2 ^ (n + 1) = 2^n * 2^1 >= (n + 1) * 2 = (n + 1) + (n + 1) >= n + 1 + 1
@@ -2679,7 +2674,7 @@ thm cauchy_condensation_partial_sum_lower_bound:
     by induc K from 1:
         ? partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
 
-        prove from K = 1:
+        ? from K = 1:
             2^1 = 2
             2^1 - 1 = 1
             partial_sum(a, 2^1 - 1) = partial_sum(a, 1)
@@ -2709,7 +2704,7 @@ thm cauchy_condensation_partial_sum_lower_bound:
             partial_sum(condensed_terms(a), 1) = a(1)
             partial_sum(a, 2^1 - 1) <= partial_sum(condensed_terms(a), 1)
 
-        prove induc:
+        ? induc:
             partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
             2^K $in N_pos
             by thm two_power_ge_successor(K)
@@ -2768,7 +2763,7 @@ thm cauchy_condensation_partial_sum_upper_strong:
     by induc K from 1:
         ? partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^(K - 1))
 
-        prove from K = 1:
+        ? from K = 1:
             condensed_terms(a)(1) = 2^(1 - 1) * a(2^(1 - 1))
             1 - 1 = 0
             2^0 = 1
@@ -2801,7 +2796,7 @@ thm cauchy_condensation_partial_sum_upper_strong:
             a(1) <= a(1) + a(1)
             partial_sum(condensed_terms(a), 1) <= 2 * partial_sum(a, 2^(1 - 1))
 
-        prove induc:
+        ? induc:
             partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^(K - 1))
             K >= 1
             K - 1 $in N
@@ -3053,7 +3048,7 @@ thm prefix_image_bound_bounds:
         $prefix_image_bound_bounds_up_to(phi, n)
     by induc n from 1:
         ? $prefix_image_bound_bounds_up_to(phi, n)
-        prove from n = 1:
+        ? from n = 1:
             claim:
                 ? forall j N_pos:
                     j <= 1
@@ -3064,7 +3059,7 @@ thm prefix_image_bound_bounds:
                 prefix_image_bound(phi, 1) = phi(1)
                 phi(j) <= prefix_image_bound(phi, 1)
             $prefix_image_bound_bounds_up_to(phi, 1)
-        prove induc:
+        ? induc:
             n + 1 > 1
             prefix_image_bound(phi, n + 1) = max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1))
             n + 1 - 1 = n
@@ -3738,7 +3733,7 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
     by induc k from 1:
         ? partial_sum(example_7_4_4_original_pair_terms, k) > 0
 
-        prove from k = 1:
+        ? from k = 1:
             by thm partial_sum_successor(example_7_4_4_original_pair_terms, 1)
             partial_sum(example_7_4_4_original_pair_terms, 1) = partial_sum(example_7_4_4_original_pair_terms, 1 - 1) + example_7_4_4_original_pair_terms(1)
             partial_sum(example_7_4_4_original_pair_terms, 1 - 1) = partial_sum(example_7_4_4_original_pair_terms, 0)
@@ -3751,7 +3746,7 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
             example_7_4_4_original_pair_terms(1) > 0
             partial_sum(example_7_4_4_original_pair_terms, 1) > 0
 
-        prove induc:
+        ? induc:
             partial_sum(example_7_4_4_original_pair_terms, k) > 0
             k + 1 $in N_pos
             by thm partial_sum_successor(example_7_4_4_original_pair_terms, k + 1)
@@ -3789,7 +3784,7 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
     by induc k from 1:
         ? partial_sum(example_7_4_4_rearranged_block_terms, k) < 0
 
-        prove from k = 1:
+        ? from k = 1:
             by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, 1)
             partial_sum(example_7_4_4_rearranged_block_terms, 1) = partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) + example_7_4_4_rearranged_block_terms(1)
             partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) = partial_sum(example_7_4_4_rearranged_block_terms, 0)
@@ -3802,7 +3797,7 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
             example_7_4_4_rearranged_block_terms(1) < 0
             partial_sum(example_7_4_4_rearranged_block_terms, 1) < 0
 
-        prove induc:
+        ? induc:
             partial_sum(example_7_4_4_rearranged_block_terms, k) < 0
             k + 1 $in N_pos
             by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, k + 1)

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by extension:` then a `prove:` or `?` goal with exactly one equality, plus proof blocks.
+    /// `by extension:` then a `?` goal with exactly one equality, plus proof blocks.
     ///
     /// Shorthand: `by extension A = B:` puts the goal on the header line; body is only proof blocks.
     /// If no proof blocks are needed, `by extension A = B` may omit the trailing colon.

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by contra:` then a `prove:` or `?` goal block, optional proof statements, then `impossible` atomic fact.
+    /// `by contra:` then a `?` goal block, optional proof statements, then `impossible` atomic fact.
     ///
     /// Shorthand: `by contra goal:` embeds the goal on the header line; body is optional proof
     /// statement blocks followed by `impossible ...` as the last block.
@@ -71,7 +71,7 @@ impl Runtime {
             if tb.body.len() < 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra: expects `prove:` or `?` goal block and impossible ... tail"
+                        "by contra: expects a `? <fact>` goal block and impossible ... tail"
                             .to_string(),
                         tb.line_file.clone(),
                     ),
@@ -105,7 +105,7 @@ impl Runtime {
         } else if n < 2 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra: expects `prove:` or `?` goal block and impossible ... tail"
+                    "by contra: expects a `? <fact>` goal block and impossible ... tail"
                         .to_string(),
                     tb.line_file.clone(),
                 ),

@@ -2,30 +2,10 @@
 
 trust local import chap6
 
-# Sequence and compactness vocabulary
-
-prop is_cauchy_tail(a seq(R), epsilon R_pos, n0 N_pos):
-    forall j, k N_pos:
-        j >= n0
-        k >= n0
-        =>:
-            abs(a(j) - a(k)) < epsilon
-
-prop is_cauchy_sequence(a seq(R)):
-    forall epsilon R_pos:
-        exist n0 N_pos st {$is_cauchy_tail(a, epsilon, n0)}
-
-prop is_subsequence_index(phi fn(k N_pos) N_pos):
-    forall k N_pos:
-        phi(k) < phi(k + 1)
-
-prop is_subsequence_along(a, b seq(R), phi fn(k N_pos) N_pos):
-    $is_subsequence_index(phi)
-    forall k N_pos:
-        b(k) = a(phi(k))
-
-prop has_subsequence(a, b seq(R)):
-    exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+# Sequence and compactness vocabulary from Chapter 6 is reused below.
+# In particular, Chapter 6 supplies the canonical Cauchy, subsequence, and
+# bounded-sequence predicates. Chapter 9 keeps only the set-relative
+# predicates introduced for compactness arguments.
 
 prop is_sequence_in_real_set(a seq(R), X power_set(R)):
     forall n N_pos:
@@ -33,14 +13,6 @@ prop is_sequence_in_real_set(a seq(R), X power_set(R)):
 
 prop has_limit_in_set(a seq(R), X power_set(R)):
     exist L R st {L $in X, $has_limit(a, L)}
-
-prop is_sequence_bounded_by(a seq(R), M R_pos):
-    forall n N_pos:
-        abs(a(n)) <= M
-
-prop is_bounded_sequence(a seq(R)):
-    exist M R_pos st {$is_sequence_bounded_by(a, M)}
-
 
 # 9.1 Subsets of the real line
 
@@ -7289,12 +7261,12 @@ thm uniformly_continuous_maps_cauchy_sequences:
         ? $is_cauchy_sequence(image_sequence_in_set(X, f, a))
         claim:
             ? forall epsilon R_pos:
-                exist n0 N_pos st {$is_cauchy_tail(image_sequence_in_set(X, f, a), epsilon, n0)}
+                exist n0 N_pos st {$is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n0)}
             exist delta R_pos st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
             obtain delta from exist delta R_pos st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
-            exist n0 N_pos st {$is_cauchy_tail(a, delta, n0)}
-            obtain n0 from exist n0 N_pos st {$is_cauchy_tail(a, delta, n0)}
-            witness exist n1 N_pos st {$is_cauchy_tail(image_sequence_in_set(X, f, a), epsilon, n1)} from n0:
+            exist n0 N_pos st {$is_tail_epsilon_steady(a, delta, n0)}
+            obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady(a, delta, n0)}
+            witness exist n1 N_pos st {$is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n1)} from n0:
                 claim:
                     ? forall j, k N_pos:
                         j >= n0
@@ -7313,8 +7285,8 @@ thm uniformly_continuous_maps_cauchy_sequences:
                     image_sequence_in_set(X, f, a)(k) = f(a(k))
                     abs(image_sequence_in_set(X, f, a)(j) - image_sequence_in_set(X, f, a)(k)) = abs(f(a(j)) - f(a(k)))
                     abs(image_sequence_in_set(X, f, a)(j) - image_sequence_in_set(X, f, a)(k)) < epsilon
-                $is_cauchy_tail(image_sequence_in_set(X, f, a), epsilon, n1)
-            exist n0 N_pos st {$is_cauchy_tail(image_sequence_in_set(X, f, a), epsilon, n0)}
+                $is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n1)
+            exist n0 N_pos st {$is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n0)}
         $is_cauchy_sequence(image_sequence_in_set(X, f, a))
     by thm image_sequence_in_set_equals_raw(X, f, a)
     image_sequence_in_set(X, f, a) = fn(n N_pos) R {f(a(n))}
@@ -7362,11 +7334,11 @@ claim:
     ? $is_cauchy_sequence(reciprocal_input_seq)
     claim:
         ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_cauchy_tail(reciprocal_input_seq, epsilon, n0)}
+            exist n0 N_pos st {$is_tail_epsilon_steady(reciprocal_input_seq, epsilon, n0)}
         2 / epsilon $in R
         by thm exists_nat_above_real(2 / epsilon)
         obtain n0 from exist n0 N_pos st {2 / epsilon < n0}
-        witness exist n1 N_pos st {$is_cauchy_tail(reciprocal_input_seq, epsilon, n1)} from n0:
+        witness exist n1 N_pos st {$is_tail_epsilon_steady(reciprocal_input_seq, epsilon, n1)} from n0:
             claim:
                 ? forall j, k N_pos:
                     j >= n0
@@ -7412,8 +7384,8 @@ claim:
                 abs(1 / j - 1 / k) <= 2 / n0 < epsilon
                 abs(1 / j - 1 / k) < epsilon
                 abs(reciprocal_input_seq(j) - reciprocal_input_seq(k)) < epsilon
-            $is_cauchy_tail(reciprocal_input_seq, epsilon, n1)
-        exist n0 N_pos st {$is_cauchy_tail(reciprocal_input_seq, epsilon, n0)}
+            $is_tail_epsilon_steady(reciprocal_input_seq, epsilon, n1)
+        exist n0 N_pos st {$is_tail_epsilon_steady(reciprocal_input_seq, epsilon, n0)}
     $is_cauchy_sequence(reciprocal_input_seq)
 
 claim:
@@ -7422,7 +7394,7 @@ claim:
         ? not $is_cauchy_sequence(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))})
         $is_cauchy_sequence(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))})
         1 $in R_pos
-        obtain n0 from exist n0 N_pos st {$is_cauchy_tail(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))}, 1, n0)}
+        obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))}, 1, n0)}
         n0 + 1 $in N_pos
         n0 >= n0
         n0 + 1 >= n0

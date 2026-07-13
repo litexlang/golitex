@@ -57,20 +57,17 @@ Nat::least_of_N_subset({2, 5}) $in {2, 5}
 
 # Trivial Mathlib Nat facts are examples, not std theorem aliases.
 claim:
-    prove:
-        forall n N:
-            n + 1 != 0
+    ? forall n N:
+        n + 1 != 0
     0 <= n < n + 1
     n + 1 != 0
 
 claim:
-    prove:
-        forall n N:
-            0 <= n
+    ? forall n N:
+        0 <= n
     0 <= n
 
 claim:
-    prove:
-        forall n N_pos:
-            n - 1 $in N
+    ? forall n N_pos:
+        n - 1 $in N
     n - 1 $in N

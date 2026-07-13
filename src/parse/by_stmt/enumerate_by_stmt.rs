@@ -66,7 +66,7 @@ impl Runtime {
                 );
             }
             tb.skip_token(COLON)?;
-            return self.parse_by_enumerate_finite_set_stmt_forall_in_prove(tb);
+            return self.parse_by_enumerate_finite_set_stmt_forall_in_question_goal(tb);
         }
         if tb.current_token_is_equal_to(RANGE) || tb.current_token_is_equal_to(CLOSED_RANGE) {
             return self.parse_by_enumerate_range_stmt(tb);
@@ -80,9 +80,9 @@ impl Runtime {
         )))
     }
 
-    /// `by enumerate finite_set:` then a `prove:` or `?` goal with a single `forall`
+    /// `by enumerate finite_set:` then a `?` goal with a single `forall`
     /// (list-set parameters, optional dom / `=>:`).
-    fn parse_by_enumerate_finite_set_stmt_forall_in_prove(
+    fn parse_by_enumerate_finite_set_stmt_forall_in_question_goal(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -106,7 +106,7 @@ impl Runtime {
         let goal_block = tb.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by enumerate finite_set: expected `prove:` or `?` goal block".to_string(),
+                    "by enumerate finite_set: expected a `? forall ...` goal block".to_string(),
                     tb.line_file.clone(),
                 ),
             ))

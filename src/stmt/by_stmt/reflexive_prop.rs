@@ -12,14 +12,12 @@ impl fmt::Display for ByReflexivePropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}:\n{}{}\n{}",
+            "{} {}:\n{}",
             BY,
             REFLEXIVE_PROP,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &self.forall_fact.to_string(),
-                2
+                &format!("{} {}", QUESTION_GOAL, self.forall_fact),
+                1
             )
         )?;
         if !self.proof.is_empty() {

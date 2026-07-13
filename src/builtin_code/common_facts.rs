@@ -103,9 +103,8 @@ trust:
             a % b = b
 
 thm archimedean_property:
-    prove:
-        forall e R_pos:
-            exist n N_pos st {1/n < e}
+    ? forall e R_pos:
+        exist n N_pos st {1/n < e}
     trust:
         exist n N_pos st {1/n < e}
 
@@ -224,37 +223,34 @@ trust:
             exist p N, q N_pos st {a = p / q}
 
 thm even_power_abs_bound:
-    prove:
-        forall x, y R, k N_pos:
-            k % 2 = 0
-            x^k <= y^k
-            =>:
-                abs(x) <= abs(y)
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        =>:
+            abs(x) <= abs(y)
     trust:
         abs(x) <= abs(y)
 
 thm even_power_bound_by_nonnegative_rhs:
-    prove:
-        forall x, y R, k N_pos:
-            k % 2 = 0
-            x^k <= y^k
-            y >= 0
-            =>:
-                -y <= x
-                x <= y
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y >= 0
+        =>:
+            -y <= x
+            x <= y
     trust:
         -y <= x
         x <= y
 
 thm even_power_bound_by_nonpositive_rhs:
-    prove:
-        forall x, y R, k N_pos:
-            k % 2 = 0
-            x^k <= y^k
-            y <= 0
-            =>:
-                y <= x
-                x <= -y
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y <= 0
+        =>:
+            y <= x
+            x <= -y
     trust:
         y <= x
         x <= -y
@@ -278,22 +274,20 @@ trust:
             a <= b
         
 thm pos_pow_strict_order_reflects:
-    prove:
-        forall a, b, k R_pos:
-            a^k < b^k
-            k >= 1
-            =>:
-                a < b
+    ? forall a, b, k R_pos:
+        a^k < b^k
+        k >= 1
+        =>:
+            a < b
     trust:
         a < b
 
 thm pos_pow_order_reflects:
-    prove:
-        forall a, b, k R_pos:
-            a^k <= b^k
-            k >= 1
-            =>:
-                a <= b
+    ? forall a, b, k R_pos:
+        a^k <= b^k
+        k >= 1
+        =>:
+            a <= b
     trust:
         a <= b
 

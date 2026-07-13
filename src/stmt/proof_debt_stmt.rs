@@ -17,7 +17,7 @@ impl ProofDebtStmt {
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user trust statements; use claim/thm/prove or move trusted background into an imported module"
+        "strict mode rejects user trust statements; use claim/thm with a `?` goal or move trusted background into an imported module"
     }
 }
 

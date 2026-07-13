@@ -1473,7 +1473,7 @@ mod tests {
     #[test]
     fn theorem_statement_records_vocabulary_dependencies() {
         let output = graph_output(
-            "abstract_prop p(x)\nthm p_fact:\n    prove:\n        forall x R:\n            $p(x)\n            =>:\n                x = x\n        x = x\n",
+            "abstract_prop p(x)\nthm p_fact:\n    ? forall x R:\n        $p(x)\n        =>:\n            x = x\n    x = x\n",
         );
 
         assert!(output.contains(r#""id": "fact:thm:p_fact""#));
@@ -1484,7 +1484,7 @@ mod tests {
     #[test]
     fn theorem_proof_records_theorem_citation_usage() {
         let output = graph_output(
-            "thm graph_base:\n    ? forall x R:\n        x = x\n    x = x\nthm graph_use_base:\n    prove:\n        forall x R:\n            x = x\n    by thm graph_base(x)\n    x = x\n",
+            "thm graph_base:\n    ? forall x R:\n        x = x\n    x = x\nthm graph_use_base:\n    ? forall x R:\n        x = x\n    by thm graph_base(x)\n    x = x\n",
         );
 
         assert!(output.contains(r#""from": "fact:thm:graph_base""#));

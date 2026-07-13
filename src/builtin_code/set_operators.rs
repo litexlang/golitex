@@ -3,50 +3,45 @@
 pub const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
 
 thm in_intersect_is_in_both:
-    prove:
-        forall z set, A set, B set:
-            $in(z, intersect(A, B))
-            =>:
-                $in(z, A)
-                $in(z, B)
+    ? forall z set, A set, B set:
+        $in(z, intersect(A, B))
+        =>:
+            $in(z, A)
+            $in(z, B)
     trust:
         $in(z, A)
         $in(z, B)
 
 thm in_set_minus_is_in_first_operand:
-    prove:
-        forall z set, A set, B set:
-            $in(z, set_minus(A, B))
-            =>:
-                $in(z, A)
+    ? forall z set, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            $in(z, A)
     trust:
         $in(z, A)
 
 thm in_set_minus_is_not_in_second_operand:
-    prove:
-        forall z set, A set, B set:
-            $in(z, set_minus(A, B))
-            =>:
-                not $in(z, B)
+    ? forall z set, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            not $in(z, B)
     trust:
         not $in(z, B)
 
 thm in_cup_via_member_set:
-    prove:
-        forall z set, F set, Y set:
-            $in(Y, F)
-            $in(z, Y)
-            =>:
-                $in(z, cup(F))
+    ? forall z set, F set, Y set:
+        $in(Y, F)
+        $in(z, Y)
+        =>:
+            $in(z, cup(F))
     trust:
         $in(z, cup(F))
 
 thm subset_of_finite_set_is_finite:
-    prove:
-        forall A set, B finite_set:
-            A $subset B
-            =>:
-                $is_finite_set(A)
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
     trust:
         $is_finite_set(A)
 

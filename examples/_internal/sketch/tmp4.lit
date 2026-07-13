@@ -2,11 +2,10 @@
 
 # Claim forall: parameters, stored assumptions, proof steps, and conclusions.
 claim:
-    prove:
-        forall x {x R: x > 0}:
+    ? forall x {x R: x > 0}:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
     x = x
 
 # Ordinary claim: proof steps and the final goal verification.
@@ -15,9 +14,8 @@ claim 1 = 1:
 
 # By cases: coverage, each case assumption, conclusions, and impossible checks.
 by cases:
-    prove:
-        1 = 1
-        2 = 2
+    ? 1 = 1
+    ? 2 = 2
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -30,39 +28,34 @@ by contra 1 = 1:
 
 # By thm: theorem arguments, parameter/domain checks, and stored then facts.
 thm tmp_one_eq_one:
-    prove:
-        forall:
-            1 = 1
+    ? forall:
+        1 = 1
     1 = 1
 
 by thm tmp_one_eq_one()
 
 # By enumerate finite_set: each finite assignment is checked separately.
 by enumerate finite_set:
-    prove:
-        forall a {1, 2}:
-            a < 3
+    ? forall a {1, 2}:
+        a < 3
     do_nothing
 
 # By for: each integer assignment is checked separately.
 by for:
-    prove:
-        forall n range(0, 3):
-            n < 3
+    ? forall n range(0, 3):
+        n < 3
     do_nothing
 
 # By enumerate range: membership expands into equality cases.
 claim:
-    prove:
-        forall x range(1, 3):
-            x = 1 or x = 2
+    ? forall x range(1, 3):
+        x = 1 or x = 2
     by enumerate range: x $in range(1, 3)
 
 # By closed_range as cases: equivalent closed-range case expansion.
 claim:
-    prove:
-        forall y closed_range(1, 2):
-            y = 1 or y = 2
+    ? forall y closed_range(1, 2):
+        y = 1 or y = 2
     by closed_range as cases: y $in 1...2
 
 # By extension: checks both subset directions before storing set equality.
@@ -77,13 +70,12 @@ trust forall m Z:
     =>:
         $tmp_induc_p(m + 1)
 by induc n from 0:
-    prove:
-        $tmp_induc_p(n)
+    ? $tmp_induc_p(n)
 
-    prove from n = 0:
+    ? from n = 0:
         $tmp_induc_p(0)
 
-    prove induc:
+    ? induc:
         $tmp_induc_p(n + 1)
 
 # Prop registration: parameters, assumptions, proof steps, conclusion, registration.
@@ -91,38 +83,34 @@ prop tmp_same_obj(x set, y set):
     x = y
 
 by reflexive_prop:
-    prove:
-        forall x set:
-            $tmp_same_obj(x, x)
+    ? forall x set:
+        $tmp_same_obj(x, x)
     x = x
 
 by transitive_prop:
-    prove:
-        forall x, y, z set:
-            $tmp_same_obj(x, y)
-            $tmp_same_obj(y, z)
-            =>:
-                $tmp_same_obj(x, z)
+    ? forall x, y, z set:
+        $tmp_same_obj(x, y)
+        $tmp_same_obj(y, z)
+        =>:
+            $tmp_same_obj(x, z)
     x = y
     y = z
     x = z
 
 by symmetric_prop:
-    prove:
-        forall x, y set:
-            $tmp_same_obj(x, y)
-            =>:
-                $tmp_same_obj(y, x)
+    ? forall x, y set:
+        $tmp_same_obj(x, y)
+        =>:
+            $tmp_same_obj(y, x)
     x = y
     y = x
 
 by antisymmetric_prop:
-    prove:
-        forall x, y set:
-            $tmp_same_obj(x, y)
-            $tmp_same_obj(y, x)
-            =>:
-                x = y
+    ? forall x, y set:
+        $tmp_same_obj(x, y)
+        $tmp_same_obj(y, x)
+        =>:
+            x = y
     x = y
 
 # Trusted preview: obligations are checked before the trusted conclusion.

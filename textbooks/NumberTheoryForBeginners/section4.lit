@@ -1,0 +1,304 @@
+# Number Theory for Beginners, Section IV.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section IV.
+# problem: Formalize primes, prime divisibility of products, unique prime
+# factorization, prime exponents, infinitely many primes, and Section IV
+# exercises.
+# proof_idea: Define primality by positive divisors, reuse relative primality
+# and Euclid's lemma from Section III, and state finite factorization through
+# an indexed product interface.  The full finite-list theorem package is marked
+# as explicit proof debt.
+# litex_code: This file runs Sections I-III first and then adds Section IV.
+# comments: No number-theory std module is imported.
+
+trust local import section3
+trust local import section2
+trust local import section1
+
+"""
+Definition. An integer p>1 is prime if its only positive divisors are 1 and p.
+"""
+
+prop is_prime_Z(p Z):
+    p > 1
+    forall d Z:
+        d > 0
+        $divides_Z(d, p)
+        =>:
+            d = 1 or d = p
+
+"""
+Every integer >1 has at least one prime divisor, namely its smallest divisor
+greater than 1.  If p is prime, then p either divides a or is prime to a.
+"""
+
+# Source handling: The text uses the least positive divisor argument from
+# Section I.
+# trust: This proof needs a checked least-divisor construction.
+trust:
+    forall a Z:
+        a > 1
+        =>:
+            exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
+    forall p, a Z:
+        $is_prime_Z(p)
+        =>:
+            $divides_Z(p, a) or $relatively_prime_Z(p, a)
+
+thm prime_divisor_exists:
+    ? forall a Z:
+        a > 1
+        =>:
+            exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
+    exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
+
+"""
+Theorem IV.1. If a prime divides a product of integers, then it divides at
+least one factor.
+"""
+
+# Source handling: The source proof says otherwise the prime is relatively
+# prime to every factor, hence to the product, contradicting divisibility.
+# trust: The finite-product version needs a list product interface.  The
+# binary version is recorded here as the reusable checked-facing interface.
+trust:
+    forall p, a, b Z:
+        $is_prime_Z(p)
+        $divides_Z(p, a * b)
+        =>:
+            $divides_Z(p, a) or $divides_Z(p, b)
+
+thm theorem_IV_1_prime_divides_binary_product:
+    ? forall p, a, b Z:
+        $is_prime_Z(p)
+        $divides_Z(p, a * b)
+        =>:
+            $divides_Z(p, a) or $divides_Z(p, b)
+    $divides_Z(p, a) or $divides_Z(p, b)
+
+abstract_prop prime_divides_some_factor(p, n, f)
+
+# Source handling: This is the theorem's finite product formulation.
+# trust: A checked theorem should quantify over a finite list or indexed
+# function and cite the binary theorem inductively.
+trust:
+    forall p Z, n N_pos, f fn(i N_pos: i <= n) Z:
+        $is_prime_Z(p)
+        $divides_Z(p, product(1, n, fn(i N_pos: i <= n) R {f(i)}))
+        =>:
+            $prime_divides_some_factor(p, n, f)
+
+"""
+Theorem IV.2. Every integer >1 is a product of primes, uniquely up to order.
+"""
+
+prop prime_factorization_Z(a Z, n N_pos, f fn(i N_pos: i <= n) Z):
+    a > 1
+    forall i N_pos:
+        i <= n
+        =>:
+            $is_prime_Z(f(i))
+    a = product(1, n, fn(i N_pos: i <= n) R {f(i)})
+
+abstract_prop prime_factorizations_equivalent_up_to_order(a, n, f, m, g)
+
+# Source handling: The text proves existence by induction on a and uniqueness
+# by cancelling a prime factor, then gives the exponent-count proof.
+# trust: The checked proof needs indexed products, list permutation, and
+# induction on the integer being factored.
+trust:
+    forall a Z:
+        a > 1
+        =>:
+            exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
+    forall a Z, n, m N_pos, f fn(i N_pos: i <= n) Z, g fn(j N_pos: j <= m) Z:
+        $prime_factorization_Z(a, n, f)
+        $prime_factorization_Z(a, m, g)
+        =>:
+            $prime_factorizations_equivalent_up_to_order(a, n, f, m, g)
+
+thm theorem_IV_2_prime_factorization_exists:
+    ? forall a Z:
+        a > 1
+        =>:
+            exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
+    exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
+
+"""
+Prime exponents. For a prime P, v_P(a) is the largest n such that P^n divides
+a; equivalently P^n divides a but P^(n+1) does not.
+"""
+
+prop exact_prime_power_divides(p, a Z, n N):
+    $is_prime_Z(p)
+    a > 0
+    $divides_Z(p^n, a)
+    not $divides_Z(p^(n + 1), a)
+
+# Source handling: This records the exponent-count proof following Theorem
+# IV.2.
+# trust: A checked definition of v_p needs a maximum over the finite set
+# of prime powers dividing a.
+trust:
+    forall p, a Z:
+        $is_prime_Z(p)
+        a > 1
+        =>:
+            exist! n N st {$exact_prime_power_divides(p, a, n)}
+
+"""
+The first primes are 2,3,5,7,11,13,17,19,23,29, and every a>1 has a finite
+factorization a = product p_i^(alpha_i).
+"""
+
+sketch:
+    # These concrete primality facts are arithmetic examples for the definition.
+    # Source handling: The text lists the first ten primes.
+    # trust: Direct primality checking should be automated by a bounded
+    # divisor search.
+    trust:
+        $is_prime_Z(2)
+        $is_prime_Z(3)
+        $is_prime_Z(5)
+        $is_prime_Z(7)
+        $is_prime_Z(11)
+        $is_prime_Z(13)
+        $is_prime_Z(17)
+        $is_prime_Z(19)
+        $is_prime_Z(23)
+        $is_prime_Z(29)
+
+"""
+Theorem IV.3. There are infinitely many primes.
+"""
+
+prop primes_are_unbounded():
+    forall n N_pos:
+        exist p Z st {p > n, $is_prime_Z(p)}
+
+# Source handling: Euclid's proof takes a prime divisor of pqr...+1.
+# trust: The checked proof needs the finite product interface and the
+# prime-divisor theorem above.
+trust:
+    $primes_are_unbounded()
+
+thm theorem_IV_3_infinitely_many_primes:
+    ? forall n N_pos:
+        exist p Z st {p > n, $is_prime_Z(p)}
+    $primes_are_unbounded()
+    exist p Z st {p > n, $is_prime_Z(p)}
+
+"""
+Exercise IV.1. Legendre's formula gives the exponent of p in n!.
+"""
+
+sketch:
+    abstract_prop largest_prime_power_in_factorial(p, n, exponent)
+
+    # Source handling: The exercise sums floor(n/p^i).
+    # trust: A checked proof needs factorial, floor, and finite valuation
+    # sums.
+    trust:
+        forall p Z, n N_pos:
+            $is_prime_Z(p)
+            =>:
+                exist exponent N st {$largest_prime_power_in_factorial(p, n, exponent)}
+
+"""
+Exercise IV.2. A multinomial coefficient is an integer.
+"""
+
+sketch:
+    abstract_prop multinomial_integer_statement(parts, total)
+
+    # Source handling: The hint compares prime exponents using Exercise IV.1.
+    # trust: This needs factorial and finite list interfaces.
+    trust:
+        forall parts finite_set, total N_pos:
+            $multinomial_integer_statement(parts, total)
+
+"""
+Exercise IV.3. Certain Fermat-type numbers have gcd 1 or 2, giving another
+proof of infinitely many primes.
+"""
+
+sketch:
+    abstract_prop fermat_gcd_pattern(a, m, n)
+
+    # Source handling: The hint uses divisibility between a^(2n)-1 and
+    # a^(2m)+1.
+    # trust: The checked proof needs exponent divisibility lemmas.
+    trust:
+        forall a, m, n N_pos:
+            m != n
+            =>:
+                $fermat_gcd_pattern(a, m, n)
+
+"""
+Exercise IV.4. If a has prime factorization p^alpha q^beta ... r^gamma, then
+the number and sum of divisors have the standard product formulas.
+"""
+
+sketch:
+    abstract_prop divisor_count_formula(a)
+    abstract_prop divisor_sum_formula(a)
+
+    # Source handling: The proof counts choices of exponents in each prime
+    # factor.
+    # trust: A checked proof needs divisors as a finite set and a product
+    # over the distinct prime factors.
+    trust:
+        forall a Z:
+            a > 1
+            =>:
+                $divisor_count_formula(a)
+                $divisor_sum_formula(a)
+
+"""
+Exercise IV.5. The product of all positive divisors of a is a^(D/2), where D
+is the number of divisors.
+"""
+
+sketch:
+    abstract_prop divisor_product_formula(a)
+
+    # Source handling: Pair each divisor d with a/d.
+    # trust: This needs a finite divisor set and product pairing.
+    trust:
+        forall a Z:
+            a > 1
+            =>:
+                $divisor_product_formula(a)
+
+"""
+Exercise IV.6. Counting products of finitely many primes gives another proof
+that there are infinitely many primes.
+"""
+
+sketch:
+    abstract_prop finite_prime_counting_contradiction()
+
+    # Source handling: The exercise compares the growth of products of powers
+    # of finitely many primes against all integers up to n.
+    # trust: A checked proof needs logarithms and asymptotic estimates.
+    trust:
+        $finite_prime_counting_contradiction()
+        $primes_are_unbounded()
+
+"""
+Exercise IV.7. If (a,b)=1 and a^2-b^2 is a perfect square, then a+b and a-b
+are either both squares or both twice squares.
+"""
+
+sketch:
+    abstract_prop square_difference_classification(a, b)
+
+    # Source handling: The hint computes gcd(a+b,a-b), which is 1 or 2.
+    # trust: A checked proof needs the parity/gcd classification and the
+    # prime-exponent criterion for squares.
+    trust:
+        forall a, b Z:
+            $relatively_prime_Z(a, b)
+            exist c Z st {a^2 - b^2 = c^2}
+            =>:
+                $square_difference_classification(a, b)

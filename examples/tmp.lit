@@ -1,2 +1,19 @@
-eval sum(1, 3, fn(x Z) Z {x})
-sum(1, 3, fn(x Z) Z {x}) = 6
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
+
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
+
+claim:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
+
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+$can_be_divided_by_2(8)

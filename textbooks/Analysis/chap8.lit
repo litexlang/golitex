@@ -310,8 +310,7 @@ thm empty_set_has_equal_cardinality_self:
             ? forall y {}:
                 exist x {} st {y = empty_to_empty(x)}
             by contra:
-                prove:
-                    exist x {} st {y = empty_to_empty(x)}
+                ? exist x {} st {y = empty_to_empty(x)}
                 not $is_nonempty_set({})
                 witness $is_nonempty_set({}) from y:
                     y $in {}
@@ -821,11 +820,11 @@ claim:
 by induc n from 0:
     ? exist s N st {$triangular_interval(n, s)}
 
-    prove from n = 0:
+    ? from n = 0:
         0 < 1 = tri(0) + 0 + 1 = tri(0 + 1)
         witness exist s N st {$triangular_interval(0, s)} from 0
 
-    prove induc:
+    ? induc:
         obtain s from exist s N st {$triangular_interval(n, s)}
         by cases:
             ? exist t N st {$triangular_interval(n + 1, t)}
