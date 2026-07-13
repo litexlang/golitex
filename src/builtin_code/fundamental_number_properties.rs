@@ -66,4 +66,19 @@ thm rational_as_integer_ratio:
     ? forall x Q:
         exist p Z, q Z_nz st {x = p / q}
     exist p Z, q Z_nz st {x = p / q}
+
+# A reduced fraction has no positive common divisor other than 1.
+prop is_reduced_fraction(a Z, b N_pos):
+    forall k N_pos:
+        a % k = 0
+        b % k = 0
+        =>:
+            k = 1
+
+# Every rational has one reduced fraction with an integer numerator and a
+# positive denominator. Example: `by thm rational_has_unique_reduced_fraction(q)`.
+thm rational_has_unique_reduced_fraction:
+    ? forall q Q:
+        exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+    trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
 "#;

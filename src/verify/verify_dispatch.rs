@@ -27,16 +27,6 @@ impl Runtime {
         }
     }
 
-    /// Compatibility name for older call sites. New code should prefer
-    /// `verify_fact_full` so the proof mode is explicit.
-    pub fn verify_fact(
-        &mut self,
-        fact: &Fact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_fact_full(fact, verify_state)
-    }
-
     pub fn verify_fact_return_err_if_not_true(
         &mut self,
         fact: &Fact,

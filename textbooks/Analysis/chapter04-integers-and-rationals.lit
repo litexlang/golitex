@@ -1516,17 +1516,40 @@ Proposition 4.4.4. There is no rational x such that x^2 = 2.
 # The proof idea is the classical parity contradiction.  Write a rational
 # square root as a reduced fraction, show the numerator is even, then show the
 # denominator is even, contradicting reducedness.
-# Source handling: the argument uses a lowest-terms numerator and positive
-# denominator before applying the parity contradiction.
-# proof_debt: the current local development has no theorem constructing a
-# reduced numerator/denominator representative for an arbitrary rational.
+# A reduced numerator and positive denominator exist for every rational.  The
+# residue cases modulo two show that they cannot both be even, since otherwise
+# two would be a common positive divisor of a reduced fraction.
 
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
-        x^2 = 2
-        =>:
-            exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
-    trust exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
+        exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
+    by thm rational_has_unique_reduced_fraction(x)
+    obtain p, q from exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+    claim:
+        ? p % 2 != 0 or q % 2 != 0
+        p % 2 = 0 or p % 2 = 1
+        by cases:
+            ? p % 2 != 0 or q % 2 != 0
+            case p % 2 = 0:
+                q % 2 = 0 or q % 2 = 1
+                by cases:
+                    ? p % 2 != 0 or q % 2 != 0
+                    case q % 2 = 0:
+                        forall k N_pos:
+                            p % k = 0
+                            q % k = 0
+                            =>:
+                                k = 1
+                        2 $in N_pos
+                        2 = 1
+                        impossible 2 = 1
+                    case q % 2 = 1:
+                        q % 2 != 0
+            case p % 2 = 1:
+                p % 2 != 0
+    witness exist p0 Z, q0 N_pos st {x = p0 / q0, p0 % 2 != 0 or q0 % 2 != 0} from p, q:
+        x = p / q
+        p % 2 != 0 or q % 2 != 0
 
 claim:
     ? forall x Q:

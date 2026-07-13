@@ -1003,7 +1003,16 @@ sketch:
     claim:
         ? forall x X_example:
             exist! y Y_example st {$P_example(x, y)}
-        witness exist! y Y_example st {$P_example(x, y)} from x
+        witness exist! y Y_example st {$P_example(x, y)} from x:
+            claim:
+                ? forall y1, y2 Y_example:
+                    $P_example(x, y1)
+                    $P_example(x, y2)
+                    =>:
+                        y1 = y2
+                y1 = x
+                x = y2
+                y1 = y2
 
     have fn f_from_relation by exist!:
         ? forall x X_example:
@@ -1131,7 +1140,16 @@ sketch:
     have fn identity_from_unique_existence by exist!:
         ? forall x A:
             exist! y B st {y = x}
-        witness exist! y B st {y = x} from x
+        witness exist! y B st {y = x} from x:
+            claim:
+                ? forall y1, y2 B:
+                    y1 = x
+                    y2 = x
+                    =>:
+                        y1 = y2
+                y1 = x
+                x = y2
+                y1 = y2
 
     forall x A:
         identity_from_unique_existence(x) = x
@@ -1658,17 +1676,12 @@ output; that is just being a function.
 
 
 """
-Full range of a function.  `function_range<X,Y,f>` is the subset of Y whose
-elements are exactly the values f(x) with x in X.
+Full range of a function.  `fn_range(f)` is the subset of the codomain whose
+elements are exactly the values f(x) with x in the domain of f.
 """
 
-# Membership predicate for the full range: y is in the range of f exactly when
-# y has a preimage in the source X.
-prop has_preimage(X, Y set, f fn(z X) Y, y Y):
-    exist x X st {y = f(x)}
-
-template<X set, Y set, f fn(x X) Y>:
-    have function_range set = {y Y: $has_preimage(X, Y, f, y)}
+# Litex provides the full range directly.  A value `f(x)` is automatically a
+# member of `fn_range(f)`, and a range member exposes a preimage witness.
 
 """
 Restricted image of a subset.  `restricted_image<X,Y,f,A>` is the set
@@ -1690,24 +1703,24 @@ point in the range of f has a unique preimage in X.  The template packages
 that unique-preimage rule as a function from the range of f back to X.
 """
 
-# This is the Section 3.4 analogue of the inverse function from Section 3.3:
-# no surjectivity onto Y is assumed; the codomain is restricted to the image.
-template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
-    have fn inverse_function by exist!:
-        ? forall y \function_range<X, Y, f>:
+# This is the Section 3.4 inverse-on-the-image statement: no surjectivity onto
+# Y is assumed, so each range value receives its unique preimage as a theorem.
+thm injective_fn_has_unique_preimage_in_range:
+    ? forall X, Y set, f fn(x X) Y, y fn_range(f):
+        $is_injective_fn(X, Y, f)
+        =>:
             exist! x X st {y = f(x)}
-        y $in \function_range<X, Y, f>
-        $has_preimage(X, Y, f, y)
-        exist x X st {y = f(x)}
-        forall x1, x2 X:
-            y = f(x1)
-            y = f(x2)
-            =>:
-                f(x1) = y
-                f(x2) = y
-                f(x1) = f(x2)
-                x1 = x2
-        exist! x X st {y = f(x)}
+    y $in fn_range(f)
+    exist x X st {y = f(x)}
+    forall x1, x2 X:
+        y = f(x1)
+        y = f(x2)
+        =>:
+            f(x1) = y
+            f(x2) = y
+            f(x1) = f(x2)
+            x1 = x2
+    exist! x X st {y = f(x)}
 
 """
 Definition 3.4.1. The forward image f(A) consists exactly of values f(x) with

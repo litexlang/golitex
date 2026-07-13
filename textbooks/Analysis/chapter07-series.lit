@@ -1,5 +1,9 @@
 # Chapter 7: Series.
 
+trust local import chap3
+trust local import chap5
+trust local import chap6
+
 # 7.1 Finite series
 
 """
@@ -217,6 +221,21 @@ thm index_function_for_singleton:
             witness exist! i closed_range(1, count(s)) st {idx0(i) = y} from 1:
                 1 <= count(s)
                 idx0(1) = y
+                claim:
+                    ? forall i1, i2 closed_range(1, count(s)):
+                        idx0(i1) = y
+                        idx0(i2) = y
+                        =>:
+                            i1 = i2
+                    i1 >= 1
+                    i1 <= count(s)
+                    i1 <= 1
+                    i1 = 1
+                    i2 >= 1
+                    i2 <= count(s)
+                    i2 <= 1
+                    i2 = 1
+                    i1 = i2
         $is_bijection_from_index_range_to_finite_set(s, idx0)
 
 thm index_function_step:
@@ -250,19 +269,89 @@ thm index_function_step:
     prev(1) $in set_minus(s, {a})
     prev(1) $in s
     idx(1) $in s
-    witness exist idx0 fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+    claim:
+        ? forall i closed_range(1, count(s)):
+            idx(i) = a
+            =>:
+                i = n + 1
+        i <= n or i > n
+        by cases:
+            ? i = n + 1
+            case i <= n:
+                i >= 1
+                i <= n = count(set_minus(s, {a}))
+                i $in closed_range(1, count(set_minus(s, {a})))
+                idx(i) = prev(i)
+                prev(i) $in set_minus(s, {a})
+                idx(i) $in set_minus(s, {a})
+                claim:
+                    ? not a $in set_minus(s, {a})
+                    by contra:
+                        ? not a $in set_minus(s, {a})
+                        a $in set_minus(s, {a})
+                        not a $in {a}
+                        a $in {a}
+                        impossible not a $in {a}
+                a $in set_minus(s, {a})
+                impossible not a $in set_minus(s, {a})
+            case i > n:
+                i <= count(s) = n + 1
+                i = n + 1
+    claim:
+        ? $is_injective_fn(closed_range(1, count(s)), s, idx)
+        claim:
+            ? forall i1, i2 closed_range(1, count(s)):
+                idx(i1) = idx(i2)
+                =>:
+                    i1 = i2
+            i1 <= n or i1 > n
+            by cases:
+                ? i1 = i2
+                case i1 <= n:
+                    i2 <= n or i2 > n
+                    by cases:
+                        ? i1 = i2
+                        case i2 <= n:
+                            i1 >= 1
+                            i2 >= 1
+                            i1 <= n = count(set_minus(s, {a}))
+                            i2 <= n = count(set_minus(s, {a}))
+                            i1 $in closed_range(1, count(set_minus(s, {a})))
+                            i2 $in closed_range(1, count(set_minus(s, {a})))
+                            idx(i1) = prev(i1)
+                            idx(i2) = prev(i2)
+                            prev(i1) = prev(i2)
+                            exist! j closed_range(1, count(set_minus(s, {a}))) st {prev(j) = prev(i1)}
+                            i1 = i2
+                        case i2 > n:
+                            i2 <= count(s) = n + 1
+                            i2 = n + 1
+                            idx(i2) = a
+                            idx(i1) = idx(i2) = a
+                            i1 = n + 1
+                            impossible i1 <= n
+                case i1 > n:
+                    i1 <= count(s) = n + 1
+                    i1 = n + 1
+                    idx(i1) = a
+                    idx(i2) = idx(i1) = a
+                    i2 = n + 1
+                    i1 = i2
+        $is_injective_fn(closed_range(1, count(s)), s, idx)
+    claim:
+        ? $is_surjective_fn(closed_range(1, count(s)), s, idx)
         claim:
             ? forall y s:
-                exist! i closed_range(1, count(s)) st {idx0(i) = y}
+                exist i closed_range(1, count(s)) st {y = idx(i)}
             y = a or y != a
             by cases:
-                ? exist! i closed_range(1, count(s)) st {idx0(i) = y}
+                ? exist i closed_range(1, count(s)) st {y = idx(i)}
                 case y = a:
                     n + 1 <= count(s)
-                    idx0(n + 1) = idx(n + 1) = a
-                    witness exist! i closed_range(1, count(s)) st {idx0(i) = y} from n + 1:
+                    y = a = idx(n + 1)
+                    witness exist i closed_range(1, count(s)) st {y = idx(i)} from n + 1:
                         n + 1 <= count(s)
-                        idx0(n + 1) = y
+                        y = idx(n + 1)
                 case y != a:
                     y $in set_minus(s, {a})
                     exist i closed_range(1, count(set_minus(s, {a}))) st {prev(i) = y}
@@ -271,10 +360,25 @@ thm index_function_step:
                     j <= n
                     n <= n + 1
                     j <= n <= n + 1 = count(s)
-                    idx0(j) = idx(j) = prev(j)
-                    witness exist! i closed_range(1, count(s)) st {idx0(i) = y} from j:
+                    y = prev(j) = idx(j)
+                    witness exist i closed_range(1, count(s)) st {y = idx(i)} from j:
                         j <= count(s)
-                        idx0(j) = y
+                        y = idx(j)
+    witness exist idx0 fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+        claim:
+            ? forall y s:
+                exist! i closed_range(1, count(s)) st {idx0(i) = y}
+            exist i closed_range(1, count(s)) st {y = idx(i)}
+            obtain i from exist i closed_range(1, count(s)) st {y = idx(i)}
+            idx(i) = y
+            witness exist! i0 closed_range(1, count(s)) st {idx0(i0) = y} from i:
+                idx0(i) = idx(i) = y
+                forall i1, i2 closed_range(1, count(s)):
+                    idx0(i1) = y
+                    idx0(i2) = y
+                    =>:
+                        idx(i1) = idx0(i1) = y = idx0(i2) = idx(i2)
+                        i1 = i2
         $is_bijection_from_index_range_to_finite_set(s, idx0)
 
 thm finite_set_size_has_index_for_all:
@@ -964,16 +1068,134 @@ thm series_cauchy_criterion_forward:
             $has_small_tail_sums_after(a, epsilon, N0 + 1)
     $has_cauchy_series_tails(a)
 
+# The tail criterion makes the partial sums Cauchy.  This is the finite
+# algebraic part of the converse; the sole remaining background use is the
+# Chapter 5 completeness interface for real Cauchy sequences.
+
+thm real_closeness_is_symmetric:
+    ? forall epsilon R_pos, x, y R:
+        $is_close_in_R(epsilon, x, y)
+        =>:
+            $is_close_in_R(epsilon, y, x)
+    dist_R(x, y) = abs(x - y)
+    x - y = -(y - x)
+    abs(x - y) = abs(-(y - x))
+    abs(-(y - x)) = abs(y - x)
+    dist_R(y, x) = abs(y - x)
+    dist_R(y, x) = dist_R(x, y)
+    $is_close_in_R(epsilon, y, x)
+
+thm partial_sums_close_when_first_index_before_second:
+    ? forall a seq(R), epsilon R_pos, n0, j, k N_pos:
+        $has_small_tail_sums_after(a, epsilon, n0)
+        j >= n0
+        k >= n0
+        j < k
+        =>:
+            $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+    j + 1 $in N_pos
+    j + 1 >= n0
+    k >= j + 1
+    abs(finite_tail_sum(a, j + 1, k)) <= epsilon
+    finite_tail_sum(a, j + 1, k) = partial_sum(a, k) - partial_sum(a, (j + 1) - 1)
+    (j + 1) - 1 = j
+    partial_sum(a, (j + 1) - 1) = partial_sum(a, j)
+    finite_tail_sum(a, j + 1, k) = partial_sum(a, k) - partial_sum(a, j)
+    abs(finite_tail_sum(a, j + 1, k)) = abs(partial_sum(a, k) - partial_sum(a, j))
+    abs(partial_sum(a, k) - partial_sum(a, j)) <= epsilon
+    abs(partial_sum(a, j) - partial_sum(a, k)) = abs(-(partial_sum(a, k) - partial_sum(a, j)))
+    abs(-(partial_sum(a, k) - partial_sum(a, j))) = abs(partial_sum(a, k) - partial_sum(a, j))
+    abs(partial_sum(a, j) - partial_sum(a, k)) <= epsilon
+    dist_R(partial_sum(a, j), partial_sum(a, k)) = abs(partial_sum(a, j) - partial_sum(a, k))
+    $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+
+thm cauchy_series_tails_make_partial_sums_cauchy_in_R:
+    ? forall a seq(R):
+        $has_cauchy_series_tails(a)
+        =>:
+            $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+    claim:
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)}
+        obtain n0 from exist n0 N_pos st {$has_small_tail_sums_after(a, epsilon, n0)}
+        witness exist n1 N_pos st {$is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n1)} from n0:
+            claim:
+                ? forall j, k N_pos:
+                    j >= n0
+                    k >= n0
+                    =>:
+                        $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                j < k or j >= k
+                by cases:
+                    ? $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                    case j < k:
+                        by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, j, k)
+                        $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                    case j >= k:
+                        k < j or k >= j
+                        by cases:
+                            ? $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                            case k < j:
+                                by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, k, j)
+                                $is_close_in_R(epsilon, partial_sum(a, k), partial_sum(a, j))
+                                by thm real_closeness_is_symmetric(epsilon, partial_sum(a, k), partial_sum(a, j))
+                                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                            case k >= j:
+                                j = k
+                                partial_sum(a, j) = partial_sum(a, k)
+                                dist_R(partial_sum(a, j), partial_sum(a, k)) = 0
+                                0 <= epsilon
+                                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+            claim:
+                ? forall j, k N_pos:
+                    j >= n0
+                    k >= n0
+                    =>:
+                        $is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
+                fn(k N_pos) R {partial_sum(a, k)}(j) = partial_sum(a, j)
+                fn(k N_pos) R {partial_sum(a, k)}(k) = partial_sum(a, k)
+                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                $is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
+            $is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
+            $is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
+    $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+
+thm nonstrict_real_limit_gives_series_limit:
+    ? forall a seq(R), L R:
+        $has_limit_in_R(a, L)
+        =>:
+            $has_limit(a, L)
+    claim:
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
+        epsilon / 2 $in R_pos
+        epsilon / 2 < epsilon
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to_in_R(a, L, epsilon / 2, n0)}
+        witness exist n1 N_pos st {$is_tail_close_to(a, L, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    $is_close_in_R(epsilon / 2, a(n), L)
+                    dist_R(a(n), L) = abs(a(n) - L)
+                    abs(a(n) - L) <= epsilon / 2 < epsilon
+            $is_tail_close_to(a, L, epsilon, n0)
+    $has_limit(a, L)
+
 thm series_cauchy_criterion_reverse:
     ? forall a seq(R):
         $has_cauchy_series_tails(a)
         =>:
             $is_convergent_series(a)
-    # Source handling: Exercise 7.2.2 proves the converse Cauchy-tail
-    # criterion from Cauchy convergence of the partial sums.
-    # proof_debt: the local chapter has no expanded real-sequence completeness
-    # proof turning these tail estimates into a partial-sum limit.
-    trust $is_convergent_series(a)
+    by thm cauchy_series_tails_make_partial_sums_cauchy_in_R(a)
+    $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+    by thm real_cauchy_sequence_has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)})
+    obtain L from exist L R st {$has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)}, L)}
+    by thm nonstrict_real_limit_gives_series_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
+    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
+    witness exist M R st {$has_series_sum(a, M)} from L:
+        $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
+        $has_series_sum(a, L)
+    $is_convergent_series(a)
 
 """
 Corollary 7.2.6 (Zero test). Every convergent series has terms tending to 0.
@@ -1636,11 +1858,18 @@ sketch:
 
     claim:
         ? $is_decreasing_sequence(harmonic_terms)
-        # Source handling: the example applies the alternating-series test to
-        # the decreasing reciprocal sequence.
-        # proof_debt: clearing the positive denominator `n(n+1)` to prove
-        # reciprocal monotonicity has not been expanded locally.
-        trust $is_decreasing_sequence(harmonic_terms)
+        forall n N_pos:
+            harmonic_terms(n + 1) = 1 / (n + 1)
+            harmonic_terms(n) = 1 / n
+            n + 1 $in N_pos
+            n * (n + 1) > 0
+            1 / (n + 1) = n / (n * (n + 1))
+            1 / n = (n + 1) / (n * (n + 1))
+            n <= n + 1
+            n / (n * (n + 1)) <= (n + 1) / (n * (n + 1))
+            1 / (n + 1) <= 1 / n
+            harmonic_terms(n + 1) <= harmonic_terms(n)
+        $is_decreasing_sequence(harmonic_terms)
 
     claim:
         ? $has_limit(harmonic_terms, 0)
@@ -3323,6 +3552,47 @@ thm even_predecessor_odd:
     (0 - 1) % 2 = 1
     (y - 1) % 2 = 1
 
+thm adjacent_pair_swap_is_involution:
+    ? forall x N_pos:
+        adjacent_pair_swap(adjacent_pair_swap(x)) = x
+    x % 2 = 0 or x % 2 = 1
+    by cases:
+        ? adjacent_pair_swap(adjacent_pair_swap(x)) = x
+        case x % 2 = 1:
+            x + 1 $in N_pos
+            by thm odd_successor_even(x)
+            (x + 1) % 2 = 0
+            by thm adjacent_pair_swap_odd(x)
+            adjacent_pair_swap(x) = x + 1
+            by thm adjacent_pair_swap_even(x + 1)
+            adjacent_pair_swap(x + 1) = (x + 1) - 1
+            (x + 1) - 1 = x
+            adjacent_pair_swap(adjacent_pair_swap(x)) = adjacent_pair_swap(x + 1) = (x + 1) - 1 = x
+        case x % 2 = 0:
+            by thm positive_even_gt_one(x)
+            x > 1
+            x - 1 $in N_pos
+            by thm even_predecessor_odd(x)
+            (x - 1) % 2 = 1
+            by thm adjacent_pair_swap_even(x)
+            adjacent_pair_swap(x) = x - 1
+            by thm adjacent_pair_swap_odd(x - 1)
+            adjacent_pair_swap(x - 1) = (x - 1) + 1
+            (x - 1) + 1 = x
+            adjacent_pair_swap(adjacent_pair_swap(x)) = adjacent_pair_swap(x - 1) = (x - 1) + 1 = x
+
+thm adjacent_pair_swap_is_injective:
+    ? forall x1, x2 N_pos:
+        adjacent_pair_swap(x1) = adjacent_pair_swap(x2)
+        =>:
+            x1 = x2
+    adjacent_pair_swap(adjacent_pair_swap(x1)) = adjacent_pair_swap(adjacent_pair_swap(x2))
+    by thm adjacent_pair_swap_is_involution(x1)
+    adjacent_pair_swap(adjacent_pair_swap(x1)) = x1
+    by thm adjacent_pair_swap_is_involution(x2)
+    adjacent_pair_swap(adjacent_pair_swap(x2)) = x2
+    x1 = x2
+
 thm adjacent_pair_swap_has_unique_preimages:
     ? forall y N_pos:
         exist! x N_pos st {adjacent_pair_swap(x) = y}
@@ -3338,6 +3608,15 @@ thm adjacent_pair_swap_has_unique_preimages:
             (y + 1) - 1 = y
             witness exist! x N_pos st {adjacent_pair_swap(x) = y} from y + 1:
                 adjacent_pair_swap(y + 1) = y
+                claim:
+                    ? forall x1, x2 N_pos:
+                        adjacent_pair_swap(x1) = y
+                        adjacent_pair_swap(x2) = y
+                        =>:
+                            x1 = x2
+                    adjacent_pair_swap(x1) = adjacent_pair_swap(x2)
+                    by thm adjacent_pair_swap_is_injective(x1, x2)
+                    x1 = x2
         case y % 2 = 0:
             by thm positive_even_gt_one(y)
             y > 1
@@ -3349,6 +3628,15 @@ thm adjacent_pair_swap_has_unique_preimages:
             (y - 1) + 1 = y
             witness exist! x N_pos st {adjacent_pair_swap(x) = y} from y - 1:
                 adjacent_pair_swap(y - 1) = y
+                claim:
+                    ? forall x1, x2 N_pos:
+                        adjacent_pair_swap(x1) = y
+                        adjacent_pair_swap(x2) = y
+                        =>:
+                            x1 = x2
+                    adjacent_pair_swap(x1) = adjacent_pair_swap(x2)
+                    by thm adjacent_pair_swap_is_injective(x1, x2)
+                    x1 = x2
 
 claim:
     ? $is_permutation_of_positive_integers(adjacent_pair_swap)

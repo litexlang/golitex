@@ -1,20 +1,18 @@
-# Number Theory for Beginners, Section V.
-#
-# source: Weil and Rosenlicht, Number Theory for Beginners, Section V.
-# problem: Formalize abelian groups, subgroups, integer congruence modulo m,
-# congruence classes, addition of classes, Theorem V.1, and the Section V
-# exercises.
-# proof_idea: Use an explicit operation-function interface for abelian groups,
-# define congruence as divisibility of x-y by m, check the elementary
-# congruence algebra directly, and record the quotient-set construction as
-# source-facing proof debt.
-# litex_code: This file runs Sections I-IV first and then adds Section V.
-# comments: No external number-theory package is imported.
+# Chapter V — Abelian Groups and Congruence Classes
 
-trust local import section4
-trust local import section3
-trust local import section2
-trust local import section1
+"""
+Chapter V — Abelian groups and congruence classes.
+
+The chapter first isolates the axioms of an abelian group.  It then defines
+congruence modulo m by divisibility of x-y, proves its elementary algebraic
+properties, and uses congruence classes to form a finite additive group of
+m elements.
+"""
+
+trust local import chapter4
+trust local import chapter3
+trust local import chapter2
+trust local import chapter1
 
 """
 Definition. A commutative, or abelian, group is a set G with a binary operation
@@ -74,7 +72,7 @@ prop is_additive_subgroup_of_Z(H power_set(Z)):
     $closed_under_subtraction(H)
 
 # Source handling: The text cites the proof of Theorem II.1.
-# trust: This is checked through the Section II theorem interface rather
+# trust: This is checked through the Chapter II theorem interface rather
 # than by rebuilding a general subgroup theorem here.
 trust:
     forall H power_set(Z):
@@ -91,7 +89,7 @@ prop congruent_mod(m N_pos, x, y Z):
     $divides_Z(m, x - y)
 
 """
-The division lemma from Section II says every integer is congruent modulo m to
+The division lemma from Chapter II says every integer is congruent modulo m to
 exactly one of 0,1,...,m-1, and congruence is the same as having the same
 remainder.
 """
@@ -99,7 +97,7 @@ remainder.
 abstract_prop has_standard_remainder_mod(m, x, r)
 abstract_prop same_remainder_mod(m, x, y)
 
-# Source handling: This is the remainder statement obtained from Section II.
+# Source handling: This is the remainder statement obtained from Chapter II.
 # trust: The checked proof needs the unique quotient-remainder theorem and
 # a finite interval interface for 0,...,m-1.
 trust:

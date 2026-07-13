@@ -156,6 +156,20 @@ pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
             layer_param_names,
         ));
     }
+    if let Obj::FnObj(fn_obj) = func {
+        let mut applied = fn_obj.clone();
+        for layer in layer_param_names {
+            let mut args: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
+            for name in layer {
+                args.push(Box::new(obj_for_bound_param_in_scope(
+                    name.clone(),
+                    ParamObjType::Forall,
+                )));
+            }
+            applied.body.push(args);
+        }
+        return Some(applied.into());
+    }
     if let Some(head) = FnObjHead::given_an_atom_return_a_fn_obj_head(func.clone()) {
         let mut body_vectors: Vec<Vec<Box<Obj>>> = Vec::with_capacity(layer_param_names.len());
         for layer in layer_param_names {

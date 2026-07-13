@@ -233,11 +233,11 @@ as an ordinary automatic `forall` matching fact. To use it, the proof says
 parameter-sensitive results explicit proof dependencies instead of background
 noise.
 
-Second, organize broad mathematical background into packages. A theorem about
-groups should live in a group-related package; a theorem about real analysis
-should live in a real-analysis package. The user imports the package when that
-background is actually needed. This keeps the active known-fact and known-`forall`
-space closer to the topic of the current proof.
+Second, organize broad mathematical background into source-local cite packages.
+A theorem about groups should live beside the source that needs it; a theorem
+about real analysis should live beside that analysis source. The source imports
+the package when that background is actually needed. This keeps the active
+known-fact and known-`forall` space closer to the topic of the current proof.
 
 A practical rule of thumb is:
 
@@ -247,8 +247,8 @@ A practical rule of thumb is:
   like local reusable context;
 - use `thm` plus `by thm` when the theorem name and arguments should be visible
   in the proof;
-- split standard-library facts by subject and import only the subjects needed
-  for the current file.
+- put unfinished background in a source-local cite package and import only
+  the facts needed for the current file.
 
 This is not only a performance issue. It is also proof readability. If a fact
 is mathematically important, the proof is often clearer when it names that fact
@@ -295,8 +295,8 @@ integers, and reals from Cauchy sequences, Dedekind cuts, decimal expansions,
 or other equivalent constructions. Litex does not make ordinary users inherit
 all of that construction history every time they write `Z`, `Q`, or `R`.
 
-Instead, Litex is relationship-first. The kernel and standard library expose
-common objects and the relationships that make them useful: membership,
+Instead, Litex is relationship-first. The kernel and source-local packages can
+expose common objects and the relationships that make them useful: membership,
 arithmetic, order, density, floor bounds, completeness, function spaces, set
 operations, and so on. For many day-to-day proofs, the exact construction of
 `R` from `Q` is not the point; what matters is that `Q` embeds into `R`,
@@ -305,22 +305,17 @@ nonempty real sets have least upper bounds.
 
 This is a deliberate design trade-off. Litex's builtin `R` is a mathematical
 surface with verifier-visible properties, not a proof term saying "this object
-was constructed by this exact chain of quotients and completions." The standard
-library may record facts such as rational density or real completeness with
-`trust` because, for Litex's default std interpretation, those are trusted
-background facts about the standard numeric objects. For example, `std/Rat`
-records the reduced numerator/denominator interface for builtin `Q`, while
-`std/Real` records the usual real-line relationships. In `std/Real`, the
-intended model is the usual real numbers, which can be obtained as the
-completion of `Q`; the std file exposes that model through relationship facts
-rather than forcing every development to replay the construction.
+was constructed by this exact chain of quotients and completions." A source
+that needs rational density or real completeness should state that background
+in a visible source-local cite package, with every `trust` boundary recorded,
+rather than loading a global numeric library.
 
 The practical rule is:
 
 - use builtin objects such as `Z`, `Q`, and `R` directly when the proof only
   needs their ordinary relationships;
 - put broad semantic background, such as density of `Q` in `R` or completeness
-  of `R`, in the relevant std package and make the trust boundary visible;
+  of `R`, in a source-local cite package and make the trust boundary visible;
 - keep chapter-specific or domain-specific theorems local until they are worth
   extracting into a reusable package;
 - formalize a construction explicitly only when the construction itself is the
@@ -542,11 +537,11 @@ the checker performs routine matching and replacement steps that a human reader
 would usually do silently.
 
 This does not mean Litex proves arbitrary goals by magic. It means Litex places
-more ordinary mathematical structure inside the verifier and standard library,
-then gives the user a fact-oriented interface to that structure. The trade-off
-is explicit: Litex has a larger trusted implementation than a small-kernel proof
-assistant, so builtin rules, infer rules, `trust`, and standard-library facts
-need clear boundaries, tests, and audit-friendly output.
+ordinary mathematical structure inside the verifier and visible local
+background packages, then gives the user a fact-oriented interface to that
+structure. The trade-off is explicit: Litex has a larger trusted implementation
+than a small-kernel proof assistant, so builtin rules, infer rules, `trust`, and
+imported facts need clear boundaries, tests, and audit-friendly output.
 
 Litex should therefore be described as complementary to Lean, Coq, and Isabelle,
 not a replacement for them. Those systems expose deeper foundations and much
@@ -619,7 +614,7 @@ environment.
 
 A `thm` is good for important named results whose use should be visible. A
 theorem is stored under a name and used explicitly with `by thm name(args...)`.
-This keeps large, classic, parameter-sensitive, or standard-library results
+This keeps large, classic, parameter-sensitive, or source-package results
 from silently becoming background search noise.
 
 The distinction is partly about performance, but mostly about readability.
@@ -646,7 +641,7 @@ This is useful for three narrow purposes:
 - introducing background assumptions in a small example;
 - marking exact proof debt while translating or experimenting;
 - temporarily stating a theorem or library fact that should later become a
-  checked `claim`, `thm`, builtin rule, or standard-library result.
+  checked `claim`, `thm`, builtin rule, or source-local cite result.
 
 The cost is explicit. If a false statement is introduced with `trust`, later
 results can inherit that assumption. Serious Litex developments should keep
@@ -863,11 +858,11 @@ and record the blocker when the proof cannot yet be completed.
 ## Benchmarks And Case Studies
 
 Benchmark claims should come from runnable artifacts, not positioning text.
-Failed translations are useful data when they identify missing language, stdlib,
+Failed translations are useful data when they identify missing language, local cite,
 inference, kernel, or diagnostic support.
 
 ## Reviewer Guide
 
 Review Litex by separating the interface hypothesis from trust-boundary risks.
-A proof script can be readable and promising while builtin rules, `trust`, stdlib
+A proof script can be readable and promising while builtin rules, `trust`, local cite
 coverage, and dataset bookkeeping still need careful audit.

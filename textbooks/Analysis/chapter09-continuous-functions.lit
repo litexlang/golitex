@@ -3325,6 +3325,35 @@ thm equal_functions_have_equal_function_limits:
         $is_locally_epsilon_close_to(E, g, x0, L, epsilon)
     $has_function_limit(E, g, x0, L)
 
+# Restricting the domain to any subset which remains adherent at `x0` preserves
+# the same epsilon-delta limit.
+thm function_limit_restricts_to_adherent_subset:
+    ? forall E, F power_set(R), f fn(x E) R, x0, L R:
+        F $subset E
+        $is_adherent_point(F, x0)
+        $has_function_limit(E, f, x0, L)
+        =>:
+            $has_function_limit(F, fn(x F) R {f(x)}, x0, L)
+    claim:
+        ? forall epsilon R_pos:
+            $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon)
+        $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)}
+        witness exist eta R_pos st {$is_delta_neighborhood_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon, eta)} from delta:
+            claim:
+                ? forall y F:
+                    abs(y - x0) < delta
+                    =>:
+                        abs(fn(x F) R {f(x)}(y) - L) <= epsilon
+                y $in E
+                abs(f(y) - L) <= epsilon
+                fn(x F) R {f(x)}(y) = f(y)
+                abs(fn(x F) R {f(x)}(y) - L) = abs(f(y) - L)
+                abs(fn(x F) R {f(x)}(y) - L) <= epsilon
+            $is_delta_neighborhood_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon, delta)
+        $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon)
+    $has_function_limit(F, fn(x F) R {f(x)}, x0, L)
+
 thm function_limit_restricts_to_nonzero_domain:
     ? forall E power_set(R), f, g fn(x E) R, x0, L, M R:
         $has_function_limit(E, f, x0, L)
@@ -3436,6 +3465,50 @@ thm function_limit_quotient:
         fn(x {x E: g(x) != 0}) R {fn(z {x E: g(x) != 0}) R {f(z)}(x) * fn(z {x E: g(x) != 0}) R {1 / g(z)}(x)}(y) = fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y)
     by thm equal_functions_have_equal_function_limits({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {fn(z {x E: g(x) != 0}) R {f(z)}(x) * fn(z {x E: g(x) != 0}) R {1 / g(z)}(x)}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
+
+# When the denominator is nonzero everywhere on the original domain, the
+# restricted-domain quotient law can be transported back to that domain.
+thm function_limit_quotient_when_nonzero_on_domain:
+    ? forall E power_set(R), f, g fn(x E) R, x0, L, M R:
+        $has_function_limit(E, f, x0, L)
+        $has_function_limit(E, g, x0, M)
+        forall x E:
+            g(x) != 0
+        M != 0
+        =>:
+            $has_function_limit(E, fn(x E) R {f(x) / g(x)}, x0, L / M)
+    have fn quotient_on_nonzero_domain(x {x E: g(x) != 0}) R = f(x) / g(x)
+    forall y {x E: g(x) != 0}:
+        quotient_on_nonzero_domain(y) = f(y) / g(y)
+    by thm function_limit_quotient(E, f, g, x0, L, M)
+    $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
+    claim:
+        ? forall y {x E: g(x) != 0}:
+            fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y) = quotient_on_nonzero_domain(y)
+        quotient_on_nonzero_domain(y) = f(y) / g(y)
+        fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y) = f(y) / g(y)
+        fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y) = quotient_on_nonzero_domain(y)
+    by thm equal_functions_have_equal_function_limits({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, quotient_on_nonzero_domain, x0, L / M)
+    $has_function_limit({x E: g(x) != 0}, quotient_on_nonzero_domain, x0, L / M)
+    claim:
+        ? forall y E:
+            y $in {x E: g(x) != 0}
+        g(y) != 0
+        y $in {x E: g(x) != 0}
+    E $subset {x E: g(x) != 0}
+    $is_adherent_point(E, x0)
+    by thm function_limit_restricts_to_adherent_subset({x E: g(x) != 0}, E, quotient_on_nonzero_domain, x0, L / M)
+    $has_function_limit(E, fn(x E) R {quotient_on_nonzero_domain(x)}, x0, L / M)
+    claim:
+        ? forall y E:
+            fn(x E) R {quotient_on_nonzero_domain(x)}(y) = fn(x E) R {f(x) / g(x)}(y)
+        fn(x E) R {quotient_on_nonzero_domain(x)}(y) = quotient_on_nonzero_domain(y)
+        y $in {x E: g(x) != 0}
+        quotient_on_nonzero_domain(y) = f(y) / g(y)
+        fn(x E) R {f(x) / g(x)}(y) = f(y) / g(y)
+        fn(x E) R {quotient_on_nonzero_domain(x)}(y) = fn(x E) R {f(x) / g(x)}(y)
+    by thm equal_functions_have_equal_function_limits(E, fn(x E) R {quotient_on_nonzero_domain(x)}, fn(x E) R {f(x) / g(x)}, x0, L / M)
+    $has_function_limit(E, fn(x E) R {f(x) / g(x)}, x0, L / M)
 
 """
 Notation after Proposition 9.3.14. Once a function limit is known to exist, it
@@ -6356,11 +6429,8 @@ thm cubic_minus_identity_on_closed_minus_two_two_continuous:
     $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3})
     by thm continuity_closed_under_arithmetic('[-2, 2], fn(x '[-2, 2]) R {x^3}, fn(x '[-2, 2]) R {x})
     $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3 - x})
-    # Source handling: the example identifies the displayed cubic polynomial
-    # with its named function before applying the intermediate value theorem.
-    # proof_debt: this local function-extensionality transport is not inferred
-    # through the named-function equality in the present verifier context.
-    trust $is_continuous_on('[-2, 2], cubic_minus_identity_on_closed_minus_two_two)
+    # The named function unfolds to this displayed cubic polynomial.
+    $is_continuous_on('[-2, 2], cubic_minus_identity_on_closed_minus_two_two)
 
 thm cubic_minus_identity_remark_9_7_2_values:
     ? forall:
@@ -7268,6 +7338,8 @@ thm uniformly_continuous_maps_cauchy_sequences:
                 exist n0 N_pos st {$is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n0)}
             exist delta R_pos st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
             obtain delta from exist delta R_pos st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
+            $is_cauchy_sequence(a)
+            $has_eventual_epsilon_steadiness(a, delta)
             exist n0 N_pos st {$is_tail_epsilon_steady(a, delta, n0)}
             obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady(a, delta, n0)}
             witness exist n1 N_pos st {$is_tail_epsilon_steady(image_sequence_in_set(X, f, a), epsilon, n1)} from n0:
@@ -7398,6 +7470,7 @@ claim:
         ? not $is_cauchy_sequence(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))})
         $is_cauchy_sequence(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))})
         1 $in R_pos
+        $has_eventual_epsilon_steadiness(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))}, 1)
         obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady(fn(n N_pos) R {reciprocal_on_open_0_2(reciprocal_input_seq(n))}, 1, n0)}
         n0 + 1 $in N_pos
         n0 >= n0

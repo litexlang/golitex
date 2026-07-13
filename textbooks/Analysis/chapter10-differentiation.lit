@@ -152,8 +152,10 @@ have fn square_function(x R) R = x^2
 # `set_minus(X, Y)` is a member of `X`, hence is real whenever `X` is a real
 # subset.
 thm real_set_minus_is_real_set:
-    ? forall X, Y power_set(R):
-        set_minus(X, Y) $in power_set(R)
+    ? forall X, Y set:
+        X $subset R
+        =>:
+            set_minus(X, Y) $in power_set(R)
     claim:
         ? set_minus(X, Y) $subset R
         claim:
@@ -171,6 +173,7 @@ thm real_line_points_are_limit_points:
         ? forall epsilon R_pos:
             $is_epsilon_adherent_to_set(set_minus(R, {x0}), x0, epsilon)
         {x0} $in power_set(R)
+        R $subset R
         by thm real_set_minus_is_real_set(R, {x0})
         set_minus(R, {x0}) $in power_set(R)
         witness exist y R st {y $in set_minus(R, {x0}), abs(x0 - y) <= epsilon} from x0 - epsilon / 2:
@@ -380,6 +383,7 @@ thm zero_is_limit_point_of_nonnegative_ray:
         $is_limit_point_of_set('[0,), 0)
     0 $in '[0,)
     {0} $in power_set(R)
+    '[0,) $subset R
     by thm real_set_minus_is_real_set('[0,), {0})
     set_minus('[0,), {0}) $in power_set(R)
     claim:
@@ -410,6 +414,7 @@ thm zero_is_limit_point_of_nonpositive_ray:
         $is_limit_point_of_set('(,0], 0)
     0 $in '(,0]
     {0} $in power_set(R)
+    '(,0] $subset R
     by thm real_set_minus_is_real_set('(,0], {0})
     set_minus('(,0], {0}) $in power_set(R)
     claim:
@@ -796,6 +801,203 @@ thm differentiable_on_implies_continuous_on:
         $is_continuous_at(X, f, x0)
     $is_continuous_on(X, f)
 
+# The derivative definition already contains the epsilon-delta statement for
+# the difference quotient.  This bridge exposes it as Chapter 9's ordinary
+# function-limit interface on the punctured domain.
+thm derivative_gives_difference_quotient_function_limit:
+    ? forall X power_set(R), g fn(x X) R, x0 X, Lg R:
+        $has_derivative_at(X, g, x0, Lg)
+        =>:
+            $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg)
+    by thm real_set_minus_is_real_set(X, {x0})
+    set_minus(X, {x0}) $in power_set(R)
+    $has_derivative_at(X, g, x0, Lg)
+    $is_limit_point_of_set(X, x0)
+    $is_adherent_point(set_minus(X, {x0}), x0)
+    claim:
+        ? forall epsilon R_pos:
+            $is_locally_epsilon_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon)
+        obtain delta from exist delta R_pos st {$is_difference_quotient_close_to(X, g, x0, Lg, epsilon, delta)}
+        witness exist eta R_pos st {$is_delta_neighborhood_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon, eta)} from delta:
+            claim:
+                ? forall y set_minus(X, {x0}):
+                    abs(y - x0) < delta
+                    =>:
+                        abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) <= epsilon
+                y $in X
+                y != x0
+                y - x0 != 0
+                abs((g(y) - g(x0)) / (y - x0) - Lg) <= epsilon
+                fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = (g(y) - g(x0)) / (y - x0)
+                abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) = abs((g(y) - g(x0)) / (y - x0) - Lg)
+                abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) <= epsilon
+            $is_delta_neighborhood_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon, delta)
+        $is_locally_epsilon_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg)
+
+# This is the converse direction of the bridge above: a limit of the literal
+# difference quotient supplies the epsilon-delta clause of differentiability.
+thm difference_quotient_function_limit_gives_derivative:
+    ? forall X power_set(R), f fn(x X) R, x0 X, L R:
+        $is_limit_point_of_set(X, x0)
+        $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}, x0, L)
+        =>:
+            $has_derivative_at(X, f, x0, L)
+    by thm real_set_minus_is_real_set(X, {x0})
+    set_minus(X, {x0}) $in power_set(R)
+    $is_limit_point_of_set(X, x0)
+    claim:
+        ? forall epsilon R_pos:
+            exist delta R_pos st {$is_difference_quotient_close_to(X, f, x0, L, epsilon, delta)}
+        $is_locally_epsilon_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}, x0, L, epsilon)
+        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}, x0, L, epsilon, delta)}
+        witness exist eta R_pos st {$is_difference_quotient_close_to(X, f, x0, L, epsilon, eta)} from delta:
+            claim:
+                ? forall y X:
+                    y - x0 != 0
+                    abs(y - x0) < delta
+                    =>:
+                        abs(((f(y) - f(x0)) / (y - x0)) - L) <= epsilon
+                y != x0
+                y $in set_minus(X, {x0})
+                abs(fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}(y) - L) <= epsilon
+                fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}(y) = (f(y) - f(x0)) / (y - x0)
+                abs(fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}(y) - L) = abs(((f(y) - f(x0)) / (y - x0)) - L)
+                abs(((f(y) - f(x0)) / (y - x0)) - L) <= epsilon
+            $is_difference_quotient_close_to(X, f, x0, L, epsilon, delta)
+        exist delta R_pos st {$is_difference_quotient_close_to(X, f, x0, L, epsilon, delta)}
+    $has_derivative_at(X, f, x0, L)
+
+prop is_nonzero_on(X power_set(R), f fn(x X) R):
+    forall x X:
+        f(x) != 0
+
+# Divide the usual difference quotient by the nonzero function value.  This
+# is the first algebraic step in the reciprocal derivative rule.
+thm derivative_difference_quotient_over_function_limit:
+    ? forall X power_set(R), g fn(x X) R, x0 X, Lg R:
+        $has_derivative_at(X, g, x0, Lg)
+        $is_nonzero_on(X, g)
+        g(x0) != 0
+        =>:
+            $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, x0, Lg / g(x0))
+    have fn difference_quotient_on_punctured_domain(x set_minus(X, {x0})) R = (g(x) - g(x0)) / (x - x0)
+    forall y set_minus(X, {x0}):
+        difference_quotient_on_punctured_domain(y) = (g(y) - g(x0)) / (y - x0)
+    have fn function_on_punctured_domain(x set_minus(X, {x0})) R = g(x)
+    forall y set_minus(X, {x0}):
+        function_on_punctured_domain(y) = g(y)
+    by thm real_set_minus_is_real_set(X, {x0})
+    set_minus(X, {x0}) $in power_set(R)
+    by thm derivative_gives_difference_quotient_function_limit(X, g, x0, Lg)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg)
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = difference_quotient_on_punctured_domain(y)
+        difference_quotient_on_punctured_domain(y) = (g(y) - g(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = (g(y) - g(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = difference_quotient_on_punctured_domain(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, difference_quotient_on_punctured_domain, x0, Lg)
+    $has_function_limit(set_minus(X, {x0}), difference_quotient_on_punctured_domain, x0, Lg)
+    $is_limit_point_of_set(X, x0)
+    $is_adherent_point(set_minus(X, {x0}), x0)
+    by thm differentiability_implies_continuity_at(X, g, x0, Lg)
+    $is_continuous_at(X, g, x0)
+    $has_function_limit(X, g, x0, g(x0))
+    set_minus(X, {x0}) $subset X
+    by thm function_limit_restricts_to_adherent_subset(X, set_minus(X, {x0}), g, x0, g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {g(x)}, x0, g(x0))
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {g(x)}(y) = function_on_punctured_domain(y)
+        function_on_punctured_domain(y) = g(y)
+        fn(x set_minus(X, {x0})) R {g(x)}(y) = g(y)
+        fn(x set_minus(X, {x0})) R {g(x)}(y) = function_on_punctured_domain(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {g(x)}, function_on_punctured_domain, x0, g(x0))
+    $has_function_limit(set_minus(X, {x0}), function_on_punctured_domain, x0, g(x0))
+    claim:
+        ? forall y set_minus(X, {x0}):
+            function_on_punctured_domain(y) != 0
+        y $in X
+        g(y) != 0
+        function_on_punctured_domain(y) = g(y)
+        function_on_punctured_domain(y) != 0
+    by thm function_limit_quotient_when_nonzero_on_domain(set_minus(X, {x0}), difference_quotient_on_punctured_domain, function_on_punctured_domain, x0, Lg, g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {difference_quotient_on_punctured_domain(x) / function_on_punctured_domain(x)}, x0, Lg / g(x0))
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {difference_quotient_on_punctured_domain(x) / function_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y)
+        fn(x set_minus(X, {x0})) R {difference_quotient_on_punctured_domain(x) / function_on_punctured_domain(x)}(y) = difference_quotient_on_punctured_domain(y) / function_on_punctured_domain(y)
+        difference_quotient_on_punctured_domain(y) = (g(y) - g(x0)) / (y - x0)
+        function_on_punctured_domain(y) = g(y)
+        fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
+        fn(x set_minus(X, {x0})) R {difference_quotient_on_punctured_domain(x) / function_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {difference_quotient_on_punctured_domain(x) / function_on_punctured_domain(x)}, fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, x0, Lg / g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, x0, Lg / g(x0))
+
+# Multiplying by the constant `-1 / g(x0)` turns the preceding quotient into
+# the reciprocal difference quotient.
+thm reciprocal_difference_quotient_limit_from_quotient_limit:
+    ? forall X power_set(R), g fn(x X) R, x0 X, Lq R:
+        $is_limit_point_of_set(X, x0)
+        $is_nonzero_on(X, g)
+        g(x0) != 0
+        $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, x0, Lq)
+        =>:
+            $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, (-Lq / g(x0)))
+    have fn quotient_difference_quotient_on_punctured_domain(x set_minus(X, {x0})) R = ((g(x) - g(x0)) / (x - x0)) / g(x)
+    forall y set_minus(X, {x0}):
+        quotient_difference_quotient_on_punctured_domain(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
+    have fn reciprocal_constant_on_punctured_domain(x set_minus(X, {x0})) R = -1 / g(x0)
+    forall y set_minus(X, {x0}):
+        reciprocal_constant_on_punctured_domain(y) = -1 / g(x0)
+    by thm real_set_minus_is_real_set(X, {x0})
+    set_minus(X, {x0}) $in power_set(R)
+    $is_adherent_point(set_minus(X, {x0}), x0)
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y) = quotient_difference_quotient_on_punctured_domain(y)
+        quotient_difference_quotient_on_punctured_domain(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
+        fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
+        fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}(y) = quotient_difference_quotient_on_punctured_domain(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, quotient_difference_quotient_on_punctured_domain, x0, Lq)
+    $has_function_limit(set_minus(X, {x0}), quotient_difference_quotient_on_punctured_domain, x0, Lq)
+    claim:
+        ? forall epsilon R_pos:
+            $is_locally_epsilon_close_to(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, x0, -1 / g(x0), epsilon)
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, x0, -1 / g(x0), epsilon, delta)} from epsilon:
+            claim:
+                ? forall y set_minus(X, {x0}):
+                    abs(y - x0) < epsilon
+                    =>:
+                        abs(reciprocal_constant_on_punctured_domain(y) - (-1 / g(x0))) <= epsilon
+                reciprocal_constant_on_punctured_domain(y) = -1 / g(x0)
+                reciprocal_constant_on_punctured_domain(y) - (-1 / g(x0)) = 0
+                abs(reciprocal_constant_on_punctured_domain(y) - (-1 / g(x0))) = abs(0)
+                abs(0) = 0
+                0 <= epsilon
+            $is_delta_neighborhood_close_to(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, x0, -1 / g(x0), epsilon, delta)
+        $is_locally_epsilon_close_to(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, x0, -1 / g(x0), epsilon)
+    $has_function_limit(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, x0, -1 / g(x0))
+    by thm function_limit_product(set_minus(X, {x0}), reciprocal_constant_on_punctured_domain, quotient_difference_quotient_on_punctured_domain, x0, -1 / g(x0), Lq)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}, x0, (-1 / g(x0)) * Lq)
+    (-1 / g(x0)) * Lq = -Lq / g(x0)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}, x0, -Lq / g(x0))
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y)
+        fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = reciprocal_constant_on_punctured_domain(y) * quotient_difference_quotient_on_punctured_domain(y)
+        reciprocal_constant_on_punctured_domain(y) = -1 / g(x0)
+        quotient_difference_quotient_on_punctured_domain(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
+        y != x0
+        y - x0 != 0
+        g(y) != 0
+        (-1 / g(x0)) * (((g(y) - g(x0)) / (y - x0)) / g(y)) = (1 / g(y) - 1 / g(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y) = (1 / g(y) - 1 / g(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}, fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, -Lq / g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, -Lq / g(x0))
+
 """
 Theorem 10.1.13 (Differential calculus).  Constants, the identity, sums,
 products, scalar multiples, differences, reciprocals, and quotients obey the
@@ -804,8 +1006,7 @@ usual derivative laws.
 
 # Each law is a limit law for the corresponding difference quotient.  The
 # product rule uses the middle-man trick of adding and subtracting
-# `f(x)g(x0)`.  The unfinished cases are left only at the estimates where the
-# corresponding limit law still has to be formalized.
+# `f(x)g(x0)`.
 
 thm constant_function_has_derivative_at:
     ? forall X power_set(R), f fn(x X) R, x0 X, c R:
@@ -1167,10 +1368,6 @@ thm derivative_difference_rule:
     by thm equal_functions_have_equal_derivatives(X, fn(x X) R {f(x) + fn(z X) R {-1 * g(z)}(x)}, fn(x X) R {f(x) - g(x)}, x0, Lf - Lg)
     $has_derivative_at(X, fn(x X) R {f(x) - g(x)}, x0, Lf - Lg)
 
-prop is_nonzero_on(X power_set(R), f fn(x X) R):
-    forall x X:
-        f(x) != 0
-
 thm derivative_reciprocal_rule:
     ? forall X power_set(R), g fn(x X) R, x0 X, Lg R:
         $has_derivative_at(X, g, x0, Lg)
@@ -1178,11 +1375,36 @@ thm derivative_reciprocal_rule:
         g(x0) != 0
         =>:
             $has_derivative_at(X, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
-    # Source handling: Exercise 10.1.4 proves the reciprocal rule from the
-    # derivative limit and non-vanishing of the denominator.
-    # proof_debt: the local reciprocal difference-quotient estimate still
-    # needs a verified non-vanishing-near-the-base-point bridge.
-    trust $has_derivative_at(X, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
+    have fn reciprocal_on_domain(x X) R = 1 / g(x)
+    forall y X:
+        reciprocal_on_domain(y) = 1 / g(y)
+    by thm derivative_difference_quotient_over_function_limit(X, g, x0, Lg)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {((g(x) - g(x0)) / (x - x0)) / g(x)}, x0, Lg / g(x0))
+    $is_limit_point_of_set(X, x0)
+    by thm reciprocal_difference_quotient_limit_from_quotient_limit(X, g, x0, Lg / g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, -(Lg / g(x0)) / g(x0))
+    -(Lg / g(x0)) / g(x0) = (-Lg / g(x0)) / g(x0)
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, (-Lg / g(x0)) / g(x0))
+    claim:
+        ? forall y set_minus(X, {x0}):
+            fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y) = fn(x set_minus(X, {x0})) R {(reciprocal_on_domain(x) - reciprocal_on_domain(x0)) / (x - x0)}(y)
+        fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y) = (1 / g(y) - 1 / g(x0)) / (y - x0)
+        reciprocal_on_domain(y) = 1 / g(y)
+        reciprocal_on_domain(x0) = 1 / g(x0)
+        fn(x set_minus(X, {x0})) R {(reciprocal_on_domain(x) - reciprocal_on_domain(x0)) / (x - x0)}(y) = (reciprocal_on_domain(y) - reciprocal_on_domain(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y) = fn(x set_minus(X, {x0})) R {(reciprocal_on_domain(x) - reciprocal_on_domain(x0)) / (x - x0)}(y)
+    by thm equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, fn(x set_minus(X, {x0})) R {(reciprocal_on_domain(x) - reciprocal_on_domain(x0)) / (x - x0)}, x0, (-Lg / g(x0)) / g(x0))
+    $has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(reciprocal_on_domain(x) - reciprocal_on_domain(x0)) / (x - x0)}, x0, (-Lg / g(x0)) / g(x0))
+    by thm difference_quotient_function_limit_gives_derivative(X, reciprocal_on_domain, x0, (-Lg / g(x0)) / g(x0))
+    $has_derivative_at(X, reciprocal_on_domain, x0, (-Lg / g(x0)) / g(x0))
+    claim:
+        ? forall y X:
+            reciprocal_on_domain(y) = fn(x X) R {1 / g(x)}(y)
+        reciprocal_on_domain(y) = 1 / g(y)
+        fn(x X) R {1 / g(x)}(y) = 1 / g(y)
+        reciprocal_on_domain(y) = fn(x X) R {1 / g(x)}(y)
+    by thm equal_functions_have_equal_derivatives(X, reciprocal_on_domain, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
+    $has_derivative_at(X, fn(x X) R {1 / g(x)}, x0, (-Lg / g(x0)) / g(x0))
 
 thm derivative_quotient_rule:
     ? forall X power_set(R), f, g fn(x X) R, x0 X, Lf, Lg R:
@@ -1193,9 +1415,7 @@ thm derivative_quotient_rule:
         =>:
             $has_derivative_at(X, fn(x X) R {f(x) / g(x)}, x0, ((Lf * g(x0) - f(x0) * Lg) / g(x0)) / g(x0))
     # In the source: Proof. See Exercise 10.1.4.
-    # The checked part reduces the quotient rule to the product and reciprocal
-    # rules; those two upstream estimates carry the remaining Exercise 10.1.4
-    # proof debt.
+    # Reduce the quotient rule to the checked product and reciprocal rules.
     by thm derivative_reciprocal_rule(X, g, x0, Lg)
     $has_derivative_at(X, fn(y X) R {1 / g(y)}, x0, (-Lg / g(x0)) / g(x0))
     by thm derivative_product_rule(X, f, fn(y X) R {1 / g(y)}, x0, Lf, (-Lg / g(x0)) / g(x0))
@@ -1236,6 +1456,7 @@ thm punctured_line_without_one_points_are_limit_points:
     ? forall x0 {x R: x != 1}:
         $is_limit_point_of_set({x R: x != 1}, x0)
     {x0} $in power_set(R)
+    {x R: x != 1} $subset R
     by thm real_set_minus_is_real_set({x R: x != 1}, {x0})
     set_minus({x R: x != 1}, {x0}) $in power_set(R)
     claim:
@@ -1414,19 +1635,84 @@ thm newton_approximation_local_linear_bound:
     abs(f(x) - y0) <= (abs(L) + 1) * abs(x - x0)
 
 thm newton_approximation_chain_rule:
-    ? forall X, Y power_set(R), f fn(x X) R, g fn(y Y) R, x0 X, y0 Y, Lf, Lg R:
+    ? forall X, Y power_set(R), f fn(x X) R, g fn(y Y) R, h fn(x X) R, x0 X, y0 Y, Lf, Lg R:
         forall x X:
             f(x) $in Y
+        forall x X:
+            h(x) = g(f(x))
         f(x0) = y0
         $has_newton_approximation_at(X, f, x0, Lf)
         $has_newton_approximation_at(Y, g, y0, Lg)
         =>:
-            $has_newton_approximation_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
+            $has_newton_approximation_at(X, h, x0, Lg * Lf)
     # Source handling: Exercise 10.1.7 composes the two Newton approximations
     # and controls their first-order errors.
-    # proof_debt: anonymous composed functions in the nested witness do not
-    # inherit the hypothesis that `f(x)` lies in the domain of `g`.
-    trust $has_newton_approximation_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
+    # The named `h` keeps the composition's domain witness visible while the
+    # error estimate is carried out in the source expression `g(f(x))`.
+    claim:
+        ? forall epsilon R_pos:
+            exist delta R_pos st {$is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)}
+        abs(Lf) + 1 $in R_pos
+        abs(Lg) + 1 $in R_pos
+        epsilon / (2 * (abs(Lf) + 1)) $in R_pos
+        epsilon / (2 * (abs(Lg) + 1)) $in R_pos
+        obtain eta_g from exist eta_g R_pos st {$is_newton_approximation_witness(Y, g, y0, Lg, epsilon / (2 * (abs(Lf) + 1)), eta_g)}
+        obtain delta_linear from exist delta_linear R_pos st {$is_newton_approximation_witness(X, f, x0, Lf, 1, delta_linear)}
+        obtain delta_error from exist delta_error R_pos st {$is_newton_approximation_witness(X, f, x0, Lf, epsilon / (2 * (abs(Lg) + 1)), delta_error)}
+        eta_g / (abs(Lf) + 1) $in R_pos
+        min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) $in R_pos
+        witness exist delta R_pos st {$is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)} from min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)):
+            claim:
+                ? forall x X:
+                    abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1))
+                    =>:
+                        abs(g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))) <= epsilon * abs(x - x0)
+                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= min(delta_linear, delta_error) <= delta_linear
+                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= min(delta_linear, delta_error) <= delta_error
+                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= eta_g / (abs(Lf) + 1)
+                f(x0) = y0
+                by thm newton_approximation_local_linear_bound(X, f, x0, y0, Lf, delta_linear, x)
+                abs(f(x) - y0) <= (abs(Lf) + 1) * abs(x - x0)
+                (abs(Lf) + 1) * abs(x - x0) <= (abs(Lf) + 1) * (eta_g / (abs(Lf) + 1))
+                (abs(Lf) + 1) * (eta_g / (abs(Lf) + 1)) = eta_g
+                abs(f(x) - y0) <= (abs(Lf) + 1) * abs(x - x0) <= (abs(Lf) + 1) * (eta_g / (abs(Lf) + 1)) = eta_g
+                abs(f(x) - y0) <= eta_g
+                f(x) $in Y
+                abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) <= (epsilon / (2 * (abs(Lf) + 1))) * abs(f(x) - y0)
+                abs(f(x) - y0) <= (abs(Lf) + 1) * abs(x - x0)
+                0 <= epsilon / (2 * (abs(Lf) + 1))
+                (epsilon / (2 * (abs(Lf) + 1))) * abs(f(x) - y0) <= (epsilon / (2 * (abs(Lf) + 1))) * ((abs(Lf) + 1) * abs(x - x0))
+                (epsilon / (2 * (abs(Lf) + 1))) * ((abs(Lf) + 1) * abs(x - x0)) = (epsilon / 2) * abs(x - x0)
+                abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) <= (epsilon / 2) * abs(x - x0)
+                abs(f(x) - (f(x0) + Lf * (x - x0))) <= (epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0)
+                abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) = abs(Lg) * abs(f(x) - (y0 + Lf * (x - x0)))
+                f(x0) = y0
+                f(x) - (y0 + Lf * (x - x0)) = f(x) - (f(x0) + Lf * (x - x0))
+                abs(f(x) - (y0 + Lf * (x - x0))) = abs(f(x) - (f(x0) + Lf * (x - x0)))
+                abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) = abs(Lg) * abs(f(x) - (f(x0) + Lf * (x - x0)))
+                abs(Lg) <= abs(Lg) + 1
+                0 <= abs(f(x) - (f(x0) + Lf * (x - x0)))
+                abs(Lg) * abs(f(x) - (f(x0) + Lf * (x - x0))) <= (abs(Lg) + 1) * abs(f(x) - (f(x0) + Lf * (x - x0)))
+                abs(f(x) - (f(x0) + Lf * (x - x0))) <= (epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0)
+                0 <= abs(Lg) + 1
+                (abs(Lg) + 1) * abs(f(x) - (f(x0) + Lf * (x - x0))) <= (abs(Lg) + 1) * ((epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0))
+                (abs(Lg) + 1) * ((epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0)) = (epsilon / 2) * abs(x - x0)
+                abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) = abs(Lg) * abs(f(x) - (f(x0) + Lf * (x - x0))) <= (abs(Lg) + 1) * abs(f(x) - (f(x0) + Lf * (x - x0))) <= (abs(Lg) + 1) * ((epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0)) = (epsilon / 2) * abs(x - x0)
+                g(f(x0)) = g(y0)
+                g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0)) = g(f(x)) - (g(y0) + (Lg * Lf) * (x - x0)) = (g(f(x)) - (g(y0) + Lg * (f(x) - y0))) + Lg * (f(x) - (y0 + Lf * (x - x0)))
+                abs(g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))) = abs((g(f(x)) - (g(y0) + Lg * (f(x) - y0))) + Lg * (f(x) - (y0 + Lf * (x - x0)))) <= abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) + abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) <= (epsilon / 2) * abs(x - x0) + (epsilon / 2) * abs(x - x0) = epsilon * abs(x - x0)
+            claim:
+                ? forall x X:
+                    abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1))
+                    =>:
+                        abs(h(x) - (h(x0) + (Lg * Lf) * (x - x0))) <= epsilon * abs(x - x0)
+                h(x) = g(f(x))
+                h(x0) = g(f(x0))
+                h(x) - (h(x0) + (Lg * Lf) * (x - x0)) = g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))
+                abs(h(x) - (h(x0) + (Lg * Lf) * (x - x0))) = abs(g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))) <= epsilon * abs(x - x0)
+            $is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)
+        exist delta R_pos st {$is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)}
+    $has_newton_approximation_at(X, h, x0, Lg * Lf)
 
 thm derivative_chain_rule:
     ? forall X, Y power_set(R), f fn(x X) R, g fn(y Y) R, x0 X, y0 Y, Lf, Lg R:
@@ -1440,14 +1726,25 @@ thm derivative_chain_rule:
     # This is Exercise 10.1.7: prove the chain rule by converting derivatives
     # to Newton approximations, composing those approximations, and converting
     # back.
+    have fn composition_on_domain(x X) R = g(f(x))
+    forall y X:
+        composition_on_domain(y) = g(f(y))
     by thm newton_approximation_forward(X, f, x0, Lf)
     $has_newton_approximation_at(X, f, x0, Lf)
     by thm newton_approximation_forward(Y, g, y0, Lg)
     $has_newton_approximation_at(Y, g, y0, Lg)
-    by thm newton_approximation_chain_rule(X, Y, f, g, x0, y0, Lf, Lg)
-    $has_newton_approximation_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
+    by thm newton_approximation_chain_rule(X, Y, f, g, composition_on_domain, x0, y0, Lf, Lg)
+    $has_newton_approximation_at(X, composition_on_domain, x0, Lg * Lf)
     $is_limit_point_of_set(X, x0)
-    by thm newton_approximation_reverse(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
+    by thm newton_approximation_reverse(X, composition_on_domain, x0, Lg * Lf)
+    $has_derivative_at(X, composition_on_domain, x0, Lg * Lf)
+    claim:
+        ? forall y X:
+            composition_on_domain(y) = fn(x X) R {g(f(x))}(y)
+        composition_on_domain(y) = g(f(y))
+        fn(x X) R {g(f(x))}(y) = g(f(y))
+        composition_on_domain(y) = fn(x X) R {g(f(x))}(y)
+    by thm equal_functions_have_equal_derivatives(X, composition_on_domain, fn(x X) R {g(f(x))}, x0, Lg * Lf)
     $has_derivative_at(X, fn(x X) R {g(f(x))}, x0, Lg * Lf)
 
 """
@@ -1667,25 +1964,30 @@ global maximum or minimum at x0.
 # equivalent inequality form states the same local condition without
 # introducing a new restricted function.
 
-prop is_local_maximum_witness(X power_set(R), f fn(x X) R, x0 X, delta R_pos):
+prop is_local_maximum_witness(X set, f fn(x X) R, x0 X, delta R_pos):
+    X $subset R
     forall x X:
         abs(x - x0) < delta
         =>:
             f(x) <= f(x0)
 
-prop is_local_minimum_witness(X power_set(R), f fn(x X) R, x0 X, delta R_pos):
+prop is_local_minimum_witness(X set, f fn(x X) R, x0 X, delta R_pos):
+    X $subset R
     forall x X:
         abs(x - x0) < delta
         =>:
             f(x0) <= f(x)
 
-prop is_local_maximum_at(X power_set(R), f fn(x X) R, x0 X):
+prop is_local_maximum_at(X set, f fn(x X) R, x0 X):
+    X $subset R
     exist delta R_pos st {$is_local_maximum_witness(X, f, x0, delta)}
 
-prop is_local_minimum_at(X power_set(R), f fn(x X) R, x0 X):
+prop is_local_minimum_at(X set, f fn(x X) R, x0 X):
+    X $subset R
     exist delta R_pos st {$is_local_minimum_witness(X, f, x0, delta)}
 
-prop is_local_extremum_at(X power_set(R), f fn(x X) R, x0 X):
+prop is_local_extremum_at(X set, f fn(x X) R, x0 X):
+    X $subset R
     $is_local_maximum_at(X, f, x0) or $is_local_minimum_at(X, f, x0)
 
 """

@@ -2,14 +2,14 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ProofDebtStmt {
+pub struct TrustStmt {
     pub facts: Vec<Fact>,
     pub line_file: LineFile,
 }
 
-impl ProofDebtStmt {
+impl TrustStmt {
     pub fn new(facts: Vec<Fact>, line_file: LineFile) -> Self {
-        ProofDebtStmt { facts, line_file }
+        TrustStmt { facts, line_file }
     }
 
     pub fn store_reason() -> &'static str {
@@ -21,7 +21,7 @@ impl ProofDebtStmt {
     }
 }
 
-impl fmt::Display for ProofDebtStmt {
+impl fmt::Display for TrustStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.facts.len() == 1 {
             write!(f, "{} {}", TRUST, self.facts[0])

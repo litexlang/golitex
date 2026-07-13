@@ -566,10 +566,14 @@ impl Runtime {
         );
 
         if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
-            let environments = self.imported_module_environments(module_name);
+            let lookup_environments = if self.is_current_parse_module(module_name) {
+                environments
+            } else {
+                self.imported_module_environments(module_name)
+            };
             Self::extend_obj_representatives_equal_to_given_in_environments(
                 &mut result,
-                &environments,
+                &lookup_environments,
                 &[given_key.clone(), local_name.to_string()],
             );
         }

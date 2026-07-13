@@ -1,37 +1,42 @@
-prop can_be_divided_by_8(x Z):
-    exist d Z st {x = 8 * d}
-
-prop can_be_divided_by_2(x Z):
-    exist d Z st {x = 2 * d}
+thm no_rational_square_equals_two:
+    ? forall x Q:
+        x^2 != 2
+    by contra x^2 != 2:
+        x^2 = 2
+        by thm rational_has_unique_reduced_fraction(x)
+        obtain q, p from exist q Z, p N_pos st {x = q / p, $is_reduced_fraction(q, p)}
+        x = q / p
+        q^2 = (q / p)^2 * p^2 = 2 * p^2
+        witness exist r Z st {q^2 = 2 * r} from p^2:
+            q^2 = 2 * p^2
+        q^2 % 2 = 0
+        by cases:
+            ? q % 2 = 0
+            case q % 2 = 0:
+                q % 2 = 0
+            case q % 2 = 1:
+                q^2 % 2 = (q % 2)^2 % 2 = 1^2 % 2 = 1
+                impossible q^2 % 2 = 0
+        obtain s from exist s Z st {q = 2 * s}
+        q^2 = (2 * s)^2 = 4 * s^2
+        p^2 = 2 * p^2 / 2 = 4 * s^2 / 2 = 2 * s^2
+        witness exist t Z st {p^2 = 2 * t} from s^2:
+            p^2 = 2 * s^2
+        p^2 % 2 = 0
+        by cases:
+            ? p % 2 = 0
+            case p % 2 = 0:
+                p % 2 = 0
+            case p % 2 = 1:
+                p^2 % 2 = (p % 2)^2 % 2 = 1^2 % 2 = 1
+                impossible p^2 % 2 = 0
+        2 = 1
+        impossible 2 = 1
 
 claim:
-    ? forall x Z:
-        $can_be_divided_by_8(x)
-        =>:
-            $can_be_divided_by_2(x)
-    obtain d from exist d Z st {x = 8 * d}
-    witness exist e Z st {x = 2 * e} from 4 * d:
-        x = 8 * d
-        8 * d = 2 * (4 * d)
-
-witness exist d Z st {8 = 1 * d} from 8
-$can_be_divided_by_8(8)
-$can_be_divided_by_2(8)
-
-have boundary R
-
-have right_open '(boundary,)
-right_open $in R
-boundary < right_open
-
-have right_closed '[boundary,)
-right_closed $in R
-boundary <= right_closed
-
-have left_open '(,boundary)
-left_open $in R
-left_open < boundary
-
-have left_closed '(,boundary]
-left_closed $in R
-left_closed <= boundary
+    ? not sqrt(2) $in Q
+    by contra not sqrt(2) $in Q:
+        sqrt(2) $in Q
+        by thm no_rational_square_equals_two(sqrt(2))
+        sqrt(2)^2 = 2
+        impossible sqrt(2)^2 = 2

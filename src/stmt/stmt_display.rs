@@ -30,8 +30,8 @@ impl fmt::Display for Stmt {
 impl fmt::Display for UnsafeStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            UnsafeStmt::ProofDebtStmt(x) => write!(f, "{}", x),
-            UnsafeStmt::DefLetStmt(x) => write!(f, "{}", x),
+            UnsafeStmt::TrustStmt(x) => write!(f, "{}", x),
+            UnsafeStmt::TrustHaveStmt(x) => write!(f, "{}", x),
         }
     }
 }

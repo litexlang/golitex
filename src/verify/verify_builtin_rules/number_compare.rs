@@ -46,6 +46,11 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_numeric_upper_bound_from_known_upper_bound(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, &vs)? {
             return Ok(result);
         }
@@ -942,6 +947,98 @@ impl Runtime {
             }
             AtomicFact::LessEqualFact(f) if f.right.to_string() == right.to_string() => {
                 Some((self.resolved_integer_value_for_order_bound(&f.left)?, false))
+            }
+            _ => None,
+        }
+    }
+
+    /// Numeric upper-bound weakening.
+    /// Examples: from `x < 4`, prove `x <= 6`; from `x <= 4`, prove `x < 6`.
+    fn try_verify_numeric_upper_bound_from_known_upper_bound(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        _verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let (target_bound, target_is_strict, target_left) = match &norm {
+            AtomicFact::LessEqualFact(f) => (
+                self.resolved_integer_value_for_order_bound(&f.right),
+                false,
+                &f.left,
+            ),
+            AtomicFact::LessFact(f) => (
+                self.resolved_integer_value_for_order_bound(&f.right),
+                true,
+                &f.left,
+            ),
+            _ => return Ok(None),
+        };
+        let Some(target_bound) = target_bound else {
+            return Ok(None);
+        };
+
+        for candidate in self.collect_known_upper_bound_candidates(target_left) {
+            let Some((known_bound, known_is_strict)) =
+                self.known_upper_bound_candidate_value(&candidate, target_left)
+            else {
+                continue;
+            };
+            let candidate_is_enough = if target_is_strict {
+                known_bound < target_bound || (known_is_strict && known_bound == target_bound)
+            } else {
+                known_bound <= target_bound
+            };
+            if !candidate_is_enough {
+                continue;
+            }
+
+            let candidate_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if !candidate_result.is_true() {
+                continue;
+            }
+            return Ok(Some(StmtResult::from(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "weaken numeric upper bound from known upper bound".to_string(),
+                    vec![candidate_result],
+                ),
+            )));
+        }
+        Ok(None)
+    }
+
+    fn collect_known_upper_bound_candidates(&self, left: &Obj) -> Vec<AtomicFact> {
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    if self
+                        .known_upper_bound_candidate_value(known_fact, left)
+                        .is_some()
+                    {
+                        candidates.push(known_fact.clone());
+                    }
+                }
+            }
+        }
+        candidates
+    }
+
+    fn known_upper_bound_candidate_value(
+        &self,
+        known_fact: &AtomicFact,
+        left: &Obj,
+    ) -> Option<(i128, bool)> {
+        let norm = normalize_positive_order_atomic_fact(known_fact)?;
+        match &norm {
+            AtomicFact::LessFact(f) if f.left.to_string() == left.to_string() => {
+                Some((self.resolved_integer_value_for_order_bound(&f.right)?, true))
+            }
+            AtomicFact::LessEqualFact(f) if f.left.to_string() == left.to_string() => {
+                Some((self.resolved_integer_value_for_order_bound(&f.right)?, false))
             }
             _ => None,
         }

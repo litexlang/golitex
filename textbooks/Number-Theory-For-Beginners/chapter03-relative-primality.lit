@@ -1,18 +1,16 @@
-# Number Theory for Beginners, Section III.
-#
-# source: Weil and Rosenlicht, Number Theory for Beginners, Section III.
-# problem: Formalize relative primality, Bezout's criterion, Euclid's lemma,
-# the product corollaries, and the Section III exercises.
-# proof_idea: Reuse Section II's gcd and Bezout interface.  Relative primality
-# for a pair is expressed as `gcd_Z(a,b)=1`; finite mutual relative primality is
-# stated through common divisors.  The forward Bezout direction and Euclid's
-# lemma are written in the same algebraic shape as the source proof.
-# litex_code: This file runs Sections I-II first and then adds Section III.
-# comments: Hard exercise statements remain local checked sketches with
-# explicit proof debt.
+# Chapter III — Relative Primality and Euclid's Lemma
 
-trust local import section2
-trust local import section1
+"""
+Chapter III — Relative primality and Euclid's lemma.
+
+This chapter characterizes relatively prime integers by Bezout identities and
+uses that characterization to prove Euclid's lemma: a divisor prime to one
+factor of a product must divide the other factor.  Its corollaries control
+coprimality of finite products.
+"""
+
+trust local import chapter2
+trust local import chapter1
 
 """
 Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
@@ -177,7 +175,7 @@ sketch:
     # Source handling: The exercise uses Euclid's lemma and division
     # remainders modulo m.
     # trust: This belongs with the congruence-class machinery of
-    # Section V.
+    # Chapter V.
     trust:
         forall a Z, m N_pos:
             m > 1

@@ -773,6 +773,24 @@ impl Runtime {
                         element_not_in_right,
                     )?,
                 );
+                // Singleton exclusion: `x $in set_minus(A, {a})` implies `x != a`.
+                // Example: a quotient over `set_minus(X, {x0})` may use `x - x0` as a divisor.
+                if let Obj::ListSet(list_set) = sm.right.as_ref() {
+                    if let [excluded] = list_set.list.as_slice() {
+                        let element_not_equal: Fact = NotEqualFact::new(
+                            in_fact.element.clone(),
+                            excluded.as_ref().clone(),
+                            lf,
+                        )
+                        .into();
+                        infer_result.new_fact(&element_not_equal);
+                        infer_result.new_infer_result_inside(
+                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                                element_not_equal,
+                            )?,
+                        );
+                    }
+                }
                 Ok(infer_result)
             }
             // Family union elimination: `x $in cup(F)` means `x` lies in some member set of `F`.

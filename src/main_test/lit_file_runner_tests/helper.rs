@@ -5,7 +5,6 @@ use crate::prelude::*;
 
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 const SLOWEST_RUNS_TO_PRINT: usize = 10;
-pub(super) const CITE_STD_EXAMPLES_SUBDIR: &str = "examples/_internal/std_imports";
 pub(super) const REPOSITORY_EXAMPLES_SUBDIR: &str = "examples/08_module_repository";
 pub(super) const SKETCH_EXAMPLES_SUBDIR: &str = "examples/_internal/sketch";
 

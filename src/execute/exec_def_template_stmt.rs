@@ -169,7 +169,7 @@ impl Runtime {
                 )
                 .into())
             }
-            TemplateDefEnum::DefLetStmt(s) => {
+            TemplateDefEnum::TrustHaveStmt(s) => {
                 let param_def = self.inst_single_result_param_def(
                     &s.param_def,
                     param_to_arg_map,
@@ -196,7 +196,7 @@ impl Runtime {
                         Some(line_file.clone()),
                     )?);
                 }
-                Ok(DefLetStmt::new(param_def, facts, line_file.clone()).into())
+                Ok(TrustHaveStmt::new(param_def, facts, line_file.clone()).into())
             }
             TemplateDefEnum::HaveByExistStmt(s) => {
                 let exist_fact = self.inst_exist_fact(
@@ -427,7 +427,7 @@ impl Runtime {
                     Some(line_file.clone()),
                 )?
                 .into()),
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => {
                 let mut facts = Vec::with_capacity(s.facts.len());
                 for fact in s.facts.iter() {
                     facts.push(self.inst_fact(
@@ -437,7 +437,7 @@ impl Runtime {
                         Some(line_file.clone()),
                     )?);
                 }
-                Ok(ProofDebtStmt::new(facts, line_file.clone()).into())
+                Ok(TrustStmt::new(facts, line_file.clone()).into())
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 let fact = self.inst_fact(

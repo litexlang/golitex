@@ -1,17 +1,15 @@
-# Number Theory for Beginners, Section II.
-#
-# source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
-# problem: Formalize Euclidean division, the subgroup theorem for Z, gcd via
-# linear combinations, and the Section II exercises.
-# proof_idea: Reuse Section I's divisibility vocabulary.  State the Euclidean
-# division lemma and the subgroup theorem as source-facing interfaces, then
-# define binary gcd through divisibility plus Bezout.  Elementary consequences
-# of the gcd definition are checked directly.
-# litex_code: This file runs Section I first and then adds Section II.
-# comments: Broad theorem packages are explicit `proof_debt` debt with source
-# handling comments; no std number-theory modules are imported.
+# Chapter II — Euclidean Division and Greatest Common Divisors
 
-trust local import section1
+"""
+Chapter II — Division with remainder and greatest common divisors.
+
+The central objects are the quotient and remainder in integer division, the
+subtraction-closed subsets of Z, and the greatest common divisor obtained from
+integral linear combinations.  The exercises develop the Euclidean algorithm
+and reduced fractions from these results.
+"""
+
+trust local import chapter1
 
 """
 Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
@@ -32,10 +30,10 @@ prop is_largest_multiple_leq_Z(a, d, q Z):
         =>:
             d * z <= d * q
 
-# Source handling: The text proves this from Section I's least positive
+# Source handling: The text proves this from Chapter I's least positive
 # integer principle.
 # trust: The checked proof needs the least-positive-element argument over
-# the set {a-dz > 0}; it is recorded here as the Section II division interface.
+# the set {a-dz > 0}; it is recorded here as the Chapter II division interface.
 trust:
     forall a Z, d N_pos:
         exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
@@ -48,8 +46,9 @@ thm lemma_II_euclidean_division:
     exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
 
 """
-Theorem II.1. A nonempty set of integers closed under subtraction is exactly
-mZ for a unique m >= 0.
+Theorem II.1. A nonempty set M of integers closed under subtraction is exactly
+mZ={mz : z in Z} for one nonnegative integer m.  Thus one number m generates
+all of M, and no other nonnegative generator does.
 """
 
 prop closed_under_subtraction(M power_set(Z)):
@@ -124,8 +123,9 @@ Corollary 2 and Definition. The integer d from Corollary 1 divides each of the
 given integers, every common divisor divides d, and d is called their gcd.
 """
 
-# For later sections this file exposes the binary gcd.  The body records the
-# divisor characterization and Bezout representation used in Sections III-IV.
+# For two integers, their gcd is the nonnegative common divisor divisible by
+# every other positive common divisor.  The source also shows that this gcd is
+# an integral linear combination of the two integers (Bezout's identity).
 
 prop is_gcd_Z(a, b Z, d N):
     $divides_Z(d, a)
@@ -249,17 +249,20 @@ Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
 and (1024,729).
 """
 
-sketch:
-    # Source handling: These are concrete Euclidean-algorithm computations.
-    # trust: The equalities are recorded as calculation targets until the
-    # checked Euclidean-algorithm function is available in this file.
-    trust:
-        gcd_Z(56, 35) = 7
-        exist x, y Z st {7 = 56 * x + 35 * y}
-        gcd_Z(309, 186) = 3
-        exist x, y Z st {3 = 309 * x + 186 * y}
-        gcd_Z(1024, 729) = 1
-        exist x, y Z st {1 = 1024 * x + 729 * y}
+# Euclidean back-substitution gives
+# 7=2*56-3*35, 3=-3*309+5*186, and 1=-257*1024+361*729.
+
+# Source handling: Run the Euclidean algorithm and substitute remainders
+# backwards.  The displayed coefficients are the requested concrete answers.
+# trust: The arithmetic equalities are kept as calculation debt until the
+# checked Euclidean-algorithm recurrence exposes its quotient sequence.
+trust:
+    gcd_Z(56, 35) = 7
+    7 = 56 * 2 + 35 * (-3)
+    gcd_Z(309, 186) = 3
+    3 = 309 * (-3) + 186 * 5
+    gcd_Z(1024, 729) = 1
+    1 = 1024 * (-257) + 729 * 361
 
 """
 Exercise II.7. Scaling all inputs by m scales the gcd by m.

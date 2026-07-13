@@ -783,7 +783,7 @@ hypothesis explicitly.
 
 Ordinary mathematics uses many small background relationships: equality, order, membership, set predicates, function application, tuple projection, finite enumeration, arithmetic normalization, and so on. Each relationship is usually simple. The total number of interactions is large.
 
-Litex builds many of these elementary relationships into the language layer. This makes short mathematical scripts less dependent on a separate standard library for basic steps. It can matter especially in areas where the needed background mathematics is not yet easy to express or package naturally in a type-theoretic library.
+Litex builds many of these elementary relationships into the language layer. This makes short mathematical scripts less dependent on a separate globally distributed library for basic steps. It can matter especially in areas where the needed background mathematics is not yet easy to express or package naturally in a type-theoretic library.
 
 This is also why Litex can make a textbook development feel less like library
 navigation. The basic mathematical ground is already available to the checker,

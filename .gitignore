@@ -7,6 +7,8 @@ scripts/*
 !scripts/update_external_repos.sh
 !scripts/build_dataset_current_data.py
 !scripts/dataset_review_dashboard.html
+!scripts/legacy_std/
+!scripts/legacy_std/**
 examples/hidden
 
 # Editor / tooling
@@ -45,8 +47,8 @@ std/todo.md
 std/*/todo.md
 
 todo.md
+!scripts/legacy_std/todo.md
 
 kernel_plan.md
 
 example_cleanup_plan.md
-

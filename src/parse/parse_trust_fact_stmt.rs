@@ -5,14 +5,14 @@ impl Runtime {
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let facts = self.parse_facts_in_body(tb)?;
-            return Ok(ProofDebtStmt::new(facts, tb.line_file.clone()).into());
+            return Ok(TrustStmt::new(facts, tb.line_file.clone()).into());
         } else if tb.current_token_is_equal_to(FORALL) {
             let fact = self.parse_fact(tb)?;
-            return Ok(ProofDebtStmt::new(vec![fact], tb.line_file.clone()).into());
+            return Ok(TrustStmt::new(vec![fact], tb.line_file.clone()).into());
         } else if tb.current_token_is_equal_to(NOT) {
             if tb.token_at_add_index(1) == FORALL {
                 let fact = self.parse_fact(tb)?;
-                return Ok(ProofDebtStmt::new(vec![fact], tb.line_file.clone()).into());
+                return Ok(TrustStmt::new(vec![fact], tb.line_file.clone()).into());
             }
         }
 
@@ -26,6 +26,6 @@ impl Runtime {
             }
             tb.skip_token(COMMA)?;
         }
-        Ok(ProofDebtStmt::new(facts, tb.line_file.clone()).into())
+        Ok(TrustStmt::new(facts, tb.line_file.clone()).into())
     }
 }

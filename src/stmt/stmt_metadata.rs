@@ -59,22 +59,22 @@ impl Stmt {
 impl UnsafeStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            UnsafeStmt::ProofDebtStmt(stmt) => stmt.line_file.clone(),
-            UnsafeStmt::DefLetStmt(stmt) => stmt.line_file.clone(),
+            UnsafeStmt::TrustStmt(stmt) => stmt.line_file.clone(),
+            UnsafeStmt::TrustHaveStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
     pub fn stmt_type_name(&self) -> String {
         match self {
-            UnsafeStmt::ProofDebtStmt(stmt) => stmt.stmt_type_name(),
-            UnsafeStmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
+            UnsafeStmt::TrustStmt(stmt) => stmt.stmt_type_name(),
+            UnsafeStmt::TrustHaveStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
     pub fn output_type_string(&self) -> String {
         match self {
-            UnsafeStmt::ProofDebtStmt(_) => ProofDebtStmt::output_type_string(),
-            UnsafeStmt::DefLetStmt(_) => DefLetStmt::output_type_string(),
+            UnsafeStmt::TrustStmt(_) => TrustStmt::output_type_string(),
+            UnsafeStmt::TrustHaveStmt(_) => TrustHaveStmt::output_type_string(),
         }
     }
 }

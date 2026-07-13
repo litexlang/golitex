@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 const LITEX_CONFIG: &str = "litex.config";
-const LEGACY_MOD_DOT_LIT: &str = "mod.lit";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 struct FileNode {
@@ -163,13 +162,6 @@ fn discover_config_export(
         {
             return Err(repository_error(
                 "[export] file targets must point to a .lit file".to_string(),
-                &config_path.to_string_lossy(),
-                export.line,
-            ));
-        }
-        if canonical_path.file_name().and_then(|name| name.to_str()) == Some(LEGACY_MOD_DOT_LIT) {
-            return Err(repository_error(
-                "mod.lit is obsolete; migrate declarations to litex.config".to_string(),
                 &config_path.to_string_lossy(),
                 export.line,
             ));
@@ -350,13 +342,6 @@ fn scan_source_dependencies(
     for mut block in blocks {
         reject_nested_local_imports(&block.body)?;
         let first_token = block.header.first().map(String::as_str);
-        if first_token == Some(EXPORT) {
-            return Err(repository_error(
-                "`export` is configured in litex.config and is not a Litex statement".to_string(),
-                source_path,
-                block.line_file.0,
-            ));
-        }
         let is_trust_import =
             first_token == Some(TRUST) && block.header.get(1).map(String::as_str) == Some(IMPORT);
         if first_token == Some(IMPORT) || is_trust_import {
@@ -370,33 +355,20 @@ fn scan_source_dependencies(
                 Stmt::Command(CommandStmt::TrustImportStmt(trust_import)) => trust_import.import,
                 _ => unreachable!("import parser should produce an import statement"),
             };
-            match import {
-                ImportStmt::ImportRelativePath(_) => {
+            let ImportStmt::ImportGlobalModule(global_import) = import;
+            if let Some(target) = runtime.module_manager.root_export(&global_import.mod_name) {
+                let ImportTarget::Module(imported_module_id) = target else {
                     return Err(repository_error(
-                        "project mode import must name a root export or globally registered module; use litex.config and local import for module-local dependencies"
-                            .to_string(),
+                        format!(
+                            "root export `{}` is a file; files can only be loaded with local import inside their owner module",
+                            global_import.mod_name
+                        ),
                         source_path,
                         block.line_file.0,
                     ));
-                }
-                ImportStmt::ImportGlobalModule(global_import) => {
-                    if let Some(target) =
-                        runtime.module_manager.root_export(&global_import.mod_name)
-                    {
-                        let ImportTarget::Module(imported_module_id) = target else {
-                            return Err(repository_error(
-                                format!(
-                                    "root export `{}` is a file; files can only be loaded with local import inside their owner module",
-                                    global_import.mod_name
-                                ),
-                                source_path,
-                                block.line_file.0,
-                            ));
-                        };
-                        if !module_imports.contains(&imported_module_id) {
-                            module_imports.push(imported_module_id);
-                        }
-                    }
+                };
+                if !module_imports.contains(&imported_module_id) {
+                    module_imports.push(imported_module_id);
                 }
             }
             continue;
@@ -704,19 +676,6 @@ fn require_project_config(
     source_path: &str,
     line: usize,
 ) -> Result<PathBuf, RuntimeError> {
-    let legacy_path = directory.join(LEGACY_MOD_DOT_LIT);
-    if legacy_path.is_file() {
-        return Err(repository_error(
-            format!(
-                "{} is obsolete; move its declarations to {}/{}",
-                legacy_path.to_string_lossy(),
-                directory.to_string_lossy(),
-                LITEX_CONFIG
-            ),
-            source_path,
-            line,
-        ));
-    }
     let config_path = directory.join(LITEX_CONFIG);
     require_file(
         &config_path,
@@ -760,13 +719,6 @@ fn resolve_entrance_file(
     if path.extension().and_then(|extension| extension.to_str()) != Some("lit") {
         return Err(repository_error(
             "[entrance].file must point to a .lit file".to_string(),
-            &config_path.to_string_lossy(),
-            config.entrance_line,
-        ));
-    }
-    if path.file_name().and_then(|name| name.to_str()) == Some(LEGACY_MOD_DOT_LIT) {
-        return Err(repository_error(
-            "[entrance].file cannot point to obsolete mod.lit".to_string(),
             &config_path.to_string_lossy(),
             config.entrance_line,
         ));
@@ -865,6 +817,32 @@ mod tests {
             );
             assert!(ok, "{output}");
             assert!(output.contains("A::chapters::leaf::x = 1"), "{output}");
+        });
+    }
+
+    #[test]
+    fn repository_imported_cart_definition_retains_dimension_and_projections() {
+        run_repository_test_with_large_stack("repository_imported_cart_definition", || {
+            let root = repository_test_dir("imported-cart-definition");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(&root, "./main.lit", &[("geometry", "./geometry.lit")]);
+            write_file(
+                &root.join("geometry.lit"),
+                "have n N_pos = 3\n\nhave cart C for i <= n, proj(C, i) = R\n",
+            );
+            write_file(
+                &root.join("main.lit"),
+                "local import geometry\n\n$is_cart(geometry::C)\ncart_dim(geometry::C) = 3\nforall i closed_range(1, 3):\n    proj(geometry::C, i) = R\n",
+            );
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
         });
     }
 
@@ -1030,15 +1008,13 @@ mod tests {
     }
 
     #[test]
-    fn file_mode_rejects_configs_exports_and_unregistered_local_imports() {
+    fn file_mode_rejects_configs_and_unregistered_local_imports() {
         run_repository_test_with_large_stack("file_mode_module_syntax", || {
             let root = repository_test_dir("file-mode");
             fs::create_dir_all(&root).expect("create repository fixture");
             let config = root.join("litex.config");
-            let export_script = root.join("export-script.lit");
             let local_import_script = root.join("local-import-script.lit");
             write_project_config(&root, "./main.lit", &[]);
-            write_file(&export_script, "export file \"./x.lit\" as x\n");
             write_file(&local_import_script, "local import x\n");
 
             let (config_ok, config_output) =
@@ -1047,15 +1023,6 @@ mod tests {
             assert!(
                 config_output.contains("litex.config is project configuration"),
                 "{config_output}"
-            );
-
-            let (export_ok, export_output) = run_source_code_in_file_with_ok(
-                export_script.to_str().expect("fixture path is UTF-8"),
-            );
-            assert!(!export_ok, "{export_output}");
-            assert!(
-                export_output.contains("`export` is configured in litex.config"),
-                "{export_output}"
             );
 
             let (local_ok, local_output) = run_source_code_in_file_with_ok(
@@ -1070,14 +1037,12 @@ mod tests {
     }
 
     #[test]
-    fn repository_mode_rejects_legacy_mod_lit_with_migration_message() {
-        run_repository_test_with_large_stack("legacy_mod_lit", || {
-            let root = repository_test_dir("legacy-mod-lit");
+    fn mod_lit_runs_when_explicitly_configured() {
+        run_repository_test_with_large_stack("configured_mod_lit", || {
+            let root = repository_test_dir("configured-mod-lit");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_file(
-                &root.join("mod.lit"),
-                "export file \"./chap1.lit\" as chap1\n",
-            );
+            write_project_config(&root, "./mod.lit", &[]);
+            write_file(&root.join("mod.lit"), "1 = 1\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1086,9 +1051,7 @@ mod tests {
                 OutputLanguage::English,
                 false,
             );
-            assert!(!ok, "{output}");
-            assert!(output.contains("mod.lit is obsolete"), "{output}");
-            assert!(output.contains("litex.config"), "{output}");
+            assert!(ok, "{output}");
         });
     }
 

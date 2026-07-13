@@ -57,12 +57,20 @@ mod tests {
 
     #[test]
     fn keyword_rejected() {
-        assert!(is_valid_litex_name("let").is_err());
         assert!(is_valid_litex_name("prop").is_err());
         assert!(is_valid_litex_name("abstract_prop").is_err());
         assert!(is_valid_litex_name("exist").is_err());
         assert!(is_valid_litex_name("R").is_err());
         assert!(is_valid_litex_name("in").is_err());
+    }
+
+    #[test]
+    fn former_compatibility_words_are_not_reserved() {
+        for name in [
+            "let", "scratch", "export", "oo", "oc", "co", "cc", "oinf", "cinf", "info", "infc",
+        ] {
+            assert!(is_valid_litex_name(name).is_ok(), "{name}");
+        }
     }
 
     #[test]

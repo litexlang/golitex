@@ -414,7 +414,7 @@ impl Runtime {
             }
             vec![]
         };
-        Ok(DefLetStmt::new(param_def, facts, tb.line_file.clone()).into())
+        Ok(TrustHaveStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, or HaveObjByExistFactsStmt
@@ -806,15 +806,6 @@ impl Runtime {
             )))
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-            if tb.current_token_is_equal_to(AS) {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "`have fn <name> as set:` has been removed; use `have fn <name> by exist!:`"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
             if tb.current_token_is_equal_to(BY) {
                 if as_algo {
                     return Err(RuntimeError::from(ParseRuntimeError(
@@ -839,15 +830,6 @@ impl Runtime {
                         )));
                     }
                     return self.parse_have_fn_by_exist_unique_body(tb, name);
-                }
-                if tb.current_token_is_equal_to(FORALL) {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`have fn <name> by forall ...` has been removed; use `have fn <name> by exist!:` with a `? forall ...` goal"
-                                .to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
                 }
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -959,14 +941,9 @@ impl Runtime {
         }
 
         if !tb.body[0].current_token_is_equal_to(QUESTION_GOAL) {
-            let message = if tb.body[0].current_token_is_equal_to("prove") {
-                "`have fn <name> by exist!:`: `prove` was removed; use `? forall ...`"
-            } else {
-                "`have fn <name> by exist!:` expects a `? forall ...` goal block"
-            };
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    message.to_string(),
+                    "`have fn <name> by exist!:` expects a `? forall ...` goal block".to_string(),
                     tb.body[0].line_file.clone(),
                 ),
             )));
@@ -1517,7 +1494,9 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
             }
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(stmt)) => Ok(TemplateDefEnum::DefLetStmt(stmt)),
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
+                Ok(TemplateDefEnum::TrustHaveStmt(stmt))
+            }
             Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveByExistStmt(stmt))
             }
@@ -1575,9 +1554,6 @@ fn skip_have_indexed_definition_keyword(
 ) -> Result<(), RuntimeError> {
     if tb.current_token_is_equal_to(FOR) {
         return tb.skip_token(FOR);
-    }
-    if tb.current_token_is_equal_to(BY) {
-        return tb.skip_token(BY);
     }
     Err(RuntimeError::from(ParseRuntimeError(
         RuntimeErrorStruct::new_with_msg_and_line_file(

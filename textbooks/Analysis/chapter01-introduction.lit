@@ -50,8 +50,8 @@ Representative runs.
 
 Run a file with `target/debug/litex -f <file>`.  Useful first checks are:
 
-- `textbooks/Analysis/chap7.lit`
-- `textbooks/Analysis/chap11.lit`
+- `textbooks/Analysis/chapter07-series.lit`
+- `textbooks/Analysis/chapter11-riemann-integral.lit`
 
 What "checked" means.
 

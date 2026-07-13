@@ -329,6 +329,112 @@ thm empty_set_has_finite_cardinality:
     by thm empty_set_has_cardinality_zero()
     witness exist n N st {$has_cardinality({}, n)} from 0
 
+# Chapter 3 defines cardinality with the zero-based model `range(0, n)`,
+# while the finite-set enumeration from Chapter 7 uses `closed_range(1, n)`.
+# Re-index the latter when the finite set is nonempty.
+
+thm positive_count_finite_set_has_cardinality:
+    ? forall s finite_set:
+        count(s) >= 1
+        =>:
+            $has_cardinality(s, count(s))
+    by thm finite_set_has_bijective_index(s)
+    obtain idx from exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+    have fn shift_up by exist!:
+        ? forall i range(0, count(s)):
+            exist! j closed_range(1, count(s)) st {j = i + 1}
+        i >= 0
+        i < count(s)
+        i + 1 >= 1
+        i + 1 <= count(s)
+        i + 1 $in closed_range(1, count(s))
+        witness exist j closed_range(1, count(s)) st {j = i + 1} from i + 1:
+            i + 1 = i + 1
+        forall j1, j2 closed_range(1, count(s)):
+            j1 = i + 1
+            j2 = i + 1
+            =>:
+                j1 = j2
+        exist! j closed_range(1, count(s)) st {j = i + 1}
+    have fn zero_index_of_s by exist!:
+        ? forall x s:
+            exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
+        exist! j closed_range(1, count(s)) st {idx(j) = x}
+        obtain j from exist j closed_range(1, count(s)) st {idx(j) = x}
+        j >= 1
+        j <= count(s)
+        j - 1 >= 0
+        j - 1 < j <= count(s)
+        j - 1 < count(s)
+        j - 1 $in range(0, count(s))
+        witness exist i range(0, count(s)) st {idx(shift_up(i)) = x} from j - 1:
+            shift_up(j - 1) = (j - 1) + 1
+            (j - 1) + 1 = j
+            idx(shift_up(j - 1)) = idx(j)
+            idx(j) = x
+            idx(shift_up(j - 1)) = x
+        forall i1, i2 range(0, count(s)):
+            idx(shift_up(i1)) = x
+            idx(shift_up(i2)) = x
+            =>:
+                shift_up(i1) = i1 + 1
+                shift_up(i2) = i2 + 1
+                exist! j closed_range(1, count(s)) st {idx(j) = x}
+                shift_up(i1) = shift_up(i2)
+                i1 + 1 = i2 + 1
+                i1 = (i1 + 1) - 1
+                (i1 + 1) - 1 = (i2 + 1) - 1
+                (i2 + 1) - 1 = i2
+                i1 = i2
+        exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
+    claim:
+        ? $is_injective_fn(s, range(0, count(s)), zero_index_of_s)
+        forall x1, x2 s:
+            zero_index_of_s(x1) = zero_index_of_s(x2)
+            =>:
+                idx(shift_up(zero_index_of_s(x1))) = x1
+                idx(shift_up(zero_index_of_s(x2))) = x2
+                shift_up(zero_index_of_s(x1)) = shift_up(zero_index_of_s(x2))
+                idx(shift_up(zero_index_of_s(x1))) = idx(shift_up(zero_index_of_s(x2)))
+                x1 = x2
+    claim:
+        ? $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
+        claim:
+            ? forall i range(0, count(s)):
+                exist x s st {i = zero_index_of_s(x)}
+            have x s = idx(shift_up(i))
+            idx(shift_up(zero_index_of_s(x))) = x
+            idx(shift_up(i)) = x
+            idx(shift_up(zero_index_of_s(x))) = idx(shift_up(i))
+            exist! j closed_range(1, count(s)) st {idx(j) = idx(shift_up(i))}
+            shift_up(zero_index_of_s(x)) = shift_up(i)
+            zero_index_of_s(x) = i
+            i = zero_index_of_s(x)
+            witness exist x0 s st {i = zero_index_of_s(x0)} from x:
+                i = zero_index_of_s(x)
+        $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
+    $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
+    witness exist f fn(x s) range(0, count(s)) st {$is_bijective_fn(s, range(0, count(s)), f)} from zero_index_of_s:
+        $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
+    $has_equal_cardinality(s, range(0, count(s)))
+    $has_cardinality(s, count(s))
+
+thm finite_set_has_cardinality_count:
+    ? forall s finite_set:
+        $has_cardinality(s, count(s))
+    count(s) = 0 or count(s) > 0
+    by cases:
+        ? $has_cardinality(s, count(s))
+        case count(s) = 0:
+            s = {}
+            by thm empty_set_has_cardinality_zero()
+            $has_cardinality({}, 0)
+            $has_cardinality(s, count(s))
+        case count(s) > 0:
+            count(s) >= 1
+            by thm positive_count_finite_set_has_cardinality(s)
+            $has_cardinality(s, count(s))
+
 thm infinite_natural_subset_is_nonempty:
     ? forall X power_set(N):
         $has_infinite_cardinality(X)
@@ -345,12 +451,34 @@ thm infinite_natural_subset_has_tail_above:
         $has_infinite_cardinality(X)
         =>:
             $is_nonempty_set({x N: x $in X and a < x})
-    # Source handling: Proposition 8.1.5 leaves this tail argument to
-    # Exercise 8.1.3.
-    # proof_debt: show that a subset of the finite initial segment through `a`
-    # cannot have infinite cardinality.
-    # primary blocker: trust.
-    trust $is_nonempty_set({x N: x $in X and a < x})
+    by contra:
+        ? $is_nonempty_set({x N: x $in X and a < x})
+        claim:
+            ? X $subset closed_range(0, a)
+            claim:
+                ? forall x X:
+                    x $in closed_range(0, a)
+                x $in N
+                x <= a or x > a
+                by cases:
+                    ? x $in closed_range(0, a)
+                    case x <= a:
+                        x >= 0
+                        x $in closed_range(0, a)
+                    case x > a:
+                        x $in {x N: x $in X and a < x}
+                        witness $is_nonempty_set({x N: x $in X and a < x}) from x:
+                            x $in {x N: x $in X and a < x}
+                        impossible $is_nonempty_set({x N: x $in X and a < x})
+            X $subset closed_range(0, a)
+        $is_finite_set(closed_range(0, a))
+        by thm subset_of_finite_set_is_finite(X, closed_range(0, a))
+        $is_finite_set(X)
+        by thm finite_set_has_cardinality_count(X)
+        witness exist n N st {$has_cardinality(X, n)} from count(X):
+            $has_cardinality(X, count(X))
+        $has_finite_cardinality(X)
+        impossible not $has_finite_cardinality(X)
 
 thm least_natural_element_above_exists_unique:
     ? forall X power_set(N), a N:
@@ -440,10 +568,155 @@ thm recursive_min_enumeration_step_is_increasing:
     $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n)))
     f(n) = increasing_N_subset_enum_value(X, n) < next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n)) = increasing_N_subset_enum_value(X, n + 1) = f(n + 1)
 
+thm recursive_min_enumeration_strictly_increases_after_steps:
+    ? forall X power_set(N), f fn(n N) X, n, k N:
+        $has_infinite_cardinality(X)
+        $is_recursive_min_enumeration_from_N_to_subset(X, f)
+        =>:
+            f(n) < f(n + k + 1)
+    by induc k from 0:
+        ? f(n) < f(n + k + 1)
+        ? from k = 0:
+            by thm recursive_min_enumeration_step_is_increasing(X, f, n)
+            f(n) < f(n + 1)
+            n + 0 + 1 = n + 1
+            f(n + 0 + 1) = f(n + 1)
+            f(n) < f(n + 1) = f(n + 0 + 1)
+        ? induc:
+            f(n) < f(n + k + 1)
+            by thm recursive_min_enumeration_step_is_increasing(X, f, n + k + 1)
+            f(n + k + 1) < f(n + k + 1 + 1)
+            n + (k + 1) + 1 = n + k + 1 + 1
+            f(n + (k + 1) + 1) = f(n + k + 1 + 1)
+            f(n) < f(n + k + 1) < f(n + k + 1 + 1) = f(n + (k + 1) + 1)
+
+thm recursive_min_enumeration_value_at_least_index:
+    ? forall X power_set(N), f fn(n N) X, n N:
+        $has_infinite_cardinality(X)
+        $is_recursive_min_enumeration_from_N_to_subset(X, f)
+        =>:
+            f(n) >= n
+    by induc n from 0:
+        ? f(n) >= n
+        ? from n = 0:
+            f(0) $in N
+            f(0) >= 0
+        ? induc:
+            f(n) >= n
+            by thm recursive_min_enumeration_step_is_increasing(X, f, n)
+            f(n + 1) > f(n)
+            f(n) $in N
+            f(n + 1) $in N
+            f(n + 1) >= f(n) + 1
+            f(n) + 1 >= n + 1
+            f(n + 1) >= f(n) + 1 >= n + 1
+            f(n + 1) >= n + 1
+
+thm successor_strict_increase_has_strict_growth:
+    ? forall X power_set(N), f fn(n N) X, n, k N:
+        forall m N:
+            f(m + 1) > f(m)
+        =>:
+            f(n) < f(n + k + 1)
+    by induc k from 0:
+        ? f(n) < f(n + k + 1)
+        ? from k = 0:
+            f(n + 1) > f(n)
+            f(n) < f(n + 1)
+            n + 0 + 1 = n + 1
+            f(n + 0 + 1) = f(n + 1)
+            f(n) < f(n + 1) = f(n + 0 + 1)
+        ? induc:
+            f(n) < f(n + k + 1)
+            f(n + k + 1 + 1) > f(n + k + 1)
+            f(n + k + 1) < f(n + k + 1 + 1)
+            n + (k + 1) + 1 = n + k + 1 + 1
+            f(n + (k + 1) + 1) = f(n + k + 1 + 1)
+            f(n) < f(n + k + 1) < f(n + k + 1 + 1) = f(n + (k + 1) + 1)
+
 prop is_increasing_bijection_from_N_to_subset(X power_set(N), f fn(n N) X):
     $is_bijective_fn(N, X, f)
     forall n N:
         f(n + 1) > f(n)
+
+thm recursive_min_enumeration_is_surjective:
+    ? forall X power_set(N), f fn(n N) X:
+        $has_infinite_cardinality(X)
+        $is_recursive_min_enumeration_from_N_to_subset(X, f)
+        =>:
+            $is_surjective_fn(N, X, f)
+    claim:
+        ? forall x X:
+            exist n N st {x = f(n)}
+        x $in N
+        x + 1 $in N
+        by thm recursive_min_enumeration_value_at_least_index(X, f, x + 1)
+        f(x + 1) >= x + 1
+        x + 1 > x
+        f(x + 1) >= x + 1 > x
+        f(x + 1) > x
+        have K power_set(N) = {n N: f(n) > x}
+        x + 1 $in {n N: f(n) > x}
+        x + 1 $in K
+        witness $is_nonempty_set(K) from x + 1:
+            x + 1 $in K
+        $is_minimum_of_natural_subset(K, min_of_N_set(K))
+        have k N = min_of_N_set(K)
+        k $in K
+        f(k) > x
+        claim:
+            ? k > 0
+            by contra:
+                ? k > 0
+                k <= 0
+                k >= 0
+                k = 0
+                f(k) = f(0)
+                f(0) > x
+                f(0) = increasing_N_subset_enum_value(X, 0) = first_in_infinite_N_subset_value(X)
+                $is_minimum_of_natural_subset(X, first_in_infinite_N_subset_value(X))
+                first_in_infinite_N_subset_value(X) <= x
+                f(0) <= x
+                impossible f(0) > x
+        k - 1 $in N
+        k = (k - 1) + 1
+        k - 1 < k
+        claim:
+            ? f(k - 1) <= x
+            f(k - 1) <= x or f(k - 1) > x
+            by cases:
+                ? f(k - 1) <= x
+                case f(k - 1) <= x:
+                    f(k - 1) <= x
+                case f(k - 1) > x:
+                    k - 1 $in {n N: f(n) > x}
+                    k - 1 $in K
+                    min_of_N_set(K) <= k - 1
+                    k = min_of_N_set(K)
+                    k <= k - 1
+                    impossible k <= k - 1
+        f(k - 1) < x or f(k - 1) >= x
+        by cases:
+            ? exist n N st {x = f(n)}
+            case f(k - 1) < x:
+                forall t N:
+                    f(t) = increasing_N_subset_enum_value(X, t)
+                f(k - 1) = increasing_N_subset_enum_value(X, k - 1)
+                f(k) = f((k - 1) + 1) = increasing_N_subset_enum_value(X, (k - 1) + 1)
+                increasing_N_subset_enum_value(X, (k - 1) + 1) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, ((k - 1) + 1) - 1))
+                ((k - 1) + 1) - 1 = k - 1
+                increasing_N_subset_enum_value(X, ((k - 1) + 1) - 1) = increasing_N_subset_enum_value(X, k - 1)
+                f(k) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, k - 1))
+                $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, k - 1), next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, k - 1)))
+                $is_least_natural_element_above_in_subset(X, f(k - 1), f(k))
+                f(k) <= x
+                impossible f(k) > x
+            case f(k - 1) >= x:
+                f(k - 1) = x
+                x = f(k - 1)
+                witness exist n N st {x = f(n)} from k - 1:
+                    x = f(k - 1)
+    $is_surjective_fn(N, X, f)
 
 thm recursive_min_enumeration_is_bijective:
     ? forall X power_set(N), f fn(n N) X:
@@ -451,12 +724,142 @@ thm recursive_min_enumeration_is_bijective:
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
             $is_bijective_fn(N, X, f)
-    # Source handling: Proposition 8.1.5 gives the recursive construction and
-    # delegates its no-gap verification to Exercise 8.1.3.
-    # proof_debt: derive surjectivity from the finite-prefix no-gap argument;
-    # strict increase already supplies the injective half.
-    # primary blocker: trust.
-    trust $is_bijective_fn(N, X, f)
+    claim:
+        ? $is_injective_fn(N, X, f)
+        claim:
+            ? forall n1, n2 N:
+                f(n1) = f(n2)
+                =>:
+                    n1 = n2
+            n1 < n2 or n1 >= n2
+            by cases:
+                ? n1 = n2
+                case n1 < n2:
+                    n1 <= n2
+                    n2 - n1 >= 1
+                    n2 - n1 - 1 $in N
+                    by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n1, n2 - n1 - 1)
+                    f(n1) < f(n1 + (n2 - n1 - 1) + 1)
+                    n1 + (n2 - n1 - 1) + 1 = n2
+                    f(n1 + (n2 - n1 - 1) + 1) = f(n2)
+                    f(n1) < f(n2)
+                    impossible f(n1) = f(n2)
+                case n1 >= n2:
+                    n2 < n1 or n2 >= n1
+                    by cases:
+                        ? n1 = n2
+                        case n2 < n1:
+                            n2 <= n1
+                            n1 - n2 >= 1
+                            n1 - n2 - 1 $in N
+                            by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n2, n1 - n2 - 1)
+                            f(n2) < f(n2 + (n1 - n2 - 1) + 1)
+                            n2 + (n1 - n2 - 1) + 1 = n1
+                            f(n2 + (n1 - n2 - 1) + 1) = f(n1)
+                            f(n2) < f(n1)
+                            impossible f(n1) = f(n2)
+                        case n2 >= n1:
+                            n1 = n2
+        $is_injective_fn(N, X, f)
+    by thm recursive_min_enumeration_is_surjective(X, f)
+    $is_surjective_fn(N, X, f)
+    $is_bijective_fn(N, X, f)
+
+thm increasing_bijection_zero_is_minimum:
+    ? forall X power_set(N), f fn(n N) X:
+        $is_increasing_bijection_from_N_to_subset(X, f)
+        =>:
+            $is_minimum_of_natural_subset(X, f(0))
+    $is_bijective_fn(N, X, f)
+    $is_surjective_fn(N, X, f)
+    f(0) $in X
+    claim:
+        ? forall z X:
+            f(0) <= z
+        exist m N st {z = f(m)}
+        obtain m from exist m N st {z = f(m)}
+        m <= 0 or m > 0
+        by cases:
+            ? f(0) <= z
+            case m <= 0:
+                m >= 0
+                m = 0
+                z = f(m) = f(0)
+                f(0) <= z
+            case m > 0:
+                m - 1 $in N
+                by thm successor_strict_increase_has_strict_growth(X, f, 0, m - 1)
+                f(0) < f(0 + (m - 1) + 1)
+                0 + (m - 1) + 1 = m
+                f(0 + (m - 1) + 1) = f(m) = z
+                f(0) < z
+                f(0) <= z
+    $is_minimum_of_natural_subset(X, f(0))
+
+thm increasing_bijection_successor_is_least_above:
+    ? forall X power_set(N), f fn(n N) X, n N:
+        $is_increasing_bijection_from_N_to_subset(X, f)
+        =>:
+            $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
+    $is_bijective_fn(N, X, f)
+    $is_surjective_fn(N, X, f)
+    f(n + 1) $in X
+    f(n + 1) > f(n)
+    claim:
+        ? forall z X:
+            f(n) < z
+            =>:
+                f(n + 1) <= z
+        exist m N st {z = f(m)}
+        obtain m from exist m N st {z = f(m)}
+        m < n + 1 or m >= n + 1
+        by cases:
+            ? f(n + 1) <= z
+            case m < n + 1:
+                m <= n
+                m < n or m >= n
+                by cases:
+                    ? f(n + 1) <= z
+                    case m < n:
+                        n - m >= 1
+                        n - m - 1 $in N
+                        by thm successor_strict_increase_has_strict_growth(X, f, m, n - m - 1)
+                        f(m) < f(m + (n - m - 1) + 1)
+                        m + (n - m - 1) + 1 = n
+                        f(m + (n - m - 1) + 1) = f(n)
+                        f(m) < f(n)
+                        z = f(m) < f(n)
+                        f(n) < z < f(n)
+                        f(n) $in N
+                        f(n) + 1 <= f(n)
+                        f(n) + 1 > f(n)
+                        impossible f(n) + 1 > f(n)
+                    case m >= n:
+                        m = n
+                        z = f(m) = f(n)
+                        f(n) < z = f(n)
+                        f(n) $in N
+                        f(n) + 1 <= f(n)
+                        f(n) + 1 > f(n)
+                        impossible f(n) + 1 > f(n)
+            case m >= n + 1:
+                m <= n + 1 or m > n + 1
+                by cases:
+                    ? f(n + 1) <= z
+                    case m <= n + 1:
+                        m = n + 1
+                        z = f(m) = f(n + 1)
+                        f(n + 1) <= z
+                    case m > n + 1:
+                        m - (n + 1) >= 1
+                        m - (n + 1) - 1 $in N
+                        by thm successor_strict_increase_has_strict_growth(X, f, n + 1, m - (n + 1) - 1)
+                        f(n + 1) < f(n + 1 + (m - (n + 1) - 1) + 1)
+                        n + 1 + (m - (n + 1) - 1) + 1 = m
+                        f(n + 1 + (m - (n + 1) - 1) + 1) = f(m) = z
+                        f(n + 1) < z
+                        f(n + 1) <= z
+    $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
 
 thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
     ? forall X power_set(N), f fn(n N) X:
@@ -464,12 +867,33 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
         $is_increasing_bijection_from_N_to_subset(X, f)
         =>:
             $is_recursive_min_enumeration_from_N_to_subset(X, f)
-    # Source handling: the uniqueness paragraph of Proposition 8.1.5 is
-    # completed in Exercise 8.1.3.
-    # proof_debt: show inductively that an increasing bijection sends `0` to
-    # `min(X)` and each successor to the least unused element.
-    # primary blocker: trust.
-    trust $is_recursive_min_enumeration_from_N_to_subset(X, f)
+    claim:
+        ? forall n N:
+            f(n) = increasing_N_subset_enum_value(X, n)
+        by induc n from 0:
+            ? f(n) = increasing_N_subset_enum_value(X, n)
+            ? from n = 0:
+                by thm increasing_bijection_zero_is_minimum(X, f)
+                $is_minimum_of_natural_subset(X, f(0))
+                $is_minimum_of_natural_subset(X, first_in_infinite_N_subset_value(X))
+                exist! y N st {$is_minimum_of_natural_subset(X, y)}
+                f(0) = first_in_infinite_N_subset_value(X)
+                increasing_N_subset_enum_value(X, 0) = first_in_infinite_N_subset_value(X)
+                f(0) = increasing_N_subset_enum_value(X, 0)
+            ? induc:
+                f(n) = increasing_N_subset_enum_value(X, n)
+                by thm increasing_bijection_successor_is_least_above(X, f, n)
+                $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
+                $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), f(n + 1))
+                $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n)))
+                exist! y N st {$is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), y)}
+                f(n + 1) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n))
+                increasing_N_subset_enum_value(X, n + 1) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, (n + 1) - 1))
+                (n + 1) - 1 = n
+                increasing_N_subset_enum_value(X, (n + 1) - 1) = increasing_N_subset_enum_value(X, n)
+                increasing_N_subset_enum_value(X, n + 1) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, (n + 1) - 1)) = next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n))
+                f(n + 1) = increasing_N_subset_enum_value(X, n + 1)
+    $is_recursive_min_enumeration_from_N_to_subset(X, f)
 
 thm infinite_subset_of_N_has_unique_increasing_enumeration:
     ? forall X power_set(N):
@@ -1826,9 +2250,10 @@ thm constant_general_cart_product_is_function_space:
 
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the
 # same data as a finite Cartesian product whose ith projection is the ith
-# factor.  Chapter 3 writes finite Cartesian products as tuples, while the
-# product above is function-valued, so the equality below identifies those two
-# ways of packaging the same finite data.
+# factor. Chapter 3 writes finite Cartesian products as tuples, while the
+# product above is function-valued. Thus the source-level agreement is a
+# canonical representation bijection, not literal equality of the two Litex
+# sets: their elements have different object forms.
 
 prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C set):
     $is_cart(C)
@@ -1837,16 +2262,74 @@ prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i closed_range(
         proj(C, i) = X(i)
 
 thm finite_index_product_agrees_with_chapter3_cartesian_product:
-    ? forall n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C set:
-        $is_finite_cartesian_product_for_family(n, U, X, C)
+    ? forall A, B, U, P set:
+        A $subset U
+        B $subset U
+        P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
         =>:
-            C = \infinite_cartesian_product<closed_range(1, n), U, X>
-    # Source handling: Example 8.4.2 identifies the finite-index case with the
-    # Cartesian product defined earlier.
-    # proof_debt: construct the tuple/function representation equivalence over
-    # `closed_range(1,n)`.
-    # primary blocker: trust.
-    trust C = \infinite_cartesian_product<closed_range(1, n), U, X>
+            $has_equal_cardinality(cart(A, B), P)
+    # This is the fully checked two-factor case of Example 8.4.2. The map
+    # `(a,b) |-> (1 |-> a, 2 |-> b)` is a bijection from the Chapter 3 tuple
+    # product to the finite-index choice-function product.
+    P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
+    have fn binary_product_encode(p cart(A, B)) P = fn(i closed_range(1, 2)) U {p[i]}
+    claim:
+        ? $is_injective_fn(cart(A, B), P, binary_product_encode)
+        claim:
+            ? forall p, q cart(A, B):
+                binary_product_encode(p) = binary_product_encode(q)
+                =>:
+                    p = q
+            binary_product_encode(p) = fn(i closed_range(1, 2)) U {p[i]}
+            binary_product_encode(q) = fn(i closed_range(1, 2)) U {q[i]}
+            fn(i closed_range(1, 2)) U {p[i]} = binary_product_encode(p) = binary_product_encode(q) = fn(i closed_range(1, 2)) U {q[i]}
+            fn(i closed_range(1, 2)) U {p[i]}(1) = p[1]
+            fn(i closed_range(1, 2)) U {q[i]}(1) = q[1]
+            fn(i closed_range(1, 2)) U {p[i]}(2) = p[2]
+            fn(i closed_range(1, 2)) U {q[i]}(2) = q[2]
+            fn(i closed_range(1, 2)) U {p[i]}(1) = fn(i closed_range(1, 2)) U {q[i]}(1)
+            fn(i closed_range(1, 2)) U {p[i]}(2) = fn(i closed_range(1, 2)) U {q[i]}(2)
+            p[1] = q[1]
+            p[2] = q[2]
+            tuple_dim(p) = 2
+            tuple_dim(q) = 2
+            p = (p[1], p[2])
+            q = (q[1], q[2])
+            (p[1], p[2]) = (q[1], q[2])
+            p = q
+        $is_injective_fn(cart(A, B), P, binary_product_encode)
+    claim:
+        ? $is_surjective_fn(cart(A, B), P, binary_product_encode)
+        claim:
+            ? forall f P:
+                exist p cart(A, B) st {f = binary_product_encode(p)}
+            f $in {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
+            f(1) $in A
+            f(2) $in B
+            (f(1), f(2)) $in cart(A, B)
+            binary_product_encode((f(1), f(2))) $in P
+            binary_product_encode((f(1), f(2))) $in fn(i closed_range(1, 2)) U
+            claim:
+                ? forall i closed_range(1, 2):
+                    f(i) = binary_product_encode((f(1), f(2)))(i)
+                by closed_range as cases: i $in 1...2
+                by cases:
+                    ? f(i) = binary_product_encode((f(1), f(2)))(i)
+                    case i = 1:
+                        binary_product_encode((f(1), f(2)))(1) = (f(1), f(2))[1]
+                        (f(1), f(2))[1] = f(1)
+                    case i = 2:
+                        binary_product_encode((f(1), f(2)))(2) = (f(1), f(2))[2]
+                        (f(1), f(2))[2] = f(2)
+            $fn_eq(f, binary_product_encode((f(1), f(2))))
+            f = binary_product_encode((f(1), f(2)))
+            witness exist p cart(A, B) st {f = binary_product_encode(p)} from (f(1), f(2)):
+                f = binary_product_encode((f(1), f(2)))
+        $is_surjective_fn(cart(A, B), P, binary_product_encode)
+    $is_bijective_fn(cart(A, B), P, binary_product_encode)
+    witness exist h fn(p cart(A, B)) P st {$is_bijective_fn(cart(A, B), P, h)} from binary_product_encode:
+        $is_bijective_fn(cart(A, B), P, binary_product_encode)
+    $has_equal_cardinality(cart(A, B), P)
 
 """
 Axiom 8.1 (Choice). Any family of non-empty sets has a choice function.
@@ -2160,7 +2643,18 @@ thm choice_gives_selector_for_pairwise_disjoint_family:
         c(alpha) $in fn_range(c)
         c(alpha) $in Y
         c(alpha) $in X(alpha)
-        witness exist! y U st {y $in Y, y $in X(alpha)} from c(alpha)
+        witness exist! y U st {y $in Y, y $in X(alpha)} from c(alpha):
+            claim:
+                ? forall y1, y2 U:
+                    y1 $in Y
+                    y1 $in X(alpha)
+                    y2 $in Y
+                    y2 $in X(alpha)
+                    =>:
+                        y1 = y2
+                y1 = c(alpha)
+                c(alpha) = y2
+                y1 = y2
     $is_single_intersection_selector(I, U, X, Y)
     witness exist Y0 power_set(U) st {$is_single_intersection_selector(I, U, X, Y0)} from Y
 

@@ -2,6 +2,7 @@
 
 trust local import chap9
 trust local import chap10
+trust local import chap5
 
 # 11.1 Partitions
 
@@ -450,6 +451,22 @@ have fn interval_length by exist!:
         by thm interval_length_value_unique(I, l1, l2)
     exist! l R st {$has_interval_length(I, l)}
 
+thm interval_length_nonnegative:
+    ? forall I power_set(R):
+        $is_bounded_interval(I)
+        =>:
+            interval_length(I) >= 0
+    # Source handling: interval length is the positive part of an endpoint
+    # difference, so it is non-negative in every endpoint convention.
+    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    by thm interval_endpoint_case_has_total_length(I, a, b)
+    $has_interval_length(I, max(b - a, 0))
+    $has_interval_length(I, interval_length(I))
+    by thm interval_length_value_unique(I, interval_length(I), max(b - a, 0))
+    interval_length(I) = max(b - a, 0)
+    max(b - a, 0) >= 0
+    interval_length(I) >= 0
+
 thm interval_endpoint_forms_are_bounded_intervals:
     ? forall a, b R:
         '[a, b] $in power_set(R)
@@ -781,11 +798,24 @@ thm one_piece_partition_of_bounded_interval:
         J $subset I
     claim:
         ? forall x I:
-            exist! J {I} st {J $in power_set(R), x $in J}
-        witness exist! J {I} st {J $in power_set(R), x $in J} from I:
+            exist J {I} st {J $in power_set(R), x $in J}
+        witness exist J {I} st {J $in power_set(R), x $in J} from I:
             I $in {I}
             I $in power_set(R)
             x $in I
+    claim:
+        ? forall x I, J1, J2 {I}:
+            J1 $in power_set(R)
+            J2 $in power_set(R)
+            x $in J1
+            x $in J2
+            =>:
+                J1 = J2
+        J1 = I
+        J2 = I
+        J1 = J2
+    forall x I:
+        exist! J {I} st {J $in power_set(R), x $in J}
     $is_partition_of_bounded_interval(I, {I})
 
 """
@@ -1356,16 +1386,152 @@ thm common_refinement_is_partition_and_finer:
             H $subset K
     $is_finer_partition_than(I, Rf, Qpart)
 
+thm intersection_image_of_two_partition_families_is_finite:
+    ? forall I power_set(R), P, Qpart finite_set:
+        $is_partition_of_bounded_interval(I, P)
+        $is_partition_of_bounded_interval(I, Qpart)
+        =>:
+            $is_finite_set(fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+    # Source handling: this constructs the finite family underlying Tao's
+    # common refinement, before proving that it covers I exactly once.
+    $is_partition_of_bounded_interval(I, P)
+    $is_partition_of_bounded_interval(I, Qpart)
+    forall p cart(P, Qpart):
+        p[1] $in P
+        p[2] $in Qpart
+        p[1] $in power_set(R)
+        p[2] $in power_set(R)
+        p[1] $subset R
+        intersect(p[1], p[2]) $subset p[1]
+        intersect(p[1], p[2]) $subset R
+        intersect(p[1], p[2]) $in power_set(R)
+    $is_finite_set(fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+
+thm intersection_image_of_two_partition_families_is_partition:
+    ? forall I power_set(R), P, Qpart finite_set:
+        $is_partition_of_bounded_interval(I, P)
+        $is_partition_of_bounded_interval(I, Qpart)
+        =>:
+            $is_partition_of_bounded_interval(I, fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+    # Source handling: each point lies in one piece of P and one piece of
+    # Qpart; their intersection gives the unique common-refinement piece.
+    $is_partition_of_bounded_interval(I, P)
+    $is_partition_of_bounded_interval(I, Qpart)
+    $is_bounded_interval(I)
+    claim:
+        ? forall H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+            H $in power_set(R)
+            $is_bounded_interval(H)
+            H $subset I
+        have by preimage p from H $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        p[1] $in P
+        p[2] $in Qpart
+        p[1] $in power_set(R)
+        p[2] $in power_set(R)
+        H = intersect(p[1], p[2])
+        $is_bounded_interval(p[1])
+        $is_bounded_interval(p[2])
+        by thm intersection_of_bounded_intervals_is_bounded_interval(p[1], p[2])
+        $is_bounded_interval(H)
+        intersect(p[1], p[2]) $subset p[1]
+        p[1] $subset I
+        H $subset p[1]
+        H $subset I
+        H $in power_set(R)
+    claim:
+        ? forall x I:
+            exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H}
+        obtain J from exist J P st {J $in power_set(R), x $in J}
+        obtain K from exist K Qpart st {K $in power_set(R), x $in K}
+        J $in power_set(R)
+        K $in power_set(R)
+        J $subset R
+        intersect(J, K) $subset J
+        intersect(J, K) $subset R
+        (J, K) $in cart(P, Qpart)
+        intersect(J, K) $in power_set(R)
+        fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) = intersect(J, K)
+        fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        intersect(J, K) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        witness exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H} from intersect(J, K):
+            intersect(J, K) $in power_set(R)
+            x $in J
+            x $in K
+            x $in intersect(J, K)
+    claim:
+        ? forall x I, H1, H2 fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+            H1 $in power_set(R)
+            H2 $in power_set(R)
+            x $in H1
+            x $in H2
+            =>:
+                H1 = H2
+        have by preimage p1 from H1 $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        have by preimage p2 from H2 $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        p1[1] $in P
+        p1[2] $in Qpart
+        p2[1] $in P
+        p2[2] $in Qpart
+        p1[1] $in power_set(R)
+        p1[2] $in power_set(R)
+        p2[1] $in power_set(R)
+        p2[2] $in power_set(R)
+        H1 = intersect(p1[1], p1[2])
+        H2 = intersect(p2[1], p2[2])
+        x $in intersect(p1[1], p1[2])
+        x $in intersect(p2[1], p2[2])
+        x $in p1[1]
+        x $in p1[2]
+        x $in p2[1]
+        x $in p2[2]
+        exist! J P st {J $in power_set(R), x $in J}
+        exist! K Qpart st {K $in power_set(R), x $in K}
+        p1[1] = p2[1]
+        p1[2] = p2[2]
+        H1 = intersect(p1[1], p1[2]) = intersect(p2[1], p2[2]) = H2
+    forall x I:
+        exist! H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H}
+    $is_partition_of_bounded_interval(I, fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+
 thm common_refinement_exists_for_partitions:
     ? forall I power_set(R), P, Qpart finite_set:
         $is_partition_of_bounded_interval(I, P)
         $is_partition_of_bounded_interval(I, Qpart)
         =>:
             exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)}
-    # Source handling: the intended witness is the finite set of all
-    # intersections `J intersect K` with `J in P` and `K in Qpart`.
-    # proof_debt: formalize the finite image/product construction of this set.
-    trust exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)}
+    # Source handling: the common refinement is the finite image of P times
+    # Qpart under intersection.  Its partition and unique-cover clauses are
+    # supplied by the preceding theorem.
+    $is_partition_of_bounded_interval(I, P)
+    $is_partition_of_bounded_interval(I, Qpart)
+    by thm intersection_image_of_two_partition_families_is_finite(I, P, Qpart)
+    witness exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)} from fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+        by thm intersection_image_of_two_partition_families_is_partition(I, P, Qpart)
+        claim:
+            ? forall H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+                exist J P, K Qpart st {J $in power_set(R), K $in power_set(R), H = intersect(J, K)}
+            have by preimage p from H $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+            p[1] $in P
+            p[2] $in Qpart
+            p[1] $in power_set(R)
+            p[2] $in power_set(R)
+            H = intersect(p[1], p[2])
+            witness exist J P, K Qpart st {J $in power_set(R), K $in power_set(R), H = intersect(J, K)} from p[1], p[2]:
+                p[1] $in power_set(R)
+                p[2] $in power_set(R)
+                H = intersect(p[1], p[2])
+        claim:
+            ? forall J P, K Qpart:
+                J $in power_set(R)
+                K $in power_set(R)
+                =>:
+                    exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H = intersect(J, K)}
+            (J, K) $in cart(P, Qpart)
+            fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) = intersect(J, K)
+            fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+            intersect(J, K) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+            witness exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H = intersect(J, K)} from intersect(J, K):
+                intersect(J, K) = intersect(J, K)
 
 
 # 11.2 Piecewise constant functions
@@ -2083,6 +2249,62 @@ thm piecewise_constant_integral_piece_contribution_has_value:
     by thm piecewise_constant_integral_piece_contribution_unique(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f), t)
     piecewise_constant_integral_piece_contribution(I, J, f) = t
 
+thm piecewise_constant_integral_piece_contribution_add:
+    ? forall I, J power_set(R), f, g fn(x I) R, sf, sg R:
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, sf)
+        $has_piecewise_constant_integral_piece_contribution(I, J, g, sg)
+        =>:
+            $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)}, sf + sg)
+    # Source handling: on one partition piece, the rectangle for `f+g` is the
+    # sum of the two rectangles because the two constant values share the same
+    # interval length.
+    obtain cf from exist c R st {$has_constant_value_on_subset(I, J, f, c), sf = c * interval_length(J)}
+    obtain cg from exist c R st {$has_constant_value_on_subset(I, J, g, c), sg = c * interval_length(J)}
+    $is_bounded_interval(J)
+    $has_constant_value_on_subset(I, J, f, cf)
+    $has_constant_value_on_subset(I, J, g, cg)
+    sf = cf * interval_length(J)
+    sg = cg * interval_length(J)
+    claim:
+        ? $has_constant_value_on_subset(I, J, fn(x I) R {f(x) + g(x)}, cf + cg)
+        J $subset I
+        forall x J:
+            x $in I
+            f(x) = cf
+            g(x) = cg
+            fn(x I) R {f(x) + g(x)}(x) = f(x) + g(x)
+            fn(x I) R {f(x) + g(x)}(x) = cf + cg
+    sf + sg = cf * interval_length(J) + cg * interval_length(J) = (cf + cg) * interval_length(J)
+    witness exist c R st {$has_constant_value_on_subset(I, J, fn(x I) R {f(x) + g(x)}, c), sf + sg = c * interval_length(J)} from cf + cg:
+        $has_constant_value_on_subset(I, J, fn(x I) R {f(x) + g(x)}, cf + cg)
+        sf + sg = (cf + cg) * interval_length(J)
+    $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)}, sf + sg)
+
+thm piecewise_constant_integral_piece_contribution_scalar_mul:
+    ? forall I, J power_set(R), f fn(x I) R, sf, c R:
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, sf)
+        =>:
+            $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)}, c * sf)
+    # Source handling: multiplying a constant rectangle by `c` multiplies its
+    # height and therefore its contribution by `c`.
+    obtain cf from exist c0 R st {$has_constant_value_on_subset(I, J, f, c0), sf = c0 * interval_length(J)}
+    $is_bounded_interval(J)
+    $has_constant_value_on_subset(I, J, f, cf)
+    sf = cf * interval_length(J)
+    claim:
+        ? $has_constant_value_on_subset(I, J, fn(x I) R {c * f(x)}, c * cf)
+        J $subset I
+        forall x J:
+            x $in I
+            f(x) = cf
+            fn(x I) R {c * f(x)}(x) = c * f(x)
+            fn(x I) R {c * f(x)}(x) = c * cf
+    c * sf = c * (cf * interval_length(J)) = (c * cf) * interval_length(J)
+    witness exist c0 R st {$has_constant_value_on_subset(I, J, fn(x I) R {c * f(x)}, c0), c * sf = c0 * interval_length(J)} from c * cf:
+        $has_constant_value_on_subset(I, J, fn(x I) R {c * f(x)}, c * cf)
+        c * sf = (c * cf) * interval_length(J)
+    $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)}, c * sf)
+
 thm piecewise_constant_partition_is_set_of_real_subsets:
     ? forall I power_set(R), P finite_set, f fn(x I) R:
         $is_piecewise_constant_with_partition(I, P, f)
@@ -2278,10 +2500,9 @@ thm example_11_2_12_displayed_partition_piece_clauses:
         J $subset '[1, 4]
     # Source handling: this is the listed-partition case split in Example
     # 11.2.12.
-    # proof_debt: expand membership in this named three-cell finite set.  The
-    # current finite-set enumeration tactic accepts literal lists but does not
-    # enumerate a local finite-set alias.
-    trust J = '[1, 3) or J = {3} or J = '(3, 4]
+    by enumerate finite_set:
+        ? forall K example_11_2_12_partition_set:
+            K = '[1, 3) or K = {3} or K = '(3, 4]
     by cases:
         ? J $in power_set(R)
         ? $is_bounded_interval(J)
@@ -2336,9 +2557,9 @@ thm example_11_2_12_refined_partition_piece_clauses:
         J $subset '[1, 4]
     # Source handling: this is the refined-partition case split in Example
     # 11.2.12.
-    # proof_debt: this is the five-cell version of the named finite-set
-    # enumeration bridge used immediately above.
-    trust J = '[1, 2) or J = '[2, 3) or J = {3} or J = '(3, 4] or J = {}
+    by enumerate finite_set:
+        ? forall K example_11_2_12_refined_partition_set:
+            K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
     by cases:
         ? J $in power_set(R)
         ? $is_bounded_interval(J)
@@ -2423,87 +2644,351 @@ thm example_11_2_12_refined_partition_piece_clauses:
 thm example_11_2_12_displayed_partition_unique_cover:
     ? forall x '[1, 4]:
         exist! J example_11_2_12_partition_set st {J $in power_set(R), x $in J}
+    claim:
+        ? forall y '[1, 4]:
+            exist J example_11_2_12_partition_set st {J $in power_set(R), y $in J}
+        by cases:
+            ? exist J example_11_2_12_partition_set st {J $in power_set(R), y $in J}
+            case y < 3:
+                claim:
+                    ? '[1, 3) $in example_11_2_12_partition_set
+                    '[1, 3) $in {'[1, 3), {3}, '(3, 4]}
+                    example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
+                    '[1, 3) $in example_11_2_12_partition_set
+                witness exist J example_11_2_12_partition_set st {J $in power_set(R), y $in J} from '[1, 3):
+                    '[1, 3) $in example_11_2_12_partition_set
+                    '[1, 3) $in power_set(R)
+                    y $in '[1, 3)
+            case y = 3:
+                claim:
+                    ? {3} $in example_11_2_12_partition_set
+                    {3} $in {'[1, 3), {3}, '(3, 4]}
+                    example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
+                    {3} $in example_11_2_12_partition_set
+                witness exist J example_11_2_12_partition_set st {J $in power_set(R), y $in J} from {3}:
+                    {3} $in example_11_2_12_partition_set
+                    {3} $in power_set(R)
+                    y $in {3}
+            case y > 3:
+                claim:
+                    ? '(3, 4] $in example_11_2_12_partition_set
+                    '(3, 4] $in {'[1, 3), {3}, '(3, 4]}
+                    example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
+                    '(3, 4] $in example_11_2_12_partition_set
+                witness exist J example_11_2_12_partition_set st {J $in power_set(R), y $in J} from '(3, 4]:
+                    '(3, 4] $in example_11_2_12_partition_set
+                    '(3, 4] $in power_set(R)
+                    y $in '(3, 4]
+    claim:
+        ? forall y '[1, 4], J1, J2 example_11_2_12_partition_set:
+            J1 $in power_set(R)
+            J2 $in power_set(R)
+            y $in J1
+            y $in J2
+            =>:
+                J1 = J2
+        by enumerate finite_set:
+            ? forall J example_11_2_12_partition_set:
+                J = '[1, 3) or J = {3} or J = '(3, 4]
+        by cases:
+            ? J1 = J2
+            case J1 = '[1, 3):
+                by cases:
+                    ? J1 = J2
+                    case J2 = '[1, 3):
+                        J1 = '[1, 3)
+                        J2 = '[1, 3)
+                        J1 = J2
+                    case J2 = {3}:
+                        y $in J1
+                        y $in J2
+                        y < 3
+                        y = 3
+                        impossible 3 < 3
+                    case J2 = '(3, 4]:
+                        y $in J1
+                        y $in J2
+                        y < 3
+                        y > 3
+                        impossible 3 < 3
+            case J1 = {3}:
+                by cases:
+                    ? J1 = J2
+                    case J2 = '[1, 3):
+                        y $in J1
+                        y $in J2
+                        y = 3
+                        y < 3
+                        impossible 3 < 3
+                    case J2 = {3}:
+                        J1 = {3}
+                        J2 = {3}
+                        J1 = J2
+                    case J2 = '(3, 4]:
+                        y $in J1
+                        y $in J2
+                        y = 3
+                        y > 3
+                        impossible 3 < 3
+            case J1 = '(3, 4]:
+                by cases:
+                    ? J1 = J2
+                    case J2 = '[1, 3):
+                        y $in J1
+                        y $in J2
+                        y > 3
+                        y < 3
+                        impossible 3 < 3
+                    case J2 = {3}:
+                        y $in J1
+                        y $in J2
+                        y > 3
+                        y = 3
+                        impossible 3 < 3
+                    case J2 = '(3, 4]:
+                        J1 = '(3, 4]
+                        J2 = '(3, 4]
+                        J1 = J2
+    forall y '[1, 4]:
+        exist! J example_11_2_12_partition_set st {J $in power_set(R), y $in J}
+
+thm example_11_2_12_refined_partition_member_below_two:
+    ? forall x '[1, 4], J example_11_2_12_refined_partition_set:
+        x < 2
+        J $in power_set(R)
+        x $in J
+        =>:
+            J = '[1, 2)
+    by enumerate finite_set:
+        ? forall K example_11_2_12_refined_partition_set:
+            K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
     by cases:
-        ? exist! J example_11_2_12_partition_set st {J $in power_set(R), x $in J}
-        case x < 3:
-            claim:
-                ? '[1, 3) $in example_11_2_12_partition_set
-                '[1, 3) $in {'[1, 3), {3}, '(3, 4]}
-                example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
-                '[1, 3) $in example_11_2_12_partition_set
-            witness exist! J example_11_2_12_partition_set st {J $in power_set(R), x $in J} from '[1, 3):
-                '[1, 3) $in example_11_2_12_partition_set
-                '[1, 3) $in power_set(R)
-                x $in '[1, 3)
-        case x = 3:
-            claim:
-                ? {3} $in example_11_2_12_partition_set
-                {3} $in {'[1, 3), {3}, '(3, 4]}
-                example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
-                {3} $in example_11_2_12_partition_set
-            witness exist! J example_11_2_12_partition_set st {J $in power_set(R), x $in J} from {3}:
-                {3} $in example_11_2_12_partition_set
-                {3} $in power_set(R)
-                x $in {3}
-        case x > 3:
-            claim:
-                ? '(3, 4] $in example_11_2_12_partition_set
-                '(3, 4] $in {'[1, 3), {3}, '(3, 4]}
-                example_11_2_12_partition_set = {'[1, 3), {3}, '(3, 4]}
-                '(3, 4] $in example_11_2_12_partition_set
-            witness exist! J example_11_2_12_partition_set st {J $in power_set(R), x $in J} from '(3, 4]:
-                '(3, 4] $in example_11_2_12_partition_set
-                '(3, 4] $in power_set(R)
-                x $in '(3, 4]
+        ? J = '[1, 2)
+        case J = '[1, 2):
+            J = '[1, 2)
+        case J = '[2, 3):
+            x $in J
+            x >= 2
+            x < 2
+            by thm a_le_lt_c(2, x, 2)
+            impossible 2 < 2
+        case J = {3}:
+            x $in J
+            x = 3
+            x < 2
+            impossible 3 < 2
+        case J = '(3, 4]:
+            x $in J
+            x > 3
+            x < 2
+            impossible 3 < 2
+        case J = {}:
+            x $in J
+            x $in {}
+            not $is_nonempty_set({})
+            witness $is_nonempty_set({}) from x
+            impossible $is_nonempty_set({})
+
+thm example_11_2_12_refined_partition_member_between_two_and_three:
+    ? forall x '[1, 4], J example_11_2_12_refined_partition_set:
+        x >= 2
+        x < 3
+        J $in power_set(R)
+        x $in J
+        =>:
+            J = '[2, 3)
+    by enumerate finite_set:
+        ? forall K example_11_2_12_refined_partition_set:
+            K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
+    by cases:
+        ? J = '[2, 3)
+        case J = '[1, 2):
+            x $in J
+            x < 2
+            x >= 2
+            by thm a_le_lt_c(2, x, 2)
+            impossible 2 < 2
+        case J = '[2, 3):
+            J = '[2, 3)
+        case J = {3}:
+            x $in J
+            x = 3
+            x < 3
+            impossible 3 < 3
+        case J = '(3, 4]:
+            x $in J
+            x > 3
+            x < 3
+            impossible 3 < 3
+        case J = {}:
+            x $in J
+            x $in {}
+            not $is_nonempty_set({})
+            witness $is_nonempty_set({}) from x
+            impossible $is_nonempty_set({})
+
+thm example_11_2_12_refined_partition_member_at_three:
+    ? forall x '[1, 4], J example_11_2_12_refined_partition_set:
+        x = 3
+        J $in power_set(R)
+        x $in J
+        =>:
+            J = {3}
+    by enumerate finite_set:
+        ? forall K example_11_2_12_refined_partition_set:
+            K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
+    by cases:
+        ? J = {3}
+        case J = '[1, 2):
+            x $in J
+            x < 2
+            x = 3
+            impossible 3 < 2
+        case J = '[2, 3):
+            x $in J
+            x < 3
+            x = 3
+            impossible 3 < 3
+        case J = {3}:
+            J = {3}
+        case J = '(3, 4]:
+            x $in J
+            x > 3
+            x = 3
+            impossible 3 < 3
+        case J = {}:
+            x $in J
+            x $in {}
+            not $is_nonempty_set({})
+            witness $is_nonempty_set({}) from x
+            impossible $is_nonempty_set({})
+
+thm example_11_2_12_refined_partition_member_above_three:
+    ? forall x '[1, 4], J example_11_2_12_refined_partition_set:
+        x > 3
+        J $in power_set(R)
+        x $in J
+        =>:
+            J = '(3, 4]
+    by enumerate finite_set:
+        ? forall K example_11_2_12_refined_partition_set:
+            K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
+    by cases:
+        ? J = '(3, 4]
+        case J = '[1, 2):
+            x $in J
+            x < 2
+            x > 3
+            impossible 3 < 2
+        case J = '[2, 3):
+            x $in J
+            x < 3
+            x > 3
+            impossible 3 < 3
+        case J = {3}:
+            x $in J
+            x = 3
+            x > 3
+            impossible 3 < 3
+        case J = '(3, 4]:
+            J = '(3, 4]
+        case J = {}:
+            x $in J
+            x $in {}
+            not $is_nonempty_set({})
+            witness $is_nonempty_set({}) from x
+            impossible $is_nonempty_set({})
 
 thm example_11_2_12_refined_partition_unique_cover:
     ? forall x '[1, 4]:
         exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J}
-    by cases:
-        ? exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J}
-        case x < 2:
-            claim:
-                ? '[1, 2) $in example_11_2_12_refined_partition_set
-                '[1, 2) $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                '[1, 2) $in example_11_2_12_refined_partition_set
-            witness exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J} from '[1, 2):
-                '[1, 2) $in example_11_2_12_refined_partition_set
-                '[1, 2) $in power_set(R)
-                x $in '[1, 2)
-        case x >= 2:
-            by cases:
-                ? exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J}
-                case x < 3:
-                    claim:
-                        ? '[2, 3) $in example_11_2_12_refined_partition_set
-                        '[2, 3) $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        '[2, 3) $in example_11_2_12_refined_partition_set
-                    witness exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J} from '[2, 3):
-                        '[2, 3) $in example_11_2_12_refined_partition_set
-                        '[2, 3) $in power_set(R)
-                        x $in '[2, 3)
-                case x = 3:
-                    claim:
-                        ? {3} $in example_11_2_12_refined_partition_set
-                        {3} $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        {3} $in example_11_2_12_refined_partition_set
-                    witness exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J} from {3}:
-                        {3} $in example_11_2_12_refined_partition_set
-                        {3} $in power_set(R)
-                        x $in {3}
-                case x > 3:
-                    claim:
-                        ? '(3, 4] $in example_11_2_12_refined_partition_set
-                        '(3, 4] $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
-                        '(3, 4] $in example_11_2_12_refined_partition_set
-                    witness exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), x $in J} from '(3, 4]:
-                        '(3, 4] $in example_11_2_12_refined_partition_set
-                        '(3, 4] $in power_set(R)
-                        x $in '(3, 4]
+    claim:
+        ? forall y '[1, 4]:
+            exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J}
+        by cases:
+            ? exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J}
+            case y < 2:
+                claim:
+                    ? '[1, 2) $in example_11_2_12_refined_partition_set
+                    '[1, 2) $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                    example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                    '[1, 2) $in example_11_2_12_refined_partition_set
+                witness exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J} from '[1, 2):
+                    '[1, 2) $in example_11_2_12_refined_partition_set
+                    '[1, 2) $in power_set(R)
+                    y $in '[1, 2)
+            case y >= 2:
+                by cases:
+                    ? exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J}
+                    case y < 3:
+                        claim:
+                            ? '[2, 3) $in example_11_2_12_refined_partition_set
+                            '[2, 3) $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            '[2, 3) $in example_11_2_12_refined_partition_set
+                        witness exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J} from '[2, 3):
+                            '[2, 3) $in example_11_2_12_refined_partition_set
+                            '[2, 3) $in power_set(R)
+                            y $in '[2, 3)
+                    case y = 3:
+                        claim:
+                            ? {3} $in example_11_2_12_refined_partition_set
+                            {3} $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            {3} $in example_11_2_12_refined_partition_set
+                        witness exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J} from {3}:
+                            {3} $in example_11_2_12_refined_partition_set
+                            {3} $in power_set(R)
+                            y $in {3}
+                    case y > 3:
+                        claim:
+                            ? '(3, 4] $in example_11_2_12_refined_partition_set
+                            '(3, 4] $in {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            example_11_2_12_refined_partition_set = {'[1, 2), '[2, 3), {3}, '(3, 4], {}}
+                            '(3, 4] $in example_11_2_12_refined_partition_set
+                        witness exist J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J} from '(3, 4]:
+                            '(3, 4] $in example_11_2_12_refined_partition_set
+                            '(3, 4] $in power_set(R)
+                            y $in '(3, 4]
+    claim:
+        ? forall y '[1, 4], J1, J2 example_11_2_12_refined_partition_set:
+            J1 $in power_set(R)
+            J2 $in power_set(R)
+            y $in J1
+            y $in J2
+            =>:
+                J1 = J2
+        by cases:
+            ? J1 = J2
+            case y < 2:
+                by thm example_11_2_12_refined_partition_member_below_two(y, J1)
+                by thm example_11_2_12_refined_partition_member_below_two(y, J2)
+                J1 = '[1, 2)
+                J2 = '[1, 2)
+                J1 = J2
+            case y >= 2:
+                by cases:
+                    ? J1 = J2
+                    case y < 3:
+                        by thm example_11_2_12_refined_partition_member_between_two_and_three(y, J1)
+                        by thm example_11_2_12_refined_partition_member_between_two_and_three(y, J2)
+                        J1 = '[2, 3)
+                        J2 = '[2, 3)
+                        J1 = J2
+                    case y = 3:
+                        by thm example_11_2_12_refined_partition_member_at_three(y, J1)
+                        by thm example_11_2_12_refined_partition_member_at_three(y, J2)
+                        J1 = {3}
+                        J2 = {3}
+                        J1 = J2
+                    case y > 3:
+                        by thm example_11_2_12_refined_partition_member_above_three(y, J1)
+                        by thm example_11_2_12_refined_partition_member_above_three(y, J2)
+                        J1 = '(3, 4]
+                        J2 = '(3, 4]
+                        J1 = J2
+    forall y '[1, 4]:
+        exist! J example_11_2_12_refined_partition_set st {J $in power_set(R), y $in J}
 
 thm example_11_2_12_displayed_partition_piecewise_constant:
     ? forall f fn(x '[1, 4]) R:
@@ -2531,8 +3016,9 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
             $is_constant_on_subset('[1, 4], J, f)
         # Source handling: this is the three-piece case split in Example
         # 11.2.12.
-        # proof_debt: enumerate the three members of the named partition set.
-        trust J = '[1, 3) or J = {3} or J = '(3, 4]
+        by enumerate finite_set:
+            ? forall K example_11_2_12_partition_set:
+                K = '[1, 3) or K = {3} or K = '(3, 4]
         by cases:
             ? $is_constant_on_subset('[1, 4], J, f)
             case J = '[1, 3):
@@ -2627,9 +3113,9 @@ thm example_11_2_12_refined_partition_piecewise_constant:
             $is_constant_on_subset('[1, 4], J, f)
         # Source handling: this is the refined five-piece case split in
         # Example 11.2.12.
-        # proof_debt: enumerate the five members of the named refined
-        # partition set before splitting into the displayed cases.
-        trust J = '[1, 2) or J = '[2, 3) or J = {3} or J = '(3, 4] or J = {}
+        by enumerate finite_set:
+            ? forall K example_11_2_12_refined_partition_set:
+                K = '[1, 2) or K = '[2, 3) or K = {3} or K = '(3, 4] or K = {}
         by cases:
             ? $is_constant_on_subset('[1, 4], J, f)
             case J = '[1, 2):
@@ -2992,13 +3478,13 @@ thm example_11_2_12_piecewise_constant_integral:
     by thm piecewise_constant_integral_piece_contribution_has_value('[1, 4], '[2, 3), f, 2)
     by thm piecewise_constant_integral_piece_contribution_has_value('[1, 4], {}, f, 0)
     piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f) = finite_set_sum(example_11_2_12_partition_set, fn(J example_11_2_12_partition_set) R {piecewise_constant_integral_piece_contribution('[1, 4], J, f)})
-    # Source handling: Tao's displayed rectangles in Example 11.2.12 have
-    # the same total before and after refinement.
-    # proof_debt: expand the two concrete finite sums over the displayed sets.
-    # The piece contribution values have already been checked above.
-    trust:
-        piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f) = 10
-        piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_refined_partition_set, f) = 10
+    finite_set_sum(example_11_2_12_partition_set, fn(J example_11_2_12_partition_set) R {piecewise_constant_integral_piece_contribution('[1, 4], J, f)}) = 4 + 0 + 6
+    4 + 0 + 6 = 10
+    piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f) = 10
+    piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_refined_partition_set, f) = finite_set_sum(example_11_2_12_refined_partition_set, fn(J example_11_2_12_refined_partition_set) R {piecewise_constant_integral_piece_contribution('[1, 4], J, f)})
+    finite_set_sum(example_11_2_12_refined_partition_set, fn(J example_11_2_12_refined_partition_set) R {piecewise_constant_integral_piece_contribution('[1, 4], J, f)}) = 2 + 2 + 0 + 6 + 0
+    2 + 2 + 0 + 6 + 0 = 10
+    piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_refined_partition_set, f) = 10
     $has_piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_partition_set, f, 10)
     $has_piecewise_constant_integral_with_partition('[1, 4], example_11_2_12_refined_partition_set, f, 10)
 
@@ -3021,6 +3507,27 @@ thm piecewise_constant_integral_independent_of_partition:
     # length.
     # proof_debt: compare both sums with the common-refinement sum.
     trust sP = sQ
+
+thm piecewise_constant_integral_transports_to_finer_partition:
+    ? forall I power_set(R), Pcoarse, Pfine finite_set, f fn(x I) R, s R:
+        $has_piecewise_constant_integral_with_partition(I, Pcoarse, f, s)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        =>:
+            $has_piecewise_constant_integral_with_partition(I, Pfine, f, s)
+    # Source handling: refinement preserves the finite rectangle sum; this
+    # invokes Proposition 11.2.13 while its finite-additivity proof remains
+    # explicit debt there.
+    $is_piecewise_constant_with_partition(I, Pcoarse, f)
+    $is_partition_of_bounded_interval(I, Pfine)
+    by thm piecewise_constant_refines(I, Pcoarse, Pfine, f)
+    $is_piecewise_constant_with_partition(I, Pfine, f)
+    by thm piecewise_constant_partition_is_set_of_real_subsets(I, Pfine, f)
+    by thm piecewise_constant_integral_with_partition_has_value(I, Pfine, f)
+    have sfine R = piecewise_constant_integral_with_partition(I, Pfine, f)
+    $has_piecewise_constant_integral_with_partition(I, Pfine, f, sfine)
+    by thm piecewise_constant_integral_independent_of_partition(I, f, Pcoarse, Pfine, s, sfine)
+    s = sfine
+    $has_piecewise_constant_integral_with_partition(I, Pfine, f, s)
 
 """
 Definition 11.2.14 (Piecewise constant integral II).  The partition-free
@@ -3074,6 +3581,222 @@ prop is_nonnegative_on(X power_set(R), f fn(x X) R):
     forall x X:
         f(x) >= 0
 
+thm piecewise_constant_integral_piece_contribution_nonnegative:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R, t R:
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, t)
+        $is_nonnegative_on(I, f)
+        =>:
+            t >= 0
+    # Source handling: a non-empty piece has a non-negative constant height
+    # and non-negative length; an empty piece has contribution zero.
+    $is_bounded_interval(J)
+    obtain c from exist c R st {$has_constant_value_on_subset(I, J, f, c), t = c * interval_length(J)}
+    J $subset I
+    $has_constant_value_on_subset(I, J, f, c)
+    t = c * interval_length(J)
+    by cases:
+        ? t >= 0
+        case $is_nonempty_set(J):
+            have x J
+            x $in I
+            f(x) >= 0
+            f(x) = c
+            c >= 0
+            by thm interval_length_nonnegative(J)
+            interval_length(J) >= 0
+            c * interval_length(J) >= 0
+            t >= 0
+        case not $is_nonempty_set(J):
+            by thm empty_bounded_interval_length_value(J)
+            interval_length(J) = 0
+            t = c * interval_length(J) = c * 0 = 0
+            t >= 0
+
+thm piecewise_constant_integral_piece_contribution_monotone:
+    ? forall I power_set(R), J power_set(R), f, g fn(x I) R, sf, sg R:
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, sf)
+        $has_piecewise_constant_integral_piece_contribution(I, J, g, sg)
+        forall x I:
+            g(x) <= f(x)
+        =>:
+            sg <= sf
+    # Source handling: on a non-empty piece, compare the two constant heights
+    # at one point and multiply by the non-negative interval length.  Empty
+    # pieces contribute zero to both sums.
+    $is_bounded_interval(J)
+    obtain cf from exist c R st {$has_constant_value_on_subset(I, J, f, c), sf = c * interval_length(J)}
+    obtain cg from exist c R st {$has_constant_value_on_subset(I, J, g, c), sg = c * interval_length(J)}
+    J $subset I
+    $has_constant_value_on_subset(I, J, f, cf)
+    $has_constant_value_on_subset(I, J, g, cg)
+    sf = cf * interval_length(J)
+    sg = cg * interval_length(J)
+    by cases:
+        ? sg <= sf
+        case $is_nonempty_set(J):
+            have x J
+            x $in I
+            g(x) <= f(x)
+            g(x) = cg
+            f(x) = cf
+            cg <= cf
+            by thm interval_length_nonnegative(J)
+            interval_length(J) >= 0
+            cg * interval_length(J) <= cf * interval_length(J)
+            sg = cg * interval_length(J) <= cf * interval_length(J) = sf
+        case not $is_nonempty_set(J):
+            by thm empty_bounded_interval_length_value(J)
+            interval_length(J) = 0
+            sg = cg * interval_length(J) = cg * 0 = 0
+            sf = cf * interval_length(J) = cf * 0 = 0
+            sg <= sf
+
+thm piecewise_constant_integral_with_same_partition_add:
+    ? forall I power_set(R), P finite_set, f, g fn(x I) R, sf, sg R:
+        $has_piecewise_constant_integral_with_partition(I, P, f, sf)
+        $has_piecewise_constant_integral_with_partition(I, P, g, sg)
+        =>:
+            $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) + g(x)}, sf + sg)
+    # Source handling: before taking a common refinement, linearity is the
+    # finite-sum identity on one partition shared by both functions.
+    P $in power_set(power_set(R))
+    $is_piecewise_constant_with_partition(I, P, f)
+    $is_piecewise_constant_with_partition(I, P, g)
+    sf = piecewise_constant_integral_with_partition(I, P, f)
+    sg = piecewise_constant_integral_with_partition(I, P, g)
+    by thm piecewise_constant_same_partition_add(I, P, f, g)
+    $is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) + g(x)})
+    claim:
+        ? forall J P:
+            piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)}) = piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        $is_constant_on_subset(I, J, g)
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        $has_piecewise_constant_integral_piece_contribution(I, J, g, piecewise_constant_integral_piece_contribution(I, J, g))
+        by thm piecewise_constant_integral_piece_contribution_add(I, J, f, g, piecewise_constant_integral_piece_contribution(I, J, f), piecewise_constant_integral_piece_contribution(I, J, g))
+        $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)}, piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g))
+        by thm piecewise_constant_integral_piece_contribution_has_value(I, J, fn(x I) R {f(x) + g(x)}, piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g))
+    claim:
+        ? $fn_eq(fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)})
+        forall K P:
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}(K) = piecewise_constant_integral_piece_contribution(I, K, fn(x I) R {f(x) + g(x)})
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)}(K) = piecewise_constant_integral_piece_contribution(I, K, f) + piecewise_constant_integral_piece_contribution(I, K, g)
+            piecewise_constant_integral_piece_contribution(I, K, fn(x I) R {f(x) + g(x)}) = piecewise_constant_integral_piece_contribution(I, K, f) + piecewise_constant_integral_piece_contribution(I, K, g)
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}(K) = fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)}(K)
+        $fn_eq(fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)})
+    fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})} = fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)}
+    piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) + g(x)}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})})
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)})
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f) + piecewise_constant_integral_piece_contribution(I, J, g)}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}) + finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, g)})
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    piecewise_constant_integral_with_partition(I, P, g) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, g)})
+    sf + sg = piecewise_constant_integral_with_partition(I, P, f) + piecewise_constant_integral_with_partition(I, P, g) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}) + finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, g)}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {f(x) + g(x)})}) = piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) + g(x)})
+    $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) + g(x)}, sf + sg)
+
+thm piecewise_constant_integral_with_same_partition_scalar_mul:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, sf, c R:
+        $has_piecewise_constant_integral_with_partition(I, P, f, sf)
+        =>:
+            $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {c * f(x)}, c * sf)
+    # Source handling: scalar multiplication factors through every rectangle
+    # contribution and then through the finite sum on the fixed partition.
+    P $in power_set(power_set(R))
+    $is_piecewise_constant_with_partition(I, P, f)
+    sf = piecewise_constant_integral_with_partition(I, P, f)
+    by thm piecewise_constant_same_partition_scalar_mul(I, P, f, c)
+    $is_piecewise_constant_with_partition(I, P, fn(x I) R {c * f(x)})
+    claim:
+        ? forall J P:
+            piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)}) = c * piecewise_constant_integral_piece_contribution(I, J, f)
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        by thm piecewise_constant_integral_piece_contribution_scalar_mul(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f), c)
+        $has_piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)}, c * piecewise_constant_integral_piece_contribution(I, J, f))
+        by thm piecewise_constant_integral_piece_contribution_has_value(I, J, fn(x I) R {c * f(x)}, c * piecewise_constant_integral_piece_contribution(I, J, f))
+    claim:
+        ? $fn_eq(fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}, fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)})
+        forall K P:
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}(K) = piecewise_constant_integral_piece_contribution(I, K, fn(x I) R {c * f(x)})
+            fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)}(K) = c * piecewise_constant_integral_piece_contribution(I, K, f)
+            piecewise_constant_integral_piece_contribution(I, K, fn(x I) R {c * f(x)}) = c * piecewise_constant_integral_piece_contribution(I, K, f)
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}(K) = fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)}(K)
+        $fn_eq(fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}, fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)})
+    fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})} = fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)}
+    piecewise_constant_integral_with_partition(I, P, fn(x I) R {c * f(x)}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})})
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}) = finite_set_sum(P, fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)})
+    finite_set_sum(P, fn(J P) R {c * piecewise_constant_integral_piece_contribution(I, J, f)}) = c * finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    c * sf = c * piecewise_constant_integral_with_partition(I, P, f) = c * finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, fn(x I) R {c * f(x)})}) = piecewise_constant_integral_with_partition(I, P, fn(x I) R {c * f(x)})
+    $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {c * f(x)}, c * sf)
+
+thm finite_set_sum_nonnegative_from_pointwise_nonnegative:
+    ? forall P finite_set, h fn(x P) R:
+        forall x P:
+            h(x) >= 0
+        =>:
+            finite_set_sum(P, h) >= 0
+    # Source handling: this is the finite-sum positivity step needed when a
+    # non-negative piecewise-constant function is evaluated on one partition.
+    claim:
+        ? forall x P:
+            fn(x P) R {0}(x) <= h(x)
+        fn(x P) R {0}(x) = 0
+        0 <= h(x)
+        fn(x P) R {0}(x) <= h(x)
+    finite_set_sum(P, fn(x P) R {0}) <= finite_set_sum(P, h)
+    finite_set_sum(P, fn(x P) R {0}) = 0
+    finite_set_sum(P, h) >= 0
+
+thm finite_set_sum_monotone_from_pointwise_order:
+    ? forall P finite_set, h, k fn(x P) R:
+        forall x P:
+            h(x) <= k(x)
+        =>:
+            finite_set_sum(P, h) <= finite_set_sum(P, k)
+    # Source handling: this packages finite-set sum monotonicity for the
+    # partition-contribution comparisons used by Theorem 11.2.16.
+    finite_set_sum(P, h) <= finite_set_sum(P, k)
+
+thm piecewise_constant_integral_with_same_partition_monotone:
+    ? forall I power_set(R), P finite_set, f, g fn(x I) R, sf, sg R:
+        $has_piecewise_constant_integral_with_partition(I, P, f, sf)
+        $has_piecewise_constant_integral_with_partition(I, P, g, sg)
+        forall x I:
+            g(x) <= f(x)
+        =>:
+            sg <= sf
+    # Source handling: compare the two rectangle contributions on each common
+    # partition piece, then use finite-set sum monotonicity.
+    P $in power_set(power_set(R))
+    $is_piecewise_constant_with_partition(I, P, f)
+    $is_piecewise_constant_with_partition(I, P, g)
+    sf = piecewise_constant_integral_with_partition(I, P, f)
+    sg = piecewise_constant_integral_with_partition(I, P, g)
+    claim:
+        ? forall J P:
+            piecewise_constant_integral_piece_contribution(I, J, g) <= piecewise_constant_integral_piece_contribution(I, J, f)
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        $is_constant_on_subset(I, J, g)
+        by thm piecewise_constant_integral_piece_contribution_has_value(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        by thm piecewise_constant_integral_piece_contribution_has_value(I, J, g, piecewise_constant_integral_piece_contribution(I, J, g))
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        $has_piecewise_constant_integral_piece_contribution(I, J, g, piecewise_constant_integral_piece_contribution(I, J, g))
+        by thm piecewise_constant_integral_piece_contribution_monotone(I, J, f, g, piecewise_constant_integral_piece_contribution(I, J, f), piecewise_constant_integral_piece_contribution(I, J, g))
+        piecewise_constant_integral_piece_contribution(I, J, g) <= piecewise_constant_integral_piece_contribution(I, J, f)
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, g)}) <= finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    piecewise_constant_integral_with_partition(I, P, g) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, g)})
+    sg <= sf
+
 thm piecewise_constant_integral_laws:
     ? forall I power_set(R), f, g fn(x I) R, sf, sg, c R:
         $has_piecewise_constant_integral(I, f, sf)
@@ -3082,13 +3805,93 @@ thm piecewise_constant_integral_laws:
             $has_piecewise_constant_integral(I, fn(x I) R {f(x) + g(x)}, sf + sg)
             $has_piecewise_constant_integral(I, fn(x I) R {c * f(x)}, c * sf)
             $has_piecewise_constant_integral(I, fn(x I) R {f(x) - g(x)}, sf - sg)
-    # Source handling: Tao proves these laws in Exercise 11.2.4, using earlier
-    # parts to prove later parts.
-    # proof_debt: pass to a common refinement and use finite-set sum algebra.
-    trust:
-        $has_piecewise_constant_integral(I, fn(x I) R {f(x) + g(x)}, sf + sg)
-        $has_piecewise_constant_integral(I, fn(x I) R {c * f(x)}, c * sf)
-        $has_piecewise_constant_integral(I, fn(x I) R {f(x) - g(x)}, sf - sg)
+    # Source handling: move both displayed partitions to their common
+    # refinement, apply the fixed-partition rectangle identities, and fold
+    # the resulting witness back into Definition 11.2.14.
+    obtain Pf from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f), $has_piecewise_constant_integral_with_partition(I, P, f, sf)}
+    obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g), $has_piecewise_constant_integral_with_partition(I, P, g, sg)}
+    $is_partition_of_bounded_interval(I, Pf)
+    $is_partition_of_bounded_interval(I, Pg)
+    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
+    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
+    $is_finer_partition_than(I, Rf, Pf)
+    $is_finer_partition_than(I, Rf, Pg)
+    by thm piecewise_constant_integral_transports_to_finer_partition(I, Pf, Rf, f, sf)
+    by thm piecewise_constant_integral_transports_to_finer_partition(I, Pg, Rf, g, sg)
+    $has_piecewise_constant_integral_with_partition(I, Rf, f, sf)
+    $has_piecewise_constant_integral_with_partition(I, Rf, g, sg)
+
+    by thm piecewise_constant_integral_with_same_partition_add(I, Rf, f, g, sf, sg)
+    $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) + g(x)}, sf + sg)
+    by thm piecewise_constant_with_partition_is_piecewise_constant(I, Rf, fn(x I) R {f(x) + g(x)})
+    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) + g(x)}), $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) + g(x)}, sf + sg)} from Rf:
+        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {f(x) + g(x)})
+        $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) + g(x)}, sf + sg)
+    $has_piecewise_constant_integral(I, fn(x I) R {f(x) + g(x)}, sf + sg)
+
+    by thm piecewise_constant_integral_with_same_partition_scalar_mul(I, Pf, f, sf, c)
+    $has_piecewise_constant_integral_with_partition(I, Pf, fn(x I) R {c * f(x)}, c * sf)
+    by thm piecewise_constant_with_partition_is_piecewise_constant(I, Pf, fn(x I) R {c * f(x)})
+    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {c * f(x)}), $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {c * f(x)}, c * sf)} from Pf:
+        $is_piecewise_constant_with_partition(I, Pf, fn(x I) R {c * f(x)})
+        $has_piecewise_constant_integral_with_partition(I, Pf, fn(x I) R {c * f(x)}, c * sf)
+    $has_piecewise_constant_integral(I, fn(x I) R {c * f(x)}, c * sf)
+
+    by thm piecewise_constant_integral_with_same_partition_scalar_mul(I, Rf, g, sg, -1)
+    $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {-1 * g(x)}, -1 * sg)
+    by thm piecewise_constant_integral_with_same_partition_add(I, Rf, f, fn(x I) R {-1 * g(x)}, sf, -1 * sg)
+    $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) + (-1 * g(x))}, sf + (-1 * sg))
+    claim:
+        ? fn(x I) R {f(x) - g(x)} = fn(x I) R {f(x) + (-1 * g(x))}
+        forall x I:
+            fn(x I) R {f(x) - g(x)}(x) = f(x) - g(x)
+            fn(x I) R {f(x) + (-1 * g(x))}(x) = f(x) + (-1 * g(x))
+            f(x) - g(x) = f(x) + (-1 * g(x))
+            fn(x I) R {f(x) - g(x)}(x) = fn(x I) R {f(x) + (-1 * g(x))}(x)
+        $fn_eq(fn(x I) R {f(x) - g(x)}, fn(x I) R {f(x) + (-1 * g(x))})
+        fn(x I) R {f(x) - g(x)} = fn(x I) R {f(x) + (-1 * g(x))}
+    $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) - g(x)}, sf + (-1 * sg))
+    sf + (-1 * sg) = sf - sg
+    $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) - g(x)}, sf - sg)
+    by thm piecewise_constant_with_partition_is_piecewise_constant(I, Rf, fn(x I) R {f(x) - g(x)})
+    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) - g(x)}), $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {f(x) - g(x)}, sf - sg)} from Rf:
+        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {f(x) - g(x)})
+        $has_piecewise_constant_integral_with_partition(I, Rf, fn(x I) R {f(x) - g(x)}, sf - sg)
+    $has_piecewise_constant_integral(I, fn(x I) R {f(x) - g(x)}, sf - sg)
+
+thm piecewise_constant_integral_nonnegative_law:
+    ? forall I power_set(R), f fn(x I) R, sf R:
+        $has_piecewise_constant_integral(I, f, sf)
+        $is_nonnegative_on(I, f)
+        =>:
+            sf >= 0
+    # Source handling: choose the partition defining `sf`; every rectangle
+    # contribution is non-negative, so its finite sum is non-negative.
+    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f), $has_piecewise_constant_integral_with_partition(I, P, f, sf)}
+    by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, f)
+    sf = piecewise_constant_integral_with_partition(I, P, f)
+    claim:
+        ? forall J P:
+            piecewise_constant_integral_piece_contribution(I, J, f) >= 0
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        by thm piecewise_constant_integral_piece_contribution_has_value(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        by thm piecewise_constant_integral_piece_contribution_nonnegative(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        piecewise_constant_integral_piece_contribution(I, J, f) >= 0
+    claim:
+        ? forall K P:
+            fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}(K) >= 0
+        fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}(K) = piecewise_constant_integral_piece_contribution(I, K, f)
+        piecewise_constant_integral_piece_contribution(I, K, f) >= 0
+        fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}(K) >= 0
+    by thm finite_set_sum_nonnegative_from_pointwise_nonnegative(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}) >= 0
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    sf >= 0
 
 thm piecewise_constant_integral_order_laws:
     ? forall I power_set(R), f, g fn(x I) R, sf, sg R:
@@ -3102,10 +3905,23 @@ thm piecewise_constant_integral_order_laws:
             sg <= sf
     # Source handling: these are the positivity and monotonicity clauses of
     # Theorem 11.2.16.
-    # proof_debt: reduce to non-negative finite sums over a common refinement.
-    trust:
-        sf >= 0
-        sg <= sf
+    by thm piecewise_constant_integral_nonnegative_law(I, f, sf)
+    sf >= 0
+    obtain Pf from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f), $has_piecewise_constant_integral_with_partition(I, P, f, sf)}
+    obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g), $has_piecewise_constant_integral_with_partition(I, P, g, sg)}
+    $is_partition_of_bounded_interval(I, Pf)
+    $is_partition_of_bounded_interval(I, Pg)
+    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
+    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
+    $is_finer_partition_than(I, Rf, Pf)
+    $is_finer_partition_than(I, Rf, Pg)
+    by thm piecewise_constant_integral_transports_to_finer_partition(I, Pf, Rf, f, sf)
+    by thm piecewise_constant_integral_transports_to_finer_partition(I, Pg, Rf, g, sg)
+    $has_piecewise_constant_integral_with_partition(I, Rf, f, sf)
+    $has_piecewise_constant_integral_with_partition(I, Rf, g, sg)
+    by thm piecewise_constant_integral_with_same_partition_monotone(I, Rf, f, g, sf, sg)
+    sg <= sf
 
 thm piecewise_constant_integral_of_constant:
     ? forall I power_set(R), c R:
@@ -3165,6 +3981,24 @@ prop is_infimum_of_real_set(E power_set(R), s R):
 prop has_infimum_of_real_set(E power_set(R)):
     exist s R st {$is_infimum_of_real_set(E, s)}
 
+prop is_upper_bound_of_real_set(E power_set(R), M R):
+    forall x E:
+        x <= M
+
+# Short source-facing spelling used in the order comparisons below.
+prop is_upper_bound(E power_set(R), M R):
+    $is_upper_bound_of_real_set(E, M)
+
+prop is_least_upper_bound(E power_set(R), s R):
+    $is_upper_bound_of_real_set(E, s)
+    forall M R:
+        $is_upper_bound_of_real_set(E, M)
+        =>:
+            s <= M
+
+prop has_least_upper_bound(E power_set(R)):
+    exist s R st {$is_least_upper_bound(E, s)}
+
 thm infimum_of_real_set_value_unique:
     ? forall E power_set(R), s1, s2 R:
         $is_infimum_of_real_set(E, s1)
@@ -3183,6 +4017,26 @@ thm infimum_of_real_set_value_unique:
         =>:
             M <= s2
     s1 <= s2
+    s1 = s2
+
+thm least_upper_bound_unique:
+    ? forall E power_set(R), s1, s2 R:
+        $is_least_upper_bound(E, s1)
+        $is_least_upper_bound(E, s2)
+        =>:
+            s1 = s2
+    $is_upper_bound_of_real_set(E, s1)
+    $is_upper_bound_of_real_set(E, s2)
+    forall M R:
+        $is_upper_bound_of_real_set(E, M)
+        =>:
+            s1 <= M
+    s1 <= s2
+    forall M R:
+        $is_upper_bound_of_real_set(E, M)
+        =>:
+            s2 <= M
+    s2 <= s1
     s1 = s2
 
 """
@@ -3304,6 +4158,100 @@ thm piecewise_constant_minorant_integral_le_majorant_integral:
     sg - sh >= 0
     sh <= sg
 
+thm absolute_value_lower_bound:
+    ? forall u R:
+        0 - abs(u) <= u
+    by thm chap9::neg_abs_le_self(u)
+
+thm lower_riemann_integral_candidate_values_have_least_upper_bound:
+    ? forall I power_set(R), f fn(x I) R:
+        $is_bounded_interval(I)
+        $is_bounded_function_on(I, f)
+        =>:
+            $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+    # A bounded function has a constant majorant.  Every lower candidate is
+    # below that majorant's integral, so Chapter 5 completeness applies.
+    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    by thm constant_function_is_piecewise_constant(I, M)
+    by thm piecewise_constant_integral_of_constant(I, M)
+    claim:
+        ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
+        claim:
+            ? forall sh lower_riemann_integral_candidate_values(I, f):
+                sh <= M * interval_length(I)
+            by thm lower_riemann_integral_candidate_value_from_member(I, f, sh)
+            obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, sh)}
+            claim:
+                ? $majorizes_on(I, fn(x I) R {M}, f)
+                forall x I:
+                    f(x) <= abs(f(x))
+                    abs(f(x)) <= M
+                    f(x) <= M
+                    fn(x I) R {M}(x) = M
+                    fn(x I) R {M}(x) >= f(x)
+                $majorizes_on(I, fn(x I) R {M}, f)
+            by thm piecewise_constant_minorant_integral_le_majorant_integral(I, f, fn(x I) R {M}, h, M * interval_length(I), sh)
+            sh <= M * interval_length(I)
+        $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
+    claim:
+        ? $is_nonempty_set(lower_riemann_integral_candidate_values(I, f))
+        claim:
+            ? $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
+            by thm constant_function_is_piecewise_constant(I, -M)
+            by thm piecewise_constant_integral_of_constant(I, -M)
+            witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, -M * interval_length(I))} from fn(x I) R {-M}:
+                $is_piecewise_constant_on(I, fn(x I) R {-M})
+                claim:
+                    ? $minorizes_on(I, fn(x I) R {-M}, f)
+                    forall x I:
+                        abs(f(x)) <= M
+                        0 - abs(f(x)) <= f(x)
+                        0 - M <= 0 - abs(f(x))
+                        0 - M = -M
+                        -M <= 0 - abs(f(x)) <= f(x)
+                        -M <= f(x)
+                        fn(x I) R {-M}(x) = -M
+                        fn(x I) R {-M}(x) <= f(x)
+                    $minorizes_on(I, fn(x I) R {-M}, f)
+                $minorizes_on(I, fn(x I) R {-M}, f)
+                $has_piecewise_constant_integral(I, fn(x I) R {-M}, -M * interval_length(I))
+            $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
+        by thm lower_riemann_integral_candidate_value_member(I, f, -M * interval_length(I))
+        -M * interval_length(I) $in lower_riemann_integral_candidate_values(I, f)
+        witness $is_nonempty_set(lower_riemann_integral_candidate_values(I, f)) from -M * interval_length(I)
+    claim:
+        ? $chap5::has_upper_bound(lower_riemann_integral_candidate_values(I, f))
+        witness exist B R st {$chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), B)} from M * interval_length(I):
+            $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
+            $chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
+        $chap5::has_upper_bound(lower_riemann_integral_candidate_values(I, f))
+    by thm chap5::least_upper_bound_existence(lower_riemann_integral_candidate_values(I, f))
+    $chap5::has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+    obtain L from exist L R st {$chap5::is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)}
+    claim:
+        ? $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+        claim:
+            ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
+            claim:
+                ? forall s lower_riemann_integral_candidate_values(I, f):
+                    s <= L
+                $chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+                s <= L
+            $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
+        claim:
+            ? forall B R:
+                $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), B)
+                =>:
+                    L <= B
+            $chap5::is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+            $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), B)
+            $chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), B)
+            L <= B
+        $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+    witness exist L0 R st {$is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L0)} from L:
+        $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+    $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+
 have fn upper_riemann_integral by exist!:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
@@ -3336,15 +4284,18 @@ have fn lower_riemann_integral by exist!:
         =>:
             exist! L R st {$has_lower_riemann_integral(I, f, L)}
     # Source handling: this packages the supremum definition of the lower
-    # Riemann integral.  Uniqueness is the supremum uniqueness argument from
-    # the completeness chapter.
-    # proof_debt: proving existence of the supremum from the local completeness
-    # interface remains outside this selector.
+    # Riemann integral.  Non-emptiness and the constant-majorant upper bound
+    # reduce existence to Chapter 5 completeness; uniqueness is local.
     claim:
         ? exist L R st {$has_lower_riemann_integral(I, f, L)}
-        # Source handling: this is the existence branch of Definition 11.3.2.
-        # proof_debt: local completeness must produce the Darboux supremum.
-        trust exist L R st {$has_lower_riemann_integral(I, f, L)}
+        by thm lower_riemann_integral_candidate_values_have_least_upper_bound(I, f)
+        obtain L from exist L R st {$is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)}
+        witness exist L0 R st {$has_lower_riemann_integral(I, f, L0)} from L:
+            $is_bounded_interval(I)
+            $is_bounded_function_on(I, f)
+            $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+            $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+        $has_lower_riemann_integral(I, f, L)
     claim:
         ? forall L1, L2 R:
             $has_lower_riemann_integral(I, f, L1)
@@ -3986,12 +4937,12 @@ thm riemann_integral_respects_pointwise_equality:
             $is_riemann_integrable_on(I, g)
             integral_on(I, g) = integral_on(I, f)
     # Source handling: Tao freely identifies functions that agree at every
-    # point of the interval.
-    # proof_debt: show the two functions have identical upper and lower
-    # Darboux candidate sets, hence identical integrability and integral value.
-    trust:
-        $is_riemann_integrable_on(I, g)
-        integral_on(I, g) = integral_on(I, f)
+    # point of the interval.  Litex first records this as equality of the
+    # function objects, then transports the Riemann predicates and selector.
+    $fn_eq(f, g)
+    f = g
+    $is_riemann_integrable_on(I, g)
+    integral_on(I, g) = integral_on(I, f)
 
 thm riemann_integral_subtraction_law:
     ? forall I power_set(R), f, g fn(x I) R:
@@ -4028,10 +4979,38 @@ thm riemann_integral_nonnegative_law:
         $is_nonnegative_on(I, f)
         =>:
             integral_on(I, f) >= 0
-    # Source handling: this is Theorem 11.4.1(d).
-    # proof_debt: compare non-negative lower approximations with the zero
-    # function, then pass to the common upper/lower Riemann integral.
-    trust integral_on(I, f) >= 0
+    # Source handling: this is Theorem 11.4.1(d).  The zero function is a
+    # piecewise-constant minorant, so its value zero lies below the lower
+    # integral.  Integrability identifies the lower and upper integrals.
+    by thm riemann_integrable_on_bounded_interval(I, f)
+    by thm riemann_integrable_on_bounded_function(I, f)
+    $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
+    by thm constant_function_is_piecewise_constant(I, 0)
+    by thm piecewise_constant_integral_of_constant(I, 0)
+    0 * interval_length(I) = 0
+    $has_piecewise_constant_integral(I, fn(x I) R {0}, 0)
+    claim:
+        ? $minorizes_on(I, fn(x I) R {0}, f)
+        forall x I:
+            fn(x I) R {0}(x) = 0
+            f(x) >= 0
+            fn(x I) R {0}(x) <= f(x)
+        $minorizes_on(I, fn(x I) R {0}, f)
+    claim:
+        ? $is_lower_riemann_integral_candidate_value(I, f, 0)
+        witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, 0)} from fn(x I) R {0}:
+            $is_piecewise_constant_on(I, fn(x I) R {0})
+            $minorizes_on(I, fn(x I) R {0}, f)
+            $has_piecewise_constant_integral(I, fn(x I) R {0}, 0)
+        $is_lower_riemann_integral_candidate_value(I, f, 0)
+    by thm lower_riemann_integral_candidate_value_le_integral(I, f, lower_riemann_integral(I, f), 0)
+    0 <= lower_riemann_integral(I, f)
+    by thm riemann_integrable_upper_eq_lower(I, f)
+    upper_riemann_integral(I, f) = lower_riemann_integral(I, f)
+    0 <= upper_riemann_integral(I, f)
+    by thm integral_on_has_riemann_integral(I, f)
+    integral_on(I, f) = upper_riemann_integral(I, f)
+    integral_on(I, f) >= 0
 
 thm riemann_integral_monotone_law:
     ? forall I power_set(R), f, g fn(x I) R:
@@ -4725,11 +5704,62 @@ thm example_11_5_5_not_continuous_on_closed_interval:
     ? forall:
         not $is_continuous_on('[1, 3], example_11_5_5_function)
     # Source handling: the left-hand values approach `4` at `2`, while the
-    # function value is `7`, so the full-domain function is discontinuous at
-    # the middle point.
-    # proof_debt: formalize the one-sided approach from `[1,2)` and contradict
-    # the epsilon condition at `2`.
-    trust not $is_continuous_on('[1, 3], example_11_5_5_function)
+    # function value is `7`.  Given the continuity radius `delta`, take a
+    # point `2 - min(delta / 2, 1 / 2)` in the left-hand piece.  Its value
+    # stays at least `3` away from `7`, contradicting epsilon `1`.
+    by contra:
+        ? not $is_continuous_on('[1, 3], example_11_5_5_function)
+        $is_continuous_on('[1, 3], example_11_5_5_function)
+        2 $in '[1, 3]
+        $is_continuous_at('[1, 3], example_11_5_5_function, 2)
+        example_11_5_5_function(2) = 7
+        $has_function_limit('[1, 3], example_11_5_5_function, 2, 7)
+        1 $in R_pos
+        $is_locally_epsilon_close_to('[1, 3], example_11_5_5_function, 2, 7, 1)
+        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to('[1, 3], example_11_5_5_function, 2, 7, 1, delta)}
+        have h R_pos = min(delta / 2, 1 / 2)
+        min(delta / 2, 1 / 2) <= 1 / 2
+        h = min(delta / 2, 1 / 2)
+        h <= 1 / 2
+        -1 * h >= -1 * (1 / 2)
+        2 + (-1 * h) >= 2 + (-1 * (1 / 2))
+        2 - h = 2 + (-1 * h)
+        2 + (-1 * (1 / 2)) = 3 / 2
+        2 - h >= 3 / 2
+        2 - h >= 1
+        2 - h <= 2
+        2 - h <= 3
+        2 - h $in '[1, 3]
+        min(delta / 2, 1 / 2) <= delta / 2
+        h <= delta / 2
+        delta / 2 < delta
+        by thm a_le_lt_c(h, delta / 2, delta)
+        h < delta
+        (2 - h) - 2 = -h
+        abs((2 - h) - 2) = abs(-h)
+        abs(-h) = abs(h)
+        abs(h) = h
+        abs(-h) = h
+        abs((2 - h) - 2) = h
+        abs((2 - h) - 2) < delta
+        abs(example_11_5_5_function(2 - h) - 7) <= 1
+        h > 0
+        2 - h < 2
+        example_11_5_5_function(2 - h) = (2 - h)^2
+        abs(example_11_5_5_function(2 - h) - 7) = abs((2 - h)^2 - 7)
+        (2 - h)^2 <= 2^2
+        2^2 = 4
+        (2 - h)^2 <= 4
+        (2 - h)^2 - 7 <= 4 - 7
+        (2 - h)^2 - 7 <= -3
+        -1 * ((2 - h)^2 - 7) >= -1 * (-3)
+        -1 * (-3) = 3
+        -((2 - h)^2 - 7) = -1 * ((2 - h)^2 - 7)
+        -((2 - h)^2 - 7) >= 3
+        abs((2 - h)^2 - 7) = -((2 - h)^2 - 7)
+        abs((2 - h)^2 - 7) >= 3
+        3 <= 1
+        impossible 3 <= 1
 
 thm example_11_5_5_partition_pieces_are_distinct:
     ? forall:
@@ -4771,8 +5801,9 @@ thm example_11_5_5_partition_piece_clauses:
         J $subset '[1, 3]
     # Source handling: this is the displayed three-piece partition in Example
     # 11.5.5.
-    # proof_debt: enumerate the members of this named three-cell partition.
-    trust J = '[1, 2) or J = {2} or J = '(2, 3]
+    by enumerate finite_set:
+        ? forall K example_11_5_5_partition_set:
+            K = '[1, 2) or K = {2} or K = '(2, 3]
     by cases:
         ? J $in power_set(R)
         ? $is_bounded_interval(J)
@@ -4820,41 +5851,128 @@ thm example_11_5_5_partition_piece_clauses:
                     x $in '[1, 3]
                 J $subset '[1, 3]
 
+thm example_11_5_5_partition_pieces_have_unique_membership:
+    ? forall x '[1, 3], J1, J2 example_11_5_5_partition_set:
+        J1 $in power_set(R)
+        J2 $in power_set(R)
+        x $in J1
+        x $in J2
+        =>:
+            J1 = J2
+    # Enumerate the three displayed pieces and prove their pointwise
+    # disjointness explicitly instead.
+    by enumerate finite_set:
+        ? forall J example_11_5_5_partition_set:
+            J = '[1, 2) or J = {2} or J = '(2, 3]
+    by cases:
+        ? J1 = J2
+        case J1 = '[1, 2):
+            by cases:
+                ? J1 = J2
+                case J2 = '[1, 2):
+                    J1 = '[1, 2)
+                    J2 = '[1, 2)
+                    J1 = J2
+                case J2 = {2}:
+                    x $in J1
+                    x $in J2
+                    x < 2
+                    x = 2
+                    impossible 2 < 2
+                case J2 = '(2, 3]:
+                    x $in J1
+                    x $in J2
+                    x < 2
+                    x > 2
+                    impossible 2 < 2
+        case J1 = {2}:
+            by cases:
+                ? J1 = J2
+                case J2 = '[1, 2):
+                    x $in J1
+                    x $in J2
+                    x = 2
+                    x < 2
+                    impossible 2 < 2
+                case J2 = {2}:
+                    J1 = {2}
+                    J2 = {2}
+                    J1 = J2
+                case J2 = '(2, 3]:
+                    x $in J1
+                    x $in J2
+                    x = 2
+                    x > 2
+                    impossible 2 < 2
+        case J1 = '(2, 3]:
+            by cases:
+                ? J1 = J2
+                case J2 = '[1, 2):
+                    x $in J1
+                    x $in J2
+                    x > 2
+                    x < 2
+                    impossible 2 < 2
+                case J2 = {2}:
+                    x $in J1
+                    x $in J2
+                    x > 2
+                    x = 2
+                    impossible 2 < 2
+                case J2 = '(2, 3]:
+                    J1 = '(2, 3]
+                    J2 = '(2, 3]
+                    J1 = J2
+
 thm example_11_5_5_partition_unique_cover:
     ? forall x '[1, 3]:
         exist! J example_11_5_5_partition_set st {J $in power_set(R), x $in J}
-    by cases:
-        ? exist! J example_11_5_5_partition_set st {J $in power_set(R), x $in J}
-        case x < 2:
-            claim:
-                ? '[1, 2) $in example_11_5_5_partition_set
-                '[1, 2) $in {'[1, 2), {2}, '(2, 3]}
-                example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
-                '[1, 2) $in example_11_5_5_partition_set
-            witness exist! J example_11_5_5_partition_set st {J $in power_set(R), x $in J} from '[1, 2):
-                '[1, 2) $in example_11_5_5_partition_set
-                '[1, 2) $in power_set(R)
-                x $in '[1, 2)
-        case x = 2:
-            claim:
-                ? {2} $in example_11_5_5_partition_set
-                {2} $in {'[1, 2), {2}, '(2, 3]}
-                example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
-                {2} $in example_11_5_5_partition_set
-            witness exist! J example_11_5_5_partition_set st {J $in power_set(R), x $in J} from {2}:
-                {2} $in example_11_5_5_partition_set
-                {2} $in power_set(R)
-                x $in {2}
-        case x > 2:
-            claim:
-                ? '(2, 3] $in example_11_5_5_partition_set
-                '(2, 3] $in {'[1, 2), {2}, '(2, 3]}
-                example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
-                '(2, 3] $in example_11_5_5_partition_set
-            witness exist! J example_11_5_5_partition_set st {J $in power_set(R), x $in J} from '(2, 3]:
-                '(2, 3] $in example_11_5_5_partition_set
-                '(2, 3] $in power_set(R)
-                x $in '(2, 3]
+    claim:
+        ? forall y '[1, 3]:
+            exist J example_11_5_5_partition_set st {J $in power_set(R), y $in J}
+        by cases:
+            ? exist J example_11_5_5_partition_set st {J $in power_set(R), y $in J}
+            case y < 2:
+                claim:
+                    ? '[1, 2) $in example_11_5_5_partition_set
+                    '[1, 2) $in {'[1, 2), {2}, '(2, 3]}
+                    example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
+                    '[1, 2) $in example_11_5_5_partition_set
+                witness exist J example_11_5_5_partition_set st {J $in power_set(R), y $in J} from '[1, 2):
+                    '[1, 2) $in example_11_5_5_partition_set
+                    '[1, 2) $in power_set(R)
+                    y $in '[1, 2)
+            case y = 2:
+                claim:
+                    ? {2} $in example_11_5_5_partition_set
+                    {2} $in {'[1, 2), {2}, '(2, 3]}
+                    example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
+                    {2} $in example_11_5_5_partition_set
+                witness exist J example_11_5_5_partition_set st {J $in power_set(R), y $in J} from {2}:
+                    {2} $in example_11_5_5_partition_set
+                    {2} $in power_set(R)
+                    y $in {2}
+            case y > 2:
+                claim:
+                    ? '(2, 3] $in example_11_5_5_partition_set
+                    '(2, 3] $in {'[1, 2), {2}, '(2, 3]}
+                    example_11_5_5_partition_set = {'[1, 2), {2}, '(2, 3]}
+                    '(2, 3] $in example_11_5_5_partition_set
+                witness exist J example_11_5_5_partition_set st {J $in power_set(R), y $in J} from '(2, 3]:
+                    '(2, 3] $in example_11_5_5_partition_set
+                    '(2, 3] $in power_set(R)
+                    y $in '(2, 3]
+    claim:
+        ? forall y '[1, 3], J1, J2 example_11_5_5_partition_set:
+            J1 $in power_set(R)
+            J2 $in power_set(R)
+            y $in J1
+            y $in J2
+            =>:
+                J1 = J2
+        by thm example_11_5_5_partition_pieces_have_unique_membership(y, J1, J2)
+    forall y '[1, 3]:
+        exist! J example_11_5_5_partition_set st {J $in power_set(R), y $in J}
 
 thm example_11_5_5_displayed_partition:
     ? forall:
@@ -4878,55 +5996,43 @@ thm example_11_5_5_square_piece_continuous:
         =>:
             $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
     # Source handling: on `[1,2)` the displayed function agrees with the
-    # polynomial `x^2`, and polynomials are continuous on restricted domains.
-    # proof_debt: cite the Chapter 9 arithmetic continuity rules and transport
-    # continuity across the pointwise equality on `'[1,2)`.
-    trust $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
+    # polynomial `x^2`, and the arithmetic continuity rules apply on the
+    # restricted domain.
+    by thm identity_function_continuous('[1, 2))
+    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x})
+    by thm continuity_closed_under_arithmetic('[1, 2), fn(x '[1, 2)) R {x}, fn(x '[1, 2)) R {x})
+    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x * x})
+    fn(x '[1, 2)) R {x * x} = fn(x '[1, 2)) R {x^2}
+    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x^2})
+    claim:
+        ? forall x '[1, 2):
+            fn(x '[1, 2)) R {example_11_5_5_function(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+        x < 2
+        example_11_5_5_function(x) = x^2
+        fn(x '[1, 2)) R {example_11_5_5_function(x)}(x) = example_11_5_5_function(x)
+        fn(x '[1, 2)) R {x^2}(x) = x^2
+        fn(x '[1, 2)) R {example_11_5_5_function(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+    fn(x '[1, 2)) R {example_11_5_5_function(x)} = fn(x '[1, 2)) R {x^2}
+    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_singleton_piece_continuous:
     ? forall:
         {2} $subset '[1, 3]
         =>:
             $is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
-    # Source handling: every function on a singleton domain is continuous.
+    # Source handling: the restriction to `{2}` is the constant function with
+    # value `7`, so it is continuous by the constant-function proof.
+    by thm constant_function_continuous({2}, 7)
+    $is_continuous_on({2}, fn(x {2}) R {7})
     claim:
-        ? {2} $subset R
-        forall z {2}:
-            z = 2
-            z $in R
-        {2} $subset R
-    claim:
-        ? forall x0 {2}:
-            $is_continuous_at({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0)
-        claim:
-            ? $has_function_limit({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0))
-            claim:
-                ? forall epsilon R_pos:
-                    $is_locally_epsilon_close_to({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0), epsilon)
-                witness exist delta R_pos st {$is_delta_neighborhood_close_to({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0), epsilon, delta)} from 1:
-                    1 $in R_pos
-                    claim:
-                        ? forall x {2}:
-                            abs(x - x0) < 1
-                            =>:
-                                abs(fn(x {2}) R {example_11_5_5_function(x)}(x) - fn(x {2}) R {example_11_5_5_function(x)}(x0)) <= epsilon
-                        x = 2
-                        x0 = 2
-                        x = x0
-                        fn(x {2}) R {example_11_5_5_function(x)}(x) = example_11_5_5_function(x)
-                        fn(x {2}) R {example_11_5_5_function(x)}(x0) = example_11_5_5_function(x0)
-                        example_11_5_5_function(x) = example_11_5_5_function(x0)
-                        fn(x {2}) R {example_11_5_5_function(x)}(x) - fn(x {2}) R {example_11_5_5_function(x)}(x0) = 0
-                        abs(fn(x {2}) R {example_11_5_5_function(x)}(x) - fn(x {2}) R {example_11_5_5_function(x)}(x0)) = 0
-                        0 <= epsilon
-                        abs(fn(x {2}) R {example_11_5_5_function(x)}(x) - fn(x {2}) R {example_11_5_5_function(x)}(x0)) <= epsilon
-                    $is_delta_neighborhood_close_to({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0), epsilon, 1)
-            # Source handling: this is the singleton continuity subcase in
-            # Example 11.5.5.
-            # proof_debt: package the explicit epsilon-delta proof above as
-            # the imported Chapter 9 function-limit predicate.
-            trust $has_function_limit({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0, fn(x {2}) R {example_11_5_5_function(x)}(x0))
-        $is_continuous_at({2}, fn(x {2}) R {example_11_5_5_function(x)}, x0)
+        ? forall x {2}:
+            fn(x {2}) R {example_11_5_5_function(x)}(x) = fn(x {2}) R {7}(x)
+        x = 2
+        example_11_5_5_function(x) = 7
+        fn(x {2}) R {example_11_5_5_function(x)}(x) = example_11_5_5_function(x)
+        fn(x {2}) R {7}(x) = 7
+        fn(x {2}) R {example_11_5_5_function(x)}(x) = fn(x {2}) R {7}(x)
+    fn(x {2}) R {example_11_5_5_function(x)} = fn(x {2}) R {7}
     $is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_cube_piece_continuous:
@@ -4935,10 +6041,28 @@ thm example_11_5_5_cube_piece_continuous:
         =>:
             $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
     # Source handling: on `(2,3]` the displayed function agrees with the
-    # polynomial `x^3`, and polynomials are continuous on restricted domains.
-    # proof_debt: cite the Chapter 9 arithmetic continuity rules and transport
-    # continuity across the pointwise equality on `'(2,3]`.
-    trust $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
+    # polynomial `x^3`, and the arithmetic continuity rules apply on the
+    # restricted domain.
+    by thm identity_function_continuous('(2, 3])
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x})
+    by thm continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x}, fn(x '(2, 3]) R {x})
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x * x})
+    fn(x '(2, 3]) R {x * x} = fn(x '(2, 3]) R {x^2}
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2})
+    by thm continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x^2}, fn(x '(2, 3]) R {x})
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2 * x})
+    fn(x '(2, 3]) R {x^2 * x} = fn(x '(2, 3]) R {x^3}
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^3})
+    claim:
+        ? forall x '(2, 3]:
+            fn(x '(2, 3]) R {example_11_5_5_function(x)}(x) = fn(x '(2, 3]) R {x^3}(x)
+        x > 2
+        example_11_5_5_function(x) = x^3
+        fn(x '(2, 3]) R {example_11_5_5_function(x)}(x) = example_11_5_5_function(x)
+        fn(x '(2, 3]) R {x^3}(x) = x^3
+        fn(x '(2, 3]) R {example_11_5_5_function(x)}(x) = fn(x '(2, 3]) R {x^3}(x)
+    fn(x '(2, 3]) R {example_11_5_5_function(x)} = fn(x '(2, 3]) R {x^3}
+    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_partition_piece_continuity:
     ? forall J example_11_5_5_partition_set:
@@ -4946,14 +6070,21 @@ thm example_11_5_5_partition_piece_continuity:
         J $subset '[1, 3]
         $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
     # Source handling: the three concrete continuity facts above handle
-    # `[1,2)`, `{2}`, and `(2,3]`.  The remaining formal step is transporting
-    # those facts through the equality `J = '[1,2) or J = {2} or J = '(2,3]`.
-    # proof_debt: expose equality transport for continuity facts whose function
-    # lambda is well-defined using the subset premise.
-    trust:
-        J $in power_set(R)
-        J $subset '[1, 3]
-        $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+    # `[1,2)`, `{2}`, and `(2,3]` after enumerating the displayed partition.
+    by enumerate finite_set:
+        ? forall K example_11_5_5_partition_set:
+            K = '[1, 2) or K = {2} or K = '(2, 3]
+    by cases:
+        ? $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+        case J = '[1, 2):
+            by thm example_11_5_5_square_piece_continuous()
+            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+        case J = {2}:
+            by thm example_11_5_5_singleton_piece_continuous()
+            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+        case J = '(2, 3]:
+            by thm example_11_5_5_cube_piece_continuous()
+            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_piecewise_continuous_with_displayed_partition:
     ? forall:
@@ -5683,10 +6814,9 @@ thm example_11_8_6_partition_piece_clauses:
         $is_bounded_interval(J)
         J $subset '[1, 3]
     # Source handling: this is the displayed two-piece split in Example 11.8.6.
-    # proof_debt: expand membership in this named two-cell finite set.  The
-    # finite-set enumerator accepts a displayed literal but does not unfold a
-    # local finite-set alias before case splitting.
-    trust J = '[1, 2) or J = '[2, 3]
+    by enumerate finite_set:
+        ? forall K example_11_8_6_partition_set:
+            K = '[1, 2) or K = '[2, 3]
     by cases:
         ? J $in power_set(R)
         ? $is_bounded_interval(J)
@@ -5721,18 +6851,60 @@ thm example_11_8_6_partition_piece_clauses:
                     x $in '[1, 3]
                 J $subset '[1, 3]
 
+thm example_11_8_6_partition_pieces_have_unique_membership:
+    ? forall x '[1, 3], J1, J2 example_11_8_6_partition_set:
+        J1 $in power_set(R)
+        J2 $in power_set(R)
+        x $in J1
+        x $in J2
+        =>:
+            J1 = J2
+    by enumerate finite_set:
+        ? forall J example_11_8_6_partition_set:
+            J = '[1, 2) or J = '[2, 3]
+    by cases:
+        ? J1 = J2
+        case J1 = '[1, 2):
+            by cases:
+                ? J1 = J2
+                case J2 = '[1, 2):
+                    J1 = '[1, 2)
+                    J2 = '[1, 2)
+                    J1 = J2
+                case J2 = '[2, 3]:
+                    x $in J1
+                    x $in J2
+                    x < 2
+                    x >= 2
+                    impossible 2 < 2
+        case J1 = '[2, 3]:
+            by cases:
+                ? J1 = J2
+                case J2 = '[1, 2):
+                    x $in J1
+                    x $in J2
+                    x >= 2
+                    x < 2
+                    impossible 2 < 2
+                case J2 = '[2, 3]:
+                    J1 = '[2, 3]
+                    J2 = '[2, 3]
+                    J1 = J2
+
 thm example_11_8_6_partition_unique_cover:
     ? forall x '[1, 3]:
         exist! J example_11_8_6_partition_set st {J $in power_set(R), x $in J}
+    claim:
+        ? exist J example_11_8_6_partition_set st {J $in power_set(R), x $in J}
     by cases:
-        ? exist! J example_11_8_6_partition_set st {J $in power_set(R), x $in J}
+        ? exist J example_11_8_6_partition_set st {J $in power_set(R), x $in J}
         case x < 2:
             claim:
                 ? '[1, 2) $in example_11_8_6_partition_set
                 '[1, 2) $in {'[1, 2), '[2, 3]}
                 example_11_8_6_partition_set = {'[1, 2), '[2, 3]}
                 '[1, 2) $in example_11_8_6_partition_set
-            witness exist! J example_11_8_6_partition_set st {J $in power_set(R), x $in J} from '[1, 2):
+            witness exist J example_11_8_6_partition_set st {J $in power_set(R), x $in J} from '[1, 2):
                 '[1, 2) $in example_11_8_6_partition_set
                 '[1, 2) $in power_set(R)
                 x $in '[1, 2)
@@ -5742,10 +6914,19 @@ thm example_11_8_6_partition_unique_cover:
                 '[2, 3] $in {'[1, 2), '[2, 3]}
                 example_11_8_6_partition_set = {'[1, 2), '[2, 3]}
                 '[2, 3] $in example_11_8_6_partition_set
-            witness exist! J example_11_8_6_partition_set st {J $in power_set(R), x $in J} from '[2, 3]:
+            witness exist J example_11_8_6_partition_set st {J $in power_set(R), x $in J} from '[2, 3]:
                 '[2, 3] $in example_11_8_6_partition_set
                 '[2, 3] $in power_set(R)
                 x $in '[2, 3]
+    forall J1, J2 example_11_8_6_partition_set:
+        J1 $in power_set(R)
+        J2 $in power_set(R)
+        x $in J1
+        x $in J2
+        =>:
+            J1 = J2
+        by thm example_11_8_6_partition_pieces_have_unique_membership(x, J1, J2)
+    exist! J example_11_8_6_partition_set st {J $in power_set(R), x $in J}
 
 thm example_11_8_6_displayed_partition_piecewise_constant:
     ? forall f fn(x '[1, 3]) R:
@@ -5772,9 +6953,9 @@ thm example_11_8_6_displayed_partition_piecewise_constant:
             J $in power_set(R)
             $is_constant_on_subset('[1, 3], J, f)
         # Source handling: this is the same two-piece split in Example 11.8.6.
-        # proof_debt: reuse the named two-cell partition enumeration bridge
-        # above before checking the two constant pieces separately.
-        trust J = '[1, 2) or J = '[2, 3]
+        by enumerate finite_set:
+            ? forall K example_11_8_6_partition_set:
+                K = '[1, 2) or K = '[2, 3]
         by cases:
             ? J $in power_set(R)
             ? $is_constant_on_subset('[1, 3], J, f)
@@ -6001,6 +7182,84 @@ thm identity_alpha_piecewise_constant_stieltjes_matches_ordinary:
         s = finite_set_sum(P, identity_stieltjes_contribution)
     $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P, identity_alpha, f, s)
 
+thm identity_alpha_piecewise_constant_ordinary_matches_stieltjes:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, s R:
+        $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P, identity_alpha, f, s)
+        =>:
+            $has_piecewise_constant_integral_with_partition(I, P, f, s)
+    # Source handling: for identity alpha, every Stieltjes contribution has the
+    # same constant value times the ordinary interval length.
+    P $in power_set(power_set(R))
+    $is_piecewise_constant_with_partition(I, P, f)
+    obtain c from exist c fn(J P) R st {$is_piecewise_constant_riemann_stieltjes_contribution_family(I, P, identity_alpha, f, c), s = finite_set_sum(P, c)}
+    $is_piecewise_constant_riemann_stieltjes_contribution_family(I, P, identity_alpha, f, c)
+    s = finite_set_sum(P, c)
+    claim:
+        ? forall J P:
+            $has_piecewise_constant_integral_piece_contribution(I, J, f, c(J))
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        $has_piecewise_constant_riemann_stieltjes_integral_piece_contribution(I, J, identity_alpha, f, c(J))
+        obtain cv from exist cv R st {$has_constant_value_on_subset(I, J, f, cv), c(J) = cv * alpha_interval_length(identity_alpha, J)}
+        $has_constant_value_on_subset(I, J, f, cv)
+        c(J) = cv * alpha_interval_length(identity_alpha, J)
+        by thm identity_alpha_length_is_interval_length(J)
+        alpha_interval_length(identity_alpha, J) = interval_length(J)
+        c(J) = cv * interval_length(J)
+        witness exist c0 R st {$has_constant_value_on_subset(I, J, f, c0), c(J) = c0 * interval_length(J)} from cv:
+            $has_constant_value_on_subset(I, J, f, cv)
+            c(J) = cv * interval_length(J)
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, c(J))
+    claim:
+        ? forall J P:
+            piecewise_constant_integral_piece_contribution(I, J, f) = c(J)
+        $is_partition_of_bounded_interval(I, P)
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f))
+        $has_piecewise_constant_integral_piece_contribution(I, J, f, c(J))
+        by thm piecewise_constant_integral_piece_contribution_unique(I, J, f, piecewise_constant_integral_piece_contribution(I, J, f), c(J))
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)})
+    finite_set_sum(P, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, f)}) = finite_set_sum(P, c)
+    piecewise_constant_integral_with_partition(I, P, f) = finite_set_sum(P, c)
+    s = piecewise_constant_integral_with_partition(I, P, f)
+    $has_piecewise_constant_integral_with_partition(I, P, f, s)
+
+thm identity_alpha_piecewise_constant_stieltjes_integral_from_ordinary:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $has_piecewise_constant_integral(I, f, s)
+        =>:
+            $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, f, s)
+    # Source handling: choose the partition witnessing the ordinary piecewise
+    # constant integral and reuse the identity-alpha contribution family.
+    $is_piecewise_constant_on(I, f)
+    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f), $has_piecewise_constant_integral_with_partition(I, P, f, s)}
+    by thm identity_alpha_piecewise_constant_stieltjes_matches_ordinary(I, P, f, s)
+    $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P, identity_alpha, f, s)
+    witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, f), $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P0, identity_alpha, f, s)} from P:
+        $is_piecewise_constant_with_partition(I, P, f)
+        $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P, identity_alpha, f, s)
+    $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, f, s)
+
+thm identity_alpha_piecewise_constant_ordinary_from_stieltjes_integral:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, f, s)
+        =>:
+            $has_piecewise_constant_integral(I, f, s)
+    # Source handling: the witnessing Stieltjes partition has the same value
+    # for the ordinary piecewise constant integral when alpha is the identity.
+    $is_piecewise_constant_on(I, f)
+    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f), $has_piecewise_constant_riemann_stieltjes_integral_with_partition(I, P, identity_alpha, f, s)}
+    by thm identity_alpha_piecewise_constant_ordinary_matches_stieltjes(I, P, f, s)
+    $has_piecewise_constant_integral_with_partition(I, P, f, s)
+    witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, f), $has_piecewise_constant_integral_with_partition(I, P0, f, s)} from P:
+        $is_piecewise_constant_with_partition(I, P, f)
+        $has_piecewise_constant_integral_with_partition(I, P, f, s)
+    $has_piecewise_constant_integral(I, f, s)
+
 """
 Riemann-Stieltjes integral.  With monotone increasing `alpha`, define upper and
 lower Riemann-Stieltjes integrals exactly as before, using alpha-lengths; the
@@ -6013,9 +7272,150 @@ prop is_upper_riemann_stieltjes_integral_candidate_value(I power_set(R), alpha f
 prop is_lower_riemann_stieltjes_integral_candidate_value(I power_set(R), alpha fn(x R) R, f fn(x I) R, s R):
     exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_riemann_stieltjes_integral(I, alpha, h, s)}
 
+thm identity_alpha_upper_riemann_candidate_from_ordinary:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $is_upper_riemann_integral_candidate_value(I, f, s)
+        =>:
+            $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+    # Source handling: an ordinary piecewise-constant majorant has the same
+    # candidate value for Stieltjes integration with the identity alpha.
+    obtain g from exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, s)}
+    $is_piecewise_constant_on(I, g)
+    $majorizes_on(I, g, f)
+    $has_piecewise_constant_integral(I, g, s)
+    by thm identity_alpha_piecewise_constant_stieltjes_integral_from_ordinary(I, g, s)
+    $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)
+    witness exist g0 fn(x I) R st {$is_piecewise_constant_on(I, g0), $majorizes_on(I, g0, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g0, s)} from g:
+        $is_piecewise_constant_on(I, g)
+        $majorizes_on(I, g, f)
+        $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)
+    $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+
+thm identity_alpha_upper_riemann_candidate_to_ordinary:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+        =>:
+            $is_upper_riemann_integral_candidate_value(I, f, s)
+    # Source handling: the identity-alpha Stieltjes majorant contributes the
+    # same ordinary piecewise-constant integral value.
+    obtain g from exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)}
+    $is_piecewise_constant_on(I, g)
+    $majorizes_on(I, g, f)
+    $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)
+    by thm identity_alpha_piecewise_constant_ordinary_from_stieltjes_integral(I, g, s)
+    $has_piecewise_constant_integral(I, g, s)
+    witness exist g0 fn(x I) R st {$is_piecewise_constant_on(I, g0), $majorizes_on(I, g0, f), $has_piecewise_constant_integral(I, g0, s)} from g:
+        $is_piecewise_constant_on(I, g)
+        $majorizes_on(I, g, f)
+        $has_piecewise_constant_integral(I, g, s)
+    $is_upper_riemann_integral_candidate_value(I, f, s)
+
+thm identity_alpha_lower_riemann_candidate_from_ordinary:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $is_lower_riemann_integral_candidate_value(I, f, s)
+        =>:
+            $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+    # Source handling: an ordinary piecewise-constant minorant has the same
+    # candidate value for identity-alpha Stieltjes integration.
+    obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, s)}
+    $is_piecewise_constant_on(I, h)
+    $minorizes_on(I, h, f)
+    $has_piecewise_constant_integral(I, h, s)
+    by thm identity_alpha_piecewise_constant_stieltjes_integral_from_ordinary(I, h, s)
+    $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)
+    witness exist h0 fn(x I) R st {$is_piecewise_constant_on(I, h0), $minorizes_on(I, h0, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h0, s)} from h:
+        $is_piecewise_constant_on(I, h)
+        $minorizes_on(I, h, f)
+        $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)
+    $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+
+thm identity_alpha_lower_riemann_candidate_to_ordinary:
+    ? forall I power_set(R), f fn(x I) R, s R:
+        $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+        =>:
+            $is_lower_riemann_integral_candidate_value(I, f, s)
+    # Source handling: the identity-alpha Stieltjes minorant has the same
+    # ordinary piecewise-constant integral value.
+    obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)}
+    $is_piecewise_constant_on(I, h)
+    $minorizes_on(I, h, f)
+    $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)
+    by thm identity_alpha_piecewise_constant_ordinary_from_stieltjes_integral(I, h, s)
+    $has_piecewise_constant_integral(I, h, s)
+    witness exist h0 fn(x I) R st {$is_piecewise_constant_on(I, h0), $minorizes_on(I, h0, f), $has_piecewise_constant_integral(I, h0, s)} from h:
+        $is_piecewise_constant_on(I, h)
+        $minorizes_on(I, h, f)
+        $has_piecewise_constant_integral(I, h, s)
+    $is_lower_riemann_integral_candidate_value(I, f, s)
+
 have fn upper_riemann_stieltjes_integral_candidate_values(I power_set(R), alpha fn(x R) R, f fn(x I) R) power_set(R) = {s R: $is_upper_riemann_stieltjes_integral_candidate_value(I, alpha, f, s)}
 
 have fn lower_riemann_stieltjes_integral_candidate_values(I power_set(R), alpha fn(x R) R, f fn(x I) R) power_set(R) = {s R: $is_lower_riemann_stieltjes_integral_candidate_value(I, alpha, f, s)}
+
+thm identity_alpha_is_monotone_increasing:
+    ? forall:
+        $is_monotone_increasing_on(R, identity_alpha)
+    # Source handling: the identity function preserves the order of real
+    # inputs, so it is an admissible Stieltjes integrator.
+    claim:
+        ? forall x, y R:
+            x < y
+            =>:
+                identity_alpha(x) <= identity_alpha(y)
+        identity_alpha(x) = x
+        identity_alpha(y) = y
+        x <= y
+        identity_alpha(x) <= identity_alpha(y)
+    $is_monotone_increasing_on(R, identity_alpha)
+
+thm identity_alpha_upper_riemann_candidate_value_sets_match:
+    ? forall I power_set(R), f fn(x I) R:
+        upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = upper_riemann_integral_candidate_values(I, f)
+    # Source handling: the preceding two candidate-value transports give the
+    # same upper candidates before either infimum is selected.
+    by extension upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = upper_riemann_integral_candidate_values(I, f):
+        forall s upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f):
+            upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = {s R: $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in {s R: $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+            by thm identity_alpha_upper_riemann_candidate_to_ordinary(I, f, s)
+            $is_upper_riemann_integral_candidate_value(I, f, s)
+            upper_riemann_integral_candidate_values(I, f) = {s R: $is_upper_riemann_integral_candidate_value(I, f, s)}
+            s $in {s R: $is_upper_riemann_integral_candidate_value(I, f, s)}
+            s $in upper_riemann_integral_candidate_values(I, f)
+        forall s upper_riemann_integral_candidate_values(I, f):
+            upper_riemann_integral_candidate_values(I, f) = {s R: $is_upper_riemann_integral_candidate_value(I, f, s)}
+            s $in {s R: $is_upper_riemann_integral_candidate_value(I, f, s)}
+            $is_upper_riemann_integral_candidate_value(I, f, s)
+            by thm identity_alpha_upper_riemann_candidate_from_ordinary(I, f, s)
+            $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+            upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = {s R: $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in {s R: $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f)
+
+thm identity_alpha_lower_riemann_candidate_value_sets_match:
+    ? forall I power_set(R), f fn(x I) R:
+        lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = lower_riemann_integral_candidate_values(I, f)
+    # Source handling: the same argument identifies the lower candidate sets.
+    by extension lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = lower_riemann_integral_candidate_values(I, f):
+        forall s lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f):
+            lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = {s R: $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in {s R: $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+            by thm identity_alpha_lower_riemann_candidate_to_ordinary(I, f, s)
+            $is_lower_riemann_integral_candidate_value(I, f, s)
+            lower_riemann_integral_candidate_values(I, f) = {s R: $is_lower_riemann_integral_candidate_value(I, f, s)}
+            s $in {s R: $is_lower_riemann_integral_candidate_value(I, f, s)}
+            s $in lower_riemann_integral_candidate_values(I, f)
+        forall s lower_riemann_integral_candidate_values(I, f):
+            lower_riemann_integral_candidate_values(I, f) = {s R: $is_lower_riemann_integral_candidate_value(I, f, s)}
+            s $in {s R: $is_lower_riemann_integral_candidate_value(I, f, s)}
+            $is_lower_riemann_integral_candidate_value(I, f, s)
+            by thm identity_alpha_lower_riemann_candidate_from_ordinary(I, f, s)
+            $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
+            lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = {s R: $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in {s R: $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)}
+            s $in lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f)
 
 prop has_upper_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(x I) R, U R):
     $is_bounded_interval(I)
@@ -6195,11 +7595,55 @@ thm identity_alpha_stieltjes_matches_riemann:
             stieltjes_integral_on(I, identity_alpha, f) = integral_on(I, f)
     # Source handling: Tao observes that Riemann-Stieltjes integration with
     # identity alpha is the ordinary Riemann integral.
-    # proof_debt: rewrite alpha-length as ordinary length in the upper/lower
-    # definitions.
-    trust:
-        $is_riemann_stieltjes_integrable_on(I, identity_alpha, f)
-        stieltjes_integral_on(I, identity_alpha, f) = integral_on(I, f)
+    by thm riemann_integrable_on_bounded_interval(I, f)
+    $is_bounded_interval(I)
+    by thm riemann_integrable_on_bounded_function(I, f)
+    $is_bounded_function_on(I, f)
+    by thm identity_alpha_is_monotone_increasing()
+    $is_monotone_increasing_on(R, identity_alpha)
+    $has_upper_riemann_integral(I, f, upper_riemann_integral(I, f))
+    $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
+    by thm identity_alpha_upper_riemann_candidate_value_sets_match(I, f)
+    upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = upper_riemann_integral_candidate_values(I, f)
+    claim:
+        ? $has_upper_riemann_stieltjes_integral(I, identity_alpha, f, upper_riemann_integral(I, f))
+        $has_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f))
+        $has_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f))
+        $is_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f))
+        $is_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f), upper_riemann_integral(I, f))
+        $has_upper_riemann_stieltjes_integral(I, identity_alpha, f, upper_riemann_integral(I, f))
+    $has_upper_riemann_stieltjes_integral(I, identity_alpha, f, upper_riemann_integral(I, f))
+    $has_upper_riemann_stieltjes_integral(I, identity_alpha, f, upper_riemann_stieltjes_integral(I, identity_alpha, f))
+    by thm upper_riemann_stieltjes_integral_value_unique(I, identity_alpha, f, upper_riemann_stieltjes_integral(I, identity_alpha, f), upper_riemann_integral(I, f))
+    upper_riemann_stieltjes_integral(I, identity_alpha, f) = upper_riemann_integral(I, f)
+
+    by thm identity_alpha_lower_riemann_candidate_value_sets_match(I, f)
+    lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f) = lower_riemann_integral_candidate_values(I, f)
+    claim:
+        ? $has_lower_riemann_stieltjes_integral(I, identity_alpha, f, lower_riemann_integral(I, f))
+        $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+        $has_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f))
+        $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), lower_riemann_integral(I, f))
+        $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, identity_alpha, f), lower_riemann_integral(I, f))
+        $has_lower_riemann_stieltjes_integral(I, identity_alpha, f, lower_riemann_integral(I, f))
+    $has_lower_riemann_stieltjes_integral(I, identity_alpha, f, lower_riemann_integral(I, f))
+    $has_lower_riemann_stieltjes_integral(I, identity_alpha, f, lower_riemann_stieltjes_integral(I, identity_alpha, f))
+    by thm lower_riemann_stieltjes_integral_value_unique(I, identity_alpha, f, lower_riemann_stieltjes_integral(I, identity_alpha, f), lower_riemann_integral(I, f))
+    lower_riemann_stieltjes_integral(I, identity_alpha, f) = lower_riemann_integral(I, f)
+
+    by thm riemann_integrable_upper_eq_lower(I, f)
+    upper_riemann_integral(I, f) = lower_riemann_integral(I, f)
+    upper_riemann_stieltjes_integral(I, identity_alpha, f) = lower_riemann_stieltjes_integral(I, identity_alpha, f)
+    $is_riemann_stieltjes_integrable_on(I, identity_alpha, f)
+    by thm stieltjes_integral_on_has_riemann_stieltjes_integral(I, identity_alpha, f)
+    $has_riemann_stieltjes_integral(I, identity_alpha, f, stieltjes_integral_on(I, identity_alpha, f))
+    by thm has_riemann_stieltjes_integral_value_eq_upper(I, identity_alpha, f, stieltjes_integral_on(I, identity_alpha, f))
+    stieltjes_integral_on(I, identity_alpha, f) = upper_riemann_stieltjes_integral(I, identity_alpha, f)
+    by thm integral_on_has_riemann_integral(I, f)
+    $has_riemann_integral(I, f, integral_on(I, f))
+    by thm has_riemann_integral_value_eq_upper(I, f, integral_on(I, f))
+    integral_on(I, f) = upper_riemann_integral(I, f)
+    stieltjes_integral_on(I, identity_alpha, f) = integral_on(I, f)
 
 
 # 11.9 The two fundamental theorems of calculus
@@ -6384,9 +7828,15 @@ thm derivative_values_imply_continuous_on_closed_interval_local:
             $is_continuous_on('[a, b], F)
     # Source handling: this is Corollary 10.1.12 specialized to a concrete
     # derivative-value function on `[a,b]`.
-    # proof_debt: expose the Chapter 10 epsilon-delta proof in this standalone
-    # Chapter 11 file.
-    trust $is_continuous_on('[a, b], F)
+    claim:
+        ? $is_differentiable_on('[a, b], F)
+        forall x0 '[a, b]:
+            witness exist L R st {$has_derivative_at('[a, b], F, x0, L)} from dF(x0):
+                $has_derivative_at('[a, b], F, x0, dF(x0))
+            $is_differentiable_at('[a, b], F, x0)
+        $is_differentiable_on('[a, b], F)
+    by thm differentiable_on_implies_continuous_on('[a, b], F)
+    $is_continuous_on('[a, b], F)
 
 thm integration_by_parts_product_terms_integrable:
     ? forall a, b R, F, G, dF, dG fn(x '[a, b]) R:

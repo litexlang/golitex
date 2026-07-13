@@ -250,8 +250,11 @@ impl Runtime {
         identifier_with_mod: &IdentifierWithMod,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        _ = param_to_arg_map;
-        Ok(identifier_with_mod.clone().into())
+        let key = identifier_with_mod.to_string();
+        Ok(match param_to_arg_map.get(&key) {
+            Some(obj) => obj.clone(),
+            None => identifier_with_mod.clone().into(),
+        })
     }
 
     pub fn inst_fn_obj(

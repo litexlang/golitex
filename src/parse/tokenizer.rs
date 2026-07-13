@@ -568,7 +568,7 @@ mod tests {
         let mut tokenizer = Tokenizer::new();
         let blocks = tokenizer
             .parse_blocks(
-                "macro eq \"a = b\"\nprove claim:\n    have @eq",
+                "macro eq \"a = b\"\nclaim:\n    have @eq",
                 Rc::from("test.lit"),
             )
             .unwrap();
@@ -580,7 +580,7 @@ mod tests {
         let mut tokenizer = Tokenizer::new();
         let error = tokenizer
             .parse_blocks(
-                "prove claim:\n    macro eq \"a = b\"\n    have @eq\nhave @eq",
+                "claim:\n    macro eq \"a = b\"\n    have @eq\nhave @eq",
                 Rc::from("test.lit"),
             )
             .unwrap_err();
@@ -592,7 +592,7 @@ mod tests {
         let mut tokenizer = Tokenizer::new();
         let blocks = tokenizer
             .parse_blocks(
-                "macro x \"outer\"\nprove claim:\n    macro x \"inner\"\n    have @x\nhave @x",
+                "macro x \"outer\"\nclaim:\n    macro x \"inner\"\n    have @x\nhave @x",
                 Rc::from("test.lit"),
             )
             .unwrap();

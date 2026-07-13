@@ -79,7 +79,6 @@ pub struct ModuleRunner {
     pub module_name: String,
     pub module_root_path: String,
     pub main_file_path: String,
-    pub is_std: bool,
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
     pub exports: HashMap<String, ExportEntry>,
@@ -95,7 +94,6 @@ impl ModuleRunner {
         module_name: String,
         module_root_path: String,
         main_file_path: String,
-        is_std: bool,
         status: ModuleStatus,
     ) -> Self {
         ModuleRunner {
@@ -103,7 +101,6 @@ impl ModuleRunner {
             module_name,
             module_root_path,
             main_file_path,
-            is_std,
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
             exports: HashMap::new(),

@@ -1047,6 +1047,10 @@ fn equality_lookup_keys_for_module_env(
             keys.push(identifier.name.clone());
         }
     }
+    let local_key = default_key.replace(&format!("{}{}", module_name, MOD_SIGN), "");
+    if local_key != default_key {
+        keys.push(local_key);
+    }
     keys
 }
 

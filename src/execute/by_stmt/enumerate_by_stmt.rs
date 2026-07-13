@@ -5,8 +5,8 @@ impl Runtime {
         &mut self,
         stmt: &ByEnumerateFiniteSetStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let (params, param_sets) = stmt
-            .expanded_list_set_params()
+        let (params, param_sets) = self
+            .by_enumerate_finite_set_params(stmt)
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
 
         let corresponding_forall_fact = stmt
@@ -314,5 +314,49 @@ impl Runtime {
             result_count,
         );
         Ok((inside_results, verification))
+    }
+
+    fn by_enumerate_finite_set_params(
+        &self,
+        stmt: &ByEnumerateFiniteSetStmt,
+    ) -> Result<(Vec<String>, Vec<ListSet>), String> {
+        let mut params = Vec::new();
+        let mut param_sets = Vec::new();
+
+        for group in stmt.forall_fact.params_def_with_type.groups.iter() {
+            let list_set = match &group.param_type {
+                ParamType::Obj(Obj::ListSet(list_set)) => list_set.clone(),
+                ParamType::Obj(domain) => self
+                    .get_all_obj_representatives_equal_to_given(domain)
+                    .into_iter()
+                    .find_map(|representative| match representative {
+                        Obj::ListSet(list_set) => Some(list_set),
+                        _ => None,
+                    })
+                    .ok_or_else(|| {
+                        "by enumerate finite_set: each forall parameter type must be a list set `{ ... }` or a name equal to one"
+                            .to_string()
+                    })?,
+                _ => {
+                    return Err(
+                        "by enumerate finite_set: each forall parameter type must be a list set `{ ... }` or a name equal to one"
+                            .to_string(),
+                    );
+                }
+            };
+
+            for name in group.params.iter() {
+                params.push(name.clone());
+                param_sets.push(list_set.clone());
+            }
+        }
+
+        if params.is_empty() {
+            return Err(
+                "by enumerate finite_set: forall must declare at least one parameter".to_string(),
+            );
+        }
+
+        Ok((params, param_sets))
     }
 }

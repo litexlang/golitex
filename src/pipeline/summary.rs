@@ -117,10 +117,10 @@ impl RunSummary {
             Stmt::Fact(_) => {
                 self.fact_statements += 1;
             }
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(_)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_)) => {
                 self.direct_trust += 1;
             }
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
                 self.trusted_object_assumptions += 1;
             }
             Stmt::DefObjStmt(def_obj) => {
@@ -362,10 +362,10 @@ impl RunSummary {
 
     fn visit_stmt_trust_dependencies(&mut self, stmt: &Stmt) {
         match stmt {
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(_)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_)) => {
                 bump_count(&mut self.trust_dependency_counts, "trust");
             }
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(_)) => {
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
                 bump_count(&mut self.trust_dependency_counts, "trust_have");
             }
             Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {

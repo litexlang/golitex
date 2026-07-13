@@ -173,6 +173,37 @@ impl Runtime {
                 inside_results.push(verification_result);
             }
 
+            if stmt.exist_fact_in_witness.is_exist_unique() {
+                let uniqueness_forall = rt
+                    .build_exist_unique_uniqueness_forall_fact(&stmt.exist_fact_in_witness)
+                    .map_err(|build_error| {
+                        short_exec_error(
+                            witness_stmt.clone(),
+                            "witness exist!: failed to construct uniqueness obligation".to_string(),
+                            Some(build_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                let uniqueness_fact: Fact = uniqueness_forall.into();
+                let uniqueness_result = rt
+                    .verify_fact_return_err_if_not_true(
+                        &uniqueness_fact,
+                        &verify_state_for_proof_check,
+                    )
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            witness_stmt.clone(),
+                            format!(
+                                "witness exist!: failed to verify uniqueness obligation `{}`",
+                                uniqueness_fact
+                            ),
+                            Some(verify_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                inside_results.push(uniqueness_result);
+            }
+
             Ok(inside_results)
         })
     }

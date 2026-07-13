@@ -352,7 +352,7 @@ background used in that run:
 
 - builtin objects and builtin mathematical facts;
 - builtin verification and inference rules;
-- imported standard-library facts;
+- facts imported from declared project modules or source-local cite packages;
 - explicit `axiom`, or `trust` assumptions;
 - the current implementation of the parser, runtime, and verifier.
 
@@ -364,6 +364,10 @@ This trust boundary is part of the project design. Litex deliberately places
 many routine mathematical relationships into the checker so ordinary proofs can
 be written as readable fact sequences. That makes the interface lightweight,
 but it also means the trusted background is larger than a minimal proof kernel.
+
+Litex does not ship or auto-load a mathematical `std`; supporting facts belong
+first in source-local cite packages. The promotion rule for any future reusable
+package is recorded in [Reusable Mathematics Policy](docs/Reusable_Mathematics_Policy.md).
 
 ## Goals
 

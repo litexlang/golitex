@@ -5,9 +5,9 @@ pub mod define_algorithm_stmt;
 pub mod definition_stmt;
 pub mod eval_stmt;
 pub mod parameter_def;
-pub mod proof_debt_stmt;
 pub mod sketch_stmt;
 pub mod tooling_stmt;
+pub mod trust_stmt;
 pub mod try_stmt;
 pub mod witness_stmt;
 

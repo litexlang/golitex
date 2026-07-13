@@ -1,0 +1,15 @@
+thm named_restricted_return_set_supports_nested_function_use:
+    ? forall U set, u U, P set:
+        P = {f fn(i closed_range(1, 2)) U: f(1) = u and f(2) = u}
+        =>:
+            exist h fn(p {u}) P st {$fn_eq(h(u), fn(i closed_range(1, 2)) U {u})}
+    P = {f fn(i closed_range(1, 2)) U: f(1) = u and f(2) = u}
+    have fn encode(p {u}) P = fn(i closed_range(1, 2)) U {u}
+    encode(u)(1) = u
+    forall i closed_range(1, 2):
+        encode(u)(i) = fn(i closed_range(1, 2)) U {u}(i)
+    encode(u) $in P
+    encode(u) $in fn(i closed_range(1, 2)) U
+    $fn_eq(encode(u), fn(i closed_range(1, 2)) U {u})
+    witness exist h fn(p {u}) P st {$fn_eq(h(u), fn(i closed_range(1, 2)) U {u})} from encode:
+        $fn_eq(encode(u), fn(i closed_range(1, 2)) U {u})

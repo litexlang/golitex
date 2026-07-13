@@ -48,13 +48,8 @@ impl Runtime {
             })
             .count();
         if question_goal_count == 0 {
-            let message = if tb.body[0].current_token_is_equal_to("prove") {
-                "induc: `prove` was removed; start each goal with `? <fact>`"
-            } else {
-                "induc: expects one or more `? <fact>` goal blocks before its proof"
-            };
             return Err(Self::induc_parse_error(
-                message.to_string(),
+                "induc: expects one or more `? <fact>` goal blocks before its proof".to_string(),
                 tb.body[0].line_file.clone(),
             ));
         }
@@ -112,13 +107,6 @@ impl Runtime {
         let step_keyword = Self::induc_step_proof_keyword(strong);
 
         for block in tb.body.iter_mut().skip(goal_body_skip) {
-            if Self::is_legacy_induc_structured_proof_block(block) {
-                return Err(Self::induc_parse_error(
-                    "induc: `prove` was removed; use `? from ...:` and `? induc:` blocks"
-                        .to_string(),
-                    block.line_file.clone(),
-                ));
-            }
             if Self::is_induc_base_proof_block(block) {
                 structured_proof_seen = true;
                 if !proof.is_empty() {
@@ -243,13 +231,6 @@ impl Runtime {
 
     fn is_induc_structured_proof_block(block: &TokenBlock) -> bool {
         Self::is_induc_base_proof_block(block) || Self::is_induc_step_proof_block(block)
-    }
-
-    fn is_legacy_induc_structured_proof_block(block: &TokenBlock) -> bool {
-        block.token_at_add_index(0) == "prove"
-            && (block.token_at_add_index(1) == FROM
-                || block.token_at_add_index(1) == INDUC
-                || block.token_at_add_index(1) == STRONG_INDUC)
     }
 
     fn induc_step_proof_keyword(strong: bool) -> &'static str {

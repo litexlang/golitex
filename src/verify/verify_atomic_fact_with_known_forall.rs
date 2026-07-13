@@ -161,6 +161,14 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         for module_name in module_names.iter() {
+            let module_local_identifiers =
+                self.imported_module_identifier_to_local_obj_map(module_name);
+            let matching_atomic_fact = self.inst_atomic_fact(
+                atomic_fact,
+                &module_local_identifiers,
+                ParamObjType::Forall,
+                None,
+            )?;
             let candidates = self
                 .imported_module_environments(module_name)
                 .into_iter()
@@ -169,14 +177,17 @@ impl Runtime {
                 .collect::<Vec<_>>();
 
             for (atomic_fact_in_known_forall, forall_rc) in candidates {
-                if let Some(fact_verified) = self.try_verify_known_forall_candidate(
-                    KnownForallSearchPhase::Fallback,
-                    KnownForallEnvKind::User,
-                    atomic_fact_in_known_forall,
-                    forall_rc,
-                    atomic_fact,
-                    verify_state,
-                )? {
+                if let Some(fact_verified) = self
+                    .try_verify_known_forall_candidate_with_matching_fact(
+                        KnownForallSearchPhase::Fallback,
+                        KnownForallEnvKind::User,
+                        atomic_fact_in_known_forall,
+                        forall_rc,
+                        &matching_atomic_fact,
+                        atomic_fact,
+                        verify_state,
+                    )?
+                {
                     return Ok(Some(fact_verified));
                 }
             }
@@ -220,10 +231,31 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        self.try_verify_known_forall_candidate_with_matching_fact(
+            phase,
+            env_kind,
+            atomic_fact_in_known_forall_fact,
+            forall_rc,
+            given_atomic_fact,
+            given_atomic_fact,
+            verify_state,
+        )
+    }
+
+    fn try_verify_known_forall_candidate_with_matching_fact(
+        &mut self,
+        phase: KnownForallSearchPhase,
+        env_kind: KnownForallEnvKind,
+        atomic_fact_in_known_forall_fact: AtomicFact,
+        forall_rc: Rc<KnownForallFactParamsAndDom>,
+        matching_atomic_fact: &AtomicFact,
+        given_atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         known_forall_profile::record_candidate_attempt(phase, env_kind);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
-            given_atomic_fact,
+            matching_atomic_fact,
         )?;
         if let Some(arg_map) = match_result {
             known_forall_profile::record_arg_match();
@@ -421,6 +453,14 @@ impl Runtime {
         verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let module_local_identifiers =
+            self.imported_module_identifier_to_local_obj_map(module_name);
+        let matching_atomic_fact = self.inst_atomic_fact(
+            atomic_fact,
+            &module_local_identifiers,
+            ParamObjType::Forall,
+            None,
+        )?;
         let candidates = self
             .imported_module_environments(module_name)
             .into_iter()
@@ -433,11 +473,12 @@ impl Runtime {
             .collect::<Vec<_>>();
 
         for (atomic_fact_in_known_forall_fact, forall_rc) in candidates {
-            if let Some(fact_verified) = self.try_verify_known_forall_candidate(
+            if let Some(fact_verified) = self.try_verify_known_forall_candidate_with_matching_fact(
                 phase,
                 KnownForallEnvKind::User,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
+                &matching_atomic_fact,
                 atomic_fact,
                 verify_state,
             )? {
@@ -445,6 +486,22 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn imported_module_identifier_to_local_obj_map(
+        &self,
+        module_name: &str,
+    ) -> HashMap<String, Obj> {
+        let mut identifiers = HashMap::new();
+        for environment in self.imported_module_environments(module_name) {
+            for name in environment.defined_identifiers.keys() {
+                identifiers.insert(
+                    format!("{}{}{}", module_name, MOD_SIGN, name),
+                    Identifier::new(name.clone()).into(),
+                );
+            }
+        }
+        identifiers
     }
 
     fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {

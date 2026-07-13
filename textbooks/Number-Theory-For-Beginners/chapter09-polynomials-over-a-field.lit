@@ -1,0 +1,289 @@
+# Chapter IX — Polynomials over a Field
+
+"""
+Chapter IX — Polynomials over a field.
+
+Fix a ground field K.  Polynomial division reproduces Euclidean division for
+integers, giving principal ideals, polynomial gcds, and factorization by
+roots.  The central application is that a nonzero degree-n polynomial has at
+most n distinct roots in K.
+"""
+
+trust local import chapter8
+trust local import chapter7
+trust local import chapter6
+trust local import chapter5
+trust local import chapter4
+trust local import chapter3
+trust local import chapter2
+trust local import chapter1
+
+"""
+Definition. A polynomial in one indeterminate X over a fixed field K is a
+finite expression a0+a1X+...+anX^n with coefficients in K.  A nonzero
+polynomial has a degree, and degrees add under multiplication of nonzero
+polynomials.
+"""
+
+abstract_prop is_polynomial_over_field(K, P)
+abstract_prop polynomial_is_zero(P)
+abstract_prop polynomial_has_degree(P, n)
+abstract_prop polynomial_product_has_degree_sum(P, P2, n, m)
+abstract_prop polynomial_ring_over_field(K)
+
+# Source handling: The text uses the ordinary coefficientwise addition and
+# convolution product of finite expressions.
+# trust: Litex has no first-class univariate polynomial datatype with a
+# coefficient field parameter, degree function, and evaluation operation.
+trust:
+    forall K set:
+        $is_field(K)
+        =>:
+            $polynomial_ring_over_field(K)
+    forall K set, P, P2 set, n, m N:
+        $is_polynomial_over_field(K, P)
+        $is_polynomial_over_field(K, P2)
+        not $polynomial_is_zero(P)
+        not $polynomial_is_zero(P2)
+        $polynomial_has_degree(P, n)
+        $polynomial_has_degree(P2, m)
+        =>:
+            $polynomial_product_has_degree_sum(P, P2, n, m)
+
+"""
+Lemma. If B is a nonzero polynomial of degree m, then every polynomial A has a
+unique quotient Q such that A-BQ is zero or has degree less than m.  This is
+the polynomial division algorithm.
+"""
+
+abstract_prop is_polynomial_division_remainder(A, B, Quotient, Remainder)
+
+# Source handling: Induct on deg(A), cancel the leading term of A with a
+# suitable multiple of B, and prove uniqueness from the degree of B(Q-Q').
+# trust: This is the first missing polynomial theorem package: leading
+# coefficients, degree-lowering subtraction, and a division-remainder result.
+trust:
+    forall K set, A, B set:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $is_polynomial_over_field(K, B)
+        not $polynomial_is_zero(B)
+        =>:
+            exist! Quotient, Remainder set st {$is_polynomial_division_remainder(A, B, Quotient, Remainder)}
+
+thm lemma_IX_polynomial_division:
+    ? forall K set, A, B set:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $is_polynomial_over_field(K, B)
+        not $polynomial_is_zero(B)
+        =>:
+            exist! Quotient, Remainder set st {$is_polynomial_division_remainder(A, B, Quotient, Remainder)}
+    trust:
+        exist! Quotient, Remainder set st {$is_polynomial_division_remainder(A, B, Quotient, Remainder)}
+
+"""
+Definition. B divides A when the remainder in division of A by B is zero.  If
+B=X-a, the remainder is the constant A(a); therefore a is a root of A exactly
+when X-a divides A.
+"""
+
+abstract_prop polynomial_divides(B, A)
+abstract_prop polynomial_evaluates_to(P, a, value)
+abstract_prop is_polynomial_root(P, a)
+abstract_prop is_linear_polynomial_factor(X_minus_a, a)
+
+# Source handling: Evaluate A=(X-a)Q+r at a to identify the remainder r with
+# A(a), then recognize zero remainder as divisibility.
+# trust: Polynomial evaluation and the distinguished indeterminate X are part
+# of the missing first-class polynomial representation.
+trust:
+    forall K set, A, X_minus_a, a set:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $is_linear_polynomial_factor(X_minus_a, a)
+        $polynomial_divides(X_minus_a, A)
+        =>:
+            $is_polynomial_root(A, a)
+    forall K set, A, X_minus_a, a set:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $is_linear_polynomial_factor(X_minus_a, a)
+        $is_polynomial_root(A, a)
+        =>:
+            $polynomial_divides(X_minus_a, A)
+
+"""
+Theorem IX.1. A nonempty set of polynomials closed under addition and under
+multiplication by arbitrary polynomials consists of all multiples of one
+polynomial D, unique up to multiplication by a nonzero constant.  A unique
+monic representative may be chosen.
+"""
+
+abstract_prop polynomial_ideal_is_principal_with_monic_generator(K, ideal, D)
+
+# Source handling: Choose a nonzero member of smallest degree and divide every
+# member by it.  Closure forces the remainder to vanish; two generators divide
+# each other and hence differ by a nonzero constant.
+# trust: This uses the preceding polynomial division theorem plus a set of
+# polynomials, its closure operations, and a monic-normalization operation.
+trust:
+    forall K set, ideal, D set:
+        $is_field(K)
+        $polynomial_ideal_is_principal_with_monic_generator(K, ideal, D)
+
+thm theorem_IX_1_polynomial_ideals_are_principal:
+    ? forall K set, ideal, D set:
+        $is_field(K)
+        =>:
+            $polynomial_ideal_is_principal_with_monic_generator(K, ideal, D)
+    $polynomial_ideal_is_principal_with_monic_generator(K, ideal, D)
+
+"""
+Definition. The normalized generator of the ideal of linear combinations of
+A,B,... is their polynomial gcd.  It divides every input, every common divisor
+divides it, and gcd(A,B)=1 exactly when AP+BQ=1 for some polynomials P,Q.
+"""
+
+abstract_prop is_polynomial_gcd_of_family(K, family, D)
+abstract_prop polynomial_bezout_identity_for_pair(K, A, B)
+
+# Source handling: Apply Theorem IX.1 to the ideal of all polynomial linear
+# combinations, exactly as Chapter II constructs integer gcds.
+# trust: Finite polynomial families and their coefficient combinations need a
+# representation once the polynomial object layer exists.
+trust:
+    forall K set, family, D set:
+        $is_field(K)
+        $is_polynomial_gcd_of_family(K, family, D)
+    forall K set, A, B set:
+        $is_field(K)
+        $polynomial_bezout_identity_for_pair(K, A, B)
+
+"""
+Definition. A positive-degree polynomial is prime, or irreducible, if it has
+no divisor of degree strictly between 0 and its degree.  Every linear
+polynomial is irreducible.  Irreducibility depends on the ground field: X^2+1
+is irreducible over Q and R but factors over C as (X+i)(X-i).
+"""
+
+abstract_prop is_irreducible_polynomial_over_field(K, P)
+abstract_prop quadratic_X_squared_plus_one_irreducibility_examples()
+
+# Source handling: The examples distinguish the same expression under three
+# different coefficient fields.
+# trust: Both irreducibility and the polynomial factorization syntax depend on
+# the missing polynomial datatype.
+trust:
+    $quadratic_X_squared_plus_one_irreducibility_examples()
+
+"""
+Theorem IX.2. A polynomial A of degree n>0 factors uniquely, up to the order
+of the factors, as a product of its linear factors X-a_i and one polynomial Q
+having no roots in K.  There are at most n linear factors.
+"""
+
+abstract_prop polynomial_factors_into_roots_and_root_free_part(K, A, n)
+
+# Source handling: If A has a root a, divide by X-a and induct on the degree.
+# Any second factorization must contain the same root, so cancellation reduces
+# uniqueness to the lower-degree case.
+# trust: The proof needs polynomial root-factor division, finite factor lists,
+# and cancellation in K[X].
+trust:
+    forall K set, A set, n N_pos:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $polynomial_has_degree(A, n)
+        =>:
+            $polynomial_factors_into_roots_and_root_free_part(K, A, n)
+
+thm theorem_IX_2_root_factorization:
+    ? forall K set, A set, n N_pos:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $polynomial_has_degree(A, n)
+        =>:
+            $polynomial_factors_into_roots_and_root_free_part(K, A, n)
+    $polynomial_factors_into_roots_and_root_free_part(K, A, n)
+
+"""
+Corollary. A polynomial of degree n>0 has at most n distinct roots in its
+ground field.
+"""
+
+abstract_prop polynomial_has_at_most_degree_many_distinct_roots(K, A, n)
+
+# Source handling: Each distinct root contributes one of the linear factors in
+# Theorem IX.2, and their number cannot exceed the degree.
+# trust: Counting a finite collection of distinct polynomial roots remains part
+# of the polynomial/finiteness interface.
+trust:
+    forall K set, A set, n N_pos:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $polynomial_has_degree(A, n)
+        =>:
+            $polynomial_has_at_most_degree_many_distinct_roots(K, A, n)
+
+thm corollary_IX_2_root_bound:
+    ? forall K set, A set, n N_pos:
+        $is_field(K)
+        $is_polynomial_over_field(K, A)
+        $polynomial_has_degree(A, n)
+        =>:
+            $polynomial_has_at_most_degree_many_distinct_roots(K, A, n)
+    $polynomial_has_at_most_degree_many_distinct_roots(K, A, n)
+
+"""
+Exercise IX.1. Find the gcd over Q of X^5-X^4-6X^3-2X^2+5X+3 and
+X^3-3X-2, and find the gcd after interpreting coefficients modulo 3.
+"""
+
+# Over Q the gcd is (X+1)^2.  Indeed the first polynomial is
+# (X+1)^3(X-1)(X-3), while the second is (X+1)^2(X-2).  Over F_3 the second
+# factor becomes (X+1)^3, so the monic gcd is (X+1)^3.
+
+abstract_prop exercise_IX_1_polynomial_gcd_computations()
+
+# Source handling: Repeated polynomial division computes the two gcds; changing
+# the coefficient field makes X-2 equal X+1 modulo 3.
+# trust: Concrete polynomial parsing and Euclidean division are pending.
+trust:
+    $exercise_IX_1_polynomial_gcd_computations()
+
+"""
+Exercise IX.2. X^4+1 is irreducible over Q, but has degree-two divisors over
+the field Q(sqrt(2)) introduced in Exercise VI.12.
+"""
+
+# Over Q(sqrt(2)), the requested factorization is
+# X^4+1=(X^2+sqrt(2)X+1)(X^2-sqrt(2)X+1).  Over Q neither a rational root nor
+# a rational quadratic factor is possible, so the polynomial is irreducible.
+
+abstract_prop exercise_IX_2_quartic_irreducibility_and_quadratic_factorization()
+
+# Source handling: Over Q(sqrt(2)), multiply the displayed conjugate
+# quadratics; over Q rule out rational quadratic factors.
+# trust: This needs a polynomial layer over the quadratic field from VI.12.
+trust:
+    $exercise_IX_2_quartic_irreducibility_and_quadratic_factorization()
+
+"""
+Exercise IX.3. If R is a subring of K[X] containing K, then finitely many
+polynomials P1,...,PN generate all of R as a K-algebra.
+"""
+
+sketch:
+    abstract_prop subring_of_polynomial_ring_is_finitely_generated_over_field(K, Ring)
+
+    # Source handling: Take the gcd d of degrees in R, choose finitely many
+    # degrees with gcd d, and use the sufficiently-large-combination result
+    # from Exercise III.6.
+    # trust: This requires polynomial subrings, degree sets, and K-algebra
+    # generation by a finite polynomial family.
+    trust:
+        forall K, Ring set:
+            $is_field(K)
+            =>:
+                $subring_of_polynomial_ring_is_finitely_generated_over_field(K, Ring)

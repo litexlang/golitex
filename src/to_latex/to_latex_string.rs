@@ -471,11 +471,8 @@ impl CartDim {
 impl ClaimStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![
-            format!(
-                r"\text{{\textbf{{claim}}:}} & {}",
-                self.fact.to_latex_string()
-            ),
-            r"\text{\textbf{prove}:} &".to_string(),
+            r"\text{\textbf{claim}:} &".to_string(),
+            format!(r"\text{{\textbf{{?}}}} & {}", self.fact.to_latex_string()),
         ];
         for st in &self.proof {
             rows.push(format!(r"& \quad {}", st.to_latex_string()));
@@ -690,7 +687,7 @@ impl DefAlgoStmt {
     }
 }
 
-impl DefLetStmt {
+impl TrustHaveStmt {
     pub fn to_latex_string(&self) -> String {
         match self.facts.len() {
             0 => format!(
@@ -1278,7 +1275,7 @@ impl IsTupleFact {
     }
 }
 
-impl ProofDebtStmt {
+impl TrustStmt {
     pub fn to_latex_string(&self) -> String {
         if self.facts.len() == 1 {
             format!(
@@ -1958,25 +1955,9 @@ impl ImportGlobalModuleStmt {
     }
 }
 
-impl ImportRelativePathStmt {
-    pub fn to_latex_string(&self) -> String {
-        let path = latex_texttt_escape(&self.path);
-        match &self.as_mod_name {
-            Some(m) => format!(
-                r"\operatorname{{{}}}\ \texttt{{{}}}\ \mathrm{{as}}\ {}",
-                IMPORT,
-                path,
-                latex_local_ident(m)
-            ),
-            None => format!(r"\operatorname{{{}}}\ \texttt{{{}}}", IMPORT, path),
-        }
-    }
-}
-
 impl ImportStmt {
     pub fn to_latex_string(&self) -> String {
         match self {
-            ImportStmt::ImportRelativePath(s) => s.to_latex_string(),
             ImportStmt::ImportGlobalModule(s) => s.to_latex_string(),
         }
     }
@@ -2156,8 +2137,8 @@ impl Stmt {
     pub fn to_latex_string(&self) -> String {
         match self {
             Stmt::Fact(x) => x.to_latex_string(),
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(x)) => x.to_latex_string(),
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(x)) => x.to_latex_string(),
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(x)) => x.to_latex_string(),
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),

@@ -70,16 +70,6 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-/// Removed spellings retained as reserved words so their migration diagnostics stay precise.
-pub const LEGACY_OPEN_OPEN_INTERVAL: &str = "oo";
-pub const LEGACY_OPEN_CLOSED_INTERVAL: &str = "oc";
-pub const LEGACY_CLOSED_OPEN_INTERVAL: &str = "co";
-pub const LEGACY_CLOSED_CLOSED_INTERVAL: &str = "cc";
-/// Removed spellings retained as reserved words so their migration diagnostics stay precise.
-pub const INFO: &str = "info";
-pub const INFC: &str = "infc";
-pub const OINF: &str = "oinf";
-pub const CINF: &str = "cinf";
 pub const SUM: &str = "sum";
 pub const FINITE_SET_SUM: &str = "finite_set_sum";
 pub const PRODUCT: &str = "product";
@@ -105,14 +95,12 @@ pub const SUPERSET: &str = "superset";
 pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const ALIAS: &str = "alias";
-pub const LET: &str = "let";
 pub const PROP: &str = "prop";
 /// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
 pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
 pub const SKETCH: &str = "sketch";
 pub const TRY: &str = "try";
-pub const SCRATCH: &str = "scratch";
 pub const THM: &str = "thm";
 pub const AXIOM: &str = "axiom";
 pub const STOP: &str = "stop";
@@ -142,7 +130,6 @@ pub const CASE: &str = "case";
 pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
 pub const LOCAL: &str = "local";
-pub const EXPORT: &str = "export";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
 pub const OBTAIN: &str = "obtain";
@@ -262,14 +249,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         MATRIX,
         RANGE,
         CLOSED_RANGE,
-        LEGACY_OPEN_OPEN_INTERVAL,
-        LEGACY_OPEN_CLOSED_INTERVAL,
-        LEGACY_CLOSED_OPEN_INTERVAL,
-        LEGACY_CLOSED_CLOSED_INTERVAL,
-        INFO,
-        INFC,
-        OINF,
-        CINF,
         EXIST,
         ST,
         FORALL,
@@ -287,13 +266,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SUCCESS_COLON,
         UNKNOWN_COLON,
         ALIAS,
-        LET,
         PROP,
         ABSTRACT_PROP,
         CLAIM,
         SKETCH,
         TRY,
-        SCRATCH,
         THM,
         AXIOM,
         STOP,
@@ -305,7 +282,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TRUST,
         IMPORT,
         LOCAL,
-        EXPORT,
         AS,
         ENUMERATE,
         HAVE,

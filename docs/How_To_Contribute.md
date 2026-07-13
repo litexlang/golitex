@@ -11,6 +11,10 @@ Litex is experimental. The most helpful contributions right now are simple:
 
 You do not need to know the Rust kernel to help.
 
+For the boundary between builtin support, source-local cite packages, and a
+future reusable project package, follow the
+[Reusable Mathematics Policy](Reusable_Mathematics_Policy.md).
+
 ## 1. Tell Us Where the Docs Are Bad
 
 Fresh-reader feedback is very useful. Read a small part of the README, Manual,
@@ -102,7 +106,7 @@ For a new or renamed statement form:
 
 - Add the statement data structure and place it in the appropriate `Stmt`
   subgroup.
-- Add parser support and a clear parse error for legacy or invalid spellings.
+- Add parser support and a clear parse error for invalid spellings.
 - Add executor support, or explicitly route unsupported forms to a clear error.
 - Update display, metadata, JSON/output evidence, and LaTeX output if the form
   can be shown to users.
@@ -114,14 +118,14 @@ Prefer a small end-to-end change over a partial branch in only one layer. If the
 statement interacts with verification, imports, or proof blocks, run the
 broader verifier test suite before treating it as complete.
 
-Some small facts may be intuitive but hard to formalize because Litex's
-standard library is still missing supporting lemmas. For now, collect these
+Some small facts may be intuitive but hard to formalize because the current
+project or source-local cite package is missing supporting lemmas. For now, collect these
 cases and mark them uniformly with `trust`. For example, many files use
 `finite_set_sum`, and a common fact is that permuting the same finite set should
 not change the result. It is acceptable to leave such facts as `trust` for now:
 they are tedious to prove and do not block the main translation work. After the
 main line is complete, clean up these `trust` steps together; some should become
-standard-library facts, and others should be proved locally.
+checked source-local cite facts, and others should be proved locally.
 
 ## Help Make Litex Easier to Understand
 
