@@ -1,6 +1,6 @@
 [package]
 name = "litex-lang"
-version = "0.9.102-beta"
+version = "0.9.103-beta"
 edition = "2021"
 description = "The Language Where Mathematics Verifies Itself"
 license = "Apache-2.0"
