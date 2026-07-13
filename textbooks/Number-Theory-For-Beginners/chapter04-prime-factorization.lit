@@ -32,16 +32,37 @@ greater than 1.  If p is prime, then p either divides a or is prime to a.
 
 # Source handling: The text uses the least positive divisor argument from
 # Chapter I.
-# trust: This proof needs a checked least-divisor construction.
+# trust: Existence of a prime divisor needs a checked least-divisor
+# construction.
 trust:
     forall a Z:
         a > 1
         =>:
             exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
-    forall p, a Z:
+
+thm prime_divides_or_is_relatively_prime:
+    ? forall p, a Z:
         $is_prime_Z(p)
         =>:
             $divides_Z(p, a) or $relatively_prime_Z(p, a)
+    by thm gcd_Z_dvd_left(p, a)
+    obtain u from exist u Z st {p = gcd_Z(p, a) * u}
+    gcd_Z(p, a) = 0 or gcd_Z(p, a) > 0
+    by cases:
+        ? $divides_Z(p, a) or $relatively_prime_Z(p, a)
+        case gcd_Z(p, a) = 0:
+            p = gcd_Z(p, a) * u = 0 * u = 0
+            impossible p > 1
+        case gcd_Z(p, a) > 0:
+            $is_prime_Z(p)
+            gcd_Z(p, a) = 1 or gcd_Z(p, a) = p
+            by cases:
+                ? $divides_Z(p, a) or $relatively_prime_Z(p, a)
+                case gcd_Z(p, a) = 1:
+                    $relatively_prime_Z(p, a)
+                case gcd_Z(p, a) = p:
+                    by thm gcd_Z_dvd_right(p, a)
+                    $divides_Z(p, a)
 
 thm prime_divisor_exists:
     ? forall a Z:
@@ -55,24 +76,22 @@ Theorem IV.1. If a prime divides a product of integers, then it divides at
 least one factor.
 """
 
-# Source handling: The source proof says otherwise the prime is relatively
-# prime to every factor, hence to the product, contradicting divisibility.
-# trust: The finite-product version needs a list product interface.  The
-# binary version is recorded here as the reusable checked-facing interface.
-trust:
-    forall p, a, b Z:
-        $is_prime_Z(p)
-        $divides_Z(p, a * b)
-        =>:
-            $divides_Z(p, a) or $divides_Z(p, b)
-
 thm theorem_IV_1_prime_divides_binary_product:
     ? forall p, a, b Z:
         $is_prime_Z(p)
         $divides_Z(p, a * b)
         =>:
             $divides_Z(p, a) or $divides_Z(p, b)
-    $divides_Z(p, a) or $divides_Z(p, b)
+    # If p does not divide the first factor, the preceding prime alternative
+    # gives the relatively-prime hypothesis needed by Euclid's lemma.
+    by thm prime_divides_or_is_relatively_prime(p, a)
+    by cases:
+        ? $divides_Z(p, a) or $divides_Z(p, b)
+        case $divides_Z(p, a):
+            $divides_Z(p, a)
+        case $relatively_prime_Z(p, a):
+            by thm theorem_III_2_euclid_lemma(p, a, b)
+            $divides_Z(p, b)
 
 abstract_prop prime_divides_some_factor(p, n, f)
 

@@ -149,8 +149,7 @@ thm theorem_X_2_primitive_root_mod_prime_exists:
         $is_prime_Z(p)
         =>:
             exist r Z st {$is_primitive_root_mod_prime(r, p)}
-    trust:
-        exist r Z st {$is_primitive_root_mod_prime(r, p)}
+    exist r Z st {$is_primitive_root_mod_prime(r, p)}
 
 """
 Definition. A primitive root modulo m is a unit class of order phi(m).  If r

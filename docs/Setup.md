@@ -217,7 +217,7 @@ litex
 ```
 
 When run directly inside a project directory containing `litex.config`, the
-REPL discovers its exports without executing the project's entrance file. You
+REPL discovers its exports without executing the project's `[run]` plan. You
 can then enter `local import chapter_name` and continue entering statements in
 the same environment. Use `litex -isolated` when you need a standalone REPL.
 
@@ -267,7 +267,7 @@ litex [OPTION...]
 
 Basic behavior:
 
-- **No arguments**: starts the interactive REPL; a `litex.config` directly in the current directory enables its root `local import` exports without running the entrance file.
+- **No arguments**: starts the interactive REPL; a `litex.config` directly in the current directory enables its root `local import` exports without running its `[run]` plan.
 - **With options**: runs code, files, repositories, or helper commands as described below.
 - **Unknown options**: print an error message and exit.
 
@@ -280,7 +280,7 @@ Basic behavior:
 | `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
 | `-isolated -f <file>` | Force a file to run without project discovery. |
 | `-isolated` | Force the interactive REPL to ignore a `litex.config` in the current directory. |
-| `-r <project>` | Run the `[entrance]` file declared by `<project>/litex.config`. |
+| `-r <project>` | Run the ordered `[run]` plan declared by `<project>/litex.config`. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <project>` | Run a project and return one wrapper JSON object. |

@@ -444,16 +444,16 @@ mod tests {
     }
 
     #[test]
-    fn project_repl_loads_root_exports_without_running_entrance() {
+    fn project_repl_loads_root_exports_without_running_project_plan() {
         let root = repl_test_dir("project");
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[entrance]\nfile = \"./main.lit\"\n\n[export]\nfacts = \"./facts.lit\"\n",
+            "[run]\n./main.lit\n\n[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
         )
         .expect("write config");
-        fs::write(root.join("main.lit"), "have entrance_value R = 9\n").expect("write entrance");
+        fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
         fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
 
         let mut runtime = Runtime::new_with_builtin_code();
@@ -466,8 +466,8 @@ mod tests {
                 .current_module()
                 .main_environment
                 .defined_identifiers
-                .contains_key("entrance_value"),
-            "the entrance file must not run when the REPL starts"
+                .contains_key("planned_value"),
+            "the project plan must not run when the REPL starts"
         );
 
         let (_, import_error) = run_source_code("local import facts", &mut runtime);

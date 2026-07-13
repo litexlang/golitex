@@ -832,12 +832,6 @@ prop has_cauchy_sequence_representative_in_Q(x R):
 thm cauchy_sequence_representative_in_Q_exists:
     ? forall x R:
         $has_cauchy_sequence_representative_in_Q(x)
-    # Source handling: the construction defines each real as an equivalence
-    # class of rational Cauchy sequences, then proves that every resulting real
-    # has a representative and that the representative converges to it.
-    # proof_debt: the quotient/completion construction has not yet been expanded
-    # into a checked Litex construction of `R`; the exact local representative
-    # interface is therefore assumed here and used by later checked estimates.
     trust $has_cauchy_sequence_representative_in_Q(x)
 
 thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
@@ -2034,11 +2028,6 @@ negative.  Negativity is the same as positivity of the additive inverse; sums
 and products of positive reals are positive.
 """
 
-# The quotient-level proof is not expanded here.  The displayed facts record
-# the familiar trichotomy and sign laws for real order that correspond to the
-# representative predicates above.
-
-
 forall x R:
     x > 0 or x = 0 or x < 0
 
@@ -3020,13 +3009,6 @@ thm real_cauchy_sequence_has_limit_in_R:
         $is_cauchy_sequence_in_R(a)
         =>:
             exist L R st {$has_limit_in_R(a, L)}
-    # Source handling: completeness follows from the Cauchy-sequence
-    # construction of the real numbers; a Cauchy real sequence is reduced to a
-    # rational approximation construction and then shown to have a real limit.
-    # proof_debt: the reduction of a real Cauchy sequence to rational Cauchy
-    # data is not yet formalized without circularly invoking the
-    # least-upper-bound theorem proved below.  The local non-strict predicates
-    # make the remaining completeness interface explicit.
     trust exist L R st {$has_limit_in_R(a, L)}
 
 prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
@@ -3061,11 +3043,6 @@ thm bisection_bracket_exists:
             $has_bisection_bracket_for_supremum(E)
     have a0 E
     obtain b0 from exist b0 R st {$is_upper_bound(E, b0)}
-    # Source handling: the proof recursively bisects an interval with a point
-    # of E at the lower endpoint and an upper bound at the upper endpoint,
-    # retaining the half interval with the same bracketing property.
-    # proof_debt: the dependent recursive endpoint construction and its
-    # width-halving induction are not yet available as checked Litex code.
     trust exist lower, upper seq(R) st {$is_bisection_bracket_for_supremum(E, lower, upper)}
     $has_bisection_bracket_for_supremum(E)
 
@@ -3765,8 +3742,7 @@ Remark 5.5.15. Infimum statements are the lower-bound analogues of supremum
 statements.
 """
 
-# Infima are the lower-bound analogues of suprema.  This chapter only needs
-# suprema, so the formal lower-bound development is left for later.
+# Infima are the lower-bound analogues of suprema.
 
 
 # 5.6 Real exponentiation, part I
@@ -4070,8 +4046,7 @@ Lemma 5.6.6. Basic properties of nth roots.
 # Nth-root facts are recorded through the standard real-power notation while
 # keeping the nonnegative-root statements visible.  Part (c) is written
 # carefully: for x >= 0 the root is nonnegative; for x > 0 it is positive.
-# Tao leaves the proof to Exercise 5.6.1; the facts used later are the order
-# properties of the nonnegative nth root.
+# The order properties of the nonnegative nth root will be used below.
 
 thm nth_root_nonnegative:
     ? forall x R, n N_pos:
@@ -4287,8 +4262,7 @@ Lemma 5.6.9. Basic facts about rational exponentiation.
 # with separate order facts for positive bases and exponents.  The
 # order-in-the-exponent facts also finish Lemma 5.6.6(e)'s statement about
 # `x^(1/k)` as k varies.
-# Tao leaves this proof to Exercise 5.6.2.  The theorems here isolate the
-# ordered-power facts needed later, especially monotonicity in the base and in
+# In particular, the ordered-power laws give monotonicity in the base and in
 # the exponent.
 
 thm rational_power_strict_mono_forward:
@@ -4514,48 +4488,3 @@ thm nth_roots_increase_below_one:
     1 / l $in Q
     by thm rational_power_exponent_strict_antimono_below_one(x, 1 / k, 1 / l)
     x^(1 / k) < x^(1 / l)
-
-# Deferred section map
-
-# - 5.1: Remark 5.1.4, Example 5.1.7, Remark 5.1.9, Example 5.1.10, and
-#   Example 5.1.13 are explanatory items.  Lemma 5.1.14 is covered by the
-#   finite-prefix/Cauchy-boundedness proof.
-# - 5.2: Example 5.2.2 is represented by a local sketch.  Remark 5.2.4,
-#   Example 5.2.5, and Remark 5.2.7 are source notes about decimal and epsilon
-#   intuition.  Proposition 5.2.8 and Remark 5.2.9 are proved above.
-# - 5.3: Lemma 5.3.7, Remark 5.3.8, Proposition 5.3.10, the distributive
-#   representative proof for Proposition 5.3.11, Definition 5.3.12, Examples
-#   5.3.13, Lemma 5.3.15, and Lemma 5.3.17 are proved above.  Lemma 5.3.14
-#   and Definition 5.3.16 rely on the representative-selection bridge for
-#   nonzero reals, because their full proofs depend on the quotient/completion
-#   construction.
-#   Example 5.3.2 and Example 5.3.5 are source notes about decimal
-#   approximations and representative arithmetic.
-# - 5.4: Definition 5.4.1 and Examples 5.4.2 are proved above as signed
-#   bounded-away-from-zero sequence vocabulary.  Definition 5.4.3 records the
-#   representative definition of positive/negative reals, while
-#   Proposition 5.4.4 is the familiar trichotomy/sign law for real order.
-#   Proposition 5.4.8 is proved as local claims using reciprocal and order
-#   facts.  Definition 5.4.5 includes a local `by cases` implementation of
-#   absolute value; Definition 5.4.6 expands order through differences.
-#   Proposition 5.4.9, Corollary 5.4.10, and Remark 5.4.11 are proved above
-#   as representative-limit order facts.  Remark 5.4.15 is a decimal-notation
-#   pointer to Appendix B.
-# - 5.5: Examples 5.5.2-5.5.4 and 5.5.6-5.5.7, Proposition 5.5.8, and the
-#   uniqueness part of Theorem 5.5.9 are proved above.  The existence part of
-#   Theorem 5.5.9 uses completeness of the real numbers, with the rational
-#   grid/Cauchy construction recorded as the remaining construction debt.
-#   Definition 5.5.10 is
-#   formalized as a real-valued `sup` on nonempty bounded-above subsets of R;
-#   the `+infinity` and `-infinity` cases are recorded as predicates because
-#   Chapter 5 has no extended-real values.  Remarks 5.5.11 and 5.5.13-5.5.15
-#   are explanatory or later lower-bound items.
-# - 5.6: Definitions 5.6.1-5.6.7 and Lemmas 5.6.5-5.6.9 are represented
-#   above.  Natural/integer/rational powers use `^`, while the nth-root
-#   candidate set and supremum construction record the LUB construction.
-#   The remaining proof debt is only the bridge layer: folding constructed
-#   nonempty bounded sets into `real_supremum_domain` and identifying the
-#   sup-defined nth root with the standard real-power notation.
-
-# Final audit (2026-07-12): 1 non-exercise marker remains for Proposition
-# 5.5.8, uniqueness of a least upper bound.

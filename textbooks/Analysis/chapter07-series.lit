@@ -76,8 +76,7 @@ and are monotone under pointwise comparison.
 
 # These are the standard finite-sum induction facts used throughout the series
 # chapter: splitting intervals, shifting indices, distributing over addition
-# and scalar multiplication, triangle inequality, and comparison.  Tao leaves
-# the proof to Exercise 7.1.1, so the rules are stated here for later use.
+# and scalar multiplication, triangle inequality, and comparison.
 
 thm finite_series_split_range:
     ? forall a fn(i Z) R, m, n, p Z:
@@ -597,8 +596,6 @@ monotonicity, and triangle-inequality laws.
 # Finite-set sums inherit their empty, singleton, substitution, union,
 # linearity, monotonicity, and triangle facts from finite enumeration and the
 # corresponding ordinary finite-sum laws.
-# Tao leaves this proof to Exercise 7.1.2.  The statements below record the
-# standard finite-set-sum rules used later.
 
 thm finite_set_sum_empty:
     ? forall f fn(x {}) R:
@@ -860,10 +857,6 @@ thm geometric_series_from_one_formula:
         1 - x != 0
         =>:
             $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
-    # Source handling: Example 7.2.4 derives the finite geometric-sum formula
-    # and then takes the geometric-sequence limit.
-    # proof_debt: the chapter still lacks that finite partial-sum identity and
-    # its bridge to the Chapter 6 geometric limit.
     trust $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
 
 thm geometric_series_from_one_diverges_when_abs_ge_one:
@@ -871,10 +864,6 @@ thm geometric_series_from_one_diverges_when_abs_ge_one:
         abs(x) >= 1
         =>:
             not $is_convergent_series(geometric_series_terms_from_one(x))
-    # Source handling: Example 7.2.4 displays unbounded partial sums; Lemma
-    # 7.3.3 later gives the full geometric-series divergence criterion.
-    # proof_debt: the local geometric-term limit package has not yet supplied
-    # the zero-test argument for every `abs(x) >= 1`.
     trust not $is_convergent_series(geometric_series_terms_from_one(x))
 
 """
@@ -989,9 +978,6 @@ are arbitrarily small.
 
 # This is the Cauchy criterion for series: convergence of partial sums is
 # equivalent to every sufficiently late finite tail having small absolute value.
-# Tao leaves this proof to Exercise 7.2.2.  The remaining work is to translate
-# the Cauchy condition for partial sums into the absolute value of a finite
-# tail sum, in both directions.
 
 have fn finite_tail_sum(a seq(R), p, q N_pos) R by cases:
     case q < p: 0
@@ -1068,9 +1054,8 @@ thm series_cauchy_criterion_forward:
             $has_small_tail_sums_after(a, epsilon, N0 + 1)
     $has_cauchy_series_tails(a)
 
-# The tail criterion makes the partial sums Cauchy.  This is the finite
-# algebraic part of the converse; the sole remaining background use is the
-# Chapter 5 completeness interface for real Cauchy sequences.
+# The tail criterion makes the partial sums Cauchy; completeness then supplies
+# their limit.
 
 thm real_closeness_is_symmetric:
     ? forall epsilon R_pos, x, y R:
@@ -1205,8 +1190,6 @@ If the terms fail to tend to 0, the series diverges.
 # The zero test says convergence of the partial sums forces the individual
 # increments `a(n)` to become small; equivalently, a nonzero term tail obstructs
 # convergence of the series.
-# Tao leaves this proof to Exercise 7.2.3.  Once the Cauchy-tail criterion is
-# available, the direct step is to apply it with `p=q=n`.
 
 thm series_zero_test:
     ? forall a seq(R):
@@ -1323,8 +1306,6 @@ of absolute values.
 # Absolute convergence controls signed finite tails by the corresponding
 # absolute tails, and the bound on the final sum is the finite triangle
 # inequality passed to the limit.
-# Tao leaves this proof to Exercise 7.2.4.  The remaining formal work is to
-# pass the finite triangle inequality through the limit of partial sums.
 
 thm partial_sum_abs_matches_finite_sum:
     ? forall a seq(R), k N_pos:
@@ -1768,10 +1749,6 @@ thm alternating_series_tail_bound:
         q >= n0
         =>:
             abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
-    # Source handling: the alternating-series proof compares successive even
-    # and odd partial sums by a finite induction.
-    # proof_debt: that finite even/odd tail induction is not yet a local
-    # theorem package.
     trust abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
 
 thm alternating_series_test:
@@ -1911,10 +1888,6 @@ sketch:
 
     claim:
         ? not $is_convergent_series(harmonic_terms)
-        # Source handling: this forward reference is justified later by
-        # Corollary 7.3.7, the p-series criterion.
-        # proof_debt: the later harmonic-series divergence theorem is not
-        # available at this source position.
         trust not $is_convergent_series(harmonic_terms)
 
     claim:
@@ -1964,8 +1937,6 @@ shifting the index.
 # by a fixed finite prefix and therefore does not affect convergence.
 # Index shift: the shifted series is a tail of the original series, so its
 # convergence follows from tail convergence.
-# Tao leaves this proof to Exercise 7.2.5.  The missing proof is the explicit
-# comparison between the shifted partial sums and the original tail sums.
 
 have fn series_add(a, b seq(R)) fn(i N_pos) R = fn(j N_pos) R {a(j) + b(j)}
 have fn series_scalar_mul(c R, a seq(R)) fn(i N_pos) R = fn(j N_pos) R {c * a(j)}
@@ -2413,11 +2384,51 @@ thm nonnegative_series_bounded_partial_sums_converge:
         $has_bounded_partial_sums(a)
         =>:
             $is_convergent_series(a)
-    # Source handling: Proposition 7.3.1 applies monotone convergence to the
-    # increasing sequence of partial sums.
-    # proof_debt: the local monotone-convergence bridge from bounded partial
-    # sums to a series limit remains unexpanded.
-    trust $is_convergent_series(a)
+    obtain M from exist M R st {$is_partial_sum_bound(a, M)}
+    have partial_sums seq(R) = fn(k N_pos) R {partial_sum(a, k)}
+    claim:
+        ? forall k N_pos:
+            partial_sums(k) <= partial_sums(k + 1)
+        partial_sums(k) = partial_sum(a, k)
+        partial_sums(k + 1) = partial_sum(a, k + 1)
+        k <= k + 1
+        by thm nonnegative_partial_sum_le_of_le(a, k, k + 1)
+        partial_sum(a, k) <= partial_sum(a, k + 1)
+        partial_sums(k) <= partial_sums(k + 1)
+    claim:
+        ? $is_increasing_sequence(partial_sums)
+        $is_increasing_sequence(partial_sums)
+    claim:
+        ? $is_bounded_above_sequence(partial_sums)
+        witness exist B R st {$is_sequence_upper_bound(partial_sums, B)} from M:
+            forall k N_pos:
+                partial_sums(k) = partial_sum(a, k)
+                partial_sum(a, k) <= M
+                partial_sums(k) <= M
+            $is_sequence_upper_bound(partial_sums, M)
+    by thm bounded_increasing_sequence_converges(partial_sums)
+    $is_convergent_sequence(partial_sums)
+    by thm chap6::convergent_sequence_has_limit(partial_sums)
+    exist L R st {$chap6::has_limit(partial_sums, L)}
+    obtain L from exist L R st {$chap6::has_limit(partial_sums, L)}
+    claim:
+        ? $has_limit(partial_sums, L)
+        claim:
+            ? forall epsilon R_pos:
+                exist n0 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n0)}
+            by thm chap6::has_limit_gives_eventual_closeness(partial_sums, L, epsilon)
+            obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(partial_sums, L, epsilon, n0)}
+            witness exist n1 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n1)} from n0:
+                forall n N_pos:
+                    n >= n0
+                    =>:
+                        abs(partial_sums(n) - L) < epsilon
+                        abs(partial_sums(n) - L) <= epsilon
+                $is_tail_close_to(partial_sums, L, epsilon, n0)
+        $has_limit(partial_sums, L)
+    partial_sums = fn(k N_pos) R {partial_sum(a, k)}
+    witness exist S R st {$has_series_sum(a, S)} from L:
+        $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
 
 """
 Corollary 7.3.2 (Comparison test). If |a_n| is bounded by a convergent
@@ -2426,8 +2437,6 @@ non-negative series b_n, then the series a_n is absolutely convergent.
 
 # The comparison test bounds the absolute partial sums of `a` by the bounded
 # partial sums of the non-negative convergent majorant `b`.
-# Tao leaves this proof to Exercise 7.3.1.  The remaining step is to turn those
-# finite partial-sum bounds into absolute convergence.
 
 thm comparison_test_for_series:
     ? forall a, b seq(R):
@@ -2652,8 +2661,6 @@ sums to 1/(1-x) when |x| < 1.
 # The geometric-series proof uses the finite partial-sum identity and then
 # passes to the limit when `abs(x) < 1`; when `abs(x) >= 1`, the terms do not
 # tend to zero.
-# Tao leaves this proof to Exercise 7.3.2.  The formal proof is the standard
-# finite geometric identity plus the Chapter 6 limit behavior of powers.
 
 have fn geometric_series_terms(x R) fn(i N_pos) R = fn(j N_pos) R {x^(j - 1)}
 
@@ -2726,11 +2733,8 @@ the series sum a_n converges iff the condensed series sum 2^k a_{2^k}
 converges.
 """
 
-# Tao proves this by comparing ordinary partial sums with dyadic blocks.  The
-# proof below uses Proposition 7.3.1 together with the finite dyadic estimate
-# stated in the source as Lemma 7.3.6.  The dyadic estimate itself still needs a
-# block-induction proof, but the two directions of Cauchy's condensation test
-# are proved from that estimate.
+# The condensation comparison groups ordinary terms into dyadic blocks and
+# compares their partial sums with the condensed partial sums.
 
 have fn condensed_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {2^(j - 1) * a(2^(j - 1))}
 
@@ -3204,10 +3208,6 @@ thm p_series_converges_when_exponent_gt_one:
         q > 1
         =>:
             $is_convergent_series(p_series_terms(q))
-    # Source handling: the text uses Cauchy condensation and the geometric
-    # ratio `2^(1-q)`.
-    # proof_debt: the local bridge from the condensed p-series to that
-    # geometric convergence test remains unproved.
     trust $is_convergent_series(p_series_terms(q))
 
 thm p_series_diverges_when_exponent_le_one:
@@ -3215,9 +3215,6 @@ thm p_series_diverges_when_exponent_le_one:
         q <= 1
         =>:
             not $is_convergent_series(p_series_terms(q))
-    # Source handling: the divergent half uses the same condensation reduction
-    # to a geometric series.
-    # proof_debt: the corresponding local divergence bridge is not expanded.
     trust not $is_convergent_series(p_series_terms(q))
 
 """
@@ -3406,10 +3403,6 @@ thm rearranged_partial_sum_le_original_at_bounded_prefix:
         $has_bounded_prefix_image(phi, n, M)
         =>:
             partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
-    # Source handling: Proposition 7.4.1 compares a finite rearranged prefix
-    # with an ordinary prefix containing all of its indices.
-    # proof_debt: the finite-set substitution and non-negative missing-term
-    # comparison have not been combined into this local prefix lemma.
     trust partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
 
 thm original_partial_sum_le_rearranged_at_bounded_preimage:
@@ -3419,10 +3412,6 @@ thm original_partial_sum_le_rearranged_at_bounded_preimage:
         $has_bounded_prefix_preimage(phi, n, M)
         =>:
             partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
-    # Source handling: Proposition 7.4.1 applies the same finite-prefix
-    # containment to the inverse bijection.
-    # proof_debt: the finite-set substitution proof for that containment is
-    # not expanded locally.
     trust partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
 
 thm rearranged_series_partial_sums_cofinal:
@@ -3461,10 +3450,6 @@ thm nonnegative_series_same_sum_from_cofinal_partial_sums:
         $has_mutually_cofinal_partial_sums(a, b)
         =>:
             $has_series_sum(b, L)
-    # Source handling: Proposition 7.4.1 passes from cofinal finite-prefix
-    # inequalities to equality of the two suprema of partial sums.
-    # proof_debt: the local least-upper-bound comparison and limit bridge has
-    # not been expanded.
     trust $has_series_sum(b, L)
 
 thm nonnegative_rearrangement:
@@ -3995,9 +3980,6 @@ followed by two negative terms.
 # The original tail groups as (1/(2n+1) - 1/(2n+2)), whose grouped partial
 # sums are positive.  The two-negative rearrangement groups as
 # 1/(2n+1) - 1/(4n) - 1/(4n+2), whose grouped partial sums are negative.
-# The remaining source-level limit step needs a grouping/rearrangement lemma
-# for conditionally convergent series; the proof below establishes the sign
-# mechanism used in the example.
 
 have fn example_7_4_4_original_pair_terms(n N_pos) R = 1 / (2*n + 1) - 1 / (2*n + 2)
 have fn example_7_4_4_rearranged_block_terms(n N_pos) R = 1 / (2*n + 1) - 1 / (4*n) - 1 / (4*n + 2)
@@ -4467,7 +4449,6 @@ thm ratio_terms_eval:
         c(n) > 0
         =>:
             ratio_terms(c)(n) = c(n + 1) / c(n)
-    # Source handling: the ratio is written simply as `c_{n+1}/c_n`.
 
 thm eventual_ratio_upper_bound_gives_root_limsup_bound:
     ? forall c seq(R), r, A R, n0 N_pos:
@@ -4476,9 +4457,6 @@ thm eventual_ratio_upper_bound_gives_root_limsup_bound:
         $has_finite_limit_superior(root_test_terms(c), A)
         =>:
             A <= r
-    # Source handling: Lemma 7.5.2 expands consecutive ratios into a product
-    # and then takes nth roots.
-    # proof_debt: this product-to-root limsup estimate is not yet proved.
     trust A <= r
 
 thm eventual_ratio_lower_bound_gives_root_liminf_bound:
@@ -4488,9 +4466,6 @@ thm eventual_ratio_lower_bound_gives_root_liminf_bound:
         $has_finite_limit_inferior(root_test_terms(c), A)
         =>:
             r <= A
-    # Source handling: Lemma 7.5.2 uses the same product estimate for the
-    # lower ratio bound.
-    # proof_debt: this product-to-root liminf estimate is not yet proved.
     trust r <= A
 
 thm ratio_limsup_bounds_root_limsup:
@@ -4549,10 +4524,6 @@ thm ratio_limsup_less_than_one_gives_root_limsup_below_one:
         alpha < 1
         =>:
             exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
-    # Source handling: Lemma 7.5.2 transfers an upper ratio bound to the
-    # limsup of the nth roots.
-    # proof_debt: the chapter lacks the combined product-estimate and
-    # finite-limsup-existence bridge needed for this consequence.
     trust exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma < 1}
 
 thm ratio_liminf_greater_than_one_gives_root_limsup_above_one:
@@ -4562,9 +4533,6 @@ thm ratio_liminf_greater_than_one_gives_root_limsup_above_one:
         beta > 1
         =>:
             exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
-    # Source handling: Lemma 7.5.2 and `liminf <= limsup` transfer the lower
-    # ratio bound to a root limsup above one.
-    # proof_debt: the local product-estimate/liminf-limsup bridge is missing.
     trust exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
 
 thm positive_sequence_ratio_limit_one_gives_root_limit_one:
@@ -4573,10 +4541,6 @@ thm positive_sequence_ratio_limit_one_gives_root_limit_one:
         $has_limit(ratio_terms(c), 1)
         =>:
             $has_limit(root_test_terms(c), 1)
-    # Source handling: Lemma 7.5.2 applies upper and lower ratio bounds
-    # tending to one.
-    # proof_debt: the equality case of this product estimate remains a local
-    # theorem-package gap.
     trust $has_limit(root_test_terms(c), 1)
 
 """
@@ -4585,8 +4549,8 @@ Corollary 7.5.3 (Ratio test). If the limsup of |a_{n+1}|/|a_n| is less than
 series is divergent.
 """
 
-# The proof combines the root test with Lemma 7.5.2; the remaining
-# inconclusive cases are supplied by Exercise 7.5.3.
+# The proof combines the root test with Lemma 7.5.2; the equality case is
+# inconclusive.
 
 prop has_no_zero_terms(a seq(R)):
     forall n N_pos:
@@ -4610,8 +4574,6 @@ thm absolute_ratio_terms_eval:
         abs(a(n)) > 0
         =>:
             absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
-    # Source handling: Corollary 7.5.3 applies Lemma 7.5.2 to the positive
-    # sequence `abs(a_n)`, and writes this ratio directly.
 
 have fn absolute_value_sequence(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {abs(a(j))}
 

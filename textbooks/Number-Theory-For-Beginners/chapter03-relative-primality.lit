@@ -48,24 +48,43 @@ thm theorem_III_1_relprime_implies_bezout_pair:
     by thm gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
     1 = gcd_Z(a, b) = a * x + b * y
-    witness exist u, v Z st {a * u + b * v = 1} from x, y:
-        a * x + b * y = 1
+    witness exist u, v Z st {a * u + b * v = 1} from x, y
 
-# Source handling: This is the converse direction of Theorem III.1 for two
-# integers.
-# trust: The checked proof should use the common-divisor part of
-# `is_gcd_Z` to show `gcd_Z(a,b)` divides 1 and hence equals 1.
-trust:
-    forall a, b Z:
-        exist x, y Z st {a * x + b * y = 1}
+# The converse is proved by showing directly that 1 has the defining gcd
+# properties: it divides both inputs, and every positive common divisor
+# divides the Bezout combination a*x+b*y=1.
+thm bezout_pair_has_gcd_one:
+    ? forall a, b, x, y Z:
+        a * x + b * y = 1
         =>:
-            $relatively_prime_Z(a, b)
+            $is_gcd_Z(a, b, 1)
+    witness exist u Z st {a = 1 * u} from a
+    $divides_Z(1, a)
+    witness exist v Z st {b = 1 * v} from b
+    $divides_Z(1, b)
+    claim:
+        ? forall e Z:
+            e > 0
+            $divides_Z(e, a)
+            $divides_Z(e, b)
+            =>:
+                $divides_Z(e, 1)
+        obtain p from exist p Z st {a = e * p}
+        obtain q from exist q Z st {b = e * q}
+        witness exist t Z st {1 = e * t} from p * x + q * y:
+            1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
+        $divides_Z(e, 1)
+    witness exist u, v Z st {1 = a * u + b * v} from x, y
+    $is_gcd_Z(a, b, 1)
 
 thm theorem_III_1_bezout_implies_relprime_pair:
     ? forall a, b Z:
         exist x, y Z st {a * x + b * y = 1}
         =>:
             $relatively_prime_Z(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    by thm bezout_pair_has_gcd_one(a, b, x, y)
+    gcd_Z(a, b) = 1
     $relatively_prime_Z(a, b)
 
 """
@@ -73,15 +92,26 @@ Corollary. If d is the gcd of a,b,...,c, then a/d,b/d,...,c/d are mutually
 relatively prime.
 """
 
-sketch:
-    # Source handling: The corollary divides the Bezout identity for d by d.
-    # trust: A finite-input gcd and division interface is needed for the
-    # full statement.
-    trust:
-        forall a, b Z:
-            gcd_Z(a, b) != 0
-            =>:
-                $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
+thm gcd_quotients_are_relatively_prime:
+    ? forall a, b Z:
+        gcd_Z(a, b) != 0
+        =>:
+            $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
+    # Divide the gcd Bezout identity by the nonzero gcd.
+    by thm gcd_Z_dvd_left(a, b)
+    obtain p from exist p Z st {a = gcd_Z(a, b) * p}
+    by thm gcd_Z_dvd_right(a, b)
+    obtain q from exist q Z st {b = gcd_Z(a, b) * q}
+    by thm gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+    a / gcd_Z(a, b) = gcd_Z(a, b) * p / gcd_Z(a, b) = p
+    b / gcd_Z(a, b) = gcd_Z(a, b) * q / gcd_Z(a, b) = q
+    gcd_Z(a, b) = a * x + b * y = gcd_Z(a, b) * p * x + gcd_Z(a, b) * q * y = gcd_Z(a, b) * (p * x + q * y)
+    p * x + q * y = gcd_Z(a, b) * (p * x + q * y) / gcd_Z(a, b) = gcd_Z(a, b) / gcd_Z(a, b) = 1
+    witness exist u, v Z st {(a / gcd_Z(a, b)) * u + (b / gcd_Z(a, b)) * v = 1} from x, y:
+        (a / gcd_Z(a, b)) * x + (b / gcd_Z(a, b)) * y = p * x + q * y = 1
+    by thm theorem_III_1_bezout_implies_relprime_pair(a / gcd_Z(a, b), b / gcd_Z(a, b))
+    $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
 
 """
 Theorem III.2. If a is prime to b and a divides bc, then a divides c.
@@ -101,31 +131,30 @@ thm theorem_III_2_euclid_lemma:
     a * (c * x) + (b * c) * y = a * (c * x) + (a * u) * y
     a * (c * x) + (a * u) * y = a * (c * x + u * y)
     c = a * (c * x + u * y)
-    witness exist t Z st {c = a * t} from c * x + u * y:
-        c = a * (c * x + u * y)
+    witness exist t Z st {c = a * t} from c * x + u * y
     $divides_Z(a, c)
 
 """
 Corollary 1. If a is prime to b and to c, then a is prime to bc.
 """
 
-# Source handling: The proof applies Theorem III.2 to any common divisor of a
-# and bc.
-# trust: The checked proof needs a reusable theorem translating the
-# common-divisor characterization into `gcd_Z(a,bc)=1`.
-trust:
-    forall a, b, c Z:
-        $relatively_prime_Z(a, b)
-        $relatively_prime_Z(a, c)
-        =>:
-            $relatively_prime_Z(a, b * c)
-
+# Source handling: Weil follows a positive common divisor through Theorem III.2.
+# The checked route multiplies the two Bezout identities instead, producing a
+# Bezout identity for a and b*c directly.
 thm theorem_III_2_corollary_1:
     ? forall a, b, c Z:
         $relatively_prime_Z(a, b)
         $relatively_prime_Z(a, c)
         =>:
             $relatively_prime_Z(a, b * c)
+    # Multiply the two Bezout identities and collect the terms containing a.
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, c)
+    obtain u, v from exist u, v Z st {a * u + c * v = 1}
+    witness exist r, s Z st {a * r + (b * c) * s = 1} from a * x * u + c * x * v + b * y * u, y * v:
+        1 = 1 * 1 = (a * x + b * y) * (a * u + c * v) = a * (a * x * u + c * x * v + b * y * u) + (b * c) * (y * v)
+    by thm theorem_III_1_bezout_implies_relprime_pair(a, b * c)
     $relatively_prime_Z(a, b * c)
 
 """
@@ -152,17 +181,25 @@ trust:
 Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
 """
 
-sketch:
-    # Source handling: This is an immediate use of Theorem III.2.
-    # trust: The direct checked proof should combine two divisibility
-    # witnesses and Euclid's lemma.
-    trust:
-        forall a, b, c Z:
-            $relatively_prime_Z(a, b)
-            $divides_Z(a, c)
-            $divides_Z(b, c)
-            =>:
-                $divides_Z(a * b, c)
+# Source handling: This is the direct Euclid-lemma route requested by the
+# exercise: first factor c by b, then factor the remaining quotient by a.
+thm exercise_III_1_coprime_divisors_product:
+    ? forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $divides_Z(a, c)
+        $divides_Z(b, c)
+        =>:
+            $divides_Z(a * b, c)
+    # Write c=b*u; since a divides b*u and is prime to b, Euclid's lemma
+    # gives u=a*v, so c=(a*b)*v.
+    obtain u from exist u Z st {c = b * u}
+    c = b * u
+    $divides_Z(a, b * u)
+    by thm theorem_III_2_euclid_lemma(a, b, u)
+    obtain v from exist v Z st {u = a * v}
+    witness exist w Z st {c = (a * b) * w} from v:
+        c = b * u = b * (a * v) = (a * b) * v
+    $divides_Z(a * b, c)
 
 """
 Exercise III.2. Multiplication by a residue prime to m permutes the nonzero

@@ -49,30 +49,49 @@ pub fn to_python_from_repository_after_builtins(
     let mut runtime = Runtime::new_with_builtin_code();
     discover_repository(&mut runtime, repository_path)?;
     let entry_module_id = runtime.current_module_id();
-    to_python_project_target(
-        &mut runtime,
-        RepositoryFileTarget::Entrance(entry_module_id),
-    )
+    to_python_project_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id))
 }
 
 fn to_python_project_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
 ) -> Result<String, RuntimeError> {
-    let (source_path, pushed_frame) = match target {
-        RepositoryFileTarget::Entrance(module_id) => {
-            let source_path = runtime
-                .module_manager
-                .module(module_id)
-                .expect("discovered module should exist")
-                .main_file_path
-                .clone();
-            if runtime.current_module_id() != module_id {
-                runtime.push_module_execution_frame(module_id, source_path.as_str());
-                (source_path, true)
-            } else {
-                (source_path, false)
+    match target {
+        RepositoryFileTarget::Module(module_id) => {
+            let (module_path, run_targets) = {
+                let module = runtime
+                    .module_manager
+                    .module(module_id)
+                    .expect("discovered module should exist");
+                (module.main_file_path.clone(), module.run_targets.clone())
+            };
+            let pushed_frame = runtime.current_module_id() != module_id;
+            if pushed_frame {
+                runtime.push_module_execution_frame(module_id, module_path.as_str());
             }
+            let output = (|| {
+                let mut fragments = vec![];
+                for run_target in run_targets {
+                    let fragment = match run_target {
+                        ImportTarget::File { module_id, file_id } => to_python_project_target(
+                            runtime,
+                            RepositoryFileTarget::File { module_id, file_id },
+                        ),
+                        ImportTarget::Module(module_id) => to_python_project_target(
+                            runtime,
+                            RepositoryFileTarget::Module(module_id),
+                        ),
+                    }?;
+                    if !fragment.trim().is_empty() {
+                        fragments.push(fragment);
+                    }
+                }
+                Ok(fragments.join("\n"))
+            })();
+            if pushed_frame {
+                runtime.pop_execution_frame();
+            }
+            output
         }
         RepositoryFileTarget::File { module_id, file_id } => {
             let source_path = runtime
@@ -83,15 +102,12 @@ fn to_python_project_target(
                 .source_path
                 .clone();
             runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
-            (source_path, true)
+            let output = read_source(source_path.as_str())
+                .and_then(|source| to_python(source.as_str(), runtime));
+            runtime.pop_execution_frame();
+            output
         }
-    };
-    let source = read_source(source_path.as_str())?;
-    let output = to_python(source.as_str(), runtime);
-    if pushed_frame {
-        runtime.pop_execution_frame();
     }
-    output
 }
 
 fn resolve_file_path(file_path: &str) -> Result<String, RuntimeError> {

@@ -34,8 +34,7 @@ forall x, y, z Q:
 claim:
     ? forall a, b Z:
         exist! x Z st {a + x = b}
-    witness exist x Z st {a + x = b} from b - a:
-        a + (b - a) = b
+    witness exist x Z st {a + x = b} from b - a
     forall x1, x2 Z:
         a + x1 = b
         a + x2 = b
@@ -46,8 +45,7 @@ claim:
 claim:
     ? forall a, b Q:
         exist! x Q st {a + x = b}
-    witness exist x Q st {a + x = b} from b - a:
-        a + (b - a) = b
+    witness exist x Q st {a + x = b} from b - a
     forall x1, x2 Q:
         a + x1 = b
         a + x2 = b
@@ -60,8 +58,7 @@ claim:
         a != 0
         =>:
             exist! x Q st {a * x = b}
-    witness exist x Q st {a * x = b} from b / a:
-        a * (b / a) = b
+    witness exist x Q st {a * x = b} from b / a
     forall x1, x2 Q:
         a * x1 = b
         a * x2 = b
@@ -129,8 +126,7 @@ prop divides_Z(a, b Z):
 claim:
     ? forall a Z:
         $divides_Z(a, a)
-    witness exist x Z st {a = a * x} from 1:
-        a = a * 1
+    witness exist x Z st {a = a * x} from 1
     $divides_Z(a, a)
 
 claim:
@@ -144,6 +140,18 @@ claim:
     witness exist t Z st {b + c = a * t} from x + y:
         b + c = a * x + a * y = a * (x + y)
     $divides_Z(a, b + c)
+
+thm divides_Z_linear_combination:
+    ? forall d, a, b, x, y Z:
+        $divides_Z(d, a)
+        $divides_Z(d, b)
+        =>:
+            $divides_Z(d, x * a + y * b)
+    obtain p from exist p Z st {a = d * p}
+    obtain q from exist q Z st {b = d * q}
+    witness exist k Z st {x * a + y * b = d * k} from x * p + y * q:
+        x * a + y * b = x * (d * p) + y * (d * q) = d * (x * p + y * q)
+    $divides_Z(d, x * a + y * b)
 
 """
 Principle (6). Every nonempty set of positive integers has a least element.

@@ -40,3 +40,12 @@ claim:
         by thm no_rational_square_equals_two(sqrt(2))
         sqrt(2)^2 = 2
         impossible sqrt(2)^2 = 2
+
+thm finite_set_sum_member_le_nonnegative_sum_tmp:
+    ? forall P finite_set, h fn(x P) R, x P:
+        x $in P
+        forall y P:
+            h(y) >= 0
+        =>:
+            h(x) <= finite_set_sum(P, h)
+    h(x) <= finite_set_sum(P, h)

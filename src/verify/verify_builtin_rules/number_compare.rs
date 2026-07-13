@@ -1037,9 +1037,10 @@ impl Runtime {
             AtomicFact::LessFact(f) if f.left.to_string() == left.to_string() => {
                 Some((self.resolved_integer_value_for_order_bound(&f.right)?, true))
             }
-            AtomicFact::LessEqualFact(f) if f.left.to_string() == left.to_string() => {
-                Some((self.resolved_integer_value_for_order_bound(&f.right)?, false))
-            }
+            AtomicFact::LessEqualFact(f) if f.left.to_string() == left.to_string() => Some((
+                self.resolved_integer_value_for_order_bound(&f.right)?,
+                false,
+            )),
             _ => None,
         }
     }

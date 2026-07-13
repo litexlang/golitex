@@ -1551,7 +1551,7 @@ thm rational_reduced_fraction_parity_witness:
         x = p / q
         p % 2 != 0 or q % 2 != 0
 
-claim:
+thm rational_square_not_two:
     ? forall x Q:
         x^2 != 2
     by contra x^2 != 2:

@@ -20,7 +20,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let function_name_obj: Obj = Identifier::new(def_algo_stmt.name.clone()).into();
+        let function_name_obj = self.declared_identifier_obj(&def_algo_stmt.name);
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
             None => {
@@ -36,7 +36,7 @@ impl Runtime {
                 &fn_set_where_algo_belongs,
             )?;
 
-        let fn_call_obj_for_verification = Self::build_algo_verification_fn_call_obj(def_algo_stmt);
+        let fn_call_obj_for_verification = self.build_algo_verification_fn_call_obj(def_algo_stmt);
         let requirement_dom_facts = Self::requirement_facts_to_exist_or_and_chain_dom_facts(
             def_algo_stmt,
             &requirement_facts_for_param,
@@ -210,7 +210,7 @@ impl Runtime {
         ))
     }
 
-    fn build_algo_verification_fn_call_obj(def_algo_stmt: &DefAlgoStmt) -> Obj {
+    fn build_algo_verification_fn_call_obj(&self, def_algo_stmt: &DefAlgoStmt) -> Obj {
         let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
         for algo_param_name in def_algo_stmt.params.iter() {
             fn_call_arg_boxes.push(Box::new(obj_for_bound_param_in_scope(
@@ -218,11 +218,11 @@ impl Runtime {
                 ParamObjType::Forall,
             )));
         }
-        FnObj::new(
-            FnObjHead::Identifier(Identifier::new(def_algo_stmt.name.clone())),
-            vec![fn_call_arg_boxes],
+        let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(
+            self.declared_identifier_obj(&def_algo_stmt.name),
         )
-        .into()
+        .expect("declared algorithm name is a function head");
+        FnObj::new(function_head, vec![fn_call_arg_boxes]).into()
     }
 
     fn requirement_facts_to_exist_or_and_chain_dom_facts(

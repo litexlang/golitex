@@ -330,6 +330,72 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    // A member of a symbolic cart is a tuple whose coordinates lie in the
+    // corresponding symbolic projections. Example: `p $in C`, `$is_cart(C)`
+    // infer `tuple_dim(p) = cart_dim(C)` and `p[i] $in proj(C, i)`.
+    fn infer_membership_in_symbolic_cart_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let is_cart_fact: AtomicFact =
+            IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
+        let is_cart_result = self.verify_atomic_fact(&is_cart_fact, &VerifyState::new(0, false))?;
+        if !is_cart_result.is_true() {
+            return Ok(InferResult::new());
+        }
+
+        let mut infer_result = InferResult::new();
+        let is_tuple_fact: AtomicFact =
+            IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
+        infer_result.push_atomic_fact(&is_tuple_fact);
+        infer_result.new_infer_result_inside(
+            self.store_atomic_fact_without_well_defined_verified_and_infer(is_tuple_fact)?,
+        );
+
+        let tuple_dim_fact: AtomicFact = EqualFact::new(
+            TupleDim::new(in_fact.element.clone()).into(),
+            CartDim::new(in_fact.set.clone()).into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        infer_result.push_atomic_fact(&tuple_dim_fact);
+        infer_result.new_infer_result_inside(
+            self.store_atomic_fact_without_well_defined_verified_and_infer(tuple_dim_fact)?,
+        );
+
+        let index_name = self.generate_random_unused_name();
+        let index_obj = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::Forall);
+        let index_set: Obj = ClosedRange::new(
+            Number::new("1".to_string()).into(),
+            CartDim::new(in_fact.set.clone()).into(),
+        )
+        .into();
+        let coordinate_fact: AtomicFact = InFact::new(
+            ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
+            Proj::new(in_fact.set.clone(), index_obj).into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let coordinate_forall_fact: Fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![index_name],
+                ParamType::Obj(index_set),
+            )]),
+            vec![],
+            vec![coordinate_fact.into()],
+            in_fact.line_file.clone(),
+        )?
+        .into();
+        infer_result.new_fact(&coordinate_forall_fact);
+        infer_result.new_infer_result_inside(
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                coordinate_forall_fact,
+            )?,
+        );
+
+        Ok(infer_result)
+    }
+
     // Membership `x $in S`: unfold `S` into stored facts (disjunction, bounds, predicate instances, …).
     pub(in crate::infer) fn infer_in_fact(
         &mut self,
@@ -361,6 +427,24 @@ impl Runtime {
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
                     return Ok(InferResult::new());
+                }
+
+                // Singleton membership has one definite value, so expose it as
+                // an atomic equality rather than a one-branch disjunction.
+                // Example: `x $in {2}` infers `x = 2`, which makes a restricted
+                // function body usable when its ambient domain contains `2`.
+                if let [singleton] = list_set.list.as_slice() {
+                    let equal_fact = EqualFact::new(
+                        in_fact.element.clone(),
+                        singleton.as_ref().clone(),
+                        in_fact.line_file.clone(),
+                    );
+                    let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
+                    let mut infer_result = InferResult::new();
+                    infer_result.push_atomic_fact(&equal_atomic_fact);
+                    self.top_level_env().store_atomic_fact(equal_atomic_fact)?;
+                    infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
+                    return Ok(infer_result);
                 }
 
                 let mut or_case_facts: Vec<AndChainAtomicFact> =
@@ -797,6 +881,11 @@ impl Runtime {
             // Example: from `x $in cup(F)`, infer `exist item F st {x $in item}`.
             Obj::Cup(cup) => self.infer_membership_in_cup(in_fact, cup),
             set_obj => {
+                let symbolic_cart_infer =
+                    self.infer_membership_in_symbolic_cart_from_in_fact(in_fact)?;
+                if !symbolic_cart_infer.is_empty() {
+                    return Ok(symbolic_cart_infer);
+                }
                 let equal_set_infer =
                     self.infer_membership_in_equal_set_representatives_from_in_fact(in_fact)?;
                 if !equal_set_infer.is_empty() {
@@ -1168,6 +1257,25 @@ impl Runtime {
             return Some(Number::new(start_i.to_string()).into());
         }
         None
+    }
+
+    // Every Litex cartesian product has at least two coordinate factors.
+    // Example: `$is_cart(C)` infers `cart_dim(C) >= 2`, which permits a
+    // symbolic `have tuple ... for i <= cart_dim(C)` construction.
+    pub fn infer_is_cart_dimension_lower_bound(
+        &mut self,
+        is_cart_fact: &IsCartFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let lower_bound: AtomicFact = GreaterEqualFact::new(
+            CartDim::new(is_cart_fact.set.clone()).into(),
+            Number::new("2".to_string()).into(),
+            is_cart_fact.line_file.clone(),
+        )
+        .into();
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&lower_bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound)?;
+        Ok(infer_result)
     }
 }
 

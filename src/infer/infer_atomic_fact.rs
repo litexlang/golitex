@@ -11,6 +11,10 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             // Membership `x $in S`: unfold `S` (list, set builder, intervals, standard sets, …).
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),
+            // A Cartesian product has at least two coordinates.
+            AtomicFact::IsCartFact(is_cart_fact) => {
+                self.infer_is_cart_dimension_lower_bound(is_cart_fact)
+            }
             // Predicate atom `P(...)`: parameter typing plus each `iff` clause from `P`'s definition.
             AtomicFact::NormalAtomicFact(normal_atomic_fact) => {
                 self.infer_normal_atomic_fact(normal_atomic_fact)

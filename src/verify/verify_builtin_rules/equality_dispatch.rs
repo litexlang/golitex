@@ -634,6 +634,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_symbolic_tuple_equality_from_coordinates(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_cart_equality_from_dim_and_projections(
             left,
             right,
@@ -1392,6 +1401,124 @@ impl Runtime {
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "tuple equality from dimension and projections".to_string(),
                 steps,
+            )
+            .into(),
+        ))
+    }
+
+    // Tuple extensionality for symbolic dimensions: equal tuples have equal
+    // coordinates on their common index range. Example: `tuple_dim(p) = n`,
+    // `tuple_dim(q) = n`, and `forall i closed_range(1, n): p[i] = q[i]`
+    // prove `p = q`.
+    fn try_verify_symbolic_tuple_equality_from_coordinates(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left_is_direct_symbol = matches!(
+            left,
+            Obj::Atom(
+                AtomObj::Identifier(_)
+                    | AtomObj::IdentifierWithMod(_)
+                    | AtomObj::Forall(_)
+                    | AtomObj::Exist(_)
+                    | AtomObj::Def(_)
+                    | AtomObj::SetBuilder(_)
+                    | AtomObj::FnSet(_)
+                    | AtomObj::Induc(_)
+                    | AtomObj::DefAlgo(_)
+            )
+        );
+        let right_is_direct_symbol = matches!(
+            right,
+            Obj::Atom(
+                AtomObj::Identifier(_)
+                    | AtomObj::IdentifierWithMod(_)
+                    | AtomObj::Forall(_)
+                    | AtomObj::Exist(_)
+                    | AtomObj::Def(_)
+                    | AtomObj::SetBuilder(_)
+                    | AtomObj::FnSet(_)
+                    | AtomObj::Induc(_)
+                    | AtomObj::DefAlgo(_)
+            )
+        );
+        if !left_is_direct_symbol || !right_is_direct_symbol {
+            return Ok(None);
+        }
+
+        let left_is_tuple: AtomicFact = IsTupleFact::new(left.clone(), line_file.clone()).into();
+        let left_is_tuple_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&left_is_tuple, verify_state)?;
+        if !left_is_tuple_result.is_true() {
+            return Ok(None);
+        }
+
+        let right_is_tuple: AtomicFact = IsTupleFact::new(right.clone(), line_file.clone()).into();
+        let right_is_tuple_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&right_is_tuple, verify_state)?;
+        if !right_is_tuple_result.is_true() {
+            return Ok(None);
+        }
+
+        let left_dim: Obj = TupleDim::new(left.clone()).into();
+        let right_dim: Obj = TupleDim::new(right.clone()).into();
+        let same_dim: AtomicFact =
+            EqualFact::new(left_dim.clone(), right_dim, line_file.clone()).into();
+        let same_dim_result =
+            self.verify_atomic_fact_known_then_builtin_rules_only(&same_dim, verify_state)?;
+        if !same_dim_result.is_true() {
+            return Ok(None);
+        }
+
+        let dimension_is_positive: AtomicFact = LessEqualFact::new(
+            Number::new("1".to_string()).into(),
+            left_dim.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let dimension_is_positive_result = self
+            .verify_non_equational_known_then_builtin_rules_only(
+                &dimension_is_positive,
+                verify_state,
+            )?;
+        if !dimension_is_positive_result.is_true() {
+            return Ok(None);
+        }
+
+        let index_name = self.generate_random_unused_name();
+        let index_obj = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::Forall);
+        let coordinate_equality: AtomicFact = EqualFact::new(
+            ObjAtIndex::new(left.clone(), index_obj.clone()).into(),
+            ObjAtIndex::new(right.clone(), index_obj).into(),
+            line_file.clone(),
+        )
+        .into();
+        let coordinate_params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![index_name],
+            ParamType::Obj(ClosedRange::new(Number::new("1".to_string()).into(), left_dim).into()),
+        )]);
+        let coordinate_result = self.run_in_local_env(|rt| {
+            rt.define_params_with_type(&coordinate_params, false, ParamObjType::Forall)?;
+            rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
+        })?;
+        if !coordinate_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "tuple equality from symbolic dimension and coordinates".to_string(),
+                vec![
+                    left_is_tuple_result,
+                    right_is_tuple_result,
+                    same_dim_result,
+                    dimension_is_positive_result,
+                    coordinate_result,
+                ],
             )
             .into(),
         ))

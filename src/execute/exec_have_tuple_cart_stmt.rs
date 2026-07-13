@@ -52,7 +52,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
-        let target: Obj = Identifier::new(stmt.name.clone()).into();
+        let target = self.declared_identifier_obj(&stmt.name);
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsTupleFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveTupleStmt::store_reason(),
@@ -118,7 +118,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
-        let target: Obj = Identifier::new(stmt.name.clone()).into();
+        let target = self.declared_identifier_obj(&stmt.name);
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsSetFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveCartStmt::store_reason(),
@@ -247,7 +247,7 @@ impl Runtime {
             &stmt.index_name,
             ParamObjType::TupleIndex,
         )?;
-        let target: Obj = Identifier::new(stmt.name.clone()).into();
+        let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new(
@@ -265,7 +265,7 @@ impl Runtime {
             &stmt.index_name,
             ParamObjType::CartIndex,
         )?;
-        let target: Obj = Identifier::new(stmt.name.clone()).into();
+        let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = Proj::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new(

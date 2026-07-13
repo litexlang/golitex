@@ -325,15 +325,23 @@ impl Runtime {
         module_name: &str,
         local_name: &str,
     ) -> Option<KnownFnInfo> {
+        let qualified_name =
+            IdentifierWithMod::new(module_name.to_string(), local_name.to_string()).to_string();
         if self.is_current_parse_module(module_name) {
             return self
                 .get_known_fn_info_for_key_from_current_envs(local_name)
+                .or_else(|| self.get_known_fn_info_for_key_from_current_envs(&qualified_name))
                 .cloned();
         }
 
         self.imported_module_environments(module_name)
             .into_iter()
-            .find_map(|env| env.known_objs_in_fn_sets.get(local_name).cloned())
+            .find_map(|env| {
+                env.known_objs_in_fn_sets
+                    .get(local_name)
+                    .or_else(|| env.known_objs_in_fn_sets.get(&qualified_name))
+                    .cloned()
+            })
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
