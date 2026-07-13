@@ -15,15 +15,15 @@ sketch:
     have y R
     trust:
         y < 3
-    y $in info(3)
+    y $in '(,3)
 
 sketch:
     have z R
     trust:
         z > 3
-    z $in oinf(3)
+    z $in '(3,)
 
 sketch:
     '(2, 12] = '(2, 12]
-    info(3) = info(3)
+    '(,3) = '(,3)
     union('(2, 12], '(12, 102]) = union('(2, 12], '(12, 102])

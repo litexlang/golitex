@@ -2282,26 +2282,26 @@ have d '[0, 1]
 0 <= d
 d <= 1
 
-have e info(1)
+have e '(,1)
 e $in R
 e < 1
 
-have f infc(1)
+have f '(,1]
 f $in R
 f <= 1
 
-have g oinf(0)
+have g '(0,)
 g $in R
 0 < g
 
-have h cinf(0)
+have h '[0,)
 h $in R
 0 <= h
 
 forall x R:
     0 <= x
     =>:
-        x $in cinf(0)
+        x $in '[0,)
 ```
 
 ```litex
@@ -2316,22 +2316,22 @@ sketch:
 
 ```litex
 sketch:
-    $is_nonempty_set(info(1))
+    $is_nonempty_set('(,1))
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(infc(1))
+    $is_nonempty_set('(,1])
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(oinf(0))
+    $is_nonempty_set('(0,))
 ```
 
 ```litex
 sketch:
-    $is_nonempty_set(cinf(0))
+    $is_nonempty_set('[0,))
 ```
 
 ### 14. Logarithms

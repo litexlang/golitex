@@ -1,206 +1,7 @@
 # Chapter 11: The Riemann integral.
-#
-# source: Chapter 11.
-#
-# This chapter follows Tao's source order through Sections 11.1-11.10.  Its
-# definitions expose the finite-partition, Darboux, and Riemann-integral
-# relations directly; the remaining theorem-sized obligations stay at their
-# exact source-facing statements as explicit proof debt.
-
-# Chapter-level background interfaces
-
-# Source handling: Chapter 11 reuses the preceding textbook chapters for
-# continuity and differentiability vocabulary.
-# proof_debt: these are project-local trust boundaries only; no external
-# package is imported.
 
 trust local import chap9
 trust local import chap10
-
-"""
-Chapter 11 imports the Chapter 9 continuity and Chapter 10 differentiability
-interfaces.  The definitions below remain only where this chapter deliberately
-uses a distinct source-facing formulation.
-"""
-
-prop is_real_set_bounded_by(X power_set(R), M R_pos):
-    forall x X:
-        abs(x) <= M
-
-prop is_bounded_real_set(X power_set(R)):
-    exist M R_pos st {$is_real_set_bounded_by(X, M)}
-
-prop is_upper_bound_of_real_set(E power_set(R), M R):
-    forall x E:
-        x <= M
-
-prop is_lower_bound_of_real_set(E power_set(R), M R):
-    forall x E:
-        M <= x
-
-prop is_supremum_of_real_set(E power_set(R), s R):
-    $is_upper_bound_of_real_set(E, s)
-    forall M R:
-        $is_upper_bound_of_real_set(E, M)
-        =>:
-            s <= M
-
-prop is_infimum_of_real_set(E power_set(R), s R):
-    $is_lower_bound_of_real_set(E, s)
-    forall M R:
-        $is_lower_bound_of_real_set(E, M)
-        =>:
-            M <= s
-
-prop has_supremum_of_real_set(E power_set(R)):
-    exist s R st {$is_supremum_of_real_set(E, s)}
-
-prop has_infimum_of_real_set(E power_set(R)):
-    exist s R st {$is_infimum_of_real_set(E, s)}
-
-thm supremum_of_real_set_value_unique:
-    ? forall E power_set(R), s1, s2 R:
-        $is_supremum_of_real_set(E, s1)
-        $is_supremum_of_real_set(E, s2)
-        =>:
-            s1 = s2
-    $is_upper_bound_of_real_set(E, s1)
-    $is_upper_bound_of_real_set(E, s2)
-    forall M R:
-        $is_upper_bound_of_real_set(E, M)
-        =>:
-            s1 <= M
-    s1 <= s2
-    forall M R:
-        $is_upper_bound_of_real_set(E, M)
-        =>:
-            s2 <= M
-    s2 <= s1
-    s1 = s2
-
-thm infimum_of_real_set_value_unique:
-    ? forall E power_set(R), s1, s2 R:
-        $is_infimum_of_real_set(E, s1)
-        $is_infimum_of_real_set(E, s2)
-        =>:
-            s1 = s2
-    $is_lower_bound_of_real_set(E, s1)
-    $is_lower_bound_of_real_set(E, s2)
-    forall M R:
-        $is_lower_bound_of_real_set(E, M)
-        =>:
-            M <= s1
-    s2 <= s1
-    forall M R:
-        $is_lower_bound_of_real_set(E, M)
-        =>:
-            M <= s2
-    s1 <= s2
-    s1 = s2
-
-# Source handling: the chapter uses the Chapter 5/6 least-upper-bound
-# construction only as the `sup` selector in its own Darboux definitions.
-# proof_debt: selector existence remains a local completeness interface.
-trust have sup fn(E power_set(R)) R:
-    forall E power_set(R):
-        $has_supremum_of_real_set(E)
-        =>:
-            $is_supremum_of_real_set(E, sup(E))
-
-# Source handling: the dual `inf` selector is used for lower Darboux values.
-# proof_debt: selector existence remains a local completeness interface.
-trust have inf fn(E power_set(R)) R:
-    forall E power_set(R):
-        $has_infimum_of_real_set(E)
-        =>:
-            $is_infimum_of_real_set(E, inf(E))
-
-thm nonempty_bounded_real_set_has_supremum_and_infimum:
-    ? forall E power_set(R):
-        $is_nonempty_set(E)
-        $is_bounded_real_set(E)
-        =>:
-            $has_supremum_of_real_set(E)
-            $has_infimum_of_real_set(E)
-    # Source handling: Chapter 5/6 supplies least upper and greatest lower
-    # bounds for bounded non-empty real sets; Chapter 11 uses that interface.
-    # proof_debt: the local completeness theorem has not yet been replayed in
-    # this chapter.
-    trust:
-        $has_supremum_of_real_set(E)
-        $has_infimum_of_real_set(E)
-
-prop has_interval_endpoints(I power_set(R), a, b R):
-    I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
-
-prop is_bounded_interval(I power_set(R)):
-    exist a, b R st {$has_interval_endpoints(I, a, b)}
-
-prop is_function_bounded_by(X power_set(R), f fn(x X) R, M R_pos):
-    forall x X:
-        abs(f(x)) <= M
-
-prop is_bounded_function_on(X power_set(R), f fn(x X) R):
-    exist M R_pos st {$is_function_bounded_by(X, f, M)}
-
-prop is_nonnegative_on(X power_set(R), f fn(x X) R):
-    forall x X:
-        f(x) >= 0
-
-prop is_monotone_increasing_on(X power_set(R), f fn(x X) R):
-    forall x, y X:
-        x <= y
-        =>:
-            f(x) <= f(y)
-
-prop is_monotone_decreasing_on(X power_set(R), f fn(x X) R):
-    forall x, y X:
-        x <= y
-        =>:
-            f(y) <= f(x)
-
-prop is_monotone_on(X power_set(R), f fn(x X) R):
-    $is_monotone_increasing_on(X, f) or $is_monotone_decreasing_on(X, f)
-
-prop is_uniform_delta_continuous_on(X power_set(R), f fn(x X) R, epsilon R_pos, delta R_pos):
-    forall x, y X:
-        abs(x - y) < delta
-        =>:
-            abs(f(x) - f(y)) < epsilon
-
-prop is_uniformly_continuous_on(X power_set(R), f fn(x X) R):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
-
-prop is_tail_close_to_value(a fn(k N_pos) R, L R, epsilon R_pos, N0 N_pos):
-    forall k N_pos:
-        k >= N0
-        =>:
-            abs(a(k) - L) <= epsilon
-
-prop has_sequence_limit_value(a fn(k N_pos) R, L R):
-    forall epsilon R_pos:
-        exist N0 N_pos st {$is_tail_close_to_value(a, L, epsilon, N0)}
-
-have fn zero_indexed_partial_sum(a fn(n N) R, k N) R by induc k from 0:
-    case k = 0: a(0)
-    case k > 0: zero_indexed_partial_sum(a, k - 1) + a(k)
-
-have fn one_indexed_partial_sum(a fn(n N_pos) R, k N) R by induc k from 0:
-    case k = 0: 0
-    case k > 0: one_indexed_partial_sum(a, k - 1) + a(k)
-
-prop has_series_sum_from_zero(a fn(n N) R, S R):
-    $has_sequence_limit_value(fn(k N_pos) R {zero_indexed_partial_sum(a, k)}, S)
-
-prop has_series_sum_from_one(a fn(n N_pos) R, S R):
-    $has_sequence_limit_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S)
-
-prop is_restriction_to_subset(X power_set(R), E power_set(R), f fn(x X) R, g fn(x E) R):
-    E $subset X
-    forall x E:
-        g(x) = f(x)
-
 
 # 11.1 Partitions
 
@@ -415,6 +216,12 @@ thm separated_closed_intervals_are_not_connected:
         2 < 5 / 2
         impossible 5 / 2 <= 2
 
+prop has_interval_endpoints(I power_set(R), a, b R):
+    I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
+
+prop is_bounded_interval(I power_set(R)):
+    exist a, b R st {$has_interval_endpoints(I, a, b)}
+
 """
 Lemma 11.1.4.  A subset of the real line is a bounded interval exactly when it
 is both bounded and connected.
@@ -426,18 +233,16 @@ thm bounded_connected_subsets_are_bounded_intervals:
         $is_connected_subset_of_R(X)
         =>:
             $is_bounded_interval(X)
-    # Source handling: Tao proves this in Exercise 11.1.1.
-    # proof_debt: the non-empty case takes endpoints from `inf(X)` and `sup(X)`;
-    # the remaining work is proving the correct open/closed endpoint form.
+    # Source handling: Tao proves this in Exercise 11.1.1 by taking the lower
+    # and upper endpoints of a non-empty bounded connected set.
+    # proof_debt: the endpoint existence and open/closed case analysis remain
+    # to be formalized.
     by cases:
         ? $is_bounded_interval(X)
         case $is_nonempty_set(X):
-            by thm nonempty_bounded_real_set_has_supremum_and_infimum(X)
-            $is_supremum_of_real_set(X, sup(X))
-            $is_infimum_of_real_set(X, inf(X))
             # Source handling: this is the non-empty branch of Lemma 11.1.4.
-            # proof_debt: endpoint openness/closedness still needs the local
-            # order-case proof after choosing `inf(X)` and `sup(X)`.
+            # proof_debt: endpoint openness and closedness still need the
+            # local order-case proof.
             trust $is_bounded_interval(X)
         case not $is_nonempty_set(X):
             by extension X = {}:
@@ -3265,6 +3070,10 @@ linear, positive on non-negative functions, monotone, correct on constants,
 compatible with extension by zero, and additive over a two-piece partition.
 """
 
+prop is_nonnegative_on(X power_set(R), f fn(x X) R):
+    forall x X:
+        f(x) >= 0
+
 thm piecewise_constant_integral_laws:
     ? forall I power_set(R), f, g fn(x I) R, sf, sg, c R:
         $has_piecewise_constant_integral(I, f, sf)
@@ -3342,6 +3151,40 @@ prop minorizes_on(I power_set(R), g, f fn(x I) R):
     forall x I:
         g(x) <= f(x)
 
+prop is_lower_bound_of_real_set(E power_set(R), M R):
+    forall x E:
+        M <= x
+
+prop is_infimum_of_real_set(E power_set(R), s R):
+    $is_lower_bound_of_real_set(E, s)
+    forall M R:
+        $is_lower_bound_of_real_set(E, M)
+        =>:
+            M <= s
+
+prop has_infimum_of_real_set(E power_set(R)):
+    exist s R st {$is_infimum_of_real_set(E, s)}
+
+thm infimum_of_real_set_value_unique:
+    ? forall E power_set(R), s1, s2 R:
+        $is_infimum_of_real_set(E, s1)
+        $is_infimum_of_real_set(E, s2)
+        =>:
+            s1 = s2
+    $is_lower_bound_of_real_set(E, s1)
+    $is_lower_bound_of_real_set(E, s2)
+    forall M R:
+        $is_lower_bound_of_real_set(E, M)
+        =>:
+            M <= s1
+    s2 <= s1
+    forall M R:
+        $is_lower_bound_of_real_set(E, M)
+        =>:
+            M <= s2
+    s1 <= s2
+    s1 = s2
+
 """
 Definition 11.3.2 (Upper and lower Riemann integrals).  The upper integral is
 the infimum of piecewise constant majorant integrals; the lower integral is the
@@ -3399,14 +3242,12 @@ prop has_upper_riemann_integral(I power_set(R), f fn(x I) R, U R):
     $is_bounded_function_on(I, f)
     $has_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f))
     $is_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f), U)
-    U = inf(upper_riemann_integral_candidate_values(I, f))
 
 prop has_lower_riemann_integral(I power_set(R), f fn(x I) R, L R):
     $is_bounded_interval(I)
     $is_bounded_function_on(I, f)
-    $has_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f))
-    $is_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
-    L = sup(lower_riemann_integral_candidate_values(I, f))
+    $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
+    $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
 
 thm upper_riemann_integral_value_unique:
     ? forall I power_set(R), f fn(x I) R, U1, U2 R:
@@ -3425,9 +3266,9 @@ thm lower_riemann_integral_value_unique:
         $has_lower_riemann_integral(I, f, L2)
         =>:
             L1 = L2
-    $is_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f), L1)
-    $is_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f), L2)
-    by thm supremum_of_real_set_value_unique(lower_riemann_integral_candidate_values(I, f), L1, L2)
+    $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L1)
+    $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L2)
+    by thm least_upper_bound_unique(lower_riemann_integral_candidate_values(I, f), L1, L2)
     L1 = L2
 
 thm piecewise_constant_minorant_integral_le_majorant_integral:
@@ -3531,8 +3372,8 @@ thm lower_riemann_integral_candidate_value_le_integral:
         $is_lower_riemann_integral_candidate_value(I, f, s)
         =>:
             s <= L
-    $is_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
-    $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
+    $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
+    $is_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
     by thm lower_riemann_integral_candidate_value_member(I, f, s)
     s $in lower_riemann_integral_candidate_values(I, f)
     s <= L
@@ -3553,12 +3394,12 @@ thm lower_bound_le_upper_riemann_integral:
 thm lower_riemann_integral_le_upper_bound:
     ? forall I power_set(R), f fn(x I) R, L, B R:
         $has_lower_riemann_integral(I, f, L)
-        $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), B)
+        $is_upper_bound(lower_riemann_integral_candidate_values(I, f), B)
         =>:
             L <= B
-    $is_supremum_of_real_set(lower_riemann_integral_candidate_values(I, f), L)
+    $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
     forall M R:
-        $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M)
+        $is_upper_bound(lower_riemann_integral_candidate_values(I, f), M)
         =>:
             L <= M
     L <= B
@@ -3624,7 +3465,7 @@ thm upper_lower_riemann_integral_bounds:
     -M * interval_length(I) <= lower_riemann_integral(I, f)
 
     claim:
-        ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f))
+        ? $is_upper_bound(lower_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f))
         claim:
             ? forall sh R:
                 sh $in lower_riemann_integral_candidate_values(I, f)
@@ -3646,7 +3487,7 @@ thm upper_lower_riemann_integral_bounds:
                 $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), sh)
             by thm lower_bound_le_upper_riemann_integral(I, f, upper_riemann_integral(I, f), sh)
             sh <= upper_riemann_integral(I, f)
-        $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f))
+        $is_upper_bound(lower_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f))
     by thm lower_riemann_integral_le_upper_bound(I, f, lower_riemann_integral(I, f), upper_riemann_integral(I, f))
     lower_riemann_integral(I, f) <= upper_riemann_integral(I, f)
 
@@ -3962,15 +3803,13 @@ prop has_nonempty_upper_riemann_sum_piece_contribution(I power_set(R), J power_s
     $is_bounded_interval(J)
     J $subset I
     $is_nonempty_set(J)
-    $has_supremum_of_real_set(function_values_on_subset(I, J, f))
-    t = sup(function_values_on_subset(I, J, f)) * interval_length(J)
+    exist s R st {$is_least_upper_bound(function_values_on_subset(I, J, f), s), t = s * interval_length(J)}
 
 prop has_nonempty_lower_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f fn(x I) R, t R):
     $is_bounded_interval(J)
     J $subset I
     $is_nonempty_set(J)
-    $has_infimum_of_real_set(function_values_on_subset(I, J, f))
-    t = inf(function_values_on_subset(I, J, f)) * interval_length(J)
+    exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), t = s * interval_length(J)}
 
 prop has_upper_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f fn(x I) R, t R):
     $has_empty_riemann_sum_piece_contribution(J, t) or $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t)
@@ -4078,7 +3917,6 @@ thm upper_integral_equals_infimum_of_riemann_sums:
         =>:
             $has_infimum_of_real_set(upper_riemann_sum_values(I, f))
             $is_infimum_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
-            upper_riemann_integral(I, f) = inf(upper_riemann_sum_values(I, f))
     # Source handling: Tao proves this in Exercise 11.3.5, using Lemma 11.3.11
     # for half of the comparison.
     # proof_debt: compare the Darboux majorant-integral infimum with the
@@ -4086,24 +3924,21 @@ thm upper_integral_equals_infimum_of_riemann_sums:
     trust:
         $has_infimum_of_real_set(upper_riemann_sum_values(I, f))
         $is_infimum_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
-        upper_riemann_integral(I, f) = inf(upper_riemann_sum_values(I, f))
 
 thm lower_integral_equals_supremum_of_riemann_sums:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
         $is_bounded_function_on(I, f)
         =>:
-            $has_supremum_of_real_set(lower_riemann_sum_values(I, f))
-            $is_supremum_of_real_set(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
-            lower_riemann_integral(I, f) = sup(lower_riemann_sum_values(I, f))
+            $has_least_upper_bound(lower_riemann_sum_values(I, f))
+            $is_least_upper_bound(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
     # Source handling: Tao proves this in Exercise 11.3.5, using Lemma 11.3.11
     # for half of the comparison.
     # proof_debt: compare the Darboux minorant-integral supremum with the
     # supremum of lower sums over all partitions.
     trust:
-        $has_supremum_of_real_set(lower_riemann_sum_values(I, f))
-        $is_supremum_of_real_set(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
-        lower_riemann_integral(I, f) = sup(lower_riemann_sum_values(I, f))
+        $has_least_upper_bound(lower_riemann_sum_values(I, f))
+        $is_least_upper_bound(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
 
 
 # 11.4 Basic properties of the Riemann integral
@@ -5329,17 +5164,45 @@ thm bounded_piecewise_monotone_riemann_integrable:
     by thm bounded_piecewise_monotone_with_partition_riemann_integrable(I, P, f)
     $is_riemann_integrable_on(I, f)
 
-prop is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f fn(x cinf(0)) R, T cinf(0), s R):
-    exist g fn(x '[0, T]) R st {$is_restriction_to_subset(cinf(0), '[0, T], f, g), $is_riemann_integrable_on('[0, T], g), s = integral_on('[0, T], g)}
+prop is_restriction_to_subset(X power_set(R), E power_set(R), f fn(x X) R, g fn(x E) R):
+    E $subset X
+    forall x E:
+        g(x) = f(x)
 
-prop is_closed_interval_integral_value_on_nonnegative_ray(f fn(x cinf(0)) R, s R):
-    exist T cinf(0) st {$is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f, T, s)}
+prop is_tail_close_to_value(a fn(k N_pos) R, L R, epsilon R_pos, N0 N_pos):
+    forall k N_pos:
+        k >= N0
+        =>:
+            abs(a(k) - L) <= epsilon
 
-have fn closed_interval_integral_values_on_nonnegative_ray(f fn(x cinf(0)) R) power_set(R) = {s R: $is_closed_interval_integral_value_on_nonnegative_ray(f, s)}
+prop has_sequence_limit_value(a fn(k N_pos) R, L R):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_tail_close_to_value(a, L, epsilon, N0)}
 
-prop has_finite_integral_supremum_on_nonnegative_ray(f fn(x cinf(0)) R):
-    $has_supremum_of_real_set(closed_interval_integral_values_on_nonnegative_ray(f))
-    $is_supremum_of_real_set(closed_interval_integral_values_on_nonnegative_ray(f), sup(closed_interval_integral_values_on_nonnegative_ray(f)))
+have fn zero_indexed_partial_sum(a fn(n N) R, k N) R by induc k from 0:
+    case k = 0: a(0)
+    case k > 0: zero_indexed_partial_sum(a, k - 1) + a(k)
+
+have fn one_indexed_partial_sum(a fn(n N_pos) R, k N) R by induc k from 0:
+    case k = 0: 0
+    case k > 0: one_indexed_partial_sum(a, k - 1) + a(k)
+
+prop has_series_sum_from_zero(a fn(n N) R, S R):
+    $has_sequence_limit_value(fn(k N_pos) R {zero_indexed_partial_sum(a, k)}, S)
+
+prop has_series_sum_from_one(a fn(n N_pos) R, S R):
+    $has_sequence_limit_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S)
+
+prop is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f fn(x '[0,)) R, T '[0,), s R):
+    exist g fn(x '[0, T]) R st {$is_restriction_to_subset('[0,), '[0, T], f, g), $is_riemann_integrable_on('[0, T], g), s = integral_on('[0, T], g)}
+
+prop is_closed_interval_integral_value_on_nonnegative_ray(f fn(x '[0,)) R, s R):
+    exist T '[0,) st {$is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f, T, s)}
+
+have fn closed_interval_integral_values_on_nonnegative_ray(f fn(x '[0,)) R) power_set(R) = {s R: $is_closed_interval_integral_value_on_nonnegative_ray(f, s)}
+
+prop has_finite_integral_supremum_on_nonnegative_ray(f fn(x '[0,)) R):
+    $has_least_upper_bound(closed_interval_integral_values_on_nonnegative_ray(f))
 
 """
 Proposition 11.6.4 (Integral test).  A non-negative monotone decreasing
@@ -5348,9 +5211,9 @@ its finite interval integrals is finite.
 """
 
 thm integral_test_series_implies_finite_integral_supremum:
-    ? forall f fn(x cinf(0)) R, S R:
-        $is_monotone_decreasing_on(cinf(0), f)
-        $is_nonnegative_on(cinf(0), f)
+    ? forall f fn(x '[0,)) R, S R:
+        $is_monotone_decreasing_on('[0,), f)
+        $is_nonnegative_on('[0,), f)
         $has_series_sum_from_zero(fn(n N) R {f(n)}, S)
         =>:
             $has_finite_integral_supremum_on_nonnegative_ray(f)
@@ -5361,9 +5224,9 @@ thm integral_test_series_implies_finite_integral_supremum:
     trust $has_finite_integral_supremum_on_nonnegative_ray(f)
 
 thm integral_test_finite_integral_supremum_implies_series:
-    ? forall f fn(x cinf(0)) R:
-        $is_monotone_decreasing_on(cinf(0), f)
-        $is_nonnegative_on(cinf(0), f)
+    ? forall f fn(x '[0,)) R:
+        $is_monotone_decreasing_on('[0,), f)
+        $is_nonnegative_on('[0,), f)
         $has_finite_integral_supremum_on_nonnegative_ray(f)
         =>:
             exist S R st {$has_series_sum_from_zero(fn(n N) R {f(n)}, S)}
@@ -6160,15 +6023,13 @@ prop has_upper_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(
     $is_bounded_function_on(I, f)
     $has_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f))
     $is_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f), U)
-    U = inf(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f))
 
 prop has_lower_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(x I) R, L R):
     $is_bounded_interval(I)
     $is_monotone_increasing_on(R, alpha)
     $is_bounded_function_on(I, f)
-    $has_supremum_of_real_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
-    $is_supremum_of_real_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L)
-    L = sup(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
+    $has_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
+    $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L)
 
 thm upper_riemann_stieltjes_integral_value_unique:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R, U1, U2 R:
@@ -6187,9 +6048,9 @@ thm lower_riemann_stieltjes_integral_value_unique:
         $has_lower_riemann_stieltjes_integral(I, alpha, f, L2)
         =>:
             L1 = L2
-    $is_supremum_of_real_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L1)
-    $is_supremum_of_real_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L2)
-    by thm supremum_of_real_set_value_unique(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L1, L2)
+    $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L1)
+    $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L2)
+    by thm least_upper_bound_unique(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L1, L2)
     L1 = L2
 
 have fn upper_riemann_stieltjes_integral by exist!:

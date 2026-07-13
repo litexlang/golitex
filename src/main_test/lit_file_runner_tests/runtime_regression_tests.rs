@@ -4039,22 +4039,22 @@ trust d $in '[0, 1]
 d <= 1
 
 have e R
-trust e $in info(1)
+trust e $in '(,1)
 e $in R
 e < 1
 
 have f R
-trust f $in infc(1)
+trust f $in '(,1]
 f $in R
 f <= 1
 
 have g R
-trust g $in oinf(0)
+trust g $in '(0,)
 g $in R
 0 < g
 
 have h R
-trust h $in cinf(0)
+trust h $in '[0,)
 h $in R
 0 <= h
 
@@ -4067,7 +4067,7 @@ x $in '(0, 1]
 have y R
 trust:
     0 <= y
-y $in cinf(0)
+y $in '[0,)
 
 have phi fn(t '(0, 1)) R
 phi(a) $in R
@@ -4100,10 +4100,10 @@ $is_nonempty_set('[a, b])
 $is_nonempty_set('(a, b))
 $is_nonempty_set('(a, b])
 $is_nonempty_set('[a, b))
-$is_nonempty_set(info(a))
-$is_nonempty_set(infc(a))
-$is_nonempty_set(oinf(a))
-$is_nonempty_set(cinf(a))
+$is_nonempty_set('(,a))
+$is_nonempty_set('(,a])
+$is_nonempty_set('(a,))
+$is_nonempty_set('[a,))
 
 have x '[a, b]
 x $in '[a, b]
@@ -4111,11 +4111,11 @@ x $in '[a, b]
 have y '(a, b)
 y $in '(a, b)
 
-have left cinf(a)
-left $in cinf(a)
+have left '[a,)
+left $in '[a,)
 
-have right info(a)
-right $in info(a)
+have right '(,a)
+right $in '(,a)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -4397,19 +4397,66 @@ forall S set, x set, y set, z set:
 }
 
 #[test]
-fn one_side_infinity_interval_parse_arity_errors() {
-    for source_code in ["have bad set = info()", "have bad set = info(0, 1)"] {
+fn one_sided_interval_literal_rejects_invalid_delimiters() {
+    for (source_code, expected_error) in [
+        (
+            "have a R\nhave bad set = '[a,]",
+            "right-unbounded interval must end with `)`",
+        ),
+        (
+            "have a R\nhave bad set = '[,a)",
+            "left-unbounded interval must start with `(`",
+        ),
+        (
+            "have a R\nhave bad set = '[,a]",
+            "left-unbounded interval must start with `(`",
+        ),
+        (
+            "have a R\nhave bad set = '(a,]",
+            "right-unbounded interval must end with `)`",
+        ),
+        (
+            "have bad set = '(,)",
+            "interval literal cannot omit both endpoints; use `R`",
+        ),
+    ] {
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime
-            .new_file_path_new_env_new_name_scope("one_side_infinity_interval_parse_arity_errors");
+        runtime.new_file_path_new_env_new_name_scope(
+            "one_sided_interval_literal_rejects_invalid_delimiters",
+        );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(!run_succeeded);
         assert!(
-            run_output.contains("info expects 1 argument"),
-            "unexpected arity error output:\n{}",
+            run_output.contains(expected_error),
+            "unexpected interval literal error output:\n{}",
+            run_output
+        );
+    }
+}
+
+#[test]
+fn legacy_one_sided_interval_names_show_migration_hints() {
+    for (source_code, replacement) in [
+        ("have bad set = oinf(0)", "'(a,)"),
+        ("have bad set = cinf(0)", "'[a,)"),
+        ("have bad set = info(0)", "'(,a)"),
+        ("have bad set = infc(0)", "'(,a]"),
+    ] {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "legacy_one_sided_interval_names_show_migration_hints",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(
+            run_output.contains(&format!("has been removed; use `{}`", replacement)),
+            "unexpected migration error output:\n{}",
             run_output
         );
     }
