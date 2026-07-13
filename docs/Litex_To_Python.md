@@ -19,7 +19,7 @@ litex -python -e "have a R = 1"
 litex -python -r repo_dir
 ```
 
-`-r` reads the `[entrance]` file declared in `repo_dir/litex.config`.
+`-r` compiles the ordered `[run]` plan declared in `repo_dir/litex.config`.
 
 ## Supported v1 Subset
 

@@ -11,7 +11,7 @@ litex [global options] [command]
 
 With no command, `litex` starts the interactive verifier REPL. If the current
 directory directly contains `litex.config`, it discovers that project without
-running its entrance file. The persistent REPL environment can then load any
+running its `[run]` plan. The persistent REPL environment can then load any
 root `[export]` on demand with `local import name`. Use `litex -isolated` to
 force the ordinary isolated REPL. Litex does not search parent directories for
 a project configuration.
@@ -94,12 +94,12 @@ those flags. `-lang` also consumes the next token globally.
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its entrance file. |
+| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its `[run]` plan. |
 | `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
 | `litex -e <code>` | Run a Litex source string. |
 | `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
-| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its `[entrance]` file. |
+| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its ordered `[run]` plan. |
 
 Declare project files and child modules in `[export]` in `litex.config`,
 then bind them with `local import`; ordinary `import Name` names a declared
@@ -133,7 +133,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Discover the repository module graph, run the `[entrance]` file, and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run its `[run]` plan, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -156,7 +156,7 @@ Runner exit behavior:
 ## Session Command
 
 `litex -session` starts a persistent, machine-readable verifier process. It
-uses the current directory's `litex.config` with the same no-entrance project
+uses the current directory's `litex.config` with the same no-plan project
 startup as the ordinary REPL; `litex -isolated -session` disables that project
 context. It writes one JSON object per event and accepts these stdin frames:
 
@@ -178,7 +178,7 @@ JSON-string `trace` field so a client never has to parse terminal prompts.
 |---------|----------|
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run the `[entrance]` file, and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save one prop/function/fact relation graph JSON object. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
@@ -199,7 +199,7 @@ artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 | `litex -latex` | Start the interactive LaTeX-output REPL. |
 | `litex -latex -e <code>` | Compile a source string to LaTeX. |
 | `litex -latex -f <file>` | Compile a file to LaTeX. |
-| `litex -latex -r <repo>` | Compile the repository `[entrance]` file to LaTeX. |
+| `litex -latex -r <repo>` | Compile the repository `[run]` plan to LaTeX. |
 
 After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
 If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
@@ -222,10 +222,10 @@ Unknown commands print an error and the help message, then exit with code `2`.
 
 Use `litex.config` to organize a multi-file project:
 
-- set `[entrance] file = "..."` for the project entry;
-- declare files and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
+- list ordered bare paths in `[run]`, for example `./chap7.lit` or `./Algebra`;
+- declare every run target, files, and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
 - use `local import name` inside registered sources;
-- run the entry with `litex -r <project>` or a registered chapter with `litex -f <file>`.
+- run the project plan with `litex -r <project>` or one registered chapter with `litex -f <file>`.
 
 Ordinary `import Name` loads a declared root module.
 
@@ -266,7 +266,7 @@ Run a file with fuller output:
 litex -detail -f examples/tmp.lit
 ```
 
-Run a project entrance file:
+Run a project plan:
 
 ```bash
 litex -r examples/08_module_repository

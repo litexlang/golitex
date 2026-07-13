@@ -1121,6 +1121,79 @@ impl Runtime {
         )))
     }
 
+    // A non-negative summand is no larger than the finite sum containing it.
+    // Example: from `x $in X` and `forall y X: h(y) >= 0`, prove
+    // `h(x) <= finite_set_sum(X, h)`.
+    fn try_less_equal_finite_set_summand_nonnegative_sum(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::SumOfFiniteSet(sum) = &f.right else {
+            return Ok(None);
+        };
+        let Obj::FnObj(call) = &f.left else {
+            return Ok(None);
+        };
+        let [args] = call.body.as_slice() else {
+            return Ok(None);
+        };
+        let [member] = args.as_slice() else {
+            return Ok(None);
+        };
+        let member = member.as_ref().clone();
+        let verify_state = VerifyState::new(0, true);
+
+        let Some(summand) = self.instantiate_unary_function_at(sum.func.as_ref(), &member)? else {
+            return Ok(None);
+        };
+        let summand_result = self.verify_objs_are_equal_in_equality_builtin(
+            &f.left,
+            &summand,
+            f.line_file.clone(),
+            &verify_state,
+        )?;
+        if !summand_result.is_true() {
+            return Ok(None);
+        }
+
+        let member_fact: AtomicFact =
+            InFact::new(member, sum.set.as_ref().clone(), f.line_file.clone()).into();
+        let member_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&member_fact, &verify_state)?;
+        if !member_result.is_true() {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let Some(summand_at_x) = self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let nonnegative_fact: AtomicFact =
+            LessEqualFact::new(Self::literal_zero_obj(), summand_at_x, f.line_file.clone()).into();
+        let nonnegative_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(sum.set.as_ref().clone()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.verify_atomic_fact(&nonnegative_fact, &verify_state)
+        })?;
+        if !nonnegative_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "finite-set sum: non-negative summand is at most the total".to_string(),
+                vec![summand_result, member_result, nonnegative_result],
+            ),
+        )))
+    }
+
     fn try_less_equal_algebra(
         &mut self,
         f: &LessEqualFact,
@@ -1178,6 +1251,10 @@ impl Runtime {
         }
 
         if let Some(r) = self.try_less_equal_finite_set_sum_pointwise_on_same_set(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_less_equal_finite_set_summand_nonnegative_sum(f, atomic_fact)? {
             return Ok(Some(r));
         }
 

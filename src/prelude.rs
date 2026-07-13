@@ -101,7 +101,7 @@ pub use crate::infer::{
 pub use crate::module_manager::{
     discover_repository, discover_repository_for_file, parse_project_config, ExportEntry, FileId,
     FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
-    ProjectConfig, ProjectExport, RepositoryFileTarget, BUILTIN_CODE_PATH,
+    ProjectConfig, ProjectExport, ProjectRunPath, RepositoryFileTarget, BUILTIN_CODE_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;

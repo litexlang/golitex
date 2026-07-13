@@ -294,10 +294,10 @@ mod tests {
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[entrance]\nfile = \"./main.lit\"\n\n[export]\nfacts = \"./facts.lit\"\n",
+            "[run]\n./main.lit\n\n[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
         )
         .expect("write config");
-        fs::write(root.join("main.lit"), "have entrance_value R = 9\n").expect("write entrance");
+        fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
         fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
 
         let input = format!(

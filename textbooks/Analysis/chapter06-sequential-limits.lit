@@ -153,6 +153,16 @@ prop is_convergent_sequence(a seq(R)):
 prop is_divergent_sequence(a seq(R)):
     not $is_convergent_sequence(a)
 
+thm convergent_sequence_has_limit:
+    ? forall a seq(R):
+        $is_convergent_sequence(a)
+        =>:
+            exist L R st {$has_limit(a, L)}
+    $is_convergent_sequence(a)
+    obtain L from exist L R st {$has_limit(a, L)}
+    witness exist M R st {$has_limit(a, M)} from L:
+        $has_limit(a, L)
+
 """
 Examples 6.1.6. Constant sequences converge, while the sequence 1/n converges
 to 0.
@@ -227,10 +237,8 @@ Definition 6.1.8. The notation lim a_n denotes the unique limit when it exists;
 if no real limit exists, the sequence is divergent.
 """
 
-# The notation is a genuine function on the subtype of convergent real
-# sequences.  Existence comes from the definition of convergence; uniqueness is
-# Proposition 6.1.7.  Thus `lim(a)` is available only after Litex checks that
-# `a` is convergent.
+# The notation is a function on the convergent real sequences. Existence comes
+# from the definition of convergence and uniqueness from Proposition 6.1.7.
 
 have fn lim by exist!:
     ? forall a seq(R):
@@ -294,9 +302,8 @@ thm shifted_sequence_has_limit:
 Remark 6.1.10. The dummy index letter in lim_{n -> infinity} a_n is irrelevant.
 """
 
-# Renaming the bound variable does not change the sequence; Litex anonymous
-# functions identify it by its function value, not by the displayed variable
-# name.
+# Renaming the bound variable does not change the sequence; its values, not
+# its displayed variable name, determine it.
 
 """
 Proposition 6.1.11. The sequence 1/n converges to 0.
@@ -1224,19 +1231,11 @@ thm seq_div_converges_to:
 
 # 6.2 The extended real number system
 
-# This section records the extended-real definitions, examples, and propositions
-# in source order without constructing a separate `R*` type.  Later infinity
-# cases are stated as concrete unboundedness, threshold, finite-supremum,
-# finite-infimum, limsup, or liminf facts.
-
 """
 Definition 6.2.1 (The extended real line). The extended real line R* is formed
 by adjoining two formal endpoints, +infty and -infty, to the ordinary real
 numbers. The ordinary real numbers are the finite points of R*.
 """
-
-# The formal objects below remain `R`-valued unless a later proposition says
-# explicitly which infinity behavior is meant.
 
 """
 Definition 6.2.2 (Negation on extended reals). Negation on R* agrees with
@@ -1244,18 +1243,11 @@ ordinary real negation on finite points, sends +infty to -infty, and sends
 -infty to +infty.
 """
 
-# Negation is listed as source vocabulary; no operation is introduced without a
-# local extended-real object.
-
 """
 Definition 6.2.3 (Extended order). The order on R* agrees with the ordinary
 real order on finite points. Every extended real is at most +infty, and
 -infty is at most every extended real.
 """
-
-# Infinite comparisons are not encoded as term comparisons with placeholder
-# endpoints. Litex records the corresponding threshold or unboundedness
-# proposition when that comparison becomes mathematically relevant.
 
 """
 Examples 6.2.4. Examples include 3 <= 5, 3 < +infty, -infty < +infty, and
@@ -1267,7 +1259,6 @@ Proposition 6.2.5. Extended order is reflexive, trichotomous, transitive, and
 reversed by negation.
 """
 
-# These are the formal laws one expects from adding `+infinity` and `-infinity`
 # to the real line.  Later arguments only need concrete threshold versions, so
 # the chapter does not build a full extended-order theory here.
 
@@ -2263,9 +2254,8 @@ not 0.8.
 """
 
 # As in Chapter 5, the finite-decimal sequence is represented by the closed
-# form `1 - 1/10^n`.  Decimal-expansion uniqueness is not formalized here; the
-# point of this example is the quantifier difference between one early hit and
-# continual adherence.
+# form `1 - 1/10^n`. The point of this example is the quantifier difference
+# between one early hit and continual adherence.
 
 # The source uses a non-strict 0.1-close relation, while this sketch's
 # adherence predicate uses a strict `< epsilon`.  In the strict formulation,
@@ -2915,10 +2905,8 @@ Remark 6.4.11. The starting index does not affect limsup or liminf.
 Proposition 6.4.12. Basic properties of limsup and liminf.
 """
 
-# Tao's statement also covers `+infty` and `-infty`.  The formal statements
-# below cover the finite real-valued branch.  Their proof idea is the threshold
-# characterization: eventual upper/lower control together with arbitrarily late
-# crossings.
+# The finite real-valued case follows the threshold characterization: eventual
+# upper/lower control together with arbitrarily late near-attainment.
 
 thm bounded_sequence_tail_sup_sequence_decreasing:
     ? forall a seq(R):
@@ -3477,9 +3465,6 @@ Lemma 6.4.13. Comparison principle for suprema, infima, limsup, and liminf.
 # The comparison principle transfers pointwise order to tail suprema/infima and
 # then to limsup/liminf.  The statements below are the forms needed by later
 # arguments.
-# Tao leaves this proof to Exercise 6.4.4.  The missing formal work is the
-# passage from pointwise comparison to every tail supremum/infimum, followed by
-# the corresponding limit comparison.
 
 thm finite_limsup_comparison:
     ? forall a, b seq(R), La, Lb R:
@@ -3549,8 +3534,6 @@ and (c_n)_{n=m}^infty both converge to the same limit L. Then
 
 # The squeeze test traps the middle sequence between two sequences with the
 # same limit and then uses an epsilon tail common to both bounds.
-# Tao leaves this proof to Exercise 6.4.5.  The local proof is expanded here
-# because later examples use the squeeze theorem directly.
 
 thm squeeze_converges_to:
     ? forall a, b, c seq(R), L R:
@@ -4033,8 +4016,6 @@ when x = 1, and diverges when x = -1 or |x| > 1.
 # apart, so the sequence is not Cauchy.  For `|x| > 1`, a hypothetical limit
 # would have to satisfy `L = xL`, hence `L = 0`, contradicting the fact that
 # powers of `|x|` eventually stay above one.
-# Tao leaves this proof to Exercise 6.5.2.  The standard proof is expanded here
-# because later examples use these geometric-sequence cases.
 
 thm geometric_abs_lt_one_converges_to_zero:
     ? forall x R:
@@ -4228,8 +4209,6 @@ Lemma 6.5.3. For every x > 0, the sequence x^(1/n) converges to 1.
 # `a(n) < 1+epsilon`.  For the lower bound, use `(1-epsilon)^n -> 0` when
 # `epsilon < 1`; if `epsilon >= 1`, positivity of the root already gives the
 # lower estimate.
-# Tao leaves this proof to Exercise 6.5.3.  The standard nth-root argument is
-# expanded here because later root-test material reuses it.
 
 prop is_nth_root_sequence_for(x R_pos, a seq(R)):
     forall n N_pos:
@@ -4519,9 +4498,8 @@ subsequences of the original sequence.
 # `1.1, 0.1, 1.01, 0.01, 1.001, 0.001, ...`.  The component sequence
 # `b = 1.1, 1.01, 1.001, ...` is the odd-indexed sequence of `a`, and
 # `c = 0.1, 0.01, 0.001, ...` is the even-indexed sequence of `a`.
-# Decimal notation is not formalized here, so the theorem below proves the
-# structural fact for any real sequence `a`: the odd- and even-indexed component
-# sequences are subsequences of `a`.
+# The theorem below gives the structural fact for any real sequence `a`: the
+# odd- and even-indexed component sequences are subsequences of `a`.
 
 have fn subsequence_odd_index(k N_pos) N_pos = 2 * (k - 1) + 1
 

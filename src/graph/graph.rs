@@ -173,7 +173,7 @@ pub fn run_graph_for_repo_with_strict_and_language(
     let entry_module_id = runtime.current_module_id();
     let (stmt_results, runtime_error) = crate::pipeline::run_repository_file_target(
         &mut runtime,
-        RepositoryFileTarget::Entrance(entry_module_id),
+        RepositoryFileTarget::Module(entry_module_id),
     );
     render_graph_result(
         "repo",

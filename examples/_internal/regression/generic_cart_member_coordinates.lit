@@ -1,0 +1,94 @@
+# A member of a symbolic Cartesian product inherits its tuple dimension and
+# coordinate-factor membership from the product metadata.
+
+have n N_pos = 3
+have cart C for i <= n, proj(C, i) = R
+
+forall p C:
+    tuple_dim(p) = n
+
+forall p C, i closed_range(1, n):
+    p[i] $in proj(C, i)
+
+forall p C:
+    p[1] $in proj(C, 1)
+    proj(C, 1) = R
+    p[1] $in R
+    p[2] $in proj(C, 2)
+    proj(C, 2) = R
+    p[2] $in R
+    p[3] $in proj(C, 3)
+    proj(C, 3) = R
+    p[3] $in R
+
+have tuple q for i <= n, q[i] = 0
+tuple_dim(q) = n
+
+forall i closed_range(1, n):
+    q[i] = 0
+    0 $in R
+    proj(C, i) = R
+    q[i] $in proj(C, i)
+
+q $in C
+
+have tuple r for i <= n, r[i] = 0
+
+forall i closed_range(1, n):
+    q[i] = 0
+    r[i] = 0
+    q[i] = r[i]
+
+q = r
+
+have fn X(i closed_range(1, n)) power_set(R) = R
+prop has_X_values(f fn(i closed_range(1, n)) R):
+    forall j closed_range(1, n):
+        f(j) $in X(j)
+prop has_values_in_family(m N_pos, V set, Y fn(i closed_range(1, m)) power_set(V), g fn(i closed_range(1, m)) V):
+    forall i closed_range(1, m):
+        g(i) $in Y(i)
+have P set = {f fn(i closed_range(1, n)) R: $has_X_values(f)}
+have fn raw_choice_tuple_encode(p C) fn(i closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
+
+claim:
+    ? forall p C:
+        raw_choice_tuple_encode(p) $in P
+    claim:
+        ? forall i closed_range(1, n):
+            raw_choice_tuple_encode(p)(i) $in X(i)
+        raw_choice_tuple_encode(p)(i) = p[i]
+        p[i] $in proj(C, i)
+        proj(C, i) = R = X(i)
+        p[i] $in X(i)
+        raw_choice_tuple_encode(p)(i) $in X(i)
+    $has_X_values(raw_choice_tuple_encode(p))
+    raw_choice_tuple_encode(p) $in {f fn(i closed_range(1, n)) R: $has_X_values(f)}
+    raw_choice_tuple_encode(p) $in P
+
+have fn choice_tuple_encode(p C) P = raw_choice_tuple_encode(p)
+
+# Symbolic dimensions remain available for a tuple defined inside a forall proof.
+claim:
+    ? forall m N_pos:
+        2 <= m
+        =>:
+            m = m
+    have tuple symbolic_tuple for i <= m, symbolic_tuple[i] = 0
+    tuple_dim(symbolic_tuple) = m
+    m = m
+
+claim:
+    ? forall m N_pos, V set, Y fn(i closed_range(1, m)) power_set(V), S set:
+        2 <= m
+        S = {g fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
+        =>:
+            S = S
+    claim:
+        ? forall g S:
+            g = g
+        g $in {g fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
+        have tuple tuple_from_member for i <= m, tuple_from_member[i] = g(i)
+        tuple_dim(tuple_from_member) = m
+        g = g
+    S = S

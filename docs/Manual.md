@@ -2113,25 +2113,36 @@ There are two project-aware top-level modes:
   **`litex -isolated -f file.lit`** to force that old isolated behavior.
 - **`litex -r project/`** first discovers `project/litex.config` and recursively
   declared child projects, validates paths and names, scans import graphs, rejects
-  local and module cycles, and only then executes the `[entrance]` file.
+  local and module cycles, and only then executes the ordered `[run]` plan.
 
 `litex.config` is project configuration, not Litex source and not a knowledge
-file. It contains exactly an entrance table and an optional export table:
+file. It contains an ordered run table and an export table:
 
 ```ini
-[entrance]
-file = "./book.lit"
+[run]
+./chapter01.lit
+./chapter02.lit
+./Algebra
 
 [export]
-chap2 = "./chap2.lit"
-chapters = "./chapters"
+chap1 = "./chapter01.lit"
+chap2 = "./chapter02.lit"
+Algebra = "./Algebra"
 ```
+
+Every `[run]` path is a bare relative path and must also be declared in
+`[export]`. Litex runs entries in that order. A `.lit` entry runs one registered
+source; a directory entry runs that child project's complete `[run]` plan before
+the parent continues. A registered target is cached for the whole top-level run,
+so a later `local import chap1` reuses a chapter already run by the plan rather
+than executing it again. A source may not import a target scheduled later in the
+same plan; move that dependency earlier.
 
 An `[export]` target ending in a `.lit` file is a local source. A directory
 target is a child project and must contain its own `litex.config`. Configuration
 declares names and paths but does not itself produce mathematical facts.
 
-Inside an entrance or registered source, **`local import name`** can name only
+Inside a registered source, **`local import name`** can name only
 an entry declared by that module's `[export]` table. It cannot contain a path or
 an alias. The binding is local to that source, but it resolves to the export's
 canonical identity:
@@ -2181,15 +2192,18 @@ source-level import policy instead of putting trust in `litex.config`:
 # chap11.lit
 trust local import chap10
 
-# project entrance file
+# a registered project source
 trust import Algebra
 ```
 
 Trusted imports still resolve the same declared target, parse its source, and
 reject configuration or dependency cycles. They skip well-definedness and proof
 processing in that target and its nested imports, applying direct environment
-effects only. They are rejected by `-strict`, and every conclusion from that
-top-level run is conservatively marked with the trusted-import dependency.
+effects only. They are rejected by `-strict`, except that `trust local import`
+may reuse the exact file or module that this same strict run has already loaded
+and strictly verified from its `[run]` plan. That reuse is not trusted and adds
+no trusted-import dependency. Every actual trusted import conservatively marks
+the top-level run with an explicit trusted-import dependency.
 
 ---
 

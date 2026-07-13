@@ -187,10 +187,8 @@ pub fn run_repository_with_output_style(
         }
     };
     let entry_module_id = runtime.current_module_id();
-    let (stmt_results, runtime_error) = run_repository_file_target(
-        &mut runtime,
-        RepositoryFileTarget::Entrance(entry_module_id),
-    );
+    let (stmt_results, runtime_error) =
+        run_repository_file_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id));
     let (ok, mut output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
     if summarize {

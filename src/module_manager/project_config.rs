@@ -4,9 +4,14 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct ProjectConfig {
-    pub entrance_path: String,
-    pub entrance_line: usize,
+    pub run_paths: Vec<ProjectRunPath>,
     pub exports: Vec<ProjectExport>,
+}
+
+#[derive(Clone)]
+pub struct ProjectRunPath {
+    pub path: String,
+    pub line: usize,
 }
 
 #[derive(Clone)]
@@ -18,7 +23,7 @@ pub struct ProjectExport {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ConfigTable {
-    Entrance,
+    Run,
     Export,
 }
 
@@ -27,8 +32,7 @@ pub fn parse_project_config(
     config_path: &str,
 ) -> Result<ProjectConfig, RuntimeError> {
     let mut current_table = None;
-    let mut entrance_path = None;
-    let mut entrance_line = 0;
+    let mut run_paths = vec![];
     let mut exports = vec![];
     let mut export_names = HashSet::new();
 
@@ -41,48 +45,41 @@ pub fn parse_project_config(
 
         if text.starts_with('[') || text.ends_with(']') {
             current_table = match text {
-                "[entrance]" => Some(ConfigTable::Entrance),
+                "[run]" => Some(ConfigTable::Run),
                 "[export]" => Some(ConfigTable::Export),
                 _ => {
                     return Err(config_error(
                         config_path,
                         line,
-                        "litex.config only supports [entrance] and [export] tables",
+                        "litex.config only supports [run] and [export] tables; replace [entrance] with [run]",
                     ))
                 }
             };
             continue;
         }
 
-        let Some((key, raw_value)) = text.split_once('=') else {
-            return Err(config_error(
-                config_path,
-                line,
-                "expected `name = \"path\"` in litex.config",
-            ));
-        };
-        let key = key.trim();
-        let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
         match current_table {
-            Some(ConfigTable::Entrance) => {
-                if key != "file" {
+            Some(ConfigTable::Run) => {
+                if text.contains('=') {
                     return Err(config_error(
                         config_path,
                         line,
-                        "[entrance] only accepts `file = \"path/to/entry.lit\"`",
+                        "[run] entries are bare relative paths, for example `./chapter01.lit`",
                     ));
                 }
-                if entrance_path.is_some() {
-                    return Err(config_error(
-                        config_path,
-                        line,
-                        "[entrance] may declare `file` only once",
-                    ));
-                }
-                entrance_path = Some(value);
-                entrance_line = line;
+                let path = parse_run_path(text, config_path, line)?;
+                run_paths.push(ProjectRunPath { path, line });
             }
             Some(ConfigTable::Export) => {
+                let Some((key, raw_value)) = text.split_once('=') else {
+                    return Err(config_error(
+                        config_path,
+                        line,
+                        "[export] expects `name = \"path\"`",
+                    ));
+                };
+                let key = key.trim();
+                let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
                 is_valid_litex_name(key)
                     .map_err(|message| config_error(config_path, line, message.as_str()))?;
                 if !export_names.insert(key.to_string()) {
@@ -102,24 +99,35 @@ pub fn parse_project_config(
                 return Err(config_error(
                     config_path,
                     line,
-                    "declare [entrance] or [export] before configuration values",
+                    "declare [run] or [export] before configuration values",
                 ))
             }
         }
     }
 
-    let Some(entrance_path) = entrance_path else {
+    if run_paths.is_empty() {
         return Err(config_error(
             config_path,
             0,
-            "litex.config must contain [entrance] with `file = \"...\"`",
+            "litex.config must contain a non-empty [run] table",
         ));
-    };
-    Ok(ProjectConfig {
-        entrance_path,
-        entrance_line,
-        exports,
-    })
+    }
+    Ok(ProjectConfig { run_paths, exports })
+}
+
+fn parse_run_path(value: &str, config_path: &str, line: usize) -> Result<String, RuntimeError> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(config_error(
+            config_path,
+            line,
+            "[run] path must not be empty",
+        ));
+    }
+    if value.starts_with('"') || value.ends_with('"') {
+        return parse_quoted_path(value, config_path, line);
+    }
+    Ok(value.to_string())
 }
 
 fn parse_quoted_path(value: &str, config_path: &str, line: usize) -> Result<String, RuntimeError> {
@@ -147,4 +155,39 @@ fn config_error(config_path: &str, line: usize, message: &str) -> RuntimeError {
         (line, Rc::from(config_path)),
     ))
     .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_an_ordered_run_plan_with_bare_paths() {
+        let config = parse_project_config(
+            "[run]\n./chapter01.lit\n./Algebra\n\n[export]\nchapter1 = \"./chapter01.lit\"\nAlgebra = \"./Algebra\"\n",
+            "litex.config",
+        )
+        .expect("parse run plan");
+        assert_eq!(config.run_paths.len(), 2);
+        assert_eq!(config.run_paths[0].path, "./chapter01.lit");
+        assert_eq!(config.run_paths[1].path, "./Algebra");
+    }
+
+    #[test]
+    fn rejects_entrance_with_a_migration_message() {
+        let result = parse_project_config("[entrance]\nfile = \"./main.lit\"\n", "litex.config");
+        let Err(error) = result else {
+            panic!("entrance must be rejected");
+        };
+        assert!(format!("{error:?}").contains("replace [entrance] with [run]"));
+    }
+
+    #[test]
+    fn rejects_key_value_entries_in_run() {
+        let result = parse_project_config("[run]\nfile = \"./main.lit\"\n", "litex.config");
+        let Err(error) = result else {
+            panic!("run entries must be bare paths");
+        };
+        assert!(format!("{error:?}").contains("bare relative paths"));
+    }
 }

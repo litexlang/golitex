@@ -84,20 +84,37 @@ prop residue_class_is_prime_to_modulus(m N_pos, a Z):
     $relatively_prime_Z(a, m)
 
 # Source handling: The source subtracts mt from a'=a+mt and then invokes the
-# relative-primality theorem from Chapter III.
-# trust: The representative-independence proof needs the Chapter III gcd
-# interface specialized to a difference by a multiple of m.
-trust:
-    forall m N_pos, a, a1 Z:
+# relative-primality theorem from Chapter III.  The Chapter II reversible
+# linear-change lemma supplies this directly for the pair (a,m).
+thm congruent_mod_preserves_relprime_with_modulus:
+    ? forall m N_pos, a, a1 Z:
         $congruent_mod(m, a, a1)
         $residue_class_is_prime_to_modulus(m, a)
         =>:
             $residue_class_is_prime_to_modulus(m, a1)
-    forall m N_pos, a, a1 Z:
+    obtain t from exist t Z st {a - a1 = m * t}
+    a1 = a - (a - a1) = a - m * t = 1 * a + (-t) * m
+    m = 0 * a + 1 * m
+    a = a1 + (a - a1) = a1 + m * t = 1 * a1 + t * m
+    m = 0 * a1 + 1 * m
+    $is_gcd_Z(a, m, gcd_Z(a, m))
+    gcd_Z(a, m) = 1
+    $is_gcd_Z(a, m, 1)
+    by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(a, m, a1, m, 1, 1, -t, 0, 1, 1, t, 0, 1)
+    $is_gcd_Z(a1, m, 1)
+    gcd_Z(a1, m) = 1
+    $relatively_prime_Z(a1, m)
+    $residue_class_is_prime_to_modulus(m, a1)
+
+thm congruent_mod_preserves_relprime_with_modulus_reverse:
+    ? forall m N_pos, a, a1 Z:
         $congruent_mod(m, a, a1)
         $residue_class_is_prime_to_modulus(m, a1)
         =>:
             $residue_class_is_prime_to_modulus(m, a)
+    by thm congruent_mod_symmetric(m, a, a1)
+    by thm congruent_mod_preserves_relprime_with_modulus(m, a1, a)
+    $residue_class_is_prime_to_modulus(m, a)
 
 """
 Nonzero zero-divisors can occur in a unitary ring: modulo 6, the classes of 2
@@ -136,24 +153,46 @@ classes of b are divisible by d.
 """
 
 prop solves_linear_congruence_mod(a, b Z, m N_pos, x Z):
-    $congruent_mod(m, a * x, b)
+    exist k Z st {a * x - b = m * k}
 
 abstract_prop linear_congruence_has_exactly_gcd_many_solutions(a, b, m)
 abstract_prop linear_congruence_admissible_right_hand_side_count(a, m)
 
 # Source handling: The proof rewrites ax=b (mod m) as b=ax-my, applies the
 # linear-combination characterization of gcd, and compares two solutions.
-# trust: Counting distinct quotient classes and dividing the common factor out
-# of a congruence require finite class enumeration and cancellation.
-trust:
-    forall a, b Z, m N_pos:
+# The two existence directions are the source's Bezout calculation; only the
+# cardinality conclusions still require finite quotient-class enumeration.
+thm linear_congruence_solution_requires_gcd_divides_rhs:
+    ? forall a, b Z, m N_pos:
         exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
         =>:
             $divides_Z(gcd_Z(a, m), b)
-    forall a, b Z, m N_pos:
+    obtain x from exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+    $solves_linear_congruence_mod(a, b, m, x)
+    obtain k from exist k Z st {a * x - b = m * k}
+    by thm gcd_Z_dvd_left(a, m)
+    obtain u from exist u Z st {a = gcd_Z(a, m) * u}
+    by thm gcd_Z_dvd_right(a, m)
+    obtain v from exist v Z st {m = gcd_Z(a, m) * v}
+    b = a * x - (a * x - b) = a * x - m * k
+    b = a * x - m * k = gcd_Z(a, m) * u * x - gcd_Z(a, m) * v * k = gcd_Z(a, m) * (u * x - v * k)
+    witness exist t Z st {b = gcd_Z(a, m) * t} from u * x - v * k
+    $divides_Z(gcd_Z(a, m), b)
+
+thm gcd_divides_rhs_gives_linear_congruence_solution:
+    ? forall a, b Z, m N_pos:
         $divides_Z(gcd_Z(a, m), b)
         =>:
             exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+    obtain t from exist t Z st {b = gcd_Z(a, m) * t}
+    by thm gcd_Z_bezout(a, m)
+    obtain u, v from exist u, v Z st {gcd_Z(a, m) = a * u + m * v}
+    witness exist x Z st {$solves_linear_congruence_mod(a, b, m, x)} from u * t:
+        witness exist k Z st {a * (u * t) - b = m * k} from -v * t:
+            a * (u * t) - b = a * u * t - gcd_Z(a, m) * t = a * u * t - (a * u + m * v) * t = m * (-v * t)
+        $solves_linear_congruence_mod(a, b, m, u * t)
+
+trust:
     forall a, b Z, m N_pos:
         $divides_Z(gcd_Z(a, m), b)
         =>:
@@ -166,6 +205,7 @@ thm theorem_VI_2_linear_congruence_solution_criterion:
         $divides_Z(gcd_Z(a, m), b)
         =>:
             exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+    by thm gcd_divides_rhs_gives_linear_congruence_solution(a, b, m)
     exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
 
 """
@@ -278,6 +318,24 @@ sketch:
             =>:
                 $integral_polynomial_respects_congruence(F, m, x, y)
 
+thm quadratic_polynomial_respects_congruence:
+    ? forall m N_pos, x, y, a, b Z:
+        $congruent_mod(m, x, y)
+        =>:
+            $congruent_mod(m, x^2 + a * x + b, y^2 + a * y + b)
+    by thm congruent_mod_multiply(m, x, y, x, y)
+    x^2 = x * x
+    y^2 = y * y
+    $congruent_mod(m, x^2, y^2)
+    by thm congruent_mod_reflexive(m, a)
+    by thm congruent_mod_multiply(m, a, a, x, y)
+    $congruent_mod(m, a * x, a * y)
+    by thm congruent_mod_add(m, x^2, y^2, a * x, a * y)
+    $congruent_mod(m, x^2 + a * x, y^2 + a * y)
+    by thm congruent_mod_reflexive(m, b)
+    by thm congruent_mod_add(m, x^2 + a * x, y^2 + a * y, b, b)
+    $congruent_mod(m, x^2 + a * x + b, y^2 + a * y + b)
+
 """
 Exercise VI.2. Solve 5x-7y=9 and 2x+3y=10 modulo 12, and show that the
 solution is unique modulo 12.
@@ -298,11 +356,113 @@ prop is_exercise_VI_2_solution_class(x, y Z):
             $congruent_mod(12, u, x)
             $congruent_mod(12, v, y)
 
-# Source handling: Eliminate either variable, then multiply by the inverse of
-# 5 modulo 12.  This produces the representative pair (5,4).
-# trust: The finite residue-pair quotient and determinant-invertibility proof
-# are not yet a checked matrix or modular-linear-system interface.
-trust:
+# Eliminating the two equations produces 29(u-5)=0 and 29(v-4)=0.
+# Since 5*5=1 modulo 12 and 29=5 modulo 12, multiplication by 29 is
+# cancellable modulo 12.
+
+thm congruent_twenty_nine_times_zero_mod_twelve:
+    ? forall z Z:
+        $congruent_mod(12, 29 * z, 0)
+        =>:
+            $congruent_mod(12, z, 0)
+    witness exist k Z st {29 * z - 5 * z = 12 * k} from 2 * z
+    $congruent_mod(12, 29 * z, 5 * z)
+    by thm congruent_mod_transitive(12, 5 * z, 29 * z, 0)
+    by thm congruent_mod_symmetric(12, 29 * z, 5 * z)
+    $congruent_mod(12, 5 * z, 0)
+    by thm congruent_mod_reflexive(12, 5)
+    by thm congruent_mod_multiply(12, 5, 5, 5 * z, 0)
+    5 * (5 * z) = 25 * z
+    5 * 0 = 0
+    $congruent_mod(12, 25 * z, 0)
+    witness exist k Z st {z - 25 * z = 12 * k} from -2 * z
+    $congruent_mod(12, z, 25 * z)
+    by thm congruent_mod_transitive(12, z, 25 * z, 0)
+    $congruent_mod(12, z, 0)
+
+thm exercise_VI_2_homogeneous_system:
+    ? forall u, v Z:
+        $congruent_mod(12, 5 * u - 7 * v, 0)
+        $congruent_mod(12, 2 * u + 3 * v, 0)
+        =>:
+            $congruent_mod(12, u, 0)
+            $congruent_mod(12, v, 0)
+    by thm congruent_mod_reflexive(12, 3)
+    by thm congruent_mod_multiply(12, 3, 3, 5 * u - 7 * v, 0)
+    3 * 0 = 0
+    $congruent_mod(12, 3 * (5 * u - 7 * v), 0)
+    by thm congruent_mod_reflexive(12, 7)
+    by thm congruent_mod_multiply(12, 7, 7, 2 * u + 3 * v, 0)
+    7 * 0 = 0
+    $congruent_mod(12, 7 * (2 * u + 3 * v), 0)
+    by thm congruent_mod_add(12, 3 * (5 * u - 7 * v), 0, 7 * (2 * u + 3 * v), 0)
+    0 + 0 = 0
+    $congruent_mod(12, 3 * (5 * u - 7 * v) + 7 * (2 * u + 3 * v), 0)
+    3 * (5 * u - 7 * v) + 7 * (2 * u + 3 * v) = 29 * u
+    $congruent_mod(12, 29 * u, 0)
+    by thm congruent_twenty_nine_times_zero_mod_twelve(u)
+    $congruent_mod(12, u, 0)
+    by thm congruent_mod_reflexive(12, -2)
+    by thm congruent_mod_multiply(12, -2, -2, 5 * u - 7 * v, 0)
+    -2 * 0 = 0
+    $congruent_mod(12, (-2) * (5 * u - 7 * v), 0)
+    by thm congruent_mod_reflexive(12, 5)
+    by thm congruent_mod_multiply(12, 5, 5, 2 * u + 3 * v, 0)
+    5 * 0 = 0
+    $congruent_mod(12, 5 * (2 * u + 3 * v), 0)
+    by thm congruent_mod_add(12, (-2) * (5 * u - 7 * v), 0, 5 * (2 * u + 3 * v), 0)
+    0 + 0 = 0
+    $congruent_mod(12, (-2) * (5 * u - 7 * v) + 5 * (2 * u + 3 * v), 0)
+    (-2) * (5 * u - 7 * v) + 5 * (2 * u + 3 * v) = 29 * v
+    $congruent_mod(12, 29 * v, 0)
+    by thm congruent_twenty_nine_times_zero_mod_twelve(v)
+    $congruent_mod(12, v, 0)
+
+thm exercise_VI_2_unique_pair:
+    ? forall u, v Z:
+        $solves_exercise_VI_2_system_mod_twelve(u, v)
+        =>:
+            $congruent_mod(12, u, 5)
+            $congruent_mod(12, v, 4)
+    $congruent_mod(12, 5 * u - 7 * v, 9)
+    $congruent_mod(12, 2 * u + 3 * v, 10)
+    witness exist k Z st {5 * 5 - 7 * 4 - 9 = 12 * k} from -1
+    $congruent_mod(12, 5 * 5 - 7 * 4, 9)
+    witness exist k Z st {2 * 5 + 3 * 4 - 10 = 12 * k} from 1
+    $congruent_mod(12, 2 * 5 + 3 * 4, 10)
+    by thm congruent_mod_symmetric(12, 5 * 5 - 7 * 4, 9)
+    by thm congruent_mod_subtract(12, 5 * u - 7 * v, 9, 5 * 5 - 7 * 4, 9)
+    9 - 9 = 0
+    $congruent_mod(12, (5 * u - 7 * v) - (5 * 5 - 7 * 4), 0)
+    (5 * u - 7 * v) - (5 * 5 - 7 * 4) = 5 * (u - 5) - 7 * (v - 4)
+    $congruent_mod(12, 5 * (u - 5) - 7 * (v - 4), 0)
+    by thm congruent_mod_symmetric(12, 2 * 5 + 3 * 4, 10)
+    by thm congruent_mod_subtract(12, 2 * u + 3 * v, 10, 2 * 5 + 3 * 4, 10)
+    10 - 10 = 0
+    $congruent_mod(12, (2 * u + 3 * v) - (2 * 5 + 3 * 4), 0)
+    (2 * u + 3 * v) - (2 * 5 + 3 * 4) = 2 * (u - 5) + 3 * (v - 4)
+    $congruent_mod(12, 2 * (u - 5) + 3 * (v - 4), 0)
+    by thm exercise_VI_2_homogeneous_system(u - 5, v - 4)
+    $congruent_mod(12, u - 5, 0)
+    $congruent_mod(12, v - 4, 0)
+    (u - 5) - 0 = u - 5
+    (v - 4) - 0 = v - 4
+    $congruent_mod(12, u, 5)
+    $congruent_mod(12, v, 4)
+
+forall u, v Z:
+    $solves_exercise_VI_2_system_mod_twelve(u, v)
+    =>:
+        $congruent_mod(12, u, 5)
+        $congruent_mod(12, v, 4)
+
+claim:
+    ? $is_exercise_VI_2_solution_class(5, 4)
+    witness exist k Z st {5 * 5 - 7 * 4 - 9 = 12 * k} from -1
+    $congruent_mod(12, 5 * 5 - 7 * 4, 9)
+    witness exist k Z st {2 * 5 + 3 * 4 - 10 = 12 * k} from 1
+    $congruent_mod(12, 2 * 5 + 3 * 4, 10)
+    $solves_exercise_VI_2_system_mod_twelve(5, 4)
     $is_exercise_VI_2_solution_class(5, 4)
 
 """
@@ -315,37 +475,86 @@ Exercise VI.3. Solve x^2+ax+b=0 modulo 2 for every a,b modulo 2.
 prop solves_exercise_VI_3_mod_two(a, b, x Z):
     $congruent_mod(2, x^2 + a * x + b, 0)
 
-# Source handling: There are four coefficient pairs and two possible values
-# of x, so direct residue enumeration proves exactly this table.
-# trust: The four finite enumeration proofs are recorded as local proof debt
-# until the verifier exposes a compact case split over residue classes.
+# Source handling: The reverse directions and the no-root case require the
+# two residue classes to be exhaustive.  The displayed roots themselves are
+# checked below from congruence algebra.
+# trust: Compact exhaustion of all residue classes modulo 2 is not yet an
+# available verifier interface.
 trust:
     forall a, b Z:
         $solves_exercise_VI_3_mod_two(0, 0, a)
         =>:
             $congruent_mod(2, a, 0)
-    forall x Z:
-        $congruent_mod(2, x, 0)
-        =>:
-            $solves_exercise_VI_3_mod_two(0, 0, x)
     forall a Z:
         $solves_exercise_VI_3_mod_two(0, 1, a)
         =>:
             $congruent_mod(2, a, 1)
-    forall x Z:
-        $congruent_mod(2, x, 1)
-        =>:
-            $solves_exercise_VI_3_mod_two(0, 1, x)
     forall a Z:
         $solves_exercise_VI_3_mod_two(1, 0, a)
         =>:
             $congruent_mod(2, a, 0) or $congruent_mod(2, a, 1)
     forall x Z:
+        not $solves_exercise_VI_3_mod_two(1, 1, x)
+
+thm exercise_VI_3_zero_zero_root:
+    ? forall x Z:
+        $congruent_mod(2, x, 0)
+        =>:
+            $solves_exercise_VI_3_mod_two(0, 0, x)
+    by thm quadratic_polynomial_respects_congruence(2, x, 0, 0, 0)
+    $congruent_mod(2, x^2 + 0 * x + 0, 0^2 + 0 * 0 + 0)
+    0^2 + 0 * 0 + 0 = 0
+    $congruent_mod(2, x^2 + 0 * x + 0, 0)
+    $solves_exercise_VI_3_mod_two(0, 0, x)
+
+thm exercise_VI_3_zero_one_root:
+    ? forall x Z:
+        $congruent_mod(2, x, 1)
+        =>:
+            $solves_exercise_VI_3_mod_two(0, 1, x)
+    by thm quadratic_polynomial_respects_congruence(2, x, 1, 0, 1)
+    $congruent_mod(2, x^2 + 0 * x + 1, 1^2 + 0 * 1 + 1)
+    witness exist k Z st {1^2 + 0 * 1 + 1 - 0 = 2 * k} from 1
+    $congruent_mod(2, 1^2 + 0 * 1 + 1, 0)
+    by thm congruent_mod_transitive(2, x^2 + 0 * x + 1, 1^2 + 0 * 1 + 1, 0)
+    $congruent_mod(2, x^2 + 0 * x + 1, 0)
+    $solves_exercise_VI_3_mod_two(0, 1, x)
+
+thm exercise_VI_3_one_zero_root_zero:
+    ? forall x Z:
+        $congruent_mod(2, x, 0)
+        =>:
+            $solves_exercise_VI_3_mod_two(1, 0, x)
+    by thm quadratic_polynomial_respects_congruence(2, x, 0, 1, 0)
+    $congruent_mod(2, x^2 + 1 * x + 0, 0^2 + 1 * 0 + 0)
+    0^2 + 1 * 0 + 0 = 0
+    $congruent_mod(2, x^2 + 1 * x + 0, 0)
+    $solves_exercise_VI_3_mod_two(1, 0, x)
+
+thm exercise_VI_3_one_zero_root_one:
+    ? forall x Z:
+        $congruent_mod(2, x, 1)
+        =>:
+            $solves_exercise_VI_3_mod_two(1, 0, x)
+    by thm quadratic_polynomial_respects_congruence(2, x, 1, 1, 0)
+    $congruent_mod(2, x^2 + 1 * x + 0, 1^2 + 1 * 1 + 0)
+    witness exist k Z st {1^2 + 1 * 1 + 0 - 0 = 2 * k} from 1
+    $congruent_mod(2, 1^2 + 1 * 1 + 0, 0)
+    by thm congruent_mod_transitive(2, x^2 + 1 * x + 0, 1^2 + 1 * 1 + 0, 0)
+    $congruent_mod(2, x^2 + 1 * x + 0, 0)
+    $solves_exercise_VI_3_mod_two(1, 0, x)
+
+thm exercise_VI_3_one_zero_roots:
+    ? forall x Z:
         $congruent_mod(2, x, 0) or $congruent_mod(2, x, 1)
         =>:
             $solves_exercise_VI_3_mod_two(1, 0, x)
-    forall x Z:
-        not $solves_exercise_VI_3_mod_two(1, 1, x)
+    by cases:
+        ? $solves_exercise_VI_3_mod_two(1, 0, x)
+        case $congruent_mod(2, x, 0):
+            by thm exercise_VI_3_one_zero_root_zero(x)
+        case $congruent_mod(2, x, 1):
+            by thm exercise_VI_3_one_zero_root_one(x)
 
 """
 Exercise VI.4. Solve x^2-3x+3=0 modulo 7.
@@ -354,19 +563,54 @@ Exercise VI.4. Solve x^2-3x+3=0 modulo 7.
 # The two solution classes are x=4 and x=6 modulo 7.  Indeed,
 # 4^2-3*4+3=7 and 6^2-3*6+3=21.
 
-# Source handling: Test the seven residue classes; only 4 and 6 make the
-# polynomial divisible by 7.
-# trust: A compact checked proof needs exhaustive enumeration of classes
-# modulo 7.
+# Source handling: Exhaustion of all seven residue classes proves that no
+# other roots occur.  The two displayed roots are checked below.
+# trust: A compact checked exhaustive enumeration modulo 7 is not available.
 trust:
     forall x Z:
         $congruent_mod(7, x^2 - 3 * x + 3, 0)
         =>:
             $congruent_mod(7, x, 4) or $congruent_mod(7, x, 6)
-    forall x Z:
+
+thm exercise_VI_4_root_four:
+    ? forall x Z:
+        $congruent_mod(7, x, 4)
+        =>:
+            $congruent_mod(7, x^2 - 3 * x + 3, 0)
+    by thm quadratic_polynomial_respects_congruence(7, x, 4, -3, 3)
+    $congruent_mod(7, x^2 + (-3) * x + 3, 4^2 + (-3) * 4 + 3)
+    witness exist k Z st {4^2 + (-3) * 4 + 3 - 0 = 7 * k} from 1
+    $congruent_mod(7, 4^2 + (-3) * 4 + 3, 0)
+    by thm congruent_mod_transitive(7, x^2 + (-3) * x + 3, 4^2 + (-3) * 4 + 3, 0)
+    $congruent_mod(7, x^2 + (-3) * x + 3, 0)
+    x^2 - 3 * x + 3 = x^2 + (-3) * x + 3
+    $congruent_mod(7, x^2 - 3 * x + 3, 0)
+
+thm exercise_VI_4_root_six:
+    ? forall x Z:
+        $congruent_mod(7, x, 6)
+        =>:
+            $congruent_mod(7, x^2 - 3 * x + 3, 0)
+    by thm quadratic_polynomial_respects_congruence(7, x, 6, -3, 3)
+    $congruent_mod(7, x^2 + (-3) * x + 3, 6^2 + (-3) * 6 + 3)
+    witness exist k Z st {6^2 + (-3) * 6 + 3 - 0 = 7 * k} from 3
+    $congruent_mod(7, 6^2 + (-3) * 6 + 3, 0)
+    by thm congruent_mod_transitive(7, x^2 + (-3) * x + 3, 6^2 + (-3) * 6 + 3, 0)
+    $congruent_mod(7, x^2 + (-3) * x + 3, 0)
+    x^2 - 3 * x + 3 = x^2 + (-3) * x + 3
+    $congruent_mod(7, x^2 - 3 * x + 3, 0)
+
+thm exercise_VI_4_listed_roots_are_solutions:
+    ? forall x Z:
         $congruent_mod(7, x, 4) or $congruent_mod(7, x, 6)
         =>:
             $congruent_mod(7, x^2 - 3 * x + 3, 0)
+    by cases:
+        ? $congruent_mod(7, x^2 - 3 * x + 3, 0)
+        case $congruent_mod(7, x, 4):
+            by thm exercise_VI_4_root_four(x)
+        case $congruent_mod(7, x, 6):
+            by thm exercise_VI_4_root_six(x)
 
 """
 Exercise VI.5. For m>1, the arithmetic mean of the positive integers below m

@@ -619,6 +619,71 @@ A $in power_set(B)
 }
 
 #[test]
+fn set_builder_subset_inference_does_not_rebind_its_filter_domain() {
+    run_with_large_stack(
+        "set_builder_subset_inference_does_not_rebind_its_filter_domain",
+        || {
+            let source_code = r#"
+have fn positive_identity(x R_pos) R = x
+have fn filtered_positive_set(n N_pos) power_set(R_pos) = {y R_pos: y $in R_pos and positive_identity(y) > 0}
+filtered_positive_set(1) $in power_set(R_pos)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "set_builder_subset_inference_does_not_rebind_its_filter_domain",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "set_builder_subset_inference_does_not_rebind_its_filter_domain failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn subset_inference_skips_set_builder_equality_representative() {
+    run_with_large_stack(
+        "subset_inference_skips_set_builder_equality_representative",
+        || {
+            let source_code = r#"
+prop is_candidate(X power_set(R), x R):
+    exist y X st {x = y}
+
+have fn candidate_closure(X power_set(R)) power_set(R) = {x R: $is_candidate(X, x)}
+
+thm closed_candidate_members_stay_in_set:
+    ? forall X power_set(R), x R:
+        candidate_closure(X) = X
+        x $in candidate_closure(X)
+        =>:
+            x $in X
+    x $in X
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "subset_inference_skips_set_builder_equality_representative",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "subset_inference_skips_set_builder_equality_representative failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn builtin_nonempty_family_witness_can_be_named_with_have() {
     run_with_large_stack(
         "builtin_nonempty_family_witness_can_be_named_with_have",
@@ -2497,6 +2562,144 @@ claim:
 }
 
 #[test]
+fn anonymous_fn_equality_transports_across_propositionally_equal_param_sets() {
+    run_with_large_stack(
+        "anonymous_fn_equality_transports_across_propositionally_equal_param_sets_large_stack",
+        || {
+            let source_code = r#"
+have fn f(x '[1, 3]) R = x
+
+forall J power_set(R):
+    J $subset '[1, 3]
+    J = '[1, 2)
+    =>:
+        fn(x J) R {f(x)} = fn(x '[1, 2)) R {f(x)}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_equality_transports_across_propositionally_equal_param_sets",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "anonymous function equality should transport across equal parameter sets:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn anonymous_fn_body_can_use_singleton_parameter_equality() {
+    run_with_large_stack(
+        "anonymous_fn_body_can_use_singleton_parameter_equality_large_stack",
+        || {
+            let source_code = r#"
+have fn ambient(x '[1, 3]) R = x
+
+fn(x {2}) R {ambient(x)} = fn(x {2}) R {ambient(x)}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_body_can_use_singleton_parameter_equality",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a singleton-domain anonymous function should expose its parameter equality:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn conditional_contribution_family_reindexes_to_equal_finite_sum() {
+    run_with_large_stack(
+        "conditional_contribution_family_reindexes_to_equal_finite_sum_large_stack",
+        || {
+            let source_code = r#"
+prop synthetic_stieltjes_contribution(J power_set(R), t R):
+    exist height R st {t = height}
+
+prop synthetic_ordinary_contribution(J power_set(R), t R):
+    exist height R st {t = height}
+
+prop synthetic_contribution_family(P finite_set, c fn(J P) R):
+    forall J P:
+        J $in power_set(R)
+        =>:
+            $synthetic_stieltjes_contribution(J, c(J))
+
+thm synthetic_stieltjes_contribution_to_ordinary:
+    ? forall J power_set(R), t R:
+        $synthetic_stieltjes_contribution(J, t)
+        =>:
+            $synthetic_ordinary_contribution(J, t)
+    obtain height from exist height R st {t = height}
+    witness exist height0 R st {t = height0} from height:
+        t = height
+    $synthetic_ordinary_contribution(J, t)
+
+have P finite_set = {{}}
+have fn c(J P) R = 0
+
+claim:
+    ? $synthetic_contribution_family(P, c)
+    claim:
+        ? forall J P:
+            J $in power_set(R)
+            =>:
+                $synthetic_stieltjes_contribution(J, c(J))
+        witness exist height R st {c(J) = height} from 0:
+            c(J) = 0
+        $synthetic_stieltjes_contribution(J, c(J))
+    $synthetic_contribution_family(P, c)
+
+claim:
+    ? forall J P:
+        J $in power_set(R)
+        =>:
+            $synthetic_ordinary_contribution(J, c(J))
+    $synthetic_stieltjes_contribution(J, c(J))
+    by thm synthetic_stieltjes_contribution_to_ordinary(J, c(J))
+    $synthetic_ordinary_contribution(J, c(J))
+
+claim:
+    ? $fn_eq(fn(J P) R {0}, c)
+    forall K P:
+        fn(J P) R {0}(K) = 0
+        c(K) = 0
+        fn(J P) R {0}(K) = c(K)
+    $fn_eq(fn(J P) R {0}, c)
+
+fn(J P) R {0} = c
+finite_set_sum(P, fn(J P) R {0}) = finite_set_sum(P, c)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "conditional_contribution_family_reindexes_to_equal_finite_sum",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "conditional contribution family should reindex through an explicit function equality:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
     run_with_large_stack(
         "anonymous_fn_direct_equality_uses_pointwise_extensionality",
@@ -2940,6 +3143,14 @@ thm finite_set_sum_monotone_tmp:
         =>:
             finite_set_sum(X, f) <= finite_set_sum(X, g)
     finite_set_sum(X, f) <= finite_set_sum(X, g)
+
+thm finite_set_sum_member_le_nonnegative_sum_tmp:
+    ? forall X finite_set, f fn(x X) R, x X:
+        forall y X:
+            f(y) >= 0
+        =>:
+            f(x) <= finite_set_sum(X, f)
+    f(x) <= finite_set_sum(X, f)
 
 thm finite_set_sum_triangle_tmp:
     ? forall X finite_set, f fn(x X) R:

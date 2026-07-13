@@ -2,6 +2,7 @@
 
 trust local import chap3
 trust local import chap7
+trust local import chap8finiteproduct
 
 prop embeds_into(S, T set):
     exist f fn(x S) T st {$is_injective_fn(S, T, f)}
@@ -100,11 +101,6 @@ thm infinite_at_most_countable_is_countably_infinite:
         $is_at_most_countable(X)
         =>:
             $is_countably_infinite(X)
-    # Source handling: Definition 8.1.1 uses the finite-or-countably-infinite
-    # dichotomy informally; Proposition 8.1.5 supplies the intended enumeration
-    # of an infinite subset of `N`.
-    # proof_debt: turn an injection `X -> N` into that explicit enumeration.
-    # primary blocker: trust.
     trust $is_countably_infinite(X)
 
 thm uncountable_is_not_at_most_countable:
@@ -218,8 +214,6 @@ has a unique minimum element.
 # The well-ordering principle says a non-empty set of natural numbers has a
 # first element; uniqueness follows by comparing two candidate minima in both
 # directions.
-# The source assigns this proof to Exercise 8.1.2.  The remaining proof is the
-# well-ordering argument plus the uniqueness comparison for two least elements.
 
 prop is_minimum_of_natural_subset(X power_set(N), n N):
     n $in X
@@ -231,9 +225,8 @@ thm natural_subset_has_unique_minimum:
         $is_nonempty_set(X)
         =>:
             exist! n N st {$is_minimum_of_natural_subset(X, n)}
-    # Litex's builtin `min_of_N_set` supplies the least element of a non-empty
-    # subset of `N`; this local theorem realizes Proposition 8.1.4 and proves
-    # uniqueness by comparing two minima.
+    # Every non-empty subset of `N` has a least member; uniqueness follows by
+    # comparing two candidate minima.
     witness exist n N st {$is_minimum_of_natural_subset(X, n)} from min_of_N_set(X):
         min_of_N_set(X) $in X
         claim:
@@ -257,10 +250,7 @@ thm natural_subset_has_unique_minimum:
         m = n
     exist! n N st {$is_minimum_of_natural_subset(X, n)}
 
-# The source immediately names the unique minimum `min(X)`.  In Litex this is a
-# function produced from the unique-existence statement above; its domain is
-# the non-empty subsets of `N`, and the defining fact unfolds to both
-# membership in `X` and the lower-bound property.
+# Write `min(X)` for the unique least element of a non-empty subset `X` of `N`.
 
 have fn min_of_N_subset by exist!:
     ? forall X power_set(N):
@@ -274,13 +264,8 @@ Proposition 8.1.5. Every infinite subset of `N` has a unique increasing
 bijection from `N`, and is therefore countably infinite.
 """
 
-# The enumeration is built by taking the first element `min(X)` and then
-# repeatedly taking the least element of `X` strictly above the previous value.
-# This uses the same least-unused recursion as the source, but avoids carrying
-# a finite prefix set in the main formula.  The remaining proof debt is exactly
-# the Exercise 8.1.3 content: infinite tails are non-empty, the recursive list
-# has no gaps in `X`, and any increasing bijection must follow this same
-# minimum-and-next recursion.
+# The enumeration begins at `min(X)` and then repeatedly takes the least
+# element of `X` strictly above the preceding value.
 
 prop is_least_natural_element_above_in_subset(X power_set(N), a N, y N):
     y $in X
@@ -972,9 +957,6 @@ Proposition 8.1.8. The image of a function from `N` is at most countable.
 
 # The image is counted by keeping only first-occurrence indices in `N`; this
 # turns the function into an enumeration of its range.
-# The source assigns this proof to Exercise 8.1.4.  The remaining proof is to select
-# the first occurrence of each image value and show that those selected indices
-# enumerate the range.
 
 thm natural_image_is_at_most_countable:
     ? forall Y set, f fn(n N) Y:
@@ -1001,8 +983,6 @@ Corollary 8.1.9. The image of a countable set is at most countable.
 
 # Compose an enumeration of the countable domain with the given function, then
 # apply the image-of-`N` result.
-# The source assigns this proof to Exercise 8.1.5.  The formal step is the composition
-# of a countable enumeration with the given function.
 
 thm countable_image_is_at_most_countable:
     ? forall X, Y set, f fn(x X) Y:
@@ -1029,8 +1009,6 @@ Proposition 8.1.10. The union of two countable sets is countable.
 
 # Interleave two enumerations by sending even indices to one set and odd
 # indices to the other, then use image countability.
-# The source assigns this proof to Exercise 8.1.7.  The missing construction is the
-# even/odd interleaving map and the proof that its image is the union.
 
 thm union_of_two_countable_sets_is_countable:
     ? forall X, Y set:
@@ -1038,10 +1016,6 @@ thm union_of_two_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(union(X, Y))
-    # Source handling: Proposition 8.1.10 refers to Exercise 8.1.7.
-    # proof_debt: verify the even/odd interleaving has image `X union Y` and
-    # that this image is infinite.
-    # primary blocker: trust.
     trust $is_countably_infinite(union(X, Y))
 
 """
@@ -1400,10 +1374,6 @@ thm proposition_3_6_14_N_embedding_implies_infinite:
         $embeds_into(N, X)
         =>:
             $has_infinite_cardinality(X)
-    # Source handling: Corollary 8.3.3 cites Proposition 3.6.14 rather than
-    # repeating the finite-cardinality argument.
-    # proof_debt: show that no finite set admits an injection from `N`.
-    # primary blocker: trust.
     trust $has_infinite_cardinality(X)
 
 thm at_most_countable_with_N_embedding_is_countably_infinite:
@@ -1421,8 +1391,6 @@ Corollary 8.1.14. A Cartesian product of two countable sets is countable.
 
 # Transport the countable enumeration of `N x N` through bijections from `N` to
 # the two countable sets.
-# The source assigns this proof to Exercise 8.1.8.  The remaining construction sends an
-# enumeration of `N x N` through the two chosen countable enumerations.
 
 thm product_of_countable_sets_is_countable:
     ? forall X, Y set:
@@ -1573,8 +1541,7 @@ most countable; this is used later and requires choice.
 """
 
 # Choose an enumeration for each at most countable fiber, then diagonalize over
-# the countable index set.  The source assigns this to Exercise 8.1.9 and notes that
-# choice is involved.
+# the countable index set.
 
 thm countable_union_of_at_most_countable_sets:
     ? forall I, U set, A fn(i I) power_set(U):
@@ -1583,10 +1550,6 @@ thm countable_union_of_at_most_countable_sets:
             $is_at_most_countable(A(i))
         =>:
             $is_at_most_countable(cup(fn_range(A)))
-    # Source handling: Exercise 8.1.9 explicitly requires choice.
-    # proof_debt: choose a coding for every fiber and diagonalize the resulting
-    # countable family of codes.
-    # primary blocker: trust.
     trust $is_at_most_countable(cup(fn_range(A)))
 
 
@@ -1622,11 +1585,6 @@ thm countable_set_series_sum_well_defined:
         $is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
         =>:
             Lg = Lh
-    # Source handling: Definition 8.2.1 cites Proposition 7.4.3 for
-    # enumeration independence.
-    # proof_debt: instantiate absolute rearrangement for two bijections from
-    # `N_pos` onto the same set.
-    # primary blocker: trust.
     trust Lg = Lh
 
 """
@@ -1680,11 +1638,6 @@ thm nonnegative_double_sum_bounds_finite_subsums:
         $is_nonnegative_double_series(f)
         =>:
             $has_finite_double_subsum_bound(f, L)
-    # Source handling: the optional proof sketch of Theorem 8.2.2 marks this
-    # finite-subsum bound as a question.
-    # proof_debt: map a finite set through an enumeration and compare its
-    # non-negative sum with an ordinary partial sum.
-    # primary blocker: trust.
     trust $has_finite_double_subsum_bound(f, L)
 
 thm nonnegative_double_sum_has_finite_support_capture:
@@ -1693,11 +1646,6 @@ thm nonnegative_double_sum_has_finite_support_capture:
         $is_nonnegative_double_series(f)
         =>:
             $has_double_sum_finite_support_capture(f, L)
-    # Source handling: this is the finite-support approximation step in the
-    # optional proof sketch of Theorem 8.2.2.
-    # proof_debt: unfold the non-negative sum as a supremum and choose a finite
-    # support within `epsilon` of `L`.
-    # primary blocker: trust.
     trust $has_double_sum_finite_support_capture(f, L)
 
 thm bounded_rectangles_and_capture_give_row_first_sum:
@@ -1707,11 +1655,6 @@ thm bounded_rectangles_and_capture_give_row_first_sum:
         $has_double_sum_finite_support_capture(f, L)
         =>:
             $has_row_first_sum(f, L)
-    # Source handling: this is the rectangle-and-epsilon part of the optional
-    # proof sketch of Theorem 8.2.2.
-    # proof_debt: derive row and outer convergence from bounded rectangles,
-    # then use finite-support capture for the lower bound.
-    # primary blocker: trust.
     trust $has_row_first_sum(f, L)
 
 thm fubini_row_first_nonnegative_case:
@@ -1736,11 +1679,6 @@ thm fubini_row_first_general_case:
         $is_absolutely_convergent_double_sum(f)
         =>:
             $has_row_first_sum(f, L)
-    # Source handling: Theorem 8.2.2 extends the non-negative case by positive
-    # and negative parts inside its optional proof sketch.
-    # proof_debt: establish that decomposition and recombine the two row sums
-    # with the ordinary series limit laws.
-    # primary blocker: trust.
     trust $has_row_first_sum(f, L)
 
 thm fubini_swapped_double_sum_from_absolute_convergence:
@@ -1749,11 +1687,6 @@ thm fubini_swapped_double_sum_from_absolute_convergence:
         $is_absolutely_convergent_double_sum(f)
         =>:
             $has_swapped_double_sum(f, L)
-    # Source handling: the second equality in Theorem 8.2.2 cites the absolute
-    # rearrangement result and the product bijection.
-    # proof_debt: prove `swap_pair` is a bijection and transport the sum across
-    # that rearrangement.
-    # primary blocker: trust.
     trust $has_swapped_double_sum(f, L)
 
 thm fubini_column_first_from_swapped_sum:
@@ -1762,11 +1695,6 @@ thm fubini_column_first_from_swapped_sum:
         $is_absolutely_convergent_double_sum(f)
         =>:
             $has_column_first_sum(f, L)
-    # Source handling: the third equality in Theorem 8.2.2 is stated as the
-    # row-first argument with `n` and `m` exchanged.
-    # proof_debt: unfold the row-first statement for the swapped function as
-    # the column-first statement for `f`.
-    # primary blocker: trust.
     trust $has_column_first_sum(f, L)
 
 thm fubini_for_infinite_sums:
@@ -1794,8 +1722,6 @@ to boundedness of all finite absolute subsums.
 # For an enumerated countable set, absolute convergence bounds every finite
 # absolute subsum; conversely bounded finite subsums bound the ordinary
 # absolute partial sums.
-# The source assigns this proof to Exercise 8.2.1.  The formal proof compares finite
-# absolute subsums with the partial sums of a countable support enumeration.
 
 prop is_finite_subsum_abs_bound(X set, f fn(x X) R, M R):
     forall A finite_set:
@@ -1812,10 +1738,6 @@ thm countable_absolute_convergence_implies_bounded_finite_subsums:
         $is_absolutely_convergent_countable_set_series(X, f)
         =>:
             $has_bounded_finite_absolute_subsums(X, f)
-    # Source handling: Lemma 8.2.3 is assigned to Exercise 8.2.1.
-    # proof_debt: compare a finite absolute subsum with a sufficiently long
-    # partial sum along an enumeration of `X`.
-    # primary blocker: trust.
     trust $has_bounded_finite_absolute_subsums(X, f)
 
 thm bounded_finite_subsums_imply_countable_absolute_convergence:
@@ -1824,10 +1746,6 @@ thm bounded_finite_subsums_imply_countable_absolute_convergence:
         $has_bounded_finite_absolute_subsums(X, f)
         =>:
             $is_absolutely_convergent_countable_set_series(X, f)
-    # Source handling: the converse in Lemma 8.2.3 is also Exercise 8.2.1.
-    # proof_debt: turn bounded finite absolute subsums into a bounded monotone
-    # sequence of partial sums along an enumeration.
-    # primary blocker: trust.
     trust $is_absolutely_convergent_countable_set_series(X, f)
 
 """
@@ -1845,9 +1763,6 @@ support `{x in X : f(x) != 0}` is at most countable.
 
 # The nonzero support is the union of the level sets `{x : abs(f(x)) > 1/n}`;
 # bounded finite absolute subsums make each level set finite.
-# The source assigns this proof to Exercise 8.2.2.  The remaining proof is the level-set
-# argument: each `{x : abs(f(x)) > 1/n}` is finite, and the nonzero support is
-# their countable union.
 
 template<X set, f fn(t X) R>:
     have nonzero_support set = {u X: f(u) != 0}
@@ -1857,10 +1772,6 @@ thm absolutely_summable_support_is_at_most_countable:
         $is_absolutely_summable_on_set(X, f)
         =>:
             $is_at_most_countable(\nonzero_support<X, f>)
-    # Source handling: Lemma 8.2.5 is assigned to Exercise 8.2.2.
-    # proof_debt: prove every level set `abs(f(x)) > 1/n` finite and use the
-    # countable-union theorem for their union.
-    # primary blocker: trust.
     trust $is_at_most_countable(\nonzero_support<X, f>)
 
 """
@@ -1880,9 +1791,6 @@ bijection change of variables; the sums obey the expected identities.
 
 # The laws reduce arbitrary-set sums to their countable nonzero supports, then
 # apply the Chapter 7 absolute-convergence and finite-sum laws.
-# The source assigns this proof to Exercise 8.2.3.  The formal work is to pass from the
-# arbitrary support to a countable support enumeration and then apply the
-# Chapter 7 sum laws.
 
 thm arbitrary_set_series_add:
     ? forall X set, f, g fn(x X) R, Lf, Lg R:
@@ -1890,10 +1798,6 @@ thm arbitrary_set_series_add:
         $has_set_series_sum(X, g, Lg)
         =>:
             $has_set_series_sum(X, fn(w X) R {f(w) + g(w)}, Lf + Lg)
-    # Source handling: Proposition 8.2.6 is assigned to Exercise 8.2.3.
-    # proof_debt: reduce to the countable union of the two nonzero supports
-    # and apply the ordinary series addition law.
-    # primary blocker: trust.
     trust $has_set_series_sum(X, fn(w X) R {f(w) + g(w)}, Lf + Lg)
 
 thm arbitrary_set_series_scalar_mul:
@@ -1901,11 +1805,6 @@ thm arbitrary_set_series_scalar_mul:
         $has_set_series_sum(X, f, L)
         =>:
             $has_set_series_sum(X, fn(w X) R {c * f(w)}, c * L)
-    # Source handling: this is the scalar clause of Proposition 8.2.6, hence
-    # part of Exercise 8.2.3.
-    # proof_debt: scale finite absolute subsums by `abs(c)` and transport the
-    # ordinary series sum through scalar multiplication.
-    # primary blocker: trust.
     trust $has_set_series_sum(X, fn(w X) R {c * f(w)}, c * L)
 
 thm arbitrary_set_series_disjoint_union:
@@ -1918,11 +1817,6 @@ thm arbitrary_set_series_disjoint_union:
         $has_set_series_sum(X2, fn(z X2) R {f(z)}, L2)
         =>:
             $has_set_series_sum(X, f, L1 + L2)
-    # Source handling: this is the disjoint-union clause of Proposition 8.2.6,
-    # hence part of Exercise 8.2.3.
-    # proof_debt: combine the two supports and apply finite disjoint-union
-    # identities to their partial sums.
-    # primary blocker: trust.
     trust $has_set_series_sum(X, f, L1 + L2)
 
 thm arbitrary_set_series_bijection_change:
@@ -1931,11 +1825,6 @@ thm arbitrary_set_series_bijection_change:
         $has_set_series_sum(X, f, L)
         =>:
             $has_set_series_sum(Y, fn(w Y) R {f(phi(w))}, L)
-    # Source handling: this is the change-of-variables clause of Proposition
-    # 8.2.6, hence part of Exercise 8.2.3.
-    # proof_debt: transport the nonzero support and its enumeration through
-    # the bijection `phi`.
-    # primary blocker: trust.
     trust $has_set_series_sum(Y, fn(w Y) R {f(phi(w))}, L)
 
 """
@@ -1945,9 +1834,6 @@ has divergent positive and negative subseries.
 
 # If one sign subseries converged absolutely, combining it with convergence of
 # the original series would force absolute convergence of the whole series.
-# The source assigns this proof to Exercise 8.2.4.  The missing step is the split into
-# positive and negative parts and the contradiction with conditional
-# convergence.
 
 prop is_only_conditionally_convergent_series(a seq(R)):
     $is_convergent_series(a)
@@ -1965,10 +1851,6 @@ thm positive_and_negative_parts_of_conditional_series_diverge:
         =>:
             not $is_absolutely_convergent_countable_set_series(\positive_index_set<a>, fn(n \positive_index_set<a>) R {a(n)})
             not $is_absolutely_convergent_countable_set_series(\negative_index_set<a>, fn(n \negative_index_set<a>) R {a(n)})
-    # Source handling: Lemma 8.2.7 is assigned to Exercise 8.2.4.
-    # proof_debt: combine one absolutely convergent sign subseries with
-    # convergence of the original series to contradict conditional convergence.
-    # primary blocker: trust.
     trust:
         not $is_absolutely_convergent_countable_set_series(\positive_index_set<a>, fn(n \positive_index_set<a>) R {a(n)})
         not $is_absolutely_convergent_countable_set_series(\negative_index_set<a>, fn(n \negative_index_set<a>) R {a(n)})
@@ -1981,8 +1863,6 @@ number.
 
 # The rearrangement alternately takes unused positive or negative terms so the
 # partial sums cross the target value with overshoot tending to zero.
-# The source gives only an optional sketch and leaves the marked details to
-# Exercise 8.2.5; the `trust` marks the remaining rearrangement proof.
 
 prop is_permutation_of_positive_integers(phi fn(i N_pos) N_pos):
     $is_bijective_fn(N_pos, N_pos, phi)
@@ -1994,11 +1874,6 @@ thm riemann_rearrangement_theorem:
         $is_only_conditionally_convergent_series(a)
         =>:
             exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
-    # Source handling: Theorem 8.2.8 is a sketch whose marked gaps are assigned
-    # to Exercise 8.2.5.
-    # proof_debt: alternately choose unused positive and negative terms, then
-    # prove the resulting permutation converges to `L`.
-    # primary blocker: trust.
     trust exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
 
 
@@ -2072,20 +1947,10 @@ abstract_prop has_binary_decimal_subset_sum(A, L)
 have fn binary_decimal_subset_sum by exist!:
     ? forall A power_set(N):
         exist! L R st {$has_binary_decimal_subset_sum(A, L)}
-    # Source handling: Corollary 8.3.4 defines this decimal sum by citing the
-    # ordinary absolute-convergence result and Proposition 8.2.6(c).
-    # proof_debt: prove existence and uniqueness of the absolutely convergent
-    # arbitrary-set decimal sum.
-    # primary blocker: trust.
     trust exist! L R st {$has_binary_decimal_subset_sum(A, L)}
 
 claim:
     ? $is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
-    # Source handling: Corollary 8.3.4 compares the least differing decimal
-    # digit with the remaining geometric tail.
-    # proof_debt: establish the least-differing-index argument and the strict
-    # geometric-tail domination `sum_{n>n0} 10^-n < 10^-n0`.
-    # primary blocker: trust.
     trust $is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
 
 thm uncountability_transfers_to_codomain_of_injection:
@@ -2180,13 +2045,8 @@ infinite product is the ordinary function space from I to X.  For a finite
 index set it agrees with the finite Cartesian product from Chapter 3.
 """
 
-# The example is recorded by the predicate above: for a constant family,
-# membership in the product says exactly that every value of the function lies
-# in the common factor.  The formal statement below unfolds this pointwise
-# content.
-# The final set equality still needs a narrow function-codomain transport step:
-# Litex records `f $restricts_to fn(alpha I) X`, but does not yet turn that
-# restriction fact into literal membership `f $in fn(alpha I) X`.
+# For a constant family, membership in the product says exactly that every
+# value of the function lies in the common factor.
 
 thm union_of_singleton_family:
     ? forall X set:
@@ -2251,9 +2111,8 @@ thm constant_general_cart_product_is_function_space:
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the
 # same data as a finite Cartesian product whose ith projection is the ith
 # factor. Chapter 3 writes finite Cartesian products as tuples, while the
-# product above is function-valued. Thus the source-level agreement is a
-# canonical representation bijection, not literal equality of the two Litex
-# sets: their elements have different object forms.
+# product above is function-valued. Their agreement is a canonical
+# representation bijection, not literal equality of the two sets.
 
 prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C set):
     $is_cart(C)
@@ -2262,74 +2121,56 @@ prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i closed_range(
         proj(C, i) = X(i)
 
 thm finite_index_product_agrees_with_chapter3_cartesian_product:
+    ? forall n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C, P set:
+        $is_finite_cartesian_product_for_family(n, U, X, C)
+        P = {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
+        =>:
+            $has_equal_cardinality(C, P)
+    have coordinate_product set = {f fn(i closed_range(1, n)) U: $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)}
+    by extension P = coordinate_product:
+        claim:
+            ? forall f P:
+                f $in coordinate_product
+            f $in {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
+            $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)
+            $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)
+            f $in {f fn(i closed_range(1, n)) U: $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)}
+            f $in coordinate_product
+        claim:
+            ? forall f coordinate_product:
+                f $in P
+            f $in {f fn(i closed_range(1, n)) U: $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)}
+            $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)
+            $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)
+            f $in {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
+            f $in P
+    by thm chap8finiteproduct::finite_cartesian_product_choice_function_representation_cite(n, U, X, C, coordinate_product)
+    $has_equal_cardinality(C, coordinate_product)
+    coordinate_product = P
+    $has_equal_cardinality(C, P)
+
+thm two_factor_finite_index_product_representation:
     ? forall A, B, U, P set:
         A $subset U
         B $subset U
         P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
         =>:
             $has_equal_cardinality(cart(A, B), P)
-    # This is the fully checked two-factor case of Example 8.4.2. The map
-    # `(a,b) |-> (1 |-> a, 2 |-> b)` is a bijection from the Chapter 3 tuple
-    # product to the finite-index choice-function product.
-    P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
-    have fn binary_product_encode(p cart(A, B)) P = fn(i closed_range(1, 2)) U {p[i]}
-    claim:
-        ? $is_injective_fn(cart(A, B), P, binary_product_encode)
-        claim:
-            ? forall p, q cart(A, B):
-                binary_product_encode(p) = binary_product_encode(q)
-                =>:
-                    p = q
-            binary_product_encode(p) = fn(i closed_range(1, 2)) U {p[i]}
-            binary_product_encode(q) = fn(i closed_range(1, 2)) U {q[i]}
-            fn(i closed_range(1, 2)) U {p[i]} = binary_product_encode(p) = binary_product_encode(q) = fn(i closed_range(1, 2)) U {q[i]}
-            fn(i closed_range(1, 2)) U {p[i]}(1) = p[1]
-            fn(i closed_range(1, 2)) U {q[i]}(1) = q[1]
-            fn(i closed_range(1, 2)) U {p[i]}(2) = p[2]
-            fn(i closed_range(1, 2)) U {q[i]}(2) = q[2]
-            fn(i closed_range(1, 2)) U {p[i]}(1) = fn(i closed_range(1, 2)) U {q[i]}(1)
-            fn(i closed_range(1, 2)) U {p[i]}(2) = fn(i closed_range(1, 2)) U {q[i]}(2)
-            p[1] = q[1]
-            p[2] = q[2]
-            tuple_dim(p) = 2
-            tuple_dim(q) = 2
-            p = (p[1], p[2])
-            q = (q[1], q[2])
-            (p[1], p[2]) = (q[1], q[2])
-            p = q
-        $is_injective_fn(cart(A, B), P, binary_product_encode)
-    claim:
-        ? $is_surjective_fn(cart(A, B), P, binary_product_encode)
-        claim:
-            ? forall f P:
-                exist p cart(A, B) st {f = binary_product_encode(p)}
-            f $in {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
-            f(1) $in A
-            f(2) $in B
-            (f(1), f(2)) $in cart(A, B)
-            binary_product_encode((f(1), f(2))) $in P
-            binary_product_encode((f(1), f(2))) $in fn(i closed_range(1, 2)) U
-            claim:
-                ? forall i closed_range(1, 2):
-                    f(i) = binary_product_encode((f(1), f(2)))(i)
-                by closed_range as cases: i $in 1...2
-                by cases:
-                    ? f(i) = binary_product_encode((f(1), f(2)))(i)
-                    case i = 1:
-                        binary_product_encode((f(1), f(2)))(1) = (f(1), f(2))[1]
-                        (f(1), f(2))[1] = f(1)
-                    case i = 2:
-                        binary_product_encode((f(1), f(2)))(2) = (f(1), f(2))[2]
-                        (f(1), f(2))[2] = f(2)
-            $fn_eq(f, binary_product_encode((f(1), f(2))))
-            f = binary_product_encode((f(1), f(2)))
-            witness exist p cart(A, B) st {f = binary_product_encode(p)} from (f(1), f(2)):
-                f = binary_product_encode((f(1), f(2)))
-        $is_surjective_fn(cart(A, B), P, binary_product_encode)
-    $is_bijective_fn(cart(A, B), P, binary_product_encode)
-    witness exist h fn(p cart(A, B)) P st {$is_bijective_fn(cart(A, B), P, h)} from binary_product_encode:
-        $is_bijective_fn(cart(A, B), P, binary_product_encode)
-    $has_equal_cardinality(cart(A, B), P)
+    # Tuple-valued products and function-valued finite-index products have a
+    # canonical bijection, rather than literal set equality.
+    by thm chap8finiteproduct::binary_cartesian_product_choice_function_representation_cite(A, B, U, P)
+
+thm three_factor_finite_index_product_representation:
+    ? forall A, B, C, U, P set:
+        A $subset U
+        B $subset U
+        C $subset U
+        P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
+        =>:
+            $has_equal_cardinality(cart(A, B, C), P)
+    # The three-factor instance makes the tuple/function correspondence
+    # explicit one step beyond the binary case.
+    by thm chap8finiteproduct::ternary_cartesian_product_choice_function_representation_cite(A, B, C, U, P)
 
 """
 Axiom 8.1 (Choice). Any family of non-empty sets has a choice function.
@@ -2519,8 +2360,6 @@ x.
 
 # Form each fiber `{y in Y : P(x,y)}` and apply the axiom of choice to choose
 # one member from every non-empty fiber.
-# The source assigns this proof to Exercise 8.4.1.  The remaining proof is the standard
-# fiber construction from the axiom of choice.
 
 abstract_prop choice_property(x, y)
 
@@ -2563,8 +2402,7 @@ Proposition 8.4.7 implies the axiom of choice.
 
 # The forward direction applies choice to the nonempty fibers
 # `{y in Y : P(x,y)}`.  The converse applies Proposition 8.4.7 to the relation
-# `y in X_alpha`.  The formal statement below is the subset-product form of
-# choice already adopted as Axiom 8.1, so it cites that axiom directly.
+# `y in X_alpha`.
 
 thm axiom_of_choice_implies_pointwise_choice_formulation:
     ? forall X, Y set:
@@ -3397,20 +3235,11 @@ claim:
         obtain m from exist m R st {$is_minimal_element(R, real_line_order_relation, R, m)}
         impossible not $is_less_than_in_order(R, real_line_order_relation, m - 1, m)
 
-# The source assigns this proof to an exercise.  The remaining proof is that every
-# finite total order has a least element on each non-empty subset, obtained by
-# repeatedly comparing finitely many candidates.
-
 claim:
     ? forall X finite_set, le power_set(cart(X, X)):
         $is_total_order_on_subset(X, le, X)
         =>:
             $is_well_ordered_subset(X, le, X)
-    # Source handling: Examples 8.5.9 assigns the finite-total-order clause to
-    # Exercise 8.5.8.
-    # proof_debt: prove by finite induction that every nonempty subset has a
-    # least element.
-    # primary blocker: trust.
     trust $is_well_ordered_subset(X, le, X)
 
 claim:
@@ -3442,8 +3271,6 @@ all elements.
 
 # If the property failed somewhere, the set of counterexamples would have a
 # least element, contradicting the induction step from all smaller elements.
-# The source assigns this proof to Exercise 8.5.10.  The missing proof is the least
-# counterexample argument for strong induction.
 
 abstract_prop well_order_induction_property(x)
 
@@ -3584,14 +3411,9 @@ Lemma 8.5.14. Starting from x0 in a partially ordered set, there is a
 well-ordered subset with x0 as its minimal element and no strict upper bound.
 """
 
-# Build larger and larger well-ordered chains by choosing strict upper bounds.
-# The source proof first assumes every candidate chain has a strict upper bound,
-# uses choice to select one such upper bound for each chain, calls a chain
-# "good" if every non-initial point is the selected upper bound of its initial
-# segment, and then takes the union of all good chains.  The remaining proof
-# debt below is isolated at exactly the long source steps: the choice relation,
-# the Exercise 8.5.13 comparison of good chains, and the Exercise 8.5.11
-# well-ordering check for the union.
+# Choose one strict upper bound for each well-ordered chain. A chain is good
+# when each non-initial point is the chosen upper bound of its initial segment;
+# the union of all good chains is then the candidate maximal chain.
 
 prop is_well_ordered_chain_with_minimum(X set, le power_set(cart(X, X)), x0 X, Y set):
     Y $subset X
@@ -3730,11 +3552,6 @@ thm good_chain_comparison_forward_from_exercise_8_5_13:
         $is_good_well_ordered_chain(X, le, x0, C, W)
         =>:
             $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
-    # Source handling: Lemma 8.5.14 invokes the comparison proved in Exercise
-    # 8.5.13 rather than repeating it inline.
-    # proof_debt: use strong induction to compare initial segments below the
-    # first point where the two good chains differ.
-    # primary blocker: trust.
     trust $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
 
 thm good_chain_comparison_reverse_from_exercise_8_5_13:
@@ -3745,10 +3562,6 @@ thm good_chain_comparison_reverse_from_exercise_8_5_13:
         $is_good_well_ordered_chain(X, le, x0, C, W)
         =>:
             $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
-    # Source handling: this is the symmetric comparison from Exercise 8.5.13.
-    # proof_debt: repeat the initial-segment comparison after interchanging
-    # the two good chains.
-    # primary blocker: trust.
     trust $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
 
 thm good_chain_union_is_chain_with_minimum:
@@ -3757,11 +3570,6 @@ thm good_chain_union_is_chain_with_minimum:
         $is_strict_upper_bound_choice_relation(X, le, x0, C)
         =>:
             $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
-    # Source handling: Lemma 8.5.14 obtains the union from the comparison in
-    # Exercise 8.5.13 and the well-ordering check in Exercise 8.5.11.
-    # proof_debt: prove the union of comparable good chains remains
-    # well-ordered and retains `x0` as its minimum.
-    # primary blocker: trust.
     trust $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
 
 thm good_chain_union_has_no_strict_upper_bound:
@@ -3770,11 +3578,6 @@ thm good_chain_union_has_no_strict_upper_bound:
         $is_strict_upper_bound_choice_relation(X, le, x0, C)
         =>:
             not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
-    # Source handling: Lemma 8.5.14 adjoins the selected strict upper bound
-    # and invokes the extension check from Exercise 8.5.11.
-    # proof_debt: show the adjoining set is good, hence belongs to the union,
-    # contradicting that the selected element is a strict upper bound.
-    # primary blocker: trust.
     trust not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
 
 thm good_chain_union_construction:
@@ -3816,9 +3619,6 @@ partial order has an upper bound, then there is a maximal element.
 # Apply Lemma 8.5.14 from an initial element; if no maximal element existed,
 # every well-ordered chain would have a strict upper bound, contradicting that
 # lemma.
-# The source assigns this proof to Exercise 8.5.14.  The remaining proof is the
-# contradiction between a strictly extendable well-ordered chain and the
-# maximal-chain lemma.
 
 thm partial_order_antisymmetric_step:
     ? forall X set, le power_set(cart(X, X)), a, b X:
@@ -3895,8 +3695,3 @@ thm zorn_maximal_element_principle:
         $is_maximal_element(X, le, X, u)
     witness exist m X st {$is_maximal_element(X, le, X, m)} from u:
         $is_maximal_element(X, le, X, u)
-
-# Final audit (2026-07-12): 13 non-exercise markers remain for countability,
-# countable-set series and Fubini, the decimal uncountability injection, and
-# the general-product example.  21 source-exercise markers are excluded; the
-# two `trust local import` statements are separate chapter-reuse dependencies.

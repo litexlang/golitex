@@ -404,7 +404,7 @@ impl Runtime {
     }
 
     /// Make the discovered repository's root module the persistent environment for an
-    /// interactive REPL without executing its entrance file.
+    /// interactive REPL without executing its `[run]` plan.
     pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
         let root_exports = self.module_manager.root_exports.clone();
         let module_id = self.current_module_id();

@@ -55,8 +55,10 @@ pub struct FileRunner {
     pub canonical_name: String,
     pub environment: Box<Environment>,
     pub local_imports: HashMap<String, ImportTarget>,
+    pub imported_modules: Vec<ModuleId>,
     pub status: FileStatus,
     pub execution_mode: ExecutionMode,
+    pub strictly_verified: bool,
 }
 
 impl FileRunner {
@@ -67,8 +69,10 @@ impl FileRunner {
             canonical_name,
             environment: Box::new(Environment::new_empty_env()),
             local_imports: HashMap::new(),
+            imported_modules: vec![],
             status: FileStatus::Unloaded,
             execution_mode: ExecutionMode::Verified,
+            strictly_verified: false,
         }
     }
 }
@@ -83,9 +87,11 @@ pub struct ModuleRunner {
     pub files: Vec<FileRunner>,
     pub exports: HashMap<String, ExportEntry>,
     pub main_local_imports: HashMap<String, ImportTarget>,
+    pub run_targets: Vec<ImportTarget>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
+    pub strictly_verified: bool,
 }
 
 impl ModuleRunner {
@@ -105,9 +111,11 @@ impl ModuleRunner {
             files: vec![],
             exports: HashMap::new(),
             main_local_imports: HashMap::new(),
+            run_targets: vec![],
             imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,
+            strictly_verified: false,
         }
     }
 
@@ -116,6 +124,13 @@ impl ModuleRunner {
         self.files
             .push(FileRunner::new(id, source_path, canonical_name));
         id
+    }
+
+    pub fn file_id_by_source_path(&self, source_path: &str) -> Option<FileId> {
+        self.files
+            .iter()
+            .find(|file| file.source_path == source_path)
+            .map(|file| file.id)
     }
 
     pub fn file(&self, id: FileId) -> Option<&FileRunner> {

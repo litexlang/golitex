@@ -266,3 +266,19 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
     }
     Ok(())
 }
+
+impl Runtime {
+    // Parser and executor must use the same object form for declarations in a
+    // named module. Example: `have fn f ...` in `m` stores facts about `m::f`.
+    pub(crate) fn declared_identifier_obj(&self, name: &str) -> Obj {
+        // A materialized template uses its rendered `\name<...>` as the map
+        // key; it is already a complete instance name, not a bare declaration.
+        if name.starts_with('\\') {
+            return Identifier::new(name.to_string()).into();
+        }
+        if let Some(module_name) = self.current_parse_namespace() {
+            return IdentifierWithMod::new(module_name.to_string(), name.to_string()).into();
+        }
+        Identifier::new(name.to_string()).into()
+    }
+}

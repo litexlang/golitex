@@ -860,7 +860,7 @@ fn help_message() -> String {
     let result = r#"litex : run Litex interactively in your terminal; use cwd/litex.config for local imports
 litex -f <file> : run a registered project file, or an isolated file when no project registers it
 litex -isolated -f <file> : force isolated file mode
-litex -r <project> : discover project/litex.config, then run its entrance file
+litex -r <project> : discover project/litex.config, then run its ordered [run] plan
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
@@ -875,7 +875,7 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
 litex -python -f <file> : compile supported verified Litex definitions to Python
 litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <project> : compile supported definitions in the project entrance file to Python
+litex -python -r <project> : compile supported definitions in the project [run] plan to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
@@ -942,11 +942,12 @@ mod tests {
     }
 
     #[test]
-    fn help_explains_project_file_and_entrance_modes() {
+    fn help_explains_project_file_and_run_plan_modes() {
         let message = help_message();
         assert!(message.contains("run a registered project file"));
         assert!(message.contains("litex -isolated -f <file>"));
         assert!(message.contains("project/litex.config"));
+        assert!(message.contains("ordered [run] plan"));
     }
 
     #[test]

@@ -2047,8 +2047,8 @@ is {-2,-1,0,1,2}.  This inverse image makes sense even though f is not
 invertible.
 """
 
-# The calculation is ordinary finite preimage reasoning.  The only remaining
-# fact is the elementary integer-square classification for roots of 1 and 4.
+# The calculation is ordinary finite preimage reasoning, together with the
+# elementary integer-square classification for roots of 1 and 4.
 
 sketch:
     have fn square_Z(z Z) Z = z^2
@@ -2126,10 +2126,9 @@ Remark 3.4.7. For a bijection, inverse-function notation and inverse-image
 notation are compatible.
 """
 
-# The formal statement records the image-restricted version behind this
-# remark: if f is injective and B is the forward image of A, then pulling B
-# back gives exactly A.  A bijection is the special case where the image is the
-# whole target.
+# If `f` is injective and `B` is the forward image of `A`, then pulling `B`
+# back gives exactly `A`. A bijection is the special case where the image is
+# the whole target.
 
 sketch:
     claim:
@@ -2616,14 +2615,10 @@ Cartesian products collect tuples with the ith component in the ith factor.
 """
 
 # Concrete tuple literals and finite Cartesian products can be written directly.
-# When the dimension `n` is available in context, one can also use
-# coordinate-wise definitions:
+# Coordinate-wise definitions use
 # `have tuple f for i <= n, f[i] = expr` and
-# `have cart C for i <= n, proj(C, i) = expr`.  Internally, `i <= n` means
-# `i closed_range(1,n)`; Litex checks `n $in N_pos` and `2 <= n`, then releases
-# the corresponding coordinate `forall` fact.  This syntax is a good way to
-# record Tao's n-tuple and finite-product intuition.  Products over an arbitrary
-# finite indexed family are left for a later, more general construction.
+# `have cart C for i <= n, proj(C, i) = expr`, where `i` ranges over
+# `closed_range(1,n)`.
 
 sketch:
     tuple_dim((1, 2, 3)) = 3
@@ -2753,11 +2748,6 @@ Remark 3.5.13. Extending finite choice to infinitely many sets is not
 automatic; it requires the axiom of choice, discussed later in Section 8.4.
 """
 
-# Remaining finite-product theorem: handle a variable family of nonempty sets
-# `X_i` and the indexed product `prod_{1<=i<=n} X_i` by Tao's induction on the
-# number of factors.
-
-
 # Chapter 3, Section 3.6: Cardinality of sets.
 
 """
@@ -2885,7 +2875,7 @@ sketch:
                 double_to_even(x1) = 2 * x1
                 double_to_even(x2) = 2 * x2
                 2 * x1 = 2 * x2
-                x1 = (2 * x1) / 2 = double_to_even(x1) / 2 = double_to_even(x2) / 2 = (2 * x2) / 2 = x2
+                x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
         $is_injective_fn(N, even_N, double_to_even)
 
     claim:
@@ -2924,10 +2914,8 @@ sketch:
 Proposition 3.6.4. Equal cardinality is reflexive, symmetric, and transitive.
 """
 
-# Reflexivity is proved by the identity map, which is a bijection from a set to
-# itself.  Symmetry and transitivity come from inverse functions and
-# composition; those two routine function-theory lemmas are the remaining
-# follow-up work for the full proposition.
+# Equal cardinality is reflexive, symmetric, and transitive because bijections
+# have inverses and compose.
 
 sketch:
     claim:
@@ -2956,9 +2944,6 @@ sketch:
         $is_bijective_fn(X, X, id_X)
         witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X:
             $is_bijective_fn(X, X, id_X)
-
-# Remaining parts of Proposition 3.6.4: prove symmetry by building the inverse
-# of a bijection, and prove transitivity by composing bijections.
 
 """
 Definition 3.6.5. A set has cardinality n when it has equal cardinality with a
@@ -3076,20 +3061,14 @@ sketch:
 Lemma 3.6.9. Removing one element from an n-element set leaves n-1 elements.
 """
 
-# The sketch records the finite-set facts already available here: the deletion
-# is finite and its count is at most the original count.  The exact `n-1`
-# equality is the remaining deletion theorem.
+# Removing an element from a finite set gives another finite set with no more
+# elements than the original set.
 
 sketch:
     1 $in set_minus({1, 2, 3}, {2})
     3 $in set_minus({1, 2, 3}, {2})
     $is_finite_set(set_minus({1, 2, 3}, {2}))
     count(set_minus({1, 2, 3}, {2})) <= count({1, 2, 3})
-
-# Remaining deletion theorem: if `X finite_set` and `x $in X`, then
-# `count(set_minus(X, {x})) = count(X) - 1`.  The proof package should also
-# expose the negative membership fact `not x $in set_minus(X, {x})`.
-
 
 """
 Definition 3.6.10. A set has finite cardinality if it has cardinality n for
@@ -3156,9 +3135,6 @@ sketch:
         impossible count(N) + 1 <= count(N)
 
     not $is_finite_set(N)
-
-# Tao's bounded-list proof still needs the reusable theorem that every finite
-# subset of `N` is bounded.
 
 """
 Remark 3.6.13. The sets Q and R are also infinite by unboundedness, and
@@ -3233,20 +3209,8 @@ Cartesian product gives multiplication, and powersets/function spaces give
 exponentiation.
 """
 
-# The concrete example here shows the powerset side of exponentiation:
-# a three-element set has `2^3` subsets.  The general powerset and
-# function-space formulas still need general theorem interfaces.
+# The concrete example here shows the powerset side of exponentiation: a
+# three-element set has `2^3` subsets.
 
 sketch:
     count(power_set({1, 2, 3})) = 2^count({1, 2, 3}) = 8
-
-# Remaining finite-cardinality package:
-# - general exact one-new-element count: `count(union(X, {x})) = count(X) + 1`
-#   when `x` is not in X;
-# - general finite image cardinality and equality for injective images;
-# - finite function-space cardinality `count(Y^X) = count(Y)^count(X)`;
-# - general finite power-set cardinality `count(power_set(X)) = 2^count(X)`;
-# - pigeonhole principle and finite boundedness lemmas needed downstream.
-
-# Final audit (2026-07-12): no non-exercise direct marker remains.  The 3
-# inverse-construction markers are for Exercise 3.3.6 and are excluded here.
