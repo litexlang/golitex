@@ -393,7 +393,7 @@ impl Runtime {
                 break;
             }
 
-            space = FnSetSpace::from_ret_obj(space.ret_set_obj())?;
+            space = self.fn_set_space_from_return_set_obj(space.ret_set_obj())?;
         }
 
         Ok(())
@@ -2778,7 +2778,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn fn_obj_return_set_after_application(
+    pub(crate) fn fn_obj_return_set_after_application(
         &self,
         fn_obj: &FnObj,
     ) -> Result<Option<Obj>, RuntimeError> {
@@ -2803,10 +2803,42 @@ impl Runtime {
             if i == fn_obj.body.len() - 1 {
                 return Ok(Some(ret_set));
             }
-            space = FnSetSpace::from_ret_obj(ret_set)?;
+            space = self.fn_set_space_from_return_set_obj(ret_set)?;
         }
 
         Ok(None)
+    }
+
+    pub(crate) fn fn_set_space_from_return_set_obj(
+        &self,
+        return_set: Obj,
+    ) -> Result<FnSetSpace, RuntimeError> {
+        let original_return_set = return_set.clone();
+        let mut candidates = vec![return_set];
+        let mut seen = Vec::new();
+        let mut next_index = 0;
+
+        while next_index < candidates.len() {
+            let candidate = candidates[next_index].clone();
+            next_index += 1;
+            if seen.contains(&candidate.to_string()) {
+                continue;
+            }
+            seen.push(candidate.to_string());
+
+            match &candidate {
+                Obj::FnSet(fn_set) => return Ok(FnSetSpace::Set(fn_set.clone())),
+                Obj::AnonymousFn(anonymous_fn) => {
+                    return Ok(FnSetSpace::Anon(anonymous_fn.clone()));
+                }
+                Obj::SetBuilder(set_builder) => candidates.push(*set_builder.param_set.clone()),
+                _ => {}
+            }
+
+            candidates.extend(self.get_all_obj_representatives_equal_to_given(&candidate));
+        }
+
+        FnSetSpace::from_ret_obj(original_return_set)
     }
 
     fn verify_q_pos_well_defined(&self) -> Result<(), RuntimeError> {

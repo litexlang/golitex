@@ -50,7 +50,6 @@ impl ModuleManager {
             String::new(),
             module_root_path,
             main_file_path.to_string(),
-            false,
             ModuleStatus::Loaded,
         );
         self.modules.insert(id, runner);
@@ -73,7 +72,6 @@ impl ModuleManager {
             String::new(),
             module_root_path.clone(),
             main_file_path.clone(),
-            false,
             ModuleStatus::Loaded,
         );
         self.modules.insert(id, runner);
@@ -113,7 +111,6 @@ impl ModuleManager {
             module_name.clone(),
             module_root_path.clone(),
             main_file_path,
-            false,
             ModuleStatus::Discovered,
         );
         self.modules.insert(id, runner);
@@ -257,7 +254,6 @@ impl ModuleManager {
         module_name: String,
         module_root_path: String,
         main_file_path: String,
-        is_std: bool,
     ) -> Result<ModuleId, String> {
         if let Some(cycle_start_index) = self.loading_import_stack.iter().position(|module_id| {
             self.modules
@@ -297,7 +293,6 @@ impl ModuleManager {
             module_name.clone(),
             module_root_path.clone(),
             main_file_path,
-            is_std,
             ModuleStatus::Loading,
         );
         self.modules.insert(id, runner);

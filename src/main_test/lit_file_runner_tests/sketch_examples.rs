@@ -5,13 +5,12 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{run_with_large_stack, CITE_STD_EXAMPLES_SUBDIR, SKETCH_EXAMPLES_SUBDIR};
+use super::helper::{run_with_large_stack, SKETCH_EXAMPLES_SUBDIR};
 
 fn run_tmp_lit_file(file_name: &str) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let candidate_paths = [
         manifest_dir.join("examples").join(file_name),
-        manifest_dir.join(CITE_STD_EXAMPLES_SUBDIR).join(file_name),
         manifest_dir.join(SKETCH_EXAMPLES_SUBDIR).join(file_name),
     ];
     let tmp_lit_path = candidate_paths

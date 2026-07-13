@@ -3798,9 +3798,9 @@ impl Runtime {
         Ok(None)
     }
 
-    // A finite-set sum over a displayed finite set expands to the left-associated sum
-    // of the summand at each listed element. Example:
-    // `finite_set_sum({1, 2}, fn(x Z) Z {x}) = 1 + 2`.
+    // A finite-set sum over a displayed finite set, or a name equal to one,
+    // expands to the left-associated sum of the summand at each listed element.
+    // Example: `P = {1, 2}` gives `finite_set_sum(P, fn(x P) Z {x}) = 1 + 2`.
     pub(crate) fn try_verify_finite_set_sum_list_expansion(
         &mut self,
         left: &Obj,
@@ -3812,38 +3812,49 @@ impl Runtime {
             let Obj::SumOfFiniteSet(s) = sum_side else {
                 continue;
             };
-            let Obj::ListSet(list_set) = s.set.as_ref() else {
-                continue;
-            };
-            let mut terms = Vec::with_capacity(list_set.list.len());
-            for element in list_set.list.iter() {
-                let Some(term) =
-                    self.instantiate_unary_function_at(s.func.as_ref(), element.as_ref())?
-                else {
-                    terms.clear();
-                    break;
-                };
-                terms.push(term);
+            let mut list_sets = Vec::new();
+            match s.set.as_ref() {
+                Obj::ListSet(list_set) => list_sets.push(list_set.clone()),
+                set => {
+                    for representative in self.get_all_obj_representatives_equal_to_given(set) {
+                        if let Obj::ListSet(list_set) = representative {
+                            list_sets.push(list_set);
+                        }
+                    }
+                }
             }
-            if terms.len() != list_set.list.len() {
-                continue;
-            }
-            let expected = Self::left_assoc_add_from_terms(terms);
-            if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &expected,
-                    line_file.clone(),
-                    verify_state,
-                )?
-                .is_true()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: finite-set sum over displayed set expands elementwise",
-                )));
+
+            for list_set in list_sets {
+                let mut terms = Vec::with_capacity(list_set.list.len());
+                for element in list_set.list.iter() {
+                    let Some(term) =
+                        self.instantiate_unary_function_at(s.func.as_ref(), element.as_ref())?
+                    else {
+                        terms.clear();
+                        break;
+                    };
+                    terms.push(term);
+                }
+                if terms.len() != list_set.list.len() {
+                    continue;
+                }
+                let expected = Self::left_assoc_add_from_terms(terms);
+                if self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        other,
+                        &expected,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        left,
+                        right,
+                        line_file,
+                        "equality: finite-set sum over displayed set expands elementwise",
+                    )));
+                }
             }
         }
         Ok(None)

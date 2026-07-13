@@ -253,16 +253,6 @@ pub fn run_file_with_project_context(
             )),
         );
     }
-    if file_name == Some("mod.lit") {
-        return (
-            vec![],
-            Some(file_target_error(
-                entry_file_path,
-                "mod.lit is obsolete; move declarations to litex.config",
-            )),
-        );
-    }
-
     if !force_isolated {
         match discover_repository_for_file(runtime, entry_file_path) {
             Ok(Some(target)) => return run_repository_file_target(runtime, target),

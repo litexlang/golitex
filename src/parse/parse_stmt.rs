@@ -2,20 +2,10 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        if tb.current_token_is_equal_to("prove") && tb.token_at_add_index(1) == COLON {
-            return Err(parse_stmt_error(
-                tb,
-                "`prove:` was removed; use `? <fact>` inside a claim/thm/by/strategy statement",
-            ));
-        }
         match tb.current()? {
             ALIAS => self.parse_alias_stmt(tb),
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
-            LET => Err(parse_stmt_error(
-                tb,
-                "`let` has been removed; use `trust have` for trusted local object assumptions",
-            )),
             HAVE => match tb.token_at_add_index(1) {
                 TUPLE => self.parse_have_tuple_stmt(tb),
                 CART => self.parse_have_cart_stmt(tb),
@@ -25,10 +15,6 @@ impl Runtime {
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),
-                    EXIST => Err(parse_stmt_error(
-                        tb,
-                        "`have by exist ...: name` has been removed; use `obtain name from exist ...`",
-                    )),
                     _ => Err(parse_stmt_error(tb, "have by: expected `preimage`")),
                 },
                 "" => Err(parse_stmt_error(
@@ -50,12 +36,6 @@ impl Runtime {
             },
             SKETCH => self.parse_sketch_stmt(tb),
             TRY => self.parse_try_stmt(tb),
-            SCRATCH => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "top-level `scratch:` has been replaced by `sketch:`".to_string(),
-                    tb.line_file.clone(),
-                ),
-            ))),
             QUESTION_GOAL => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "top-level `?` is not supported; use it as a goal block inside claim/thm/by/strategy statements".to_string(),
@@ -64,10 +44,6 @@ impl Runtime {
             ))),
             TRUST => self.parse_trust_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
-            EXPORT => Err(parse_stmt_error(
-                tb,
-                "`export` is configured in litex.config and is not a Litex statement",
-            )),
             LOCAL => self.parse_local_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
@@ -153,13 +129,6 @@ mod parse_stmt_diagnostic_tests {
             "trust local import chapter",
         ] {
             assert!(parse_one_stmt(source_code).is_ok(), "{source_code:?}");
-        }
-
-        for legacy_source in ["proof_debt 1 = 1", "suppose x R", "local_import chapter"] {
-            assert!(
-                parse_one_stmt(legacy_source).is_err(),
-                "legacy syntax unexpectedly parsed: {legacy_source:?}"
-            );
         }
     }
 }

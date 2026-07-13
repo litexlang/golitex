@@ -32,14 +32,14 @@ impl Runtime {
                 };
 
                 for g in forall_fact.params_def_with_type.groups.iter() {
-                    match &g.param_type {
-                        ParamType::Obj(Obj::ListSet(_)) => {}
-                        _ => {
-                            return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
-                                        .to_string(), forall_fact.line_file.clone()),
-                            )));
-                        }
+                    if !matches!(&g.param_type, ParamType::Obj(_)) {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named set alias"
+                                    .to_string(),
+                                forall_fact.line_file.clone(),
+                            ),
+                        )));
                     }
                 }
 
@@ -81,7 +81,7 @@ impl Runtime {
     }
 
     /// `by enumerate finite_set:` then a `?` goal with a single `forall`
-    /// (list-set parameters, optional dom / `=>:`).
+    /// (displayed list-set or named-alias parameters, optional dom / `=>:`).
     fn parse_by_enumerate_finite_set_stmt_forall_in_question_goal(
         &mut self,
         tb: &mut TokenBlock,
@@ -115,14 +115,14 @@ impl Runtime {
             self.parse_goal_forall_fact_block(goal_block, "by enumerate finite_set")?;
 
         for g in forall_fact.params_def_with_type.groups.iter() {
-            match &g.param_type {
-                ParamType::Obj(Obj::ListSet(_)) => {}
-                _ => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
-                                .to_string(), forall_fact.line_file.clone()),
-                    )));
-                }
+            if !matches!(&g.param_type, ParamType::Obj(_)) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named set alias"
+                            .to_string(),
+                        forall_fact.line_file.clone(),
+                    ),
+                )));
             }
         }
 

@@ -1,0 +1,394 @@
+# Chapter X — Finite Subgroups and Primitive Roots
+
+"""
+Chapter X — Finite subgroups of fields and primitive roots.
+
+The polynomial root bound shows that finite multiplicative subgroups of a
+field are cyclic.  In particular, every prime modulus has a primitive root.
+The final definitions turn powers of a primitive root into indices, the
+finite-field analogue of logarithms.
+"""
+
+trust local import chapter9
+trust local import chapter8
+trust local import chapter7
+trust local import chapter6
+trust local import chapter5
+trust local import chapter4
+trust local import chapter3
+trust local import chapter2
+trust local import chapter1
+
+"""
+Lemma. Let G have order m.  Suppose that for every divisor d of m there are no
+more than d elements satisfying x^d=1.  Then G is cyclic.
+"""
+
+abstract_prop finite_group_root_count_bound_implies_cyclic(G, m)
+
+# Source handling: Count elements by their orders.  If some order d occurs,
+# its cyclic subgroup already supplies phi(d) such elements; Corollary VIII.1.4
+# then forces phi(m)>0, hence an element of order m.
+# trust: The proof needs a finite group element-order partition, generic group
+# powers, and the divisor sum for Euler phi.
+trust:
+    forall G finite_set, m N_pos:
+        $finite_group_root_count_bound_implies_cyclic(G, m)
+
+thm lemma_X_finite_group_root_bound_implies_cyclic:
+    ? forall G finite_set, m N_pos:
+        $finite_group_root_count_bound_implies_cyclic(G, m)
+    $finite_group_root_count_bound_implies_cyclic(G, m)
+
+"""
+Definition. A nonzero element x of a field has finite order m when x^m=1 and
+m is least positive with that property.  It is then a primitive mth root of
+unity.  An element satisfying x^n=1 is a root of unity whose order divides n.
+"""
+
+abstract_prop is_primitive_root_of_unity_in_field(K, x, m)
+abstract_prop field_root_of_unity_order_divides_exponent(K, x, n)
+
+# Source handling: The equations are interpreted in the multiplicative group
+# of nonzero field elements, using Chapter VIII's element-order corollary.
+# trust: Litex does not yet package a field's nonzero subtype with a generic
+# multiplicative order and power operation.
+trust:
+    forall K set, x set, m N_pos:
+        $is_primitive_root_of_unity_in_field(K, x, m)
+    forall K set, x set, n N_pos:
+        $field_root_of_unity_order_divides_exponent(K, x, n)
+
+"""
+Theorem X.1. Every finite subgroup of the multiplicative group K^x of any
+field K is cyclic.
+"""
+
+abstract_prop finite_multiplicative_subgroup_of_field_is_cyclic(K, G)
+
+# Source handling: The solutions of x^n=1 are roots of X^n-1, so Chapter IX's
+# root bound gives at most n such elements; the lemma then applies.
+# trust: This bridge needs polynomial evaluation on field elements and a finite
+# subgroup carrier for K^x.
+trust:
+    forall K, G set:
+        $is_field(K)
+        =>:
+            $finite_multiplicative_subgroup_of_field_is_cyclic(K, G)
+
+thm theorem_X_1_finite_field_subgroups_are_cyclic:
+    ? forall K, G set:
+        $is_field(K)
+        =>:
+            $finite_multiplicative_subgroup_of_field_is_cyclic(K, G)
+    $finite_multiplicative_subgroup_of_field_is_cyclic(K, G)
+
+"""
+Corollary 1. If K is a finite field, its nonzero multiplicative group K^x is
+cyclic.
+"""
+
+abstract_prop finite_field_nonzero_multiplicative_group_is_cyclic(K)
+
+# Source handling: K^x itself is a finite subgroup of K^x.
+# trust: This specializes the preceding theorem to the nonzero carrier of a
+# finite field.
+trust:
+    forall K finite_set:
+        $finite_field_nonzero_multiplicative_group_is_cyclic(K)
+
+thm corollary_X_1_finite_field_units_are_cyclic:
+    ? forall K finite_set:
+        $finite_field_nonzero_multiplicative_group_is_cyclic(K)
+    $finite_field_nonzero_multiplicative_group_is_cyclic(K)
+
+"""
+Corollary 2. In any field, the elements satisfying x^n=1 form a cyclic group
+whose order divides n.
+"""
+
+abstract_prop nth_roots_of_unity_form_cyclic_group_of_order_dividing_n(K, n)
+
+# Source handling: The roots form a finite subgroup by the root bound; its
+# generator has order dividing n.
+# trust: This combines the root-of-unity subgroup and polynomial root-count
+# interfaces.
+trust:
+    forall K set, n N_pos:
+        $is_field(K)
+        =>:
+            $nth_roots_of_unity_form_cyclic_group_of_order_dividing_n(K, n)
+
+thm corollary_X_2_roots_of_unity_are_cyclic:
+    ? forall K set, n N_pos:
+        $is_field(K)
+        =>:
+            $nth_roots_of_unity_form_cyclic_group_of_order_dividing_n(K, n)
+    $nth_roots_of_unity_form_cyclic_group_of_order_dividing_n(K, n)
+
+"""
+Theorem X.2. For every prime p there is an integer r prime to p whose powers
+1,r,r^2,...,r^(p-2), in some order, are all nonzero residue classes modulo p.
+Equivalently, the group F_p^x is cyclic.
+"""
+
+abstract_prop is_primitive_root_mod_prime(r, p)
+
+# Source handling: F_p is a finite field, so Corollary 1 gives a generator of
+# its nonzero multiplicative group; any integer representative is r.
+# trust: A checked proof needs the field structure on residue classes and a
+# representative map from its cyclic generator to an integer.
+trust:
+    forall p Z:
+        $is_prime_Z(p)
+        =>:
+            exist r Z st {$is_primitive_root_mod_prime(r, p)}
+
+thm theorem_X_2_primitive_root_mod_prime_exists:
+    ? forall p Z:
+        $is_prime_Z(p)
+        =>:
+            exist r Z st {$is_primitive_root_mod_prime(r, p)}
+    trust:
+        exist r Z st {$is_primitive_root_mod_prime(r, p)}
+
+"""
+Definition. A primitive root modulo m is a unit class of order phi(m).  If r
+is one, every unit a has an index ind_r(a), determined modulo phi(m), with
+r^ind_r(a)=a modulo m.  The index map is an isomorphism from unit classes
+under multiplication to residue classes modulo phi(m) under addition.
+"""
+
+abstract_prop is_primitive_root_modulus(r, m)
+abstract_prop is_index_of_unit_modulus(r, m, a, index)
+abstract_prop primitive_root_index_is_group_isomorphism(r, m)
+
+prop has_primitive_root_modulus(m N_pos):
+    exist r Z st {$is_primitive_root_modulus(r, m)}
+
+prop is_two_or_four(m N_pos):
+    m = 2 or m = 4
+
+prop is_odd_prime_power_or_twice_one(m N_pos):
+    exist p Z, n N_pos st {$is_prime_Z(p), p > 2, m = p^n or m = 2 * p^n}
+
+prop is_primitive_root_admissible_modulus(m N_pos):
+    $is_two_or_four(m) or $is_odd_prime_power_or_twice_one(m)
+
+# Source handling: Apply the cyclic-group classification of Chapter VII to the
+# unit group modulo m.  Multiplication turns into addition of indices.
+# trust: This needs the cyclic unit quotient and a chosen representative for
+# its discrete logarithm class.
+trust:
+    forall r Z, m N_pos:
+        $is_primitive_root_modulus(r, m)
+        =>:
+            $residue_class_is_prime_to_modulus(m, r)
+            $primitive_root_index_is_group_isomorphism(r, m)
+    forall r Z, m N_pos, a Z:
+        $is_primitive_root_modulus(r, m)
+        $residue_class_is_prime_to_modulus(m, a)
+        =>:
+            exist index Z st {$is_index_of_unit_modulus(r, m, a, index)}
+    forall r Z, m N_pos, a, b, i, j Z:
+        $is_index_of_unit_modulus(r, m, a, i)
+        $is_index_of_unit_modulus(r, m, b, j)
+        =>:
+            $is_index_of_unit_modulus(r, m, a * b, i + j)
+
+"""
+Exercise X.1. The number of primitive roots modulo m is either zero or
+phi(phi(m)).
+"""
+
+sketch:
+    abstract_prop primitive_root_count_is_zero_or_phi_phi(m)
+
+    # Source handling: If one primitive root exists, its generators are the
+    # phi(phi(m)) exponents coprime to phi(m).
+    # trust: This needs the cyclic-unit group and generator-count interface.
+    trust:
+        forall m N_pos:
+            $primitive_root_count_is_zero_or_phi_phi(m)
+
+"""
+Exercise X.2. Find a primitive root modulo 13, tabulate indices, determine all
+primitive roots modulo 13, and use the table for fifth and twenty-ninth powers.
+"""
+
+# Take r=2.  The index table for a=1,...,12 is
+# 0,1,4,2,9,5,11,3,8,10,7,6.  Thus the primitive roots are 2,6,7,11.
+# Fifth powers are respectively 1,6,9,10,5,2,11,8,3,4,7,12; because
+# 29=5 modulo 12, the twenty-ninth-power table is the same.
+
+# Source handling: Compute successive powers of 2 modulo 13, then multiply
+# indices by 5 and by 29 modulo the group order 12.
+# trust: The current index interface is a trusted quotient-group bridge, so
+# the finite table is recorded as explicit trusted arithmetic rather than
+# hidden behind an unnamed calculation predicate.
+trust:
+    $is_primitive_root_modulus(2, 13)
+    $is_primitive_root_modulus(6, 13)
+    $is_primitive_root_modulus(7, 13)
+    $is_primitive_root_modulus(11, 13)
+    $is_index_of_unit_modulus(2, 13, 1, 0)
+    $is_index_of_unit_modulus(2, 13, 2, 1)
+    $is_index_of_unit_modulus(2, 13, 3, 4)
+    $is_index_of_unit_modulus(2, 13, 4, 2)
+    $is_index_of_unit_modulus(2, 13, 5, 9)
+    $is_index_of_unit_modulus(2, 13, 6, 5)
+    $is_index_of_unit_modulus(2, 13, 7, 11)
+    $is_index_of_unit_modulus(2, 13, 8, 3)
+    $is_index_of_unit_modulus(2, 13, 9, 8)
+    $is_index_of_unit_modulus(2, 13, 10, 10)
+    $is_index_of_unit_modulus(2, 13, 11, 7)
+    $is_index_of_unit_modulus(2, 13, 12, 6)
+    forall a Z:
+        $relatively_prime_Z(a, 13)
+        =>:
+            $congruent_mod(13, a^29, a^5)
+
+"""
+Exercise X.3. For prime p, the sum 1^n+...+(p-1)^n is 0 or -1 modulo p,
+according as p-1 does not divide n or does divide n.
+"""
+
+sketch:
+    abstract_prop prime_power_sum_modulus_classification(p, n)
+
+    # Source handling: Rewrite the nonzero residues as powers of a primitive
+    # root and sum a finite geometric progression.
+    # trust: This needs finite geometric sums in a residue field.
+    trust:
+        forall p Z, n N:
+            $is_prime_Z(p)
+            =>:
+                $prime_power_sum_modulus_classification(p, n)
+
+"""
+Exercise X.4. A primitive root modulo m is also a primitive root modulo every
+divisor of m.
+"""
+
+sketch:
+    abstract_prop primitive_root_descends_to_divisors(r, m, d)
+
+    # Source handling: Use the Chinese-remainder compatibility of residue
+    # classes from Exercise V.6.
+    # trust: The statement needs compatible unit-class quotient maps.
+    trust:
+        forall r Z, m, d N_pos:
+            $is_primitive_root_modulus(r, m)
+            $divides_Z(d, m)
+            =>:
+                $primitive_root_descends_to_divisors(r, m, d)
+
+"""
+Exercise X.5. If p is odd, (1+p*x)^(p^n)=1+p^(n+1)*x modulo p^(n+2).
+Use this to lift primitive roots from p to powers p^n, and show either r or
+r+p is a primitive root modulo p^n.
+"""
+
+sketch:
+    abstract_prop odd_prime_binomial_lifting_congruence(p, x, n)
+    abstract_prop primitive_roots_lift_to_odd_prime_powers(r, p, n)
+
+    # Source handling: The binomial formula supplies the induction step; the
+    # order criterion distinguishes r from r+p.
+    # trust: The proof needs binomial coefficients and multiplicative orders
+    # modulo prime powers.
+    trust:
+        forall p Z, x Z, n N:
+            $is_prime_Z(p)
+            p > 2
+            =>:
+                $odd_prime_binomial_lifting_congruence(p, x, n)
+        forall r, p Z, n N_pos:
+            $is_prime_Z(p)
+            p > 2
+            =>:
+                $primitive_roots_lift_to_odd_prime_powers(r, p, n)
+
+"""
+Exercise X.6. Determine all m>1 for which a primitive root modulo m exists.
+"""
+
+# The complete list is m=2, m=4, an odd prime power p^n, or twice an odd
+# prime power 2p^n.  No other m>1 has a primitive root.
+
+# Source handling: Combine descent, odd-prime-power lifting, and the
+# noncyclic product and power-of-two unit groups from Chapter VII.
+# trust: The complete classification needs a factorization of arbitrary m
+# together with the quotient maps and finite-group order calculations.
+trust:
+    forall m N_pos:
+        m > 1
+        $has_primitive_root_modulus(m)
+        =>:
+            $is_primitive_root_admissible_modulus(m)
+    forall m N_pos:
+        m > 1
+        $is_primitive_root_admissible_modulus(m)
+        =>:
+            $has_primitive_root_modulus(m)
+
+"""
+Exercise X.7. Define the Mobius value mu(m) as (-1)^r for square-free m with r
+prime factors, and 0 otherwise.  It is multiplicative on coprime inputs, and
+the sum of mu(d) over divisors d of m is 1 for m=1 and 0 for m>1.
+"""
+
+sketch:
+    abstract_prop is_square_free_positive_integer(m)
+    abstract_prop has_mobius_value(m, value)
+    abstract_prop mobius_divisor_sum_is_delta_at_one(m)
+
+    # Source handling: Factor m into distinct prime powers and expand the
+    # product of (1-1) over its distinct primes.
+    # trust: This needs finite prime-factor support and finite divisor sums.
+    trust:
+        forall a, b N_pos, u, v Z:
+            gcd_Z(a, b) = 1
+            $has_mobius_value(a, u)
+            $has_mobius_value(b, v)
+            =>:
+                $has_mobius_value(a * b, u * v)
+        forall m N_pos:
+            $mobius_divisor_sum_is_delta_at_one(m)
+
+"""
+Exercise X.8. Over a field containing a primitive mth root of unity, form the
+polynomials F_d from primitive dth roots.  Then deg(F_d)=phi(d),
+X^m-1=product_{d|m} F_d, and Mobius inversion gives a product formula for F_m.
+"""
+
+sketch:
+    abstract_prop cyclotomic_factorization_and_mobius_inversion_over_field(K, m)
+
+    # Source handling: Partition all mth roots by their exact orders and apply
+    # the divisor-sum identity from Exercise X.7.
+    # trust: This needs polynomial products indexed by divisors and root-of-
+    # unity carriers.
+    trust:
+        forall K set, m N_pos:
+            $is_field(K)
+            =>:
+                $cyclotomic_factorization_and_mobius_inversion_over_field(K, m)
+
+"""
+Exercise X.9. The sum of all primitive mth roots of unity is mu(m).  For
+K=F_p and m=p-1, this gives the sum of primitive roots modulo p.
+"""
+
+sketch:
+    abstract_prop sum_of_primitive_roots_of_unity_is_mobius_value(K, m)
+
+    # Source handling: Compare the coefficient of X^(phi(m)-1) in F_m with
+    # the cyclotomic product formula from Exercise X.8.
+    # trust: The calculation needs polynomial coefficients and the cyclotomic
+    # factorization interface.
+    trust:
+        forall K set, m N_pos:
+            $is_field(K)
+            =>:
+                $sum_of_primitive_roots_of_unity_is_mobius_value(K, m)

@@ -143,6 +143,18 @@ fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
         )
         .ok(),
         Obj::FnSet(fs) => Some(fs.clone()),
+        Obj::FnObj(fn_obj) => {
+            let return_set = rt.fn_obj_return_set_after_application(fn_obj).ok()??;
+            match rt.fn_set_space_from_return_set_obj(return_set).ok()? {
+                FnSetSpace::Set(fn_set) => Some(fn_set),
+                FnSetSpace::Anon(anonymous_fn) => FnSet::new(
+                    anonymous_fn.body.params_def_with_set,
+                    anonymous_fn.body.dom_facts,
+                    (*anonymous_fn.body.ret_set).clone(),
+                )
+                .ok(),
+            }
+        }
         o => rt
             .get_cloned_object_in_fn_set(o)
             .and_then(|body| FnSet::from_body(body).ok()),

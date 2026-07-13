@@ -1,5 +1,5 @@
 # This example shows how Lean/Mathlib-style aliases can be attached to a local
-# theorem while keeping trivial builtin arithmetic facts out of std.
+# theorem while keeping trivial builtin arithmetic facts local to the source.
 
 thm example_real_addition_commutes, add_comm:
     ? forall a, b R:

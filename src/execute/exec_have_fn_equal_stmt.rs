@@ -277,6 +277,48 @@ impl Runtime {
         else {
             return Ok(None);
         };
+
+        let declared_return_set = have_fn_equal_stmt
+            .equal_to_anonymous_fn
+            .body
+            .ret_set
+            .as_ref()
+            .clone();
+        let mut return_set_representatives = vec![declared_return_set.clone()];
+        return_set_representatives
+            .extend(self.get_all_obj_representatives_equal_to_given(&declared_return_set));
+        for return_set_representative in return_set_representatives {
+            let Obj::SetBuilder(_) = return_set_representative else {
+                continue;
+            };
+            let representative_membership: AtomicFact = InFact::new(
+                value_fn.clone().into(),
+                return_set_representative,
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
+            let representative_result =
+                self.verify_atomic_fact(&representative_membership, verify_state)?;
+            if !representative_result.is_true() {
+                continue;
+            }
+            let membership_fact: Fact = InFact::new(
+                value_fn.clone().into(),
+                declared_return_set,
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    membership_fact,
+                    "restricted anonymous fn satisfies a declared set-builder return set"
+                        .to_string(),
+                    vec![representative_result],
+                )
+                .into(),
+            ));
+        }
+
         let Obj::FnSet(target_fn_set) = have_fn_equal_stmt
             .equal_to_anonymous_fn
             .body

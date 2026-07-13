@@ -70,7 +70,7 @@ by thm add_one_after_two(2)
 2 + 1 = 3
 ```
 
-This is useful for standard-library facts, long results, or parameter-sensitive
+This is useful for source-local cite facts, long results, or parameter-sensitive
 theorems. The distinctive Litex style is that routine local reasoning can stay
 as direct factual lines.
 
@@ -144,6 +144,15 @@ claim:
         exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
+        claim:
+            ? forall q1, q2 power_set(power_set(s)):
+                $is_group_quotient_set(s, g, h, q1)
+                $is_group_quotient_set(s, g, h, q2)
+                =>:
+                    q1 = q2
+            q1 = {c power_set(s): $is_left_coset(s, g, h, c)}
+            {c power_set(s): $is_left_coset(s, g, h, c)} = q2
+            q1 = q2
 
 template<s nonempty_set>:
     have fn group_quotient by exist!:

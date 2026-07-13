@@ -6,9 +6,9 @@ impl From<Fact> for Stmt {
     }
 }
 
-impl From<DefLetStmt> for Stmt {
-    fn from(v: DefLetStmt) -> Self {
-        UnsafeStmt::DefLetStmt(v).into()
+impl From<TrustHaveStmt> for Stmt {
+    fn from(v: TrustHaveStmt) -> Self {
+        UnsafeStmt::TrustHaveStmt(v).into()
     }
 }
 
@@ -138,9 +138,9 @@ impl From<ClaimStmt> for Stmt {
     }
 }
 
-impl From<ProofDebtStmt> for Stmt {
-    fn from(v: ProofDebtStmt) -> Self {
-        UnsafeStmt::ProofDebtStmt(v).into()
+impl From<TrustStmt> for Stmt {
+    fn from(v: TrustStmt) -> Self {
+        UnsafeStmt::TrustStmt(v).into()
     }
 }
 

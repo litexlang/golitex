@@ -100,14 +100,13 @@ jobs:
         run: |
           cp target/${{ matrix.target }}/release/litex litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}
 
-      - name: Package archive with std (unix)
+      - name: Package archive (unix)
         if: matrix.os_name != 'windows'
         run: |
           PKG_DIR="package_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${PKG_DIR}"
           cp "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}" "${PKG_DIR}/litex"
           chmod 755 "${PKG_DIR}/litex"
-          cp -R std "${PKG_DIR}/std"
           tar -czf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${PKG_DIR}" .
 
       - name: Rename binary (windows)
@@ -116,41 +115,39 @@ jobs:
         run: |
           cp target/${{ matrix.target }}/release/litex.exe litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.exe
 
-      - name: Package archive with std (windows)
+      - name: Package archive (windows)
         if: matrix.os_name == 'windows'
         shell: pwsh
         run: |
           $pkgDir = "package_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
-          New-Item -ItemType Directory -Force -Path (Join-Path $pkgDir "std") | Out-Null
           Copy-Item -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.exe" -Destination (Join-Path $pkgDir "litex.exe")
-          Copy-Item -Path (Join-Path "std" "*") -Destination (Join-Path $pkgDir "std") -Recurse
           Compress-Archive -Path (Join-Path $pkgDir "*") -DestinationPath "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -Force
 
-      - name: Smoke test archive with std (linux amd64)
+      - name: Smoke test archive (linux amd64)
         if: matrix.os_name == 'linux' && matrix.arch == 'amd64'
         run: |
           SMOKE_DIR="smoke_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${SMOKE_DIR}"
           tar -xzf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${SMOKE_DIR}"
-          OUTPUT=$("${SMOKE_DIR}/litex" -e $'import Trig\nTrig::sin(0) = 0')
-          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F 'Trig::sin(0)' > /dev/null; then
+          OUTPUT=$("${SMOKE_DIR}/litex" -e '1 = 1')
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
 
-      - name: Smoke test archive with std (windows)
+      - name: Smoke test archive (windows)
         if: matrix.os_name == 'windows'
         shell: pwsh
         run: |
           $smokeDir = "smoke_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
           Expand-Archive -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -DestinationPath $smokeDir -Force
-          $output = & (Join-Path $smokeDir "litex.exe") -e "import Trig`nTrig::sin(0) = 0"
+          $output = & (Join-Path $smokeDir "litex.exe") -e "1 = 1"
           $outputText = $output -join "`n"
-          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "equality fact"') -or -not $outputText.Contains('Trig::sin(0)')) {
+          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "equality fact"')) {
               $outputText
-              throw "std smoke test failed"
+              throw "archive smoke test failed"
           }
 
       - name: Upload artifact
@@ -188,7 +185,6 @@ jobs:
           PKG_DIR="pkg_litex_${VERSION}_${{ matrix.deb_arch }}"
           mkdir -p "${PKG_DIR}/DEBIAN"
           mkdir -p "${PKG_DIR}/usr/local/bin"
-          mkdir -p "${PKG_DIR}/usr/share/litex"
 
           sed -e "s/{{VERSION}}/${VERSION}/" \
               -e "s/{{ARCH}}/${{ matrix.deb_arch }}/" \
@@ -196,16 +192,14 @@ jobs:
 
           cp "litex_${VERSION}_linux_${{ matrix.arch }}" "${PKG_DIR}/usr/local/bin/litex"
           chmod 755 "${PKG_DIR}/usr/local/bin/litex"
-          cp -R std "${PKG_DIR}/usr/share/litex/std"
-
           dpkg-deb --build "${PKG_DIR}" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
 
-      - name: Smoke test .deb with std (amd64)
+      - name: Smoke test .deb (amd64)
         if: matrix.arch == 'amd64'
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          OUTPUT=$(litex -e $'import Trig\nTrig::sin(0) = 0')
-          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F 'Trig::sin(0)' > /dev/null; then
+          OUTPUT=$(litex -e '1 = 1')
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -366,15 +360,13 @@ jobs:
 
             def install
               bin.install "litex"
-              pkgshare.install "std"
             end
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "import Trig\nTrig::sin(0) = 0\n"
+              (testpath/"test.lit").write "1 = 1\n"
               output = shell_output("#{bin}/litex -f #{testpath}/test.lit")
               assert_match '"type": "equality fact"', output
-              assert_match "Trig::sin(0)", output
               refute_match '"result": "error"', output
             end
           end

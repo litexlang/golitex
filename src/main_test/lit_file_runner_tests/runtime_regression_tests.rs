@@ -25,7 +25,7 @@ fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
 
 pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: running selected runtime/output smoke tests ---");
-    runtime_contract_import_and_clear();
+    runtime_contract_builtin_and_clear();
     unknown_fact_failure_has_structured_output_fields();
     latex_output_is_fragment_without_default_packages();
     python_extractor_outputs_supported_have_subset();
@@ -33,36 +33,23 @@ pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: all selected smoke tests OK ---");
 }
 
-fn runtime_contract_import_and_clear() {
-    let suffix = std::process::id();
-
-    let module_dir = std::env::temp_dir().join(format!("litex-run-all-contract-import-{}", suffix));
-    fs::create_dir_all(&module_dir).expect("create runtime contract import module");
-    fs::write(
-        module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\ntrust forall x R:\n    $imported_prop(x)\n",
-    )
-    .expect("write runtime contract import module");
-    let import_source_code = format!(
-        "import \"{}\" as Trusted\n$Trusted::imported_prop(2)",
-        module_dir.to_string_lossy()
-    );
+fn runtime_contract_builtin_and_clear() {
+    let source_code = "1 = 1";
 
     let mut import_runtime = Runtime::new_with_builtin_code();
     import_runtime.new_file_path_new_env_new_name_scope("runtime_contract_import");
     import_runtime.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
-        run_source_code(import_source_code.as_str(), &mut import_runtime);
+        run_source_code(source_code, &mut import_runtime);
     let (import_run_succeeded, import_run_output) = render_run_source_code_output(
         &import_runtime,
         &import_stmt_results,
         &import_runtime_error,
         false,
     );
-    let _ = fs::remove_dir_all(&module_dir);
     assert!(
         import_run_succeeded,
-        "runtime contract import fixture failed:\n{}",
+        "runtime contract builtin fixture failed:\n{}",
         import_run_output
     );
 
@@ -92,7 +79,7 @@ fn builtin_rules_do_not_call_full_verifier_pipeline() {
         .join("verify")
         .join("verify_builtin_rules");
     let disallowed_calls = [
-        "verify_fact(",
+        "verify_fact_full(",
         "verify_atomic_fact(",
         "verify_forall_fact(",
         "verify_exist_or_and_chain_atomic_fact(",
@@ -304,44 +291,54 @@ fn failed_have_process_checks_do_not_bind_names() {
 }
 
 #[test]
-fn have_indexed_definitions_accept_legacy_by_keyword_but_render_for() {
-    run_with_large_stack(
-        "have_indexed_definitions_accept_legacy_by_keyword_but_render_for",
-        || {
-            let source_code = r#"
+fn have_indexed_definitions_require_for_keyword() {
+    run_with_large_stack("have_indexed_definitions_require_for_keyword", || {
+        let source_code = r#"
 have n N_pos = 3
-have tuple t by i <= n, t[i] = i
+have tuple t for i <= n, t[i] = i
 t[2] = 2
 
-have seq s seq(N_pos) by i, s(i) = i
+have seq s seq(N_pos) for i, s(i) = i
 s(3) = 3
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
-            runtime.new_file_path_new_env_new_name_scope(
-                "have_indexed_definitions_accept_legacy_by_keyword_but_render_for",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("have_indexed_definitions_require_for_keyword");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(
-                run_succeeded,
-                "legacy by indexed definitions should still work:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("have tuple t for i <= n,"),
-                "legacy tuple definition should render with `for`:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("have seq s seq(N_pos) for i,"),
-                "legacy sequence definition should render with `for`:\n{}",
-                run_output
-            );
-        },
-    );
+        assert!(
+            run_succeeded,
+            "indexed definitions with `for` should work:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("have tuple t for i <= n,"),
+            "tuple definition should render with `for`:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("have seq s seq(N_pos) for i,"),
+            "sequence definition should render with `for`:\n{}",
+            run_output
+        );
+
+        let mut legacy_runtime = Runtime::new_with_builtin_code();
+        legacy_runtime.new_file_path_new_env_new_name_scope("indexed_definition_old_form");
+        let (stmt_results, runtime_error) = run_source_code(
+            "have tuple old_form by i N, old_form[i] = i",
+            &mut legacy_runtime,
+        );
+        let (old_form_succeeded, old_form_output) =
+            render_run_source_code_output(&legacy_runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !old_form_succeeded,
+            "old index syntax unexpectedly parsed:\n{old_form_output}"
+        );
+        assert!(old_form_output.contains("expects `for` before the index binder"));
+    });
 }
 
 #[test]
@@ -1151,137 +1148,31 @@ try:
 }
 
 #[test]
-fn top_level_scratch_is_rejected_with_sketch_hint() {
+fn former_compatibility_words_are_ordinary_identifiers() {
     let source_code = r#"
-scratch:
-    1 = 1
+have let set
+have scratch set
+have export set
+have oo set
+have oc set
+have co set
+have cc set
+have oinf set
+have cinf set
+have info set
+have infc set
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("top_level_scratch_is_rejected_with_sketch_hint");
+    runtime.new_file_path_new_env_new_name_scope(
+        "former_compatibility_words_are_ordinary_identifiers",
+    );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
     assert!(
-        !run_succeeded,
-        "top-level scratch should be rejected:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("top-level `scratch:` has been replaced by `sketch:`"),
-        "top-level scratch should explain the replacement:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn removed_prove_goal_is_rejected_with_question_hint() {
-    run_with_large_stack("removed_prove_goal_is_rejected_with_question_hint", || {
-        let source_code = r#"
-prove:
-    1 = 1
-"#;
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(
-            "removed_prove_goal_is_rejected_with_question_hint",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            !run_succeeded,
-            "removed prove syntax should be rejected:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("`prove:` was removed; use `? <fact>`"),
-            "removed prove syntax should explain its replacement:\n{}",
-            run_output
-        );
-    });
-}
-
-#[test]
-fn removed_surface_syntax_is_rejected_with_migration_hints() {
-    run_with_large_stack(
-        "removed_surface_syntax_is_rejected_with_migration_hints",
-        || {
-            let cases = [
-                (
-                    "old_let",
-                    "let x R",
-                    "`let` has been removed; use `trust have`",
-                ),
-                (
-                    "old_have_by_exist",
-                    "have by exist x R st {x = 1}: a",
-                    "`have by exist ...: name` has been removed",
-                ),
-                (
-                    "old_have_fn_as_set",
-                    r#"
-have fn f as set:
-    ? forall x R:
-        exist! y R st {y = x}
-"#,
-                    "`have fn <name> as set:` has been removed",
-                ),
-                (
-                    "legacy_open_open_interval",
-                    "have I set = oo(0, 1)",
-                    "two-sided interval spelling `oo` has been removed; use `'(a, b)`",
-                ),
-                (
-                    "legacy_open_closed_interval",
-                    "have I set = oc(0, 1)",
-                    "two-sided interval spelling `oc` has been removed; use `'(a, b]`",
-                ),
-                (
-                    "legacy_closed_open_interval",
-                    "have I set = co(0, 1)",
-                    "two-sided interval spelling `co` has been removed; use `'[a, b)`",
-                ),
-                (
-                    "legacy_closed_closed_interval",
-                    "have I set = cc(0, 1)",
-                    "two-sided interval spelling `cc` has been removed; use `'[a, b]`",
-                ),
-                (
-                    "interval_prefix_requires_delimiter",
-                    "have I set = 'invalid",
-                    "interval literal after `'` expects `(` or `[`",
-                ),
-                (
-                    "interval_literal_requires_two_endpoints",
-                    "have I set = '(0, 1, 2)",
-                    "interval literal expects exactly two endpoints",
-                ),
-            ];
-
-            for (label, source_code, expected_message) in cases {
-                let mut runtime = Runtime::new_with_builtin_code();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-                let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-                assert!(
-                    !run_succeeded,
-                    "{} should reject removed syntax:\n{}",
-                    label, run_output
-                );
-                assert!(
-                    run_output.contains(expected_message),
-                    "{} should include migration hint `{}`:\n{}",
-                    label,
-                    expected_message,
-                    run_output
-                );
-            }
-        },
+        run_succeeded,
+        "former compatibility words should be available as names:\n{run_output}"
     );
 }
 
@@ -1436,64 +1327,10 @@ by induc n from 0:
         );
         assert!(
             !run_output.contains("prove:"),
-            "Display output must not regenerate removed prove syntax:\n{}",
+            "Display output must use question goals:\n{}",
             run_output
         );
     });
-}
-
-#[test]
-fn removed_prove_goal_forms_report_question_migration_hints() {
-    run_with_large_stack(
-        "removed_prove_goal_forms_report_question_migration_hints",
-        || {
-            for (name, source_code, expected) in [
-                (
-                    "claim",
-                    r#"
-claim:
-    prove:
-        1 = 1
-"#,
-                    "`prove` was removed; use `? <fact>`",
-                ),
-                (
-                    "induction_branch",
-                    r#"
-abstract_prop p(n)
-trust $p(0)
-trust forall n N:
-    $p(n)
-    =>:
-        $p(n + 1)
-
-by induc n from 0:
-    ? $p(n)
-    prove from n = 0:
-        $p(0)
-    prove induc:
-        $p(n)
-        $p(n + 1)
-"#,
-                    "`prove` was removed; use `? from ...:` and `? induc:` blocks",
-                ),
-            ] {
-                let mut runtime = Runtime::new_with_builtin_code();
-                runtime.new_file_path_new_env_new_name_scope(name);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-                let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-                assert!(
-                    !run_succeeded,
-                    "removed prove form should fail:\n{run_output}"
-                );
-                assert!(
-                    run_output.contains(expected),
-                    "removed prove form should name its replacement:\n{run_output}"
-                );
-            }
-        },
-    );
 }
 
 #[test]
@@ -1896,41 +1733,6 @@ y $in replacement(rel, {1, 2})
 }
 
 #[test]
-fn typed_fn_return_standard_subset_allows_floor_bounds_for_reals() {
-    run_with_large_stack(
-        "typed_fn_return_standard_subset_allows_floor_bounds_for_reals_large_stack",
-        || {
-            let source_code = r#"
-import Int
-
-claim:
-    ? forall x R:
-        exist n Z st {n <= x and x < n + 1}
-    Int::floor(x) $in R
-    by thm Int::floor_bounds(x)
-    Int::floor(x) <= x < Int::floor(x) + 1
-    witness exist n Z st {n <= x and x < n + 1} from Int::floor(x):
-        Int::floor(x) <= x and x < Int::floor(x) + 1
-"#;
-
-            let mut runtime = Runtime::new_with_builtin_code();
-            runtime.new_file_path_new_env_new_name_scope(
-                "typed_fn_return_standard_subset_allows_floor_bounds_for_reals",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            assert!(
-                run_succeeded,
-                "typed_fn_return_standard_subset_allows_floor_bounds_for_reals failed:\n{}",
-                run_output
-            );
-        },
-    );
-}
-
-#[test]
 fn nested_forall_reusing_outer_param_is_rejected() {
     let source_code = r#"
 forall x R:
@@ -1979,6 +1781,127 @@ by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
         run_succeeded,
         "inline by-for/by-enumerate empty proof syntax failed:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn by_enumerate_finite_set_resolves_named_literal_alias() {
+    let source_code = r#"
+have P finite_set = {1, 2}
+
+by enumerate finite_set:
+    ? forall x P:
+        x = 1 or x = 2
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope(
+        "by_enumerate_finite_set_resolves_named_literal_alias",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "finite-set enumeration over a named literal alias failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"parameter_sets\": [") && run_output.contains("\"{1, 2}\""),
+        "enumeration output should show the resolved displayed set:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn anonymous_quotient_lambda_uses_nonzero_on_predicate() {
+    run_with_large_stack(
+        "anonymous_quotient_lambda_uses_nonzero_on_predicate",
+        || {
+            let source_code = r#"
+prop nonzero_on(I power_set(R), g fn(x I) R):
+    forall x I:
+        g(x) != 0
+
+forall I power_set(R), f, g fn(x I) R:
+    $nonzero_on(I, g)
+    =>:
+        fn(x I) R {f(x) / g(x)} $in fn(x I) R
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_quotient_lambda_uses_nonzero_on_predicate",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "anonymous quotient lambda should inherit nonzero-on facts:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate() {
+    run_with_large_stack(
+        "anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",
+        || {
+            let source_code = r#"
+prop nonzero_on(E power_set(R), g fn(x E) R):
+    forall x E:
+        g(x) != 0
+
+thm nested_existential_quotient_is_well_defined:
+    ? forall E power_set(R), g fn(x E) R:
+        $nonzero_on(E, g)
+        =>:
+            exist delta R_pos st {fn(x E) R {1 / g(x)} $in fn(x E) R}
+    trust exist delta R_pos st {fn(x E) R {1 / g(x)} $in fn(x E) R}
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "anonymous quotient lambda in an existential should inherit nonzero-on facts:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn anonymous_quotient_lambda_over_punctured_set_is_well_defined() {
+    run_with_large_stack(
+        "anonymous_quotient_lambda_over_punctured_set_is_well_defined",
+        || {
+            let source_code = r#"
+forall X power_set(R), x0 X:
+    fn(x set_minus(X, {x0})) R {1 / (x - x0)} $in fn(x set_minus(X, {x0})) R
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_quotient_lambda_over_punctured_set_is_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "anonymous quotient lambda over a punctured set should be well-defined:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -2537,6 +2460,43 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
 }
 
 #[test]
+fn restricted_lambda_can_apply_function_on_larger_numeric_interval() {
+    run_with_large_stack(
+        "restricted_lambda_can_apply_function_on_larger_numeric_interval",
+        || {
+            let source_code = r#"
+have fn piece(x '[1, 3]) R by cases:
+    case x < 2: x^2
+    case x = 2: 7
+    case x > 2: x^3
+
+claim:
+    ? forall x '[1, 2):
+        fn(x '[1, 2)) R {piece(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+    x < 2
+    piece(x) = x^2
+    fn(x '[1, 2)) R {piece(x)}(x) = piece(x)
+    fn(x '[1, 2)) R {x^2}(x) = x^2
+    fn(x '[1, 2)) R {piece(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "restricted_lambda_can_apply_function_on_larger_numeric_interval",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "restricted lambda should inherit numeric interval bounds:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
     run_with_large_stack(
         "anonymous_fn_direct_equality_uses_pointwise_extensionality",
@@ -2926,6 +2886,8 @@ fn finite_set_sum_core_rules() {
 finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
 finite_set_sum({}, fn(x Z) Z {x}) = 0
 finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+have P finite_set = {1, 2}
+finite_set_sum(P, fn(x P) R {x}) = 3
 finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
 finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 
@@ -4010,6 +3972,33 @@ forall a R:
 }
 
 #[test]
+fn builtin_rational_has_unique_reduced_fraction() {
+    let source_code = r#"
+have q Q
+
+by thm rational_has_unique_reduced_fraction(q)
+exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("builtin_rational_has_unique_reduced_fraction");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "builtin_rational_has_unique_reduced_fraction failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("unique existence fact"),
+        "reduced-fraction theorem should expose an exist! fact:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn real_interval_membership_rules() {
     let source_code = r#"
 have pair cart(R, R) = (0, 1)
@@ -4432,31 +4421,6 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
         assert!(
             run_output.contains(expected_error),
             "unexpected interval literal error output:\n{}",
-            run_output
-        );
-    }
-}
-
-#[test]
-fn legacy_one_sided_interval_names_show_migration_hints() {
-    for (source_code, replacement) in [
-        ("have bad set = oinf(0)", "'(a,)"),
-        ("have bad set = cinf(0)", "'[a,)"),
-        ("have bad set = info(0)", "'(,a)"),
-        ("have bad set = infc(0)", "'(,a]"),
-    ] {
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(
-            "legacy_one_sided_interval_names_show_migration_hints",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(!run_succeeded);
-        assert!(
-            run_output.contains(&format!("has been removed; use `{}`", replacement)),
-            "unexpected migration error output:\n{}",
             run_output
         );
     }
@@ -4924,8 +4888,8 @@ forall x A, y B:
 }
 
 #[test]
-fn have_fn_by_exist_rejects_direct_forall_legacy_form() {
-    run_with_large_stack("have_fn_by_exist_rejects_direct_forall_legacy_form", || {
+fn have_fn_by_exist_requires_question_goal() {
+    run_with_large_stack("have_fn_by_exist_requires_question_goal", || {
         let source_code = r#"
 abstract_prop F(x, y)
 have A set
@@ -4942,21 +4906,19 @@ forall x A:
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(
-            "have_fn_by_exist_rejects_direct_forall_legacy_form",
-        );
+        runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_requires_question_goal");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             !run_succeeded,
-            "legacy direct forall form should be rejected:\n{}",
+            "direct forall form should be rejected:\n{}",
             run_output
         );
         assert!(
             run_output.contains("expects a `? forall ...` goal block"),
-            "legacy direct forall rejection should point to the new goal block shape:\n{}",
+            "direct forall rejection should report the expected goal shape:\n{}",
             run_output
         );
     });
@@ -5388,6 +5350,64 @@ witness exist x R st {x = 1} from 1:
     assert!(
         run_output.contains("\"inside_results\": ["),
         "witness detail output should expand its proof trace:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn witness_exist_unique_rejects_missing_uniqueness_proof() {
+    let source_code = r#"
+claim:
+    ? exist! x R st {x = x}
+    witness exist! x R st {x = x} from 0:
+        0 = 0
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("witness_exist_unique_requires_uniqueness");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "witness exist! without uniqueness proof should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("witness exist!: failed to verify uniqueness obligation"),
+        "the missing uniqueness obligation should be explicit:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn witness_exist_unique_accepts_explicit_uniqueness_proof() {
+    let source_code = r#"
+claim:
+    ? exist! x R st {x = 0}
+    witness exist! x R st {x = 0} from 0:
+        0 = 0
+        claim:
+            ? forall u, v R:
+                u = 0
+                v = 0
+                =>:
+                    u = v
+            u = 0
+            0 = v
+            u = v
+"#;
+
+    let mut runtime = Runtime::new_with_builtin_code();
+    runtime.new_file_path_new_env_new_name_scope("witness_exist_unique_with_uniqueness");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "witness exist! with a uniqueness proof should succeed:\n{}",
         run_output
     );
 }
@@ -5951,43 +5971,6 @@ $axiom_prop(3)
 }
 
 #[test]
-fn imported_axiom_can_be_cited_by_qualified_theorem_name() {
-    let module_dir =
-        std::env::temp_dir().join(format!("litex-import-axiom-{}", std::process::id()));
-    fs::create_dir_all(&module_dir).expect("create axiom import test module");
-    fs::write(
-        module_dir.join("main.lit"),
-        r#"
-abstract_prop imported_axiom_prop(x)
-
-axiom imported_axiom_all:
-    ? forall x R:
-        $imported_axiom_prop(x)
-"#,
-    )
-    .expect("write axiom import test module");
-    let source_code = format!(
-        "import \"{}\" as Trusted\nby thm Trusted::imported_axiom_all(2)\n$Trusted::imported_axiom_prop(2)",
-        module_dir.to_string_lossy()
-    );
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "imported_axiom_can_be_cited_by_qualified_theorem_name",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    let _ = fs::remove_dir_all(&module_dir);
-    assert!(
-        run_succeeded,
-        "imported axiom should be available through qualified by thm:\n{}",
-        run_output
-    );
-}
-
-#[test]
 fn axiom_rejects_proof_body() {
     let source_code = r#"
 abstract_prop axiom_body_prop(x)
@@ -6017,35 +6000,6 @@ axiom bad_axiom:
 }
 
 #[test]
-fn axiom_rejects_removed_prove_goal_block() {
-    run_with_large_stack("axiom_rejects_removed_prove_goal_block", || {
-        let source_code = r#"
-axiom bad_axiom:
-    prove:
-        forall:
-            1 = 1
-"#;
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("axiom_rejects_removed_prove_goal_block");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            !run_succeeded,
-            "axiom should reject removed prove goal blocks:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("`prove` was removed; use `? forall ...`"),
-            "axiom prove-block rejection should explain the replacement:\n{}",
-            run_output
-        );
-    });
-}
-
-#[test]
 fn strict_mode_rejects_user_trust() {
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("strict_mode_rejects_user_trust");
@@ -6061,7 +6015,7 @@ fn strict_mode_rejects_user_trust() {
         run_output
     );
     assert!(
-        run_output.contains(ProofDebtStmt::strict_mode_rejection_message()),
+        run_output.contains(TrustStmt::strict_mode_rejection_message()),
         "strict mode should report the trust boundary:\n{}",
         run_output
     );
@@ -6084,7 +6038,7 @@ fn strict_mode_rejects_user_trust_have() {
             run_output
         );
         assert!(
-            run_output.contains(DefLetStmt::strict_mode_rejection_message()),
+            run_output.contains(TrustHaveStmt::strict_mode_rejection_message()),
             "strict mode should report the trust have boundary:\n{}",
             run_output
         );
@@ -6128,7 +6082,7 @@ fn strict_runner_rejects_user_trust() {
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(ProofDebtStmt::strict_mode_rejection_message()));
+    assert!(output.contains(TrustStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -6160,66 +6114,7 @@ fn strict_runner_rejects_user_trust_have() {
             output
         );
         assert!(output.contains("\"result\": \"error\""));
-        assert!(output.contains(DefLetStmt::strict_mode_rejection_message()));
-    });
-}
-
-#[test]
-fn strict_mode_allows_imported_module_trust() {
-    let module_dir =
-        std::env::temp_dir().join(format!("litex-strict-import-{}", std::process::id()));
-    fs::create_dir_all(&module_dir).expect("create strict import test module");
-    fs::write(
-        module_dir.join("main.lit"),
-        "abstract_prop imported_prop(x)\ntrust $imported_prop(2)\n",
-    )
-    .expect("write strict import test module");
-    let source_code = format!(
-        "import \"{}\" as Trusted\n$Trusted::imported_prop(2)",
-        module_dir.to_string_lossy()
-    );
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust");
-    runtime.strict_mode = true;
-    let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    let _ = fs::remove_dir_all(&module_dir);
-    assert!(
-        run_succeeded,
-        "strict mode should allow trust inside imported modules:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn strict_mode_allows_imported_module_trust_have() {
-    run_with_large_stack("strict_mode_allows_imported_module_trust_have", || {
-        let module_dir = std::env::temp_dir().join(format!(
-            "litex-strict-import-trust-have-{}",
-            std::process::id()
-        ));
-        fs::create_dir_all(&module_dir).expect("create strict import trust have test module");
-        fs::write(module_dir.join("main.lit"), "trust have imported_value R\n")
-            .expect("write strict import trust have test module");
-        let source_code = format!("import \"{}\" as Trusted", module_dir.to_string_lossy());
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime
-            .new_file_path_new_env_new_name_scope("strict_mode_allows_imported_module_trust_have");
-        runtime.strict_mode = true;
-        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        let _ = fs::remove_dir_all(&module_dir);
-        assert!(
-            run_succeeded,
-            "strict mode should allow trust have inside imported modules:\n{}",
-            run_output
-        );
+        assert!(output.contains(TrustHaveStmt::strict_mode_rejection_message()));
     });
 }
 
@@ -6502,11 +6397,11 @@ $q(1)
     assert!(
         detail_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str())
     );
-    assert!(detail_output
-        .contains(format!("\"reason\": \"{}\"", ProofDebtStmt::store_reason()).as_str()));
     assert!(
-        detail_output.contains(format!("\"reason\": \"{}\"", DefLetStmt::store_reason()).as_str())
+        detail_output.contains(format!("\"reason\": \"{}\"", TrustStmt::store_reason()).as_str())
     );
+    assert!(detail_output
+        .contains(format!("\"reason\": \"{}\"", TrustHaveStmt::store_reason()).as_str()));
     assert!(detail_output.contains(format!("\"reason\": \"{}\"", Fact::store_reason()).as_str()));
 }
 
@@ -8082,7 +7977,7 @@ stop strategy use_target_strategy
 }
 
 #[test]
-fn by_strategy_is_rejected_as_removed_activation_syntax() {
+fn by_strategy_is_not_a_valid_by_subkeyword() {
     let source_code = r#"
 prop target_strategy_prop(x R):
     x = 1
@@ -8097,16 +7992,14 @@ by strategy use_target_strategy
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope(
-        "by_strategy_is_rejected_as_removed_activation_syntax",
-    );
+    runtime.new_file_path_new_env_new_name_scope("by_strategy_is_not_a_valid_by_subkeyword");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         !run_succeeded,
-        "`by strategy` should no longer parse as strategy activation:\n{}",
+        "`by strategy` should not parse as strategy activation:\n{}",
         run_output
     );
     assert!(

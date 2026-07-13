@@ -183,25 +183,7 @@ fn run_runner_on_source(
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
 
-    let (stmt_results, runtime_error) = if target_kind == "file"
-        && Path::new(target_label)
-            .file_name()
-            .and_then(|name| name.to_str())
-            == Some("mod.lit")
-    {
-        (
-            vec![],
-            Some(
-                ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "mod.lit is obsolete; move declarations to litex.config".to_string(),
-                    (0, std::rc::Rc::from(target_label)),
-                ))
-                .into(),
-            ),
-        )
-    } else {
-        run_source_code(normalized_source.as_str(), &mut runtime)
-    };
+    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     let (ok, trace_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
     runner_output_from_trace(

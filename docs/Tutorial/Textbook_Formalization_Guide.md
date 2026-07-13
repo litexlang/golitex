@@ -67,7 +67,7 @@ After the chapter outlines are ready, formalize each markdown file one at a time
 5. Make the next smallest correction.
 6. Record any remaining proof debt near the source item.
 
-The goal of the first pass is not to finish every proof. The goal is to preserve the book's mathematical structure while discovering which parts are already checkable and which parts require standard-library work, builtin rules, infer rules, or proof engineering.
+The goal of the first pass is not to finish every proof. The goal is to preserve the book's mathematical structure while discovering which parts are already checkable and which parts require a source-local cite package, builtin rules, infer rules, or proof engineering.
 
 If AI gets stuck on something you know how to do, guide it. If you also do not know how to handle the issue, file an issue in `golitex`.
 

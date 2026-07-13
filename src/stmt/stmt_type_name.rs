@@ -18,7 +18,7 @@ impl ClaimStmt {
     }
 }
 
-impl ProofDebtStmt {
+impl TrustStmt {
     pub fn stmt_type_name(&self) -> String {
         "TrustStmt".to_string()
     }
@@ -48,12 +48,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl ImportRelativePathStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ImportRelativePathStmt".to_string()
-    }
-}
-
 impl ImportGlobalModuleStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportGlobalModuleStmt".to_string()
@@ -63,7 +57,6 @@ impl ImportGlobalModuleStmt {
 impl ImportStmt {
     pub fn stmt_type_name(&self) -> String {
         match self {
-            ImportStmt::ImportRelativePath(stmt) => stmt.stmt_type_name(),
             ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -255,7 +248,7 @@ impl AliasThmStmt {
     }
 }
 
-impl DefLetStmt {
+impl TrustHaveStmt {
     pub fn stmt_type_name(&self) -> String {
         "TrustHaveStmt".to_string()
     }
@@ -363,7 +356,7 @@ impl ClaimStmt {
     }
 }
 
-impl ProofDebtStmt {
+impl TrustStmt {
     pub fn output_type_string() -> String {
         "unproved assumption".to_string()
     }
@@ -393,12 +386,6 @@ impl DefTemplateStmt {
     }
 }
 
-impl ImportRelativePathStmt {
-    pub fn output_type_string() -> String {
-        "import statement".to_string()
-    }
-}
-
 impl ImportGlobalModuleStmt {
     pub fn output_type_string() -> String {
         "import statement".to_string()
@@ -408,7 +395,6 @@ impl ImportGlobalModuleStmt {
 impl ImportStmt {
     pub fn output_type_string(&self) -> String {
         match self {
-            ImportStmt::ImportRelativePath(_) => ImportRelativePathStmt::output_type_string(),
             ImportStmt::ImportGlobalModule(_) => ImportGlobalModuleStmt::output_type_string(),
         }
     }
@@ -600,7 +586,7 @@ impl AliasThmStmt {
     }
 }
 
-impl DefLetStmt {
+impl TrustHaveStmt {
     pub fn output_type_string() -> String {
         "unproved object definition".to_string()
     }

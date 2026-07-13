@@ -37,7 +37,7 @@ is command-oriented, not a general argument parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `suppose`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-strict` | Reject user `trust`, `trust have`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -101,10 +101,9 @@ those flags. `-lang` also consumes the next token globally.
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
 | `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its `[entrance]` file. |
 
-In isolated file mode, `import "./Demo" as Demo` may still load a module
-directory containing `main.lit`. It cannot load a `.lit` file. In a project,
-declare local sources in `[export]` in `litex.config` and bind them with
-`local import`.
+Declare project files and child modules in `[export]` in `litex.config`,
+then bind them with `local import`; ordinary `import Name` names a declared
+root module.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -114,7 +113,7 @@ With `-summarize`, Litex appends one final JSON object whose `output_type` is
 `"run summary"`. The ordinary statement output before that object is unchanged.
 The summary reports top-level and expanded statement counts, fact/prop/theorem
 definition counts, proof-block and `by` counts, direct `trust` statements,
-indirect proof-debt dependencies, axioms, supposes, abstract interfaces, and
+indirect trusted dependencies, axioms, trusted local names, abstract interfaces, and
 stack/runner warnings. It also includes `statement_type_counts`,
 `output_type_counts`, and a `statements` array with line numbers and rendered
 statement text for editor-side cursor selection. Prefer:
@@ -134,7 +133,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Discover the repository module graph, run `<repo>/main.lit`, and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run the `[entrance]` file, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -179,7 +178,7 @@ JSON-string `trace` field so a client never has to parse terminal prompts.
 |---------|----------|
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run `<repo>/main.lit`, and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run the `[entrance]` file, and save one prop/function/fact relation graph JSON object. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
@@ -200,7 +199,7 @@ artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 | `litex -latex` | Start the interactive LaTeX-output REPL. |
 | `litex -latex -e <code>` | Compile a source string to LaTeX. |
 | `litex -latex -f <file>` | Compile a file to LaTeX. |
-| `litex -latex -r <repo>` | Compile `<repo>/main.lit` to LaTeX. |
+| `litex -latex -r <repo>` | Compile the repository `[entrance]` file to LaTeX. |
 
 After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
 If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
@@ -219,19 +218,16 @@ JSON error object.
 
 Unknown commands print an error and the help message, then exit with code `2`.
 
-## Module Migration
+## Project Modules
 
-Litex no longer has `run_file`, `trust_file`, or `stop import` statements.
-There is no Litex statement that directly loads an arbitrary `.lit` path. Use
-`litex.config` instead:
+Use `litex.config` to organize a multi-file project:
 
 - set `[entrance] file = "..."` for the project entry;
 - declare files and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
 - use `local import name` inside registered sources;
 - run the entry with `litex -r <project>` or a registered chapter with `litex -f <file>`.
 
-Ordinary `import` loads module directories or registered global modules. A
-direct `import "./x.lit" as X` is rejected.
+Ordinary `import Name` loads a declared root module.
 
 For an explicitly trusted project dependency, write `trust import Name` or
 `trust local import name` in a registered `.lit` source. Litex still resolves
@@ -285,7 +281,7 @@ litex -strict -runner -f examples/tmp.lit
 Generate a relation graph:
 
 ```bash
-litex -graph -f textbooks/Analysis/chap6.lit tmp/graphs/chap6_graph.json
+litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
 ```
 
 Run with Chinese output labels:

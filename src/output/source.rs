@@ -14,7 +14,6 @@ use super::language::localize_json_value;
 const SOURCE_KIND: &str = "source_kind";
 const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_BUILTIN: &str = "builtin";
-const SOURCE_KIND_STD: &str = "std";
 const SOURCE_KIND_MODULE: &str = "module";
 const SOURCE_KIND_FILE: &str = "file";
 
@@ -73,22 +72,13 @@ fn imported_module_source_label_for_path(
         if Some(imported_module.id) == module_manager.entry_module_id {
             continue;
         }
-        let module_name = imported_module.module_name.as_str();
         let module_root = Path::new(imported_module.module_root_path.as_str());
         if !source_path.starts_with(module_root) {
             continue;
         }
 
-        let source_kind = if imported_module.is_std {
-            SOURCE_KIND_STD.to_string()
-        } else {
-            SOURCE_KIND_MODULE.to_string()
-        };
-        let source = if imported_module.is_std {
-            format!("std/{}", module_name)
-        } else {
-            module_display_path(module_root, &module_manager.entry_path_rc)
-        };
+        let source_kind = SOURCE_KIND_MODULE.to_string();
+        let source = module_display_path(module_root, &module_manager.entry_path_rc);
         let score = imported_module.module_root_path.len();
 
         if best_match

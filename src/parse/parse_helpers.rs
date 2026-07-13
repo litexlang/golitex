@@ -343,14 +343,9 @@ fn require_question_goal(block: &TokenBlock, syntax_name: &str) -> Result<(), Ru
     if block.current_token_is_equal_to(QUESTION_GOAL) {
         return Ok(());
     }
-    let message = if block.current_token_is_equal_to("prove") {
-        "`prove` was removed; use `? <fact>`"
-    } else {
-        "expects a `? <fact>` goal block"
-    };
     Err(parse_goal_error(
         syntax_name,
-        message,
+        "expects a `? <fact>` goal block",
         block.line_file.clone(),
     ))
 }

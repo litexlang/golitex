@@ -36,8 +36,8 @@ impl Runtime {
     fn exec_stmt_verified(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.exec_fact(fact),
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => self.exec_proof_debt_stmt(s),
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(d)) => self.exec_let_stmt(d),
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => self.exec_trust_stmt(s),
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(d)) => self.exec_trust_have_stmt(d),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(d)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
@@ -125,11 +125,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.exec_fact_stmt_affect_environment_only(fact),
-            Stmt::UnsafeStmt(UnsafeStmt::ProofDebtStmt(s)) => {
-                self.exec_proof_debt_stmt_affect_environment_only(s)
+            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => {
+                self.exec_trust_stmt_affect_environment_only(s)
             }
-            Stmt::UnsafeStmt(UnsafeStmt::DefLetStmt(s)) => {
-                self.exec_let_stmt_affect_environment_only(s)
+            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(s)) => {
+                self.exec_trust_have_stmt_affect_environment_only(s)
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(s)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(s)

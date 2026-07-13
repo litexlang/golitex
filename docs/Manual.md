@@ -126,8 +126,8 @@ verified context.
 
 This convenience has a real trust cost. Litex has a larger trusted
 mathematical background than a small proof kernel: builtin objects, builtin
-facts, verifier rules, inference rules, imported standard-library facts, and
-any explicit `trust` assumptions all matter. `trust` is assumption
+facts, verifier rules, inference rules, facts imported from declared modules,
+and any explicit `trust` assumptions all matter. `trust` is assumption
 injection. It stores a fact for later use, but it does not prove that fact.
 
 For a compact discussion of trust boundaries, comparison with Lean, and project
@@ -241,10 +241,9 @@ check it and reuse accepted facts.
 
 ### Builtin Mathematical Background
 
-Litex starts every run with a builtin mathematical environment. This is separate
-from imported `std/...` modules: it is loaded before the user file and provides
-ordinary object names, object forms, trusted background facts, and a small set
-of named theorem interfaces that are useful enough to be globally available.
+Litex starts every run with a builtin mathematical environment. It is loaded
+before the user file and provides ordinary object names, object forms, trusted
+background facts, and verifier-visible rules.
 
 There are three layers to keep distinct:
 
@@ -276,6 +275,7 @@ Some currently preloaded named theorem interfaces are:
 |------|---------|
 | `has_rational_between`, `exists_rat_between`, `exists_rat_btwn` | If `a < b` for real numbers, there exists `q Q` with `a < q < b`. |
 | `rational_as_integer_ratio` | Every rational can be written as `p / q` with `p Z` and `q Z_nz`. |
+| `rational_has_unique_reduced_fraction` | Every rational has exactly one `a Z, b N_pos` with `q = a / b` and `$is_reduced_fraction(a, b)`. |
 | `archimedean_property` | For every positive real `e`, there exists `n N_pos` with `1 / n < e`. |
 | `a_lt_c`, `a_le_c`, `a_gt_c`, `a_ge_c` | Named transitivity interfaces for real order chains. |
 | `in_intersect_is_in_both` | Membership in an intersection gives membership in both operands. |
@@ -293,8 +293,8 @@ These facts can often be used by automatic known-`forall` matching without a
 visible `by thm` line.
 
 Treat this builtin layer as part of Litex's trusted mathematical background.
-When a theorem is broad, textbook-facing, or domain-specific, prefer putting it
-in the relevant source file or `std` module instead of adding it globally.
+When a theorem is broad, textbook-facing, or domain-specific, keep it in the
+relevant source-local cite package instead of adding it globally.
 
 ---
 
@@ -314,7 +314,7 @@ Objects are the material that facts talk about. For the full path from objects t
 
 #### Names and parameters
 
-Objects introduced by `forall`, `have`, `suppose`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
+Objects introduced by `forall`, `have`, `trust have`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
 
 ```litex
 forall x R:
@@ -348,7 +348,7 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
-Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases, including the natural-exponent convention `0^0 = 1`. Natural-number powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N`, then `a^k $in N_pos`. Integer floor and ceiling live in `std/Int`, not the builtin environment: after `import Int`, use `Int::floor(x)` and `Int::ceil(x)` with the bounds and uniqueness theorems from that module.
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases, including the natural-exponent convention `0^0 = 1`. Natural-number powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N`, then `a^k $in N_pos`. Floor and ceiling are not builtin operations; when a source needs them, define or cite the required interface in that source's local package.
 
 #### `abs`, `sqrt`, `log`, `max`, `min`
 
@@ -643,12 +643,15 @@ forall f fn(x Z) R:
     abs(sum(1, 3, fn(x Z) R {f(x)})) <= sum(1, 3, fn(x Z) R {abs(f(x))})
 ```
 
-`finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty sum is `0`, closed integer ranges bridge to the existing `sum(start, end, f)` object, and double sums over finite Cartesian products support the usual finite Fubini swap.
+`finite_set_sum(X, f)` sums `f(x)` over the elements of a finite set `X`. Displayed finite sets, and names with a checked equality to a displayed set, expand elementwise; the empty sum is `0`, closed integer ranges bridge to the existing `sum(start, end, f)` object, and double sums over finite Cartesian products support the usual finite Fubini swap.
 
 ```litex
 finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
 finite_set_sum({}, fn(x Z) Z {x}) = 0
 finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
+
+have P finite_set = {1, 2}
+finite_set_sum(P, fn(x P) R {x}) = 3
 ```
 
 ```litex
@@ -911,7 +914,7 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 > Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly. `error` is different: first fix the syntax or make every object well-defined.
 
-This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `trust`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
+This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `trust`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
 
 This page mainly lists the **types of facts** Litex can read and how they are shaped. For how those facts are actually proved by the checker, read [Proof Process](https://litexlang.com/doc/Manual#proof-process) and [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules).
 
@@ -1407,7 +1410,7 @@ by this form, because they do not carry a checked definition body.
 Use **`alias thm new_name <=> old_name`** to copy an existing theorem
 under a new theorem name. The new name can then be used with `by thm`.
 An alias can use a local-language name. This lets a file keep an English,
-standard-library, or Lean-facing theorem name while giving learners a name they
+source-package, or Lean-facing theorem name while giving learners a name they
 can read directly.
 
 ```litex
@@ -1775,7 +1778,16 @@ have B set = R
 have fn f by exist!:
     ? forall x A:
         exist! y B st {y = x}
-    witness exist! y B st {y = x} from x
+    witness exist! y B st {y = x} from x:
+        claim:
+            ? forall y1, y2 B:
+                y1 = x
+                y2 = x
+                =>:
+                    y1 = y2
+            y1 = x
+            x = y2
+            y1 = y2
 
 forall x A:
     f(x) = x
@@ -1786,6 +1798,10 @@ forall x A:
 > Hint: the target `forall` under `? forall ...` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter.
 
 > Hint: `by exist!` means "define a function from unique existence." The return set comes from the `exist!` witness type, such as `exist! y B ...`.
+
+> A `witness exist!` block must establish both the chosen witness property and
+> the corresponding uniqueness `forall`; the nested `claim` above supplies
+> that second proof.
 
 For a short first encounter with `struct`, `template`, and small mathematical
 interfaces, see `docs/Examples.md#small-worlds`. Longer quotient-style
@@ -1825,9 +1841,9 @@ have fn h(a Z, b Z: a >= 0, b >= 0) R by induc abs(a) + abs(b) from 0:
 
 ---
 
-### Local assumption block (`suppose`)
+### Trusted local names (`trust have`)
 
-Use **`suppose`** to introduce names together with assumptions or definitions about them. This is an advanced form: it stores the assumptions you write instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
+Use **`trust have`** to introduce names together with assumptions or definitions about them. This advanced form stores the attached assumptions instead of proving them. Prefer `forall` assumptions, `have`, bare facts, or `claim` in ordinary examples.
 
 ```litex
 trust have a R:
@@ -1840,7 +1856,7 @@ trust have b, c R:
 b < c
 ```
 
-> Hint: `suppose` and `trust` both introduce new facts without verification. Litex allows this and warns you because these statements are useful for temporary assumptions, but abusing them can make the system unsound. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
+> Hint: `trust have` and `trust` both introduce new facts without verification. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ### Algorithm and evaluation (`algo` / `eval`)
 
@@ -2018,7 +2034,7 @@ A final artifact should not leave broad `trust` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `trust`, `suppose`, and `axiom` statements are rejected instead
+If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements are rejected instead
 of being stored. Facts loaded from imported modules are still trusted inputs, so
 strict mode is an audit boundary for the current run, not a claim that all
 dependencies are assumption-free.
@@ -2045,11 +2061,9 @@ trust:
 
 It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. `? <Fact>` is the sole internal proof-target syntax inside statements such as `claim`, `thm`, `strategy`, and `have fn ... by exist!`. It is not valid as a top-level statement. Structured induction uses the matching forms `? from`, `? induc`, and `? strong_induc`.
 
-`sketch:` is the canonical top-level spelling for this checked sandbox. Older
-notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
-alias with an error message pointing to `sketch:`. A top-level `?` goal is not
-a proof container. Use `sketch:` when you want a local checked block; `prove:`
-has been removed and reports a migration error.
+`sketch:` is the top-level spelling for this checked sandbox. A top-level
+`?` goal is not a proof container; use `sketch:` when you want a local
+checked block.
 
 ```litex
 sketch:
@@ -2089,7 +2103,7 @@ x = 1
 
 ### Modules and manifests (preview)
 
-Use **`import Nat`** to load a standard-library module into its own imported-module environment. Standard-library imports always use the std folder name as the module name; write `import Nat`, not `import Nat as N`. Importing the same module again is an idempotent no-op.
+Use **`import Algebra`** to load a module declared by the root `litex.config` into its own imported-module environment. An import uses the declared root-module name exactly; aliases are not supported. Importing the same module again is an idempotent no-op.
 
 There are two project-aware top-level modes:
 
@@ -2142,19 +2156,17 @@ chapter.  This lets a later textbook chapter read naturally after, for example,
 provenance explicitly, such as `chap9::is_continuous_at`; do not rely on an
 arbitrary import order.
 
-In project mode, **`import A`** names a module exported by the root
-`litex.config`, or an already registered global/standard module. Relative imports
-are not the project dependency mechanism. In isolated file mode,
-**`import "path/to/module" as M`** remains available for a local module
-directory containing `main.lit`. Ordinary `import` never loads a `.lit` file;
-declare that file in `[export]` and access it with `local import` instead.
+**`import A`** names a module exported by the root `litex.config`. Declare
+project files and child modules in `[export]`, then access them with `local
+import` inside the declaring module. Litex has no automatic mathematical
+standard-library imports; write source-local cite packages for unfinished or
+source-specific background.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
 prefer local definitions, local claims, and explicit proof-debt notes when the
-book is building a concept. Extract repeated interfaces into std later; do not
-hide the main derivation by importing a large package and citing a synonym
-theorem.
+book is building a concept. Do not hide the main derivation by importing a
+large package and citing a synonym theorem.
 
 There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
 developments declare their entry and sources in `litex.config`, then use
@@ -2211,11 +2223,11 @@ The imported module table is separate from the current user environment, so
 
 <!-- litex:skip-test -->
 ```litex
-import "./Demo" as Demo
+import Algebra
 
 clear
 
-$Demo::some_prop(2) # Demo is still active after clear
+# Algebra remains active after clear
 ```
 
 ---
@@ -2349,6 +2361,18 @@ by enumerate finite_set:
 # inline by enumerate finite_set: put the forall goal on the header line
 by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
     ...
+```
+
+The finite domain may also be a named finite-set object when Litex has a
+checked equality from that name to a displayed list set. This keeps a concrete
+partition readable while preserving exhaustive enumeration.
+
+```litex
+have P finite_set = {1, 2, 3}
+
+by enumerate finite_set:
+    ? forall x P:
+        x = 1 or x = 2 or x = 3
 ```
 
 For a known integer interval membership, **`by enumerate range`** and **`by enumerate closed_range`** expand the member into equality cases. `range(lo, hi)` is half-open, so it enumerates `lo, lo + 1, ..., hi - 1`; `closed_range(lo, hi)` enumerates through `hi`.
@@ -2700,7 +2724,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... by cases` | Define a function by cases |
 | `have fn ... by exist!: ? forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
-| `suppose` | Introduce local names and local assumptions |
+| `trust have` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
@@ -2708,7 +2732,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `alias thm` | Copy a theorem under a new name |
 | `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
-| `prove` | Internal proof target block for `claim`, `thm`, `strategy`, and related proof forms |
+| `? <fact>` | Internal proof target for `claim`, `thm`, `strategy`, and related proof forms |
 | `import` / `local import` | Verify and load project module interfaces declared in `litex.config` |
 | `trust import` / `trust local import` | Load a declared dependency's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
@@ -2966,7 +2990,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
 | define a function from unique existence | `have fn choose by exist!:`<br>`? forall x R:`<br>`exist! y R st {y = x}` |
 | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
-| introduce local names and assumed facts | `suppose x R:`<br>`x = 1` |
+| introduce local names and assumed facts | `trust have x R:`<br>`x = 1` |
 | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
 | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
@@ -2984,8 +3008,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
-| import a standard-library module | `import Nat` |
-| import a local module directory | `import "local_module" as L` |
+| import a declared root module | `import Algebra` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | bind a declared export inside a module source | `local import local` |
 | bind a declared export without running its proof process | `trust local import local` |
@@ -3190,7 +3213,7 @@ This is the named-theorem style: name a reusable theorem, then call it at the
 point where the proof needs its consequences. The theorem itself opens the
 witness `x = 8 * d` and builds `x = 2 * (4 * d)`; the later lines establish
 that `8` has the first form and make the intended call explicit. This style is
-useful when a theorem is famous, comes from the standard library, is long
+useful when a theorem is famous, comes from a source-local cite package, is long
 enough that a reader should recognize it by name, or needs explicit parameters
 that are not obvious from the final goal alone. Defining a `thm` does not turn
 it into an ordinary automatic `forall` pattern.

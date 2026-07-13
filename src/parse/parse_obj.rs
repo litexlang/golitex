@@ -905,46 +905,6 @@ impl Runtime {
             })?;
             return Ok(ClosedRange::new(left, right).into());
         }
-        if tok == LEGACY_OPEN_OPEN_INTERVAL
-            || tok == LEGACY_OPEN_CLOSED_INTERVAL
-            || tok == LEGACY_CLOSED_OPEN_INTERVAL
-            || tok == LEGACY_CLOSED_CLOSED_INTERVAL
-        {
-            let replacement = match tok {
-                LEGACY_OPEN_OPEN_INTERVAL => "'(a, b)",
-                LEGACY_OPEN_CLOSED_INTERVAL => "'(a, b]",
-                LEGACY_CLOSED_OPEN_INTERVAL => "'[a, b)",
-                LEGACY_CLOSED_CLOSED_INTERVAL => "'[a, b]",
-                _ => unreachable!(),
-            };
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "two-sided interval spelling `{}` has been removed; use `{}`",
-                        tok, replacement
-                    ),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        if tok == INFO || tok == INFC || tok == OINF || tok == CINF {
-            let replacement = match tok {
-                INFO => "'(,a)",
-                INFC => "'(,a]",
-                OINF => "'(a,)",
-                CINF => "'[a,)",
-                _ => unreachable!(),
-            };
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "one-sided interval spelling `{}` has been removed; use `{}`",
-                        tok, replacement
-                    ),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         if tok == FINITE_SEQ {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1383,7 +1343,7 @@ impl Runtime {
         self.parse_and_reclassify_atom_as_free_param_obj(tb)
     }
 
-    // parse_identifier_or_identifier_with_mod + reclassify (std sets + free params).
+    // parse_identifier_or_identifier_with_mod + reclassify (builtin sets + free params).
     fn parse_and_reclassify_atom_as_free_param_obj(
         &mut self,
         tb: &mut TokenBlock,

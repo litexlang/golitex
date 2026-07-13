@@ -70,11 +70,10 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
-The `.deb` package installs the standard library at `/usr/share/litex/std`.
-To verify that the CLI accepts a standard-library import registration, run:
+The `.deb` package installs only the Litex executable. To verify it, run:
 
 ```bash
-litex -e $'import Trig' | grep '"statement": "import Trig"'
+litex -e '1 = 1' | grep '"type": "equality fact"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +91,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e $'import Trig' | grep '"statement": "import Trig"'
+litex -e '1 = 1' | grep '"type": "equality fact"'
 ```
 
 ---
@@ -112,13 +111,8 @@ $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
 $zip = Join-Path $env:TEMP $name
 $exe = Join-Path $dir 'litex.exe'
-$std = Join-Path $dir 'std'
-
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest -Uri $url -OutFile $zip
-if (Test-Path $std) {
-    Remove-Item -Recurse -Force $std
-}
 Expand-Archive -Path $zip -DestinationPath $dir -Force
 Remove-Item -Force $zip
 
@@ -131,7 +125,6 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 Write-Host "Installed: $exe"
-Write-Host "Installed std: $std"
 Write-Host "Open a new terminal and run: litex -version"
 ```
 
@@ -139,9 +132,8 @@ What this command changes on the user machine:
 
 1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
 2. Writes `litex.exe` to `%LOCALAPPDATA%\litex\litex.exe`.
-3. Writes the standard library to `%LOCALAPPDATA%\litex\std`.
-4. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
-5. Updates `Path` in the current PowerShell session.
+3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
+4. Updates `Path` in the current PowerShell session.
 
 It does **not** install services or edit firewall settings.
 
@@ -152,7 +144,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import Trig" | Select-String '"statement": "import Trig"'
+litex -e "1 = 1" | Select-String '"type": "equality fact"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -168,13 +160,8 @@ $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
 $zip = Join-Path $env:TEMP $name
 $exe = Join-Path $dir 'litex.exe'
-$std = Join-Path $dir 'std'
-
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest -Uri $url -OutFile $zip
-if (Test-Path $std) {
-    Remove-Item -Recurse -Force $std
-}
 Expand-Archive -Path $zip -DestinationPath $dir -Force
 Remove-Item -Force $zip
 
@@ -187,14 +174,14 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"statement": "import Trig"'
+litex -e "1 = 1" | Select-String '"type": "equality fact"'
 ```
 
 ### Upgrade Litex on Windows
 
 If you installed by **Option A** (PowerShell one-command install), run the same command again.
 It downloads the newer zip, overwrites `%LOCALAPPDATA%\litex\litex.exe`, refreshes
-`%LOCALAPPDATA%\litex\std`, and keeps your existing user `Path` entry:
+the installed executable, and keeps your existing user `Path` entry:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -204,13 +191,8 @@ $name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
 $zip = Join-Path $env:TEMP $name
-$exe = Join-Path $dir 'litex.exe'
-$std = Join-Path $dir 'std'
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
+$exe = Join-Path $dir 'litex.exe'New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest -Uri $url -OutFile $zip
-if (Test-Path $std) {
-    Remove-Item -Recurse -Force $std
-}
 Expand-Archive -Path $zip -DestinationPath $dir -Force
 Remove-Item -Force $zip
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -221,7 +203,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import Trig" | Select-String '"statement": "import Trig"'
+litex -e "1 = 1" | Select-String '"type": "equality fact"'
 ```
 
 ---

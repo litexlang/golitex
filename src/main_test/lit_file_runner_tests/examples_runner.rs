@@ -10,13 +10,13 @@ use super::helper::{
     collect_markdown_files_under_dir_sorted, format_litex_failure_location,
     litex_snippets_from_markdown_files, print_known_forall_profile_summary,
     print_slowest_run_labels, run_with_large_stack, spawn_with_large_stack,
-    CITE_STD_EXAMPLES_SUBDIR, REPOSITORY_EXAMPLES_SUBDIR,
+    REPOSITORY_EXAMPLES_SUBDIR,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
-const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
+const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/Number-Theory-For-Beginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -86,17 +86,7 @@ fn print_run_examples_timing_summary(
 
 #[test]
 fn run_examples() {
-    run_with_large_stack("run_examples_large_stack", || run_examples_impl(false));
-}
-
-#[test]
-fn run_examples_include_std() {
-    if !include_std_test_selected_directly("run_examples_include_std") {
-        return;
-    }
-    run_with_large_stack("run_examples_include_std_large_stack", || {
-        run_examples_impl(true)
-    });
+    run_with_large_stack("run_examples_large_stack", run_examples_impl);
 }
 
 #[test]
@@ -111,29 +101,17 @@ fn run_all() {
     run_with_large_stack("run_all_large_stack", run_all_impl);
 }
 
-#[test]
-fn run_all_include_std() {
-    if !include_std_test_selected_directly("run_all_include_std") {
-        return;
-    }
-    run_with_large_stack("run_all_include_std_large_stack", run_all_include_std_impl);
-}
-
 fn run_all_impl() {
-    run_all_parallel_impl(true);
+    run_all_parallel_impl();
 }
 
-fn run_all_include_std_impl() {
-    run_all_parallel_impl(true);
-}
-
-fn run_all_parallel_impl(include_std_examples: bool) {
+fn run_all_parallel_impl() {
     if crate::verify::known_forall_profile::enabled() {
         // The profile counters are process-global, so keep profiled aggregate runs sequential.
         println!(
             "--- run_all: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
         );
-        run_examples_impl(include_std_examples);
+        run_examples_impl();
         run_analysis_one_chapters_impl();
         run_mechanics_textbook_chapters_impl();
         run_number_theory_for_beginners_impl();
@@ -148,9 +126,7 @@ fn run_all_parallel_impl(include_std_examples: bool) {
     let mut handles = Vec::new();
     handles.push((
         "examples",
-        spawn_with_large_stack("run_all_examples_large_stack", move || {
-            run_examples_dataset_impl(include_std_examples)
-        }),
+        spawn_with_large_stack("run_all_examples_large_stack", run_examples_dataset_impl),
     ));
     handles.push((
         "docs",
@@ -185,7 +161,7 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         &mut failed_dataset_labels,
     );
     collect_run_all_dataset_result(
-        "Number Theory for Beginners sections",
+        "Number Theory for Beginners chapters",
         spawn_with_large_stack(
             "run_number_theory_for_beginners_large_stack",
             run_number_theory_for_beginners_impl,
@@ -377,14 +353,13 @@ fn run_textbook_chapters_impl(chapters_subdir: &'static str, textbook_name: &'st
     );
 }
 
-fn run_examples_impl(include_std_examples: bool) {
+fn run_examples_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let builtin_start = Instant::now();
     let mut runtime = Runtime::new_with_builtin_code();
     let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
 
-    let examples_summary =
-        run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, include_std_examples, true);
+    let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, true);
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, false, !examples_summary.ran);
     print_run_examples_timing_summary(
@@ -397,13 +372,12 @@ fn run_examples_impl(include_std_examples: bool) {
     );
 }
 
-fn run_examples_dataset_impl(include_std_examples: bool) {
+fn run_examples_dataset_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let builtin_start = Instant::now();
     let mut runtime = Runtime::new_with_builtin_code();
     let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
-    let examples_summary =
-        run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, include_std_examples, false);
+    let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, false);
     print_examples_dataset_timing_summary(builtin_duration_ms, &examples_summary, false);
 }
 
@@ -420,21 +394,18 @@ fn run_docs_markdown_impl(include_manual_docs: bool) {
 fn run_examples_phase1_with_runtime(
     manifest_dir: &Path,
     runtime: &mut Runtime,
-    include_std_examples: bool,
     include_manual_docs: bool,
 ) -> TimedRunSummary {
     if crate::verify::known_forall_profile::enabled() {
         return run_examples_phase1_sequential_with_runtime(
             manifest_dir,
             runtime,
-            include_std_examples,
             include_manual_docs,
         );
     }
 
     let phase_label = examples_phase_label(include_manual_docs);
-    let phase1_groups =
-        collect_examples_phase1_groups(manifest_dir, include_std_examples, include_manual_docs);
+    let phase1_groups = collect_examples_phase1_groups(manifest_dir, include_manual_docs);
     let phase1_items_count: usize = phase1_groups.iter().map(|group| group.items.len()).sum();
     let phase1_group_count = phase1_groups.len();
 
@@ -536,12 +507,10 @@ fn run_examples_phase1_with_runtime(
 fn run_examples_phase1_sequential_with_runtime(
     manifest_dir: &Path,
     runtime: &mut Runtime,
-    include_std_examples: bool,
     include_manual_docs: bool,
 ) -> TimedRunSummary {
     let phase_label = examples_phase_label(include_manual_docs);
-    let phase1_items =
-        collect_examples_phase1_items(manifest_dir, include_std_examples, include_manual_docs);
+    let phase1_items = collect_examples_phase1_items(manifest_dir, include_manual_docs);
 
     let mut file_label_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
     let mut every_file_run_ok = true;
@@ -733,10 +702,9 @@ fn run_docs_markdown_with_runtime(
 
 fn collect_examples_phase1_items(
     manifest_dir: &Path,
-    include_std_examples: bool,
     include_manual_docs: bool,
 ) -> Vec<LitexRunItem> {
-    collect_examples_phase1_groups(manifest_dir, include_std_examples, include_manual_docs)
+    collect_examples_phase1_groups(manifest_dir, include_manual_docs)
         .into_iter()
         .flat_map(|group| group.items)
         .collect()
@@ -744,29 +712,13 @@ fn collect_examples_phase1_items(
 
 fn collect_examples_phase1_groups(
     manifest_dir: &Path,
-    include_std_examples: bool,
     include_manual_docs: bool,
 ) -> Vec<LitexRunGroup> {
-    let lit_file_paths = if include_std_examples {
-        collect_lit_files_recursive_under_excluding(
-            manifest_dir,
-            "examples",
-            &[REPOSITORY_EXAMPLES_SUBDIR],
-        )
-    } else {
-        collect_lit_files_recursive_under_excluding(
-            manifest_dir,
-            "examples",
-            &[CITE_STD_EXAMPLES_SUBDIR, REPOSITORY_EXAMPLES_SUBDIR],
-        )
-    };
-    if include_std_examples {
-        println!("--- examples/_internal/std_imports included ---");
-    } else {
-        println!(
-            "--- examples/_internal/std_imports excluded; use run_examples_include_std to include it ---"
-        );
-    }
+    let lit_file_paths = collect_lit_files_recursive_under_excluding(
+        manifest_dir,
+        "examples",
+        &[REPOSITORY_EXAMPLES_SUBDIR],
+    );
 
     let manual_md_paths = if include_manual_docs {
         collect_manual_markdown_paths(manifest_dir)
@@ -1007,18 +959,4 @@ fn panic_payload_to_string(panic_payload: Box<dyn std::any::Any + Send + 'static
     } else {
         "non-string panic payload".to_string()
     }
-}
-
-fn include_std_test_selected_directly(test_name: &str) -> bool {
-    let full_path_suffix = format!("::{}", test_name);
-    let selected = std::env::args()
-        .skip(1)
-        .any(|arg| arg == test_name || arg.ends_with(&full_path_suffix));
-    if !selected {
-        println!(
-            "--- {} skipped; select it directly with `cargo test {} -- --nocapture` ---",
-            test_name, test_name
-        );
-    }
-    selected
 }

@@ -95,14 +95,9 @@ impl Runtime {
             ))
         })?;
         if !goal_block.current_token_is_equal_to(QUESTION_GOAL) {
-            let message = if goal_block.current_token_is_equal_to("prove") {
-                format!("{}: `prove` was removed; use `? forall ...`", keyword)
-            } else {
-                format!("{}: expected `? forall ...` goal block", keyword)
-            };
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    message,
+                    format!("{}: expected `? forall ...` goal block", keyword),
                     goal_block.line_file.clone(),
                 ),
             )));

@@ -63,6 +63,24 @@ thm a_lt_c:
             a < c
     a < b < c
 
+# Mixed transitivity on R. Example: `a <= b` and `b < c` yield `a < c`.
+thm a_le_lt_c:
+    ? forall a, b, c R:
+        a <= b
+        b < c
+        =>:
+            a < c
+    trust a < c
+
+# Mixed transitivity on R. Example: `a < b` and `b <= c` yield `a < c`.
+thm a_lt_le_c:
+    ? forall a, b, c R:
+        a < b
+        b <= c
+        =>:
+            a < c
+    trust a < c
+
 thm a_le_c:
     ? forall a, b, c R:
         a <= b

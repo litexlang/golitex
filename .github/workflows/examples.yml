@@ -11,8 +11,6 @@ on:
         options:
           - run_examples
           - run_all
-          - run_examples_include_std
-          - run_all_include_std
 
 env:
   CARGO_TERM_COLOR: always
@@ -40,9 +38,6 @@ jobs:
           case "${{ inputs.suite }}" in
             run_examples|run_all)
               cargo test "${{ inputs.suite }}" -- --nocapture
-              ;;
-            run_examples_include_std|run_all_include_std)
-              cargo test "${{ inputs.suite }}" -- --ignored --nocapture
               ;;
             *)
               echo "::error::unknown example suite: ${{ inputs.suite }}"

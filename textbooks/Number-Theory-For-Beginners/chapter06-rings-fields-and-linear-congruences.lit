@@ -1,0 +1,506 @@
+# Chapter VI — Rings, Fields, and Linear Congruences
+
+"""
+Chapter VI — Rings, fields, and linear congruences.
+
+Multiplication of residue classes is well defined because congruent factors
+have congruent products.  This turns the classes modulo m into a finite
+unitary ring.  The chapter then counts solutions to ax=b modulo m, defines
+Euler's phi function, and characterizes exactly when the residue-class ring is
+a field.
+"""
+
+trust local import chapter5
+trust local import chapter4
+trust local import chapter3
+trust local import chapter2
+trust local import chapter1
+
+"""
+Definition. A ring is a set with an abelian-group addition and an associative,
+commutative multiplication that distributes over addition.  A unitary ring
+also has a multiplicative identity.
+"""
+
+# The additive-group part is the definition introduced in Chapter V.  The
+# remaining clauses state the three multiplication laws in the definition.
+
+prop is_commutative_ring(G set, add fn(x, y G) G, mul fn(x, y G) G, zero G):
+    $is_abelian_group(G, add, zero)
+    forall x, y, z G:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x, y G:
+        mul(x, y) = mul(y, x)
+    forall x, y, z G:
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+
+prop is_unitary_commutative_ring(G set, add fn(x, y G) G, mul fn(x, y G) G, zero, one G):
+    $is_commutative_ring(G, add, mul, zero)
+    forall x G:
+        mul(one, x) = x
+
+"""
+The distributive law gives x*0=0 and x*(-y)=-(xy).  The unit, when it exists,
+is unique.  The integers and rationals are examples of unitary rings; these
+are direct consequences of Litex's builtin arithmetic.
+"""
+
+sketch:
+    forall x, y Z:
+        x * 0 = 0
+        x * (-y) = -(x * y)
+    forall x, y Q:
+        x * 0 = 0
+        x * (-y) = -(x * y)
+
+"""
+Theorem VI.1. For every m>0, the congruence classes modulo m, under the class
+addition and multiplication (x mod m)(y mod m)=(xy mod m), form a unitary
+ring with m elements.  Its zero and unit are the classes of 0 and 1.
+"""
+
+abstract_prop residue_classes_form_unitary_ring_mod(m)
+
+# Source handling: Well-definedness follows from Properties (D) and (E) of
+# Chapter V, and the ring laws follow by computing with representatives.
+# trust: A checked proof needs a finite quotient-carrier construction for all
+# residue classes and operations on that carrier.
+trust:
+    forall m N_pos:
+        $residue_classes_form_unitary_ring_mod(m)
+
+thm theorem_VI_1_residue_classes_unitary_ring:
+    ? forall m N_pos:
+        $residue_classes_form_unitary_ring_mod(m)
+    $residue_classes_form_unitary_ring_mod(m)
+
+"""
+Definition. A residue class (a mod m) is prime to m when a is relatively prime
+to m.  This does not depend on the representative: if a'=a+mt, every common
+divisor of a' and m also divides a.
+"""
+
+prop residue_class_is_prime_to_modulus(m N_pos, a Z):
+    $relatively_prime_Z(a, m)
+
+# Source handling: The source subtracts mt from a'=a+mt and then invokes the
+# relative-primality theorem from Chapter III.
+# trust: The representative-independence proof needs the Chapter III gcd
+# interface specialized to a difference by a multiple of m.
+trust:
+    forall m N_pos, a, a1 Z:
+        $congruent_mod(m, a, a1)
+        $residue_class_is_prime_to_modulus(m, a)
+        =>:
+            $residue_class_is_prime_to_modulus(m, a1)
+    forall m N_pos, a, a1 Z:
+        $congruent_mod(m, a, a1)
+        $residue_class_is_prime_to_modulus(m, a1)
+        =>:
+            $residue_class_is_prime_to_modulus(m, a)
+
+"""
+Nonzero zero-divisors can occur in a unitary ring: modulo 6, the classes of 2
+and 3 multiply to 0.  A class prime to m is not a zero-divisor, and the
+classes prime to m are closed under multiplication.
+"""
+
+sketch:
+    $congruent_mod(6, 2 * 3, 0)
+
+abstract_prop residue_class_is_zero_divisor_mod(m, a)
+abstract_prop residue_classes_prime_to_modulus_form_multiplicative_group(m)
+
+# Source handling: Closure is Corollary 1 of Theorem III.2; the absence of
+# zero-divisors is then immediate from relative primality.
+# trust: The proof needs multiplication on the finite quotient carrier and a
+# cancellation theorem for a class prime to m.
+trust:
+    forall m N_pos, a, b Z:
+        $residue_class_is_prime_to_modulus(m, a)
+        $residue_class_is_prime_to_modulus(m, b)
+        =>:
+            $residue_class_is_prime_to_modulus(m, a * b)
+    forall m N_pos, a Z:
+        $residue_class_is_prime_to_modulus(m, a)
+        =>:
+            not $residue_class_is_zero_divisor_mod(m, a)
+    forall m N_pos:
+        $residue_classes_prime_to_modulus_form_multiplicative_group(m)
+
+"""
+Theorem VI.2. Let d=gcd(a,m), with m>0.  The congruence ax=b modulo m has a
+solution exactly when d divides b.  When it does, it has exactly d distinct
+solutions modulo m; they differ by multiples of m/d.  Exactly m/d residue
+classes of b are divisible by d.
+"""
+
+prop solves_linear_congruence_mod(a, b Z, m N_pos, x Z):
+    $congruent_mod(m, a * x, b)
+
+abstract_prop linear_congruence_has_exactly_gcd_many_solutions(a, b, m)
+abstract_prop linear_congruence_admissible_right_hand_side_count(a, m)
+
+# Source handling: The proof rewrites ax=b (mod m) as b=ax-my, applies the
+# linear-combination characterization of gcd, and compares two solutions.
+# trust: Counting distinct quotient classes and dividing the common factor out
+# of a congruence require finite class enumeration and cancellation.
+trust:
+    forall a, b Z, m N_pos:
+        exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+        =>:
+            $divides_Z(gcd_Z(a, m), b)
+    forall a, b Z, m N_pos:
+        $divides_Z(gcd_Z(a, m), b)
+        =>:
+            exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+    forall a, b Z, m N_pos:
+        $divides_Z(gcd_Z(a, m), b)
+        =>:
+            $linear_congruence_has_exactly_gcd_many_solutions(a, b, m)
+    forall a Z, m N_pos:
+        $linear_congruence_admissible_right_hand_side_count(a, m)
+
+thm theorem_VI_2_linear_congruence_solution_criterion:
+    ? forall a, b Z, m N_pos:
+        $divides_Z(gcd_Z(a, m), b)
+        =>:
+            exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+    exist x Z st {$solves_linear_congruence_mod(a, b, m, x)}
+
+"""
+Corollary. The congruence classes prime to m form a group under
+multiplication.  A class a prime to m has an inverse because ax=1 modulo m is
+solvable precisely when gcd(a,m)=1.
+"""
+
+thm corollary_VI_2_unit_classes_form_group:
+    ? forall m N_pos:
+        $residue_classes_prime_to_modulus_form_multiplicative_group(m)
+    $residue_classes_prime_to_modulus_form_multiplicative_group(m)
+
+"""
+Definition. Euler's function phi(m) is the number of residue classes prime to
+m modulo m.  Thus phi(1)=1, phi(2)=1, phi(3)=phi(4)=2, and phi(5)=4; for a
+prime p, phi(p)=p-1.
+"""
+
+abstract_prop has_euler_phi_value(m, value)
+
+# Source handling: This is a counting definition over the finite set of
+# residue classes prime to m.
+# trust: A checked definition needs a cardinality operation for the quotient
+# carrier of unit residue classes.
+trust:
+    forall m N_pos:
+        exist! value N st {$has_euler_phi_value(m, value)}
+    $has_euler_phi_value(1, 1)
+    $has_euler_phi_value(2, 1)
+    $has_euler_phi_value(3, 2)
+    $has_euler_phi_value(4, 2)
+    $has_euler_phi_value(5, 4)
+    forall p Z:
+        $is_prime_Z(p)
+        =>:
+            $has_euler_phi_value(p, p - 1)
+
+"""
+Definition. A field is a unitary ring whose nonzero elements form a group
+under multiplication.  The rationals are a field, whereas the integers are
+not; every field has no zero-divisors.
+"""
+
+abstract_prop is_field(G)
+
+# Source handling: This definition packages the ring axioms and the
+# multiplicative inverse of every nonzero element.
+# trust: A typed field interface must quantify over a carrier, its operations,
+# and its nonzero subtype; the present predicate keeps that package explicit.
+trust:
+    $is_field(Q)
+    not $is_field(Z)
+
+"""
+Theorem VI.3. For m>1, the residue-class ring modulo m is a field if and only
+if m is prime.  If m is composite, a proper divisor d and m/d give nonzero
+classes with product 0; if m is prime, every nonzero class is prime to m.
+"""
+
+abstract_prop residue_class_ring_is_field_mod(m)
+
+# Source handling: The forward direction exhibits zero-divisors for a
+# composite modulus; the reverse direction uses the preceding corollary.
+# trust: The quotient-ring field predicate and the divisor split for a
+# composite m are not yet represented by a checked finite-ring API.
+trust:
+    forall m N_pos:
+        m > 1
+        $residue_class_ring_is_field_mod(m)
+        =>:
+            $is_prime_Z(m)
+    forall m N_pos:
+        m > 1
+        $is_prime_Z(m)
+        =>:
+            $residue_class_ring_is_field_mod(m)
+
+thm theorem_VI_3_prime_modulus_gives_field:
+    ? forall m N_pos:
+        m > 1
+        $is_prime_Z(m)
+        =>:
+            $residue_class_ring_is_field_mod(m)
+    $residue_class_ring_is_field_mod(m)
+
+thm theorem_VI_3_field_modulus_is_prime:
+    ? forall m N_pos:
+        m > 1
+        $residue_class_ring_is_field_mod(m)
+        =>:
+            $is_prime_Z(m)
+    $is_prime_Z(m)
+
+"""
+Exercise VI.1. An integral-coefficient polynomial respects congruence: if
+x=y modulo m, then F(x)=F(y) modulo m.
+"""
+
+sketch:
+    abstract_prop integral_polynomial_respects_congruence(F, m, x, y)
+
+    # Source handling: Each monomial respects congruence by Property (E), and
+    # sums respect congruence by Property (D).
+    # trust: A checked version needs finite polynomial syntax and induction on
+    # its list of terms.
+    trust:
+        forall F, m N_pos, x, y Z:
+            $congruent_mod(m, x, y)
+            =>:
+                $integral_polynomial_respects_congruence(F, m, x, y)
+
+"""
+Exercise VI.2. Solve 5x-7y=9 and 2x+3y=10 modulo 12, and show that the
+solution is unique modulo 12.
+"""
+
+# Eliminating x gives y=4 modulo 12 and then x=5 modulo 12.  The determinant
+# is 29=5 modulo 12, a unit, so these two residue classes are the only ones.
+
+prop solves_exercise_VI_2_system_mod_twelve(x, y Z):
+    $congruent_mod(12, 5 * x - 7 * y, 9)
+    $congruent_mod(12, 2 * x + 3 * y, 10)
+
+prop is_exercise_VI_2_solution_class(x, y Z):
+    $solves_exercise_VI_2_system_mod_twelve(x, y)
+    forall u, v Z:
+        $solves_exercise_VI_2_system_mod_twelve(u, v)
+        =>:
+            $congruent_mod(12, u, x)
+            $congruent_mod(12, v, y)
+
+# Source handling: Eliminate either variable, then multiply by the inverse of
+# 5 modulo 12.  This produces the representative pair (5,4).
+# trust: The finite residue-pair quotient and determinant-invertibility proof
+# are not yet a checked matrix or modular-linear-system interface.
+trust:
+    $is_exercise_VI_2_solution_class(5, 4)
+
+"""
+Exercise VI.3. Solve x^2+ax+b=0 modulo 2 for every a,b modulo 2.
+"""
+
+# The complete table is: (a,b)=(0,0) has x=0; (0,1) has x=1;
+# (1,0) has both x=0 and x=1; and (1,1) has no solution.
+
+prop solves_exercise_VI_3_mod_two(a, b, x Z):
+    $congruent_mod(2, x^2 + a * x + b, 0)
+
+# Source handling: There are four coefficient pairs and two possible values
+# of x, so direct residue enumeration proves exactly this table.
+# trust: The four finite enumeration proofs are recorded as local proof debt
+# until the verifier exposes a compact case split over residue classes.
+trust:
+    forall a, b Z:
+        $solves_exercise_VI_3_mod_two(0, 0, a)
+        =>:
+            $congruent_mod(2, a, 0)
+    forall x Z:
+        $congruent_mod(2, x, 0)
+        =>:
+            $solves_exercise_VI_3_mod_two(0, 0, x)
+    forall a Z:
+        $solves_exercise_VI_3_mod_two(0, 1, a)
+        =>:
+            $congruent_mod(2, a, 1)
+    forall x Z:
+        $congruent_mod(2, x, 1)
+        =>:
+            $solves_exercise_VI_3_mod_two(0, 1, x)
+    forall a Z:
+        $solves_exercise_VI_3_mod_two(1, 0, a)
+        =>:
+            $congruent_mod(2, a, 0) or $congruent_mod(2, a, 1)
+    forall x Z:
+        $congruent_mod(2, x, 0) or $congruent_mod(2, x, 1)
+        =>:
+            $solves_exercise_VI_3_mod_two(1, 0, x)
+    forall x Z:
+        not $solves_exercise_VI_3_mod_two(1, 1, x)
+
+"""
+Exercise VI.4. Solve x^2-3x+3=0 modulo 7.
+"""
+
+# The two solution classes are x=4 and x=6 modulo 7.  Indeed,
+# 4^2-3*4+3=7 and 6^2-3*6+3=21.
+
+# Source handling: Test the seven residue classes; only 4 and 6 make the
+# polynomial divisible by 7.
+# trust: A compact checked proof needs exhaustive enumeration of classes
+# modulo 7.
+trust:
+    forall x Z:
+        $congruent_mod(7, x^2 - 3 * x + 3, 0)
+        =>:
+            $congruent_mod(7, x, 4) or $congruent_mod(7, x, 6)
+    forall x Z:
+        $congruent_mod(7, x, 4) or $congruent_mod(7, x, 6)
+        =>:
+            $congruent_mod(7, x^2 - 3 * x + 3, 0)
+
+"""
+Exercise VI.5. For m>1, the arithmetic mean of the positive integers below m
+and prime to m is m/2.
+"""
+
+sketch:
+    abstract_prop reduced_residues_have_mean_half_modulus(m)
+
+    # Source handling: Pair each reduced residue a with m-a.
+    # trust: This needs the finite set of reduced residues and a finite-sum
+    # pairing theorem.
+    trust:
+        forall m N_pos:
+            m > 1
+            =>:
+                $reduced_residues_have_mean_half_modulus(m)
+
+"""
+Exercise VI.6. For odd m, the sum 1^m+2^m+...+(m-1)^m is 0 modulo m.
+"""
+
+sketch:
+    abstract_prop odd_power_sum_vanishes_modulus(m)
+
+    # Source handling: Pair a with m-a and use that m is odd.
+    # trust: The argument needs finite sums over a residue interval.
+    trust:
+        forall m N_pos:
+            m > 1
+            m % 2 = 1
+            =>:
+                $odd_power_sum_vanishes_modulus(m)
+
+"""
+Exercise VI.7. Euler's function is multiplicative on coprime positive
+integers: phi(mn)=phi(m)phi(n) when gcd(m,n)=1.
+"""
+
+sketch:
+    # Source handling: Exercise V.6 identifies residue classes modulo mn with
+    # pairs of classes modulo m and n.
+    # trust: The proof needs the quotient Chinese-remainder bijection and
+    # cardinality multiplication.
+    trust:
+        forall m, n N_pos, u, v N:
+            gcd_Z(m, n) = 1
+            $has_euler_phi_value(m, u)
+            $has_euler_phi_value(n, v)
+            =>:
+                $has_euler_phi_value(m * n, u * v)
+
+"""
+Exercise VI.8. If the distinct prime divisors of m are p,q,...,r, then
+phi(m)=m(1-1/p)(1-1/q)...(1-1/r).
+"""
+
+sketch:
+    abstract_prop euler_phi_product_formula_from_distinct_prime_divisors(m)
+
+    # Source handling: Combine Exercise VI.7 with the value of phi on prime
+    # powers.
+    # trust: This requires a finite distinct-prime-factor representation.
+    trust:
+        forall m N_pos:
+            $euler_phi_product_formula_from_distinct_prime_divisors(m)
+
+"""
+Exercise VI.9. For every prime p and integer n, n^p=n modulo p.
+"""
+
+sketch:
+    # Source handling: The book asks for induction using the binomial formula.
+    # trust: The binomial expansion and its prime-divisibility coefficients are
+    # not yet a checked theorem package.
+    trust:
+        forall p Z, n Z:
+            $is_prime_Z(p)
+            =>:
+                $congruent_mod(p, n^p, n)
+
+"""
+Exercise VI.10. If a=b modulo p, then a^(p^n)=b^(p^n) modulo p^(n+1).
+"""
+
+sketch:
+    # Source handling: Induct on n and raise a congruence one prime power at a
+    # time.
+    # trust: The step needs the binomial divisibility estimates from the
+    # previous exercise.
+    trust:
+        forall p Z, n N, a, b Z:
+            $is_prime_Z(p)
+            $congruent_mod(p, a, b)
+            =>:
+                $congruent_mod(p^(n + 1), a^(p^n), b^(p^n))
+
+"""
+Exercise VI.11. For odd prime p, x^2=y^2 modulo p implies x=y or x=-y
+modulo p; consequently exactly half the nonzero classes modulo p are squares.
+"""
+
+sketch:
+    abstract_prop nonzero_quadratic_residues_are_half_mod_prime(p)
+
+    # Source handling: Factor x^2-y^2=(x-y)(x+y), use that a prime divides a
+    # product only through a factor, then count the two roots of each square.
+    # trust: The count needs a finite quotient-set pairing.
+    trust:
+        forall p Z, x, y Z:
+            $is_prime_Z(p)
+            p > 2
+            $congruent_mod(p, x^2, y^2)
+            =>:
+                $congruent_mod(p, x, y) or $congruent_mod(p, x, -y)
+        forall p Z:
+            $is_prime_Z(p)
+            p > 2
+            =>:
+                $nonzero_quadratic_residues_are_half_mod_prime(p)
+
+"""
+Exercise VI.12. The numbers x+y*sqrt(2) with integral x,y form a ring; with
+rational x,y they form a field.
+"""
+
+sketch:
+    abstract_prop quadratic_integer_sqrt_two_forms_ring()
+    abstract_prop quadratic_rational_sqrt_two_forms_field()
+
+    # Source handling: Closure follows by expanding products and using
+    # sqrt(2)^2=2; the field inverse uses the nonzero norm x^2-2y^2.
+    # trust: This needs a two-coordinate algebraic-number representation and
+    # a proof that its rational norm is nonzero away from zero.
+    trust:
+        $quadratic_integer_sqrt_two_forms_ring()
+        $quadratic_rational_sqrt_two_forms_field()
