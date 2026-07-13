@@ -142,20 +142,20 @@ impl Runtime {
                 }
             }
             // Half-infinite real intervals are nonempty whenever their finite endpoint is well-defined.
-            // Example: `$is_nonempty_set(cinf(a))` after `a $in R`.
+            // Example: `$is_nonempty_set('[a,))` after `a $in R`.
             Obj::OneSideInfinityIntervalObj(interval) => {
                 let rule = match interval {
                     OneSideInfinityIntervalObj::LeftOpen(_) => {
-                        "oinf_interval_nonempty_with_real_endpoint"
+                        "right_unbounded_open_interval_nonempty_with_real_endpoint"
                     }
                     OneSideInfinityIntervalObj::LeftClosed(_) => {
-                        "cinf_interval_nonempty_with_real_endpoint"
+                        "right_unbounded_closed_interval_nonempty_with_real_endpoint"
                     }
                     OneSideInfinityIntervalObj::RightOpen(_) => {
-                        "info_interval_nonempty_with_real_endpoint"
+                        "left_unbounded_open_interval_nonempty_with_real_endpoint"
                     }
                     OneSideInfinityIntervalObj::RightClosed(_) => {
-                        "infc_interval_nonempty_with_real_endpoint"
+                        "left_unbounded_closed_interval_nonempty_with_real_endpoint"
                     }
                 };
                 Ok(

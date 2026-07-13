@@ -1,68 +1,6 @@
 # Chapter 10: Differentiation of functions.
 
-
-# Chapter 9 background used by differentiation
-
 trust local import chap9
-
-"""
-Chapter 10 uses the Chapter 9 language of limit points, local function limits,
-continuity, extrema, and monotonicity.  These earlier notions remain defined
-in their source chapter; this chapter introduces derivatives rather than
-duplicating that vocabulary.
-"""
-
-thm limit_point_is_adherent_point:
-    ? forall X power_set(R), x0 X:
-        $is_limit_point_of_set(X, x0)
-        =>:
-            $is_adherent_point(X, x0)
-    claim:
-        ? forall epsilon R_pos:
-            $is_epsilon_adherent_to_set(X, x0, epsilon)
-        $is_epsilon_adherent_to_set(set_minus(X, {x0}), x0, epsilon)
-        obtain y from exist y R st {y $in set_minus(X, {x0}), abs(x0 - y) <= epsilon}
-        y $in X
-        witness exist z R st {z $in X, abs(x0 - z) <= epsilon} from y:
-            y $in X
-            abs(x0 - y) <= epsilon
-        $is_epsilon_adherent_to_set(X, x0, epsilon)
-    $is_adherent_point(X, x0)
-
-prop is_constant_on(X power_set(R), f fn(x X) R):
-    forall x, y X:
-        f(x) = f(y)
-
-prop is_nonzero_on(X power_set(R), f fn(x X) R):
-    forall x X:
-        f(x) != 0
-
-prop is_inverse_pair_between_real_subsets(X, Y power_set(R), f fn(x X) R, g fn(y Y) R):
-    forall x X:
-        f(x) $in Y
-        g(f(x)) = x
-    forall y Y:
-        g(y) $in X
-        f(g(y)) = y
-
-forall a R:
-    cinf(a) $subset R
-    cinf(a) $in power_set(R)
-    infc(a) $subset R
-    infc(a) $in power_set(R)
-
-forall a, b R:
-    '(a, b) $subset R
-    '(a, b) $in power_set(R)
-
-Z $in power_set(R)
-
-forall x cinf(0):
-    x >= 0
-
-forall x infc(0):
-    x <= 0
-
 
 # 10.1 Basic definitions
 
@@ -370,8 +308,8 @@ derivatives at 0 are 1 and -1 respectively.
 # derivative at zero.
 
 have fn absolute_value_function(x R) R = abs(x)
-have fn absolute_value_on_nonnegative_ray(x cinf(0)) R = abs(x)
-have fn absolute_value_on_nonpositive_ray(x infc(0)) R = abs(x)
+have fn absolute_value_on_nonnegative_ray(x '[0,)) R = abs(x)
+have fn absolute_value_on_nonpositive_ray(x '(,0]) R = abs(x)
 
 thm absolute_value_positive_difference_quotient_at_zero:
     ? forall x R:
@@ -406,7 +344,7 @@ thm absolute_value_negative_difference_quotient_at_zero:
     (-x) / x = -1
 
 thm absolute_value_nonnegative_ray_difference_quotient_at_zero:
-    ? forall x cinf(0):
+    ? forall x '[0,):
         x - 0 != 0
         =>:
             (absolute_value_on_nonnegative_ray(x) - absolute_value_on_nonnegative_ray(0)) / (x - 0) = 1
@@ -422,7 +360,7 @@ thm absolute_value_nonnegative_ray_difference_quotient_at_zero:
     (x - 0) / (x - 0) = 1
 
 thm absolute_value_nonpositive_ray_difference_quotient_at_zero:
-    ? forall x infc(0):
+    ? forall x '(,0]:
         x - 0 != 0
         =>:
             (absolute_value_on_nonpositive_ray(x) - absolute_value_on_nonpositive_ray(0)) / (x - 0) = -1
@@ -439,22 +377,22 @@ thm absolute_value_nonpositive_ray_difference_quotient_at_zero:
 
 thm zero_is_limit_point_of_nonnegative_ray:
     ? forall:
-        $is_limit_point_of_set(cinf(0), 0)
-    0 $in cinf(0)
+        $is_limit_point_of_set('[0,), 0)
+    0 $in '[0,)
     {0} $in power_set(R)
-    by thm real_set_minus_is_real_set(cinf(0), {0})
-    set_minus(cinf(0), {0}) $in power_set(R)
+    by thm real_set_minus_is_real_set('[0,), {0})
+    set_minus('[0,), {0}) $in power_set(R)
     claim:
         ? forall epsilon R_pos:
-            $is_epsilon_adherent_to_set(set_minus(cinf(0), {0}), 0, epsilon)
-        witness exist y R st {y $in set_minus(cinf(0), {0}), abs(0 - y) <= epsilon} from epsilon / 2:
+            $is_epsilon_adherent_to_set(set_minus('[0,), {0}), 0, epsilon)
+        witness exist y R st {y $in set_minus('[0,), {0}), abs(0 - y) <= epsilon} from epsilon / 2:
             epsilon / 2 $in R_pos
             epsilon / 2 > 0
             epsilon / 2 >= 0
-            epsilon / 2 $in cinf(0)
+            epsilon / 2 $in '[0,)
             epsilon / 2 != 0
             not epsilon / 2 $in {0}
-            epsilon / 2 $in set_minus(cinf(0), {0})
+            epsilon / 2 $in set_minus('[0,), {0})
             0 - epsilon / 2 = -(epsilon / 2)
             abs(0 - epsilon / 2) = abs(-(epsilon / 2))
             abs(-(epsilon / 2)) = abs(epsilon / 2)
@@ -463,29 +401,29 @@ thm zero_is_limit_point_of_nonnegative_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(0 - epsilon / 2) <= epsilon
-        $is_epsilon_adherent_to_set(set_minus(cinf(0), {0}), 0, epsilon)
-    $is_adherent_point(set_minus(cinf(0), {0}), 0)
-    $is_limit_point_of_set(cinf(0), 0)
+        $is_epsilon_adherent_to_set(set_minus('[0,), {0}), 0, epsilon)
+    $is_adherent_point(set_minus('[0,), {0}), 0)
+    $is_limit_point_of_set('[0,), 0)
 
 thm zero_is_limit_point_of_nonpositive_ray:
     ? forall:
-        $is_limit_point_of_set(infc(0), 0)
-    0 $in infc(0)
+        $is_limit_point_of_set('(,0], 0)
+    0 $in '(,0]
     {0} $in power_set(R)
-    by thm real_set_minus_is_real_set(infc(0), {0})
-    set_minus(infc(0), {0}) $in power_set(R)
+    by thm real_set_minus_is_real_set('(,0], {0})
+    set_minus('(,0], {0}) $in power_set(R)
     claim:
         ? forall epsilon R_pos:
-            $is_epsilon_adherent_to_set(set_minus(infc(0), {0}), 0, epsilon)
-        witness exist y R st {y $in set_minus(infc(0), {0}), abs(0 - y) <= epsilon} from 0 - epsilon / 2:
+            $is_epsilon_adherent_to_set(set_minus('(,0], {0}), 0, epsilon)
+        witness exist y R st {y $in set_minus('(,0], {0}), abs(0 - y) <= epsilon} from 0 - epsilon / 2:
             epsilon / 2 $in R_pos
             epsilon / 2 > 0
             0 - epsilon / 2 < 0
             0 - epsilon / 2 <= 0
-            0 - epsilon / 2 $in infc(0)
+            0 - epsilon / 2 $in '(,0]
             0 - epsilon / 2 != 0
             not 0 - epsilon / 2 $in {0}
-            0 - epsilon / 2 $in set_minus(infc(0), {0})
+            0 - epsilon / 2 $in set_minus('(,0], {0})
             0 - (0 - epsilon / 2) = epsilon / 2
             abs(epsilon / 2) = epsilon / 2
             abs(0 - (0 - epsilon / 2)) = abs(epsilon / 2)
@@ -493,21 +431,21 @@ thm zero_is_limit_point_of_nonpositive_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(0 - (0 - epsilon / 2)) <= epsilon
-        $is_epsilon_adherent_to_set(set_minus(infc(0), {0}), 0, epsilon)
-    $is_adherent_point(set_minus(infc(0), {0}), 0)
-    $is_limit_point_of_set(infc(0), 0)
+        $is_epsilon_adherent_to_set(set_minus('(,0], {0}), 0, epsilon)
+    $is_adherent_point(set_minus('(,0], {0}), 0)
+    $is_limit_point_of_set('(,0], 0)
 
 thm absolute_value_on_nonnegative_ray_has_derivative_at_zero:
     ? forall:
-        $has_derivative_at(cinf(0), absolute_value_on_nonnegative_ray, 0, 1)
+        $has_derivative_at('[0,), absolute_value_on_nonnegative_ray, 0, 1)
     by thm zero_is_limit_point_of_nonnegative_ray()
-    $is_limit_point_of_set(cinf(0), 0)
+    $is_limit_point_of_set('[0,), 0)
     claim:
         ? forall epsilon R_pos:
-            exist delta R_pos st {$is_difference_quotient_close_to(cinf(0), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)}
-        witness exist delta R_pos st {$is_difference_quotient_close_to(cinf(0), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)} from epsilon:
+            exist delta R_pos st {$is_difference_quotient_close_to('[0,), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)}
+        witness exist delta R_pos st {$is_difference_quotient_close_to('[0,), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)} from epsilon:
             claim:
-                ? forall x cinf(0):
+                ? forall x '[0,):
                     x - 0 != 0
                     abs(x - 0) < epsilon
                     =>:
@@ -518,31 +456,31 @@ thm absolute_value_on_nonnegative_ray_has_derivative_at_zero:
                 abs(((absolute_value_on_nonnegative_ray(x) - absolute_value_on_nonnegative_ray(0)) / (x - 0)) - 1) = abs(0)
                 abs(0) = 0
                 0 <= epsilon
-            $is_difference_quotient_close_to(cinf(0), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)
-        exist delta R_pos st {$is_difference_quotient_close_to(cinf(0), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)}
-    $has_derivative_at(cinf(0), absolute_value_on_nonnegative_ray, 0, 1)
+            $is_difference_quotient_close_to('[0,), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)
+        exist delta R_pos st {$is_difference_quotient_close_to('[0,), absolute_value_on_nonnegative_ray, 0, 1, epsilon, delta)}
+    $has_derivative_at('[0,), absolute_value_on_nonnegative_ray, 0, 1)
 
 thm absolute_value_on_nonnegative_ray_derivative_value_at_zero:
     ? forall:
-        $is_differentiable_at(cinf(0), absolute_value_on_nonnegative_ray, 0)
-        derivative(cinf(0), absolute_value_on_nonnegative_ray, 0) = 1
+        $is_differentiable_at('[0,), absolute_value_on_nonnegative_ray, 0)
+        derivative('[0,), absolute_value_on_nonnegative_ray, 0) = 1
     by thm absolute_value_on_nonnegative_ray_has_derivative_at_zero()
-    $has_derivative_at(cinf(0), absolute_value_on_nonnegative_ray, 0, 1)
-    by thm has_derivative_at_to_derivative_value(cinf(0), absolute_value_on_nonnegative_ray, 0, 1)
-    $is_differentiable_at(cinf(0), absolute_value_on_nonnegative_ray, 0)
-    derivative(cinf(0), absolute_value_on_nonnegative_ray, 0) = 1
+    $has_derivative_at('[0,), absolute_value_on_nonnegative_ray, 0, 1)
+    by thm has_derivative_at_to_derivative_value('[0,), absolute_value_on_nonnegative_ray, 0, 1)
+    $is_differentiable_at('[0,), absolute_value_on_nonnegative_ray, 0)
+    derivative('[0,), absolute_value_on_nonnegative_ray, 0) = 1
 
 thm absolute_value_on_nonpositive_ray_has_derivative_at_zero:
     ? forall:
-        $has_derivative_at(infc(0), absolute_value_on_nonpositive_ray, 0, -1)
+        $has_derivative_at('(,0], absolute_value_on_nonpositive_ray, 0, -1)
     by thm zero_is_limit_point_of_nonpositive_ray()
-    $is_limit_point_of_set(infc(0), 0)
+    $is_limit_point_of_set('(,0], 0)
     claim:
         ? forall epsilon R_pos:
-            exist delta R_pos st {$is_difference_quotient_close_to(infc(0), absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)}
-        witness exist delta R_pos st {$is_difference_quotient_close_to(infc(0), absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)} from epsilon:
+            exist delta R_pos st {$is_difference_quotient_close_to('(,0], absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)}
+        witness exist delta R_pos st {$is_difference_quotient_close_to('(,0], absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)} from epsilon:
             claim:
-                ? forall x infc(0):
+                ? forall x '(,0]:
                     x - 0 != 0
                     abs(x - 0) < epsilon
                     =>:
@@ -553,19 +491,19 @@ thm absolute_value_on_nonpositive_ray_has_derivative_at_zero:
                 abs(((absolute_value_on_nonpositive_ray(x) - absolute_value_on_nonpositive_ray(0)) / (x - 0)) - (-1)) = abs(0)
                 abs(0) = 0
                 0 <= epsilon
-            $is_difference_quotient_close_to(infc(0), absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)
-        exist delta R_pos st {$is_difference_quotient_close_to(infc(0), absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)}
-    $has_derivative_at(infc(0), absolute_value_on_nonpositive_ray, 0, -1)
+            $is_difference_quotient_close_to('(,0], absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)
+        exist delta R_pos st {$is_difference_quotient_close_to('(,0], absolute_value_on_nonpositive_ray, 0, -1, epsilon, delta)}
+    $has_derivative_at('(,0], absolute_value_on_nonpositive_ray, 0, -1)
 
 thm absolute_value_on_nonpositive_ray_derivative_value_at_zero:
     ? forall:
-        $is_differentiable_at(infc(0), absolute_value_on_nonpositive_ray, 0)
-        derivative(infc(0), absolute_value_on_nonpositive_ray, 0) = -1
+        $is_differentiable_at('(,0], absolute_value_on_nonpositive_ray, 0)
+        derivative('(,0], absolute_value_on_nonpositive_ray, 0) = -1
     by thm absolute_value_on_nonpositive_ray_has_derivative_at_zero()
-    $has_derivative_at(infc(0), absolute_value_on_nonpositive_ray, 0, -1)
-    by thm has_derivative_at_to_derivative_value(infc(0), absolute_value_on_nonpositive_ray, 0, -1)
-    $is_differentiable_at(infc(0), absolute_value_on_nonpositive_ray, 0)
-    derivative(infc(0), absolute_value_on_nonpositive_ray, 0) = -1
+    $has_derivative_at('(,0], absolute_value_on_nonpositive_ray, 0, -1)
+    by thm has_derivative_at_to_derivative_value('(,0], absolute_value_on_nonpositive_ray, 0, -1)
+    $is_differentiable_at('(,0], absolute_value_on_nonpositive_ray, 0)
+    derivative('(,0], absolute_value_on_nonpositive_ray, 0) = -1
 
 thm absolute_value_not_differentiable_at_zero_on_real_line:
     ? forall:
@@ -743,6 +681,23 @@ differentiable at x0, then f is continuous at x0.
 # error term, so the function values tend to `f(x0)`.
 # The proof bounds the difference quotient by `abs(L)+1` near `x0`, then
 # chooses the continuity radius `epsilon/(abs(L)+1)`.
+
+thm limit_point_is_adherent_point:
+    ? forall X power_set(R), x0 X:
+        $is_limit_point_of_set(X, x0)
+        =>:
+            $is_adherent_point(X, x0)
+    claim:
+        ? forall epsilon R_pos:
+            $is_epsilon_adherent_to_set(X, x0, epsilon)
+        $is_epsilon_adherent_to_set(set_minus(X, {x0}), x0, epsilon)
+        obtain y from exist y R st {y $in set_minus(X, {x0}), abs(x0 - y) <= epsilon}
+        y $in X
+        witness exist z R st {z $in X, abs(x0 - z) <= epsilon} from y:
+            y $in X
+            abs(x0 - y) <= epsilon
+        $is_epsilon_adherent_to_set(X, x0, epsilon)
+    $is_adherent_point(X, x0)
 
 thm differentiability_implies_continuity_at:
     ? forall X power_set(R), f fn(x X) R, x0 X, L R:
@@ -1211,6 +1166,10 @@ thm derivative_difference_rule:
         fn(x X) R {f(x) + fn(z X) R {-1 * g(z)}(x)}(y) = fn(x X) R {f(x) - g(x)}(y)
     by thm equal_functions_have_equal_derivatives(X, fn(x X) R {f(x) + fn(z X) R {-1 * g(z)}(x)}, fn(x X) R {f(x) - g(x)}, x0, Lf - Lg)
     $has_derivative_at(X, fn(x X) R {f(x) - g(x)}, x0, Lf - Lg)
+
+prop is_nonzero_on(X power_set(R), f fn(x X) R):
+    forall x X:
+        f(x) != 0
 
 thm derivative_reciprocal_rule:
     ? forall X power_set(R), g fn(x X) R, x0 X, Lg R:
@@ -2774,6 +2733,10 @@ thm negative_derivative_strictly_decreasing:
         f(u) > f(v)
     $is_strictly_decreasing_on('[a, b], f)
 
+prop is_constant_on(X power_set(R), f fn(x X) R):
+    forall x, y X:
+        f(x) = f(y)
+
 thm zero_derivative_constant:
     ? forall a, b R, f fn(x '[a, b]) R, df fn(x '[a, b]) R:
         a < b
@@ -2788,6 +2751,14 @@ thm zero_derivative_constant:
     trust $is_constant_on('[a, b], f)
 
 # 10.4 Inverse functions and derivatives
+
+prop is_inverse_pair_between_real_subsets(X, Y power_set(R), f fn(x X) R, g fn(y Y) R):
+    forall x X:
+        f(x) $in Y
+        g(f(x)) = x
+    forall y Y:
+        g(y) $in X
+        f(g(y)) = y
 
 """
 Lemma 10.4.1.  If f and its inverse are both differentiable at corresponding

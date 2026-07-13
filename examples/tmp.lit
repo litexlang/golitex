@@ -17,3 +17,21 @@ claim:
 witness exist d Z st {8 = 1 * d} from 8
 $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
+
+have boundary R
+
+have right_open '(boundary,)
+right_open $in R
+boundary < right_open
+
+have right_closed '[boundary,)
+right_closed $in R
+boundary <= right_closed
+
+have left_open '(,boundary)
+left_open $in R
+left_open < boundary
+
+have left_closed '(,boundary]
+left_closed $in R
+left_closed <= boundary

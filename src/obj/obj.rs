@@ -2047,13 +2047,14 @@ impl fmt::Display for IntervalObj {
 
 impl fmt::Display for OneSideInfinityIntervalObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = match self {
-            OneSideInfinityIntervalObj::LeftOpen(_) => OINF,
-            OneSideInfinityIntervalObj::LeftClosed(_) => CINF,
-            OneSideInfinityIntervalObj::RightOpen(_) => INFO,
-            OneSideInfinityIntervalObj::RightClosed(_) => INFC,
-        };
-        write!(f, "{}{}", name, braced_vec_to_string(&vec![self.start()]))
+        match self {
+            OneSideInfinityIntervalObj::LeftOpen(interval) => write!(f, "'({},)", interval.start),
+            OneSideInfinityIntervalObj::LeftClosed(interval) => write!(f, "'[{},)", interval.start),
+            OneSideInfinityIntervalObj::RightOpen(interval) => write!(f, "'(,{})", interval.start),
+            OneSideInfinityIntervalObj::RightClosed(interval) => {
+                write!(f, "'(,{}]", interval.start)
+            }
+        }
     }
 }
 
@@ -2911,6 +2912,28 @@ mod tests {
         assert_eq!(
             IntervalObj::new_left_closed_right_closed(zero, one).to_string(),
             "'[0, 1]"
+        );
+    }
+
+    #[test]
+    fn display_uses_one_sided_interval_literals() {
+        let zero = number("0");
+
+        assert_eq!(
+            OneSideInfinityIntervalObj::new_left_open(zero.clone()).to_string(),
+            "'(0,)"
+        );
+        assert_eq!(
+            OneSideInfinityIntervalObj::new_left_closed(zero.clone()).to_string(),
+            "'[0,)"
+        );
+        assert_eq!(
+            OneSideInfinityIntervalObj::new_right_open(zero.clone()).to_string(),
+            "'(,0)"
+        );
+        assert_eq!(
+            OneSideInfinityIntervalObj::new_right_closed(zero).to_string(),
+            "'(,0]"
         );
     }
 

@@ -706,14 +706,14 @@ have q set = 0 ... 1
 
 #### Real intervals as sets
 
-Two-sided real intervals use `'(a, b)`, `'(a, b]`, `'[a, b)`, and `'[a, b]`. The leading apostrophe distinguishes these literals from tuples and finite sequences. Half-infinite real intervals use `info(a)`, `infc(a)`, `oinf(a)`, and `cinf(a)`.
+Two-sided real intervals use `'(a, b)`, `'(a, b]`, `'[a, b)`, and `'[a, b]`. The leading apostrophe distinguishes these literals from tuples and finite sequences. Half-infinite real intervals use `'(,a)`, `'(,a]`, `'(a,)`, and `'[a,)`.
 
 ```litex
-have left set = info(1)
-have right set = cinf(0)
+have left set = '(,1)
+have right set = '[0,)
 ```
 
-Membership unfolds to real membership and the endpoint bounds. For example, `x $in info(a)` gives `x $in R` and `x < a`; `x $in cinf(a)` gives `x $in R` and `a <= x`.
+Membership unfolds to real membership and the endpoint bounds. For example, `x $in '(,a)` gives `x $in R` and `x < a`; `x $in '[a,)` gives `x $in R` and `a <= x`.
 
 #### Sequence- and matrix-style index sets
 
@@ -881,7 +881,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
 | `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
-| Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `info(a)`, `infc(a)`, `oinf(a)`, `cinf(a)` | Endpoints must be real-number objects. |
+| Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `'(,a)`, `'(,a]`, `'(a,)`, `'[a,)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
 | Matrix operators `A ++ B`, `A -- B`, `A ** B`, `c *. A`, `A ^^ n` | The scalar in `c *. A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
@@ -2853,10 +2853,10 @@ bound variable in a set builder.
 | left-open, right-closed real interval | `'(0, 1]` |
 | left-closed, right-open real interval | `'[0, 1)` |
 | closed real interval | `'[0, 1]` |
-| open lower-bounded ray | `oinf(0)` |
-| closed lower-bounded ray | `cinf(0)` |
-| open upper-bounded ray | `info(0)` |
-| closed upper-bounded ray | `infc(0)` |
+| open lower-bounded ray | `'(0,)` |
+| closed lower-bounded ray | `'[0,)` |
+| open upper-bounded ray | `'(,0)` |
+| closed upper-bounded ray | `'(,0]` |
 | struct view object | `&Point`, `&Group<S>` |
 | explicit field access through a struct view | `&Point{p}.x` |
 | instantiated template object | `\T<R>` |
@@ -4582,7 +4582,7 @@ sketch:
 
 ```litex
 sketch:
-    $is_nonempty_set(cinf(0))
+    $is_nonempty_set('[0,))
 ```
 
 ```litex
@@ -4981,7 +4981,7 @@ Membership in a real interval gives real membership and the corresponding endpoi
 
 ```text
 known:
-    x $in info(1)
+    x $in '(,1)
 
 inferred:
     x $in R
@@ -4990,7 +4990,7 @@ inferred:
 
 ```text
 known:
-    x $in cinf(0)
+    x $in '[0,)
 
 inferred:
     x $in R

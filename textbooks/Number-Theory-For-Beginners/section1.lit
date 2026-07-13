@@ -35,19 +35,46 @@ forall x, y, z Q:
     x * y = y * x
     x * (y + z) = x * y + x * z
 
-# Source handling: Section I assumes unique solvability of additive equations
-# in Z and Q, and of nonzero multiplicative equations in Q.
-# trust: These are treated as the book's algebraic background here rather
-# than reconstructed from a separate ordered-field or group development.
-trust:
-    forall a, b Z:
+# Section I takes these solution laws as background.  For Litex's builtin
+# integer and rational arithmetic, each witness and its uniqueness are
+# directly checkable.
+claim:
+    ? forall a, b Z:
         exist! x Z st {a + x = b}
-    forall a, b Q:
+    witness exist x Z st {a + x = b} from b - a:
+        a + (b - a) = b
+    forall x1, x2 Z:
+        a + x1 = b
+        a + x2 = b
+        =>:
+            x1 = (a + x1) - a = (a + x2) - a = x2
+    exist! x Z st {a + x = b}
+
+claim:
+    ? forall a, b Q:
         exist! x Q st {a + x = b}
-    forall a, b Q:
+    witness exist x Q st {a + x = b} from b - a:
+        a + (b - a) = b
+    forall x1, x2 Q:
+        a + x1 = b
+        a + x2 = b
+        =>:
+            x1 = (a + x1) - a = (a + x2) - a = x2
+    exist! x Q st {a + x = b}
+
+claim:
+    ? forall a, b Q:
         a != 0
         =>:
             exist! x Q st {a * x = b}
+    witness exist x Q st {a * x = b} from b / a:
+        a * (b / a) = b
+    forall x1, x2 Q:
+        a * x1 = b
+        a * x2 = b
+        =>:
+            x1 = (a * x1) / a = (a * x2) / a = x2
+    exist! x Q st {a * x = b}
 
 forall a, b Z:
     a + (b - a) = b

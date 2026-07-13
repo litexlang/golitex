@@ -47,7 +47,7 @@ pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
-/// Prefix for a two-sided real interval literal, such as `'(a, b)` or `'[a, b]`.
+/// Prefix for a real interval literal, such as `'(a, b)`, `'[a,)`, or `'(,b]`.
 pub const INTERVAL_LITERAL_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
@@ -75,6 +75,7 @@ pub const LEGACY_OPEN_OPEN_INTERVAL: &str = "oo";
 pub const LEGACY_OPEN_CLOSED_INTERVAL: &str = "oc";
 pub const LEGACY_CLOSED_OPEN_INTERVAL: &str = "co";
 pub const LEGACY_CLOSED_CLOSED_INTERVAL: &str = "cc";
+/// Removed spellings retained as reserved words so their migration diagnostics stay precise.
 pub const INFO: &str = "info";
 pub const INFC: &str = "infc";
 pub const OINF: &str = "oinf";

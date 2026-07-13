@@ -19,8 +19,8 @@ prop has_limit_in_set(a seq(R), X power_set(R)):
 """
 Definition 9.1.1 (Intervals). Closed, open, and half-open intervals are sets of
 real points satisfying the corresponding endpoint inequalities.  Litex already
-has the two-sided literals `'[a, b]`, `'(a, b)`, `'[a, b)`, and `'(a, b]`,
-along with `oinf`, `cinf`, `info`, and `infc`.
+has the interval literals `'[a, b]`, `'(a, b)`, `'[a, b)`, `'(a, b]`,
+`'(a,)`, `'[a,)`, `'(,a)`, and `'(,a]`.
 """
 
 forall a, b R, x '[a, b]:
@@ -43,31 +43,35 @@ forall a, b R, x '(a, b]:
     a < x
     x <= b
 
-forall a R, x oinf(a):
+forall a R, x '(a,):
     x $in R
     a < x
 
-forall a R, x cinf(a):
+forall a R, x '[a,):
     x $in R
     a <= x
 
-forall a R, x info(a):
+forall a R, x '(,a):
     x $in R
     x < a
 
-forall a R, x infc(a):
+forall a R, x '(,a]:
     x $in R
     x <= a
 
-# For the reversed-endpoint closed interval example below, `self_cc` exposes
-# the source set-builder convention directly.  The rest of the chapter uses
-# builtin interval objects.
+# Litex already provides the builtin closed-interval object `'[l, r]`, which
+# is the canonical notation used throughout this chapter.  Users can also
+# define the same mathematical concept directly with a set-builder function;
+# this local function makes Tao's source convention explicit for the
+# reversed-endpoint example below.
 
-have fn self_cc(l, r R) power_set(R) = {x R: l <= x <= r}
+have fn closed_interval(l, r R) power_set(R) = {x R: l <= x <= r}
 
 """
-Remark 9.1.2. Parentheses now denote open intervals as well as ordered pairs;
-the intended meaning is resolved by whether a set or a tuple is expected.
+Remark 9.1.2. In Tao's source notation, parentheses are used both for ordered
+pairs and for open intervals.  Litex makes this distinction syntactic: a
+leading apostrophe marks an interval, as in `'(a, b)`, while ordinary
+parentheses retain their tuple and expression meaning.
 """
 
 forall a, b R:
@@ -92,14 +96,14 @@ forall a, b R:
     '(a, b] $in power_set(R)
 
 forall a R:
-    oinf(a) $subset R
-    oinf(a) $in power_set(R)
-    cinf(a) $subset R
-    cinf(a) $in power_set(R)
-    info(a) $subset R
-    info(a) $in power_set(R)
-    infc(a) $subset R
-    infc(a) $in power_set(R)
+    '(a,) $subset R
+    '(a,) $in power_set(R)
+    '[a,) $subset R
+    '[a,) $in power_set(R)
+    '(,a) $subset R
+    '(,a) $in power_set(R)
+    '(,a] $subset R
+    '(,a] $in power_set(R)
 
 N $in power_set(R)
 N_pos $in power_set(R)
@@ -108,16 +112,16 @@ Q $in power_set(R)
 R $in power_set(R)
 {} $in power_set(R)
 
-forall x oinf(0):
+forall x '(0,):
     x > 0
 
-forall x cinf(0):
+forall x '[0,):
     x >= 0
 
-forall x info(0):
+forall x '(,0):
     x < 0
 
-forall x infc(0):
+forall x '(,0]:
     x <= 0
 
 """
@@ -125,24 +129,24 @@ Example 9.1.4. Degenerate intervals can be empty or singletons depending on the
 endpoint inequalities.  In Tao's book-style set-builder convention, `[a, b]`
 means `{x R: a <= x <= b}` even when `a > b`; then any alleged point gives
 incompatible endpoint inequalities.  Litex's builtin two-sided interval literals
-are the concise objects used later, while `self_cc` exposes the
+are the concise objects used later, while `closed_interval` exposes the
 set-builder proof of the reversed-endpoint closed interval directly.
 """
 
 forall a R:
-    a $in self_cc(a, a)
+    a $in closed_interval(a, a)
     a $in '[a, a]
 
 thm closed_singleton_intervals_nonempty:
     ? forall a R:
-        $is_nonempty_set(self_cc(a, a))
+        $is_nonempty_set(closed_interval(a, a))
         $is_nonempty_set('[a, a])
-    have A set = self_cc(a, a)
-    a $in self_cc(a, a)
+    have A set = closed_interval(a, a)
+    a $in closed_interval(a, a)
     a $in A
     witness $is_nonempty_set(A) from a:
         a $in A
-    $is_nonempty_set(self_cc(a, a))
+    $is_nonempty_set(closed_interval(a, a))
     have B set = '[a, a]
     a $in '[a, a]
     a $in B
@@ -154,10 +158,10 @@ thm self_closed_interval_empty_when_endpoints_reversed:
     ? forall a, b R:
         a > b
         =>:
-            self_cc(a, b) = {}
-    by extension self_cc(a, b) = {}:
+            closed_interval(a, b) = {}
+    by extension closed_interval(a, b) = {}:
         claim:
-            ? forall x self_cc(a, b):
+            ? forall x closed_interval(a, b):
                 x $in {}
             a <= x
             x <= b
@@ -168,9 +172,9 @@ thm self_closed_interval_empty_when_endpoints_reversed:
                 impossible a > b
         claim:
             ? forall x {}:
-                x $in self_cc(a, b)
+                x $in closed_interval(a, b)
             by contra:
-                ? x $in self_cc(a, b)
+                ? x $in closed_interval(a, b)
                 not $is_nonempty_set({})
                 witness $is_nonempty_set({}) from x
                 impossible $is_nonempty_set({})
@@ -969,14 +973,14 @@ thm closure_of_bounded_intervals:
 
 thm endpoint_adherent_to_open_right_ray:
     ? forall a R:
-        $is_adherent_point(oinf(a), a)
+        $is_adherent_point('(a,), a)
     claim:
         ? forall epsilon R_pos:
-            $is_epsilon_adherent_to_set(oinf(a), a, epsilon)
-        witness exist y R st {y $in oinf(a), abs(a - y) <= epsilon} from a + epsilon / 2:
+            $is_epsilon_adherent_to_set('(a,), a, epsilon)
+        witness exist y R st {y $in '(a,), abs(a - y) <= epsilon} from a + epsilon / 2:
             epsilon / 2 > 0
             a < a + epsilon / 2
-            a + epsilon / 2 $in oinf(a)
+            a + epsilon / 2 $in '(a,)
             a - (a + epsilon / 2) = -epsilon / 2
             -epsilon / 2 < 0
             abs(-epsilon / 2) = epsilon / 2
@@ -985,45 +989,45 @@ thm endpoint_adherent_to_open_right_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(a - (a + epsilon / 2)) <= epsilon
-    $is_adherent_point(oinf(a), a)
+    $is_adherent_point('(a,), a)
 
 thm closed_right_ray_subset_open_right_ray_closure:
     ? forall a R:
-        cinf(a) $subset closure_of_real_set(oinf(a))
+        '[a,) $subset closure_of_real_set('(a,))
     claim:
-        ? forall x cinf(a):
-            x $in closure_of_real_set(oinf(a))
+        ? forall x '[a,):
+            x $in closure_of_real_set('(a,))
         x = a or x > a
         by cases:
-            ? $is_adherent_point(oinf(a), x)
+            ? $is_adherent_point('(a,), x)
             case x = a:
                 by thm endpoint_adherent_to_open_right_ray(a)
-                $is_adherent_point(oinf(a), a)
-                $is_adherent_point(oinf(a), x)
+                $is_adherent_point('(a,), a)
+                $is_adherent_point('(a,), x)
             case x > a:
                 a < x
-                x $in oinf(a)
-                by thm interval_member_is_adherent(oinf(a), x)
-                $is_adherent_point(oinf(a), x)
-        x $in closure_of_real_set(oinf(a))
-    cinf(a) $subset closure_of_real_set(oinf(a))
+                x $in '(a,)
+                by thm interval_member_is_adherent('(a,), x)
+                $is_adherent_point('(a,), x)
+        x $in closure_of_real_set('(a,))
+    '[a,) $subset closure_of_real_set('(a,))
 
 thm open_right_ray_closure_subset_closed_right_ray:
     ? forall a R:
-        closure_of_real_set(oinf(a)) $subset cinf(a)
+        closure_of_real_set('(a,)) $subset '[a,)
     claim:
-        ? forall x closure_of_real_set(oinf(a)):
-            x $in cinf(a)
-        by thm closure_member_is_adherent(oinf(a), x)
-        $is_adherent_point(oinf(a), x)
+        ? forall x closure_of_real_set('(a,)):
+            x $in '[a,)
+        by thm closure_member_is_adherent('(a,), x)
+        $is_adherent_point('(a,), x)
         x < a or x >= a
         by cases:
-            ? x $in cinf(a)
+            ? x $in '[a,)
             case x < a:
                 a - x $in R_pos
-                $is_epsilon_adherent_to_set(oinf(a), x, a - x)
-                obtain y from exist y R st {y $in oinf(a), abs(x - y) <= a - x}
-                y $in oinf(a)
+                $is_epsilon_adherent_to_set('(a,), x, a - x)
+                obtain y from exist y R st {y $in '(a,), abs(x - y) <= a - x}
+                y $in '(a,)
                 a < y
                 x < a < y
                 x < y
@@ -1039,40 +1043,40 @@ thm open_right_ray_closure_subset_closed_right_ray:
                 a - x < abs(x - y) <= a - x
                 impossible a - x < a - x
             case x >= a:
-                x $in cinf(a)
-    closure_of_real_set(oinf(a)) $subset cinf(a)
+                x $in '[a,)
+    closure_of_real_set('(a,)) $subset '[a,)
 
 thm closure_of_open_right_ray:
     ? forall a R:
-        closure_of_real_set(oinf(a)) = cinf(a)
+        closure_of_real_set('(a,)) = '[a,)
     by thm open_right_ray_closure_subset_closed_right_ray(a)
-    closure_of_real_set(oinf(a)) $subset cinf(a)
+    closure_of_real_set('(a,)) $subset '[a,)
     by thm closed_right_ray_subset_open_right_ray_closure(a)
-    cinf(a) $subset closure_of_real_set(oinf(a))
-    by extension closure_of_real_set(oinf(a)) = cinf(a):
-        forall x closure_of_real_set(oinf(a)):
-            x $in cinf(a)
-        forall x cinf(a):
-            x $in closure_of_real_set(oinf(a))
-    closure_of_real_set(oinf(a)) = cinf(a)
+    '[a,) $subset closure_of_real_set('(a,))
+    by extension closure_of_real_set('(a,)) = '[a,):
+        forall x closure_of_real_set('(a,)):
+            x $in '[a,)
+        forall x '[a,):
+            x $in closure_of_real_set('(a,))
+    closure_of_real_set('(a,)) = '[a,)
 
 thm closed_right_ray_closure_subset_closed_right_ray:
     ? forall a R:
-        closure_of_real_set(cinf(a)) $subset cinf(a)
+        closure_of_real_set('[a,)) $subset '[a,)
     claim:
-        ? forall x closure_of_real_set(cinf(a)):
-            x $in cinf(a)
-        by thm closure_member_is_adherent(cinf(a), x)
-        $is_adherent_point(cinf(a), x)
+        ? forall x closure_of_real_set('[a,)):
+            x $in '[a,)
+        by thm closure_member_is_adherent('[a,), x)
+        $is_adherent_point('[a,), x)
         x < a or x >= a
         by cases:
-            ? x $in cinf(a)
+            ? x $in '[a,)
             case x < a:
                 a - x $in R_pos
                 (a - x) / 2 $in R_pos
-                $is_epsilon_adherent_to_set(cinf(a), x, (a - x) / 2)
-                obtain y from exist y R st {y $in cinf(a), abs(x - y) <= (a - x) / 2}
-                y $in cinf(a)
+                $is_epsilon_adherent_to_set('[a,), x, (a - x) / 2)
+                obtain y from exist y R st {y $in '[a,), abs(x - y) <= (a - x) / 2}
+                y $in '[a,)
                 a <= y
                 x < a
                 x < a <= y
@@ -1092,33 +1096,33 @@ thm closed_right_ray_closure_subset_closed_right_ray:
                 (a - x) / 2 < abs(x - y) <= (a - x) / 2
                 impossible (a - x) / 2 < (a - x) / 2
             case x >= a:
-                x $in cinf(a)
-    closure_of_real_set(cinf(a)) $subset cinf(a)
+                x $in '[a,)
+    closure_of_real_set('[a,)) $subset '[a,)
 
 thm closure_of_closed_right_ray:
     ? forall a R:
-        closure_of_real_set(cinf(a)) = cinf(a)
-    by thm closure_contains_set(cinf(a))
-    cinf(a) $subset closure_of_real_set(cinf(a))
+        closure_of_real_set('[a,)) = '[a,)
+    by thm closure_contains_set('[a,))
+    '[a,) $subset closure_of_real_set('[a,))
     by thm closed_right_ray_closure_subset_closed_right_ray(a)
-    closure_of_real_set(cinf(a)) $subset cinf(a)
-    by extension closure_of_real_set(cinf(a)) = cinf(a):
-        forall x closure_of_real_set(cinf(a)):
-            x $in cinf(a)
-        forall x cinf(a):
-            x $in closure_of_real_set(cinf(a))
-    closure_of_real_set(cinf(a)) = cinf(a)
+    closure_of_real_set('[a,)) $subset '[a,)
+    by extension closure_of_real_set('[a,)) = '[a,):
+        forall x closure_of_real_set('[a,)):
+            x $in '[a,)
+        forall x '[a,):
+            x $in closure_of_real_set('[a,))
+    closure_of_real_set('[a,)) = '[a,)
 
 thm endpoint_adherent_to_open_left_ray:
     ? forall a R:
-        $is_adherent_point(info(a), a)
+        $is_adherent_point('(,a), a)
     claim:
         ? forall epsilon R_pos:
-            $is_epsilon_adherent_to_set(info(a), a, epsilon)
-        witness exist y R st {y $in info(a), abs(a - y) <= epsilon} from a - epsilon / 2:
+            $is_epsilon_adherent_to_set('(,a), a, epsilon)
+        witness exist y R st {y $in '(,a), abs(a - y) <= epsilon} from a - epsilon / 2:
             epsilon / 2 > 0
             a - epsilon / 2 < a
-            a - epsilon / 2 $in info(a)
+            a - epsilon / 2 $in '(,a)
             a - (a - epsilon / 2) = epsilon / 2
             abs(epsilon / 2) = epsilon / 2
             abs(a - (a - epsilon / 2)) = abs(epsilon / 2)
@@ -1126,46 +1130,46 @@ thm endpoint_adherent_to_open_left_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(a - (a - epsilon / 2)) <= epsilon
-    $is_adherent_point(info(a), a)
+    $is_adherent_point('(,a), a)
 
 thm closed_left_ray_subset_open_left_ray_closure:
     ? forall a R:
-        infc(a) $subset closure_of_real_set(info(a))
+        '(,a] $subset closure_of_real_set('(,a))
     claim:
-        ? forall x infc(a):
-            x $in closure_of_real_set(info(a))
+        ? forall x '(,a]:
+            x $in closure_of_real_set('(,a))
         x = a or x < a
         by cases:
-            ? $is_adherent_point(info(a), x)
+            ? $is_adherent_point('(,a), x)
             case x = a:
                 by thm endpoint_adherent_to_open_left_ray(a)
-                $is_adherent_point(info(a), a)
-                $is_adherent_point(info(a), x)
+                $is_adherent_point('(,a), a)
+                $is_adherent_point('(,a), x)
             case x < a:
-                x $in info(a)
-                by thm interval_member_is_adherent(info(a), x)
-                $is_adherent_point(info(a), x)
-        x $in closure_of_real_set(info(a))
-    infc(a) $subset closure_of_real_set(info(a))
+                x $in '(,a)
+                by thm interval_member_is_adherent('(,a), x)
+                $is_adherent_point('(,a), x)
+        x $in closure_of_real_set('(,a))
+    '(,a] $subset closure_of_real_set('(,a))
 
 thm open_left_ray_closure_subset_closed_left_ray:
     ? forall a R:
-        closure_of_real_set(info(a)) $subset infc(a)
+        closure_of_real_set('(,a)) $subset '(,a]
     claim:
-        ? forall x closure_of_real_set(info(a)):
-            x $in infc(a)
-        by thm closure_member_is_adherent(info(a), x)
-        $is_adherent_point(info(a), x)
+        ? forall x closure_of_real_set('(,a)):
+            x $in '(,a]
+        by thm closure_member_is_adherent('(,a), x)
+        $is_adherent_point('(,a), x)
         x <= a or x > a
         by cases:
-            ? x $in infc(a)
+            ? x $in '(,a]
             case x <= a:
-                x $in infc(a)
+                x $in '(,a]
             case x > a:
                 x - a $in R_pos
-                $is_epsilon_adherent_to_set(info(a), x, x - a)
-                obtain y from exist y R st {y $in info(a), abs(x - y) <= x - a}
-                y $in info(a)
+                $is_epsilon_adherent_to_set('(,a), x, x - a)
+                obtain y from exist y R st {y $in '(,a), abs(x - y) <= x - a}
+                y $in '(,a)
                 y < a
                 y < a < x
                 y < x
@@ -1176,41 +1180,41 @@ thm open_left_ray_closure_subset_closed_left_ray:
                 abs(x - y) <= x - a
                 x - a < abs(x - y) <= x - a
                 impossible x - a < x - a
-    closure_of_real_set(info(a)) $subset infc(a)
+    closure_of_real_set('(,a)) $subset '(,a]
 
 thm closure_of_open_left_ray:
     ? forall a R:
-        closure_of_real_set(info(a)) = infc(a)
+        closure_of_real_set('(,a)) = '(,a]
     by thm open_left_ray_closure_subset_closed_left_ray(a)
-    closure_of_real_set(info(a)) $subset infc(a)
+    closure_of_real_set('(,a)) $subset '(,a]
     by thm closed_left_ray_subset_open_left_ray_closure(a)
-    infc(a) $subset closure_of_real_set(info(a))
-    by extension closure_of_real_set(info(a)) = infc(a):
-        forall x closure_of_real_set(info(a)):
-            x $in infc(a)
-        forall x infc(a):
-            x $in closure_of_real_set(info(a))
-    closure_of_real_set(info(a)) = infc(a)
+    '(,a] $subset closure_of_real_set('(,a))
+    by extension closure_of_real_set('(,a)) = '(,a]:
+        forall x closure_of_real_set('(,a)):
+            x $in '(,a]
+        forall x '(,a]:
+            x $in closure_of_real_set('(,a))
+    closure_of_real_set('(,a)) = '(,a]
 
 thm closed_left_ray_closure_subset_closed_left_ray:
     ? forall a R:
-        closure_of_real_set(infc(a)) $subset infc(a)
+        closure_of_real_set('(,a]) $subset '(,a]
     claim:
-        ? forall x closure_of_real_set(infc(a)):
-            x $in infc(a)
-        by thm closure_member_is_adherent(infc(a), x)
-        $is_adherent_point(infc(a), x)
+        ? forall x closure_of_real_set('(,a]):
+            x $in '(,a]
+        by thm closure_member_is_adherent('(,a], x)
+        $is_adherent_point('(,a], x)
         x <= a or x > a
         by cases:
-            ? x $in infc(a)
+            ? x $in '(,a]
             case x <= a:
-                x $in infc(a)
+                x $in '(,a]
             case x > a:
                 x - a $in R_pos
                 (x - a) / 2 $in R_pos
-                $is_epsilon_adherent_to_set(infc(a), x, (x - a) / 2)
-                obtain y from exist y R st {y $in infc(a), abs(x - y) <= (x - a) / 2}
-                y $in infc(a)
+                $is_epsilon_adherent_to_set('(,a], x, (x - a) / 2)
+                obtain y from exist y R st {y $in '(,a], abs(x - y) <= (x - a) / 2}
+                y $in '(,a]
                 y <= a
                 y <= a < x
                 y < x
@@ -1224,28 +1228,28 @@ thm closed_left_ray_closure_subset_closed_left_ray:
                 abs(x - y) <= (x - a) / 2
                 (x - a) / 2 < abs(x - y) <= (x - a) / 2
                 impossible (x - a) / 2 < (x - a) / 2
-    closure_of_real_set(infc(a)) $subset infc(a)
+    closure_of_real_set('(,a]) $subset '(,a]
 
 thm closure_of_closed_left_ray:
     ? forall a R:
-        closure_of_real_set(infc(a)) = infc(a)
-    by thm closure_contains_set(infc(a))
-    infc(a) $subset closure_of_real_set(infc(a))
+        closure_of_real_set('(,a]) = '(,a]
+    by thm closure_contains_set('(,a])
+    '(,a] $subset closure_of_real_set('(,a])
     by thm closed_left_ray_closure_subset_closed_left_ray(a)
-    closure_of_real_set(infc(a)) $subset infc(a)
-    by extension closure_of_real_set(infc(a)) = infc(a):
-        forall x closure_of_real_set(infc(a)):
-            x $in infc(a)
-        forall x infc(a):
-            x $in closure_of_real_set(infc(a))
-    closure_of_real_set(infc(a)) = infc(a)
+    closure_of_real_set('(,a]) $subset '(,a]
+    by extension closure_of_real_set('(,a]) = '(,a]:
+        forall x closure_of_real_set('(,a]):
+            x $in '(,a]
+        forall x '(,a]:
+            x $in closure_of_real_set('(,a])
+    closure_of_real_set('(,a]) = '(,a]
 
 thm closure_of_one_sided_intervals:
     ? forall a R:
-        closure_of_real_set(oinf(a)) = cinf(a)
-        closure_of_real_set(cinf(a)) = cinf(a)
-        closure_of_real_set(info(a)) = infc(a)
-        closure_of_real_set(infc(a)) = infc(a)
+        closure_of_real_set('(a,)) = '[a,)
+        closure_of_real_set('[a,)) = '[a,)
+        closure_of_real_set('(,a)) = '(,a]
+        closure_of_real_set('(,a]) = '(,a]
         closure_of_real_set(R) = R
     claim:
         ? closure_of_real_set(R) = R
@@ -1262,13 +1266,13 @@ thm closure_of_one_sided_intervals:
                 x $in closure_of_real_set(R)
         closure_of_real_set(R) = R
     by thm closure_of_open_right_ray(a)
-    closure_of_real_set(oinf(a)) = cinf(a)
+    closure_of_real_set('(a,)) = '[a,)
     by thm closure_of_closed_right_ray(a)
-    closure_of_real_set(cinf(a)) = cinf(a)
+    closure_of_real_set('[a,)) = '[a,)
     by thm closure_of_open_left_ray(a)
-    closure_of_real_set(info(a)) = infc(a)
+    closure_of_real_set('(,a)) = '(,a]
     by thm closure_of_closed_left_ray(a)
-    closure_of_real_set(infc(a)) = infc(a)
+    closure_of_real_set('(,a]) = '(,a]
 
 thm closure_of_empty_set:
     ? forall:
@@ -1472,8 +1476,8 @@ thm standard_closed_sets:
         a < b
         =>:
             $is_closed_subset('[a, b])
-            $is_closed_subset(cinf(a))
-            $is_closed_subset(infc(a))
+            $is_closed_subset('[a,))
+            $is_closed_subset('(,a])
             $is_closed_subset(N)
             $is_closed_subset(Z)
             $is_closed_subset(R)
@@ -1482,11 +1486,11 @@ thm standard_closed_sets:
     closure_of_real_set('[a, b]) = '[a, b]
     $is_closed_subset('[a, b])
     by thm closure_of_one_sided_intervals(a)
-    closure_of_real_set(cinf(a)) = cinf(a)
-    $is_closed_subset(cinf(a))
+    closure_of_real_set('[a,)) = '[a,)
+    $is_closed_subset('[a,))
     by thm closure_of_one_sided_intervals(a)
-    closure_of_real_set(infc(a)) = infc(a)
-    $is_closed_subset(infc(a))
+    closure_of_real_set('(,a]) = '(,a]
+    $is_closed_subset('(,a])
     by thm closures_of_standard_sets()
     closure_of_real_set(N) = N
     closure_of_real_set(Z) = Z
@@ -3690,23 +3694,23 @@ have fn signum_for_limit_example(x R) R by cases:
     case x < 0: -1
     case x > 0: 1
 
-have fn signum_on_open_right_ray(x oinf(0)) R = signum_for_limit_example(x)
-have fn signum_on_open_left_ray(x info(0)) R = signum_for_limit_example(x)
+have fn signum_on_open_right_ray(x '(0,)) R = signum_for_limit_example(x)
+have fn signum_on_open_left_ray(x '(,0)) R = signum_for_limit_example(x)
 
 thm signum_for_limit_example_restricted_limits:
     ? forall:
-        $has_function_limit(oinf(0), signum_on_open_right_ray, 0, 1)
-        $has_function_limit(info(0), signum_on_open_left_ray, 0, -1)
+        $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
+        $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
     claim:
-        ? $has_function_limit(oinf(0), signum_on_open_right_ray, 0, 1)
+        ? $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
         by thm endpoint_adherent_to_open_right_ray(0)
-        $is_adherent_point(oinf(0), 0)
+        $is_adherent_point('(0,), 0)
         claim:
             ? forall epsilon R_pos:
-                $is_locally_epsilon_close_to(oinf(0), signum_on_open_right_ray, 0, 1, epsilon)
-            witness exist delta R_pos st {$is_delta_neighborhood_close_to(oinf(0), signum_on_open_right_ray, 0, 1, epsilon, delta)} from epsilon:
+                $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon)
+            witness exist delta R_pos st {$is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon, delta)} from epsilon:
                 claim:
-                    ? forall x oinf(0):
+                    ? forall x '(0,):
                         abs(x - 0) < epsilon
                         =>:
                             abs(signum_on_open_right_ray(x) - 1) <= epsilon
@@ -3718,19 +3722,19 @@ thm signum_for_limit_example_restricted_limits:
                     abs(signum_on_open_right_ray(x) - 1) = abs(0)
                     abs(0) = 0
                     0 <= epsilon
-                $is_delta_neighborhood_close_to(oinf(0), signum_on_open_right_ray, 0, 1, epsilon, delta)
-            $is_locally_epsilon_close_to(oinf(0), signum_on_open_right_ray, 0, 1, epsilon)
-        $has_function_limit(oinf(0), signum_on_open_right_ray, 0, 1)
+                $is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon, delta)
+            $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon)
+        $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
     claim:
-        ? $has_function_limit(info(0), signum_on_open_left_ray, 0, -1)
+        ? $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
         by thm endpoint_adherent_to_open_left_ray(0)
-        $is_adherent_point(info(0), 0)
+        $is_adherent_point('(,0), 0)
         claim:
             ? forall epsilon R_pos:
-                $is_locally_epsilon_close_to(info(0), signum_on_open_left_ray, 0, -1, epsilon)
-            witness exist delta R_pos st {$is_delta_neighborhood_close_to(info(0), signum_on_open_left_ray, 0, -1, epsilon, delta)} from epsilon:
+                $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon)
+            witness exist delta R_pos st {$is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon, delta)} from epsilon:
                 claim:
-                    ? forall x info(0):
+                    ? forall x '(,0):
                         abs(x - 0) < epsilon
                         =>:
                             abs(signum_on_open_left_ray(x) - (-1)) <= epsilon
@@ -3742,11 +3746,11 @@ thm signum_for_limit_example_restricted_limits:
                     abs(signum_on_open_left_ray(x) - (-1)) = abs(0)
                     abs(0) = 0
                     0 <= epsilon
-                $is_delta_neighborhood_close_to(info(0), signum_on_open_left_ray, 0, -1, epsilon, delta)
-            $is_locally_epsilon_close_to(info(0), signum_on_open_left_ray, 0, -1, epsilon)
-        $has_function_limit(info(0), signum_on_open_left_ray, 0, -1)
-    $has_function_limit(oinf(0), signum_on_open_right_ray, 0, 1)
-    $has_function_limit(info(0), signum_on_open_left_ray, 0, -1)
+                $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon, delta)
+            $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon)
+        $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
+    $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
+    $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
 
 thm signum_for_limit_example_has_no_full_limit:
     ? forall:
@@ -4385,24 +4389,24 @@ limit does not exist.
 # no-full-limit theorem from Example 9.3.16 immediately rules out continuity.
 thm signum_continuous_on_open_rays:
     ? forall:
-        $is_continuous_on(oinf(0), signum_on_open_right_ray)
-        $is_continuous_on(info(0), signum_on_open_left_ray)
+        $is_continuous_on('(0,), signum_on_open_right_ray)
+        $is_continuous_on('(,0), signum_on_open_left_ray)
     claim:
-        ? $is_continuous_on(oinf(0), signum_on_open_right_ray)
+        ? $is_continuous_on('(0,), signum_on_open_right_ray)
         claim:
-            ? forall x0 oinf(0):
-                $is_continuous_at(oinf(0), signum_on_open_right_ray, x0)
-            by thm interval_member_is_adherent(oinf(0), x0)
+            ? forall x0 '(0,):
+                $is_continuous_at('(0,), signum_on_open_right_ray, x0)
+            by thm interval_member_is_adherent('(0,), x0)
             x0 > 0
             signum_for_limit_example(x0) = 1
             signum_on_open_right_ray(x0) = signum_for_limit_example(x0)
             signum_on_open_right_ray(x0) = 1
             claim:
                 ? forall epsilon R_pos:
-                    $is_locally_epsilon_close_to(oinf(0), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
-                witness exist delta R_pos st {$is_delta_neighborhood_close_to(oinf(0), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, delta)} from epsilon:
+                    $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
+                witness exist delta R_pos st {$is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, delta)} from epsilon:
                     claim:
-                        ? forall y oinf(0):
+                        ? forall y '(0,):
                             abs(y - x0) < epsilon
                             =>:
                                 abs(signum_on_open_right_ray(y) - signum_on_open_right_ray(x0)) <= epsilon
@@ -4415,27 +4419,27 @@ thm signum_continuous_on_open_rays:
                         abs(signum_on_open_right_ray(y) - signum_on_open_right_ray(x0)) = abs(0)
                         abs(0) = 0
                         0 <= epsilon
-                    $is_delta_neighborhood_close_to(oinf(0), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, delta)
-                $is_locally_epsilon_close_to(oinf(0), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
-            $has_function_limit(oinf(0), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0))
-            $is_continuous_at(oinf(0), signum_on_open_right_ray, x0)
-        $is_continuous_on(oinf(0), signum_on_open_right_ray)
+                    $is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, delta)
+                $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
+            $has_function_limit('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0))
+            $is_continuous_at('(0,), signum_on_open_right_ray, x0)
+        $is_continuous_on('(0,), signum_on_open_right_ray)
     claim:
-        ? $is_continuous_on(info(0), signum_on_open_left_ray)
+        ? $is_continuous_on('(,0), signum_on_open_left_ray)
         claim:
-            ? forall x0 info(0):
-                $is_continuous_at(info(0), signum_on_open_left_ray, x0)
-            by thm interval_member_is_adherent(info(0), x0)
+            ? forall x0 '(,0):
+                $is_continuous_at('(,0), signum_on_open_left_ray, x0)
+            by thm interval_member_is_adherent('(,0), x0)
             x0 < 0
             signum_for_limit_example(x0) = -1
             signum_on_open_left_ray(x0) = signum_for_limit_example(x0)
             signum_on_open_left_ray(x0) = -1
             claim:
                 ? forall epsilon R_pos:
-                    $is_locally_epsilon_close_to(info(0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
-                witness exist delta R_pos st {$is_delta_neighborhood_close_to(info(0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, delta)} from epsilon:
+                    $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
+                witness exist delta R_pos st {$is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, delta)} from epsilon:
                     claim:
-                        ? forall y info(0):
+                        ? forall y '(,0):
                             abs(y - x0) < epsilon
                             =>:
                                 abs(signum_on_open_left_ray(y) - signum_on_open_left_ray(x0)) <= epsilon
@@ -4448,11 +4452,11 @@ thm signum_continuous_on_open_rays:
                         abs(signum_on_open_left_ray(y) - signum_on_open_left_ray(x0)) = abs(0)
                         abs(0) = 0
                         0 <= epsilon
-                    $is_delta_neighborhood_close_to(info(0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, delta)
-                $is_locally_epsilon_close_to(info(0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
-            $has_function_limit(info(0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0))
-            $is_continuous_at(info(0), signum_on_open_left_ray, x0)
-        $is_continuous_on(info(0), signum_on_open_left_ray)
+                    $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, delta)
+                $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
+            $has_function_limit('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0))
+            $is_continuous_at('(,0), signum_on_open_left_ray, x0)
+        $is_continuous_on('(,0), signum_on_open_left_ray)
 
 thm signum_discontinuous_at_zero:
     ? forall:
@@ -4508,12 +4512,12 @@ right-hand half-line.  The example shows that continuity is domain-sensitive.
 # The right-continuous step is `0` on the negative side and `1` on the
 # non-negative side.  The full-domain value at zero is `1`, but approaching
 # from the left gives nearby values `0`, so full-domain continuity fails.  On
-# `cinf(0)` the restricted function is constant `1`, hence continuous.
+# `'[0,)` the restricted function is constant `1`, hence continuous.
 have fn right_step_at_zero(x R) R by cases:
     case x < 0: 0
     case x >= 0: 1
 
-have fn right_step_on_nonnegative_ray(x cinf(0)) R = right_step_at_zero(x)
+have fn right_step_on_nonnegative_ray(x '[0,)) R = right_step_at_zero(x)
 
 thm right_step_discontinuous_at_zero_on_full_line:
     ? forall:
@@ -4544,21 +4548,21 @@ thm right_step_discontinuous_at_zero_on_full_line:
 
 thm right_step_continuous_on_nonnegative_ray:
     ? forall:
-        $is_continuous_on(cinf(0), right_step_on_nonnegative_ray)
+        $is_continuous_on('[0,), right_step_on_nonnegative_ray)
     claim:
-        ? forall x0 cinf(0):
-            $is_continuous_at(cinf(0), right_step_on_nonnegative_ray, x0)
-        by thm interval_member_is_adherent(cinf(0), x0)
+        ? forall x0 '[0,):
+            $is_continuous_at('[0,), right_step_on_nonnegative_ray, x0)
+        by thm interval_member_is_adherent('[0,), x0)
         x0 >= 0
         right_step_at_zero(x0) = 1
         right_step_on_nonnegative_ray(x0) = right_step_at_zero(x0)
         right_step_on_nonnegative_ray(x0) = 1
         claim:
             ? forall epsilon R_pos:
-                $is_locally_epsilon_close_to(cinf(0), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
-            witness exist delta R_pos st {$is_delta_neighborhood_close_to(cinf(0), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, delta)} from epsilon:
+                $is_locally_epsilon_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
+            witness exist delta R_pos st {$is_delta_neighborhood_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, delta)} from epsilon:
                 claim:
-                    ? forall y cinf(0):
+                    ? forall y '[0,):
                         abs(y - x0) < epsilon
                         =>:
                             abs(right_step_on_nonnegative_ray(y) - right_step_on_nonnegative_ray(x0)) <= epsilon
@@ -4571,11 +4575,11 @@ thm right_step_continuous_on_nonnegative_ray:
                     abs(right_step_on_nonnegative_ray(y) - right_step_on_nonnegative_ray(x0)) = abs(0)
                     abs(0) = 0
                     0 <= epsilon
-                $is_delta_neighborhood_close_to(cinf(0), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, delta)
-            $is_locally_epsilon_close_to(cinf(0), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
-        $has_function_limit(cinf(0), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0))
-        $is_continuous_at(cinf(0), right_step_on_nonnegative_ray, x0)
-    $is_continuous_on(cinf(0), right_step_on_nonnegative_ray)
+                $is_delta_neighborhood_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, delta)
+            $is_locally_epsilon_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
+        $has_function_limit('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0))
+        $is_continuous_at('[0,), right_step_on_nonnegative_ray, x0)
+    $is_continuous_on('[0,), right_step_on_nonnegative_ray)
 
 """
 Proposition 9.4.7 (Equivalent formulations of continuity).  For a function
@@ -5325,8 +5329,8 @@ thm example_9_4_14_denominator_eval:
     example_9_4_14_denominator(x) = fn(x R) R {x^2 + 1}(x)
     fn(x R) R {x^2 + 1}(x) = x^2 + 1
 
-have fn example_9_4_14_abs_quadratic_nonnegative(x R) cinf(0) = abs(x^2 - 8 * x + 7)
-have fn example_9_4_14_sqrt_two_power_on_nonnegative(t cinf(0)) R = t^sqrt(2)
+have fn example_9_4_14_abs_quadratic_nonnegative(x R) '[0,) = abs(x^2 - 8 * x + 7)
+have fn example_9_4_14_sqrt_two_power_on_nonnegative(t '[0,)) R = t^sqrt(2)
 have fn example_9_4_14_powered_abs_quadratic(x R) R = abs(x^2 - 8 * x + 7)^sqrt(2)
 have fn example_9_4_14_complex(x R) R = abs(x^2 - 8 * x + 7)^sqrt(2) / (x^2 + 1)
 
@@ -6483,12 +6487,12 @@ intervals but not on all of R.
 
 thm square_strictly_increasing_on_nonnegative_axis:
     ? forall :
-        $is_strictly_increasing_on(cinf(0), fn(x cinf(0)) R {x^2})
+        $is_strictly_increasing_on('[0,), fn(x '[0,)) R {x^2})
     claim:
-        ? forall u, v cinf(0):
+        ? forall u, v '[0,):
             u < v
             =>:
-                fn(x cinf(0)) R {x^2}(u) < fn(x cinf(0)) R {x^2}(v)
+                fn(x '[0,)) R {x^2}(u) < fn(x '[0,)) R {x^2}(v)
         u >= 0
         v >= 0
         v - u > 0
@@ -6500,10 +6504,10 @@ thm square_strictly_increasing_on_nonnegative_axis:
         (v - u) * (v + u) = v^2 - u^2
         v^2 - u^2 > 0
         u^2 < v^2
-        fn(x cinf(0)) R {x^2}(u) = u^2
-        fn(x cinf(0)) R {x^2}(v) = v^2
-        fn(x cinf(0)) R {x^2}(u) < fn(x cinf(0)) R {x^2}(v)
-    $is_strictly_increasing_on(cinf(0), fn(x cinf(0)) R {x^2})
+        fn(x '[0,)) R {x^2}(u) = u^2
+        fn(x '[0,)) R {x^2}(v) = v^2
+        fn(x '[0,)) R {x^2}(u) < fn(x '[0,)) R {x^2}(v)
+    $is_strictly_increasing_on('[0,), fn(x '[0,)) R {x^2})
 
 """
 Proposition 9.8.3. A continuous strictly increasing function on a closed

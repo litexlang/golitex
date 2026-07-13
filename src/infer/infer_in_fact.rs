@@ -488,7 +488,7 @@ impl Runtime {
             Obj::IntervalObj(interval) => {
                 self.infer_in_fact_element_in_real_interval(in_fact, interval)
             }
-            // Half-infinite real interval membership: `x $in cinf(a)` => `x $in R`, `a <= x`.
+            // Half-infinite real interval membership: `x $in '[a,)` => `x $in R`, `a <= x`.
             Obj::OneSideInfinityIntervalObj(interval) => {
                 self.infer_in_fact_element_in_one_side_infinity_interval(in_fact, interval)
             }

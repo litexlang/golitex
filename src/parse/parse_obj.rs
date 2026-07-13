@@ -928,33 +928,22 @@ impl Runtime {
             )));
         }
         if tok == INFO || tok == INFC || tok == OINF || tok == CINF {
-            let interval_kind = tok.to_string();
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 1 argument", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let start = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} expects 1 argument", interval_kind),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return match interval_kind.as_str() {
-                INFO => Ok(OneSideInfinityIntervalObj::new_right_open(start).into()),
-                INFC => Ok(OneSideInfinityIntervalObj::new_right_closed(start).into()),
-                OINF => Ok(OneSideInfinityIntervalObj::new_left_open(start).into()),
-                CINF => Ok(OneSideInfinityIntervalObj::new_left_closed(start).into()),
+            let replacement = match tok {
+                INFO => "'(,a)",
+                INFC => "'(,a]",
+                OINF => "'(a,)",
+                CINF => "'[a,)",
                 _ => unreachable!(),
             };
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "one-sided interval spelling `{}` has been removed; use `{}`",
+                        tok, replacement
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         if tok == FINITE_SEQ {
             tb.skip()?;
@@ -1469,8 +1458,74 @@ impl Runtime {
             }
         };
         tb.skip()?;
+        if tb.current_token_is_equal_to(COMMA) {
+            if left_closed {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "left-unbounded interval must start with `(`; use `'(,a)` or `'(,a]`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            tb.skip_token(COMMA)?;
+            if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal cannot omit both endpoints; use `R`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let right = self.parse_obj(tb)?;
+            if tb.current_token_is_equal_to(COMMA) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "interval literal expects exactly two endpoints".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let right_closed = match tb.current()? {
+                RIGHT_BRACE => false,
+                RIGHT_BRACKET => true,
+                _ => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "interval literal expects `)` or `]` after its right endpoint"
+                                .to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+            };
+            tb.skip()?;
+            return Ok(if right_closed {
+                OneSideInfinityIntervalObj::new_right_closed(right).into()
+            } else {
+                OneSideInfinityIntervalObj::new_right_open(right).into()
+            });
+        }
+
         let left = self.parse_obj(tb)?;
         tb.skip_token(COMMA)?;
+        if tb.current_token_is_equal_to(RIGHT_BRACE) {
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(if left_closed {
+                OneSideInfinityIntervalObj::new_left_closed(left).into()
+            } else {
+                OneSideInfinityIntervalObj::new_left_open(left).into()
+            });
+        }
+        if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "right-unbounded interval must end with `)`; use `'(a,)` or `'[a,)`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
         let right = self.parse_obj(tb)?;
         if tb.current_token_is_equal_to(COMMA) {
             return Err(RuntimeError::from(ParseRuntimeError(
