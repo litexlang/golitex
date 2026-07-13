@@ -58,11 +58,10 @@ trust:
             exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}
 
 claim:
-    prove:
-        forall S power_set(N):
-            not $is_finite_set(S)
-            =>:
-                exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
+    ? forall S power_set(N):
+        not $is_finite_set(S)
+        =>:
+            exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
     obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence_constructed_by_min(S, P)}
     $least_prefix_sequence(S, P)
     witness exist P0 fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P0)} from P:
@@ -100,11 +99,10 @@ trust:
             exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}
 
 claim:
-    prove:
-        forall S power_set(N):
-            not $is_finite_set(S)
-            =>:
-                exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
+    ? forall S power_set(N):
+        not $is_finite_set(S)
+        =>:
+            exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
     obtain P from exist P fn(n N_pos) power_set(N) st {$least_prefix_sequence(S, P)}
     obtain a from exist a fn(n N_pos) N st {$enumeration_extracted_from_prefixes(S, P, a)}
     $least_order_enumeration(S, a)
@@ -168,11 +166,10 @@ trust:
 have fn succ_N(n N) N_pos = n + 1
 
 claim:
-    prove:
-        forall S power_set(N):
-            not $is_finite_set(S)
-            =>:
-                $countably_infinite_N_subset(S)
+    ? forall S power_set(N):
+        not $is_finite_set(S)
+        =>:
+            $countably_infinite_N_subset(S)
     obtain a from exist a fn(n N_pos) N st {$least_order_enumeration(S, a)}
     have fn enum_to_subset(n N_pos) S = a(n)
     forall n N_pos:
@@ -192,8 +189,7 @@ claim:
 
     have fn subset_to_N_pos(x S) N_pos = succ_N(x)
     claim:
-        prove:
-            $injective_fn(S, N_pos, subset_to_N_pos)
+        ? $injective_fn(S, N_pos, subset_to_N_pos)
         forall x1, x2 S:
             subset_to_N_pos(x1) = subset_to_N_pos(x2)
             =>:

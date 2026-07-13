@@ -2,6 +2,12 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        if tb.current_token_is_equal_to("prove") && tb.token_at_add_index(1) == COLON {
+            return Err(parse_stmt_error(
+                tb,
+                "`prove:` was removed; use `? <fact>` inside a claim/thm/by/strategy statement",
+            ));
+        }
         match tb.current()? {
             ALIAS => self.parse_alias_stmt(tb),
             PROP => self.parse_def_prop_stmt(tb),
@@ -47,12 +53,6 @@ impl Runtime {
             SCRATCH => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "top-level `scratch:` has been replaced by `sketch:`".to_string(),
-                    tb.line_file.clone(),
-                ),
-            ))),
-            PROVE => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "top-level `prove:` is not supported; use `sketch:` for a local checked block, or use `prove:` inside claim/thm/by/strategy statements".to_string(),
                     tb.line_file.clone(),
                 ),
             ))),

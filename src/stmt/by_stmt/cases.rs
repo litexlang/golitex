@@ -31,6 +31,11 @@ impl ByCasesStmt {
 
 impl fmt::Display for ByCasesStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let question_goals = self
+            .then_facts
+            .iter()
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact))
+            .collect::<Vec<String>>();
         let case_and_proof_of_each_case = self
             .cases
             .iter()
@@ -61,13 +66,11 @@ impl fmt::Display for ByCasesStmt {
 
         write!(
             f,
-            "{} {}{}\n{}{}\n{}\n{}",
+            "{} {}{}\n{}\n{}",
             BY,
             CASES,
             COLON,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1),
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
             case_and_proof_of_each_case.join("\n")
         )
     }

@@ -1,7 +1,6 @@
 claim:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
-        trust x = 1
+    trust x = 1

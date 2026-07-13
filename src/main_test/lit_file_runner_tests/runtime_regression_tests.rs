@@ -133,28 +133,25 @@ fn cup_membership_has_builtin_intro_and_elim() {
     run_with_large_stack("cup_membership_has_builtin_intro_and_elim", || {
         let source_code = r#"
 thm tmp_cup_intro_from_member:
-    prove:
-        forall x set, F set, A set:
-            A $in F
-            x $in A
-            =>:
-                x $in cup(F)
+    ? forall x set, F set, A set:
+        A $in F
+        x $in A
+        =>:
+            x $in cup(F)
     x $in cup(F)
 
 thm tmp_cup_intro_from_exist:
-    prove:
-        forall x set, F set:
-            exist A F st {x $in A}
-            =>:
-                x $in cup(F)
+    ? forall x set, F set:
+        exist A F st {x $in A}
+        =>:
+            x $in cup(F)
     x $in cup(F)
 
 thm tmp_cup_elim_to_exist:
-    prove:
-        forall x set, F set:
-            x $in cup(F)
-            =>:
-                exist A F st {x $in A}
+    ? forall x set, F set:
+        x $in cup(F)
+        =>:
+            exist A F st {x $in A}
     exist A F st {x $in A}
 "#;
 
@@ -955,11 +952,10 @@ fn try_stmt_commit_reactivates_parent_stopped_strategy() {
 abstract_prop target_strategy_prop(x)
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -1180,28 +1176,32 @@ scratch:
 }
 
 #[test]
-fn top_level_prove_is_rejected_with_sketch_hint() {
-    let source_code = r#"
+fn removed_prove_goal_is_rejected_with_question_hint() {
+    run_with_large_stack("removed_prove_goal_is_rejected_with_question_hint", || {
+        let source_code = r#"
 prove:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("top_level_prove_is_rejected_with_sketch_hint");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "removed_prove_goal_is_rejected_with_question_hint",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "top-level prove should be rejected:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("top-level `prove:` is not supported; use `sketch:`"),
-        "top-level prove should explain the supported spelling:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "removed prove syntax should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("`prove:` was removed; use `? <fact>`"),
+            "removed prove syntax should explain its replacement:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -1224,9 +1224,8 @@ fn removed_surface_syntax_is_rejected_with_migration_hints() {
                     "old_have_fn_as_set",
                     r#"
 have fn f as set:
-    prove:
-        forall x R:
-            exist! y R st {y = x}
+    ? forall x R:
+        exist! y R st {y = x}
 "#,
                     "`have fn <name> as set:` has been removed",
                 ),
@@ -1287,68 +1286,60 @@ have fn f as set:
 }
 
 #[test]
-fn internal_claim_prove_block_remains_supported() {
-    run_with_large_stack("internal_claim_prove_block_remains_supported", || {
+fn internal_claim_question_goal_remains_supported() {
+    run_with_large_stack("internal_claim_question_goal_remains_supported", || {
         let source_code = r#"
 claim:
-    prove:
-        1 = 1
+    ? 1 = 1
     1 = 1
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
         runtime
-            .new_file_path_new_env_new_name_scope("internal_claim_prove_block_remains_supported");
+            .new_file_path_new_env_new_name_scope("internal_claim_question_goal_remains_supported");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             run_succeeded,
-            "internal claim prove block should still run:\n{}",
+            "internal claim question goal should still run:\n{}",
             run_output
         );
     });
 }
 
 #[test]
-fn internal_claim_prove_block_allows_inline_proof_body() {
-    run_with_large_stack(
-        "internal_claim_prove_block_allows_inline_proof_body",
-        || {
-            let source_code = r#"
+fn internal_claim_question_goal_allows_proof_body() {
+    run_with_large_stack("internal_claim_question_goal_allows_proof_body", || {
+        let source_code = r#"
 claim:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
-        trust x = 1
+    trust x = 1
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
-            runtime.new_file_path_new_env_new_name_scope(
-                "internal_claim_prove_block_allows_inline_proof_body",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("internal_claim_question_goal_allows_proof_body");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(
-                run_succeeded,
-                "claim prove block with inline proof body should still run:\n{}",
-                run_output
-            );
-        },
-    );
+        assert!(
+            run_succeeded,
+            "claim question goal with a proof body should still run:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
-fn question_goal_shorthand_parses_like_prove_goal_blocks() {
-    run_with_large_stack(
-        "question_goal_shorthand_parses_like_prove_goal_blocks",
-        || {
-            let source_code = r#"
+fn question_goal_is_the_only_goal_syntax() {
+    run_with_large_stack("question_goal_is_the_only_goal_syntax", || {
+        let source_code = r#"
 claim:
     ? 1 = 1
     1 = 1
@@ -1420,32 +1411,110 @@ trust forall m N:
 
 by induc n from 0:
     ? $qgoal_induc_p(n)
-    prove from n = 0:
+    ? from n = 0:
         $qgoal_induc_p(0)
-    prove induc:
+    ? induc:
         $qgoal_induc_p(n)
         $qgoal_induc_p(n + 1)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
-            runtime
-                .new_file_path_new_env_new_name_scope("question_goal_shorthand_parses_like_prove");
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("question_goal_is_the_only_goal_syntax");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(
-                run_succeeded,
-                "question goal shorthand fixture failed:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("prove:"),
-                "Display output should still canonicalize goal blocks to prove:\n{}",
-                run_output
-            );
+        assert!(
+            run_succeeded,
+            "question goal shorthand fixture failed:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("? 1 = 1"),
+            "Display output should canonicalize goal blocks to question syntax:\n{}",
+            run_output
+        );
+        assert!(
+            !run_output.contains("prove:"),
+            "Display output must not regenerate removed prove syntax:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn removed_prove_goal_forms_report_question_migration_hints() {
+    run_with_large_stack(
+        "removed_prove_goal_forms_report_question_migration_hints",
+        || {
+            for (name, source_code, expected) in [
+                (
+                    "claim",
+                    r#"
+claim:
+    prove:
+        1 = 1
+"#,
+                    "`prove` was removed; use `? <fact>`",
+                ),
+                (
+                    "induction_branch",
+                    r#"
+abstract_prop p(n)
+trust $p(0)
+trust forall n N:
+    $p(n)
+    =>:
+        $p(n + 1)
+
+by induc n from 0:
+    ? $p(n)
+    prove from n = 0:
+        $p(0)
+    prove induc:
+        $p(n)
+        $p(n + 1)
+"#,
+                    "`prove` was removed; use `? from ...:` and `? induc:` blocks",
+                ),
+            ] {
+                let mut runtime = Runtime::new_with_builtin_code();
+                runtime.new_file_path_new_env_new_name_scope(name);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    !run_succeeded,
+                    "removed prove form should fail:\n{run_output}"
+                );
+                assert!(
+                    run_output.contains(expected),
+                    "removed prove form should name its replacement:\n{run_output}"
+                );
+            }
         },
     );
+}
+
+#[test]
+fn prove_is_available_as_an_identifier() {
+    run_with_large_stack("prove_is_available_as_an_identifier", || {
+        let source_code = r#"
+prop prove(x R):
+    x = x
+
+$prove(1)
+"#;
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("prove_is_available_as_an_identifier");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "prove should be an ordinary identifier:\n{run_output}"
+        );
+    });
 }
 
 #[test]
@@ -1540,15 +1609,13 @@ fn fn_range_membership_infers_preimage_existence() {
 have f fn(x R) R
 
 claim:
-    prove:
-        forall y fn_range(f):
-            exist x R st {y = f(x)}
+    ? forall y fn_range(f):
+        exist x R st {y = f(x)}
     exist x R st {y = f(x)}
 
 claim:
-    prove:
-        forall y fn_range_on(f, R):
-            exist x R st {y = f(x)}
+    ? forall y fn_range_on(f, R):
+        exist x R st {y = f(x)}
     y $in fn_range_on(f, R)
     exist x R st {y = f(x)}
 
@@ -1560,9 +1627,8 @@ prop is_injective_fn(S, T set, f fn(x S) T):
 
 template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
     have fn inverse_function by exist!:
-        prove:
-            forall y fn_range_on(f, X):
-                exist! x X st {y = f(x)}
+        ? forall y fn_range_on(f, X):
+            exist! x X st {y = f(x)}
         y $in fn_range_on(f, X)
         exist x X st {y = f(x)}
         forall x1, x2 X:
@@ -1578,8 +1644,7 @@ template<X set, Y set, f fn(x X) Y: $is_injective_fn(X, Y, f)>:
 have fn id_R(x R) R = x
 
 claim:
-    prove:
-        $is_injective_fn(R, R, id_R)
+    ? $is_injective_fn(R, R, id_R)
     forall x1, x2 R:
         id_R(x1) = id_R(x2)
         =>:
@@ -1588,8 +1653,7 @@ claim:
             x1 = x2
 
 claim:
-    prove:
-        \inverse_function<R, R, id_R>(id_R(1)) = 1
+    ? \inverse_function<R, R, id_R>(id_R(1)) = 1
     1 = \inverse_function<R, R, id_R>(id_R(1))
     \inverse_function<R, R, id_R>(id_R(1)) = 1
 "#;
@@ -1840,9 +1904,8 @@ fn typed_fn_return_standard_subset_allows_floor_bounds_for_reals() {
 import Int
 
 claim:
-    prove:
-        forall x R:
-            exist n Z st {n <= x and x < n + 1}
+    ? forall x R:
+        exist n Z st {n <= x and x < n + 1}
     Int::floor(x) $in R
     by thm Int::floor_bounds(x)
     Int::floor(x) <= x < Int::floor(x) + 1
@@ -2339,17 +2402,15 @@ prop image_like(S, T set, f fn(x S) T, A, B set):
         exist a A st {y = f(a)}
 
 claim:
-    prove:
-        forall S, T set, f fn(x S) T, A, B set, x S:
-            A $subset S
-            $image_like(S, T, f, A, B)
-            f(x) $in B
-            =>:
-                x = x
+    ? forall S, T set, f fn(x S) T, A, B set, x S:
+        A $subset S
+        $image_like(S, T, f, A, B)
+        f(x) $in B
+        =>:
+            x = x
     claim:
-        prove:
-            forall a A:
-                a $in S
+        ? forall a A:
+            a $in S
         a $in S
     obtain a from exist a A st {f(x) = f(a)}
     a $in S
@@ -2723,46 +2784,42 @@ fn finite_sum_order_uses_pointwise_bounds() {
     run_with_large_stack("finite_sum_order_uses_pointwise_bounds_large_stack", || {
         let source_code = r#"
 thm finite_series_comparison_test:
-    prove:
-        forall a, b fn(i Z) R, m, n Z:
-            m <= n
-            forall i Z:
-                m <= i <= n
-                =>:
-                    a(i) <= b(i)
+    ? forall a, b fn(i Z) R, m, n Z:
+        m <= n
+        forall i Z:
+            m <= i <= n
             =>:
-                sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
+                a(i) <= b(i)
+        =>:
+            sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
     sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
 
 thm finite_series_comparison_n_pos_index_test:
-    prove:
-        forall a, b fn(i N_pos) R, m, n N_pos:
-            m <= n
-            forall i N_pos:
-                m <= i <= n
-                =>:
-                    a(i) <= b(i)
+    ? forall a, b fn(i N_pos) R, m, n N_pos:
+        m <= n
+        forall i N_pos:
+            m <= i <= n
             =>:
-                sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
+                a(i) <= b(i)
+        =>:
+            sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
     sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
 
 thm finite_series_triangle_test:
-    prove:
-        forall a fn(i Z) R, m, n Z:
-            m <= n
-            =>:
-                abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
+    ? forall a fn(i Z) R, m, n Z:
+        m <= n
+        =>:
+            abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
     abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
 
 thm finite_series_scalar_mul_test:
-    prove:
-        forall a fn(i Z) R, c R, m, n Z:
-            m <= n
-            =>:
-                sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
+    ? forall a fn(i Z) R, c R, m, n Z:
+        m <= n
+        =>:
+            sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 
     sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 "#;
@@ -2791,9 +2848,8 @@ fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
                     "sum_symbolic_empty_range",
                     r#"
 thm bad_symbolic_empty_sum:
-    prove:
-        forall a fn(i Z) R, m Z:
-            sum(m, m - 1, fn(i Z) R {a(i)}) = 0
+    ? forall a fn(i Z) R, m Z:
+        sum(m, m - 1, fn(i Z) R {a(i)}) = 0
 
     trust:
         sum(m, m - 1, fn(i Z) R {a(i)}) = 0
@@ -2804,9 +2860,8 @@ thm bad_symbolic_empty_sum:
                     "product_symbolic_empty_range",
                     r#"
 thm bad_symbolic_empty_product:
-    prove:
-        forall a fn(i Z) R, m Z:
-            product(m, m - 1, fn(i Z) R {a(i)}) = 1
+    ? forall a fn(i Z) R, m Z:
+        product(m, m - 1, fn(i Z) R {a(i)}) = 1
 
     trust:
         product(m, m - 1, fn(i Z) R {a(i)}) = 1
@@ -2885,55 +2940,48 @@ sketch:
     finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 
 thm finite_set_sum_substitution_tmp:
-    prove:
-        forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
-            forall x X:
-                exist! y Y st {g(y) = x}
-            =>:
-                finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    ? forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
+        forall x X:
+            exist! y Y st {g(y) = x}
+        =>:
+            finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_matches_series_tmp:
-    prove:
-        forall a fn(i Z) R, m, n Z:
-            m <= n
-            =>:
-                sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+    ? forall a fn(i Z) R, m, n Z:
+        m <= n
+        =>:
+            sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
     sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
 
 thm finite_set_sum_disjoint_union_tmp:
-    prove:
-        forall X, Y finite_set, f fn(z union(X, Y)) R:
-            intersect(X, Y) = {}
-            =>:
-                finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    ? forall X, Y finite_set, f fn(z union(X, Y)) R:
+        intersect(X, Y) = {}
+        =>:
+            finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
     finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 
 thm finite_set_sum_add_tmp:
-    prove:
-        forall X finite_set, f, g fn(x X) R:
-            finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    ? forall X finite_set, f, g fn(x X) R:
+        finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
     finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
 
 thm finite_set_sum_scalar_mul_tmp:
-    prove:
-        forall X finite_set, f fn(x X) R, c R:
-            finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    ? forall X finite_set, f fn(x X) R, c R:
+        finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
     finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
 
 thm finite_set_sum_monotone_tmp:
-    prove:
-        forall X finite_set, f, g fn(x X) R:
-            forall x X:
-                f(x) <= g(x)
-            =>:
-                finite_set_sum(X, f) <= finite_set_sum(X, g)
+    ? forall X finite_set, f, g fn(x X) R:
+        forall x X:
+            f(x) <= g(x)
+        =>:
+            finite_set_sum(X, f) <= finite_set_sum(X, g)
     finite_set_sum(X, f) <= finite_set_sum(X, g)
 
 thm finite_set_sum_triangle_tmp:
-    prove:
-        forall X finite_set, f fn(x X) R:
-            abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
+    ? forall X finite_set, f fn(x X) R:
+        abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
     abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 "#;
 
@@ -2956,21 +3004,18 @@ fn finite_set_sum_cartesian_product_and_fubini() {
     run_with_large_stack("finite_set_sum_cartesian_product_and_fubini", || {
         let source_code = r#"
 thm finite_double_sum_over_cartesian_product_tmp:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_double_sum_over_cartesian_product_reversed_tmp:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
     finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_tmp:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 "#;
 
@@ -3002,23 +3047,21 @@ template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X
     have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
-    prove:
-        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-            count(X) >= 1
-            $is_bijection_from_index_range_to_finite_set(X, g)
-            $is_bijection_from_index_range_to_finite_set(X, h)
-            =>:
-                sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+        count(X) >= 1
+        $is_bijection_from_index_range_to_finite_set(X, g)
+        $is_bijection_from_index_range_to_finite_set(X, h)
+        =>:
+            sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
     sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
 
 thm finite_set_sum_template_enumeration_well_defined:
-    prove:
-        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-            count(X) >= 1
-            $is_bijection_from_index_range_to_finite_set(X, g)
-            $is_bijection_from_index_range_to_finite_set(X, h)
-            =>:
-                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+        count(X) >= 1
+        $is_bijection_from_index_range_to_finite_set(X, g)
+        $is_bijection_from_index_range_to_finite_set(X, h)
+        =>:
+            \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 "#;
 
@@ -3380,13 +3423,12 @@ trust forall f, g fn(x R) R:
         $p(fn(x R) R {f(x) + g(x)})
 
 claim:
-    prove:
-        forall a, b, c fn(x R) R:
-            $p(a)
-            $p(b)
-            $p(c)
-            =>:
-                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+    ? forall a, b, c fn(x R) R:
+        $p(a)
+        $p(b)
+        $p(c)
+        =>:
+            $p(fn(x R) R {a(x) + (b(x) + c(x))})
     $p(fn(x R) R {b(x) + c(x)})
 "#;
 
@@ -4694,8 +4736,8 @@ sketch:
 }
 
 #[test]
-fn have_fn_by_exist_accepts_prove_block_target() {
-    run_with_large_stack("have_fn_by_exist_accepts_prove_block_target", || {
+fn have_fn_by_exist_accepts_question_goal_target() {
+    run_with_large_stack("have_fn_by_exist_accepts_question_goal_target", || {
         let source_code = r#"
 abstract_prop F(x, y)
 have A set
@@ -4704,16 +4746,16 @@ trust forall x A:
     exist! y B st {$F(x, y)}
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {$F(x, y)}
+    ? forall x A:
+        exist! y B st {$F(x, y)}
 
 forall x A:
     $F(x, f(x))
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_prove_block_target");
+        runtime
+            .new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_question_goal_target");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -4735,9 +4777,8 @@ have A set
 have B set
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {$F(x, y)}
+    ? forall x A:
+        exist! y B st {$F(x, y)}
     trust exist! y B st {$F(x, y)}
 
 forall x A:
@@ -4769,9 +4810,8 @@ have A set
 have B set
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {$F(x, y)}
+    ? forall x A:
+        exist! y B st {$F(x, y)}
     trust exist! y B st {$F(x, y)}
 
 forall x A, y B:
@@ -4808,9 +4848,8 @@ have A set
 have B set
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {$F(x, y), $G(x, y)}
+    ? forall x A:
+        exist! y B st {$F(x, y), $G(x, y)}
     trust exist! y B st {$F(x, y), $G(x, y)}
 
 forall x A, y B:
@@ -4869,7 +4908,7 @@ forall x A:
             run_output
         );
         assert!(
-            run_output.contains("expects a `prove:` or `?` goal block"),
+            run_output.contains("expects a `? forall ...` goal block"),
             "legacy direct forall rejection should point to the new goal block shape:\n{}",
             run_output
         );
@@ -4877,19 +4916,18 @@ forall x A:
 }
 
 #[test]
-fn have_fn_by_exist_prove_block_requires_forall_target() {
+fn have_fn_by_exist_question_goal_requires_forall_target() {
     run_with_large_stack(
-        "have_fn_by_exist_prove_block_requires_forall_target",
+        "have_fn_by_exist_question_goal_requires_forall_target",
         || {
             let source_code = r#"
 have fn f by exist!:
-    prove:
-        1 = 1
+    ? 1 = 1
 "#;
 
             let mut runtime = Runtime::new_with_builtin_code();
             runtime.new_file_path_new_env_new_name_scope(
-                "have_fn_by_exist_prove_block_requires_forall_target",
+                "have_fn_by_exist_question_goal_requires_forall_target",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -4977,8 +5015,7 @@ thm summary_theorem:
         y = y
     y = y
 claim:
-    prove:
-        1 = 1
+    ? 1 = 1
     1 = 1
 witness exist z R st {z = 1} from 1:
     1 = 1
@@ -5046,8 +5083,7 @@ sketch:
     1 = 1
 
 claim:
-    prove:
-        1 = 1
+    ? 1 = 1
     1 = 1
 
 by cases 1 = 1:
@@ -5134,9 +5170,8 @@ fn normal_theorem_output_exposes_structured_proof_route() {
         || {
             let source_code = r#"
 thm theorem_trace_self_eq:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 "#;
 
@@ -5175,8 +5210,7 @@ sketch:
     1 = 1
 
 claim:
-    prove:
-        1 = 1
+    ? 1 = 1
     1 = 1
 
 by cases 1 = 1:
@@ -5224,13 +5258,12 @@ trust forall m Z:
     =>:
         $p(m + 1)
 by induc n from 0:
-    prove:
-        $p(n)
+    ? $p(n)
 
-    prove from n = 0:
+    ? from n = 0:
         $p(0)
 
-    prove induc:
+    ? induc:
         $p(n + 1)
 "#;
 
@@ -5428,14 +5461,28 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
 #[test]
 fn zh_forall_output_uses_short_conclusions_and_compact_citation() {
     let source_code = r#"
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-forall:
-    forall x human:
-        $mortal(x)
-    =>:
-        $mortal(Socrates)
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
+
+claim:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
+
+have d Z
+have x Z = 8 * d
+witness exist k Z st {x = 8 * k} from d:
+    x = 8 * d
+$can_be_divided_by_8(x)
+$can_be_divided_by_2(x)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -5455,8 +5502,7 @@ forall:
     );
     assert!(run_output.contains("\"结论\": ["));
     assert!(run_output.contains("\"类型\": \"引用 forall 事实\""));
-    assert!(run_output.contains("\"被引用语句\": \"forall x human:\\n    $mortal(x)\""));
-    assert!(run_output.contains("\"原因\": \"forall 前提\""));
+    assert!(run_output.contains("\"被引用语句\": \"forall x Z:\\n    $can_be_divided_by_8(x)\\n    =>:\\n        $can_be_divided_by_2(x)\""));
     assert!(run_output.contains("\"验证依据\""));
     assert!(!run_output.contains("\"带验证的结论\""));
     assert!(!run_output.contains("\"原因\": \"推导事实\""));
@@ -5924,30 +5970,32 @@ axiom bad_axiom:
 }
 
 #[test]
-fn axiom_rejects_prove_goal_block() {
-    let source_code = r#"
+fn axiom_rejects_removed_prove_goal_block() {
+    run_with_large_stack("axiom_rejects_removed_prove_goal_block", || {
+        let source_code = r#"
 axiom bad_axiom:
     prove:
         forall:
             1 = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("axiom_rejects_prove_goal_block");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("axiom_rejects_removed_prove_goal_block");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "axiom should reject `prove:` goal blocks:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("expected `? forall ...` goal block"),
-        "axiom prove-block rejection should explain the expected shape:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "axiom should reject removed prove goal blocks:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("`prove` was removed; use `? forall ...`"),
+            "axiom prove-block rejection should explain the replacement:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -6236,11 +6284,10 @@ $def_p(1)
 prop sym_p(x set, y set):
     x = y
 by symmetric_prop:
-    prove:
-        forall x, y set:
-            $sym_p(x, y)
-            =>:
-                $sym_p(y, x)
+    ? forall x, y set:
+        $sym_p(x, y)
+        =>:
+            $sym_p(y, x)
     x = y
     y = x
 have A set
@@ -6359,8 +6406,7 @@ fn detail_output_moves_store_facts_into_environment_effects_impl() {
     let source_code = r#"
 1 = 1
 claim:
-    prove:
-        2 = 2
+    ? 2 = 2
     2 = 2
 trust:
     3 = 3
@@ -6623,11 +6669,10 @@ fn claim_forall_output_explains_parameters_proof_steps_and_conclusions() {
         || {
             let source_code = r#"
 claim:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
     x = x
 "#;
 
@@ -6715,15 +6760,13 @@ fn output_contract_covers_composite_facts_and_control_statements() {
 1 = 1 = 1
 
 claim:
-    prove:
-        forall:
-            1 = 1
+    ? forall:
+        1 = 1
     1 = 1
 
 thm one_eq_one:
-    prove:
-        forall:
-            1 = 1
+    ? forall:
+        1 = 1
     1 = 1
 
 by thm one_eq_one()
@@ -6820,9 +6863,8 @@ fn by_cases_normal_output_lists_readable_internal_results() {
         || {
             let source_code = r#"
 by cases:
-    prove:
-        1 = 1
-        2 = 2
+    ? 1 = 1
+    ? 2 = 2
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -6935,35 +6977,30 @@ fn by_iteration_range_extension_and_theorem_outputs_explain_processes() {
         || {
             let source_code = r#"
 thm local_one_eq_one:
-    prove:
-        forall:
-            1 = 1
+    ? forall:
+        1 = 1
     1 = 1
 
 by thm local_one_eq_one()
 
 by enumerate finite_set:
-    prove:
-        forall a {1, 2}:
-            a < 3
+    ? forall a {1, 2}:
+        a < 3
     do_nothing
 
 by for:
-    prove:
-        forall n range(0, 3):
-            n < 3
+    ? forall n range(0, 3):
+        n < 3
     do_nothing
 
 claim:
-    prove:
-        forall x range(1, 3):
-            x = 1 or x = 2
+    ? forall x range(1, 3):
+        x = 1 or x = 2
     by enumerate range: x $in range(1, 3)
 
 claim:
-    prove:
-        forall y closed_range(1, 2):
-            y = 1 or y = 2
+    ? forall y closed_range(1, 2):
+        y = 1 or y = 2
     by closed_range as cases: y $in 1...2
 
 by extension {1} = {1}
@@ -7016,30 +7053,27 @@ trust forall m Z:
     =>:
         $local_induc_p(m + 1)
 by induc n from 0:
-    prove:
-        $local_induc_p(n)
+    ? $local_induc_p(n)
 
-    prove from n = 0:
+    ? from n = 0:
         $local_induc_p(0)
 
-    prove induc:
+    ? induc:
         $local_induc_p(n + 1)
 
 prop local_same_obj(x set, y set):
     x = y
 
 by reflexive_prop:
-    prove:
-        forall x set:
-            $local_same_obj(x, x)
+    ? forall x set:
+        $local_same_obj(x, x)
     x = x
 
 by symmetric_prop:
-    prove:
-        forall x, y set:
-            $local_same_obj(x, y)
-            =>:
-                $local_same_obj(y, x)
+    ? forall x, y set:
+        $local_same_obj(x, y)
+        =>:
+            $local_same_obj(y, x)
     x = y
     y = x
 
@@ -7365,9 +7399,8 @@ forall x R:
 fn proof_block_failure_has_structured_then_clause_fields() {
     let source_code = r#"
 claim:
-    prove:
-        forall:
-            2 = 3
+    ? forall:
+        2 = 3
     1 = 1
 "#;
 
@@ -7399,9 +7432,8 @@ claim:
 fn detail_proof_block_failure_keeps_then_clause_position_metadata() {
     let source_code = r#"
 claim:
-    prove:
-        forall:
-            2 = 3
+    ? forall:
+        2 = 3
     1 = 1
 "#;
 
@@ -7631,11 +7663,10 @@ $one_prop(1)
 fn alias_thm_copies_existing_theorem_definition() {
     let source_code = r#"
 thm one_eq_one:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
 alias thm same_one <=> one_eq_one
 1 = 1
 by thm same_one(1)
@@ -7716,9 +7747,8 @@ fn unicode_alias_thm_name_works() {
     run_with_large_stack("unicode_alias_thm_name_works", || {
         let source_code = r#"
 thm self_eq_en:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 alias thm 自反等式 <=> self_eq_en
 by thm 自反等式(1)
@@ -7782,11 +7812,10 @@ fn thm_definition_stores_forall_fact_for_known_forall_use() {
 abstract_prop target_thm_prop(x)
 
 thm use_target_thm:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_thm_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_thm_prop(x)
 
     trust $target_thm_prop(x)
 
@@ -7821,11 +7850,10 @@ prop target_thm_prop(x R):
     x = 1
 
 thm use_target_thm:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_thm_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_thm_prop(x)
 
     x = 1
 
@@ -7854,11 +7882,10 @@ fn by_thm_releases_instantiated_then_facts() {
 abstract_prop target_thm_prop(x)
 
 thm use_target_thm:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_thm_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_thm_prop(x)
 
     trust $target_thm_prop(x)
 
@@ -7887,11 +7914,10 @@ prop target_strategy_prop(x R):
     x = 1
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -7929,11 +7955,10 @@ prop target_strategy_prop(x R):
     x = 1
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -7944,11 +7969,10 @@ strategy use_target_strategy:
 stop strategy use_target_strategy
 
 claim:
-    prove:
-        forall z R:
-            z = 1
-            =>:
-                $target_strategy_prop(z)
+    ? forall z R:
+        z = 1
+        =>:
+            $target_strategy_prop(z)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -7973,11 +7997,10 @@ prop target_strategy_prop(x R):
     x = 1
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
 use strategy use_target_strategy
 stop strategy use_target_strategy
@@ -8018,11 +8041,10 @@ prop target_strategy_prop(x R):
     x = 1
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
 by strategy use_target_strategy
 "#;
@@ -8053,11 +8075,10 @@ fn strategy_positive_and_negative_atomic_keys_do_not_collide() {
 abstract_prop target_strategy_prop(x)
 
 strategy use_positive_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -8066,11 +8087,10 @@ strategy use_positive_strategy:
                 $target_strategy_prop(y)
 
 strategy use_negative_strategy:
-    prove:
-        forall x R:
-            x != 1
-            =>:
-                not $target_strategy_prop(x)
+    ? forall x R:
+        x != 1
+        =>:
+            not $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -8126,11 +8146,10 @@ fn use_strategy_verifies_matching_atomic_fact_and_stop_leaves_known_forall_avail
 abstract_prop target_strategy_prop(x)
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -8183,11 +8202,10 @@ fn use_strategy_after_stop_in_same_env_removes_stop() {
 abstract_prop target_strategy_prop(x)
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -8228,11 +8246,10 @@ fn child_env_use_strategy_overrides_parent_stop_without_removing_it() {
 abstract_prop target_strategy_prop(x)
 
 strategy use_target_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $target_strategy_prop(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $target_strategy_prop(x)
 
     trust:
         forall y R:
@@ -8243,8 +8260,7 @@ strategy use_target_strategy:
 use strategy use_target_strategy
 stop strategy use_target_strategy
 claim:
-    prove:
-        $target_strategy_prop(1)
+    ? $target_strategy_prop(1)
     use strategy use_target_strategy
 "#;
 
@@ -8280,12 +8296,11 @@ prop p(x R):
     x = 1
 
 strategy bad_strategy:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
+            $p(x)
             x = 1
-            =>:
-                $p(x)
-                x = 1
 "#,
             "strategy: forall then-clause must contain exactly one fact",
         ),
@@ -8293,11 +8308,10 @@ strategy bad_strategy:
             "non atomic then fact",
             r#"
 strategy bad_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x = 1 and x = 1
+    ? forall x R:
+        x = 1
+        =>:
+            x = 1 and x = 1
 "#,
             "strategy: forall then-clause fact must be atomic",
         ),
@@ -8333,11 +8347,10 @@ prop p(x R):
     x = 1
 
 strategy bad_strategy:
-    prove:
-        forall x R:
-            x = 1 and x = 1
-            =>:
-                $p(x)
+    ? forall x R:
+        x = 1 and x = 1
+        =>:
+            $p(x)
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();
@@ -8362,11 +8375,10 @@ strategy bad_strategy:
 fn strategy_rejects_equal_then_fact() {
     let source_code = r#"
 strategy bad_strategy:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x = x
+    ? forall x R:
+        x = 1
+        =>:
+            x = x
 "#;
 
     let mut runtime = Runtime::new_with_builtin_code();

@@ -29,7 +29,7 @@ prop bounded_below_seq(a seq(R)):
     exist M R st {$is_seq_lower_bound(a, M)}
 
 trust:
-    # trust: prove from the real least-upper-bound interface by
+    # trust: derive this from the real least-upper-bound interface by
     # taking the supremum of the sequence range.
     forall a seq(R):
         $increasing_seq(a)
@@ -46,19 +46,17 @@ trust:
             $Real::convergent_seq(a)
 
 thm increasing_bounded_above_seq_converges:
-    prove:
-        forall a seq(R):
-            $increasing_seq(a)
-            $bounded_above_seq(a)
-            =>:
-                $Real::convergent_seq(a)
+    ? forall a seq(R):
+        $increasing_seq(a)
+        $bounded_above_seq(a)
+        =>:
+            $Real::convergent_seq(a)
     $Real::convergent_seq(a)
 
 thm decreasing_bounded_below_seq_converges:
-    prove:
-        forall a seq(R):
-            $decreasing_seq(a)
-            $bounded_below_seq(a)
-            =>:
-                $Real::convergent_seq(a)
+    ? forall a seq(R):
+        $decreasing_seq(a)
+        $bounded_below_seq(a)
+        =>:
+            $Real::convergent_seq(a)
     $Real::convergent_seq(a)

@@ -65,15 +65,13 @@ impl fmt::Display for DefStrategyStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}\n{}{}\n{}",
+            "{} {}{}\n{}",
             STRATEGY,
             vec_to_string_with_sep(&self.names, ", ".to_string()),
             COLON,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &self.forall_fact.to_string(),
-                2
+                &format!("{} {}", QUESTION_GOAL, self.forall_fact),
+                1
             )
         )?;
         if !self.prove_process.is_empty() {

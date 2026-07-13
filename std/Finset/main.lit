@@ -14,10 +14,9 @@ import Fn
 # now this module exposes it as the trusted finite-sum interface used by
 # Analysis I Chapter 7.
 thm finite_set_sum_permutation_invariance:
-    prove:
-        forall S finite_set, g fn(x S) S, f fn(x S) R:
-            $Fn::bijective_fn(S, S, g)
-            =>:
-                finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)
+    ? forall S finite_set, g fn(x S) S, f fn(x S) R:
+        $Fn::bijective_fn(S, S, g)
+        =>:
+            finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)
     trust finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)
     finite_set_sum(S, fn(x S) R {f(g(x))}) = finite_set_sum(S, f)

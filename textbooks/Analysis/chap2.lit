@@ -133,10 +133,10 @@ sketch:
         by induc n from 0:
             ? $induction_demo(n)
 
-            prove from n = 0:
+            ? from n = 0:
                 $induction_demo(0)
 
-            prove induc:
+            ? induc:
                 $induction_demo(n + 1)
 
 sketch:
@@ -474,10 +474,10 @@ sketch:
         by strong_induc n from 0:
             ? $strong_induction_demo(n)
 
-            prove from n = 0:
+            ? from n = 0:
                 $strong_induction_demo(0)
 
-            prove strong_induc:
+            ? strong_induc:
                 forall y N:
                     y <= n
                     =>:
@@ -607,12 +607,12 @@ claim:
     by induc n from 0:
         ? exist m, r N st {$is_euclidean_division(n, q, m, r)}
 
-        prove from n = 0:
+        ? from n = 0:
             witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0:
                 0 = 0 * q + 0
                 $is_euclidean_division(0, q, 0, 0)
 
-        prove induc:
+        ? induc:
             obtain m, r from exist m, r N st {$is_euclidean_division(n, q, m, r)}
             r < q
             n = m * q + r

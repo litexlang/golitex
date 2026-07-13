@@ -55,11 +55,10 @@ C::norm(z) = 5
 count({1, 2, 3}) = 3
 
 claim:
-    prove:
-        forall n N_pos:
+    ? forall n N_pos:
+        count(Nat::divisors(2 * n)) = 28
+        =>:
             count(Nat::divisors(2 * n)) = 28
-            =>:
-                count(Nat::divisors(2 * n)) = 28
     count(Nat::divisors(2 * n)) = 28
 
 by thm ZMod::value_ZMod(5)

@@ -2878,8 +2878,7 @@ thm inverse_function_limit_point_transfer:
         claim:
             ? x != x0
             by contra:
-                prove:
-                    x != x0
+                ? x != x0
                 x = x0
                 x0 $in {x0}
                 x $in {x0}

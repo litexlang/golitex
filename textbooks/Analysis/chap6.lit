@@ -399,13 +399,13 @@ claim:
         ? (-1)^n <= 1
         ? -1 <= (-1)^n
 
-        prove from n = 1:
+        ? from n = 1:
             (-1)^1 = -1
             -1 <= 1
             (-1)^1 <= 1
             -1 <= (-1)^1
 
-        prove induc:
+        ? induc:
             (-1)^(n + 1) = (-1)^n * (-1)
             (-1)^n <= 1
             -1 <= (-1)^n
@@ -520,7 +520,7 @@ claim:
     by induc n from 1:
         ? $is_finite_prefix_bounded(a, n, prefix_bound(a, n))
 
-        prove from n = 1:
+        ? from n = 1:
             prefix_bound(a, 1) = abs(a(1))
             abs(a(1)) >= 0
             prefix_bound(a, 1) >= 0
@@ -533,7 +533,7 @@ claim:
                     abs(a(i)) <= prefix_bound(a, 1)
             $is_finite_prefix_bounded(a, 1, prefix_bound(a, 1))
 
-        prove induc:
+        ? induc:
             n + 1 > 1
             prefix_bound(a, n + 1) = max(prefix_bound(a, n + 1 - 1), abs(a(n + 1)))
             n + 1 - 1 = n
@@ -1960,12 +1960,12 @@ thm increasing_seq_le_add:
             a(n) <= a(n + k)
     by induc k from 0:
         ? a(n) <= a(n + k)
-        prove from k = 0:
+        ? from k = 0:
             n + 0 = n
             a(n + 0) = a(n)
             a(n) <= a(n)
             a(n) <= a(n + 0)
-        prove induc:
+        ? induc:
             a(n) <= a(n + k)
             n + k $in N_pos
             a(n + k) <= a(n + k + 1)
@@ -4156,11 +4156,11 @@ thm positive_power_gt_one:
             u^n > 1
     by induc n from 1:
         ? u^n > 1
-        prove from n = 1:
+        ? from n = 1:
             u^1 = u
             u > 1
             u^1 > 1
-        prove induc:
+        ? induc:
             u^n > 1
             u^n > 0
             u > 1
@@ -4616,10 +4616,10 @@ thm subsequence_index_strict_mono_add:
             phi(i) < phi(i + h)
     by induc h from 1:
         ? phi(i) < phi(i + h)
-        prove from h = 1:
+        ? from h = 1:
             i + 1 $in N_pos
             phi(i) < phi(i + 1)
-        prove induc:
+        ? induc:
             phi(i) < phi(i + h)
             i + h $in N_pos
             phi(i + h) < phi(i + h + 1)
@@ -4691,10 +4691,10 @@ thm subsequence_index_at_least_identity:
             phi(k) >= k
     by induc k from 1:
         ? phi(k) >= k
-        prove from k = 1:
+        ? from k = 1:
             phi(1) $in N_pos
             phi(1) >= 1
-        prove induc:
+        ? induc:
             phi(k) >= k
             phi(k) < phi(k + 1)
             k + 1 <= phi(k) + 1 <= phi(k + 1)

@@ -14,71 +14,63 @@ forall a, b R, f set:
         \integral<a, b, f> = \integral<a, b, f>
 
 strategy sum_of_integrable_fn_integrable:
-    prove:
-        forall a, b R, f, g fn(x R) R:
-            $integrable(a, b, f)
-            $integrable(a, b, g)
-            =>:
-                $integrable(a, b, fn(x R) R {f(x) + g(x)})
+    ? forall a, b R, f, g fn(x R) R:
+        $integrable(a, b, f)
+        $integrable(a, b, g)
+        =>:
+            $integrable(a, b, fn(x R) R {f(x) + g(x)})
     trust $integrable(a, b, fn(x R) R {f(x) + g(x)})
 
 strategy minus_of_integrable_fn_integrable:
-    prove:
-        forall a, b R, f, g fn(x R) R:
-            $integrable(a, b, f)
-            $integrable(a, b, g)
-            =>:
-                $integrable(a, b, fn(x R) R {f(x) - g(x)})
+    ? forall a, b R, f, g fn(x R) R:
+        $integrable(a, b, f)
+        $integrable(a, b, g)
+        =>:
+            $integrable(a, b, fn(x R) R {f(x) - g(x)})
     trust $integrable(a, b, fn(x R) R {f(x) - g(x)})
 
 strategy scalar_mul_of_integrable_fn_integrable:
-    prove:
-        forall a, b, c R, f fn(x R) R:
-            $integrable(a, b, f)
-            =>:
-                $integrable(a, b, fn(x R) R {c * f(x)})
+    ? forall a, b, c R, f fn(x R) R:
+        $integrable(a, b, f)
+        =>:
+            $integrable(a, b, fn(x R) R {c * f(x)})
     trust $integrable(a, b, fn(x R) R {c * f(x)})
 
 strategy constant_fn_integrable:
-    prove:
-        forall a, b, c R:
-            a <= b
-            =>:
-                $integrable(a, b, fn(x R) R {c})
+    ? forall a, b, c R:
+        a <= b
+        =>:
+            $integrable(a, b, fn(x R) R {c})
     trust $integrable(a, b, fn(x R) R {c})
 
 strategy identity_fn_integrable:
-    prove:
-        forall a, b R:
-            a <= b
-            =>:
-                $integrable(a, b, fn(x R) R {x})
+    ? forall a, b R:
+        a <= b
+        =>:
+            $integrable(a, b, fn(x R) R {x})
     trust $integrable(a, b, fn(x R) R {x})
 
 strategy square_fn_integrable:
-    prove:
-        forall a, b R:
-            a <= b
-            =>:
-                $integrable(a, b, fn(x R) R {x^2})
+    ? forall a, b R:
+        a <= b
+        =>:
+            $integrable(a, b, fn(x R) R {x^2})
     trust $integrable(a, b, fn(x R) R {x^2})
 
 strategy affine_two_x_plus_one_integrable:
-    prove:
-        forall a, b R:
-            a <= b
-            =>:
-                $integrable(a, b, fn(x R) R {2 * x + 1})
+    ? forall a, b R:
+        a <= b
+        =>:
+            $integrable(a, b, fn(x R) R {2 * x + 1})
     trust $integrable(a, b, fn(x R) R {2 * x + 1})
 
 strategy interval_integral_additive_strategy:
-    prove:
-        forall a, b, c R, f set, s1, s2 R:
-            a <= b
-            b <= c
-            $integrable(a, c, f)
-            =>:
-                $interval_integral_additive(a, b, c, f, s1, s2)
+    ? forall a, b, c R, f set, s1, s2 R:
+        a <= b
+        b <= c
+        $integrable(a, c, f)
+        =>:
+            $interval_integral_additive(a, b, c, f, s1, s2)
     trust $interval_integral_additive(a, b, c, f, s1, s2)
 
 trust:
@@ -132,12 +124,11 @@ trust:
             \integral<a, b, fn(x R) R {2 * x + 1}> = b^2 + b - (a^2 + a)
 
 claim:
-    prove:
-        forall a, b R, f, g fn(x R) R:
-            $integrable(a, b, f)
-            $integrable(a, b, g)
-            =>:
-                $integrable(a, b, fn(x R) R {f(x) + g(x)})
+    ? forall a, b R, f, g fn(x R) R:
+        $integrable(a, b, f)
+        $integrable(a, b, g)
+        =>:
+            $integrable(a, b, fn(x R) R {f(x) + g(x)})
     use strategy sum_of_integrable_fn_integrable
     trust $integrable(a, b, fn(x R) R {f(x) + g(x)})
     stop strategy sum_of_integrable_fn_integrable
@@ -149,32 +140,28 @@ trust:
     $integrable(0, 3, fn(x R) R {2 * x + 1})
 
 claim:
-    prove:
-        \integral<0, 2, fn(x R) R {3}> = 6
+    ? \integral<0, 2, fn(x R) R {3}> = 6
     $integrable(0, 2, fn(x R) R {3})
     \integral<0, 2, fn(x R) R {3}> = 3 * (2 - 0)
     3 * (2 - 0) = 6
     \integral<0, 2, fn(x R) R {3}> = 6
 
 claim:
-    prove:
-        \integral<0, 2, fn(x R) R {x}> = 2
+    ? \integral<0, 2, fn(x R) R {x}> = 2
     $integrable(0, 2, fn(x R) R {x})
     \integral<0, 2, fn(x R) R {x}> = 2^2 / 2 - 0^2 / 2
     2^2 / 2 - 0^2 / 2 = 2
     \integral<0, 2, fn(x R) R {x}> = 2
 
 claim:
-    prove:
-        \integral<0, 3, fn(x R) R {x^2}> = 9
+    ? \integral<0, 3, fn(x R) R {x^2}> = 9
     $integrable(0, 3, fn(x R) R {x^2})
     \integral<0, 3, fn(x R) R {x^2}> = 3^3 / 3 - 0^3 / 3
     3^3 / 3 - 0^3 / 3 = 9
     \integral<0, 3, fn(x R) R {x^2}> = 9
 
 claim:
-    prove:
-        \integral<0, 3, fn(x R) R {2 * x + 1}> = 12
+    ? \integral<0, 3, fn(x R) R {2 * x + 1}> = 12
     $integrable(0, 3, fn(x R) R {2 * x + 1})
     \integral<0, 3, fn(x R) R {2 * x + 1}> = 3^2 + 3 - (0^2 + 0)
     3^2 + 3 - (0^2 + 0) = 12

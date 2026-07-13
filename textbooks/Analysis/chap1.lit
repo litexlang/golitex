@@ -6,6 +6,8 @@ replacement for the book; it follows the book's order and uses the text as a
 pressure test for writing ordinary undergraduate analysis in a small formal
 language.
 
+The project is still in early development.
+
 Interactive textbook.
 
 - These `.lit` files are meant to be read as an interactive textbook, not only

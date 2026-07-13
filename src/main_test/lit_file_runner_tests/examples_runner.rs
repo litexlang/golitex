@@ -16,6 +16,7 @@ use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
+const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -135,6 +136,7 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         run_examples_impl(include_std_examples);
         run_analysis_one_chapters_impl();
         run_mechanics_textbook_chapters_impl();
+        run_number_theory_for_beginners_impl();
         run_runtime_contract_suite_impl();
         return;
     }
@@ -179,6 +181,14 @@ fn run_all_parallel_impl(include_std_examples: bool) {
         spawn_with_large_stack(
             "run_all_mechanics_textbook_chapters_large_stack",
             run_mechanics_textbook_chapters_impl,
+        ),
+        &mut failed_dataset_labels,
+    );
+    collect_run_all_dataset_result(
+        "Number Theory for Beginners sections",
+        spawn_with_large_stack(
+            "run_number_theory_for_beginners_large_stack",
+            run_number_theory_for_beginners_impl,
         ),
         &mut failed_dataset_labels,
     );
@@ -238,6 +248,21 @@ fn run_mechanics_textbook_chapters_impl() {
     run_textbook_chapters_impl(
         MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR,
         "Mechanics textbook chapters",
+    );
+}
+
+#[test]
+fn run_number_theory_for_beginners() {
+    run_with_large_stack(
+        "run_number_theory_for_beginners_large_stack",
+        run_number_theory_for_beginners_impl,
+    );
+}
+
+fn run_number_theory_for_beginners_impl() {
+    run_textbook_chapters_impl(
+        NUMBER_THEORY_FOR_BEGINNERS_SUBDIR,
+        "Number Theory for Beginners sections",
     );
 }
 

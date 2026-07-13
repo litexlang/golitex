@@ -21,51 +21,36 @@ impl Runtime {
         block: &mut TokenBlock,
         syntax_name: &str,
     ) -> Result<Fact, RuntimeError> {
-        if block.current_token_is_equal_to(QUESTION_GOAL) {
-            block.skip_token(QUESTION_GOAL)?;
-            if block.exceed_end_of_head() {
-                return Err(parse_goal_error(
-                    syntax_name,
-                    "`?` expects a fact",
-                    block.line_file.clone(),
-                ));
-            }
-            let fact = self.parse_fact(block)?;
-            if !block.exceed_end_of_head() {
-                return Err(parse_goal_error(
-                    syntax_name,
-                    "unfinished tokens in `?` goal",
-                    block.line_file.clone(),
-                ));
-            }
-            if !block.body.is_empty()
-                && !matches!(&fact, Fact::ForallFact(_) | Fact::ForallFactWithIff(_))
-            {
-                return Err(parse_goal_error(
-                    syntax_name,
-                    "`?` body is only allowed for multiline `forall` facts",
-                    block.line_file.clone(),
-                ));
-            }
-            return Ok(fact);
-        }
-
-        block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-        if block.body.len() != 1 {
+        require_question_goal(block, syntax_name)?;
+        block.skip_token(QUESTION_GOAL)?;
+        if block.exceed_end_of_head() {
             return Err(parse_goal_error(
                 syntax_name,
-                "`prove:` must contain exactly one fact block",
+                "`?` expects a fact",
                 block.line_file.clone(),
             ));
         }
-        let fact_block = block.body.get_mut(0).ok_or_else(|| {
-            parse_goal_error(
+        let fact = self.parse_fact(block)?;
+        if !block.exceed_end_of_head() {
+            return Err(parse_goal_error(
                 syntax_name,
-                "`prove:` is missing its fact",
+                "unfinished tokens in `?` goal",
                 block.line_file.clone(),
+            ));
+        }
+        if !block.body.is_empty()
+            && !matches!(
+                &fact,
+                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_)
             )
-        })?;
-        self.parse_fact(fact_block)
+        {
+            return Err(parse_goal_error(
+                syntax_name,
+                "`?` body is only allowed for multiline `forall` facts",
+                block.line_file.clone(),
+            ));
+        }
+        Ok(fact)
     }
 
     pub(crate) fn parse_goal_fact_block_with_inline_proof(
@@ -73,26 +58,7 @@ impl Runtime {
         block: &mut TokenBlock,
         syntax_name: &str,
     ) -> Result<(Fact, usize), RuntimeError> {
-        if block.current_token_is_equal_to(QUESTION_GOAL) {
-            return Ok((self.parse_goal_fact_block(block, syntax_name)?, 0));
-        }
-
-        block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-        if block.body.is_empty() {
-            return Err(parse_goal_error(
-                syntax_name,
-                "`prove:` must contain at least one fact block",
-                block.line_file.clone(),
-            ));
-        }
-        let fact_block = block.body.get_mut(0).ok_or_else(|| {
-            parse_goal_error(
-                syntax_name,
-                "`prove:` is missing its fact",
-                block.line_file.clone(),
-            )
-        })?;
-        Ok((self.parse_fact(fact_block)?, 1))
+        Ok((self.parse_goal_fact_block(block, syntax_name)?, 0))
     }
 
     pub(crate) fn parse_goal_forall_fact_block_with_inline_proof(
@@ -122,42 +88,24 @@ impl Runtime {
         block: &mut TokenBlock,
         syntax_name: &str,
     ) -> Result<AtomicFact, RuntimeError> {
-        if block.current_token_is_equal_to(QUESTION_GOAL) {
-            block.skip_token(QUESTION_GOAL)?;
-            if block.exceed_end_of_head() {
-                return Err(parse_goal_error(
-                    syntax_name,
-                    "`?` expects an atomic fact",
-                    block.line_file.clone(),
-                ));
-            }
-            let fact = self.parse_atomic_fact(block, true)?;
-            if !block.exceed_end_of_head() || !block.body.is_empty() {
-                return Err(parse_goal_error(
-                    syntax_name,
-                    "unfinished tokens in `?` atomic goal",
-                    block.line_file.clone(),
-                ));
-            }
-            return Ok(fact);
-        }
-
-        block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-        if block.body.len() != 1 {
+        require_question_goal(block, syntax_name)?;
+        block.skip_token(QUESTION_GOAL)?;
+        if block.exceed_end_of_head() {
             return Err(parse_goal_error(
                 syntax_name,
-                "`prove:` must contain exactly one atomic fact block",
+                "`?` expects an atomic fact",
                 block.line_file.clone(),
             ));
         }
-        let fact_block = block.body.get_mut(0).ok_or_else(|| {
-            parse_goal_error(
+        let fact = self.parse_atomic_fact(block, true)?;
+        if !block.exceed_end_of_head() || !block.body.is_empty() {
+            return Err(parse_goal_error(
                 syntax_name,
-                "`prove:` is missing its atomic fact",
+                "unfinished tokens in `?` atomic goal",
                 block.line_file.clone(),
-            )
-        })?;
-        self.parse_atomic_fact(fact_block, true)
+            ));
+        }
+        Ok(fact)
     }
 
     pub(crate) fn parse_goal_forall_fact_block(
@@ -190,31 +138,21 @@ impl Runtime {
         if body.is_empty() {
             return Err(parse_goal_error(
                 syntax_name,
-                "expects a `prove:` or `?` goal block",
+                "expects one or more `? <fact>` goal blocks",
                 line_file,
             ));
         }
-        if body[0].current_token_is_equal_to(QUESTION_GOAL) {
-            let mut facts = Vec::new();
-            let mut consumed = 0;
-            for block in body.iter_mut() {
-                if !block.current_token_is_equal_to(QUESTION_GOAL) {
-                    break;
-                }
-                facts.push(self.parse_goal_fact_block(block, syntax_name)?);
-                consumed += 1;
+        require_question_goal(&body[0], syntax_name)?;
+        let mut facts = Vec::new();
+        let mut consumed = 0;
+        for block in body.iter_mut() {
+            if !block.current_token_is_equal_to(QUESTION_GOAL) {
+                break;
             }
-            return Ok((facts, consumed));
+            facts.push(self.parse_goal_fact_block(block, syntax_name)?);
+            consumed += 1;
         }
-
-        let prove_block = &mut body[0];
-        prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-        let facts = prove_block
-            .body
-            .iter_mut()
-            .map(|b| self.parse_fact(b))
-            .collect::<Result<_, _>>()?;
-        Ok((facts, 1))
+        Ok((facts, consumed))
     }
 
     pub(crate) fn parse_question_goal_exist_or_and_chain_atomic_fact(
@@ -222,6 +160,7 @@ impl Runtime {
         block: &mut TokenBlock,
         syntax_name: &str,
     ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
+        require_question_goal(block, syntax_name)?;
         block.skip_token(QUESTION_GOAL)?;
         if block.exceed_end_of_head() {
             return Err(parse_goal_error(
@@ -397,5 +336,21 @@ fn parse_goal_error(syntax_name: &str, msg: &str, line_file: LineFile) -> Runtim
             format!("{}: {}", syntax_name, msg),
             line_file,
         ),
+    ))
+}
+
+fn require_question_goal(block: &TokenBlock, syntax_name: &str) -> Result<(), RuntimeError> {
+    if block.current_token_is_equal_to(QUESTION_GOAL) {
+        return Ok(());
+    }
+    let message = if block.current_token_is_equal_to("prove") {
+        "`prove` was removed; use `? <fact>`"
+    } else {
+        "expects a `? <fact>` goal block"
+    };
+    Err(parse_goal_error(
+        syntax_name,
+        message,
+        block.line_file.clone(),
     ))
 }

@@ -53,19 +53,17 @@ trust:
 # Example: from `a < b`, `by thm has_rational_between(a, b)` gives
 # `exist q Q st {a < q < b}`.
 thm has_rational_between, exists_rat_between, exists_rat_btwn:
-    prove:
-        forall a, b R:
-            a < b
-            =>:
-                exist q Q st {a < q < b}
+    ? forall a, b R:
+        a < b
+        =>:
+            exist q Q st {a < q < b}
     trust:
         exist q Q st {a < q < b}
 
 # Rational representation by integer numerator and nonzero integer denominator.
 # Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.
 thm rational_as_integer_ratio:
-    prove:
-        forall x Q:
-            exist p Z, q Z_nz st {x = p / q}
+    ? forall x Q:
+        exist p Z, q Z_nz st {x = p / q}
     exist p Z, q Z_nz st {x = p / q}
 "#;

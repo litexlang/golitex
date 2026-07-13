@@ -30,13 +30,14 @@ impl fmt::Display for ByContraStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}\n{}{}\n{}",
+            "{} {}{}\n{}",
             BY,
             CONTRA,
             COLON,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
-            add_four_spaces_at_beginning(self.to_prove.to_string(), 2),
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &format!("{} {}", QUESTION_GOAL, self.to_prove),
+                1,
+            ),
         )?;
         if !self.proof.is_empty() {
             write!(

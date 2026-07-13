@@ -447,18 +447,16 @@ witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 21
 abstract_prop p0(x, y)
 abstract_prop q0(x, y)
 claim:
-    prove:
-        forall:
-            forall a, b R:
-                $p0(a, b)
-                =>:
-                    $q0(a, b)
-            not $q0(1, 2)
+    ? forall:
+        forall a, b R:
+            $p0(a, b)
             =>:
-                not $p0(1, 2)
-    by contra:
-        prove:
+                $q0(a, b)
+        not $q0(1, 2)
+        =>:
             not $p0(1, 2)
+    by contra:
+        ? not $p0(1, 2)
         impossible $q0(1, 2)
 ```
 
@@ -746,18 +744,17 @@ anonymous-function body against the same known fact again.
 abstract_prop p(x)
 
 claim:
-    prove:
-        forall a, b, c fn(x R) R:
-            forall f, g fn(x R) R:
-                $p(f)
-                $p(g)
-                =>:
-                    $p(fn(x R) R {f(x) + g(x)})
-            $p(a)
-            $p(b)
-            $p(c)
+    ? forall a, b, c fn(x R) R:
+        forall f, g fn(x R) R:
+            $p(f)
+            $p(g)
             =>:
-                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+                $p(fn(x R) R {f(x) + g(x)})
+        $p(a)
+        $p(b)
+        $p(c)
+        =>:
+            $p(fn(x R) R {a(x) + (b(x) + c(x))})
     $p(fn(x R) R {b(x) + c(x)})
 ```
 
@@ -891,8 +888,7 @@ example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x �
 <!-- litex:skip-test -->
 ```litex
 by contra:
-    prove:
-        {1, 2, 3} != {1, 2}
+    ? {1, 2, 3} != {1, 2}
     count({1, 2, 3}) = 3
     count({1, 2}) = 2
     count({1, 2, 3}) = count({1, 2})
@@ -911,8 +907,7 @@ example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
 
 ```litex
 by contra:
-    prove:
-        {1, 2, 3} != {1, 2}
+    ? {1, 2, 3} != {1, 2}
     count({1, 2, 3}) = 3
     count({1, 2}) = 2
     count({1, 2, 3}) = count({1, 2})
@@ -944,21 +939,20 @@ prop prime(a N_pos):
             a % b != 0
 
 claim:
-    prove:
-        forall a N_pos:
-            forall n, k N_pos:
-                k <= n
-                =>:
-                    product(1, n, fn(x N_pos) N_pos {x}) % k = 0
-            forall n N_pos:
-                2 <= n
-                =>:
-                    exist k N_pos st {$prime(k), n % k = 0}
-            forall n N_pos:
-                n <= product(1, n, fn(x N_pos) N_pos {x})
-            2 <= a
+    ? forall a N_pos:
+        forall n, k N_pos:
+            k <= n
             =>:
-                exist k N_pos st {k > a, $prime(k)}
+                product(1, n, fn(x N_pos) N_pos {x}) % k = 0
+        forall n N_pos:
+            2 <= n
+            =>:
+                exist k N_pos st {$prime(k), n % k = 0}
+        forall n N_pos:
+            n <= product(1, n, fn(x N_pos) N_pos {x})
+        2 <= a
+        =>:
+            exist k N_pos st {k > a, $prime(k)}
     2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
     obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
     by cases k > a:
@@ -1113,9 +1107,8 @@ Litex:
 
 ```text
 thm add_comm:
-    prove:
-        forall a, b R:
-            a + b = b + a
+    ? forall a, b R:
+        a + b = b + a
     a + b = b + a
 ```
 

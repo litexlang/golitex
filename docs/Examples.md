@@ -103,11 +103,10 @@ the context introduced by the goal.
 
 ```litex
 claim:
-    prove:
-        forall x R:
-            x = 2
-            =>:
-                (x + 1)^2 = 9
+    ? forall x R:
+        x = 2
+        =>:
+            (x + 1)^2 = 9
     x + 1 = 3
     (x + 1)^2 = 9
 ```
@@ -161,12 +160,11 @@ forall a, b, c, d, e, f R:
 
 ```litex
 claim:
-    prove:
-        forall S set:
-            forall A S:
-                $is_nonempty_set(A)
-            =>:
-                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+    ? forall S set:
+        forall A S:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -202,8 +200,7 @@ forall alpha I:
 ```litex
 sketch:
     by cases:
-        prove:
-            1 + 1 = 2
+        ? 1 + 1 = 2
         case 1 + 1 = 2:
             do_nothing
         case 1 + 1 != 2:
@@ -215,21 +212,19 @@ sketch:
 abstract_prop p(x)
 
 claim:
-    prove:
-        forall x R:
-            forall y R:
-                y > 0
-                =>:
-                    $p(y)
-            forall y R:
-                y <= 0
-                =>:
-                    $p(y)
+    ? forall x R:
+        forall y R:
+            y > 0
             =>:
-                $p(x)
-    by cases:
-        prove:
+                $p(y)
+        forall y R:
+            y <= 0
+            =>:
+                $p(y)
+        =>:
             $p(x)
+    by cases:
+        ? $p(x)
 
         case x > 0:
             $p(x)
@@ -258,32 +253,28 @@ forall x, y R:
 abstract_prop p(a)
 
 claim:
-    prove:
-        forall b, c R:
-            forall a R:
-                $p(a + b)
-                =>:
-                    $p(a)
-            not $p(c)
+    ? forall b, c R:
+        forall a R:
+            $p(a + b)
             =>:
-                not $p(c + b)
-    by contra:
-        prove:
+                $p(a)
+        not $p(c)
+        =>:
             not $p(c + b)
+    by contra:
+        ? not $p(c + b)
         impossible $p(c)
 
 by contra 1 = 1:
     impossible 1 != 1
 
 by contra:
-    prove:
-        not exist x R st {x != x}
+    ? not exist x R st {x != x}
     obtain a from exist x R st {x != x}
     impossible a = a
 
 by contra:
-    prove:
-        exist x R st {x = x}
+    ? exist x R st {x = x}
     impossible 0 = 0
 ```
 
@@ -314,13 +305,12 @@ sketch:
 
 ```litex
 by enumerate finite_set:
-    prove:
-        forall a {1, 2}, b {3, 4}:
-            a > 1
-            b > 3
-            =>:
-                a = 2
-                b = 4
+    ? forall a {1, 2}, b {3, 4}:
+        a > 1
+        b > 3
+        =>:
+            a = 2
+            b = 4
 
 by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) = (2, 4)}:
     ...
@@ -333,25 +323,22 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) =
 
 ```litex
 claim:
-    prove:
-        forall a range(7, 8):
-            a = 7
+    ? forall a range(7, 8):
+        a = 7
     by enumerate range: a $in range(7, 8)
 ```
 
 ```litex
 claim:
-    prove:
-        forall x range(1, 3):
-            x = 1 or x = 2
+    ? forall x range(1, 3):
+        x = 1 or x = 2
     by enumerate range: x $in range(1, 3)
 ```
 
 ```litex
 claim:
-    prove:
-        forall y closed_range(1, 3):
-            y = 1 or y = 2 or y = 3
+    ? forall y closed_range(1, 3):
+        y = 1 or y = 2 or y = 3
     by enumerate closed_range: y $in 1...3
 ```
 
@@ -362,16 +349,13 @@ claim:
 
 ```litex
 by extension:
-    prove:
-        {1, 2} = {2, 1}
+    ? {1, 2} = {2, 1}
     by enumerate finite_set:
-        prove:
-            forall x {1, 2}:
-                x $in {2, 1}
+        ? forall x {1, 2}:
+            x $in {2, 1}
     by enumerate finite_set:
-        prove:
-            forall y {2, 1}:
-                y $in {1, 2}
+        ? forall y {2, 1}:
+            y $in {1, 2}
 
 {1, 2} = {2, 1}
 
@@ -385,24 +369,21 @@ by extension {1} = {1}
 
 ```litex
 by for:
-    prove:
-        forall n range(0, 10):
-            n < 10
+    ? forall n range(0, 10):
+        n < 10
     do_nothing
 
 by for:
-    prove:
-        forall n closed_range(0, 10):
-            n <= 10
+    ? forall n closed_range(0, 10):
+        n <= 10
     do_nothing
 
 by for forall! n range(0, 3) => {n < 3}:
     ...
 
 by for:
-    prove:
-        forall x cart({1, 2}, {3, 4}):
-            0 <= x[1] + x[2]
+    ? forall x cart({1, 2}, {3, 4}):
+        0 <= x[1] + x[2]
     do_nothing
 ```
 
@@ -418,9 +399,8 @@ sketch:
             $Prime(k ^ (k ^ n) + 1)
 
     by for:
-        prove:
-            forall n range(2, 2):
-                2 % n != 0
+        ? forall n range(2, 2):
+            2 % n != 0
 
     $Prime(2)
 
@@ -448,25 +428,23 @@ sketch:
 abstract_prop p(a)
 
 claim:
-    prove:
-        forall n Z:
-            $p(0)
-            forall m Z:
-                m >= 0
-                $p(m)
-                =>:
-                    $p(m + 1)
-            n >= 0
+    ? forall n Z:
+        $p(0)
+        forall m Z:
+            m >= 0
+            $p(m)
             =>:
-                $p(n)
-    by induc n from 0:
-        prove:
+                $p(m + 1)
+        n >= 0
+        =>:
             $p(n)
+    by induc n from 0:
+        ? $p(n)
 
-        prove from n = 0:
+        ? from n = 0:
             $p(0)
 
-        prove induc:
+        ? induc:
             $p(n + 1)
 ```
 
@@ -477,12 +455,10 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall n N:
-            2 ^ n >= n + 1
+    ? forall n N:
+        2 ^ n >= n + 1
     by induc n from 0:
-        prove:
-            2 ^ n >= n + 1
+        ? 2 ^ n >= n + 1
         2^0 = 1 >= 0 + 1
 
         forall m Z:
@@ -500,19 +476,17 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall b fn(x Z: x >= 0) Z, i Z:
-            forall y Z:
-                y >= 0
-                =>:
-                    b(y+1) = b(y)^ 2 - 2
-            b(0) = 3
-            i >= 0
+    ? forall b fn(x Z: x >= 0) Z, i Z:
+        forall y Z:
+            y >= 0
             =>:
-                b(i) % 2 = 1
-    by induc i from 0:
-        prove:
+                b(y+1) = b(y)^ 2 - 2
+        b(0) = 3
+        i >= 0
+        =>:
             b(i) % 2 = 1
+    by induc i from 0:
+        ? b(i) % 2 = 1
         b(0) % 2 = 3 % 2 = 1
 
         forall m Z:
@@ -542,59 +516,51 @@ sketch:
         x = y
 
     by reflexive_prop:
-        prove:
-            forall x set:
-                $same_obj(x, x)
+        ? forall x set:
+            $same_obj(x, x)
         x = x
 
     by reflexive_prop:
-        prove:
-            forall x set:
-                $r(x, x)
+        ? forall x set:
+            $r(x, x)
         x = x
 
     by symmetric_prop:
-        prove:
-            forall x, y set:
-                $p(x, y)
-                =>:
-                    $p(y, x)
+        ? forall x, y set:
+            $p(x, y)
+            =>:
+                $p(y, x)
         x = y
         y = x
 
     by antisymmetric_prop:
-        prove:
-            forall x, y set:
-                $p(x, y)
-                $p(y, x)
-                =>:
-                    x = y
+        ? forall x, y set:
+            $p(x, y)
+            $p(y, x)
+            =>:
+                x = y
         x = y
 
     claim:
-        prove:
-            forall a set:
-                $same_obj(a, a)
+        ? forall a set:
+            $same_obj(a, a)
 
     claim:
-        prove:
-            forall a set:
-                $r(a, a)
+        ? forall a set:
+            $r(a, a)
 
     claim:
-        prove:
-            forall a, b set:
-                $p(a, b)
-                =>:
-                    $p(b, a)
-
-    claim:
-        prove:
-            forall a, b set:
-                $p(a, b)
+        ? forall a, b set:
+            $p(a, b)
+            =>:
                 $p(b, a)
-                =>:
-                    a = b
+
+    claim:
+        ? forall a, b set:
+            $p(a, b)
+            $p(b, a)
+            =>:
+                a = b
 ```
 
 ### 15. Registering Transitivity For A Predicate
@@ -607,12 +573,11 @@ prop p(x set, y set):
     x = y
 
 by transitive_prop:
-    prove:
-        forall x, y, z set:
-            $p(x, y)
-            $p(y, z)
-            =>:
-                $p(x, z)
+    ? forall x, y, z set:
+        $p(x, y)
+        $p(y, z)
+        =>:
+            $p(x, z)
     x = y
     y = z
     x = z
@@ -631,15 +596,13 @@ forall a, b, c set:
 
 ```litex
 claim:
-    prove:
-        1 = 1 and 1 + 2 = 3
+    ? 1 = 1 and 1 + 2 = 3
     1 = 1
     1 + 2 = 3
 
 claim:
-    prove:
-        forall a R:
-            a $in R
+    ? forall a R:
+        a $in R
     a $in R
 
 claim 1 = 1:
@@ -763,20 +726,18 @@ Let n be a natural number which is a factor of every natural number m. Show that
 """
 
 claim:
-    prove:
-        forall n N:
-            forall m, k N:
-                0 < m < k
-                =>:
-                    m % k = m
-            n > 0
-            forall m N:
-                m % n = 0
+    ? forall n N:
+        forall m, k N:
+            0 < m < k
             =>:
-                n = 1
+                m % k = m
+        n > 0
+        forall m N:
+            m % n = 0
+        =>:
+            n = 1
     by contra:
-        prove:
-            n <= 1
+        ? n <= 1
         n > 1
         1 % n = 0
         1 % n = 1
@@ -784,14 +745,12 @@ claim:
 
     n $in closed_range(0, 1)
     by for:
-        prove:
-            forall m closed_range(0, 1):
-                m = 0 or m = 1
+        ? forall m closed_range(0, 1):
+            m = 0 or m = 1
 
     n =  0 or n = 1
     by cases:
-        prove:
-            n = 1
+        ? n = 1
         case n  = 0:
             n >  0
             impossible 0 > 0
@@ -850,15 +809,13 @@ abstract_prop q()
 abstract_prop r()
 
 claim:
-    prove:
-        forall:
-            $p() or $q()
-            not $p()
-            =>:
-                $q()
-    by cases:
-        prove:
+    ? forall:
+        $p() or $q()
+        not $p()
+        =>:
             $q()
+    by cases:
+        ? $q()
         case $p():
             impossible not $p()
         case $q():
@@ -883,14 +840,12 @@ forall:
 (P ∨ P) is logically equivalent to P.
 """
 claim:
-    prove:
-        forall:
-            $p() or $p()
-            =>:
-                $p()
-    by cases:
-        prove:
+    ? forall:
+        $p() or $p()
+        =>:
             $p()
+    by cases:
+        ? $p()
         case $p():
             do_nothing
         case $p():
@@ -907,16 +862,14 @@ forall:
 P ∧ (Q ∨ R) is logically equivalent to (P ∧ Q) ∨ (P ∧ R).
 """
 claim:
-    prove:
-        forall:
-            $p()
-            $q() or $r()
-            =>:
-                $p() and $q() or $p() and $r()
+    ? forall:
+        $p()
+        $q() or $r()
+        =>:
+            $p() and $q() or $p() and $r()
 
     by cases:
-        prove:
-            $p() and $q() or $p() and $r()
+        ? $p() and $q() or $p() and $r()
         case $q():
             $p() and $q()
         case $r():
@@ -1259,40 +1212,36 @@ prop r(x R):
     x = 1
 
 strategy prove_p:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $p(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $p(x)
     x = 1
 
 ## A verified strategy is enabled immediately after definition.
 $p(1)
 
 strategy prove_q:
-    prove:
-        forall x R:
-            x = x
-            =>:
-                $q(x)
+    ? forall x R:
+        x = x
+        =>:
+            $q(x)
     x = x
 
 ## A stopped strategy still leaves its proved forall available to ordinary proofs.
 strategy prove_r:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                $r(x)
+    ? forall x R:
+        x = 1
+        =>:
+            $r(x)
     x = 1
 
 stop strategy prove_r
 claim:
-    prove:
-        forall z R:
-            z = 1
-            =>:
-                $r(z)
+    ? forall z R:
+        z = 1
+        =>:
+            $r(z)
 
 ## Same environment: stop followed by use re-enables the same strategy key.
 stop strategy prove_p
@@ -1303,8 +1252,7 @@ $p(1)
 use strategy prove_q
 stop strategy prove_q
 claim:
-    prove:
-        $q(2)
+    ? $q(2)
     use strategy prove_q
 
 ## Back in the parent environment, use removes the parent stop and re-enables it.
@@ -1321,46 +1269,56 @@ $q(3)
 abstract_prop p(a)
 
 claim:
-    prove:
-        forall n Z:
-            $p(0)
-            forall m Z:
-                m >= 0
-                forall y Z:
-                    y >= 0
-                    y <= m
-                    =>:
-                        $p(y)
+    ? forall n Z:
+        $p(0)
+        forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
                 =>:
-                    $p(m + 1)
-            n >= 0
+                    $p(y)
             =>:
-                $p(n)
-    by strong_induc n from 0:
-        prove:
+                $p(m + 1)
+        n >= 0
+        =>:
             $p(n)
+    by strong_induc n from 0:
+        ? $p(n)
 
-        prove from n = 0:
+        ? from n = 0:
             $p(0)
 
-        prove strong_induc:
+        ? strong_induc:
             $p(n + 1)
 ```
 
-### 32. Syllogism Through A Shared Predicate
+### 32. A Divisibility Implication by Witnesses
 
 - Category: `proof pattern`
-- Purpose: Shows a minimal universal-instantiation argument.
+- Purpose: Shows a universal implication proved by unpacking and constructing
+  existential witnesses.
 
 ```litex
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-forall:
-    forall x human:
-        $mortal(x)
-    =>:
-        $mortal(Socrates)
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
+
+claim:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
+
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+$can_be_divided_by_2(8)
 ```
 
 ### 33. Named Theorems With `thm`
@@ -1371,9 +1329,8 @@ forall:
 ```litex
 ## Basic named theorem with aliases and no domain facts.
 thm thm_refl_r, thm_refl_r_alias:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
 
 by thm thm_refl_r(0)
 0 = 0
@@ -1384,9 +1341,8 @@ by thm thm_refl_r_alias(0)
 ## A theorem alias can use a local-language name while the original theorem
 ## keeps an English/std-facing name.
 thm self_eq_en:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 
 alias thm 自反等式 <=> self_eq_en
@@ -1395,11 +1351,10 @@ by thm 自反等式(1)
 
 ## A theorem with one domain fact.
 thm thm_one_succ:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x + 1 = 2
+    ? forall x R:
+        x = 1
+        =>:
+            x + 1 = 2
     x + 1 = 1 + 1 = 2
 
 by thm thm_one_succ(1)
@@ -1407,12 +1362,11 @@ by thm thm_one_succ(1)
 
 ## Multiple arguments and multiple domain facts.
 thm thm_add_equal_with_unit:
-    prove:
-        forall a, b, c R:
-            a = b
-            c = 1
-            =>:
-                a + c = b + 1
+    ? forall a, b, c R:
+        a = b
+        c = 1
+        =>:
+            a + c = b + 1
     a + c = b + c = b + 1
 
 by thm thm_add_equal_with_unit(2, 2, 1)
@@ -1420,13 +1374,12 @@ by thm thm_add_equal_with_unit(2, 2, 1)
 
 ## Multiple then-facts are all released by the named theorem call.
 thm thm_many_then:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
-                x + 1 = 2
-                x + 2 = 3
+            x + 1 = 2
+            x + 2 = 3
     x = 1
     x + 1 = 1 + 1 = 2
     x + 2 = 1 + 2 = 3
@@ -1436,11 +1389,10 @@ by thm thm_many_then(1)
 
 ## A theorem can release an and-fact.
 thm thm_and_then:
-    prove:
-        forall x R:
-            x = 0
-            =>:
-                x = 0 and x + 1 = 1
+    ? forall x R:
+        x = 0
+        =>:
+            x = 0 and x + 1 = 1
     x = 0
     x + 1 = 0 + 1 = 1
     x = 0 and x + 1 = 1
@@ -1450,11 +1402,10 @@ by thm thm_and_then(0)
 
 ## A theorem can release a chain fact.
 thm thm_chain_then:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x + 1 = 1 + 1 = 2
+    ? forall x R:
+        x = 1
+        =>:
+            x + 1 = 1 + 1 = 2
     x + 1 = 1 + 1 = 2
 
 by thm thm_chain_then(1)
@@ -1462,20 +1413,18 @@ by thm thm_chain_then(1)
 
 ## The explicit call works inside a claim proof.
 claim:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x + 1 = 2
+    ? forall x R:
+        x = 1
+        =>:
+            x + 1 = 2
     by thm thm_one_succ(x)
 
 ## A named theorem may use another named theorem in its proof.
 thm thm_use_thm_inside_thm:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x + 2 = 3
+    ? forall x R:
+        x = 1
+        =>:
+            x + 2 = 3
     by thm thm_one_succ(x)
     x + 2 = 1 + 2 = 3
 
@@ -1484,9 +1433,8 @@ by thm thm_use_thm_inside_thm(1)
 
 ## Argument type checking still applies for theorem calls.
 thm thm_nat_refl:
-    prove:
-        forall n N:
-            n = n
+    ? forall n N:
+        n = n
 
 by thm thm_nat_refl(1)
 1 = 1
@@ -1499,11 +1447,10 @@ prop thm_match_q(x R):
     x = 1
 
 thm thm_stored_forall:
-    prove:
-        forall x R:
-            $thm_match_p(x)
-            =>:
-                $thm_match_q(x)
+    ? forall x R:
+        $thm_match_p(x)
+        =>:
+            $thm_match_q(x)
     x = 1
 
 $thm_match_p(1)
@@ -1521,23 +1468,20 @@ by thm thm_stored_forall(1)
 
 ```litex
 claim:
-    prove:
-        forall a, b R:
-            a < b or a = b or a > b
+    ? forall a, b R:
+        a < b or a = b or a > b
 
 claim:
-    prove:
-        forall a, b R:
-            a <= b
-            =>:
-                a = b or a < b
+    ? forall a, b R:
+        a <= b
+        =>:
+            a = b or a < b
 
 import Int
 
 claim:
-    prove:
-        forall x R:
-            Int::floor(x) $in R
+    ? forall x R:
+        Int::floor(x) $in R
     Int::floor(x) $in R
 ```
 
@@ -1701,11 +1645,10 @@ exist x, y R st {x > y}
 
 ```litex
 claim:
-    prove:
-        forall s set:
-            1 $in s
-            =>:
-                $is_nonempty_set(s)
+    ? forall s set:
+        1 $in s
+        =>:
+            $is_nonempty_set(s)
     witness $is_nonempty_set(s) from 1:
         1 $in s
 ```
@@ -1742,20 +1685,18 @@ exist x {1, 2} st {intersect(x, {1, 2}) = {}}
 
 ```litex
 thm cup_intro_from_member:
-    prove:
-        forall x set, F set, A set:
-            A $in F
-            x $in A
-            =>:
-                x $in cup(F)
+    ? forall x set, F set, A set:
+        A $in F
+        x $in A
+        =>:
+            x $in cup(F)
     x $in cup(F)
 
 thm cup_elim_to_exist:
-    prove:
-        forall x set, F set:
-            x $in cup(F)
-            =>:
-                exist A F st {x $in A}
+    ? forall x set, F set:
+        x $in cup(F)
+        =>:
+            exist A F st {x $in A}
     exist A F st {x $in A}
 ```
 
@@ -2075,13 +2016,12 @@ count(range(1, 5)) = 4
 
 ```litex
 claim:
-    prove:
-        forall a, b, c, d R:
-            2 * a <= 3 * b
-            1 <= a
-            d = 2
-            =>:
-                d + a <= 5 * b
+    ? forall a, b, c, d R:
+        2 * a <= 3 * b
+        1 <= a
+        d = 2
+        =>:
+            d + a <= 5 * b
     d = 2 * 1 <= 2 * a
     a = (2*a)/2 <= (3*b)/2 = 1.5 * b
     0 <= (2/3)* a = (2 * a)/3 <= (3 * b)/3 = b
@@ -2181,11 +2121,10 @@ sketch:
             t < 4
 
 claim:
-    prove:
-        forall t R_pos:
-            t^6 < 4^6
-            =>:
-                t < 4
+    ? forall t R_pos:
+        t^6 < 4^6
+        =>:
+            t < 4
     by thm pos_pow_strict_order_reflects(t, 4, 6)
 ```
 
@@ -2196,19 +2135,18 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall x, y, epsilon R:
-            forall a, b, c, d R:
-                0 <= a < c
-                0 <= b < d
-                =>:
-                    a * b < c * d
-            0 < epsilon
-            epsilon <= 1
-            abs(x) < epsilon
-            abs(y) < epsilon
+    ? forall x, y, epsilon R:
+        forall a, b, c, d R:
+            0 <= a < c
+            0 <= b < d
             =>:
-                abs(x * y) < epsilon
+                a * b < c * d
+        0 < epsilon
+        epsilon <= 1
+        abs(x) < epsilon
+        abs(y) < epsilon
+        =>:
+            abs(x * y) < epsilon
     0 <= abs(x) < epsilon
     0 <= abs(y) < epsilon
     abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon * 1 = epsilon
@@ -2221,14 +2159,13 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall a, b R:
-            0 <= a
-            a <= 1
-            0 <= b
-            b <= 1
-            =>:
-                a * b <= 1
+    ? forall a, b R:
+        0 <= a
+        a <= 1
+        0 <= b
+        b <= 1
+        =>:
+            a * b <= 1
     0 <= 1 - a
     0 <= (1 - a) * b = b - a * b
     a * b <= b <= 1
@@ -2313,12 +2250,11 @@ forall X finite_set:
         $is_nonempty_set(X)
 
 claim:
-    prove:
-        forall X, Y set:
-            $is_finite_set(X)
-            $is_finite_set(Y)
-            =>:
-                count(cart(X, Y)) = count(X) * count(Y)
+    ? forall X, Y set:
+        $is_finite_set(X)
+        $is_finite_set(Y)
+        =>:
+            count(cart(X, Y)) = count(X) * count(Y)
     count(cart(X, Y)) = count(X) * count(Y)
 ```
 
@@ -2560,106 +2496,95 @@ sketch:
         exist k Z st {a - b = n * k}
 
     claim:
-        prove:
-            $mod_eq(11, 3, 4)
+        ? $mod_eq(11, 3, 4)
         witness exist k Z st {11 - 3 = 4 * k} from 2:
             11 - 3 = 4 * 2
 
     claim:
-        prove:
-            $mod_eq(-5, 1, 3)
+        ? $mod_eq(-5, 1, 3)
         witness exist k Z st {(-5) - 1 = 3 * k} from -2:
             (-5) - 1 = 3 * (-2)
 
     claim:
-        prove:
-            forall a, b, c, d, n Z:
-                $mod_eq(a, b, n)
-                $mod_eq(c, d, n)
-                =>:
-                    $mod_eq(a + c, b + d, n)
+        ? forall a, b, c, d, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a + c, b + d, n)
         obtain x from exist x Z st {a - b = n * x}
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
 
     claim:
-        prove:
-            forall a, b, c, d, n Z:
-                $mod_eq(a, b, n)
-                $mod_eq(c, d, n)
-                =>:
-                    $mod_eq(a - c, b - d, n)
+        ? forall a, b, c, d, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a - c, b - d, n)
         obtain x from exist x Z st {a - b = n * x}
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a - c) - (b - d) = n * k} from x - y:
             (a - c) - (b - d) = (a - b) - (c - d) = n * x - n * y = n * (x - y)
 
     claim:
-        prove:
-            forall a, b, n Z:
-                $mod_eq(a, b, n)
-                =>:
-                    $mod_eq(-a, -b, n)
+        ? forall a, b, n Z:
+            $mod_eq(a, b, n)
+            =>:
+                $mod_eq(-a, -b, n)
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {(-a) - (-b) = n * k} from -x:
             (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
 
     claim:
-        prove:
-            forall a, b, c, d, n Z:
-                $mod_eq(a, b, n)
-                $mod_eq(c, d, n)
-                =>:
-                    $mod_eq(a * c, b * d, n)
+        ? forall a, b, c, d, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a * c, b * d, n)
         obtain x from exist x Z st {a - b = n * x}
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
             a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
 
     claim:
-        prove:
-            forall a, b, n Z:
-                $mod_eq(a, b, n)
-                =>:
-                    $mod_eq(a^2, b^2, n)
+        ? forall a, b, n Z:
+            $mod_eq(a, b, n)
+            =>:
+                $mod_eq(a^2, b^2, n)
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^2 - b^2 = n * k} from x * (a + b):
             a^2 - b^2 = (a - b) * (a + b) = n * x * (a + b) = n * (x * (a + b))
 
     claim:
-        prove:
-            forall a, b, n Z:
-                $mod_eq(a, b, n)
-                =>:
-                    $mod_eq(a^3, b^3, n)
+        ? forall a, b, n Z:
+            $mod_eq(a, b, n)
+            =>:
+                $mod_eq(a^3, b^3, n)
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
             a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
 
     claim:
-        prove:
-            forall a, n Z:
-                $mod_eq(a, a, n)
+        ? forall a, n Z:
+            $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
 
     claim:
-        prove:
-            forall a, b Z:
-                $mod_eq(a, 2, 4)
-                =>:
-                    $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
+        ? forall a, b Z:
+            $mod_eq(a, 2, 4)
+            =>:
+                $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
         obtain x from exist x Z st {a - 2 = 4 * x}
         witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
             a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
 
     claim:
-        prove:
-            forall a, b Z:
-                $mod_eq(a, 2, 4)
-                =>:
-                    $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
+        ? forall a, b Z:
+            $mod_eq(a, 2, 4)
+            =>:
+                $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
         $mod_eq(b^2, b^2, 4)
         $mod_eq(a * b^2, 2 * b^2, 4)
         $mod_eq(a^2, 2^2, 4)
@@ -2956,67 +2881,58 @@ forall X power_set(Z):
 
 ```litex
 thm finite_set_sum_substitution_example:
-    prove:
-        forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
-            forall x X:
-                exist! y Y st {g(y) = x}
-            =>:
-                finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    ? forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
+        forall x X:
+            exist! y Y st {g(y) = x}
+        =>:
+            finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_bridge_example:
-    prove:
-        forall a fn(i Z) R, m, n Z:
-            m <= n
-            =>:
-                sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+    ? forall a fn(i Z) R, m, n Z:
+        m <= n
+        =>:
+            sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
     sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
 
 thm finite_set_sum_disjoint_union_example:
-    prove:
-        forall X, Y finite_set, f fn(z union(X, Y)) R:
-            intersect(X, Y) = {}
-            =>:
-                finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    ? forall X, Y finite_set, f fn(z union(X, Y)) R:
+        intersect(X, Y) = {}
+        =>:
+            finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
     finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 
 thm finite_set_sum_add_example:
-    prove:
-        forall X finite_set, f, g fn(x X) R:
-            finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
+    ? forall X finite_set, f, g fn(x X) R:
+        finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
     finite_set_sum(X, fn(x X) R {f(x) + g(x)}) = finite_set_sum(X, f) + finite_set_sum(X, g)
 
 thm finite_set_sum_scalar_mul_example:
-    prove:
-        forall X finite_set, f fn(x X) R, c R:
-            finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
+    ? forall X finite_set, f fn(x X) R, c R:
+        finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
     finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)
 
 thm finite_set_sum_monotone_example:
-    prove:
-        forall X finite_set, f, g fn(x X) R:
-            forall x X:
-                f(x) <= g(x)
-            =>:
-                finite_set_sum(X, f) <= finite_set_sum(X, g)
+    ? forall X finite_set, f, g fn(x X) R:
+        forall x X:
+            f(x) <= g(x)
+        =>:
+            finite_set_sum(X, f) <= finite_set_sum(X, g)
     finite_set_sum(X, f) <= finite_set_sum(X, g)
 
 thm finite_set_sum_triangle_example:
-    prove:
-        forall X finite_set, f fn(x X) R:
-            abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
+    ? forall X finite_set, f fn(x X) R:
+        abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
     abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 
 thm finite_double_sum_over_cartesian_product_example:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_example:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 ## A finite-set sum defined by a bijective enumeration is independent of the enumeration.
@@ -3028,13 +2944,12 @@ template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X
     have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
-    prove:
-        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-            count(X) >= 1
-            $is_bijection_from_index_range_to_finite_set(X, g)
-            $is_bijection_from_index_range_to_finite_set(X, h)
-            =>:
-                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+        count(X) >= 1
+        $is_bijection_from_index_range_to_finite_set(X, g)
+        $is_bijection_from_index_range_to_finite_set(X, h)
+        =>:
+            \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 
 ## Finite-set product: multiply the function value over each element of a finite set.
@@ -3082,19 +2997,17 @@ sketch:
 ```litex
 sketch:
     by induc a from 1:
-        prove:
-            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+        ? product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
         product(1, 1, fn(x N_pos) N_pos {x}) = 1
         1 <= product(1, 1, fn(x N_pos) N_pos {x})
 
         claim:
-            prove:
-                forall k Z:
-                    k >= 1
-                    product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
-                    =>:
-                        product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
+            ? forall k Z:
+                k >= 1
+                product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
+                =>:
+                    product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
             product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
             witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
@@ -3522,9 +3435,8 @@ have A set = R
 have B set = R
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {y = x}
+    ? forall x A:
+        exist! y B st {y = x}
     witness exist! y B st {y = x} from x
 
 forall x A:
@@ -3659,8 +3571,7 @@ Purpose: prove a local target and store it in the current environment.
 
 ```litex
 claim:
-    prove:
-        1 + 1 = 2
+    ? 1 + 1 = 2
     1 + 1 = 2
 ```
 
@@ -3717,8 +3628,7 @@ Purpose: tell Litex which proof shape to use for a local target.
 
 ```litex
 by cases:
-    prove:
-        1 + 1 = 2
+    ? 1 + 1 = 2
     case 1 + 1 = 2:
         do_nothing
     case 1 + 1 != 2:
@@ -3727,31 +3637,26 @@ by cases:
 
 ```litex
 by contra:
-    prove:
-        not exist x R st {x != x}
+    ? not exist x R st {x != x}
     obtain a from exist x R st {x != x}
     impossible a = a
 ```
 
 ```litex
 by enumerate finite_set:
-    prove:
-        forall x {1, 2}:
-            x = 1 or x = 2
+    ? forall x {1, 2}:
+        x = 1 or x = 2
 ```
 
 ```litex
 by extension:
-    prove:
-        {1, 2} = {2, 1}
+    ? {1, 2} = {2, 1}
     by enumerate finite_set:
-        prove:
-            forall x {1, 2}:
-                x $in {2, 1}
+        ? forall x {1, 2}:
+            x $in {2, 1}
     by enumerate finite_set:
-        prove:
-            forall y {2, 1}:
-                y $in {1, 2}
+        ? forall y {2, 1}:
+            y $in {1, 2}
 
 {1, 2} = {2, 1}
 ```
@@ -3982,24 +3887,21 @@ prop prime(a N_pos):
             a % b != 0
 
 claim:
-    prove:
-        forall a N_pos:
-            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+    ? forall a N_pos:
+        product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
     by induc a from 1:
-        prove:
-            product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+        ? product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
         product(1, 1, fn(x N_pos) N_pos {x}) = 1
         1 <= product(1, 1, fn(x N_pos) N_pos {x})
 
         claim:
-            prove:
-                forall k Z:
-                    k >= 1
-                    product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
-                    =>:
-                        product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
+            ? forall k Z:
+                k >= 1
+                product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
+                =>:
+                    product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
             product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
             witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
@@ -4007,15 +3909,13 @@ claim:
             k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
 claim:
-    prove:
-        forall a, k N_pos:
-            k <= a
-            =>:
-                product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+    ? forall a, k N_pos:
+        k <= a
+        =>:
+            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
 
     by cases:
-        prove:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+        ? product(1, a, fn(x N_pos) N_pos {x}) % k = 0
         case k = a:
             product(1, a, fn(x N_pos) N_pos {x}) % a = 0
             product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
@@ -4028,29 +3928,25 @@ claim:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
 
 claim:
-    prove:
-        forall a N_pos:
-            a <= product(1, a, fn(x N_pos) N_pos {x})
+    ? forall a N_pos:
+        a <= product(1, a, fn(x N_pos) N_pos {x})
 
     product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
 
 claim:
-    prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {$prime(k), a % k = 0}
+    ? forall a N_pos:
+        2 <= a
+        =>:
+            exist k N_pos st {$prime(k), a % k = 0}
 
     by strong_induc x from 2:
-        prove:
-            exist k N_pos st {$prime(k), x % k = 0}
+        ? exist k N_pos st {$prime(k), x % k = 0}
 
         claim:
-            prove:
-                forall b N_pos:
-                    2 <= b < 2
-                    =>:
-                        2 % b != 0
+            ? forall b N_pos:
+                2 <= b < 2
+                =>:
+                    2 % b != 0
             by contra 2 % b != 0:
                 impossible b < 2
         $prime(2)
@@ -4060,16 +3956,15 @@ claim:
         witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
 
         claim:
-            prove:
-                forall n Z:
-                    n >= 2
-                    forall m Z:
-                        2 <= m
-                        m <= n
-                        =>:
-                            exist k N_pos st {$prime(k), m % k = 0}
+            ? forall n Z:
+                n >= 2
+                forall m Z:
+                    2 <= m
+                    m <= n
                     =>:
-                        exist k N_pos st {$prime(k), (n + 1) % k = 0}
+                        exist k N_pos st {$prime(k), m % k = 0}
+                =>:
+                    exist k N_pos st {$prime(k), (n + 1) % k = 0}
 
             by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
                 case $prime(n+1):
@@ -4078,11 +3973,10 @@ claim:
                     witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
                 case not $prime(n+1):
                     by contra:
-                        prove:
-                            not forall b N_pos:
-                                2 <= b < n + 1
-                                =>:
-                                    (n + 1) % b != 0
+                        ? not forall b N_pos:
+                            2 <= b < n + 1
+                            =>:
+                                (n + 1) % b != 0
                         2 <= n + 1
                         $prime(n+1)
                         impossible $prime(n+1)
@@ -4094,8 +3988,7 @@ claim:
                     (n+1) % c = 0
                     c <= n or c >= n + 1
                     by cases:
-                        prove:
-                            c <= n
+                        ? c <= n
                         case c <= n:
                             ...
                         case c >= n + 1:
@@ -4134,27 +4027,24 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
 
 ```litex
 claim:
-    prove:
-        forall x, y R:
-            0 <= x
-            0 <= y
-            x^2 < y^2
-            =>:
-                x < y
+    ? forall x, y R:
+        0 <= x
+        0 <= y
+        x^2 < y^2
+        =>:
+            x < y
 
     by contra:
-        prove:
-            x < y
+        ? x < y
         y <= x
         y^2 <= x^2
         impossible x^2 < y^2
 
 claim:
-    prove:
-        forall n, d Z:
-            n * d < 0
-            =>:
-                abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
+    ? forall n, d Z:
+        n * d < 0
+        =>:
+            abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
 
     0 < -(n * d)
     0 < 8
@@ -4165,23 +4055,21 @@ claim:
     abs(2 * (n + d) - d)^2 = (2 * (n + d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
 
 claim:
-    prove:
-        forall n, d Z:
-            n * d < 0
-            =>:
-                abs(2 * (n + d) - d) < abs(2 * n - d)
+    ? forall n, d Z:
+        n * d < 0
+        =>:
+            abs(2 * (n + d) - d) < abs(2 * n - d)
 
     0 <= abs(2 * (n + d) - d)
     0 <= abs(2 * n - d)
     abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
 
 claim:
-    prove:
-        forall n, d Z:
-            n * d >= 0
-            0 < d * (n - d)
-            =>:
-                abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
+    ? forall n, d Z:
+        n * d >= 0
+        0 < d * (n - d)
+        =>:
+            abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
 
     0 < 8
     0 < 8 * (d * (n - d))
@@ -4191,12 +4079,11 @@ claim:
     abs(2 * (n - d) - d)^2 = (2 * (n - d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
 
 claim:
-    prove:
-        forall n, d Z:
-            n * d >= 0
-            0 < d * (n - d)
-            =>:
-                abs(2 * (n - d) - d) < abs(2 * n - d)
+    ? forall n, d Z:
+        n * d >= 0
+        0 < d * (n - d)
+        =>:
+            abs(2 * (n - d) - d) < abs(2 * n - d)
 
     0 <= abs(2 * (n - d) - d)
     0 <= abs(2 * n - d)
@@ -4225,31 +4112,27 @@ prop fmod_add_fdiv_at_measure(m Z):
             fmod(u, v) + v * fdiv(u, v) = u
 
 claim:
-    prove:
-        forall n, d Z:
-            abs(2 * n - d) = 0
-            =>:
-                fmod(n, d) + d * fdiv(n, d) = n
+    ? forall n, d Z:
+        abs(2 * n - d) = 0
+        =>:
+            fmod(n, d) + d * fdiv(n, d) = n
 
     by cases:
-        prove:
-            fmod(n, d) + d * fdiv(n, d) = n
+        ? fmod(n, d) + d * fdiv(n, d) = n
         case n * d < 0:
             abs(2 * (n + d) - d) < abs(2 * n - d) = 0
             0 <= abs(2 * (n + d) - d)
             impossible abs(2 * (n + d) - d) < 0
         case n * d >= 0:
             by cases:
-                prove:
-                    fmod(n, d) + d * fdiv(n, d) = n
+                ? fmod(n, d) + d * fdiv(n, d) = n
                 case 0 < d * (n - d):
                     abs(2 * (n - d) - d) < abs(2 * n - d) = 0
                     0 <= abs(2 * (n - d) - d)
                     impossible abs(2 * (n - d) - d) < 0
                 case 0 >= d * (n - d):
                     by cases:
-                        prove:
-                            fmod(n, d) + d * fdiv(n, d) = n
+                        ? fmod(n, d) + d * fdiv(n, d) = n
                         case n = d:
                             fmod(n, d) = 0
                             fdiv(n, d) = 1
@@ -4262,34 +4145,30 @@ claim:
 $fmod_add_fdiv_at_measure(0)
 
 claim:
-    prove:
-        forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $fmod_add_fdiv_at_measure(y)
+    ? forall m Z:
+        m >= 0
+        forall y Z:
+            y >= 0
+            y <= m
             =>:
-                $fmod_add_fdiv_at_measure(m + 1)
+                $fmod_add_fdiv_at_measure(y)
+        =>:
+            $fmod_add_fdiv_at_measure(m + 1)
 
     claim:
-        prove:
-            forall n, d Z:
-                abs(2 * n - d) = m + 1
-                =>:
-                    fmod(n, d) + d * fdiv(n, d) = n
+        ? forall n, d Z:
+            abs(2 * n - d) = m + 1
+            =>:
+                fmod(n, d) + d * fdiv(n, d) = n
 
         by cases:
-            prove:
-                fmod(n, d) + d * fdiv(n, d) = n
+            ? fmod(n, d) + d * fdiv(n, d) = n
             case n * d < 0:
                 abs(2 * (n + d) - d) >= 0
                 abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
                 abs(2 * (n + d) - d) <= m or abs(2 * (n + d) - d) >= m + 1
                 by cases:
-                    prove:
-                        abs(2 * (n + d) - d) <= m
+                    ? abs(2 * (n + d) - d) <= m
                     case abs(2 * (n + d) - d) <= m:
                         do_nothing
                     case abs(2 * (n + d) - d) >= m + 1:
@@ -4303,15 +4182,13 @@ claim:
                 fmod(n, d) + d * fdiv(n, d) = fmod(n + d, d) + d * (fdiv(n + d, d) - 1) = fmod(n + d, d) + d * fdiv(n + d, d) - d = n + d - d = n
             case n * d >= 0:
                 by cases:
-                    prove:
-                        fmod(n, d) + d * fdiv(n, d) = n
+                    ? fmod(n, d) + d * fdiv(n, d) = n
                     case 0 < d * (n - d):
                         abs(2 * (n - d) - d) >= 0
                         abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
                         abs(2 * (n - d) - d) <= m or abs(2 * (n - d) - d) >= m + 1
                         by cases:
-                            prove:
-                                abs(2 * (n - d) - d) <= m
+                            ? abs(2 * (n - d) - d) <= m
                             case abs(2 * (n - d) - d) <= m:
                                 do_nothing
                             case abs(2 * (n - d) - d) >= m + 1:
@@ -4325,8 +4202,7 @@ claim:
                         fmod(n, d) + d * fdiv(n, d) = fmod(n - d, d) + d * (fdiv(n - d, d) + 1) = fmod(n - d, d) + d * fdiv(n - d, d) + d = n - d + d = n
                     case 0 >= d * (n - d):
                         by cases:
-                            prove:
-                                fmod(n, d) + d * fdiv(n, d) = n
+                            ? fmod(n, d) + d * fdiv(n, d) = n
                             case n = d:
                                 fmod(n, d) = 0
                                 fdiv(n, d) = 1
@@ -4339,19 +4215,17 @@ claim:
     $fmod_add_fdiv_at_measure(m + 1)
 
 by strong_induc m from 0:
-    prove:
-        $fmod_add_fdiv_at_measure(m)
+    ? $fmod_add_fdiv_at_measure(m)
 
-    prove from m = 0:
+    ? from m = 0:
         $fmod_add_fdiv_at_measure(0)
 
-    prove strong_induc:
+    ? strong_induc:
         $fmod_add_fdiv_at_measure(m + 1)
 
 claim:
-    prove:
-        forall n, d Z:
-            fmod(n, d) + d * fdiv(n, d) = n
+    ? forall n, d Z:
+        fmod(n, d) + d * fdiv(n, d) = n
 
     forall n1, d1 Z:
         abs(2 * n1 - d1) >= 0
@@ -4359,47 +4233,41 @@ claim:
         fmod(n1, d1) + d1 * fdiv(n1, d1) = n1
 
 claim:
-    prove:
-        forall x, y Z:
-            0 < y
-            x * y >= 0
-            =>:
-                0 <= x
+    ? forall x, y Z:
+        0 < y
+        x * y >= 0
+        =>:
+            0 <= x
 
     by contra:
-        prove:
-            0 <= x
+        ? 0 <= x
         x < 0
         x * y < 0
         impossible x * y >= 0
 
 claim:
-    prove:
-        forall x, y Z:
-            0 < y
-            0 >= y * (x - y)
-            =>:
-                x <= y
+    ? forall x, y Z:
+        0 < y
+        0 >= y * (x - y)
+        =>:
+            x <= y
 
     by contra:
-        prove:
-            x <= y
+        ? x <= y
         y < x
         0 < x - y
         0 < y * (x - y)
         impossible 0 >= y * (x - y)
 
 claim:
-    prove:
-        forall x, y Z:
-            x <= y
-            x != y
-            =>:
-                x < y
+    ? forall x, y Z:
+        x <= y
+        x != y
+        =>:
+            x < y
 
     by contra:
-        prove:
-            x < y
+        ? x < y
         x >= y
         x = y
         impossible x != y
@@ -4412,32 +4280,28 @@ prop fmod_bound_at_measure(m Z):
             abs(fmod(u, v)) < abs(v)
 
 claim:
-    prove:
-        forall a, b Z:
-            abs(2 * a - b) = 0
-            0 < b
-            =>:
-                abs(fmod(a, b)) < abs(b)
+    ? forall a, b Z:
+        abs(2 * a - b) = 0
+        0 < b
+        =>:
+            abs(fmod(a, b)) < abs(b)
 
     by cases:
-        prove:
-            abs(fmod(a, b)) < abs(b)
+        ? abs(fmod(a, b)) < abs(b)
         case a * b < 0:
             abs(2 * (a + b) - b) < abs(2 * a - b) = 0
             0 <= abs(2 * (a + b) - b)
             impossible abs(2 * (a + b) - b) < 0
         case a * b >= 0:
             by cases:
-                prove:
-                    abs(fmod(a, b)) < abs(b)
+                ? abs(fmod(a, b)) < abs(b)
                 case 0 < b * (a - b):
                     abs(2 * (a - b) - b) < abs(2 * a - b) = 0
                     0 <= abs(2 * (a - b) - b)
                     impossible abs(2 * (a - b) - b) < 0
                 case 0 >= b * (a - b):
                     by cases:
-                        prove:
-                            abs(fmod(a, b)) < abs(b)
+                        ? abs(fmod(a, b)) < abs(b)
                         case a = b:
                             fmod(a, b) = 0
                             abs(fmod(a, b)) = abs(0) = 0
@@ -4447,21 +4311,18 @@ claim:
                         case a != b:
                             fmod(a, b) = a
                             by contra:
-                                prove:
-                                    0 <= a
+                                ? 0 <= a
                                 a < 0
                                 a * b < 0
                                 impossible a * b >= 0
                             by contra:
-                                prove:
-                                    a <= b
+                                ? a <= b
                                 b < a
                                 0 < a - b
                                 0 < b * (a - b)
                                 impossible 0 >= b * (a - b)
                             by contra:
-                                prove:
-                                    a < b
+                                ? a < b
                                 a >= b
                                 a = b
                                 impossible a != b
@@ -4473,35 +4334,31 @@ claim:
 $fmod_bound_at_measure(0)
 
 claim:
-    prove:
-        forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $fmod_bound_at_measure(y)
+    ? forall m Z:
+        m >= 0
+        forall y Z:
+            y >= 0
+            y <= m
             =>:
-                $fmod_bound_at_measure(m + 1)
+                $fmod_bound_at_measure(y)
+        =>:
+            $fmod_bound_at_measure(m + 1)
 
     claim:
-        prove:
-            forall a, b Z:
-                abs(2 * a - b) = m + 1
-                0 < b
-                =>:
-                    abs(fmod(a, b)) < abs(b)
+        ? forall a, b Z:
+            abs(2 * a - b) = m + 1
+            0 < b
+            =>:
+                abs(fmod(a, b)) < abs(b)
 
         by cases:
-            prove:
-                abs(fmod(a, b)) < abs(b)
+            ? abs(fmod(a, b)) < abs(b)
             case a * b < 0:
                 abs(2 * (a + b) - b) >= 0
                 abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
                 abs(2 * (a + b) - b) <= m or abs(2 * (a + b) - b) >= m + 1
                 by cases:
-                    prove:
-                        abs(2 * (a + b) - b) <= m
+                    ? abs(2 * (a + b) - b) <= m
                     case abs(2 * (a + b) - b) <= m:
                         do_nothing
                     case abs(2 * (a + b) - b) >= m + 1:
@@ -4518,15 +4375,13 @@ claim:
                 abs(fmod(a, b)) < abs(b)
             case a * b >= 0:
                 by cases:
-                    prove:
-                        abs(fmod(a, b)) < abs(b)
+                    ? abs(fmod(a, b)) < abs(b)
                     case 0 < b * (a - b):
                         abs(2 * (a - b) - b) >= 0
                         abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
                         abs(2 * (a - b) - b) <= m or abs(2 * (a - b) - b) >= m + 1
                         by cases:
-                            prove:
-                                abs(2 * (a - b) - b) <= m
+                            ? abs(2 * (a - b) - b) <= m
                             case abs(2 * (a - b) - b) <= m:
                                 do_nothing
                             case abs(2 * (a - b) - b) >= m + 1:
@@ -4543,8 +4398,7 @@ claim:
                         abs(fmod(a, b)) < abs(b)
                     case 0 >= b * (a - b):
                         by cases:
-                            prove:
-                                abs(fmod(a, b)) < abs(b)
+                            ? abs(fmod(a, b)) < abs(b)
                             case a = b:
                                 fmod(a, b) = 0
                                 abs(fmod(a, b)) = abs(0) = 0
@@ -4554,21 +4408,18 @@ claim:
                             case a != b:
                                 fmod(a, b) = a
                                 by contra:
-                                    prove:
-                                        0 <= a
+                                    ? 0 <= a
                                     a < 0
                                     a * b < 0
                                     impossible a * b >= 0
                                 by contra:
-                                    prove:
-                                        a <= b
+                                    ? a <= b
                                     b < a
                                     0 < a - b
                                     0 < b * (a - b)
                                     impossible 0 >= b * (a - b)
                                 by contra:
-                                    prove:
-                                        a < b
+                                    ? a < b
                                     a >= b
                                     a = b
                                     impossible a != b
@@ -4580,21 +4431,19 @@ claim:
     $fmod_bound_at_measure(m + 1)
 
 by strong_induc m from 0:
-    prove:
-        $fmod_bound_at_measure(m)
+    ? $fmod_bound_at_measure(m)
 
-    prove from m = 0:
+    ? from m = 0:
         $fmod_bound_at_measure(0)
 
-    prove strong_induc:
+    ? strong_induc:
         $fmod_bound_at_measure(m + 1)
 
 claim:
-    prove:
-        forall a, b Z:
-            0 < b
-            =>:
-                abs(fmod(a, b)) < abs(b)
+    ? forall a, b Z:
+        0 < b
+        =>:
+            abs(fmod(a, b)) < abs(b)
 
     forall a1, b1 Z:
         0 < b1
@@ -4604,11 +4453,10 @@ claim:
             abs(fmod(a1, b1)) < abs(b1)
 
 claim:
-    prove:
-        forall a, b Z:
-            b < 0
-            =>:
-                abs(fmod(a, -b)) < abs(b)
+    ? forall a, b Z:
+        b < 0
+        =>:
+            abs(fmod(a, -b)) < abs(b)
 
     0 < -b
     -b $in Z
@@ -4646,18 +4494,16 @@ prop egcd_identity_at_measure(m Z):
             egcd_l(u, v) * u + egcd_r(u, v) * v = gcd(u, v)
 
 claim:
-    prove:
-        forall a, b Z:
-            abs(b) = 0
-            =>:
-                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+    ? forall a, b Z:
+        abs(b) = 0
+        =>:
+            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
 
     b = 0
     0 >= b
     b >= 0
     by cases:
-        prove:
-            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+        ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
         case 0 <= a:
             egcd_pair(a, b) = (1, 0)
             egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
@@ -4674,34 +4520,30 @@ claim:
 $egcd_identity_at_measure(0)
 
 claim:
-    prove:
-        forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $egcd_identity_at_measure(y)
+    ? forall m Z:
+        m >= 0
+        forall y Z:
+            y >= 0
+            y <= m
             =>:
-                $egcd_identity_at_measure(m + 1)
+                $egcd_identity_at_measure(y)
+        =>:
+            $egcd_identity_at_measure(m + 1)
 
     claim:
-        prove:
-            forall a, b Z:
-                abs(b) = m + 1
-                =>:
-                    egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+        ? forall a, b Z:
+            abs(b) = m + 1
+            =>:
+                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
 
         by cases:
-            prove:
-                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+            ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
             case 0 < b:
                 abs(fmod(a, b)) >= 0
                 abs(fmod(a, b)) < abs(b) = m + 1
                 abs(fmod(a, b)) <= m or abs(fmod(a, b)) >= m + 1
                 by cases:
-                    prove:
-                        abs(fmod(a, b)) <= m
+                    ? abs(fmod(a, b)) <= m
                     case abs(fmod(a, b)) <= m:
                         do_nothing
                     case abs(fmod(a, b)) >= m + 1:
@@ -4726,15 +4568,13 @@ claim:
                 egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b)) = gcd(a, b)
             case 0 >= b:
                 by cases:
-                    prove:
-                        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                    ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
                     case b < 0:
                         abs(fmod(a, -b)) >= 0
                         abs(fmod(a, -b)) < abs(b) = m + 1
                         abs(fmod(a, -b)) <= m or abs(fmod(a, -b)) >= m + 1
                         by cases:
-                            prove:
-                                abs(fmod(a, -b)) <= m
+                            ? abs(fmod(a, -b)) <= m
                             case abs(fmod(a, -b)) <= m:
                                 do_nothing
                             case abs(fmod(a, -b)) >= m + 1:
@@ -4760,8 +4600,7 @@ claim:
                     case b >= 0:
                         b = 0
                         by cases:
-                            prove:
-                                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                            ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
                             case 0 <= a:
                                 egcd_pair(a, b) = (1, 0)
                                 egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
@@ -4778,19 +4617,17 @@ claim:
     $egcd_identity_at_measure(m + 1)
 
 by strong_induc m from 0:
-    prove:
-        $egcd_identity_at_measure(m)
+    ? $egcd_identity_at_measure(m)
 
-    prove from m = 0:
+    ? from m = 0:
         $egcd_identity_at_measure(0)
 
-    prove strong_induc:
+    ? strong_induc:
         $egcd_identity_at_measure(m + 1)
 
 claim:
-    prove:
-        forall a, b Z:
-            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+    ? forall a, b Z:
+        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
 
     forall a1, b1 Z:
         abs(b1) >= 0
@@ -4822,13 +4659,11 @@ prop exist_bijection(S, T set):
     exist f fn(x S) T st {$bijective_fn(S, T, f)}
 
 claim:
-    prove:
-        forall n N:
-            exist! y N st {2 * y = n * (n + 1)}
+    ? forall n N:
+        exist! y N st {2 * y = n * (n + 1)}
 
     by cases:
-        prove:
-            n * (n + 1) % 2 = 0
+        ? n * (n + 1) % 2 = 0
         case n % 2 = 0:
             n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 0 * ((n + 1) % 2) % 2 = 0 % 2 = 0
         case n % 2 = 1:
@@ -4846,20 +4681,17 @@ claim:
     exist! y N st {2 * y = n * (n + 1)}
 
 have fn tri by exist!:
-    prove:
-        forall n N:
-            exist! y N st {2 * y = n * (n + 1)}
+    ? forall n N:
+        exist! y N st {2 * y = n * (n + 1)}
 
 claim:
-    prove:
-        tri(0) = 0
+    ? tri(0) = 0
     2 * tri(0) = 0 * (0 + 1)
     tri(0) = (2 * tri(0)) / 2 = (0 * (0 + 1)) / 2 = 0
 
 claim:
-    prove:
-        forall n N:
-            tri(n + 1) = tri(n) + n + 1
+    ? forall n N:
+        tri(n + 1) = tri(n) + n + 1
     2 * tri(n + 1) = (n + 1) * ((n + 1) + 1) = (n + 1) * (n + 2)
     2 * tri(n) = n * (n + 1)
     2 * (tri(n) + n + 1) = 2 * tri(n) + 2 * n + 2 = n * (n + 1) + 2 * n + 2 = (n + 1) * (n + 2)
@@ -4872,52 +4704,46 @@ prop triangular_interval(n, s N):
 have fn diagonal_index(u cart(N, N)) N = tri(u[1]) + u[2]
 
 claim:
-    prove:
-        forall u cart(N, N):
-            u[2] <= u[1]
-            =>:
-                tri(u[1]) <= diagonal_index(u)
-                diagonal_index(u) < tri(u[1] + 1)
+    ? forall u cart(N, N):
+        u[2] <= u[1]
+        =>:
+            tri(u[1]) <= diagonal_index(u)
+            diagonal_index(u) < tri(u[1] + 1)
     tri(u[1]) <= tri(u[1]) + u[2] = diagonal_index(u)
     diagonal_index(u) = tri(u[1]) + u[2] <= tri(u[1]) + u[1] < tri(u[1]) + u[1] + 1 = tri(u[1] + 1)
 
 claim:
-    prove:
-        forall a, b N:
-            a < b
-            =>:
-                tri(a + 1) <= tri(b)
+    ? forall a, b N:
+        a < b
+        =>:
+            tri(a + 1) <= tri(b)
     a + 1 <= b
     2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
     tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
 
 claim:
-    prove:
-        forall u, v cart(N, N):
-            u[2] <= u[1]
-            v[2] <= v[1]
-            u[1] < v[1]
-            =>:
-                diagonal_index(u) < diagonal_index(v)
+    ? forall u, v cart(N, N):
+        u[2] <= u[1]
+        v[2] <= v[1]
+        u[1] < v[1]
+        =>:
+            diagonal_index(u) < diagonal_index(v)
     diagonal_index(u) < tri(u[1] + 1) <= tri(v[1]) <= diagonal_index(v)
 
 ## If two valid diagonal positions have the same number, they are on the same diagonal.
 claim:
-    prove:
-        forall u, v cart(N, N):
-            u[2] <= u[1]
-            v[2] <= v[1]
-            diagonal_index(u) = diagonal_index(v)
-            =>:
-                u[1] = v[1]
+    ? forall u, v cart(N, N):
+        u[2] <= u[1]
+        v[2] <= v[1]
+        diagonal_index(u) = diagonal_index(v)
+        =>:
+            u[1] = v[1]
     by contra:
-        prove:
-            not u[1] < v[1]
+        ? not u[1] < v[1]
         diagonal_index(u) < diagonal_index(v)
         impossible diagonal_index(u) = diagonal_index(v)
     by contra:
-        prove:
-            not v[1] < u[1]
+        ? not v[1] < u[1]
         diagonal_index(v) < diagonal_index(u)
         impossible diagonal_index(u) = diagonal_index(v)
     u[1] = v[1]
@@ -4926,21 +4752,19 @@ have fn cantor_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
 
 ## On one diagonal, the offset determines the position.
 claim:
-    prove:
-        forall u, v cart(N, N):
-            u[1] = v[1]
-            diagonal_index(u) = diagonal_index(v)
-            =>:
-                u[2] = v[2]
+    ? forall u, v cart(N, N):
+        u[1] = v[1]
+        diagonal_index(u) = diagonal_index(v)
+        =>:
+            u[2] = v[2]
     tri(u[1]) + u[2] = diagonal_index(u) = diagonal_index(v) = tri(v[1]) + v[2]
     u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
 
 claim:
-    prove:
-        forall t1, t2 cart(N, N):
-            cantor_pair(t1) = cantor_pair(t2)
-            =>:
-                t1 = t2
+    ? forall t1, t2 cart(N, N):
+        cantor_pair(t1) = cantor_pair(t2)
+        =>:
+            t1 = t2
     have u cart(N, N) = (t1[1] + t1[2], t1[2])
     have v cart(N, N) = (t2[1] + t2[2], t2[2])
     u[2] = t1[2] <= t1[1] + t1[2] = u[1]
@@ -4954,41 +4778,37 @@ claim:
     t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
 
 claim:
-    prove:
-        forall a, b N:
-            b <= a
-            =>:
-                a - b $in N
+    ? forall a, b N:
+        b <= a
+        =>:
+            a - b $in N
     a - b >= 0
     a - b $in Z
     a - b $in N
 
 claim:
-    prove:
-        forall n, s N:
-            $triangular_interval(n, s)
-            =>:
-                n - tri(s) <= s
+    ? forall n, s N:
+        $triangular_interval(n, s)
+        =>:
+            n - tri(s) <= s
     n < tri(s + 1) = tri(s) + s + 1
     n <= (tri(s) + s + 1) - 1 = tri(s) + s
     n - tri(s) <= (tri(s) + s) - tri(s) = s
 
 by induc n from 0:
-    prove:
-        exist s N st {$triangular_interval(n, s)}
+    ? exist s N st {$triangular_interval(n, s)}
 
-    prove from n = 0:
+    ? from n = 0:
         tri(0) <= 0
         tri(0 + 1) = tri(0) + 0 + 1 = 1
         0 < 1 = tri(0 + 1)
         witness exist s N st {$triangular_interval(0, s)} from 0:
             $triangular_interval(0, 0)
 
-    prove induc:
+    ? induc:
         obtain s from exist s N st {$triangular_interval(n, s)}
         by cases:
-            prove:
-                exist t N st {$triangular_interval(n + 1, t)}
+            ? exist t N st {$triangular_interval(n + 1, t)}
             case n + 1 < tri(s + 1):
                 tri(s) <= n <= n + 1
                 witness exist t N st {$triangular_interval(n + 1, t)} from s:
@@ -5000,9 +4820,8 @@ by induc n from 0:
                     $triangular_interval(n + 1, s + 1)
 
 claim:
-    prove:
-        forall n N:
-            exist t cart(N, N) st {n = cantor_pair(t)}
+    ? forall n N:
+        exist t cart(N, N) st {n = cantor_pair(t)}
     obtain s from exist s N st {$triangular_interval(n, s)}
     have b N = n - tri(s)
     n - tri(s) <= s
@@ -5014,8 +4833,7 @@ claim:
         n = cantor_pair(p)
 
 claim:
-    prove:
-        $exist_bijection(cart(N, N), N)
+    ? $exist_bijection(cart(N, N), N)
     witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cantor_pair
 ```
 
@@ -5026,41 +4844,35 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall n Z:
-            n % 2 = 0 or n % 2 = 1
+    ? forall n Z:
+        n % 2 = 0 or n % 2 = 1
     by induc n from 0:
-        prove:
-            n % 2 = 0 or n % 2 = 1
+        ? n % 2 = 0 or n % 2 = 1
         0 % 2 = 0
         0 % 2 = 0 or 0 % 2 = 1
 
         claim:
-            prove:
-                forall x Z:
-                    x >= 0
-                    x % 2 = 0 or x % 2 = 1
-                    =>:
-                        (x + 1) % 2 = 0 or (x + 1) % 2 = 1
+            ? forall x Z:
+                x >= 0
+                x % 2 = 0 or x % 2 = 1
+                =>:
+                    (x + 1) % 2 = 0 or (x + 1) % 2 = 1
 
             by cases:
-                prove:
-                    (x + 1) % 2 = 0 or (x + 1) % 2 = 1
+                ? (x + 1) % 2 = 0 or (x + 1) % 2 = 1
                 case x % 2 = 0:
                     (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
                 case x % 2 = 1:
                     (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
     by cases:
-        prove:
-            n % 2 = 0 or n % 2 = 1
+        ? n % 2 = 0 or n % 2 = 1
         case n >= 0:
             do_nothing
         case n < 0:
             -n >= 0
             (-n) % 2 = 0 or (-n) % 2 = 1
             by cases:
-                prove:
-                    (n) % 2 = 0 or (n) % 2 = 1
+                ? (n) % 2 = 0 or (n) % 2 = 1
                 case -n % 2 = 0:
                     (n) % 2 = (-(-n)) % 2 = (2 - ((-n) % 2)) % 2 = (2 - 0) % 2 = 0
                 case -n % 2 = 1:
@@ -5074,29 +4886,25 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall x Z:
-            0 <= x
-            =>:
-                x % 2 = 0 or x % 2 = 1
+    ? forall x Z:
+        0 <= x
+        =>:
+            x % 2 = 0 or x % 2 = 1
 
     by induc x from 0:
-        prove:
-            x % 2 = 0 or x % 2 = 1
+        ? x % 2 = 0 or x % 2 = 1
 
         0 % 2 = 0
 
         claim:
-            prove:
-                forall y Z:
-                    0 <= y
-                    y % 2 = 0 or y % 2 = 1
-                    =>:
-                        (y + 1) % 2 = 0 or (y + 1) % 2 = 1
+            ? forall y Z:
+                0 <= y
+                y % 2 = 0 or y % 2 = 1
+                =>:
+                    (y + 1) % 2 = 0 or (y + 1) % 2 = 1
 
             by cases:
-                prove:
-                    (y + 1) % 2 = 0 or (y + 1) % 2 = 1
+                ? (y + 1) % 2 = 0 or (y + 1) % 2 = 1
                 case y % 2 = 0:
                     (y + 1) % 2 = (y % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
                 case y % 2 = 1:
@@ -5110,21 +4918,19 @@ claim:
 
 ```litex
 claim:
-    prove:
-        forall n N_pos:
-            sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
+    ? forall n N_pos:
+        sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
 
     by induc n from 1:
-        prove:
-            sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
+        ? sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
 
-        prove from n = 1:
+        ? from n = 1:
             sum(0, 0, fn(x R) R {x}) = 0
             sum(0, 1, fn(x R) R {x}) = sum(0, 0, fn(x R) R {x}) + fn(x R) R {x}(1)
             fn(x R) R {x}(1) = 1
             sum(0, 1, fn(x R) R {x}) = sum(0, 0, fn(x R) R {x}) + 1 = 0 + 1 = 1 = 1 * (1 + 1) / 2
 
-        prove induc:
+        ? induc:
             sum(0, n + 1, fn(x R) R {x}) = sum(0, n, fn(x R) R {x}) + fn(x R) R {x}(n + 1)
             fn(x R) R {x}(n + 1) = n + 1
             sum(0, n + 1, fn(x R) R {x}) = sum(0, n, fn(x R) R {x}) + (n + 1) = n * (n + 1) / 2 + (n + 1) = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2

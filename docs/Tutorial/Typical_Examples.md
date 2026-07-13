@@ -9,56 +9,61 @@ Litex source code stays the same across languages, but CLI output supports
 localized JSON keys and explanatory labels with `litex -lang <code> ...`.
 See [CLI](https://litexlang.com/doc/cli) for the supported language codes.
 
-## 1. Matching And Substitution
+## 1. A Divisibility Proof by Witnesses
 
-The smallest useful pattern is a syllogism. We introduce a set of humans, an
-object `Socrates` in that set, an abstract predicate `mortal`, and then prove
-the conclusion from a local premise saying that every human is mortal.
+The smallest useful pattern can already be a real proof. We define divisibility
+by a concrete existential witness, then prove that every multiple of `8` is a
+multiple of `2`.
 
 ```litex
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-forall:
-    forall x human:
-        $mortal(x)
-    =>:
-        $mortal(Socrates)
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
+
+claim:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
+
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+$can_be_divided_by_2(8)
 ```
 
-The conclusion is not a command about a proof state. It is the mathematical fact
-we want. Litex sees that the local `forall` premise has the same predicate
-shape, checks that `Socrates $in human`, and substitutes `Socrates` for `x`.
+The conclusion is not a command about a proof state. It is the mathematical
+fact we want. `obtain` opens the witness in the first definition, and `witness`
+constructs the witness required by the second definition.
 
-The accepted fact can also carry an explanation like this:
+The accepted claim carries an explanation like this:
 
 ```json
 {
   "result": "success",
-  "statement": "$mortal(Socrates)",
-  "verification": {
-    "type": "cite forall fact",
-    "cite_source": {
-      "line": 4
-    },
-    "cited_statement": "forall x human:\n    $mortal(x)"
+  "type": "proved claim",
+  "why_verified": {
+    "type": "claim forall proof"
   }
 }
 ```
 
-Here `abstract_prop mortal(x)` only declares the predicate vocabulary. The rule
-"every human is mortal" is a premise of the displayed `forall`, so the example
-shows a conditional result rather than silently adding an axiom to the file.
+Both predicate names have definitions. The only new mathematical construction
+is the witness `4 * d`; the last equality is checked by arithmetic.
 
 Litex also supports the named-theorem route used by many formal systems:
 
 ```litex
 thm add_one_after_two:
-    prove:
-        forall x R:
-            x = 2
-            =>:
-                x + 1 = 3
+    ? forall x R:
+        x = 2
+        =>:
+            x + 1 = 3
     x + 1 = 2 + 1 = 3
 
 by thm add_one_after_two(2)
@@ -69,9 +74,9 @@ This is useful for standard-library facts, long results, or parameter-sensitive
 theorems. The distinctive Litex style is that routine local reasoning can stay
 as direct factual lines.
 
-When `verification` says a line was accepted by citing a `forall`, check where
-that `forall` came from. In the syllogism above, it came from the local premise
-of the displayed statement, so the result is conditional on that premise.
+When a claim is accepted, inspect its witness choices and the facts they use.
+Here the proof has no trusted premise: it explicitly transforms a witness for
+divisibility by `8` into one for divisibility by `2`.
 
 ## 2. Structured Algebra
 
@@ -135,17 +140,15 @@ prop is_group_quotient_set(s nonempty_set, g &Group<s>, h power_set(s), q power_
     q = {c power_set(s): $is_left_coset(s, g, h, c)}
 
 claim:
-    prove:
-        forall s nonempty_set, g &Group<s>, h power_set(s):
-            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+    ? forall s nonempty_set, g &Group<s>, h power_set(s):
+        exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
 
 template<s nonempty_set>:
     have fn group_quotient by exist!:
-        prove:
-            forall g &Group<s>, h power_set(s):
-                exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+        ? forall g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 
 prop is_quotient_product_coset(s nonempty_set, g &Group<s>, h power_set(s), c1 power_set(s), c2 power_set(s), c3 power_set(s)):
     forall x, y s:
@@ -173,11 +176,10 @@ prop is_quotient_multiplication(s nonempty_set, g &Group<s>, h power_set(s), q p
         $is_quotient_product_coset(s, g, h, c1, c2, quotient_mul(c1, c2))
 
 thm group_left_cancel:
-    prove:
-        forall s nonempty_set, g &Group<s>, a, b, c s:
-            @G.op(a, b) = @G.op(a, c)
-            =>:
-                b = c
+    ? forall s nonempty_set, g &Group<s>, a, b, c s:
+        @G.op(a, b) = @G.op(a, c)
+        =>:
+            b = c
     $GroupProperty(s, @G.inv, @G.op, @G.e)
     @G.op(@G.inv(a), a) = @G.e
     @G.op(@G.e, b) = b
@@ -187,9 +189,8 @@ thm group_left_cancel:
     b = c
 
 thm group_inv_inv:
-    prove:
-        forall s nonempty_set, g &Group<s>, a s:
-            @G.inv(@G.inv(a)) = a
+    ? forall s nonempty_set, g &Group<s>, a s:
+        @G.inv(@G.inv(a)) = a
     $GroupProperty(s, @G.inv, @G.op, @G.e)
     @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.e
     @G.op(@G.inv(a), a) = @G.e
@@ -211,11 +212,10 @@ displayed above the `=>:`.
 
 ```litex
 claim:
-    prove:
-        forall x R:
-            x + 3 = 10
-            =>:
-                x = 7
+    ? forall x R:
+        x + 3 = 10
+        =>:
+            x = 7
     x = (x + 3) - 3 = 10 - 3 = 7
 ```
 

@@ -33,55 +33,44 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "induc: expects `prove:` or `?` goal block".to_string(),
+                    "induc: expects one or more `? <fact>` goal blocks".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
 
-        let question_goal_count = if tb.body[0].current_token_is_equal_to(QUESTION_GOAL) {
-            tb.body
-                .iter()
-                .take_while(|block| block.current_token_is_equal_to(QUESTION_GOAL))
-                .count()
-        } else {
-            0
-        };
-        let goal_body_skip = if question_goal_count > 0 {
-            question_goal_count
-        } else {
-            1
-        };
-        let prove_line = tb.body[0].line_file.clone();
+        let question_goal_count = tb
+            .body
+            .iter()
+            .take_while(|block| {
+                block.current_token_is_equal_to(QUESTION_GOAL)
+                    && !Self::is_induc_structured_proof_block(block)
+            })
+            .count();
+        if question_goal_count == 0 {
+            let message = if tb.body[0].current_token_is_equal_to("prove") {
+                "induc: `prove` was removed; start each goal with `? <fact>`"
+            } else {
+                "induc: expects one or more `? <fact>` goal blocks before its proof"
+            };
+            return Err(Self::induc_parse_error(
+                message.to_string(),
+                tb.body[0].line_file.clone(),
+            ));
+        }
+        let goal_body_skip = question_goal_count;
+        let goal_line = tb.body[0].line_file.clone();
         let induc_param = [param.clone()];
         let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         self.parse_in_local_free_param_scope(
             ParamObjType::Induc,
             &induc_param,
-            prove_line,
+            goal_line,
             |this| {
-                if question_goal_count > 0 {
-                    for block in tb.body.iter_mut().take(question_goal_count) {
-                        to_prove.push(
-                            this.parse_question_goal_exist_or_and_chain_atomic_fact(
-                                block, "induc",
-                            )?,
-                        );
-                    }
-                    return Ok(());
-                }
-
-                tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-                if tb.body[0].body.is_empty() {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "induc prove: expects at least one fact to prove".to_string(),
-                            tb.body[0].line_file.clone(),
-                        ),
-                    )));
-                }
-                for block in tb.body[0].body.iter_mut() {
-                    to_prove.push(this.parse_exist_or_and_chain_atomic_fact(block)?);
+                for block in tb.body.iter_mut().take(question_goal_count) {
+                    to_prove.push(
+                        this.parse_question_goal_exist_or_and_chain_atomic_fact(block, "induc")?,
+                    );
                 }
                 Ok(())
             },
@@ -123,12 +112,19 @@ impl Runtime {
         let step_keyword = Self::induc_step_proof_keyword(strong);
 
         for block in tb.body.iter_mut().skip(goal_body_skip) {
+            if Self::is_legacy_induc_structured_proof_block(block) {
+                return Err(Self::induc_parse_error(
+                    "induc: `prove` was removed; use `? from ...:` and `? induc:` blocks"
+                        .to_string(),
+                    block.line_file.clone(),
+                ));
+            }
             if Self::is_induc_base_proof_block(block) {
                 structured_proof_seen = true;
                 if !proof.is_empty() {
                     return Err(Self::induc_parse_error(
                         format!(
-                            "induc: old proof statements cannot be mixed with `prove from` / `prove {}` blocks",
+                            "induc: unstructured proof statements cannot be mixed with `? from` / `? {}` blocks",
                             step_keyword
                         ),
                         block.line_file.clone(),
@@ -136,7 +132,7 @@ impl Runtime {
                 }
                 if base_proof.is_some() {
                     return Err(Self::induc_parse_error(
-                        "induc: duplicated `prove from` block".to_string(),
+                        "induc: duplicated `? from` block".to_string(),
                         block.line_file.clone(),
                     ));
                 }
@@ -148,7 +144,7 @@ impl Runtime {
                 if !proof.is_empty() {
                     return Err(Self::induc_parse_error(
                         format!(
-                            "induc: old proof statements cannot be mixed with `prove from` / `prove {}` blocks",
+                            "induc: unstructured proof statements cannot be mixed with `? from` / `? {}` blocks",
                             step_keyword
                         ),
                         block.line_file.clone(),
@@ -156,16 +152,16 @@ impl Runtime {
                 }
                 if step_proof.is_some() {
                     return Err(Self::induc_parse_error(
-                        format!("induc: duplicated `prove {}` block", step_keyword),
+                        format!("induc: duplicated `? {}` block", step_keyword),
                         block.line_file.clone(),
                     ));
                 }
-                block.skip_token(PROVE)?;
+                block.skip_token(QUESTION_GOAL)?;
                 block.skip_token(step_keyword)?;
                 block.skip_token(COLON)?;
                 if !block.exceed_end_of_head() {
                     return Err(Self::induc_parse_error(
-                        format!("induc: expected end of `prove {}` head", step_keyword),
+                        format!("induc: expected end of `? {}` head", step_keyword),
                         block.line_file.clone(),
                     ));
                 }
@@ -174,7 +170,7 @@ impl Runtime {
                 if structured_proof_seen {
                     return Err(Self::induc_parse_error(
                         format!(
-                            "induc: old proof statements cannot be mixed with `prove from` / `prove {}` blocks",
+                            "induc: unstructured proof statements cannot be mixed with `? from` / `? {}` blocks",
                             step_keyword
                         ),
                         block.line_file.clone(),
@@ -187,7 +183,7 @@ impl Runtime {
         if structured_proof_seen && (base_proof.is_none() || step_proof.is_none()) {
             return Err(Self::induc_parse_error(
                 format!(
-                    "induc: structured proof expects both `prove from param = base:` and `prove {}:` blocks",
+                    "induc: structured proof expects both `? from param = base:` and `? {}:` blocks",
                     step_keyword
                 ),
                 tb.line_file.clone(),
@@ -214,13 +210,13 @@ impl Runtime {
         param: &str,
         induc_from: &Obj,
     ) -> Result<(), RuntimeError> {
-        block.skip_token(PROVE)?;
+        block.skip_token(QUESTION_GOAL)?;
         block.skip_token(FROM)?;
         let header_fact =
-            self.parse_header_fact_before_trailing_colon(block, "induc prove from", "", "")?;
+            self.parse_header_fact_before_trailing_colon(block, "induc ? from", "", "")?;
         let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = header_fact else {
             return Err(Self::induc_parse_error(
-                "induc: `prove from` expects an equality fact".to_string(),
+                "induc: `? from` expects an equality fact".to_string(),
                 block.line_file.clone(),
             ));
         };
@@ -229,7 +225,7 @@ impl Runtime {
             || equal_fact.right.to_string() != induc_from.to_string()
         {
             return Err(Self::induc_parse_error(
-                format!("induc: `prove from` must be `{} = {}`", param, induc_from),
+                format!("induc: `? from` must be `{} = {}`", param, induc_from),
                 block.line_file.clone(),
             ));
         }
@@ -237,12 +233,23 @@ impl Runtime {
     }
 
     fn is_induc_base_proof_block(block: &TokenBlock) -> bool {
-        block.token_at_add_index(0) == PROVE && block.token_at_add_index(1) == FROM
+        block.token_at_add_index(0) == QUESTION_GOAL && block.token_at_add_index(1) == FROM
     }
 
     fn is_induc_step_proof_block(block: &TokenBlock) -> bool {
-        block.token_at_add_index(0) == PROVE
+        block.token_at_add_index(0) == QUESTION_GOAL
             && (block.token_at_add_index(1) == INDUC || block.token_at_add_index(1) == STRONG_INDUC)
+    }
+
+    fn is_induc_structured_proof_block(block: &TokenBlock) -> bool {
+        Self::is_induc_base_proof_block(block) || Self::is_induc_step_proof_block(block)
+    }
+
+    fn is_legacy_induc_structured_proof_block(block: &TokenBlock) -> bool {
+        block.token_at_add_index(0) == "prove"
+            && (block.token_at_add_index(1) == FROM
+                || block.token_at_add_index(1) == INDUC
+                || block.token_at_add_index(1) == STRONG_INDUC)
     }
 
     fn induc_step_proof_keyword(strong: bool) -> &'static str {
@@ -261,7 +268,7 @@ impl Runtime {
             return Ok(());
         }
         Err(Self::induc_parse_error(
-            format!("induc: expected `prove {}:` here", expected),
+            format!("induc: expected `? {}:` here", expected),
             block.line_file.clone(),
         ))
     }

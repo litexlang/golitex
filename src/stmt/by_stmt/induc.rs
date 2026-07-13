@@ -45,6 +45,11 @@ impl ByInducStmt {
 
 impl fmt::Display for ByInducStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let question_goals = self
+            .to_prove
+            .iter()
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact))
+            .collect::<Vec<String>>();
         if self.has_structured_proof() {
             let keyword = if self.strong { STRONG_INDUC } else { INDUC };
             let step_keyword = if self.strong { STRONG_INDUC } else { INDUC };
@@ -58,24 +63,22 @@ impl fmt::Display for ByInducStmt {
             };
             return write!(
                 f,
-                "{} {} {} {} {}{}\n{}{}\n{}\n{} {} {} {} {}{}\n{}\n{} {}{}\n{}",
+                "{} {} {} {} {}{}\n{}\n{} {} {} {} {}{}\n{}\n{} {}{}\n{}",
                 BY,
                 keyword,
                 self.param,
                 FROM,
                 self.induc_from,
                 COLON,
-                add_four_spaces_at_beginning(PROVE.to_string(), 1),
-                COLON,
-                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 2),
-                add_four_spaces_at_beginning(PROVE.to_string(), 1),
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
+                add_four_spaces_at_beginning(QUESTION_GOAL.to_string(), 1),
                 FROM,
                 self.param,
                 EQUAL,
                 self.induc_from,
                 COLON,
                 base_proof,
-                add_four_spaces_at_beginning(PROVE.to_string(), 1),
+                add_four_spaces_at_beginning(QUESTION_GOAL.to_string(), 1),
                 step_keyword,
                 COLON,
                 step_proof,
@@ -85,31 +88,27 @@ impl fmt::Display for ByInducStmt {
         if self.strong {
             write!(
                 f,
-                "{} {} {} {} {}{}\n{}{}\n{}\n{}",
+                "{} {} {} {} {}{}\n{}\n{}",
                 BY,
                 STRONG_INDUC,
                 self.param,
                 FROM,
                 self.induc_from,
                 COLON,
-                add_four_spaces_at_beginning(PROVE.to_string(), 1),
-                COLON,
-                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 2),
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1),
             )
         } else {
             write!(
                 f,
-                "{} {} {} {} {}{}\n{}{}\n{}\n{}",
+                "{} {} {} {} {}{}\n{}\n{}",
                 BY,
                 INDUC,
                 self.param,
                 FROM,
                 self.induc_from,
                 COLON,
-                add_four_spaces_at_beginning(PROVE.to_string(), 1),
-                COLON,
-                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 2),
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1),
             )
         }

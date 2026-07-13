@@ -1,0 +1,255 @@
+# Number Theory for Beginners, Section III.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section III.
+# problem: Formalize relative primality, Bezout's criterion, Euclid's lemma,
+# the product corollaries, and the Section III exercises.
+# proof_idea: Reuse Section II's gcd and Bezout interface.  Relative primality
+# for a pair is expressed as `gcd_Z(a,b)=1`; finite mutual relative primality is
+# stated through common divisors.  The forward Bezout direction and Euclid's
+# lemma are written in the same algebraic shape as the source proof.
+# litex_code: This file runs Sections I-II first and then adds Section III.
+# comments: Hard exercise statements remain local checked sketches with
+# explicit proof debt.
+
+trust local import section2
+trust local import section1
+
+"""
+Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
+For two integers, a is prime to b when gcd(a,b)=1.
+"""
+
+prop relatively_prime_Z(a, b Z):
+    gcd_Z(a, b) = 1
+
+prop mutually_relatively_prime_integer_set(A finite_set):
+    A $subset Z
+    forall d Z:
+        d > 0
+        forall a A:
+            a $in Z
+            $divides_Z(d, a)
+        =>:
+            d = 1
+
+forall a, b Z:
+    $relatively_prime_Z(a, b)
+    =>:
+        gcd_Z(a, b) = 1
+
+"""
+Theorem III.1. Integers a,b,...,c are mutually relatively prime if and only if
+a suitable integral linear combination equals 1.
+"""
+
+thm theorem_III_1_relprime_implies_bezout_pair:
+    ? forall a, b Z:
+        $relatively_prime_Z(a, b)
+        =>:
+            exist x, y Z st {a * x + b * y = 1}
+    by thm gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+    1 = gcd_Z(a, b) = a * x + b * y
+    witness exist u, v Z st {a * u + b * v = 1} from x, y:
+        a * x + b * y = 1
+
+# Source handling: This is the converse direction of Theorem III.1 for two
+# integers.
+# trust: The checked proof should use the common-divisor part of
+# `is_gcd_Z` to show `gcd_Z(a,b)` divides 1 and hence equals 1.
+trust:
+    forall a, b Z:
+        exist x, y Z st {a * x + b * y = 1}
+        =>:
+            $relatively_prime_Z(a, b)
+
+thm theorem_III_1_bezout_implies_relprime_pair:
+    ? forall a, b Z:
+        exist x, y Z st {a * x + b * y = 1}
+        =>:
+            $relatively_prime_Z(a, b)
+    $relatively_prime_Z(a, b)
+
+"""
+Corollary. If d is the gcd of a,b,...,c, then a/d,b/d,...,c/d are mutually
+relatively prime.
+"""
+
+sketch:
+    # Source handling: The corollary divides the Bezout identity for d by d.
+    # trust: A finite-input gcd and division interface is needed for the
+    # full statement.
+    trust:
+        forall a, b Z:
+            gcd_Z(a, b) != 0
+            =>:
+                $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
+
+"""
+Theorem III.2. If a is prime to b and a divides bc, then a divides c.
+"""
+
+thm theorem_III_2_euclid_lemma:
+    ? forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $divides_Z(a, b * c)
+        =>:
+            $divides_Z(a, c)
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    obtain u from exist u Z st {b * c = a * u}
+    c = c * 1 = c * (a * x + b * y) = a * (c * x) + (b * c) * y
+    (b * c) * y = (a * u) * y
+    a * (c * x) + (b * c) * y = a * (c * x) + (a * u) * y
+    a * (c * x) + (a * u) * y = a * (c * x + u * y)
+    c = a * (c * x + u * y)
+    witness exist t Z st {c = a * t} from c * x + u * y:
+        c = a * (c * x + u * y)
+    $divides_Z(a, c)
+
+"""
+Corollary 1. If a is prime to b and to c, then a is prime to bc.
+"""
+
+# Source handling: The proof applies Theorem III.2 to any common divisor of a
+# and bc.
+# trust: The checked proof needs a reusable theorem translating the
+# common-divisor characterization into `gcd_Z(a,bc)=1`.
+trust:
+    forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $relatively_prime_Z(a, c)
+        =>:
+            $relatively_prime_Z(a, b * c)
+
+thm theorem_III_2_corollary_1:
+    ? forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $relatively_prime_Z(a, c)
+        =>:
+            $relatively_prime_Z(a, b * c)
+    $relatively_prime_Z(a, b * c)
+
+"""
+Corollary 2. If an integer is prime to each of finitely many integers, then it
+is prime to their product.
+"""
+
+abstract_prop finite_product_of_integer_set(A, p)
+
+# Source handling: The text proves this by induction from Corollary 1.
+# trust: A checked version needs a finite product interface for integer
+# sets or lists.
+trust:
+    forall a Z, A finite_set, p Z:
+        A $subset Z
+        $finite_product_of_integer_set(A, p)
+        forall x A:
+            x $in Z
+            $relatively_prime_Z(a, x)
+        =>:
+            $relatively_prime_Z(a, p)
+
+"""
+Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
+"""
+
+sketch:
+    # Source handling: This is an immediate use of Theorem III.2.
+    # trust: The direct checked proof should combine two divisibility
+    # witnesses and Euclid's lemma.
+    trust:
+        forall a, b, c Z:
+            $relatively_prime_Z(a, b)
+            $divides_Z(a, c)
+            $divides_Z(b, c)
+            =>:
+                $divides_Z(a * b, c)
+
+"""
+Exercise III.2. Multiplication by a residue prime to m permutes the nonzero
+remainders modulo m.
+"""
+
+sketch:
+    abstract_prop multiplication_by_unit_permutes_nonzero_remainders(a, m)
+
+    # Source handling: The exercise uses Euclid's lemma and division
+    # remainders modulo m.
+    # trust: This belongs with the congruence-class machinery of
+    # Section V.
+    trust:
+        forall a Z, m N_pos:
+            m > 1
+            $relatively_prime_Z(a, m)
+            =>:
+                $multiplication_by_unit_permutes_nonzero_remainders(a, m)
+
+"""
+Exercise III.3. A positive integer is either a perfect square or has irrational
+square root.
+"""
+
+sketch:
+    prop perfect_square_Z(n Z):
+        exist k Z st {k > 0, n = k^2}
+
+    # Source handling: The hint uses unique reduced fractions from Exercise
+    # II.8.
+    # trust: A checked proof needs the reduced-fraction interface plus
+    # parity or prime-factorization reasoning.
+    trust:
+        forall n N_pos:
+            $perfect_square_Z(n) or not sqrt(n) $in Q
+
+"""
+Exercise III.4. Every integer >1 that is not a power of 2 is a sum of two or
+more consecutive integers.
+"""
+
+sketch:
+    abstract_prop is_power_of_two(n)
+    abstract_prop is_sum_of_consecutive_positive_integers(n)
+
+    # Source handling: The proof separates odd divisors from powers of 2.
+    # trust: The checked proof needs finite interval sums and odd-divisor
+    # extraction.
+    trust:
+        forall n Z:
+            n > 1
+            not $is_power_of_two(n)
+            =>:
+                $is_sum_of_consecutive_positive_integers(n)
+
+"""
+Exercise III.5. If a,b are positive and coprime, every integer >= ab is
+ax+by with positive x,y.
+"""
+
+sketch:
+    # Source handling: This is the two-generator Frobenius coin argument.
+    # trust: The proof needs modular residues and a positivity adjustment.
+    trust:
+        forall a, b, n N_pos:
+            $relatively_prime_Z(a, b)
+            n >= a * b
+            =>:
+                exist x, y N_pos st {n = a * x + b * y}
+
+"""
+Exercise III.6. For finitely many positive integers with gcd d, every
+sufficiently large multiple of d is a positive linear combination.
+"""
+
+sketch:
+    abstract_prop sufficiently_large_multiple_positive_combination(A, d)
+
+    # Source handling: The text derives this by induction on the number of
+    # generators using Exercise III.5.
+    # trust: A checked proof needs finite lists of positive integers and
+    # the finite-input gcd interface.
+    trust:
+        forall A finite_set, d N_pos:
+            A $subset N_pos
+            =>:
+                $sufficiently_large_multiple_positive_combination(A, d)

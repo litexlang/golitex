@@ -61,23 +61,21 @@ prop LeastElementOfNSubset(S power_set(N), m N):
         m <= x
 
 thm min_of_N_set_is_least:
-    prove:
-        forall S power_set(N):
-            $is_nonempty_set(S)
-            =>:
-                $LeastElementOfNSubset(S, min_of_N_set(S))
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            $LeastElementOfNSubset(S, min_of_N_set(S))
     min_of_N_set(S) $in S
     forall x S:
         min_of_N_set(S) <= x
     $LeastElementOfNSubset(S, min_of_N_set(S))
 
 thm least_of_N_subset_unique:
-    prove:
-        forall S power_set(N), m, n N:
-            $LeastElementOfNSubset(S, m)
-            $LeastElementOfNSubset(S, n)
-            =>:
-                m = n
+    ? forall S power_set(N), m, n N:
+        $LeastElementOfNSubset(S, m)
+        $LeastElementOfNSubset(S, n)
+        =>:
+            m = n
     m $in S
     n $in S
     forall x S:
@@ -89,31 +87,28 @@ thm least_of_N_subset_unique:
     m = n
 
 thm exists_least_of_nonempty_N_subset:
-    prove:
-        forall S power_set(N):
-            $is_nonempty_set(S)
-            =>:
-                exist m N st {$LeastElementOfNSubset(S, m)}
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            exist m N st {$LeastElementOfNSubset(S, m)}
     by thm min_of_N_set_is_least(S)
     witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
         $LeastElementOfNSubset(S, min_of_N_set(S))
 
 thm exists_unique_least_of_nonempty_N_subset, well_ordering_principle:
-    prove:
-        forall S power_set(N):
-            $is_nonempty_set(S)
-            =>:
-                exist! m N st {$LeastElementOfNSubset(S, m)}
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            exist! m N st {$LeastElementOfNSubset(S, m)}
     by thm min_of_N_set_is_least(S)
     witness exist m N st {$LeastElementOfNSubset(S, m)} from min_of_N_set(S):
         $LeastElementOfNSubset(S, min_of_N_set(S))
     claim:
-        prove:
-            forall m, n N:
-                $LeastElementOfNSubset(S, m)
-                $LeastElementOfNSubset(S, n)
-                =>:
-                    m = n
+        ? forall m, n N:
+            $LeastElementOfNSubset(S, m)
+            $LeastElementOfNSubset(S, n)
+            =>:
+                m = n
         by thm least_of_N_subset_unique(S, m, n)
         m = n
     exist! m N st {$LeastElementOfNSubset(S, m)}
@@ -121,11 +116,10 @@ thm exists_unique_least_of_nonempty_N_subset, well_ordering_principle:
 have fn least_of_N_subset(S power_set(N): $is_nonempty_set(S)) N = min_of_N_set(S)
 
 thm least_of_N_subset_is_least:
-    prove:
-        forall S power_set(N):
-            $is_nonempty_set(S)
-            =>:
-                $LeastElementOfNSubset(S, least_of_N_subset(S))
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            $LeastElementOfNSubset(S, least_of_N_subset(S))
     by thm min_of_N_set_is_least(S)
     least_of_N_subset(S) = min_of_N_set(S)
     $LeastElementOfNSubset(S, least_of_N_subset(S))
@@ -274,73 +268,64 @@ trust:
 
 # Mathlib: Nat.Prime.ne_zero
 thm Prime_ne_zero:
-    prove:
-        forall p N:
-            $Prime(p)
-            =>:
-                p != 0
+    ? forall p N:
+        $Prime(p)
+        =>:
+            p != 0
     p != 0
 
 # Mathlib: Nat.Prime.one_lt
 thm Prime_one_lt:
-    prove:
-        forall p N:
-            $Prime(p)
-            =>:
-                1 < p
+    ? forall p N:
+        $Prime(p)
+        =>:
+            1 < p
     1 < p
 
 # Mathlib: Nat.prime_def, exposed as the useful divisor direction.
 thm Prime_eq_one_or_self_of_dvd:
-    prove:
-        forall p, d N:
-            $Prime(p)
-            $Dvd(d, p)
-            =>:
-                d = 1 or d = p
+    ? forall p, d N:
+        $Prime(p)
+        $Dvd(d, p)
+        =>:
+            d = 1 or d = p
     d = 1 or d = p
 
 # Mathlib: Nat.Prime.two
 thm Prime_two:
-    prove:
-        forall _ N:
-            $Prime(2)
+    ? forall _ N:
+        $Prime(2)
     $Prime(2)
 
 # Mathlib: Nat.not_prime_zero
 thm not_prime_zero:
-    prove:
-        forall _ N:
-            not $Prime(0)
+    ? forall _ N:
+        not $Prime(0)
     not $Prime(0)
 
 # Mathlib: Nat.not_prime_one
 thm not_prime_one:
-    prove:
-        forall _ N:
-            not $Prime(1)
+    ? forall _ N:
+        not $Prime(1)
     not $Prime(1)
 
 thm euclidean_division_fixed_divisor:
-    prove:
-        forall q N_pos, n N:
-            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    ? forall q N_pos, n N:
+        exist m, r N st {$EuclideanDivision(n, q, m, r)}
     by induc n from 0:
-        prove:
-            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+        ? exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
-        prove from n = 0:
+        ? from n = 0:
             witness exist m, r N st {$EuclideanDivision(0, q, m, r)} from 0, 0:
                 0 <= 0
                 0 < q
                 0 = 0 * q + 0
                 $EuclideanDivision(0, q, 0, 0)
 
-        prove induc:
+        ? induc:
             obtain m, r from exist m, r N st {$EuclideanDivision(n, q, m, r)}
             by cases:
-                prove:
-                    exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)}
+                ? exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)}
                 case r + 1 < q:
                     witness exist m1, r1 N st {$EuclideanDivision(n + 1, q, m1, r1)} from m, r + 1:
                         0 <= r + 1
@@ -365,171 +350,150 @@ thm euclidean_division_fixed_divisor:
 # Textbook/API bridge: Euclidean division is exposed as a named Nat theorem
 # after the elementary induction proof above.
 thm euclidean_division:
-    prove:
-        forall n N, q N_pos:
-            exist m, r N st {$EuclideanDivision(n, q, m, r)}
+    ? forall n N, q N_pos:
+        exist m, r N st {$EuclideanDivision(n, q, m, r)}
     by thm euclidean_division_fixed_divisor(q, n)
     exist m, r N st {$EuclideanDivision(n, q, m, r)}
 
 # Mathlib: Nat.dvd_refl
 thm dvd_refl:
-    prove:
-        forall n N:
-            $Dvd(n, n)
+    ? forall n N:
+        $Dvd(n, n)
     witness exist k N st {n = n * k} from 1:
         n = n * 1
     $Dvd(n, n)
 
 # Mathlib: Nat.dvd_zero
 thm dvd_zero:
-    prove:
-        forall d N:
-            $Dvd(d, 0)
+    ? forall d N:
+        $Dvd(d, 0)
     witness exist k N st {0 = d * k} from 0:
         0 = d * 0
     $Dvd(d, 0)
 
 # Mathlib: Nat.one_dvd
 thm one_dvd:
-    prove:
-        forall n N:
-            $Dvd(1, n)
+    ? forall n N:
+        $Dvd(1, n)
     $Dvd(1, n)
 
 # Mathlib: Nat.dvd_mul_left / Nat.dvd_mul_right
 thm dvd_mul_left:
-    prove:
-        forall a, b N:
-            $Dvd(a, a * b)
+    ? forall a, b N:
+        $Dvd(a, a * b)
     witness exist k N st {a * b = a * k} from b:
         a * b = a * b
     $Dvd(a, a * b)
 
 thm dvd_mul_right:
-    prove:
-        forall a, b N:
-            $Dvd(a, b * a)
+    ? forall a, b N:
+        $Dvd(a, b * a)
     witness exist k N st {b * a = a * k} from b:
         b * a = a * b
     $Dvd(a, b * a)
 
 # Mathlib: Nat.dvd_add
 thm dvd_add:
-    prove:
-        forall a, b, c N:
-            $Dvd(a, b)
-            $Dvd(a, c)
-            =>:
-                $Dvd(a, b + c)
+    ? forall a, b, c N:
+        $Dvd(a, b)
+        $Dvd(a, c)
+        =>:
+            $Dvd(a, b + c)
     $Dvd(a, b + c)
 
 # Mathlib: Nat.dvd_mul_of_dvd_left
 thm dvd_mul_of_dvd_left:
-    prove:
-        forall a, b, c N:
-            $Dvd(a, b)
-            =>:
-                $Dvd(a, b * c)
+    ? forall a, b, c N:
+        $Dvd(a, b)
+        =>:
+            $Dvd(a, b * c)
     $Dvd(a, b * c)
 
 # Mathlib: Nat.ModEq.refl / symm
 thm ModEq_refl:
-    prove:
-        forall n N_pos, a N:
-            $ModEq(n, a, a)
+    ? forall n N_pos, a N:
+        $ModEq(n, a, a)
     $ModEq(n, a, a)
 
 thm ModEq_symm:
-    prove:
-        forall n N_pos, a, b N:
-            $ModEq(n, a, b)
-            =>:
-                $ModEq(n, b, a)
+    ? forall n N_pos, a, b N:
+        $ModEq(n, a, b)
+        =>:
+            $ModEq(n, b, a)
     $ModEq(n, b, a)
 
 # Mathlib: Nat.gcd_comm
 thm gcd_comm:
-    prove:
-        forall a, b N:
-            gcd(a, b) = gcd(b, a)
+    ? forall a, b N:
+        gcd(a, b) = gcd(b, a)
     gcd(a, b) = gcd(b, a)
 
 # Mathlib: Nat.gcd_dvd_left
 thm gcd_dvd_left:
-    prove:
-        forall a, b N:
-            $Dvd(gcd(a, b), a)
+    ? forall a, b N:
+        $Dvd(gcd(a, b), a)
     $Dvd(gcd(a, b), a)
 
 # Mathlib: Nat.gcd_dvd_right
 thm gcd_dvd_right:
-    prove:
-        forall a, b N:
-            $Dvd(gcd(a, b), b)
+    ? forall a, b N:
+        $Dvd(gcd(a, b), b)
     $Dvd(gcd(a, b), b)
 
 # Mathlib: Nat.dvd_gcd
 thm dvd_gcd:
-    prove:
-        forall a, b, d N:
-            $Dvd(d, a)
-            $Dvd(d, b)
-            =>:
-                $Dvd(d, gcd(a, b))
+    ? forall a, b, d N:
+        $Dvd(d, a)
+        $Dvd(d, b)
+        =>:
+            $Dvd(d, gcd(a, b))
     $Dvd(d, gcd(a, b))
 
 # Mathlib: Nat.lcm_mul_gcd
 thm lcm_mul_gcd:
-    prove:
-        forall a, b N:
-            lcm(a, b) * gcd(a, b) = a * b
+    ? forall a, b N:
+        lcm(a, b) * gcd(a, b) = a * b
     lcm(a, b) * gcd(a, b) = a * b
 
 # Mathlib: Nat.dvd_lcm_left / Nat.dvd_lcm_right
 thm dvd_lcm_left:
-    prove:
-        forall a, b N:
-            $Dvd(a, lcm(a, b))
+    ? forall a, b N:
+        $Dvd(a, lcm(a, b))
     $Dvd(a, lcm(a, b))
 
 thm dvd_lcm_right:
-    prove:
-        forall a, b N:
-            $Dvd(b, lcm(a, b))
+    ? forall a, b N:
+        $Dvd(b, lcm(a, b))
     $Dvd(b, lcm(a, b))
 
 # Mathlib: Nat.Coprime.symm / Nat.coprime_comm
 thm Coprime_symm, coprime_comm:
-    prove:
-        forall a, b N:
-            $Coprime(a, b)
-            =>:
-                $Coprime(b, a)
+    ? forall a, b N:
+        $Coprime(a, b)
+        =>:
+            $Coprime(b, a)
     $Coprime(b, a)
 
 # Mathlib: Nat.coprime_one_right
 thm coprime_one_right:
-    prove:
-        forall a N:
-            $Coprime(a, 1)
+    ? forall a N:
+        $Coprime(a, 1)
     $Coprime(a, 1)
 
 # Mathlib: Nat.one_coprime
 thm one_coprime:
-    prove:
-        forall a N:
-            $Coprime(1, a)
+    ? forall a N:
+        $Coprime(1, a)
     $Coprime(1, a)
 
 # Mathlib: Nat.Prime.dvd_or_dvd
 # Euclid's lemma for primes: a prime dividing a product divides one factor.
 thm Prime_dvd_or_dvd:
-    prove:
-        forall p, a, b N:
-            $Prime(p)
-            $Dvd(p, a * b)
-            =>:
-                $Dvd(p, a) or $Dvd(p, b)
+    ? forall p, a, b N:
+        $Prime(p)
+        $Dvd(p, a * b)
+        =>:
+            $Dvd(p, a) or $Dvd(p, b)
     $Dvd(p, a) or $Dvd(p, b)
 
 # Mathlib: Nat.Prime.dvd_of_dvd_pow
@@ -537,12 +501,11 @@ thm Prime_dvd_or_dvd:
 # shape is useful for number-theory problems even while the proof is still
 # backed by local proof debt.
 thm Prime_dvd_of_dvd_pow:
-    prove:
-        forall p, a N, k N_pos:
-            $Prime(p)
-            $Dvd(p, a^k)
-            =>:
-                $Dvd(p, a)
+    ? forall p, a N, k N_pos:
+        $Prime(p)
+        $Dvd(p, a^k)
+        =>:
+            $Dvd(p, a)
     trust $Dvd(p, a)
     $Dvd(p, a)
 
@@ -550,44 +513,38 @@ thm Prime_dvd_of_dvd_pow:
 # Every natural number at least 2 has a prime divisor. This is a standard first
 # step toward prime factorization arguments.
 thm exists_prime_and_dvd:
-    prove:
-        forall n N:
-            2 <= n
-            =>:
-                exist p N st {$Prime(p), $Dvd(p, n)}
+    ? forall n N:
+        2 <= n
+        =>:
+            exist p N st {$Prime(p), $Dvd(p, n)}
     exist p N st {$Prime(p), $Dvd(p, n)}
 
 # Mathlib: Nat.choose_zero_right / Nat.choose_self
 thm choose_zero_right:
-    prove:
-        forall n N:
-            choose_fn(n, 0) = 1
+    ? forall n N:
+        choose_fn(n, 0) = 1
     choose_fn(n, 0) = 1
 
 thm choose_self:
-    prove:
-        forall n N:
-            choose_fn(n, n) = 1
+    ? forall n N:
+        choose_fn(n, n) = 1
     choose_fn(n, n) = 1
 
 # Mathlib: Nat.choose_succ_succ
 thm choose_succ_succ:
-    prove:
-        forall n, k N:
-            k <= n
-            =>:
-                choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
+    ? forall n, k N:
+        k <= n
+        =>:
+            choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
     choose_fn(n + 1, k + 1) = choose_fn(n, k) + choose_fn(n, k + 1)
 
 # Integer square-root bounds.
 thm sqrt_sq_le:
-    prove:
-        forall n N:
-            sqrt_nat(n)^2 <= n
+    ? forall n N:
+        sqrt_nat(n)^2 <= n
     sqrt_nat(n)^2 <= n
 
 thm lt_succ_sqrt_sq:
-    prove:
-        forall n N:
-            n < (sqrt_nat(n) + 1)^2
+    ? forall n N:
+        n < (sqrt_nat(n) + 1)^2
     n < (sqrt_nat(n) + 1)^2

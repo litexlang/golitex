@@ -3,9 +3,8 @@ trust:
         a + b = b + a
 
 claim:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x + 2 = 2 + x
+    ? forall x R:
+        x = 1
+        =>:
+            x + 2 = 2 + x
     x + 2 = 2 + x

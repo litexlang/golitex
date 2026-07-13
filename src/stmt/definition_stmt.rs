@@ -305,7 +305,7 @@ impl DefLetStmt {
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user trust have statements; use have/claim/thm/prove or move trusted background into an imported module"
+        "strict mode rejects user trust have statements; use have/claim/thm with a `?` goal or move trusted background into an imported module"
     }
 }
 
@@ -796,16 +796,17 @@ impl fmt::Display for HaveFnByForallExistUniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {} {}{}\n{}{}\n{}",
+            "{} {} {} {} {}{}\n{}",
             HAVE,
             FN_LOWER_CASE,
             self.fn_name,
             AS,
             SET,
             COLON,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 2)
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &format!("{} {}", QUESTION_GOAL, self.forall),
+                1,
+            )
         )?;
         if !self.prove_process.is_empty() {
             write!(

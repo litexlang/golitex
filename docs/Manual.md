@@ -163,12 +163,11 @@ For algebra, prefer explicit local steps over "obvious" jumps. A common case is 
 
 ```litex
 claim:
-    prove:
-        forall a, b R:
-            (2 * a - b) * (3 * a + b) = 0
-            2 * a - b != 0
-            =>:
-                3 * a + b = 0
+    ? forall a, b R:
+        (2 * a - b) * (3 * a + b) = 0
+        2 * a - b != 0
+        =>:
+            3 * a + b = 0
     3 * a + b = 0 / (2 * a - b) = 0
 ```
 
@@ -654,15 +653,13 @@ finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
 
 ```litex
 thm finite_double_sum_over_cartesian_product_example:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(cart(X, Y), f)
 
 thm finite_fubini_example:
-    prove:
-        forall X, Y finite_set, f fn(z cart(X, Y)) R:
-            finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
+    ? forall X, Y finite_set, f fn(z cart(X, Y)) R:
+        finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 ```
 
@@ -677,13 +674,12 @@ template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X
     have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
-    prove:
-        forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-            count(X) >= 1
-            $is_bijection_from_index_range_to_finite_set(X, g)
-            $is_bijection_from_index_range_to_finite_set(X, h)
-            =>:
-                \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
+        count(X) >= 1
+        $is_bijection_from_index_range_to_finite_set(X, g)
+        $is_bijection_from_index_range_to_finite_set(X, h)
+        =>:
+            \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 ```
 
@@ -729,12 +725,11 @@ Use `by axiom_of_choice: set S:` to assert the existence of a function that pick
 
 ```litex
 claim:
-    prove:
-        forall S set:
-            forall A S:
-                $is_nonempty_set(A)
-            =>:
-                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+    ? forall S set:
+        forall A S:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -1107,8 +1102,7 @@ Disjunctions also work together with the `by cases` statement. After Litex knows
 have x R
 
 by cases:
-    prove:
-        x = 0 or x != 0
+    ? x = 0 or x != 0
     case x = 0:
         ...
     case x != 0:
@@ -1427,20 +1421,18 @@ alias prop 是一 <=> is_one
 $是一(1)
 
 thm eq_one_reuses_hyp:
-    prove:
-        forall x R:
+    ? forall x R:
+        x = 1
+        =>:
             x = 1
-            =>:
-                x = 1
 
 alias thm same_eq_one <=> eq_one_reuses_hyp
 1 = 1
 by thm same_eq_one(1)
 
 thm self_eq_en:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 
 alias thm 自反等式 <=> self_eq_en
@@ -1772,7 +1764,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn ... by exist!: prove: forall ... exist!`)
+### Function from unique existence (`have fn ... by exist!: ? forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1781,9 +1773,8 @@ have A set = R
 have B set = R
 
 have fn f by exist!:
-    prove:
-        forall x A:
-            exist! y B st {y = x}
+    ? forall x A:
+        exist! y B st {y = x}
     witness exist! y B st {y = x} from x
 
 forall x A:
@@ -1792,7 +1783,7 @@ forall x A:
 
 > Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-> Hint: the target `forall` under `prove:` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter. The shorthand `? forall ...` may be used for the same ordinary goal block.
+> Hint: the target `forall` under `? forall ...` must be provable in the current context. Its conclusion must be exactly one `exist!` fact with one output parameter.
 
 > Hint: `by exist!` means "define a function from unique existence." The return set comes from the `exist!` witness type, such as `exist! y B ...`.
 
@@ -1805,9 +1796,8 @@ building blocks are familiar.
 ```litex
 template<s set>:
     have fn group_quotient by exist!:
-        prove:
-            forall g &Group<s>, h power_set(s):
-                exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
+        ? forall g &Group<s>, h power_set(s):
+            exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
 ```
 
 This quotient construction is the main mathematician-facing example inside the
@@ -1914,13 +1904,11 @@ explicit calls with `by thm name(args...)`.
 
 ```litex
 claim:
-    prove:
-        1 + 1 = 2
+    ? 1 + 1 = 2
     1 + 1 = 2
 
 claim:
-    prove:
-        2 = 2
+    ? 2 = 2
     2 = 2
 
 # shorthand for an ordinary single-goal prove block
@@ -1940,11 +1928,9 @@ claim forall! x R => {x = x}:
 
 ### Named universal facts (`thm`)
 
-**`thm name:`** defines a named verified `forall` fact. Its `prove:` block must
+**`thm name:`** defines a named verified `forall` fact. Its `? forall ...` goal must
 contain exactly one `forall` fact, followed by the proof steps that establish
-its conclusions. For ordinary single-goal blocks, `? forall ...` is accepted as
-shorthand for that `prove:` block; Litex still displays the canonical form as
-`prove:`.
+its conclusions.
 
 The result is reused in two ways:
 
@@ -1961,9 +1947,8 @@ forall ...`.
 
 ```litex
 thm self_eq_named:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 
 by thm self_eq_named(1)
@@ -1974,9 +1959,8 @@ thm self_eq_question_goal:
     x = x
 
 thm self_eq_named_auto:
-    prove:
-        forall x R:
-            x = x
+    ? forall x R:
+        x = x
     x = x
 
 # This can use automatic matching from the proved theorem.
@@ -2059,13 +2043,13 @@ trust:
 
 **`sketch:`** opens a checked local block: a nested list of statements closed before the outer environment continues.
 
-It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. The `prove:` keyword is reserved for internal proof targets inside statements such as `claim`, `thm`, `strategy`, and `have fn ... by exist!`. The shorthand `? <Fact>` is accepted for ordinary goal blocks in those contexts, but not as a top-level statement and not as a replacement for structured induction headers such as `prove from`, `prove induc`, or `prove strong_induc`.
+It does not affect the outside environment at all. Facts introduced or proved inside the `sketch` block disappear when the block ends. `? <Fact>` is the sole internal proof-target syntax inside statements such as `claim`, `thm`, `strategy`, and `have fn ... by exist!`. It is not valid as a top-level statement. Structured induction uses the matching forms `? from`, `? induc`, and `? strong_induc`.
 
 `sketch:` is the canonical top-level spelling for this checked sandbox. Older
 notes may mention `scratch:`, but top-level `scratch:` is now a rejected legacy
-alias with an error message pointing to `sketch:`. A top-level `prove:` block is
-also rejected: use `sketch:` when you want a local checked block, and use
-`prove:` only inside a statement that owns a proof target.
+alias with an error message pointing to `sketch:`. A top-level `?` goal is not
+a proof container. Use `sketch:` when you want a local checked block; `prove:`
+has been removed and reports a migration error.
 
 ```litex
 sketch:
@@ -2303,8 +2287,7 @@ have x R
 x = 2 or x != 2
 
 by cases:
-    prove:
-        k(x) > 2
+    ? k(x) > 2
     case x = 2:
         k(x) = 3
         k(x) > 2
@@ -2334,8 +2317,7 @@ context.
 
 ```litex
 by contra:
-    prove:
-        not 1 = 2
+    ? not 1 = 2
     1 = 2
     impossible 1 = 2
 
@@ -2345,9 +2327,8 @@ by contra not 1 = 2:
     impossible 1 = 2
 
 by contra:
-    prove:
-        not forall x R:
-            x^2 >= x
+    ? not forall x R:
+        x^2 >= x
     impossible 0.5^2 >= 0.5
 ```
 
@@ -2362,9 +2343,8 @@ forall a {1, 2}:
     a = 1 or a = 2
 
 by enumerate finite_set:
-    prove:
-        forall a2 {1, 2, 3}:
-            a2 < 4
+    ? forall a2 {1, 2, 3}:
+        a2 < 4
 
 # inline by enumerate finite_set: put the forall goal on the header line
 by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
@@ -2397,63 +2377,59 @@ sketch:
 abstract_prop r0(a)
 
 claim:
-    prove:
-        forall n Z:
-            $r0(0)
-            forall m Z:
-                m >= 0
-                $r0(m)
-                =>:
-                    $r0(m + 1)
-            n >= 0
+    ? forall n Z:
+        $r0(0)
+        forall m Z:
+            m >= 0
+            $r0(m)
             =>:
-                $r0(n)
-    by induc n from 0:
-        prove:
+                $r0(m + 1)
+        n >= 0
+        =>:
             $r0(n)
+    by induc n from 0:
+        ? $r0(n)
 
-        prove from n = 0:
+        ? from n = 0:
             $r0(0)
 
-        prove induc:
+        ? induc:
             $r0(n + 1)
 ```
 
-Inside `prove from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and checks the base goal. Inside `prove induc:`, Litex declares `n $in Z`, assumes `n >= base` and `P(n)`, and checks `P(n + 1)`.
+Inside `? from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and checks the base goal. Inside `? induc:`, Litex declares `n $in Z`, assumes `n >= base` and `P(n)`, and checks `P(n + 1)`.
 
-**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`. Its structured step block is named `prove strong_induc:`.
+**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`. Its structured step block is named `? strong_induc:`.
 
 ```litex
 abstract_prop r1(a)
 
 claim:
-    prove:
-        forall n Z:
-            $r1(0)
-            forall m Z:
-                m >= 0
-                forall y Z:
-                    y >= 0
-                    y <= m
-                    =>:
-                        $r1(y)
+    ? forall n Z:
+        $r1(0)
+        forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
                 =>:
-                    $r1(m + 1)
-            n >= 0
+                    $r1(y)
             =>:
-                $r1(n)
-    by strong_induc n from 0:
-        prove:
+                $r1(m + 1)
+        n >= 0
+        =>:
             $r1(n)
+    by strong_induc n from 0:
+        ? $r1(n)
 
-        prove from n = 0:
+        ? from n = 0:
             $r1(0)
 
-        prove strong_induc:
+        ? strong_induc:
             $r1(n + 1)
 ```
 
-Inside `prove strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
+Inside `? strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
 
 > Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
@@ -2467,15 +2443,13 @@ Inside `prove strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and
 
 ```litex
 by for:
-    prove:
-        forall i range(0, 10):
-            i < 10
+    ? forall i range(0, 10):
+        i < 10
     do_nothing
 
 by for:
-    prove:
-        forall x cart({1, 2}, {3, 4}):
-            0 <= x[1] + x[2]
+    ? forall x cart({1, 2}, {3, 4}):
+        0 <= x[1] + x[2]
     do_nothing
 
 # inline by for: put the forall goal on the header line
@@ -2489,18 +2463,16 @@ by for forall! i range(0, 10) => {i < 10}:
 
 Proves **`A = B`** by mutual inclusion, often with **`by enumerate finite_set`** on each side.
 
-Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`prove:`** wrapper). If the needed subset facts are already known, the body can be empty and the trailing colon can be omitted: **`by extension A = B`**.
+Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`?`** wrapper). If the needed subset facts are already known, the body can be empty and the trailing colon can be omitted: **`by extension A = B`**.
 
 ```litex
 by extension {1, 2} = {2, 1}:
     by enumerate finite_set:
-        prove:
-            forall x {1, 2}:
-                x $in {2, 1}
+        ? forall x {1, 2}:
+            x $in {2, 1}
     by enumerate finite_set:
-        prove:
-            forall y {2, 1}:
-                y $in {1, 2}
+        ? forall y {2, 1}:
+            y $in {1, 2}
 
 {1, 2} = {2, 1}
 
@@ -2511,16 +2483,13 @@ Long form (still supported; the first body block may also be written as `? {1, 2
 
 ```litex
 by extension:
-    prove:
-        {1, 2} = {2, 1}
+    ? {1, 2} = {2, 1}
     by enumerate finite_set:
-        prove:
-            forall x {1, 2}:
-                x $in {2, 1}
+        ? forall x {1, 2}:
+            x $in {2, 1}
     by enumerate finite_set:
-        prove:
-            forall y {2, 1}:
-                y $in {1, 2}
+        ? forall y {2, 1}:
+            y $in {1, 2}
 
 {1, 2} = {2, 1}
 ```
@@ -2530,7 +2499,7 @@ by extension:
 
 ### Registering reflexivity
 
-Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
+Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The ordinary `?` goal block must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
 
 After the proof succeeds, Litex records that predicate as reflexive in the current environment. Later, if a positive goal `$p(a, a)` is still unproved after the usual steps, Litex can close it from the reflexive registration.
 
@@ -2539,9 +2508,8 @@ prop same_obj(x set, y set):
     x = y
 
 by reflexive_prop:
-    prove:
-        forall x set:
-            $same_obj(x, x)
+    ? forall x set:
+        $same_obj(x, x)
     x = x
 
 have a set
@@ -2552,7 +2520,7 @@ $same_obj(a, a)
 
 ### Registering transitivity
 
-Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The ordinary `?` goal block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
 After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
 
@@ -2561,12 +2529,11 @@ prop p(x set, y set):
     x = y
 
 by transitive_prop:
-    prove:
-        forall x, y, z set:
-            $p(x, y)
-            $p(y, z)
-            =>:
-                $p(x, z)
+    ? forall x, y, z set:
+        $p(x, y)
+        $p(y, z)
+        =>:
+            $p(x, z)
     x = y
     y = z
     x = z
@@ -2619,12 +2586,11 @@ Use **`by axiom_of_choice: set S:`** when `S` is a set whose members are all non
 
 ```litex
 claim:
-    prove:
-        forall S set:
-            forall A S:
-                $is_nonempty_set(A)
-            =>:
-                exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+    ? forall S set:
+        forall A S:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -2637,7 +2603,7 @@ See the proof-pattern examples in `docs/Examples.md#proof-patterns`.
 
 ### Registering symmetry
 
-Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the ordinary goal block (`prove:` or `?`) is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
+Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the ordinary `?` goal is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
@@ -2648,11 +2614,10 @@ prop p(x set, y set):
     x = y
 
 by symmetric_prop:
-    prove:
-        forall x, y set:
-            $p(x, y)
-            =>:
-                $p(y, x)
+    ? forall x, y set:
+        $p(x, y)
+        =>:
+            $p(y, x)
     x = y
     y = x
 
@@ -2666,7 +2631,7 @@ forall a, b set:
 
 ### Registering antisymmetry
 
-Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The ordinary goal block (`prove:` or `?`) must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
+Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The ordinary `?` goal block must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
 
 After the proof succeeds, Litex records that predicate as antisymmetric in the current environment. Later, if an equality goal `a = b` is still unproved after the usual equality rules, Litex can close it from the two verified facts `$p(a, b)` and `$p(b, a)`.
 
@@ -2675,12 +2640,11 @@ prop p(x set, y set):
     x = y
 
 by antisymmetric_prop:
-    prove:
-        forall x, y set:
-            $p(x, y)
-            $p(y, x)
-            =>:
-                x = y
+    ? forall x, y set:
+        $p(x, y)
+        $p(y, x)
+        =>:
+            x = y
     x = y
 
 have a, b set
@@ -2734,7 +2698,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... = ...` | Define a function by one formula |
 | `template` | Define a parameterized family of objects or functions |
 | `have fn ... by cases` | Define a function by cases |
-| `have fn ... by exist!: prove: forall ... exist!` | Define a function from unique existence |
+| `have fn ... by exist!: ? forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
 | `suppose` | Introduce local names and local assumptions |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
@@ -3000,7 +2964,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a function by one expression | `have fn f(x R) R = x + 1` |
 | define a function by cases | `have fn sgn(x R) R by cases:`<br>`case x >= 0: 1`<br>`case x < 0: -1` |
 | define a recursive function by an induction measure | `have fn h(n N) N by induc n from 0:`<br>`case n = 0: 1`<br>`case n > 0: h(n - 1)` |
-| define a function from unique existence | `have fn choose by exist!:`<br>`prove:`<br>`forall x R:`<br>`exist! y R st {y = x}` |
+| define a function from unique existence | `have fn choose by exist!:`<br>`? forall x R:`<br>`exist! y R st {y = x}` |
 | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
 | introduce local names and assumed facts | `suppose x R:`<br>`x = 1` |
 | define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
@@ -3010,14 +2974,14 @@ code, evaluate an expression, or register a reusable proof pattern.
 
 | Meaning | Example |
 |---------|---------|
-| prove a fact in a local proof, then store it outside | `claim:`<br>`prove:`<br>`1 = 1`<br>`1 = 1` |
+| prove a fact in a local proof, then store it outside | `claim:`<br>`? 1 = 1`<br>`1 = 1` |
 | inject explicit assumptions | `trust x = 1` |
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
-| define a named theorem for explicit calls | `thm self_eq:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
-| define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`prove:`<br>`forall x R:`<br>`x = x` |
+| define a named theorem for explicit calls | `thm self_eq:`<br>`? forall x R:`<br>`x = x` |
+| define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`? forall x R:`<br>`x = x` |
 | copy a theorem under a new name | `alias thm eq_refl <=> self_eq` |
 | call a named theorem with arguments | `by thm self_eq(1)` |
-| define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`prove:`<br>`forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
+| define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
 | import a standard-library module | `import Nat` |
@@ -3041,13 +3005,13 @@ code, evaluate an expression, or register a reusable proof pattern.
 | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
 | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
 | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
-| ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`prove:`<br>`$P(n)` |
+| ordinary or strong induction over an integer parameter | `by induc n from 0:`<br>`? $P(n)` |
 | bounded iteration proof shell over ranges or finite Cartesian products | `by for forall! i range(0, 3) => {i < 3}:` |
 | prove set equality by extensionality | `by extension A = B:` |
-| register a user predicate as reflexive | `by reflexive_prop:`<br>`prove:`<br>`forall x set:`<br>`$rel(x, x)` |
-| register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
-| register a user predicate as transitive | `by transitive_prop:`<br>`prove:`<br>`forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
-| register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`prove:`<br>`forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
+| register a user predicate as reflexive | `by reflexive_prop:`<br>`? forall x set:`<br>`$rel(x, x)` |
+| register a user predicate as symmetric/permutation-stable | `by symmetric_prop:`<br>`? forall x, y set:`<br>`$rel(x, y)`<br>`=>:`<br>`$rel(y, x)` |
+| register a user predicate as transitive | `by transitive_prop:`<br>`? forall x, y, z set:`<br>`$rel(x, y)`<br>`$rel(y, z)`<br>`=>:`<br>`$rel(x, z)` |
+| register a user predicate as antisymmetric | `by antisymmetric_prop:`<br>`? forall x, y set:`<br>`$le(x, y)`<br>`$le(y, x)`<br>`=>:`<br>`x = y` |
 | trusted preview Zorn step | `by zorn_lemma: set P, prop le` |
 | trusted preview choice step | `by axiom_of_choice: set F` |
 | trusted preview regularity/foundation step | `by regularity_axiom(A)` |
@@ -3200,50 +3164,65 @@ calls and automatic matching against known `forall` facts.
 The explicit route gives the fact a name and cites it:
 
 ```litex
-have human nonempty_set, Socrates human
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-prop mortal(x human):
-    x = x
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
 
-thm all_humans_are_mortal:
-    prove:
-        forall x human:
-            $mortal(x)
-    x = x
+thm every_multiple_of_8_can_be_divided_by_2:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
 
-by thm all_humans_are_mortal(Socrates)
-$mortal(Socrates)
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+by thm every_multiple_of_8_can_be_divided_by_2(8)
+$can_be_divided_by_2(8)
 ```
 
 This is the named-theorem style: name a reusable theorem, then call it at the
-point where the proof needs its consequences. It is especially useful when a
-theorem is famous, comes from the standard library, is long enough that a reader
-should recognize it by name, or needs explicit parameters that are not obvious
-from the final goal alone. Defining a `thm` does not turn it into an ordinary
-automatic `forall` pattern; the proof uses it by making the one intended call
-explicit.
+point where the proof needs its consequences. The theorem itself opens the
+witness `x = 8 * d` and builds `x = 2 * (4 * d)`; the later lines establish
+that `8` has the first form and make the intended call explicit. This style is
+useful when a theorem is famous, comes from the standard library, is long
+enough that a reader should recognize it by name, or needs explicit parameters
+that are not obvious from the final goal alone. Defining a `thm` does not turn
+it into an ordinary automatic `forall` pattern.
 
 The lightweight route leaves the universal fact in the current context and
 writes the desired conclusion directly:
 
 ```litex
-have human nonempty_set, Socrates human
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-prop mortal(x human):
-    x = x
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
 
 claim:
-    prove:
-        forall x human:
-            $mortal(x)
-    x = x
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
 
-$mortal(Socrates)
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+$can_be_divided_by_2(8)
 ```
 
-The known fact says that every human is mortal. When the goal is
-`$mortal(Socrates)`, Litex matches `x` with `Socrates`, checks that
-`Socrates human` is known, and verifies the instantiated conclusion.
+The claim leaves its proved universal fact in the current context. Its proof
+opens a witness for divisibility by `8`, constructs a witness for divisibility
+by `2`, and then applies the resulting vocabulary to the concrete value `8`.
 
 This match-and-substitution behavior is one of the main reasons Litex proofs can be written without manually naming every small intermediate fact. As a rule of thumb, use automatic `forall` matching for short and common facts whose shape makes the intended substitution clear; use `thm` when that fact should also have a stable theorem name or when the name and explicit arguments make the proof more readable.
 
@@ -3344,18 +3323,17 @@ The following example shows why this matters. The known `forall` fact says that 
 abstract_prop p(x)
 
 claim:
-    prove:
-        forall a, b, c fn(x R) R:
-            forall f, g fn(x R) R:
-                $p(f)
-                $p(g)
-                =>:
-                    $p(fn(x R) R {f(x) + g(x)})
-            $p(a)
-            $p(b)
-            $p(c)
+    ? forall a, b, c fn(x R) R:
+        forall f, g fn(x R) R:
+            $p(f)
+            $p(g)
             =>:
-                $p(fn(x R) R {a(x) + (b(x) + c(x))})
+                $p(fn(x R) R {f(x) + g(x)})
+        $p(a)
+        $p(b)
+        $p(c)
+        =>:
+            $p(fn(x R) R {a(x) + (b(x) + c(x))})
     $p(fn(x R) R {b(x) + c(x)})
 ```
 

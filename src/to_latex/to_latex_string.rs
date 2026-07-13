@@ -425,7 +425,7 @@ impl ByInducStmt {
             self.induc_from.to_latex_string(),
             goals
         )];
-        rows.push(r"\text{prove:} &".to_string());
+        rows.push(r"\text{?} &".to_string());
         for st in &self.proof {
             rows.push(format!(r"& \quad {}", st.to_latex_string()));
         }

@@ -69,7 +69,7 @@ impl DefThmStmt {
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user axiom statements; use thm/prove or move trusted background into an imported module"
+        "strict mode rejects user axiom statements; use thm with a `?` goal or move trusted background into an imported module"
     }
 
     pub fn output_type_string_for_stmt(&self) -> String {
@@ -99,15 +99,13 @@ impl fmt::Display for DefThmStmt {
 
         write!(
             f,
-            "{} {}{}\n{}{}\n{}",
+            "{} {}{}\n{}",
             self.keyword(),
             vec_to_string_with_sep(&self.names, ", ".to_string()),
             COLON,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &self.forall_fact.to_string(),
-                2
+                &format!("{} {}", QUESTION_GOAL, self.forall_fact),
+                1
             )
         )?;
         if !self.prove_process.is_empty() {

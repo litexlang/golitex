@@ -734,7 +734,8 @@ mod tests {
     #[test]
     fn translates_verified_real_theorem() {
         run_with_large_stack("translates_verified_real_theorem", || {
-            let source = "thm add_comm:\n    prove:\n        forall a, b R:\n            a + b = b + a\n    a + b = b + a";
+            let source =
+                "thm add_comm:\n    ? forall a, b R:\n        a + b = b + a\n    a + b = b + a";
             let output = to_lean_from_source_after_builtins(source, "to-lean-test").unwrap();
 
             assert!(output.contains("theorem add_comm (a b : ℝ)"));
@@ -745,7 +746,7 @@ mod tests {
     #[test]
     fn introduces_forall_binders_before_claim_steps() {
         run_with_large_stack("introduces_forall_binders_before_claim_steps", || {
-            let source = "claim:\n    prove:\n        forall x R:\n            x = 1\n            =>:\n                x = 1\n    x = 1";
+            let source = "claim:\n    ? forall x R:\n        x = 1\n        =>:\n            x = 1\n    x = 1";
             let output = to_lean_from_source_after_builtins(source, "to-lean-test").unwrap();
             let intro = output.find("intro x h1").unwrap();
             let local_fact = output.find("have litex_fact_2").unwrap();
@@ -767,7 +768,7 @@ mod tests {
     #[test]
     fn rejects_non_natural_power_exponent() {
         run_with_large_stack("rejects_non_natural_power_exponent", || {
-            let source = "thm bad_shape:\n    prove:\n        forall x, y R:\n            x^y = x^y\n    x^y = x^y";
+            let source = "thm bad_shape:\n    ? forall x, y R:\n        x^y = x^y\n    x^y = x^y";
             let result = to_lean_from_source_after_builtins(source, "to-lean-test");
 
             assert!(result.is_err());

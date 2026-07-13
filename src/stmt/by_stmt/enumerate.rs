@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// List-set enumeration: `by enumerate finite_set:` then `prove:` / one `forall`.
+/// List-set enumeration: `by enumerate finite_set:` then `?` / one `forall`.
 #[derive(Clone)]
 pub struct ByEnumerateFiniteSetStmt {
     pub forall_fact: ForallFact,
@@ -55,15 +55,13 @@ impl fmt::Display for ByEnumerateFiniteSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {}:\n{}{}\n{}",
+            "{} {} {}:\n{}",
             BY,
             ENUMERATE,
             FINITE_SET,
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &self.forall_fact.to_string(),
-                2
+                &format!("{} {}", QUESTION_GOAL, self.forall_fact),
+                1
             )
         )?;
         if !self.proof.is_empty() {

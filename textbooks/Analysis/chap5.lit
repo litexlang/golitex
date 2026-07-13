@@ -287,7 +287,7 @@ claim:
     by induc n from 1:
         ? $is_finite_prefix_bounded_in_Q(a, n, prefix_bound_Q(a, n))
 
-        prove from n = 1:
+        ? from n = 1:
             prefix_bound_Q(a, 1) = abs(a(1))
             abs(a(1)) >= 0
             prefix_bound_Q(a, 1) >= 0
@@ -300,7 +300,7 @@ claim:
                     abs(a(i)) <= prefix_bound_Q(a, 1)
             $is_finite_prefix_bounded_in_Q(a, 1, prefix_bound_Q(a, 1))
 
-        prove induc:
+        ? induc:
             n + 1 > 1
             prefix_bound_Q(a, n + 1) = max(prefix_bound_Q(a, n + 1 - 1), abs(a(n + 1)))
             n + 1 - 1 = n
@@ -668,11 +668,11 @@ claim:
     by induc n from 1:
         ? n <= 10^n
 
-        prove from n = 1:
+        ? from n = 1:
             10^1 = 10
             1 <= 10
 
-        prove induc:
+        ? induc:
             n <= 10^n
             n >= 1
             10^n >= 0
@@ -3932,11 +3932,11 @@ thm natural_power_above_base_for_base_ge_one:
     by induc n from 1:
         ? x^n >= x
 
-        prove from n = 1:
+        ? from n = 1:
             x^1 = x
             x^1 >= x
 
-        prove induc:
+        ? induc:
             x^n >= x
             x >= 1
             x > 0

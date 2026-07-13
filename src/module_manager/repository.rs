@@ -1253,7 +1253,7 @@ thm self_witness_can_be_obtained:
             write_file(&a.join("main.lit"), "local import chap10\n");
             write_file(
                 &a.join("chap10.lit"),
-                "abstract_prop trusted_prop(x)\n\nthm trusted_all:\n    prove:\n        forall x R:\n            =>:\n                $trusted_prop(x)\n",
+                "abstract_prop trusted_prop(x)\n\nthm trusted_all:\n    ? forall x R:\n        =>:\n            $trusted_prop(x)\n",
             );
 
             write_file(

@@ -47,19 +47,17 @@ forall x Q_nz, n Z:
     abs(x^n) = abs(x)^n
 
 claim:
-    prove:
-        forall a, b R_pos:
-            a^6 < b^6
-            =>:
-                a < b
+    ? forall a, b R_pos:
+        a^6 < b^6
+        =>:
+            a < b
     by thm pos_pow_strict_order_reflects(a, b, 6)
 
 claim:
-    prove:
-        forall a, b R_pos:
-            a^6 <= b^6
-            =>:
-                a <= b
+    ? forall a, b R_pos:
+        a^6 <= b^6
+        =>:
+            a <= b
     by thm pos_pow_order_reflects(a, b, 6)
 
 forall a, b R:

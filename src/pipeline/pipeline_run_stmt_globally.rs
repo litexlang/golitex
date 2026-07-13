@@ -1767,9 +1767,8 @@ trust forall x Z:
 abstract_prop imported_prop(x)
 
 thm imported_thm:
-    prove:
-        forall x Z:
-            $imported_prop(x)
+    ? forall x Z:
+        $imported_prop(x)
 
     trust $imported_prop(x)
 "#,
@@ -1806,13 +1805,11 @@ trust:
         exist r N st {r = n}
 
 thm local_exist_case:
-    prove:
-        forall n N:
-            exist s N st {s = n}
+    ? forall n N:
+        exist s N st {s = n}
     obtain r from exist r N st {r = n}
     by cases:
-        prove:
-            exist s N st {s = n}
+        ? exist s N st {s = n}
         case r < n + 1:
             witness exist s N st {s = n} from n:
                 n = n
@@ -1853,11 +1850,10 @@ thm local_exist_case:
 abstract_prop imported_strategy_prop(x)
 
 strategy imported_strategy:
-    prove:
-        forall x Z:
-            x = 2
-            =>:
-                $imported_strategy_prop(x)
+    ? forall x Z:
+        x = 2
+        =>:
+            $imported_strategy_prop(x)
 
     trust:
         forall y Z:
@@ -1898,11 +1894,10 @@ strategy imported_strategy:
 abstract_prop imported_strategy_prop(x)
 
 strategy imported_strategy:
-    prove:
-        forall x Z:
-            x = 2
-            =>:
-                $imported_strategy_prop(x)
+    ? forall x Z:
+        x = 2
+        =>:
+            $imported_strategy_prop(x)
 
     trust:
         forall y Z:
@@ -1979,11 +1974,12 @@ trust $imported_prop(2)
     }
 
     #[test]
-    fn import_inside_prove_is_rejected() {
-        let mut runtime = Runtime::new_with_builtin_code();
+    fn import_inside_question_goal_is_rejected() {
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) = run_source_code("prove:\n    import Trig", &mut runtime);
+        let (_, runtime_error) =
+            run_source_code("claim:\n    ? 1 = 1\n    import Trig", &mut runtime);
 
         assert!(runtime_error.is_some());
         assert!(runtime.module_manager.module_by_name.is_empty());

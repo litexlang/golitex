@@ -189,11 +189,10 @@ trust forall G set, r, f G:
         $presentation_normal_form_bound(G, r, f)
 
 claim:
-    prove:
-        forall G set, r, f G:
-            $presentation_r8_f2_rfrf(G, r, f)
-            =>:
-                $presentation_normal_form_bound(G, r, f)
+    ? forall G set, r, f G:
+        $presentation_r8_f2_rfrf(G, r, f)
+        =>:
+            $presentation_normal_form_bound(G, r, f)
     $presentation_reflection_swap_rule(G, r, f)
     $presentation_normal_form_cover(G, r, f)
     $presentation_normal_form_slot_bound(G, r, f)
@@ -222,12 +221,11 @@ trust forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
         $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
 
 claim:
-    prove:
-        forall G, D set, r, f G, rho, sigma D:
-            $presentation_r8_f2_rfrf(G, r, f)
-            $regular_octagon_dihedral_group(D, rho, sigma)
-            =>:
-                $isomorphic_group(G, D)
+    ? forall G, D set, r, f G, rho, sigma D:
+        $presentation_r8_f2_rfrf(G, r, f)
+        $regular_octagon_dihedral_group(D, rho, sigma)
+        =>:
+            $isomorphic_group(G, D)
 
     obtain phi from exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
 

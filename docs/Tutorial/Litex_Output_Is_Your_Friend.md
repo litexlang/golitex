@@ -295,8 +295,7 @@ $forall_p_tmp(1)
 prop claim_p_tmp(t R):
     t = 5
 claim:
-    prove:
-        $claim_p_tmp(5)
+    ? $claim_p_tmp(5)
     5 = 5
 $claim_p_tmp(5)
 
@@ -304,11 +303,10 @@ $claim_p_tmp(5)
 prop thm_p_tmp(t R):
     t = 4
 thm thm_proves_p_tmp:
-    prove:
-        forall t R:
-            t = 4
-            =>:
-                $thm_p_tmp(t)
+    ? forall t R:
+        t = 4
+        =>:
+            $thm_p_tmp(t)
     t = 4
 by thm thm_proves_p_tmp(4)
 $thm_p_tmp(4)
@@ -318,11 +316,10 @@ $thm_p_tmp(4)
 prop sym_p_tmp(u set, v set):
     u = v
 by symmetric_prop:
-    prove:
-        forall u, v set:
-            $sym_p_tmp(u, v)
-            =>:
-                $sym_p_tmp(v, u)
+    ? forall u, v set:
+        $sym_p_tmp(u, v)
+        =>:
+            $sym_p_tmp(v, u)
     u = v
     v = u
 have A_tmp set
@@ -335,9 +332,8 @@ $sym_p_tmp(B_tmp, A_tmp)
 # unsafe so this file can isolate the output route.
 abstract_prop refl_p_tmp(u, v)
 by reflexive_prop:
-    prove:
-        forall u set:
-            $refl_p_tmp(u, u)
+    ? forall u set:
+        $refl_p_tmp(u, u)
     trust $refl_p_tmp(u, u)
 have C_tmp set
 $refl_p_tmp(C_tmp, C_tmp)
@@ -638,7 +634,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "proved claim",
   "line": 37,
-  "statement": "claim:\n    prove:\n        $claim_p_tmp(5)\n    5 = 5",
+  "statement": "claim:\n    ? $claim_p_tmp(5)\n    5 = 5",
   "store_facts": [
     {
       "fact": "$claim_p_tmp(5)",
@@ -686,7 +682,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "theorem",
   "line": 46,
-  "statement": "thm thm_proves_p_tmp:\n    prove:\n        forall t R:\n            ~1t = 4\n            =>:\n                $thm_p_tmp(~1t)\n    ~1t = 4"
+  "statement": "thm thm_proves_p_tmp:\n    ? forall t R:\n        ~1t = 4\n        =>:\n            $thm_p_tmp(~1t)\n    ~1t = 4"
 }
 
 {
@@ -741,7 +737,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "proof by symmetry",
   "line": 60,
-  "statement": "by symmetric_prop:\n    prove:\n        forall u, v set:\n            $sym_p_tmp(~1u, ~1v)\n            =>:\n                $sym_p_tmp(~1v, ~1u)\n    ~1u = ~1v\n    ~1v = ~1u"
+  "statement": "by symmetric_prop:\n    ? forall u, v set:\n        $sym_p_tmp(~1u, ~1v)\n        =>:\n            $sym_p_tmp(~1v, ~1u)\n    ~1u = ~1v\n    ~1v = ~1u"
 }
 
 {
@@ -824,7 +820,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "proof by reflexivity",
   "line": 77,
-  "statement": "by reflexive_prop:\n    prove:\n        forall u set:\n            $refl_p_tmp(~1u, ~1u)\n    trust $refl_p_tmp(~1u, ~1u)"
+  "statement": "by reflexive_prop:\n    ? forall u set:\n        $refl_p_tmp(~1u, ~1u)\n    trust $refl_p_tmp(~1u, ~1u)"
 }
 
 {

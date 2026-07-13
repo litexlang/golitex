@@ -49,9 +49,25 @@ context**.
 
 ## A Small Mathematical Workflow
 
-Litex is a bet on compression: not compressing mathematics into opaque
-automation, but compressing the user-facing verification workflow into a few
-inspectable mathematical moves.
+Litex is a bet on compressing the writing of mathematical reasoning without
+making its verification opaque. A C compiler lets a programmer describe
+structured operations instead of manually managing assembly instructions.
+Litex lets a mathematical writer state objects, facts, and small derivations
+instead of repeatedly exposing every formal encoding, proof goal, and tactic
+step.
+
+The details are not discarded: Litex checks each statement against the current
+context, records the facts it accepted, and explains the rule or earlier fact
+that justified the result.
+
+Litex is also developing a Litex-to-Lean compiler (not yet released). For the supported verified
+subset, it translates this fact-oriented surface into Lean declarations that
+Lean's kernel can check, with Mathlib as the formal library. The bridge makes
+the compression inspectable: readers can see how a concise Litex fact expands
+into lower-level formal mathematics. The compiler is ongoing work and does not
+yet cover every Litex feature. See
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean) for the current
+mapping and limits.
 
 Litex tries to reduce formal verification to a small mathematical state:
 
@@ -181,6 +197,39 @@ x + 1 = 3
 x^2 = 4
 ```
 
+### The Same Context in Lean
+
+<table>
+  <tr>
+    <th>Litex</th>
+    <th>Lean</th>
+  </tr>
+  <tr>
+    <td valign="top">
+<pre><code>forall x R:
+    x = 2
+    =&gt;:
+        x + 1 = 3
+        x^2 = 4</code></pre>
+    </td>
+    <td valign="top">
+<pre><code>import Mathlib
+
+example (x : ℝ) (h : x = 2) :
+    x + 1 = 3 ∧ x ^ 2 = 4 := by
+  constructor
+  · rw [h]
+    norm_num
+  · rw [h]
+    norm_num</code></pre>
+    </td>
+  </tr>
+</table>
+
+Both snippets express the same arithmetic. Litex presents each consequence as
+the next fact in a context; Lean makes the theorem boundary and proof
+construction explicit.
+
 ### Finite Sets Look Like Finite Sets
 
 ```litex
@@ -190,21 +239,33 @@ forall a {1, 2, 3}:
     a = 1 or a = 2 or a = 3
 ```
 
-### A Universal Fact Can Be Used by Shape
+### A Universal Fact Can Be Proved from Witnesses
 
 ```litex
-have human nonempty_set, Socrates human
-abstract_prop mortal(x)
+prop can_be_divided_by_8(x Z):
+    exist d Z st {x = 8 * d}
 
-forall:
-    forall x human:
-        $mortal(x)
-    =>:
-        $mortal(Socrates)
+prop can_be_divided_by_2(x Z):
+    exist d Z st {x = 2 * d}
+
+claim:
+    ? forall x Z:
+        $can_be_divided_by_8(x)
+        =>:
+            $can_be_divided_by_2(x)
+    obtain d from exist d Z st {x = 8 * d}
+    witness exist e Z st {x = 2 * e} from 4 * d:
+        x = 8 * d
+        8 * d = 2 * (4 * d)
+
+witness exist d Z st {8 = 1 * d} from 8
+$can_be_divided_by_8(8)
+$can_be_divided_by_2(8)
 ```
 
-The conclusion `$mortal(Socrates)` is checked by matching it against the local
-`forall x human: $mortal(x)` and the known fact `Socrates human`.
+The claim unfolds both divisibility predicates. From a witness `d` with
+`x = 8 * d`, it constructs the new witness `4 * d` with `x = 2 * (4 * d)`.
+The final three lines give the concrete witness for `8` and check that instance.
 
 ### Functions Look Like Functions
 
@@ -283,116 +344,6 @@ The last line says that `(Z, x -> -x, (x, y) -> x + y, 0)` is an instance of
 the `Group` structure. Litex verifies it by checking the tuple fields have the
 right types and that the displayed group axioms hold for integer addition.
 
-
-## Litex & Lean: Shared Aim, Different First Principles
-
-Lean is a mature theorem prover with a powerful dependent type theory, Mathlib,
-expert tooling, and a large community. Litex is a younger research system with
-a larger trusted mathematical background and a narrower interface goal. Litex and Lean share the broad aim of making mathematics machine-checkable.
-
-We are also developing a partial Litex-to-Lean compiler. The longer-term
-experiment is not to make Litex a Lean-based language, but to let it serve as a
-fact-oriented, set-theory-based, intuitive, and simple-to-write interface for
-Lean. Lean is not its
-foundation; it is an important backend: Litex can compile verified
-developments into independently checkable Lean code and reuse the Mathlib
-ecosystem. This is ongoing work; see
-[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
-
-The point of the comparison below is not that Lean cannot prove these examples.
-Lean proves them easily. The point is that the default user interface is
-different.
-
-### Context Reuse
-
-<table>
-  <tr>
-    <th>Litex</th>
-    <th>Lean</th>
-  </tr>
-  <tr>
-    <td valign="top">
-<pre><code>forall x R:
-    x = 2
-    =&gt;:
-        x + 1 = 3
-        x^2 = 4</code></pre>
-    </td>
-    <td valign="top">
-<pre><code>import Mathlib
-
-example (x : ℝ) (h : x = 2) :
-    x + 1 = 3 ∧ x ^ 2 = 4 := by
-  constructor
-  · rw [h]
-    norm_num
-  · rw [h]
-    norm_num</code></pre>
-    </td>
-  </tr>
-</table>
-
-Litex writes the desired facts directly. Lean exposes a theorem goal and asks
-the user to construct a proof, here by rewriting with `h` and running
-arithmetic simplification.
-
-### Finite Set Membership
-
-<table>
-  <tr>
-    <th>Litex</th>
-    <th>Lean</th>
-  </tr>
-  <tr>
-    <td valign="top">
-<pre><code>forall a {1, 2, 3}:
-    a = 1 or a = 2 or a = 3</code></pre>
-    </td>
-    <td valign="top">
-<pre><code>import Mathlib
-
-example (a : ℕ)
-    (ha : a ∈ ({1, 2, 3} : Finset ℕ)) :
-    a = 1 ∨ a = 2 ∨ a = 3 := by
-  simpa using ha</code></pre>
-    </td>
-  </tr>
-</table>
-
-Litex treats membership in a displayed finite set as an ordinary mathematical
-fact. Lean can express the same fact precisely, but the user chooses a concrete
-encoding such as `Finset ℕ` and uses library simplification.
-
-### Domain-Constrained Functions
-
-<table>
-  <tr>
-    <th>Litex</th>
-    <th>Lean</th>
-  </tr>
-  <tr>
-    <td valign="top">
-<pre><code>have fn g(x R: x &gt; 0) R = x + 1
-
-g(1) = 2</code></pre>
-    </td>
-    <td valign="top">
-<pre><code>import Mathlib
-
-def g (x : {x : ℝ // x &gt; 0}) : ℝ :=
-  x.val + 1
-
-example : g ⟨1, by norm_num⟩ = 2 := by
-  norm_num [g]</code></pre>
-    </td>
-  </tr>
-</table>
-
-Lean is more general and more mature. Litex chooses a surface closer to the
-way the same domain restriction often appears in ordinary mathematical writing.
-
-For a much longer and more careful comparison, see
-[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
 ## Trust Boundary
 

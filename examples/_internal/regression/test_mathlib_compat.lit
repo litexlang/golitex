@@ -2,21 +2,18 @@
 # theorem while keeping trivial builtin arithmetic facts out of std.
 
 thm example_real_addition_commutes, add_comm:
-    prove:
-        forall a, b R:
-            a + b = b + a
+    ? forall a, b R:
+        a + b = b + a
     a + b = b + a
 
 thm example_real_zero_added_on_left, zero_add:
-    prove:
-        forall a R:
-            0 + a = a
+    ? forall a R:
+        0 + a = a
     0 + a = a
 
 thm example_real_multiplication_distributes_over_addition_left, left_distrib:
-    prove:
-        forall a, b, c R:
-            a * (b + c) = a * b + a * c
+    ? forall a, b, c R:
+        a * (b + c) = a * b + a * c
     a * (b + c) = a * b + a * c
 
 # Litex-style names and Lean/Mathlib-style aliases both work locally.

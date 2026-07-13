@@ -26,22 +26,20 @@ prop finite_set_size_has_index(n N_pos):
             exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
 
 thm nonempty_from_positive_count:
-    prove:
-        forall s finite_set:
-            count(s) >= 1
-            =>:
-                $is_nonempty_set(s)
+    ? forall s finite_set:
+        count(s) >= 1
+        =>:
+            $is_nonempty_set(s)
     by contra $is_nonempty_set(s):
         s = {}
         count(s) = count({}) = 0
         impossible count(s) >= 1
 
 thm intersect_with_singleton:
-    prove:
-        forall s set, a set:
-            a $in s
-            =>:
-                intersect(s, {a}) = {a}
+    ? forall s set, a set:
+        a $in s
+        =>:
+            intersect(s, {a}) = {a}
     by extension intersect(s, {a}) = {a}:
         forall z intersect(s, {a}):
             z $in s
@@ -54,13 +52,12 @@ thm intersect_with_singleton:
             z $in {a}
 
 thm remove_singleton_from_singleton_sized_set_is_empty:
-    prove:
-        forall s finite_set, a set:
-            $is_finite_set(s)
-            count(s) = 1
-            a $in s
-            =>:
-                set_minus(s, {a}) = {}
+    ? forall s finite_set, a set:
+        $is_finite_set(s)
+        count(s) = 1
+        a $in s
+        =>:
+            set_minus(s, {a}) = {}
     by thm intersect_with_singleton(s, a)
     intersect(s, {a}) = {a}
     count({a}) = 1
@@ -69,12 +66,11 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
-    prove:
-        forall s finite_set:
-            $is_finite_set(s)
-            count(s) = 1
-            =>:
-                exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+    ? forall s finite_set:
+        $is_finite_set(s)
+        count(s) = 1
+        =>:
+            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
     count(s) >= 1
     by thm nonempty_from_positive_count(s)
     have a s
@@ -97,13 +93,12 @@ thm index_function_for_singleton:
         $is_index_fn(s, idx0)
 
 thm index_function_step:
-    prove:
-        forall n N_pos, s finite_set:
-            $is_finite_set(s)
-            count(s) = n + 1
-            $finite_set_size_has_index(n)
-            =>:
-                exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+    ? forall n N_pos, s finite_set:
+        $is_finite_set(s)
+        count(s) = n + 1
+        $finite_set_size_has_index(n)
+        =>:
+            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
     n >= 1
     n + 1 >= 1
     count(s) = n + 1 >= 1
@@ -132,8 +127,7 @@ thm index_function_step:
         claim forall! y s => {exist i N_pos st {i <= count(s), y = idx0(i)}}:
             y = a or y != a
             by cases:
-                prove:
-                    exist i N_pos st {i <= count(s), y = idx0(i)}
+                ? exist i N_pos st {i <= count(s), y = idx0(i)}
                 case y = a:
                     n + 1 <= count(s)
                     idx0(n + 1) = idx(n + 1) = a
@@ -155,45 +149,40 @@ thm index_function_step:
         $is_index_fn(s, idx0)
 
 claim:
-    prove:
-        forall n N_pos:
-            $finite_set_size_has_index(n)
+    ? forall n N_pos:
+        $finite_set_size_has_index(n)
     by induc n from 1:
-        prove:
-            $finite_set_size_has_index(n)
+        ? $finite_set_size_has_index(n)
 
-        prove from n = 1:
+        ? from n = 1:
             claim:
-                prove:
-                    forall s finite_set:
-                        $is_finite_set(s)
-                        count(s) = 1
-                        =>:
-                            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                ? forall s finite_set:
+                    $is_finite_set(s)
+                    count(s) = 1
+                    =>:
+                        exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_for_singleton(s)
                 exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
-        prove induc:
+        ? induc:
             $finite_set_size_has_index(n)
             claim:
-                prove:
-                    forall s finite_set:
-                        $is_finite_set(s)
-                        count(s) = n + 1
-                        =>:
-                            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                ? forall s finite_set:
+                    $is_finite_set(s)
+                    count(s) = n + 1
+                    =>:
+                        exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_step(n, s)
                 exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
             $finite_set_size_has_index(n + 1)
 
 claim:
-    prove:
-        forall s finite_set:
-            count(s) >= 1
-            =>:
-                exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+    ? forall s finite_set:
+        count(s) >= 1
+        =>:
+            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
     count(s) >= 1
     count(s) $in N_pos
     have n N_pos = count(s)

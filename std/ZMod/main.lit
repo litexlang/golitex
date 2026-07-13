@@ -24,9 +24,8 @@ trust:
 
 # The constructor `ZMod(n)` is the canonical set of natural representatives.
 thm value_ZMod:
-    prove:
-        forall n N_pos:
-            $value(n, ZMod(n))
+    ? forall n N_pos:
+        $value(n, ZMod(n))
     $value(n, ZMod(n))
 
 prop congruent(n N_pos, a, b Z):
