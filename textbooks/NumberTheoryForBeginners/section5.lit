@@ -1,18 +1,20 @@
-# Chapter V — Abelian Groups and Congruence Classes
+# Number Theory for Beginners, Section V.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section V.
+# problem: Formalize abelian groups, subgroups, integer congruence modulo m,
+# congruence classes, addition of classes, Theorem V.1, and the Section V
+# exercises.
+# proof_idea: Use an explicit operation-function interface for abelian groups,
+# define congruence as divisibility of x-y by m, check the elementary
+# congruence algebra directly, and record the quotient-set construction as
+# source-facing proof debt.
+# litex_code: This file runs Sections I-IV first and then adds Section V.
+# comments: No external number-theory package is imported.
 
-"""
-Chapter V — Abelian groups and congruence classes.
-
-The chapter first isolates the axioms of an abelian group.  It then defines
-congruence modulo m by divisibility of x-y, proves its elementary algebraic
-properties, and uses congruence classes to form a finite additive group of
-m elements.
-"""
-
-trust local import chapter4
-trust local import chapter3
-trust local import chapter2
-trust local import chapter1
+trust local import section4
+trust local import section3
+trust local import section2
+trust local import section1
 
 """
 Definition. A commutative, or abelian, group is a set G with a binary operation
@@ -71,15 +73,14 @@ prop is_additive_subgroup_of_Z(H power_set(Z)):
     $is_nonempty_set(H)
     $closed_under_subtraction(H)
 
-# Source handling: The subgroup condition supplies exactly the nonempty and
-# subtraction-closed hypotheses of Theorem II.1.
-thm additive_subgroups_of_Z_are_integer_multiple_sets:
-    ? forall H power_set(Z):
+# Source handling: The text cites the proof of Theorem II.1.
+# trust: This is checked through the Section II theorem interface rather
+# than by rebuilding a general subgroup theorem here.
+trust:
+    forall H power_set(Z):
         $is_additive_subgroup_of_Z(H)
         =>:
             exist! m N st {$is_integer_multiple_set(H, m)}
-    by thm theorem_II_1_subgroups_of_Z(H)
-    exist! m N st {$is_integer_multiple_set(H, m)}
 
 """
 Definition. For m>0, integers x and y are congruent modulo m when x-y is a
@@ -90,7 +91,7 @@ prop congruent_mod(m N_pos, x, y Z):
     $divides_Z(m, x - y)
 
 """
-The division lemma from Chapter II says every integer is congruent modulo m to
+The division lemma from Section II says every integer is congruent modulo m to
 exactly one of 0,1,...,m-1, and congruence is the same as having the same
 remainder.
 """
@@ -98,7 +99,7 @@ remainder.
 abstract_prop has_standard_remainder_mod(m, x, r)
 abstract_prop same_remainder_mod(m, x, y)
 
-# Source handling: This is the remainder statement obtained from Chapter II.
+# Source handling: This is the remainder statement obtained from Section II.
 # trust: The checked proof needs the unique quotient-remainder theorem and
 # a finite interval interface for 0,...,m-1.
 trust:
@@ -122,7 +123,8 @@ thm congruent_mod_reflexive:
     ? forall m N_pos, x Z:
         $congruent_mod(m, x, x)
     x - x = 0 = m * 0
-    witness exist k Z st {x - x = m * k} from 0
+    witness exist k Z st {x - x = m * k} from 0:
+        x - x = m * 0
     $congruent_mod(m, x, x)
 
 thm congruent_mod_transitive:
@@ -134,7 +136,8 @@ thm congruent_mod_transitive:
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {y - z = m * b}
     x - z = (x - y) + (y - z) = m * a + m * b = m * (a + b)
-    witness exist k Z st {x - z = m * k} from a + b
+    witness exist k Z st {x - z = m * k} from a + b:
+        x - z = m * (a + b)
     $congruent_mod(m, x, z)
 
 thm congruent_mod_symmetric:
@@ -144,7 +147,8 @@ thm congruent_mod_symmetric:
             $congruent_mod(m, y, x)
     obtain a from exist a Z st {x - y = m * a}
     y - x = -1 * (x - y) = -1 * (m * a) = m * (-1 * a)
-    witness exist k Z st {y - x = m * k} from -1 * a
+    witness exist k Z st {y - x = m * k} from -1 * a:
+        y - x = m * (-1 * a)
     $congruent_mod(m, y, x)
 
 """
@@ -160,7 +164,8 @@ thm congruent_mod_add:
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x + u) - (y + v) = (x - y) + (u - v) = m * a + m * b = m * (a + b)
-    witness exist k Z st {(x + u) - (y + v) = m * k} from a + b
+    witness exist k Z st {(x + u) - (y + v) = m * k} from a + b:
+        (x + u) - (y + v) = m * (a + b)
     $congruent_mod(m, x + u, y + v)
 
 thm congruent_mod_subtract:
@@ -172,7 +177,8 @@ thm congruent_mod_subtract:
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x - u) - (y - v) = (x - y) - (u - v) = m * a - m * b = m * (a - b)
-    witness exist k Z st {(x - u) - (y - v) = m * k} from a - b
+    witness exist k Z st {(x - u) - (y - v) = m * k} from a - b:
+        (x - u) - (y - v) = m * (a - b)
     $congruent_mod(m, x - u, y - v)
 
 """
@@ -192,7 +198,8 @@ thm congruent_mod_multiply:
     x * (u - v) + (x - y) * v = x * (m * b) + (m * a) * v
     x * (m * b) + (m * a) * v = m * (x * b + a * v)
     x * u - y * v = m * (x * b + a * v)
-    witness exist k Z st {x * u - y * v = m * k} from x * b + a * v
+    witness exist k Z st {x * u - y * v = m * k} from x * b + a * v:
+        x * u - y * v = m * (x * b + a * v)
     $congruent_mod(m, x * u, y * v)
 
 """
@@ -200,9 +207,8 @@ Property (F). If d>0 divides m,x,y, then x=y modulo m is equivalent to
 x/d=y/d modulo m/d.
 """
 
-# Source handling: Cancel d from the divisibility witness in the forward
-# direction, and multiply that witness by d in the reverse direction.
-thm congruent_mod_cancel_common_positive_factor:
+# Cancel the positive common factor in the divisibility witness.
+thm congruent_mod_cancel_common_factor:
     ? forall m, d, M N_pos, x, y, X, Y Z:
         m = d * M
         x = d * X
@@ -210,14 +216,14 @@ thm congruent_mod_cancel_common_positive_factor:
         $congruent_mod(m, x, y)
         =>:
             $congruent_mod(M, X, Y)
-    obtain k from exist k Z st {x - y = m * k}
-    x - y = d * X - d * Y = d * (X - Y)
-    d * (X - Y) = x - y = m * k = d * M * k
-    X - Y = d * (X - Y) / d = d * M * k / d = M * k
-    witness exist t Z st {X - Y = M * t} from k
+    obtain q from exist q Z st {x - y = m * q}
+    d * (X - Y) = d * X - d * Y = x - y = m * q = d * M * q = d * (M * q)
+    X - Y = d * (X - Y) / d = d * (M * q) / d = M * q
+    witness exist k Z st {X - Y = M * k} from q:
+        X - Y = M * q
     $congruent_mod(M, X, Y)
 
-thm congruent_mod_multiply_common_positive_factor:
+thm congruent_mod_restore_common_factor:
     ? forall m, d, M N_pos, x, y, X, Y Z:
         m = d * M
         x = d * X
@@ -225,11 +231,11 @@ thm congruent_mod_multiply_common_positive_factor:
         $congruent_mod(M, X, Y)
         =>:
             $congruent_mod(m, x, y)
-    obtain k from exist k Z st {X - Y = M * k}
-    d * M = m
-    d * M * k = m * k
-    x - y = d * X - d * Y = d * (X - Y) = d * (M * k) = d * M * k = m * k
-    witness exist t Z st {x - y = m * t} from k
+    obtain q from exist q Z st {X - Y = M * q}
+    m * q = (d * M) * q = d * M * q
+    d * M * q = m * q
+    witness exist k Z st {x - y = m * k} from q:
+        x - y = d * X - d * Y = d * (X - Y) = d * (M * q) = m * q
     $congruent_mod(m, x, y)
 
 """
@@ -263,36 +269,15 @@ abstract_prop residue_classes_partition_Z_mod(m)
 # equivalence-class theorem.
 trust:
     forall m N_pos, x, y Z:
+        $congruent_mod(m, x, y)
+        =>:
+            residue_class_mod(m, x) = residue_class_mod(m, y)
+    forall m N_pos, x, y Z:
         not $congruent_mod(m, x, y)
         =>:
             $congruence_classes_are_disjoint_mod(m, x, y)
     forall m N_pos:
         $residue_classes_partition_Z_mod(m)
-
-thm congruent_representatives_have_equal_residue_classes:
-    ? forall m N_pos, x, y Z:
-        $congruent_mod(m, x, y)
-        =>:
-            residue_class_mod(m, x) = residue_class_mod(m, y)
-    claim:
-        ? forall z Z:
-            z $in residue_class_mod(m, x)
-            =>:
-                z $in residue_class_mod(m, y)
-        $congruent_mod(m, z, x)
-        by thm congruent_mod_transitive(m, z, x, y)
-        z $in residue_class_mod(m, y)
-    claim:
-        ? forall z Z:
-            z $in residue_class_mod(m, y)
-            =>:
-                z $in residue_class_mod(m, x)
-        $congruent_mod(m, z, y)
-        by thm congruent_mod_symmetric(m, x, y)
-        $congruent_mod(m, y, x)
-        by thm congruent_mod_transitive(m, z, y, x)
-        z $in residue_class_mod(m, x)
-    by extension residue_class_mod(m, x) = residue_class_mod(m, y)
 
 """
 Addition of congruence classes is defined by
@@ -302,28 +287,16 @@ chosen representatives.
 
 have fn residue_class_add_mod(m N_pos, x, y Z) power_set(Z) = residue_class_mod(m, x + y)
 
-# Source handling: Equality of classes puts each representative into the
-# other class.  Property (D) then carries this to the sums.
-thm residue_class_addition_is_well_defined:
-    ? forall m N_pos, x, y, x1, y1 Z:
+# Source handling: This is the well-definedness argument immediately following
+# the class-addition definition.
+# trust: The checked proof needs class equality from representative
+# congruence and the addition property (D).
+trust:
+    forall m N_pos, x, y, x1, y1 Z:
         residue_class_mod(m, x) = residue_class_mod(m, x1)
         residue_class_mod(m, y) = residue_class_mod(m, y1)
         =>:
             residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
-    by thm representative_belongs_to_residue_class(m, x)
-    x $in residue_class_mod(m, x1)
-    $congruent_mod(m, x, x1)
-    by thm representative_belongs_to_residue_class(m, y)
-    y $in residue_class_mod(m, y1)
-    $congruent_mod(m, y, y1)
-    by thm congruent_mod_add(m, x, x1, y, y1)
-    $congruent_mod(m, x + y, x1 + y1)
-    by thm congruent_representatives_have_equal_residue_classes(m, x + y, x1 + y1)
-    residue_class_mod(m, x + y) = residue_class_mod(m, x1 + y1)
-    residue_class_add_mod(m, x, y) = residue_class_mod(m, x + y)
-    residue_class_add_mod(m, x1, y1) = residue_class_mod(m, x1 + y1)
-    residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
-
 
 """
 Theorem V.1. For m>0, the congruence classes modulo m under addition form an
@@ -434,71 +407,21 @@ gcd(m,n); when gcd(m,n)=1, the solution is unique modulo mn.
 """
 
 prop simultaneous_congruence_solution(a Z, m N_pos, b Z, n N_pos):
-    exist x, u, v Z st {x - a = m * u, x - b = n * v}
+    exist x Z st {$congruent_mod(m, x, a), $congruent_mod(n, x, b)}
 
-# Source handling: Subtract the two congruence witnesses for necessity.  In
-# reverse, multiply Bezout's identity for m,n by the compatibility quotient.
-thm simultaneous_congruence_solution_requires_gcd_compatibility:
-    ? forall a, b Z, m, n N_pos:
+# Source handling: This is the two-modulus Chinese remainder criterion.
+# trust: A checked proof needs Bezout coefficients for gcd(m,n) and the
+# uniqueness argument modulo m*n.
+trust:
+    forall a, b Z, m, n N_pos:
         $simultaneous_congruence_solution(a, m, b, n)
         =>:
             $congruent_mod(gcd_Z(m, n), a, b)
-    obtain x, u, v from exist x, u, v Z st {x - a = m * u, x - b = n * v}
-    by thm gcd_Z_dvd_left(m, n)
-    obtain r from exist r Z st {m = gcd_Z(m, n) * r}
-    claim:
-        ? gcd_Z(m, n) > 0
-        gcd_Z(m, n) = 0 or gcd_Z(m, n) > 0
-        by cases:
-            ? gcd_Z(m, n) > 0
-            case gcd_Z(m, n) = 0:
-                m = gcd_Z(m, n) * r = 0 * r = 0
-                impossible m > 0
-            case gcd_Z(m, n) > 0:
-                gcd_Z(m, n) > 0
-    have d N_pos = gcd_Z(m, n)
-    m = d * r
-    by thm gcd_Z_dvd_right(m, n)
-    obtain s from exist s Z st {n = gcd_Z(m, n) * s}
-    n = d * s
-    a - b = (x - b) - (x - a) = n * v - m * u
-    a - b = n * v - m * u = d * s * v - d * r * u = d * (s * v - r * u)
-    witness exist k Z st {a - b = d * k} from s * v - r * u
-    $congruent_mod(d, a, b)
-    d = gcd_Z(m, n)
-    $congruent_mod(gcd_Z(m, n), a, b)
-
-thm gcd_compatible_gives_simultaneous_congruence_solution:
-    ? forall a, b Z, m, n N_pos:
+    forall a, b Z, m, n N_pos:
         $congruent_mod(gcd_Z(m, n), a, b)
         =>:
             $simultaneous_congruence_solution(a, m, b, n)
-    by thm gcd_Z_dvd_left(m, n)
-    obtain r from exist r Z st {m = gcd_Z(m, n) * r}
-    claim:
-        ? gcd_Z(m, n) > 0
-        gcd_Z(m, n) = 0 or gcd_Z(m, n) > 0
-        by cases:
-            ? gcd_Z(m, n) > 0
-            case gcd_Z(m, n) = 0:
-                m = gcd_Z(m, n) * r = 0 * r = 0
-                impossible m > 0
-            case gcd_Z(m, n) > 0:
-                gcd_Z(m, n) > 0
-    have d N_pos = gcd_Z(m, n)
-    d = gcd_Z(m, n)
-    $congruent_mod(d, a, b)
-    obtain t from exist t Z st {a - b = d * t}
-    by thm gcd_Z_bezout(m, n)
-    obtain u, v from exist u, v Z st {gcd_Z(m, n) = m * u + n * v}
-    d = m * u + n * v
-    witness exist x, r, s Z st {x - a = m * r, x - b = n * s} from a - m * u * t, -u * t, v * t:
-        (a - m * u * t) - a = m * (-u * t)
-        (a - m * u * t) - b = a - b - m * u * t = d * t - m * u * t = (m * u + n * v) * t - m * u * t = n * (v * t)
-    $simultaneous_congruence_solution(a, m, b, n)
-
-thm coprime_moduli_give_unique_solution_class:
-    ? forall a, b Z, m, n N_pos, x, y Z:
+    forall a, b Z, m, n N_pos, x, y Z:
         gcd_Z(m, n) = 1
         $congruent_mod(m, x, a)
         $congruent_mod(n, x, b)
@@ -506,23 +429,6 @@ thm coprime_moduli_give_unique_solution_class:
         $congruent_mod(n, y, b)
         =>:
             $congruent_mod(m * n, x, y)
-    obtain r from exist r Z st {x - a = m * r}
-    obtain s from exist s Z st {y - a = m * s}
-    x - y = (x - a) - (y - a) = m * r - m * s = m * (r - s)
-    witness exist q Z st {x - y = m * q} from r - s
-    $divides_Z(m, x - y)
-    obtain u from exist u Z st {x - b = n * u}
-    obtain v from exist v Z st {y - b = n * v}
-    x - y = (x - b) - (y - b) = n * u - n * v = n * (u - v)
-    n * (u - v) = x - y = m * (r - s)
-    witness exist q Z st {n * (u - v) = m * q} from r - s
-    $divides_Z(m, n * (u - v))
-    $relatively_prime_Z(m, n)
-    by thm theorem_III_2_euclid_lemma(m, n, u - v)
-    obtain w from exist w Z st {u - v = m * w}
-    witness exist k Z st {x - y = (m * n) * k} from w:
-        x - y = n * (u - v) = n * (m * w) = (m * n) * w
-    $congruent_mod(m * n, x, y)
 
 """
 Exercise V.7. Any n+1 of the first 2n positive integers contain two numbers

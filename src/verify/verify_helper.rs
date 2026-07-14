@@ -119,39 +119,6 @@ impl Runtime {
         self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
     }
 
-    pub(crate) fn verify_fact_restricted_known_builtin(
-        &mut self,
-        fact: &Fact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        match fact {
-            Fact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
-            }
-            Fact::AndFact(and_fact) => {
-                self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
-            }
-            Fact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
-            }
-            Fact::OrFact(or_fact) => {
-                self.verify_or_fact_known_then_builtin_rules_only(or_fact, verify_state)
-            }
-            Fact::ForallFact(_)
-            | Fact::ForallFactWithIff(_)
-            | Fact::NotForall(_)
-            | Fact::ExistFact(_) => Ok(StmtUnknown::new().into()),
-        }
-    }
-
-    pub(crate) fn verify_fact_by_known_atomic_or_builtin_only(
-        &mut self,
-        fact: &Fact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_fact_restricted_known_builtin(fact, verify_state)
-    }
-
     pub(crate) fn non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,

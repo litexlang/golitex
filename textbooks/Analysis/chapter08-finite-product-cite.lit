@@ -1,6 +1,6 @@
 # Finite Cartesian-product representation for Analysis I, Example 8.4.2.
 
-trust local import chap3
+local import chap3
 
 thm equal_cardinality_from_bijection_cite:
     ? forall S, T set, h fn(x S) T:

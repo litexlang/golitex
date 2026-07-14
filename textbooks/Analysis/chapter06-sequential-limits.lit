@@ -1,8 +1,8 @@
 # Chapter 6: Limits of sequences.
 
 # Chapter 5 supplies the locally developed completeness vocabulary used here.
-trust local import chap5
-trust local import chap4
+local import chap5
+local import chap4
 
 # 6.1 Convergence and limit laws
 
@@ -4471,6 +4471,17 @@ prop is_subsequence_along(a, b seq(R), phi fn(k N_pos) N_pos):
 
 prop has_subsequence(a, b seq(R)):
     exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+
+# Imported concrete predicates do not expose existential witnesses directly.
+# Keep this elimination interface next to the subsequence definition.
+thm subsequence_witness_exists:
+    ? forall a, b seq(R):
+        $has_subsequence(a, b)
+        =>:
+            exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+    obtain phi from exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+    witness exist phi0 fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi0)} from phi:
+        $is_subsequence_along(a, b, phi)
 
 """
 Example 6.6.2. The even-indexed terms of a sequence form a subsequence.

@@ -81,26 +81,25 @@ divisibility by `8` into one for divisibility by `2`.
 ## 2. Structured Algebra
 
 Litex can also define structured mathematical objects in a set-theoretic style.
-The next example defines the group property, packages it as a `struct`, and then
-defines subgroup and normal-subgroup predicates.
+The next example gives the group laws directly in a `struct`, and then defines
+subgroup and normal-subgroup predicates.
 
 ```litex
-prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
-    forall x, y, z s:
-        op(x, op(y, z)) = op(op(x, y), z)
-    forall x s:
-        op(e, x) = x
-        op(x, e) = x
-    forall x s:
-        op(x, inv(x)) = e
-        op(inv(x), x) = e
-
 struct Group<s nonempty_set>:
     inv fn(x s) s
     op fn(x, y s) s
     e s
     <=>:
-        $GroupProperty(s, inv, op, e)
+        forall x, y, z s:
+            op(x, op(y, z)) = op(op(x, y), z)
+        forall x s:
+            op(e, x) = x
+        forall x s:
+            op(x, e) = x
+        forall x s:
+            op(x, inv(x)) = e
+        forall x s:
+            op(inv(x), x) = e
 
 macro G "&Group<s>{g}"
 
@@ -189,7 +188,6 @@ thm group_left_cancel:
         @G.op(a, b) = @G.op(a, c)
         =>:
             b = c
-    $GroupProperty(s, @G.inv, @G.op, @G.e)
     @G.op(@G.inv(a), a) = @G.e
     @G.op(@G.e, b) = b
     @G.op(@G.e, c) = c
@@ -200,7 +198,6 @@ thm group_left_cancel:
 thm group_inv_inv:
     ? forall s nonempty_set, g &Group<s>, a s:
         @G.inv(@G.inv(a)) = a
-    $GroupProperty(s, @G.inv, @G.op, @G.e)
     @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.e
     @G.op(@G.inv(a), a) = @G.e
     @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.op(@G.inv(a), a)

@@ -1144,6 +1144,9 @@ fn collect_cited_param_indices_from_fn_head(
         FnObjHead::FnSet(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
+        FnObjHead::DefStructField(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
         FnObjHead::AnonymousFnLiteral(x) => collect_cited_param_indices_from_anonymous_fn(
             x,
             previous_param_indices,

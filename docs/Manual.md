@@ -577,29 +577,29 @@ The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A decla
 
 After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, those facts are stored twice: once with each field name replaced by its explicit field access, and once with each field name replaced by its tuple projection. When checking that a tuple itself belongs to a struct object, Litex can instantiate the `<=>:` facts directly with the tuple components.
 
-For example, a group-like struct can use `<=>:` to say that the tuple of fields
-is a member of `&group<s>` exactly when those fields satisfy the displayed group
-property.
+For example, a group-like struct can state its laws directly in `<=>:`. A tuple
+is a member of `&group<s>` exactly when its operations satisfy those displayed
+laws; no separate predicate wrapper is needed.
 
 ```litex
-prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
-    forall x, y, z s:
-        add(x, add(y, z)) = add(add(x, y), z)
-    forall x s:
-        add(x, zero) = x
-        add(zero, x) = x
-        add(x, inv(x)) = zero
-        add(inv(x), x) = zero
-
 struct group<s set>:
     zero s
     add fn(x, y s) s
     inv fn(x s) s
     <=>:
-        $group_property(s, zero, add, inv)
+        forall x, y, z s:
+            add(x, add(y, z)) = add(add(x, y), z)
+        forall x s:
+            add(x, zero) = x
+        forall x s:
+            add(zero, x) = x
+        forall x s:
+            add(x, inv(x)) = zero
+        forall x s:
+            add(inv(x), x) = zero
 ```
 
-If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
+If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples. A checked `have x &Name<args> = value` supplies that witness after proving the value satisfies the fields and laws.
 
 #### Counting members
 

@@ -291,13 +291,7 @@ impl Runtime {
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::Atom(AtomObj::TupleIndex(p)) => p.clone().into(),
             Obj::Atom(AtomObj::CartIndex(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::DefStructField(_)) => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(
-                        "struct field cannot be used as a function head".to_string(),
-                    ),
-                )));
-            }
+            Obj::Atom(AtomObj::DefStructField(x)) => FnObjHead::DefStructField(x.clone()),
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t),
             Obj::FnObj(x) => {

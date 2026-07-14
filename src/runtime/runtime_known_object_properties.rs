@@ -1015,6 +1015,7 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
+        | FnObjHead::DefStructField(_)
         | FnObjHead::Induc(_)
         | FnObjHead::DefAlgo(_)
         | FnObjHead::TupleIndex(_)

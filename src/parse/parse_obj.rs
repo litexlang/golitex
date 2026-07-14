@@ -508,7 +508,7 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
-            Obj::Atom(AtomObj::DefStructField(_)) => return Ok(result),
+            Obj::Atom(AtomObj::DefStructField(p)) => (FnObjHead::DefStructField(p.clone()), vec![]),
             Obj::AnonymousFn(anon) => (
                 FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
                 vec![],

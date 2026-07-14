@@ -1,7 +1,7 @@
 # Chapter 5: The real numbers.
 
 # Chapter 4 establishes the rational distance and epsilon-closeness vocabulary.
-trust local import chap4
+local import chap4
 
 # 5.1 Cauchy sequences
 

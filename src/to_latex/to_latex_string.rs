@@ -875,6 +875,7 @@ impl FnObj {
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::DefStructField(p) => latex_local_ident(&p.name),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::ObjAtIndex(v) => v.to_latex_string(),

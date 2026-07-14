@@ -1367,8 +1367,10 @@ impl Runtime {
                 ParamObjType::DefStructField,
                 Some(in_fact.line_file.clone()),
             )?;
-            let fact_result =
-                self.verify_fact_by_known_atomic_or_builtin_only(&instantiated_fact, verify_state)?;
+            // A structure's equivalent facts are its membership obligations. They
+            // may be universal laws, such as associativity, so use the ordinary
+            // verifier rather than the restricted atomic builtin path.
+            let fact_result = self.verify_fact_full(&instantiated_fact, verify_state)?;
             if !fact_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }

@@ -1,17 +1,19 @@
-# Chapter IV — Prime Divisors and Factorization
+# Number Theory for Beginners, Section IV.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section IV.
+# problem: Formalize primes, prime divisibility of products, unique prime
+# factorization, prime exponents, infinitely many primes, and Section IV
+# exercises.
+# proof_idea: Define primality by positive divisors, reuse relative primality
+# and Euclid's lemma from Section III, and state finite factorization through
+# an indexed product interface.  The full finite-list theorem package is marked
+# as explicit proof debt.
+# litex_code: This file runs Sections I-III first and then adds Section IV.
+# comments: No number-theory std module is imported.
 
-"""
-Chapter IV — Prime divisors and factorization.
-
-The main line is: every integer greater than 1 has a prime divisor; a prime
-dividing a product divides a factor; and every integer greater than 1 factors
-into primes uniquely apart from their order.  The chapter closes with Euclid's
-argument that there are infinitely many primes.
-"""
-
-trust local import chapter3
-trust local import chapter2
-trust local import chapter1
+trust local import section3
+trust local import section2
+trust local import section1
 
 """
 Definition. An integer p>1 is prime if its only positive divisors are 1 and p.
@@ -31,9 +33,8 @@ greater than 1.  If p is prime, then p either divides a or is prime to a.
 """
 
 # Source handling: The text uses the least positive divisor argument from
-# Chapter I.
-# trust: Existence of a prime divisor needs a checked least-divisor
-# construction.
+# Section I.
+# trust: This proof needs a checked least-divisor construction.
 trust:
     forall a Z:
         a > 1
@@ -82,8 +83,6 @@ thm theorem_IV_1_prime_divides_binary_product:
         $divides_Z(p, a * b)
         =>:
             $divides_Z(p, a) or $divides_Z(p, b)
-    # If p does not divide the first factor, the preceding prime alternative
-    # gives the relatively-prime hypothesis needed by Euclid's lemma.
     by thm prime_divides_or_is_relatively_prime(p, a)
     by cases:
         ? $divides_Z(p, a) or $divides_Z(p, b)
@@ -256,23 +255,20 @@ Exercise IV.4. If a has prime factorization p^alpha q^beta ... r^gamma, then
 the number and sum of divisors have the standard product formulas.
 """
 
-# The divisor count is (alpha+1)(beta+1)...(gamma+1), and the divisor sum is
-# (p^(alpha+1)-1)/(p-1) times (q^(beta+1)-1)/(q-1) times ... times
-# (r^(gamma+1)-1)/(r-1).
+sketch:
+    abstract_prop divisor_count_formula(a)
+    abstract_prop divisor_sum_formula(a)
 
-abstract_prop divisor_count_formula(a)
-abstract_prop divisor_sum_formula(a)
-
-# Source handling: The proof counts choices of exponents in each prime
-# factor and multiplies independent geometric sums.
-# trust: A checked proof needs divisors as a finite set and a product over the
-# distinct prime factors.
-trust:
-    forall a Z:
-        a > 1
-        =>:
-            $divisor_count_formula(a)
-            $divisor_sum_formula(a)
+    # Source handling: The proof counts choices of exponents in each prime
+    # factor.
+    # trust: A checked proof needs divisors as a finite set and a product
+    # over the distinct prime factors.
+    trust:
+        forall a Z:
+            a > 1
+            =>:
+                $divisor_count_formula(a)
+                $divisor_sum_formula(a)
 
 """
 Exercise IV.5. The product of all positive divisors of a is a^(D/2), where D
