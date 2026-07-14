@@ -29,6 +29,13 @@ impl Runtime {
             );
         }
 
+        if let Some(result) = self.try_verify_nonempty_finite_set_from_positive_count(
+            is_nonempty_set_fact,
+            _verify_state,
+        )? {
+            return Ok(result);
+        }
+
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -474,6 +481,45 @@ impl Runtime {
                 Ok((StmtUnknown::new()).into())
             }
         }
+    }
+
+    // A finite set with at least one element is nonempty.
+    // Example: `$is_finite_set(S)`, `count(S) >= 1` => `$is_nonempty_set(S)`.
+    fn try_verify_nonempty_finite_set_from_positive_count(
+        &mut self,
+        is_nonempty_set_fact: &IsNonemptySetFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = is_nonempty_set_fact.line_file.clone();
+        let finite: AtomicFact =
+            IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
+        let finite_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&finite, verify_state)?;
+        if !finite_result.is_true() {
+            return Ok(None);
+        }
+
+        let count_at_least_one: AtomicFact = GreaterEqualFact::new(
+            Count::new(is_nonempty_set_fact.set.clone()).into(),
+            Number::new("1".to_string()).into(),
+            line_file,
+        )
+        .into();
+        let count_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&count_at_least_one)?;
+        if !count_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                is_nonempty_set_fact.clone().into(),
+                InferResult::new(),
+                "nonempty_finite_set_from_positive_count".to_string(),
+                vec![finite_result, count_result],
+            )
+            .into(),
+        ))
     }
 
     pub fn _verify_is_finite_set_fact_with_builtin_rules(

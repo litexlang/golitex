@@ -23,6 +23,8 @@ sketch:
 Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 """
 
+# In set theory, every object is a set. Since litex is based on set theory, every object is a set. So there is no difference between an object and a set here. prop `is_set` is used to prove something is a set. Since any object is a set, the prop `is_set` is always true.
+
 forall A set:
     $is_set(A)
 
@@ -51,6 +53,8 @@ element of A is an element of B and vice versa.
 
 # Set equality is extensional: both directions of membership imply equality.
 # Litex's `by extension` form proves the same principle for arbitrary sets.
+# The commutative property of equality, the transitive property of equality, and the reflexive property of equality are all builtin in Litex.
+
 claim:
     ? forall A, B set:
         forall x A:

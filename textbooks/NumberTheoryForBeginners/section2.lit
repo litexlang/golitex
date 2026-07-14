@@ -32,92 +32,236 @@ prop is_largest_multiple_leq_Z(a, d, q Z):
         =>:
             d * z <= d * q
 
-# Source handling: The text proves this from Section I's least positive
-# integer principle.
-# trust: The checked proof needs the least-positive-element argument over
-# the set {a-dz > 0}; it is recorded here as the Section II division interface.
-trust:
-    forall a Z, d N_pos:
-        exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
-    forall a Z, d N_pos:
-        exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+prop has_unique_euclidean_division_Z(a Z, d N_pos):
+    exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    forall q, r, q1, r1 Z:
+        $euclidean_division_Z(a, d, q, r)
+        $euclidean_division_Z(a, d, q1, r1)
+        =>:
+            q = q1
+            r = r1
+
+# The verifier's integer remainder gives the source quotient-remainder
+# construction directly: a - (a % d) is a multiple of d.
+thm euclidean_division_exists:
+    ? forall a Z, d N_pos:
+        exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    (a - a % d) % d = 0
+    obtain q from exist q Z st {a - a % d = d * q}
+    witness exist q1, r Z st {$euclidean_division_Z(a, d, q1, r)} from q, a % d:
+        d > 0
+        a = (a - a % d) + a % d = d * q + a % d
+        0 <= a % d < d
+        $euclidean_division_Z(a, d, q, a % d)
+
+thm euclidean_division_remainder_is_mod:
+    ? forall a Z, d N_pos, q, r Z:
+        $euclidean_division_Z(a, d, q, r)
+        =>:
+            a % d = r
+    d > 0
+    a = d * q + r
+    0 <= r < d
+    have rN N = r
+    rN = r
+    rN < d
+    a = d * q + rN
+    witness exist z Z st {a = d * z + rN} from q:
+        a = d * q + rN
+    a % d = rN
+    a % d = r
+
+thm euclidean_division_unique:
+    ? forall a Z, d N_pos, q, r, q1, r1 Z:
+        $euclidean_division_Z(a, d, q, r)
+        $euclidean_division_Z(a, d, q1, r1)
+        =>:
+            q = q1
+            r = r1
+    by thm euclidean_division_remainder_is_mod(a, d, q, r)
+    by thm euclidean_division_remainder_is_mod(a, d, q1, r1)
+    r = a % d = r1
+    r = r1
+    a = d * q + r
+    a = d * q1 + r1
+    d * q + r = d * q1 + r
+    d * q = (d * q + r) - r = (d * q1 + r) - r = d * q1
+    q = d * q / d = d * q1 / d = q1
 
 thm lemma_II_euclidean_division:
     ? forall a Z, d N_pos:
-        exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
-    exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
+        $has_unique_euclidean_division_Z(a, d)
+    by thm euclidean_division_exists(a, d)
+    claim:
+        ? forall q, r, q1, r1 Z:
+            $euclidean_division_Z(a, d, q, r)
+            $euclidean_division_Z(a, d, q1, r1)
+            =>:
+                q = q1
+                r = r1
+        by thm euclidean_division_unique(a, d, q, r, q1, r1)
+        q = q1
+        r = r1
+    $has_unique_euclidean_division_Z(a, d)
+
+# The largest-multiple phrasing follows from the same remainder construction.
+thm remainder_bounds_multiple:
+    ? forall d N_pos, q, r, z Z:
+        0 <= r < d
+        d * z <= d * q + r
+        =>:
+            d * z <= d * q
+    by contra:
+        ? d * z <= d * q
+        d * z > d * q
+        d * z - d * q > 0
+        d * z - d * q = d * (z - q)
+        d * (z - q) > 0
+        by contra:
+            ? z - q > 0
+            z - q <= 0
+            d * (z - q) <= 0
+            impossible d * (z - q) > 0
+        z - q >= 1
+        d * (z - q) >= d * 1
+        d * z - d * q >= d * 1
+        d * 1 = d
+        d * z - d * q >= d
+        d * z <= d * q + r
+        d * z - d * q <= (d * q + r) - d * q = r
+        d <= r
+        impossible d <= r
+
+thm largest_multiple_exists:
+    ? forall a Z, d N_pos:
+        exist q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+    by thm euclidean_division_exists(a, d)
+    obtain q, r from exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    d > 0
+    a = d * q + r
+    0 <= r < d
+    d * q <= d * q + r
+    d * q <= a
+    claim:
+        ? forall z Z:
+            d * z <= a
+            =>:
+                d * z <= d * q
+        a = d * q + r
+        d * z <= d * q + r
+        by thm remainder_bounds_multiple(d, q, r, z)
+    witness exist q1 Z st {$is_largest_multiple_leq_Z(a, d, q1)} from q:
+        d > 0
+        d * q <= a
+        forall z Z:
+            d * z <= a
+            =>:
+                d * z <= d * q
+        $is_largest_multiple_leq_Z(a, d, q)
+
+thm largest_multiple_unique:
+    ? forall a Z, d N_pos, q1, q2 Z:
+        $is_largest_multiple_leq_Z(a, d, q1)
+        $is_largest_multiple_leq_Z(a, d, q2)
+        =>:
+            q1 = q2
+    d * q1 <= a
+    d * q2 <= a
+    d * q1 <= d * q2
+    d * q2 <= d * q1
+    d * q1 = d * q2
+    q1 = d * q1 / d = d * q2 / d = q2
+
+thm lemma_II_largest_multiple:
+    ? forall a Z, d N_pos:
+        exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+    by thm largest_multiple_exists(a, d)
+    forall q1, q2 Z:
+        $is_largest_multiple_leq_Z(a, d, q1)
+        $is_largest_multiple_leq_Z(a, d, q2)
+        =>:
+            d * q1 <= a
+            d * q2 <= a
+            d * q1 <= d * q2
+            d * q2 <= d * q1
+            d * q1 = d * q2
+            q1 = d * q1 / d = d * q2 / d = q2
+    exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
 
 """
 Theorem II.1. A nonempty set of integers closed under subtraction is exactly
 mZ for a unique m >= 0.
 """
 
+# Subtraction closure is the only residual condition: `M power_set(Z)` already
+# gives the integer carrier for M and for every x, y in M.
 prop closed_under_subtraction(M power_set(Z)):
-    M $subset Z
     forall x, y M:
-        x $in Z
-        y $in Z
         x - y $in M
 
-prop is_integer_multiple_set(M power_set(Z), m Z):
-    M $subset Z
-    m >= 0
-    forall x Z:
-        x $in M
-        =>:
-            $divides_Z(m, x)
-    forall x Z:
-        $divides_Z(m, x)
-        =>:
-            x $in M
+# The notation mZ is a set-valued construction, not a relation between a set
+# and an integer. Its members are exactly the integer multiples of m.
+have fn mZ(m N) power_set(Z) = {x Z: $divides_Z(m, x)}
 
-# Source handling: This is Theorem II.1.  The book proves closure under
-# addition, all integer multiples, and then uses the least positive element.
-# trust: The full checked proof needs a finite amount of subgroup algebra
-# plus the Euclidean division lemma above.
+# Keep the historical relation exported for later sections, but make it only
+# the equality to the actual mZ value instead of restating its membership law.
+prop is_integer_multiple_set(M power_set(Z), m N):
+    M = mZ(m)
+
+# Source handling: The book proves closure under addition, all integer
+# multiples, and then uses the least positive element.
+# trust: The full checked proof still needs this subgroup argument together
+# with the Euclidean division lemma above.
 trust:
     forall M power_set(Z):
         $is_nonempty_set(M)
         $closed_under_subtraction(M)
         =>:
-            exist! m N st {$is_integer_multiple_set(M, m)}
+            exist! m N st {M = mZ(m)}
 
 thm theorem_II_1_subgroups_of_Z:
     ? forall M power_set(Z):
         $is_nonempty_set(M)
         $closed_under_subtraction(M)
         =>:
-            exist! m N st {$is_integer_multiple_set(M, m)}
-    exist! m N st {$is_integer_multiple_set(M, m)}
+            exist! m N st {M = mZ(m)}
+    exist! m N st {M = mZ(m)}
 
 """
 Corollary 1. The set of all integral linear combinations of finitely many
 integers is mZ for a unique m >= 0.
 """
 
-abstract_prop integer_linear_combination_from(A, x)
+# A finite subset carrier records both the integer ambient set and finiteness.
+template<S set>:
+    have finite_subsets set = {A power_set(S): $is_finite_set(A)}
 
-prop is_linear_combination_multiple_set(A finite_set, M power_set(Z)):
-    A $subset Z
-    M $subset Z
-    forall x Z:
-        x $in M
-        =>:
-            $integer_linear_combination_from(A, x)
-    forall x Z:
-        $integer_linear_combination_from(A, x)
-        =>:
-            x $in M
+# An integer linear combination chooses one integer coefficient for every
+# generator and sums the coefficient-generator products.
+prop is_integer_linear_combination(A \finite_subsets<Z>, x Z):
+    exist c fn(a A) Z st {x = finite_set_sum(A, fn(a A) Z {c(a) * a})}
 
-# Source handling: Corollary 1 applies Theorem II.1 to the set of all linear
-# combinations.
-# trust: Finite linear combinations over an arbitrary finite integer set
-# need a reusable finite-sum coefficient interface.
+# The corollary's "set of all integral linear combinations" is a reusable
+# set-valued function, so later statements can write integer_linear_span(A).
+have fn integer_linear_span(A \finite_subsets<Z>) power_set(Z) = {x Z: $is_integer_linear_combination(A, x)}
+
+# Source handling: zero coefficients make the span nonempty, and subtracting
+# coefficient functions gives subtraction closure. The corollary then applies
+# Theorem II.1 to this explicit span.
+# trust: The remaining debt is the finite-sum coefficient proof of those two
+# subgroup facts; the application of Theorem II.1 below is checked.
 trust:
-    forall A finite_set:
-        A $subset Z
-        =>:
-            exist M power_set(Z), d N st {$is_linear_combination_multiple_set(A, M), $is_integer_multiple_set(M, d)}
+    forall A \finite_subsets<Z>:
+        $is_nonempty_set(integer_linear_span(A))
+        $closed_under_subtraction(integer_linear_span(A))
+
+thm corollary_II_1_integer_linear_span_is_mZ:
+    ? forall A \finite_subsets<Z>:
+        exist! m N st {integer_linear_span(A) = mZ(m)}
+    $is_nonempty_set(integer_linear_span(A))
+    $closed_under_subtraction(integer_linear_span(A))
+    by thm theorem_II_1_subgroups_of_Z(integer_linear_span(A))
+    exist! m N st {integer_linear_span(A) = mZ(m)}
 
 """
 Corollary 2 and Definition. The integer d from Corollary 1 divides each of the
@@ -174,28 +318,16 @@ Exercise II.1. Prove associativity of gcd for three integers:
 """
 
 sketch:
-    # Source handling: This follows from the universal divisor
-    # characterization of gcd.
-    # trust: A checked proof needs a ternary gcd interface derived from
-    # finite linear combinations.
-    trust:
-        forall a, b, c Z:
-            gcd_Z(gcd_Z(a, b), c) = gcd_Z(a, gcd_Z(b, c))
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise II.2. Consecutive Fibonacci numbers are relatively prime.
 """
 
 sketch:
-    abstract_prop are_consecutive_fibonacci_terms(n, a, b)
-
-    # Source handling: The exercise uses the recurrence and the gcd identity
-    # gcd(u+v,u)=gcd(v,u).
-    # trust: A checked recursive Fibonacci function should be defined by
-    # induction before proving the gcd recurrence.
-    trust:
-        forall n N_pos:
-            exist a, b N_pos st {$are_consecutive_fibonacci_terms(n, a, b), gcd_Z(a, b) = 1}
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise II.3. A unimodular linear change of two integers preserves gcd.
@@ -280,15 +412,8 @@ remainder is gcd(a,b).
 """
 
 sketch:
-    abstract_prop euclidean_algorithm_run(a, b, last)
-
-    # Source handling: The source defines the remainder sequence and asks for
-    # termination plus correctness.
-    # trust: The checked version should connect repeated Euclidean
-    # divisions with a decreasing positive remainder measure.
-    trust:
-        forall a, b N_pos:
-            exist last N_pos st {$euclidean_algorithm_run(a, b, last), last = gcd_Z(a, b)}
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise II.5. Every Euclidean-algorithm remainder is an integral linear
@@ -296,14 +421,8 @@ combination ax+by.
 """
 
 sketch:
-    abstract_prop euclidean_remainder_linear_combination(a, b, n)
-
-    # Source handling: The proof is the usual back-substitution induction.
-    # trust: This should be proved together with the checked Euclidean
-    # algorithm recurrence from Exercise II.4.
-    trust:
-        forall a, b N_pos, n N:
-            $euclidean_remainder_linear_combination(a, b, n)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
@@ -426,14 +545,6 @@ Exercise II.8. Every rational number has a unique reduced integer numerator
 and positive denominator.
 """
 
-prop is_reduced_fraction_for(q Q, m Z, n N_pos):
-    q = m / n
-    gcd_Z(m, n) = 1
-
-# Source handling: The exercise uses the gcd and Bezout theory above to reduce
-# an arbitrary rational representation.
-# trust: A checked proof needs a local rational numerator/denominator
-# construction without importing the Rat module.
-trust:
-    forall q Q:
-        exist! m Z, n N_pos st {$is_reduced_fraction_for(q, m, n)}
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

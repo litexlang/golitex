@@ -185,16 +185,8 @@ Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
 """
 
 sketch:
-    # Source handling: This is an immediate use of Theorem III.2.
-    # trust: The direct checked proof should combine two divisibility
-    # witnesses and Euclid's lemma.
-    trust:
-        forall a, b, c Z:
-            $relatively_prime_Z(a, b)
-            $divides_Z(a, c)
-            $divides_Z(b, c)
-            =>:
-                $divides_Z(a * b, c)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise III.2. Multiplication by a residue prime to m permutes the nonzero
@@ -202,18 +194,8 @@ remainders modulo m.
 """
 
 sketch:
-    abstract_prop multiplication_by_unit_permutes_nonzero_remainders(a, m)
-
-    # Source handling: The exercise uses Euclid's lemma and division
-    # remainders modulo m.
-    # trust: This belongs with the congruence-class machinery of
-    # Section V.
-    trust:
-        forall a Z, m N_pos:
-            m > 1
-            $relatively_prime_Z(a, m)
-            =>:
-                $multiplication_by_unit_permutes_nonzero_remainders(a, m)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise III.3. A positive integer is either a perfect square or has irrational
@@ -221,16 +203,8 @@ square root.
 """
 
 sketch:
-    prop perfect_square_Z(n Z):
-        exist k Z st {k > 0, n = k^2}
-
-    # Source handling: The hint uses unique reduced fractions from Exercise
-    # II.8.
-    # trust: A checked proof needs the reduced-fraction interface plus
-    # parity or prime-factorization reasoning.
-    trust:
-        forall n N_pos:
-            $perfect_square_Z(n) or not sqrt(n) $in Q
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise III.4. Every integer >1 that is not a power of 2 is a sum of two or
@@ -238,18 +212,8 @@ more consecutive integers.
 """
 
 sketch:
-    abstract_prop is_power_of_two(n)
-    abstract_prop is_sum_of_consecutive_positive_integers(n)
-
-    # Source handling: The proof separates odd divisors from powers of 2.
-    # trust: The checked proof needs finite interval sums and odd-divisor
-    # extraction.
-    trust:
-        forall n Z:
-            n > 1
-            not $is_power_of_two(n)
-            =>:
-                $is_sum_of_consecutive_positive_integers(n)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise III.5. If a,b are positive and coprime, every integer >= ab is
@@ -257,14 +221,8 @@ ax+by with positive x,y.
 """
 
 sketch:
-    # Source handling: This is the two-generator Frobenius coin argument.
-    # trust: The proof needs modular residues and a positivity adjustment.
-    trust:
-        forall a, b, n N_pos:
-            $relatively_prime_Z(a, b)
-            n >= a * b
-            =>:
-                exist x, y N_pos st {n = a * x + b * y}
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise III.6. For finitely many positive integers with gcd d, every
@@ -272,14 +230,5 @@ sufficiently large multiple of d is a positive linear combination.
 """
 
 sketch:
-    abstract_prop sufficiently_large_multiple_positive_combination(A, d)
-
-    # Source handling: The text derives this by induction on the number of
-    # generators using Exercise III.5.
-    # trust: A checked proof needs finite lists of positive integers and
-    # the finite-input gcd interface.
-    trust:
-        forall A finite_set, d N_pos:
-            A $subset N_pos
-            =>:
-                $sufficiently_large_multiple_positive_combination(A, d)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

@@ -209,29 +209,16 @@ Exercise IV.1. Legendre's formula gives the exponent of p in n!.
 """
 
 sketch:
-    abstract_prop largest_prime_power_in_factorial(p, n, exponent)
-
-    # Source handling: The exercise sums floor(n/p^i).
-    # trust: A checked proof needs factorial, floor, and finite valuation
-    # sums.
-    trust:
-        forall p Z, n N_pos:
-            $is_prime_Z(p)
-            =>:
-                exist exponent N st {$largest_prime_power_in_factorial(p, n, exponent)}
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.2. A multinomial coefficient is an integer.
 """
 
 sketch:
-    abstract_prop multinomial_integer_statement(parts, total)
-
-    # Source handling: The hint compares prime exponents using Exercise IV.1.
-    # trust: This needs factorial and finite list interfaces.
-    trust:
-        forall parts finite_set, total N_pos:
-            $multinomial_integer_statement(parts, total)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.3. Certain Fermat-type numbers have gcd 1 or 2, giving another
@@ -239,16 +226,8 @@ proof of infinitely many primes.
 """
 
 sketch:
-    abstract_prop fermat_gcd_pattern(a, m, n)
-
-    # Source handling: The hint uses divisibility between a^(2n)-1 and
-    # a^(2m)+1.
-    # trust: The checked proof needs exponent divisibility lemmas.
-    trust:
-        forall a, m, n N_pos:
-            m != n
-            =>:
-                $fermat_gcd_pattern(a, m, n)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.4. If a has prime factorization p^alpha q^beta ... r^gamma, then
@@ -256,19 +235,8 @@ the number and sum of divisors have the standard product formulas.
 """
 
 sketch:
-    abstract_prop divisor_count_formula(a)
-    abstract_prop divisor_sum_formula(a)
-
-    # Source handling: The proof counts choices of exponents in each prime
-    # factor.
-    # trust: A checked proof needs divisors as a finite set and a product
-    # over the distinct prime factors.
-    trust:
-        forall a Z:
-            a > 1
-            =>:
-                $divisor_count_formula(a)
-                $divisor_sum_formula(a)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.5. The product of all positive divisors of a is a^(D/2), where D
@@ -276,15 +244,8 @@ is the number of divisors.
 """
 
 sketch:
-    abstract_prop divisor_product_formula(a)
-
-    # Source handling: Pair each divisor d with a/d.
-    # trust: This needs a finite divisor set and product pairing.
-    trust:
-        forall a Z:
-            a > 1
-            =>:
-                $divisor_product_formula(a)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.6. Counting products of finitely many primes gives another proof
@@ -292,14 +253,8 @@ that there are infinitely many primes.
 """
 
 sketch:
-    abstract_prop finite_prime_counting_contradiction()
-
-    # Source handling: The exercise compares the growth of products of powers
-    # of finitely many primes against all integers up to n.
-    # trust: A checked proof needs logarithms and asymptotic estimates.
-    trust:
-        $finite_prime_counting_contradiction()
-        $primes_are_unbounded()
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise IV.7. If (a,b)=1 and a^2-b^2 is a perfect square, then a+b and a-b
@@ -307,14 +262,5 @@ are either both squares or both twice squares.
 """
 
 sketch:
-    abstract_prop square_difference_classification(a, b)
-
-    # Source handling: The hint computes gcd(a+b,a-b), which is 1 or 2.
-    # trust: A checked proof needs the parity/gcd classification and the
-    # prime-exponent criterion for squares.
-    trust:
-        forall a, b Z:
-            $relatively_prime_Z(a, b)
-            exist c Z st {a^2 - b^2 = c^2}
-            =>:
-                $square_difference_classification(a, b)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

@@ -88,9 +88,23 @@ pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::graph::{
-    render_graph_from_stmt_results, run_graph_for_code, run_graph_for_code_strict,
-    run_graph_for_code_strict_with_language, run_graph_for_code_with_language, run_graph_for_file,
-    run_graph_for_file_with_strict, run_graph_for_file_with_strict_and_language,
+    render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
+    render_graph_from_stmt_results, run_definition_graph_for_code,
+    run_definition_graph_for_code_strict, run_definition_graph_for_code_strict_with_language,
+    run_definition_graph_for_code_with_language, run_definition_graph_for_file,
+    run_definition_graph_for_file_with_strict,
+    run_definition_graph_for_file_with_strict_and_language,
+    run_definition_graph_for_file_with_strict_language_and_isolation,
+    run_definition_graph_for_repo, run_definition_graph_for_repo_with_strict,
+    run_definition_graph_for_repo_with_strict_and_language, run_fact_graph_for_code,
+    run_fact_graph_for_code_strict, run_fact_graph_for_code_strict_with_language,
+    run_fact_graph_for_code_with_language, run_fact_graph_for_file,
+    run_fact_graph_for_file_with_strict, run_fact_graph_for_file_with_strict_and_language,
+    run_fact_graph_for_file_with_strict_language_and_isolation, run_fact_graph_for_repo,
+    run_fact_graph_for_repo_with_strict, run_fact_graph_for_repo_with_strict_and_language,
+    run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
+    run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
+    run_graph_for_file_with_strict_and_language,
     run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };

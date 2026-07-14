@@ -728,14 +728,16 @@ impl Runtime {
                         ParamObjType::DefStructField,
                         Some(in_fact.line_file.clone()),
                     )?;
-                    infer_result.new_fact(&instantiated_fact);
-                    let instantiated_fact_line_file = instantiated_fact.line_file();
-                    let instantiated_fact_string = instantiated_fact.to_string();
-                    self.top_level_env().store_fact(instantiated_fact)?;
-                    self.top_level_env().store_fact_to_cache_known_fact(
-                        instantiated_fact_string,
-                        instantiated_fact_line_file,
-                    )?;
+                    // Struct membership assumes each filter fact under the named field view,
+                    // then exposes its normal inference consequences.
+                    // Example: `g &Group<s>` and `$is_group(s, inv, op, e)` infer
+                    // `@G.op(@G.inv(x), x) = @G.e` for the same explicit field view.
+                    infer_result.new_infer_result_inside(
+                        self.store_fact_without_forall_coverage_check_and_infer_with_reason(
+                            instantiated_fact,
+                            "struct membership filter",
+                        )?,
+                    );
 
                     let projected_fact = self.inst_fact(
                         &after_header,

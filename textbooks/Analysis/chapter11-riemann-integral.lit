@@ -5590,10 +5590,9 @@ supremum of `f` on every non-empty piece times the piece length; `L(f,P)` uses
 the infimum.
 """
 
-# Source-facing selectors below: `upper_riemann_sum(I, P, f)` and
-# `lower_riemann_sum(I, P, f)` are the Litex names for Tao's `U(f,P)` and
-# `L(f,P)`.  The contribution predicates are only a domain bridge for the
-# filtered finite sums over non-empty pieces.
+# Source-facing Riemann-sum values are represented by the relations below.
+# Their finite contribution families are constructed explicitly, so the value
+# sets do not need an unverified global selector function.
 
 have fn function_values_on_subset(I power_set(R), J power_set(R), f fn(x I) R: J $subset I) power_set(R) = fn_range(fn(x J) R {f(x)})
 
@@ -5605,7 +5604,7 @@ prop has_nonempty_upper_riemann_sum_piece_contribution(I power_set(R), J power_s
     $is_bounded_interval(J)
     J $subset I
     $is_nonempty_set(J)
-    exist s R st {$is_least_upper_bound(function_values_on_subset(I, J, f), s), t = s * interval_length(J)}
+    exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), t = s * interval_length(J)}
 
 prop has_nonempty_lower_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f fn(x I) R, t R):
     $is_bounded_interval(J)
@@ -5618,6 +5617,180 @@ prop has_upper_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f 
 
 prop has_lower_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f fn(x I) R, t R):
     $has_empty_riemann_sum_piece_contribution(J, t) or $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t)
+
+thm bounded_piece_function_values_have_upper_bound:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        J $subset I
+        $is_bounded_function_on(I, f)
+        =>:
+            $has_upper_bound(function_values_on_subset(I, J, f))
+    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    claim:
+        ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+        claim:
+            ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            forall x J:
+                x $in I
+                fn(x J) R {f(x)}(x) = f(x)
+                abs(f(x)) <= M
+                abs(fn(x J) R {f(x)}(x)) <= M
+            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        $is_bounded_function_on(J, fn(x J) R {f(x)})
+    by thm bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
+    $is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
+    function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
+    $is_bounded_real_set(function_values_on_subset(I, J, f))
+    by thm bounded_real_set_has_upper_bound(function_values_on_subset(I, J, f))
+    $has_upper_bound(function_values_on_subset(I, J, f))
+
+thm nonempty_piece_function_values_has_least_upper_bound:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        J $subset I
+        $is_nonempty_set(J)
+        $is_bounded_function_on(I, f)
+        =>:
+            exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
+    have x J
+    x $in I
+    function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
+    fn(x J) R {f(x)}(x) = f(x)
+    fn(x J) R {f(x)}(x) $in fn_range(fn(x J) R {f(x)})
+    f(x) $in fn_range(fn(x J) R {f(x)})
+    f(x) $in function_values_on_subset(I, J, f)
+    witness $is_nonempty_set(function_values_on_subset(I, J, f)) from f(x):
+        f(x) $in function_values_on_subset(I, J, f)
+    by thm bounded_piece_function_values_have_upper_bound(I, J, f)
+    $has_upper_bound(function_values_on_subset(I, J, f))
+    by thm chap5::least_upper_bound_existence(function_values_on_subset(I, J, f))
+    obtain s from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
+    witness exist s0 R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s0)} from s:
+        $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)
+
+thm bounded_piece_function_values_have_lower_bound:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        J $subset I
+        $is_bounded_function_on(I, f)
+        =>:
+            exist B R st {$is_lower_bound_of_real_set(function_values_on_subset(I, J, f), B)}
+    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    claim:
+        ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+        claim:
+            ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            forall x J:
+                x $in I
+                fn(x J) R {f(x)}(x) = f(x)
+                abs(f(x)) <= M
+                abs(fn(x J) R {f(x)}(x)) <= M
+            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        $is_bounded_function_on(J, fn(x J) R {f(x)})
+    by thm bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
+    $is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
+    function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
+    $is_bounded_real_set(function_values_on_subset(I, J, f))
+    obtain B from exist B R_pos st {function_values_on_subset(I, J, f) $subset '[-B, B]}
+    witness exist B0 R st {$is_lower_bound_of_real_set(function_values_on_subset(I, J, f), B0)} from -B:
+        claim:
+            ? $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), -B)
+            forall y function_values_on_subset(I, J, f):
+                function_values_on_subset(I, J, f) $subset '[-B, B]
+                y $in '[-B, B]
+                -B <= y
+            $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), -B)
+        $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), -B)
+
+thm nonempty_piece_function_values_has_infimum:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        J $subset I
+        $is_nonempty_set(J)
+        $is_bounded_function_on(I, f)
+        =>:
+            exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s)}
+    have x J
+    x $in I
+    function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
+    fn(x J) R {f(x)}(x) = f(x)
+    fn(x J) R {f(x)}(x) $in fn_range(fn(x J) R {f(x)})
+    f(x) $in fn_range(fn(x J) R {f(x)})
+    f(x) $in function_values_on_subset(I, J, f)
+    by thm bounded_piece_function_values_have_lower_bound(I, J, f)
+    obtain B from exist B R st {$is_lower_bound_of_real_set(function_values_on_subset(I, J, f), B)}
+    by thm lower_bounded_real_set_with_member_has_infimum(function_values_on_subset(I, J, f), B, f(x))
+    obtain s from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s)}
+    witness exist s0 R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s0)} from s:
+        $is_infimum_of_real_set(function_values_on_subset(I, J, f), s)
+
+thm upper_riemann_sum_piece_contribution_exists:
+    ? forall I power_set(R), P finite_set, J P, f fn(x I) R:
+        P $in power_set(power_set(R))
+        $is_partition_of_bounded_interval(I, P)
+        $is_bounded_function_on(I, f)
+        =>:
+            exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+    P $in power_set(power_set(R))
+    $is_partition_of_bounded_interval(I, P)
+    J $in power_set(R)
+    $is_bounded_interval(J)
+    J $subset I
+    by cases:
+        ? exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+        case $is_nonempty_set(J):
+            by thm nonempty_piece_function_values_has_least_upper_bound(I, J, f)
+            obtain upper from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
+            witness exist t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)} from upper * interval_length(J):
+                $is_bounded_interval(J)
+                J $subset I
+                $is_nonempty_set(J)
+                witness exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), upper * interval_length(J) = s * interval_length(J)} from upper:
+                    $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper)
+                    upper * interval_length(J) = upper * interval_length(J)
+                exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), upper * interval_length(J) = s * interval_length(J)}
+                $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, upper * interval_length(J))
+                $has_upper_riemann_sum_piece_contribution(I, J, f, upper * interval_length(J))
+        case not $is_nonempty_set(J):
+            witness exist t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)} from 0:
+                not $is_nonempty_set(J)
+                0 = 0
+                $has_empty_riemann_sum_piece_contribution(J, 0)
+                $has_upper_riemann_sum_piece_contribution(I, J, f, 0)
+
+thm lower_riemann_sum_piece_contribution_exists:
+    ? forall I power_set(R), P finite_set, J P, f fn(x I) R:
+        P $in power_set(power_set(R))
+        $is_partition_of_bounded_interval(I, P)
+        $is_bounded_function_on(I, f)
+        =>:
+            exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+    P $in power_set(power_set(R))
+    $is_partition_of_bounded_interval(I, P)
+    J $in power_set(R)
+    $is_bounded_interval(J)
+    J $subset I
+    by cases:
+        ? exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+        case $is_nonempty_set(J):
+            by thm nonempty_piece_function_values_has_infimum(I, J, f)
+            obtain lower from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s)}
+            witness exist t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)} from lower * interval_length(J):
+                $is_bounded_interval(J)
+                J $subset I
+                $is_nonempty_set(J)
+                witness exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), lower * interval_length(J) = s * interval_length(J)} from lower:
+                    $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower)
+                    lower * interval_length(J) = lower * interval_length(J)
+                exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), lower * interval_length(J) = s * interval_length(J)}
+                $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, lower * interval_length(J))
+                $has_lower_riemann_sum_piece_contribution(I, J, f, lower * interval_length(J))
+        case not $is_nonempty_set(J):
+            witness exist t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)} from 0:
+                not $is_nonempty_set(J)
+                0 = 0
+                $has_empty_riemann_sum_piece_contribution(J, 0)
+                $has_lower_riemann_sum_piece_contribution(I, J, f, 0)
 
 prop is_upper_riemann_sum_contribution_family(I power_set(R), P finite_set, f fn(x I) R, c fn(J P) R):
     forall J P:
@@ -5639,34 +5812,106 @@ prop has_lower_riemann_sum(I power_set(R), P finite_set, f fn(x I) R, L R):
     $is_bounded_function_on(I, f)
     exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
 
-# Source handling: Definition 11.3.9 names the upper Riemann sum `U(f,P)`.
-# proof_debt: the finite contribution family is an explicit selector bridge.
-trust have upper_riemann_sum fn(I power_set(R), P power_set(power_set(R)), f fn(x I) R) R:
-    forall I power_set(R), P finite_set, f fn(x I) R:
+thm upper_riemann_sum_exists:
+    ? forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
         $is_bounded_function_on(I, f)
         =>:
-            $has_upper_riemann_sum(I, P, f, upper_riemann_sum(I, P, f))
+            exist U R st {$has_upper_riemann_sum(I, P, f, U)}
+    have fn upper_piece_value_set(J P) power_set(R) = {t R: $has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+    claim:
+        ? forall A fn_range(upper_piece_value_set):
+            $is_nonempty_set(A)
+        have by preimage J from A $in fn_range(upper_piece_value_set)
+        A = upper_piece_value_set(J)
+        by thm upper_riemann_sum_piece_contribution_exists(I, P, J, f)
+        obtain t from exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+        upper_piece_value_set(J) = {t R: $has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+        t $in upper_piece_value_set(J)
+        t $in A
+        witness $is_nonempty_set(A) from t:
+            t $in A
+    claim:
+        ? exist f fn(A fn_range(upper_piece_value_set)) cup(fn_range(upper_piece_value_set)) st {forall! A fn_range(upper_piece_value_set) => {f(A) $in A}}
+        by axiom_of_choice: set fn_range(upper_piece_value_set)
+    obtain choose_upper from exist f fn(A fn_range(upper_piece_value_set)) cup(fn_range(upper_piece_value_set)) st {forall! A fn_range(upper_piece_value_set) => {f(A) $in A}}
+    claim:
+        ? forall J P:
+            choose_upper(upper_piece_value_set(J)) $in R
+        choose_upper(upper_piece_value_set(J)) $in upper_piece_value_set(J)
+        upper_piece_value_set(J) $in power_set(R)
+        choose_upper(upper_piece_value_set(J)) $in R
+    have fn c(J P) R = choose_upper(upper_piece_value_set(J))
+    witness exist U0 R st {$has_upper_riemann_sum(I, P, f, U0)} from finite_set_sum(P, c):
+        P $in power_set(power_set(R))
+        $is_partition_of_bounded_interval(I, P)
+        $is_bounded_function_on(I, f)
+        witness exist c0 fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)} from c:
+            forall J P:
+                c(J) = choose_upper(upper_piece_value_set(J))
+                choose_upper(upper_piece_value_set(J)) $in upper_piece_value_set(J)
+                c(J) $in upper_piece_value_set(J)
+                $has_upper_riemann_sum_piece_contribution(I, J, f, c(J))
+            $is_upper_riemann_sum_contribution_family(I, P, f, c)
+            finite_set_sum(P, c) = finite_set_sum(P, c)
+        exist c0 fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)}
+        $has_upper_riemann_sum(I, P, f, finite_set_sum(P, c))
 
-# Source handling: Definition 11.3.9 names the lower Riemann sum `L(f,P)`.
-# proof_debt: the finite contribution family is an explicit selector bridge.
-trust have lower_riemann_sum fn(I power_set(R), P power_set(power_set(R)), f fn(x I) R) R:
-    forall I power_set(R), P finite_set, f fn(x I) R:
+thm lower_riemann_sum_exists:
+    ? forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
         $is_bounded_function_on(I, f)
         =>:
-            $has_lower_riemann_sum(I, P, f, lower_riemann_sum(I, P, f))
+            exist L R st {$has_lower_riemann_sum(I, P, f, L)}
+    have fn lower_piece_value_set(J P) power_set(R) = {t R: $has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+    claim:
+        ? forall A fn_range(lower_piece_value_set):
+            $is_nonempty_set(A)
+        have by preimage J from A $in fn_range(lower_piece_value_set)
+        A = lower_piece_value_set(J)
+        by thm lower_riemann_sum_piece_contribution_exists(I, P, J, f)
+        obtain t from exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+        lower_piece_value_set(J) = {t R: $has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+        t $in lower_piece_value_set(J)
+        t $in A
+        witness $is_nonempty_set(A) from t:
+            t $in A
+    claim:
+        ? exist f fn(A fn_range(lower_piece_value_set)) cup(fn_range(lower_piece_value_set)) st {forall! A fn_range(lower_piece_value_set) => {f(A) $in A}}
+        by axiom_of_choice: set fn_range(lower_piece_value_set)
+    obtain choose_lower from exist f fn(A fn_range(lower_piece_value_set)) cup(fn_range(lower_piece_value_set)) st {forall! A fn_range(lower_piece_value_set) => {f(A) $in A}}
+    claim:
+        ? forall J P:
+            choose_lower(lower_piece_value_set(J)) $in R
+        choose_lower(lower_piece_value_set(J)) $in lower_piece_value_set(J)
+        lower_piece_value_set(J) $in power_set(R)
+        choose_lower(lower_piece_value_set(J)) $in R
+    have fn c(J P) R = choose_lower(lower_piece_value_set(J))
+    witness exist L0 R st {$has_lower_riemann_sum(I, P, f, L0)} from finite_set_sum(P, c):
+        P $in power_set(power_set(R))
+        $is_partition_of_bounded_interval(I, P)
+        $is_bounded_function_on(I, f)
+        witness exist c0 fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)} from c:
+            forall J P:
+                c(J) = choose_lower(lower_piece_value_set(J))
+                choose_lower(lower_piece_value_set(J)) $in lower_piece_value_set(J)
+                c(J) $in lower_piece_value_set(J)
+                $has_lower_riemann_sum_piece_contribution(I, J, f, c(J))
+            $is_lower_riemann_sum_contribution_family(I, P, f, c)
+            finite_set_sum(P, c) = finite_set_sum(P, c)
+        exist c0 fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)}
+        $has_lower_riemann_sum(I, P, f, finite_set_sum(P, c))
 
 # These value-set interfaces are proof packages for Proposition 11.3.12, not
 # additional source definitions.
 
 prop is_upper_riemann_sum_value(I power_set(R), f fn(x I) R, U R):
-    exist P finite_set st {P $in power_set(power_set(R)), $is_partition_of_bounded_interval(I, P), $is_bounded_function_on(I, f), U = upper_riemann_sum(I, P, f)}
+    exist P finite_set st {$has_upper_riemann_sum(I, P, f, U)}
 
 prop is_lower_riemann_sum_value(I power_set(R), f fn(x I) R, L R):
-    exist P finite_set st {P $in power_set(power_set(R)), $is_partition_of_bounded_interval(I, P), $is_bounded_function_on(I, f), L = lower_riemann_sum(I, P, f)}
+    exist P finite_set st {$has_lower_riemann_sum(I, P, f, L)}
 
 have fn upper_riemann_sum_values(I power_set(R), f fn(x I) R) power_set(R) = {U R: $is_upper_riemann_sum_value(I, f, U)}
 
