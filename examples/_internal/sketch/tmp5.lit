@@ -25,16 +25,6 @@ prop finite_set_size_has_index(n N_pos):
         =>:
             exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
 
-thm nonempty_from_positive_count:
-    ? forall s finite_set:
-        count(s) >= 1
-        =>:
-            $is_nonempty_set(s)
-    by contra $is_nonempty_set(s):
-        s = {}
-        count(s) = count({}) = 0
-        impossible count(s) >= 1
-
 thm intersect_with_singleton:
     ? forall s set, a set:
         a $in s
@@ -72,7 +62,7 @@ thm index_function_for_singleton:
         =>:
             exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
     count(s) >= 1
-    by thm nonempty_from_positive_count(s)
+    $is_nonempty_set(s)
     have a s
     a $in s
     by thm remove_singleton_from_singleton_sized_set_is_empty(s, a)
@@ -102,7 +92,7 @@ thm index_function_step:
     n >= 1
     n + 1 >= 1
     count(s) = n + 1 >= 1
-    by thm nonempty_from_positive_count(s)
+    $is_nonempty_set(s)
     have a s
     a $in s
     by thm intersect_with_singleton(s, a)

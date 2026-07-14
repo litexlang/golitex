@@ -209,6 +209,90 @@ relations are visible. A group object gives access to `@G.inv`, `@G.op`, and
 `@G.e`; subgroup and normality are stated as relations among the carrier, the
 group structure, and the subset.
 
+### A Reusable Algebraic Hierarchy
+
+The following self-contained interface reference makes the distinction
+explicit: an `is_*` predicate is a law about already supplied data, whereas a
+`struct` is the reusable package of operation fields.  The carrier remains
+explicit: `s` is a set, while a value of `&Field<s>` is the field data on that
+carrier.
+
+```litex
+prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(e, x) = x
+        op(x, e) = x
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+
+struct Group<s nonempty_set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
+    <=>:
+        $is_group(s, inv, op, e)
+
+prop is_abelian_group(s nonempty_set, neg fn(x s) s, add fn(x, y s) s, zero s):
+    $is_group(s, neg, add, zero)
+    forall x, y s:
+        add(x, y) = add(y, x)
+
+struct AbelianGroup<s nonempty_set>:
+    neg fn(x s) s
+    add fn(x, y s) s
+    zero s
+    <=>:
+        $is_abelian_group(s, neg, add, zero)
+
+prop is_ring(s nonempty_set, zero, one s, add fn(x, y s) s, neg fn(x s) s, mul fn(x, y s) s):
+    $is_abelian_group(s, neg, add, zero)
+    forall x, y, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+    forall x s:
+        mul(one, x) = x
+        mul(x, one) = x
+
+struct Ring<s nonempty_set>:
+    zero s
+    one s
+    add fn(x, y s) s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    <=>:
+        $is_ring(s, zero, one, add, neg, mul)
+
+prop is_field(s nonempty_set, zero, one s, add fn(x, y s) s, neg fn(x s) s, mul fn(x, y s) s, inv fn(x s) s):
+    $is_ring(s, zero, one, add, neg, mul)
+    zero != one
+    forall x, y s:
+        mul(x, y) = mul(y, x)
+    forall x s:
+        x != zero
+        =>:
+            mul(x, inv(x)) = one
+
+struct Field<s nonempty_set>:
+    zero s
+    one s
+    add fn(x, y s) s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $is_field(s, zero, one, add, neg, mul, inv)
+
+have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+```
+
+`Z_additive_group` is an immediate use probe: the supplied inverse, addition,
+and zero form a checked abelian-group instance.  A field object's `inv` is a
+total function on the carrier, but its defining law constrains it only away
+from `zero`; the value at zero is intentionally unspecified.
+
 
 ## 3. A Proof Shape: Local Assumptions
 

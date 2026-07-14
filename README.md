@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
+<img src="https://litexlang.com/assets/logo.png" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -59,7 +59,7 @@ in practice. Formal systems are increasingly important, but their interfaces
 still ask writers to cross a substantial gap from ordinary mathematical writing.
 
 <p align="center">
-  <img src="assets/knowledge_graph.svg" alt="Litex relation graph from Analysis I, Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
+  <img src="https://litexlang.com/assets/knowledge_graph.svg" alt="Litex relation graph from Analysis I, Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
 </p>
 
 Litex aims to make formal mathematics feel like ordinary mathematics: a

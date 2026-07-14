@@ -1,0 +1,207 @@
+prop closed_under_subtraction(M power_set(Z)):
+    forall x, y M:
+        x - y $in M
+
+prop divides_Z(a, b Z):
+    exist k Z st {b = a * k}
+
+have fn mZ(m N) power_set(Z) = {x Z: $divides_Z(m, x)}
+
+have fn positive_elements(M power_set(Z)) power_set(Z) = {x Z: x $in M and x > 0}
+
+thm zero_in_subtraction_closed_set:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        =>:
+            0 $in M
+    have a M
+    a - a $in M
+    0 = a - a
+    0 $in M
+
+thm neg_in_subtraction_closed_set:
+    ? forall M power_set(Z), x M:
+        $closed_under_subtraction(M)
+        =>:
+            -x $in M
+    x - x $in M
+    (x - x) - x $in M
+    -x = (x - x) - x
+    -x $in M
+
+thm add_in_subtraction_closed_set:
+    ? forall M power_set(Z), x, y M:
+        $closed_under_subtraction(M)
+        =>:
+            x + y $in M
+    by thm neg_in_subtraction_closed_set(M, y)
+    -y $in M
+    x - (-y) $in M
+    x + y = x - (-y)
+    x + y $in M
+
+prop nonnegative_multiple_in_subtraction_closed_set(M power_set(Z), m, k Z):
+    m $in M
+    k >= 0
+    k * m $in M
+
+thm natural_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, n N:
+        $closed_under_subtraction(M)
+        =>:
+            $nonnegative_multiple_in_subtraction_closed_set(M, m, n)
+    claim:
+        ? forall k Z:
+            k >= 0
+            =>:
+                $nonnegative_multiple_in_subtraction_closed_set(M, m, k)
+        by induc k from 0:
+            ? $nonnegative_multiple_in_subtraction_closed_set(M, m, k)
+            ? from k = 0:
+                m - m $in M
+                0 = m - m
+                0 $in M
+                0 * m = 0
+                k >= 0
+                k * m $in M
+            ? induc:
+                k * m $in M
+                by thm add_in_subtraction_closed_set(M, k * m, m)
+                k * m + m $in M
+                (k + 1) * m = k * m + m
+                k + 1 >= 0
+                (k + 1) * m $in M
+    $nonnegative_multiple_in_subtraction_closed_set(M, m, n)
+
+thm nonnegative_integer_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, k Z:
+        $closed_under_subtraction(M)
+        k >= 0
+        =>:
+            k * m $in M
+    have kN N = k
+    kN = k
+    by thm natural_multiple_in_subtraction_closed_set(M, m, kN)
+    $nonnegative_multiple_in_subtraction_closed_set(M, m, kN)
+    kN * m $in M
+    k * m = kN * m
+    k * m $in M
+
+thm integer_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, k Z:
+        $closed_under_subtraction(M)
+        =>:
+            k * m $in M
+    k >= 0 or k < 0
+    by cases:
+        ? k * m $in M
+        case k >= 0:
+            by thm nonnegative_integer_multiple_in_subtraction_closed_set(M, m, k)
+            k * m $in M
+        case k < 0:
+            -k >= 0
+            by thm nonnegative_integer_multiple_in_subtraction_closed_set(M, m, -k)
+            (-k) * m $in M
+            by thm neg_in_subtraction_closed_set(M, (-k) * m)
+            -((-k) * m) $in M
+            k * m = -((-k) * m)
+            k * m $in M
+
+claim:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M) or not $is_nonempty_set(M)
+    $is_nonempty_set(M) or not $is_nonempty_set(M)
+
+thm zero_subtraction_closed_set:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        not $is_nonempty_set(positive_elements(M))
+        =>:
+            M = mZ(0)
+    by extension M = mZ(0):
+        claim:
+            ? forall x M:
+                x $in mZ(0)
+            have z Z = x
+            z = x
+            z $in M
+            z > 0 or z <= 0
+            by cases:
+                ? x $in mZ(0)
+                case z > 0:
+                    witness $is_nonempty_set(positive_elements(M)) from z:
+                        z $in positive_elements(M)
+                    impossible not $is_nonempty_set(positive_elements(M))
+                case z <= 0:
+                    z = 0 or z < 0
+                    by cases:
+                        ? x $in mZ(0)
+                        case z = 0:
+                            witness exist k Z st {x = 0 * k} from 0:
+                                x = z = 0 = 0 * 0
+                            $divides_Z(0, x)
+                            x $in mZ(0)
+                        case z < 0:
+                            by thm neg_in_subtraction_closed_set(M, z)
+                            -z $in M
+                            witness $is_nonempty_set(positive_elements(M)) from -z:
+                                -z $in positive_elements(M)
+                            impossible not $is_nonempty_set(positive_elements(M))
+        forall x M:
+            x $in mZ(0)
+        claim:
+            ? forall x mZ(0):
+                x $in M
+            obtain k from exist k Z st {x = 0 * k}
+            x = 0 * k = 0
+            by thm zero_in_subtraction_closed_set(M)
+            0 $in M
+            x $in M
+        forall x mZ(0):
+            x $in M
+
+thm positive_mZ_generator_unique:
+    ? forall m N_pos, n N:
+        mZ(m) = mZ(n)
+        =>:
+            m = n
+    witness exist k Z st {m = m * k} from 1:
+        m = m * 1
+    $divides_Z(m, m)
+    m $in mZ(m)
+    m $in mZ(n)
+    obtain a from exist a Z st {m = n * a}
+    m = n * a
+    n = 0 or n > 0
+    by cases:
+        ? m = n
+        case n = 0:
+            m = n * a = 0 * a = 0
+            impossible m > 0
+        case n > 0:
+            witness exist k Z st {n = n * k} from 1:
+                n = n * 1
+            $divides_Z(n, n)
+            n $in mZ(n)
+            n $in mZ(m)
+            obtain b from exist b Z st {n = m * b}
+            n = m * b
+            by contra:
+                ? a > 0
+                a <= 0
+                n * a <= 0
+                m = n * a <= 0
+                impossible m > 0
+            a >= 1
+            m = n * a >= n * 1 = n
+            by contra:
+                ? b > 0
+                b <= 0
+                m * b <= 0
+                n = m * b <= 0
+                impossible n > 0
+            b >= 1
+            n = m * b >= m * 1 = m
+            m = n

@@ -96,23 +96,74 @@ exactly one of 0,1,...,m-1, and congruence is the same as having the same
 remainder.
 """
 
-abstract_prop has_standard_remainder_mod(m, x, r)
-abstract_prop same_remainder_mod(m, x, y)
+prop has_standard_remainder_mod(m N_pos, x, r Z):
+    r = x % m
 
-# Source handling: This is the remainder statement obtained from Section II.
-# trust: The checked proof needs the unique quotient-remainder theorem and
-# a finite interval interface for 0,...,m-1.
-trust:
-    forall m N_pos, x Z:
+prop same_remainder_mod(m N_pos, x, y Z):
+    x % m = y % m
+
+# The builtin remainder is already in the source interval.  The two directions
+# below make the book's equivalence with divisibility explicit.
+thm standard_remainder_mod_exists_unique:
+    ? forall m N_pos, x Z:
         exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
-    forall m N_pos, x, y Z:
+    (x - x % m) % m = 0
+    obtain q from exist q Z st {x - x % m = m * q}
+    witness exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)} from x % m:
+        0 <= x % m < m
+        $has_standard_remainder_mod(m, x, x % m)
+        x - x % m = m * q
+        witness exist k Z st {x - x % m = m * k} from q:
+            x - x % m = m * q
+        $congruent_mod(m, x, x % m)
+    forall r, r1 Z:
+        0 <= r < m
+        0 <= r1 < m
+        $has_standard_remainder_mod(m, x, r)
+        $has_standard_remainder_mod(m, x, r1)
+        $congruent_mod(m, x, r)
+        $congruent_mod(m, x, r1)
+        =>:
+            r = x % m = r1
+    exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
+
+thm congruent_mod_has_same_remainder:
+    ? forall m N_pos, x, y Z:
         $congruent_mod(m, x, y)
         =>:
             $same_remainder_mod(m, x, y)
-    forall m N_pos, x, y Z:
+    obtain k from exist k Z st {x - y = m * k}
+    (y - y % m) % m = 0
+    obtain q from exist q Z st {y - y % m = m * q}
+    x = (x - y) + y = m * k + y = y + m * k
+    y = (y - y % m) + y % m = m * q + y % m
+    x = y + m * k = (m * q + y % m) + m * k = m * (q + k) + y % m
+    have rN N = y % m
+    rN = y % m < m
+    x = m * (q + k) + rN
+    witness exist z Z st {x = m * z + rN} from q + k:
+        x = m * (q + k) + rN
+    x % m = rN
+    x % m = y % m
+    $same_remainder_mod(m, x, y)
+
+thm same_remainder_mod_is_congruent:
+    ? forall m N_pos, x, y Z:
         $same_remainder_mod(m, x, y)
         =>:
             $congruent_mod(m, x, y)
+    (x - x % m) % m = 0
+    obtain a from exist a Z st {x - x % m = m * a}
+    (y - y % m) % m = 0
+    obtain b from exist b Z st {y - y % m = m * b}
+    x = (x - x % m) + x % m = m * a + x % m
+    y = (y - y % m) + y % m = m * b + y % m
+    x % m = y % m
+    y = m * b + x % m
+    x - y = (m * a + x % m) - (m * b + x % m) = m * a - m * b = m * (a - b)
+    witness exist k Z st {x - y = m * k} from a - b:
+        x - y = m * (a - b)
+    $congruent_mod(m, x, y)
 
 """
 Properties (A), (B), (C). Congruence modulo m is reflexive, transitive, and
@@ -333,102 +384,49 @@ Exercise V.1. Among m integers, a nonempty subset has sum divisible by m.
 """
 
 sketch:
-    abstract_prop has_nonempty_subset_sum_multiple_mod(m, x)
-
-    # Source handling: The hint compares the m+1 partial sums
-    # 0, x1, x1+x2, ..., x1+...+xm modulo m.
-    # trust: This needs finite indexed partial sums and a pigeonhole
-    # principle for the m residue classes.
-    trust:
-        forall m N_pos, x fn(i N_pos: i <= m) Z:
-            $has_nonempty_subset_sum_multiple_mod(m, x)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.2. Every perfect square is congruent to 0, 1, or 4 modulo 8.
 """
 
-prop perfect_square_Z(n Z):
-    exist k Z st {n = k^2}
-
 sketch:
-    # Source handling: The exercise asks for a residue check modulo 8.
-    # trust: A checked proof needs finite residue-class case splitting for
-    # k modulo 8.
-    trust:
-        forall n Z:
-            $perfect_square_Z(n)
-            =>:
-                $congruent_mod(8, n, 0) or $congruent_mod(8, n, 1) or $congruent_mod(8, n, 4)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.3. For n>0, 2^(2n+1) is congruent to 9n^2-3n+2 modulo 54.
 """
 
 sketch:
-    # Source handling: The exercise specifies induction on n.
-    # trust: A checked proof needs the induction step for powers modulo 54.
-    trust:
-        forall n N_pos:
-            $congruent_mod(54, 2^(2 * n + 1), 9 * n^2 - 3 * n + 2)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.4. If x^2+y^2=z^2, then xyz is congruent to 0 modulo 60.
 """
 
 sketch:
-    # Source handling: The exercise combines congruence restrictions modulo
-    # 3, 4, and 5.
-    # trust: A checked proof needs the square-residue classification and
-    # Chinese-remainder combination for 60.
-    trust:
-        forall x, y, z Z:
-            x^2 + y^2 = z^2
-            =>:
-                $congruent_mod(60, x * y * z, 0)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.5. A decimal integer is congruent modulo 9 to the sum of its digits.
 """
 
 sketch:
-    abstract_prop decimal_digit_sum_congruence_mod9(n, digits)
-
-    # Source handling: The source states x0+10x1+...+10^n xn is congruent to
-    # x0+x1+...+xn modulo 9.
-    # trust: A checked proof needs finite indexed sums and powers of 10
-    # modulo 9.
-    trust:
-        forall n N, digits fn(i N: i <= n) Z:
-            $decimal_digit_sum_congruence_mod9(n, digits)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.6. The pair x=a mod m, x=b mod n has a solution iff a=b mod
 gcd(m,n); when gcd(m,n)=1, the solution is unique modulo mn.
 """
 
-prop simultaneous_congruence_solution(a Z, m N_pos, b Z, n N_pos):
-    exist x Z st {$congruent_mod(m, x, a), $congruent_mod(n, x, b)}
-
-# Source handling: This is the two-modulus Chinese remainder criterion.
-# trust: A checked proof needs Bezout coefficients for gcd(m,n) and the
-# uniqueness argument modulo m*n.
-trust:
-    forall a, b Z, m, n N_pos:
-        $simultaneous_congruence_solution(a, m, b, n)
-        =>:
-            $congruent_mod(gcd_Z(m, n), a, b)
-    forall a, b Z, m, n N_pos:
-        $congruent_mod(gcd_Z(m, n), a, b)
-        =>:
-            $simultaneous_congruence_solution(a, m, b, n)
-    forall a, b Z, m, n N_pos, x, y Z:
-        gcd_Z(m, n) = 1
-        $congruent_mod(m, x, a)
-        $congruent_mod(n, x, b)
-        $congruent_mod(m, y, a)
-        $congruent_mod(n, y, b)
-        =>:
-            $congruent_mod(m * n, x, y)
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.7. Any n+1 of the first 2n positive integers contain two numbers
@@ -436,18 +434,8 @@ whose ratio is a power of 2.
 """
 
 sketch:
-    abstract_prop subset_of_first_2n_with_size_n_plus_one(S, n)
-    abstract_prop has_pair_with_power_of_two_ratio(S)
-
-    # Source handling: The hint assigns to each selected integer its largest
-    # odd divisor and applies the pigeonhole principle.
-    # trust: A checked proof needs largest odd divisors and a finite
-    # pigeonhole principle over the n odd integers up to 2n.
-    trust:
-        forall n N_pos, S finite_set:
-            $subset_of_first_2n_with_size_n_plus_one(S, n)
-            =>:
-                $has_pair_with_power_of_two_ratio(S)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
 
 """
 Exercise V.8. For positive integers x,y, write x~y if y/x is a power of 2.
@@ -455,31 +443,6 @@ This is an equivalence relation, and it is equivalent to x and y having the
 same odd divisors.
 """
 
-abstract_prop related_by_power_of_two_ratio(x, y)
-abstract_prop have_same_odd_divisors(x, y)
-
 sketch:
-    # Source handling: The exercise asks for reflexivity, symmetry,
-    # transitivity, and the odd-divisor characterization.
-    # trust: A checked proof needs an integer power-of-two predicate and
-    # largest odd divisor decomposition.
-    trust:
-        forall x N_pos:
-            $related_by_power_of_two_ratio(x, x)
-        forall x, y N_pos:
-            $related_by_power_of_two_ratio(x, y)
-            =>:
-                $related_by_power_of_two_ratio(y, x)
-        forall x, y, z N_pos:
-            $related_by_power_of_two_ratio(x, y)
-            $related_by_power_of_two_ratio(y, z)
-            =>:
-                $related_by_power_of_two_ratio(x, z)
-        forall x, y N_pos:
-            $related_by_power_of_two_ratio(x, y)
-            =>:
-                $have_same_odd_divisors(x, y)
-        forall x, y N_pos:
-            $have_same_odd_divisors(x, y)
-            =>:
-                $related_by_power_of_two_ratio(x, y)
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

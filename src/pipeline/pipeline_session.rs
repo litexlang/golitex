@@ -204,11 +204,32 @@ fn run_session_loop_with_readers(
                     all_results.as_slice(),
                     None,
                 );
+                let (_, fact_graph) = render_fact_graph_from_stmt_results(
+                    "session",
+                    "entry",
+                    !output_style.is_detailed(),
+                    &runtime,
+                    all_results.as_slice(),
+                    None,
+                );
+                let (_, definition_graph) = render_definition_graph_from_stmt_results(
+                    "session",
+                    "entry",
+                    !output_style.is_detailed(),
+                    &mut runtime,
+                    all_results.as_slice(),
+                    None,
+                );
                 write_session_event(
                     stdout_writer,
                     "artifacts",
                     Some(id),
-                    &[('s', summary), ('g', graph)],
+                    &[
+                        ('s', summary),
+                        ('g', graph),
+                        ('f', fact_graph),
+                        ('d', definition_graph),
+                    ],
                 )?;
             }
             "close" if id.is_empty() && fields.next().is_none() => return Ok(()),
@@ -258,6 +279,10 @@ fn write_session_event(
             't' => output.push_str(format!(",\"trace\":{}", json_string(value)).as_str()),
             's' => output.push_str(format!(",\"summary\":{}", json_string(value)).as_str()),
             'g' => output.push_str(format!(",\"graph\":{}", json_string(value)).as_str()),
+            'f' => output.push_str(format!(",\"fact_graph\":{}", json_string(value)).as_str()),
+            'd' => {
+                output.push_str(format!(",\"definition_graph\":{}", json_string(value)).as_str())
+            }
             'e' => output.push_str(format!(",\"error\":{}", json_string(value)).as_str()),
             _ => {}
         }
@@ -325,6 +350,8 @@ mod tests {
         assert!(output.contains("\"id\":\"proof\",\"ok\":true"));
         assert!(output.contains("y = 2"));
         assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(output.contains("litex-fact-graph"));
+        assert!(output.contains("litex-definition-graph"));
 
         let _ = fs::remove_dir_all(&root);
     }

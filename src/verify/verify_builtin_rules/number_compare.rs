@@ -22,6 +22,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let vs = VerifyState::new(0, true);
         if let Some(result) =
+            self.try_verify_finite_nonempty_set_count_at_least_one(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
             self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
         {
             return Ok(result);
@@ -621,6 +626,70 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // A nonempty finite set has at least one element.
+    // Example: `$is_finite_set(S)`, `$is_nonempty_set(S)` => `count(S) >= 1`.
+    fn try_verify_finite_nonempty_set_count_at_least_one(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (count_obj, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                let Some(right) = self.resolve_obj_to_number(&f.right) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&right.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.left.clone(), f.line_file.clone())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                let Some(left) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&left.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let Obj::Count(count) = count_obj else {
+            return Ok(None);
+        };
+        let set = (*count.set).clone();
+
+        let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
+        let finite_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&finite, verify_state)?;
+        if !finite_result.is_true() {
+            return Ok(None);
+        }
+
+        let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
+        let nonempty_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&nonempty, verify_state)?;
+        if !nonempty_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                atomic_fact.clone().into(),
+                InferResult::new(),
+                "finite_nonempty_set_count_at_least_one".to_string(),
+                vec![finite_result, nonempty_result],
+            )
+            .into(),
+        ))
     }
 
     /// `n >= 1` / `1 <= n` from known `n $in N` and `n != 0` (nonzero naturals are at least 1).

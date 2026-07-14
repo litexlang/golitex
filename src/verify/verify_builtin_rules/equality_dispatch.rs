@@ -173,6 +173,12 @@ impl Runtime {
             }
         }
 
+        if let Some(done) =
+            self.try_verify_intersection_from_subset(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
             return Ok(done);
         }
@@ -1204,6 +1210,62 @@ impl Runtime {
         };
         matches!(intersection.left.as_ref(), Obj::ListSet(_))
             || matches!(intersection.right.as_ref(), Obj::ListSet(_))
+    }
+
+    // Proves intersection absorption from a known subset fact.
+    // Example: from `B $subset A`, prove `intersect(A, B) = B`.
+    fn try_verify_intersection_from_subset(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if self.loading_builtin_code {
+            return Ok(None);
+        }
+
+        for (intersection_side, target_side) in [
+            (statement_left, statement_right),
+            (statement_right, statement_left),
+        ] {
+            let Obj::Intersect(intersection) = intersection_side else {
+                continue;
+            };
+
+            let (subset, superset) =
+                if verify_equality_by_they_are_the_same(target_side, &intersection.right) {
+                    (&intersection.right, &intersection.left)
+                } else if verify_equality_by_they_are_the_same(target_side, &intersection.left) {
+                    (&intersection.left, &intersection.right)
+                } else {
+                    continue;
+                };
+
+            let subset_fact: AtomicFact = SubsetFact::new(
+                subset.as_ref().clone(),
+                superset.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            let subset_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+            if !subset_result.is_true() {
+                continue;
+            }
+
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "intersect_from_subset".to_string(),
+                    vec![subset_result],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
     }
 
     // Filters a literal set through an intersection using known membership facts.

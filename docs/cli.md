@@ -27,8 +27,9 @@ litex -lang zh -runner -e "1 = 1"
 ```
 
 Do not rely on extra positional tokens after a command's required values, except
-for the documented graph-output path after `litex -graph`. The current parser
-is command-oriented, not a general argument parser.
+for the documented graph-output path after `litex -graph` or `litex
+-factgraph`. The current parser is command-oriented, not a general argument
+parser.
 
 ## Global Options
 
@@ -167,8 +168,9 @@ close
 ```
 
 `run` executes exactly one arbitrary, including multiline, source block in the
-same persistent Runtime. `artifacts` returns the accumulated summary and graph
-after successful blocks. The event values are `ready`, `block`, `artifacts`,
+same persistent Runtime. `artifacts` returns the accumulated summary, relation
+graph, and fact graph after successful blocks. The event values are `ready`,
+`block`, `artifacts`,
 `skipped`, and `protocol_error`; textual verifier output is returned in the
 JSON-string `trace` field so a client never has to parse terminal prompts.
 
@@ -179,6 +181,9 @@ JSON-string `trace` field so a client never has to parse terminal prompts.
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save one prop/function/fact relation graph JSON object. |
+| `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
+| `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
+| `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save a fact-only verification dependency graph. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
@@ -191,6 +196,15 @@ rendering. Nodes include `uses_count` and `used_by_count`; edges include
 If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
 quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
 artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
+
+`-factgraph` is the preview proof-flow view. It deliberately omits `prop`,
+function, and object-definition nodes. Its nodes are ordinary facts, `claim`s,
+and `thm`s; its edges come from the verifier's actual cited facts, instantiated
+`forall` facts, checked requirements, and fact-level definition unfolding. The
+JSON includes a `longest_chain` field and a Mermaid flowchart. The main chain
+compresses automatic inferred facts into their surrounding edges, so a reader
+can follow one long, concrete chain from assumptions or trusted boundaries to a
+theorem without mixing it with the definition graph.
 
 ## LaTeX Commands
 
@@ -282,6 +296,12 @@ Generate a relation graph:
 
 ```bash
 litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
+```
+
+Generate a fact-only verification chain:
+
+```bash
+litex -factgraph -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
 ```
 
 Run with Chinese output labels:

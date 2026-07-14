@@ -181,16 +181,216 @@ prop is_least_element_of_integer_set(S power_set(Z), m Z):
         x $in Z
         m <= x
 
-# Source handling: This is Section I's well-ordering principle for positive
-# integers.
-# trust: The proof is not rebuilt here; later chapters cite this as the
-# book's foundational induction/well-ordering background.
-trust:
-    forall S power_set(Z):
+prop is_least_element_of_N_set(T set, m N):
+    m $in T
+    forall x T:
+        m <= x
+
+# This is the requested finite-set formulation: every nonempty finite subset
+# of N with n elements has a least element.  The explicit nonempty premise
+# makes the proposition well-defined also at n = 0.
+prop every_N_finite_subset_of_n_elements_has_least(n Z):
+    forall T finite_set:
+        T $subset N
+        count(T) = n
+        $is_nonempty_set(T)
+        =>:
+            exist m N st {$is_least_element_of_N_set(T, m)}
+
+thm intersect_with_singleton:
+    ? forall T set, a set:
+        a $in T
+        =>:
+            intersect(T, {a}) = {a}
+    by extension intersect(T, {a}) = {a}:
+        forall z intersect(T, {a}):
+            z $in T
+            z $in {a}
+            z = a
+        forall z {a}:
+            z = a
+            a $in T
+            z $in T
+            z $in {a}
+
+thm finite_N_subset_size_one_has_least:
+    ? forall T finite_set:
+        T $subset N
+        count(T) = 1
+        =>:
+            exist a N st {$is_least_element_of_N_set(T, a)}
+    count(T) >= 1
+    $is_nonempty_set(T)
+    have a T
+    a $in T
+    a $in N
+    by thm intersect_with_singleton(T, a)
+    intersect(T, {a}) = {a}
+    count({a}) = 1
+    $is_finite_set(set_minus(T, {a}))
+    count(set_minus(T, {a})) = count(T) - count(intersect(T, {a})) = 1 - 1 = 0
+    set_minus(T, {a}) = {}
+    witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
+        a $in T
+        claim:
+            ? forall y T:
+                a <= y
+            by contra:
+                ? a <= y
+                y < a
+                y != a
+                y $in set_minus(T, {a})
+                impossible set_minus(T, {a}) = {}
+        $is_least_element_of_N_set(T, a)
+
+thm finite_N_subset_successor_has_least:
+    ? forall n Z, T finite_set:
+        n >= 1
+        T $subset N
+        count(T) = n + 1
+        $every_N_finite_subset_of_n_elements_has_least(n)
+        $is_nonempty_set(T)
+        =>:
+            exist a N st {$is_least_element_of_N_set(T, a)}
+    n $in N_pos
+    have a T
+    a $in T
+    a $in N
+    by thm intersect_with_singleton(T, a)
+    intersect(T, {a}) = {a}
+    count({a}) = 1
+    $is_finite_set(set_minus(T, {a}))
+    count(set_minus(T, {a})) = count(T) - count(intersect(T, {a})) = (n + 1) - 1 = n
+    count(set_minus(T, {a})) = n >= 1
+    $is_nonempty_set(set_minus(T, {a}))
+    set_minus(T, {a}) $subset T
+    set_minus(T, {a}) $subset N
+    $every_N_finite_subset_of_n_elements_has_least(n)
+    exist b N st {$is_least_element_of_N_set(set_minus(T, {a}), b)}
+    obtain b from exist b N st {$is_least_element_of_N_set(set_minus(T, {a}), b)}
+    b $in set_minus(T, {a})
+    b $in T
+    b <= a or b > a
+    by cases:
+        ? exist x N st {$is_least_element_of_N_set(T, x)}
+        case b <= a:
+            witness exist x N st {$is_least_element_of_N_set(T, x)} from b:
+                b $in T
+                claim:
+                    ? forall y T:
+                        b <= y
+                    y = a or y != a
+                    by cases:
+                        ? b <= y
+                        case y = a:
+                            b <= a = y
+                        case y != a:
+                            y $in set_minus(T, {a})
+                            b <= y
+                $is_least_element_of_N_set(T, b)
+        case b > a:
+            a <= b
+            witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
+                a $in T
+                claim:
+                    ? forall y T:
+                        a <= y
+                    y = a or y != a
+                    by cases:
+                        ? a <= y
+                        case y = a:
+                            a <= y
+                        case y != a:
+                            y $in set_minus(T, {a})
+                            b <= y
+                            a <= b <= y
+                $is_least_element_of_N_set(T, a)
+
+thm every_N_finite_subset_has_least_by_count_induction:
+    ? forall n N_pos:
+        $every_N_finite_subset_of_n_elements_has_least(n)
+    by induc n from 1:
+        ? $every_N_finite_subset_of_n_elements_has_least(n)
+        ? from n = 1:
+            claim:
+                ? forall T finite_set:
+                    T $subset N
+                    count(T) = 1
+                    $is_nonempty_set(T)
+                    =>:
+                        exist a N st {$is_least_element_of_N_set(T, a)}
+                by thm finite_N_subset_size_one_has_least(T)
+                exist a N st {$is_least_element_of_N_set(T, a)}
+            $every_N_finite_subset_of_n_elements_has_least(1)
+            $every_N_finite_subset_of_n_elements_has_least(n)
+        ? induc:
+            $every_N_finite_subset_of_n_elements_has_least(n)
+            claim:
+                ? forall T finite_set:
+                    T $subset N
+                    count(T) = n + 1
+                    $is_nonempty_set(T)
+                    =>:
+                        exist a N st {$is_least_element_of_N_set(T, a)}
+                by thm finite_N_subset_successor_has_least(n, T)
+                exist a N st {$is_least_element_of_N_set(T, a)}
+            $every_N_finite_subset_of_n_elements_has_least(n + 1)
+
+# Start with any a in S and restrict S to the finite interval 0,...,a.
+# The cardinality induction above supplies a least point of that finite part;
+# anything outside the interval is larger than a and hence larger than it.
+thm positive_integer_set_has_least_element:
+    ? forall S power_set(Z):
         $is_nonempty_set(S)
         $is_positive_integer_set(S)
         =>:
             exist m Z st {$is_least_element_of_integer_set(S, m)}
+    have a S
+    a $in S
+    a $in Z
+    a > 0
+    have aN N_pos = a
+    aN = a
+    have T set = intersect(S, 0...aN)
+    T = intersect(S, 0...aN)
+    T $subset 0...aN
+    by thm subset_of_finite_set_is_finite(T, 0...aN)
+    $is_finite_set(T)
+    a $in 0...aN
+    a $in intersect(S, 0...aN)
+    a $in T
+    T $subset N
+    witness $is_nonempty_set(T) from a:
+        a $in T
+    count(T) >= 1
+    count(T) $in N_pos
+    by thm every_N_finite_subset_has_least_by_count_induction(count(T))
+    $every_N_finite_subset_of_n_elements_has_least(count(T))
+    exist m N st {$is_least_element_of_N_set(T, m)}
+    obtain m from exist m N st {$is_least_element_of_N_set(T, m)}
+    m $in T
+    m $in S
+    m <= a
+    witness exist z Z st {$is_least_element_of_integer_set(S, z)} from m:
+        S $subset Z
+        m $in S
+        claim:
+            ? forall x S:
+                x $in Z
+                m <= x
+            x $in Z
+            x > 0
+            x <= aN or x > aN
+            by cases:
+                ? m <= x
+                case x <= aN:
+                    x $in 0...aN
+                    x $in intersect(S, 0...aN)
+                    x $in T
+                    m <= x
+                case x > aN:
+                    m <= aN < x
+        $is_least_element_of_integer_set(S, m)
 
 """
 Induction principle. If a statement about positive integers is true at the
@@ -198,118 +398,75 @@ base and truth below n implies truth at n, then it is true for all positive
 integers.
 """
 
-sketch:
-    abstract_prop section_I_induction_statement(n)
+abstract_prop section_I_induction_statement(n)
 
-    # Source handling: This is the induction principle derived from the least
-    # positive integer principle in the text.
-    # trust: The abstract predicate version is kept as a local proof
-    # skeleton, not as a global theorem about first-class predicates.
-    trust:
+# Source proof: the counterexample set is positive because zero is the base
+# case.  Apply Principle (6), then its least element cannot be a counterexample.
+thm section_I_strong_induction:
+    ? forall n N:
         $section_I_induction_statement(0)
-        forall n N_pos:
+        forall m N_pos:
             forall k N:
-                k < n
+                k < m
                 =>:
                     $section_I_induction_statement(k)
             =>:
-                $section_I_induction_statement(n)
-
-    # Source handling: The text derives this conclusion from the least
-    # positive counterexample argument.
-    # trust: The local abstract-predicate version needs a first-class
-    # strong-induction interface; it is not proved by the ordinary successor
-    # induction block here.
-    trust:
-        forall n N:
+                $section_I_induction_statement(m)
+        =>:
             $section_I_induction_statement(n)
-
-"""
-Exercise I.1. Derive (-1)(-1)=1 from the distributive law.
-"""
-
-sketch:
-    (-1) * (-1) = 1
-
-"""
-Exercise I.2. Every integer x > 1 either has a divisor d with 1 < d and
-d^2 <= x, or has no divisor strictly between 1 and x.
-"""
-
-sketch:
-    prop has_small_divisor_bound(x Z):
-        exist d Z st {d > 1, d^2 <= x, $divides_Z(d, x)}
-
-    prop has_no_proper_divisor_above_one(x Z):
-        forall d Z:
-            d > 1
-            d < x
-            =>:
-                not $divides_Z(d, x)
-
-    # Source handling: The exercise is a first divisor search leading to the
-    # Section IV definition of prime.
-    # trust: A full checked proof needs a finite least-divisor search over
-    # integers up to x.
-    trust:
-        forall x Z:
-            x > 1
-            =>:
-                $has_small_divisor_bound(x) or $has_no_proper_divisor_above_one(x)
-
-"""
-Exercise I.3. Prove by induction the usual formula for the sum of cubes.
-"""
-
-sketch:
-    # Source handling: The source asks for an induction proof.
-    # trust: This needs a finite-sum induction theorem for polynomial
-    # summands over positive integer ranges.
-    trust:
-        forall n N_pos:
-            sum(1, n, fn(k N_pos: k <= n) R {k^3}) = (n * (n + 1) / 2)^2
-
-"""
-Exercise I.4. Prove by induction that 4^(2n+1)+3^(n+2) is a multiple of 13.
-"""
-
-sketch:
-    # Source handling: The source asks for an induction proof.
-    # trust: The modular-arithmetic induction is left as local proof debt
-    # until the congruence interface from Section V is available.
-    trust:
-        forall n N:
-            $divides_Z(13, 4^(2 * n + 1) + 3^(n + 2))
-
-"""
-Exercise I.5. Balanced ternary weights 1,3,...,3^(n-1) can weigh every integer
-N with 1 <= N <= (3^n-1)/2 by placing weights on either pan.
-"""
-
-sketch:
-    abstract_prop balanced_ternary_weighs(n, weight)
-
-    # Source handling: The hint describes sums with coefficients -1, 0, and 1.
-    # trust: A checked version needs finite indexed sums with coefficient
-    # functions into {-1, 0, 1} and the balanced-ternary induction.
-    trust:
-        forall n, weight N_pos:
-            weight <= (3^n - 1) / 2
-            =>:
-                $balanced_ternary_weighs(n, weight)
-
-"""
-Exercise I.6. The number of terms in a polynomial of degree d in n variables
-is bounded by the binomial coefficient (n+d)!/(n!d!).
-"""
-
-sketch:
-    abstract_prop polynomial_term_count_bound(n, d)
-
-    # Source handling: The hint reduces homogeneous degree d in n variables to
-    # degree d in n-1 variables and uses induction on d.
-    # trust: A checked version needs polynomial syntax, factorials, and a
-    # finite monomial-counting interface.
-    trust:
-        forall n, d N_pos:
-            $polynomial_term_count_bound(n, d)
+    by contra:
+        ? $section_I_induction_statement(n)
+        not $section_I_induction_statement(n)
+        have bad power_set(Z) = {t N: not $section_I_induction_statement(t)}
+        bad = {t N: not $section_I_induction_statement(t)}
+        n $in {t N: not $section_I_induction_statement(t)}
+        n $in bad
+        witness $is_nonempty_set(bad) from n
+        claim:
+            ? $is_positive_integer_set(bad)
+            bad $subset Z
+            claim:
+                ? forall x bad:
+                    x $in Z
+                    x > 0
+                x $in Z
+                x $in {t N: not $section_I_induction_statement(t)}
+                x $in N
+                not $section_I_induction_statement(x)
+                by contra:
+                    ? x > 0
+                    x = 0
+                    $section_I_induction_statement(0)
+                    $section_I_induction_statement(x)
+                    impossible not $section_I_induction_statement(x)
+            $is_positive_integer_set(bad)
+        $is_positive_integer_set(bad)
+        by thm positive_integer_set_has_least_element(bad)
+        exist m Z st {$is_least_element_of_integer_set(bad, m)}
+        obtain m from exist m Z st {$is_least_element_of_integer_set(bad, m)}
+        m $in bad
+        m $in {t N: not $section_I_induction_statement(t)}
+        m $in N
+        not $section_I_induction_statement(m)
+        claim:
+            ? forall k N:
+                k < m
+                =>:
+                    $section_I_induction_statement(k)
+            by contra:
+                ? $section_I_induction_statement(k)
+                not $section_I_induction_statement(k)
+                k $in {t N: not $section_I_induction_statement(t)}
+                k $in bad
+                m <= k
+                impossible k < m
+        m = 0 or m > 0
+        by cases:
+            ? $section_I_induction_statement(m)
+            case m = 0:
+                $section_I_induction_statement(0)
+                $section_I_induction_statement(m)
+            case m > 0:
+                m $in N_pos
+                $section_I_induction_statement(m)
+        impossible not $section_I_induction_statement(m)
