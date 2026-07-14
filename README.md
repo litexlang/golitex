@@ -41,11 +41,36 @@ x^2 = 4
 ```
 
 The first line introduces a real number `x` and stores the fact `x = 2`.
-The next two lines are not tactic commands. They are mathematical facts. Litex
-checks them using the stored value of `x`, equality substitution, and arithmetic.
+The next two lines are mathematical facts. Litex checks them from the stored
+value of `x`, equality substitution, and arithmetic; these are builtin rules
+whose use remains visible in the verification output.
+
+> For Lean users: Litex packages the equality substitution and
+> arithmetic behind rw [h]; norm_num into its built-in verifier, so
+> users can write the resulting fact directly.1.
 
 That is the central interface: **users write facts; Litex grows a verified
 context**.
+
+AI can now generate mathematics faster than conventional review can absorb.
+This creates a review bottleneck and a possible opening for mathematical
+engineering, though we are only beginning to understand what that change means
+in practice. Formal systems are increasingly important, but their interfaces
+still ask writers to cross a substantial gap from ordinary mathematical writing.
+
+<p align="center">
+  <img src="assets/knowledge_graph.svg" alt="Litex relation graph from Analysis I, Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
+</p>
+
+Litex aims to make formal mathematics feel like ordinary mathematics: a
+language that covers common LaTeX-style mathematical notation, set theory, and
+basic logic, where routine consequences are written directly as mathematical
+facts rather than as low-level proof scripts. Explicit proof routes remain
+available when the argument needs them.
+
+Litex can also generate a run summary and a dependency graph, giving writers
+and reviewers an inspectable view of what was checked and how the facts in a
+development depend on one another.
 
 ## A Small Mathematical Workflow
 
@@ -382,19 +407,14 @@ Litex is aiming at three practical goals:
 3. **Translation as pressure test.** Use real mathematical sources to discover
    language, library, verifier, and diagnostic gaps.
 
-By the end of 2026, our goal is to make textbook-first formalization the main
-benchmark for Litex: a public, auditable body of undergraduate mathematics
-translations across calculus, linear algebra, geometry, probability, analysis,
-algebra, and number theory. We think this is more meaningful than simply
-accumulating many isolated definitions, theorem names, or lines of formal code,
-because a textbook translation tests whether the language can preserve the
-actual mathematical development: definitions in order, local lemmas,
-intermediate facts, proof routes, verifier output, and explicit blockers when
-the current system falls short.
-
-Litex is not a shortcut around mathematics. It is an experiment in making the
-proof trail readable enough that more people and AI systems can participate in
-formal checking without losing sight of the argument.
+Many mathematicians work with the familiar set-based language of objects,
+relations, and constructions, while most proof assistants are built on type
+theory--a powerful foundation, but an additional language to learn even for
+mathematics PhDs. Litex explores a different interface: preserve the narrative
+structure of mathematics--its statements, objects, concepts, and
+dependencies--rather than first recasting it as program structure. The aim is
+to turn the mental model mathematicians use to decide what exists and what
+follows into readable, checked code.
 
 ## Starting Points
 

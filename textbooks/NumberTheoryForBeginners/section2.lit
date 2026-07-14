@@ -1,15 +1,17 @@
-# Chapter II — Euclidean Division and Greatest Common Divisors
+# Number Theory for Beginners, Section II.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
+# problem: Formalize Euclidean division, the subgroup theorem for Z, gcd via
+# linear combinations, and the Section II exercises.
+# proof_idea: Reuse Section I's divisibility vocabulary.  State the Euclidean
+# division lemma and the subgroup theorem as source-facing interfaces, then
+# define binary gcd through divisibility plus Bezout.  Elementary consequences
+# of the gcd definition are checked directly.
+# litex_code: This file runs Section I first and then adds Section II.
+# comments: Broad theorem packages are explicit `proof_debt` debt with source
+# handling comments; no std number-theory modules are imported.
 
-"""
-Chapter II — Division with remainder and greatest common divisors.
-
-The central objects are the quotient and remainder in integer division, the
-subtraction-closed subsets of Z, and the greatest common divisor obtained from
-integral linear combinations.  The exercises develop the Euclidean algorithm
-and reduced fractions from these results.
-"""
-
-trust local import chapter1
+trust local import section1
 
 """
 Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
@@ -30,10 +32,10 @@ prop is_largest_multiple_leq_Z(a, d, q Z):
         =>:
             d * z <= d * q
 
-# Source handling: The text proves this from Chapter I's least positive
+# Source handling: The text proves this from Section I's least positive
 # integer principle.
 # trust: The checked proof needs the least-positive-element argument over
-# the set {a-dz > 0}; it is recorded here as the Chapter II division interface.
+# the set {a-dz > 0}; it is recorded here as the Section II division interface.
 trust:
     forall a Z, d N_pos:
         exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
@@ -46,9 +48,8 @@ thm lemma_II_euclidean_division:
     exist! q Z, r Z st {$euclidean_division_Z(a, d, q, r)}
 
 """
-Theorem II.1. A nonempty set M of integers closed under subtraction is exactly
-mZ={mz : z in Z} for one nonnegative integer m.  Thus one number m generates
-all of M, and no other nonnegative generator does.
+Theorem II.1. A nonempty set of integers closed under subtraction is exactly
+mZ for a unique m >= 0.
 """
 
 prop closed_under_subtraction(M power_set(Z)):
@@ -123,9 +124,8 @@ Corollary 2 and Definition. The integer d from Corollary 1 divides each of the
 given integers, every common divisor divides d, and d is called their gcd.
 """
 
-# For two integers, their gcd is the nonnegative common divisor divisible by
-# every other positive common divisor.  The source also shows that this gcd is
-# an integral linear combination of the two integers (Bezout's identity).
+# For later sections this file exposes the binary gcd.  The body records the
+# divisor characterization and Bezout representation used in Sections III-IV.
 
 prop is_gcd_Z(a, b Z, d N):
     $divides_Z(d, a)
@@ -174,10 +174,10 @@ Exercise II.1. Prove associativity of gcd for three integers:
 """
 
 sketch:
-    # Source handling: Weil identifies both parenthesizations with the same
-    # set of all integer combinations a*x+b*y+c*z.
-    # trust: The current binary `is_gcd_Z` interface has no source-facing
-    # ternary linear-combination carrier or theorem equating those two sets.
+    # Source handling: This follows from the universal divisor
+    # characterization of gcd.
+    # trust: A checked proof needs a ternary gcd interface derived from
+    # finite linear combinations.
     trust:
         forall a, b, c Z:
             gcd_Z(gcd_Z(a, b), c) = gcd_Z(a, gcd_Z(b, c))
@@ -201,9 +201,9 @@ sketch:
 Exercise II.3. A unimodular linear change of two integers preserves gcd.
 """
 
-# The source's inverse-matrix argument can be expressed as a reusable gcd
-# transport lemma.  The forward and inverse linear combinations show that the
-# two pairs have exactly the same positive common divisors and Bezout values.
+# The source's inverse-matrix argument gives mutual integer linear
+# combinations between the old and new pairs.  Such changes preserve the two
+# divisibility clauses and the Bezout clause of `is_gcd_Z`.
 thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
     ? forall a, b, a1, b1 Z, d N, p, q, r, s, u, v, w, z Z:
         $is_gcd_Z(a, b, d)
@@ -310,9 +310,9 @@ Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
 and (1024,729).
 """
 
-# Euclidean back-substitution gives
-# 7=2*56-3*35, 3=-3*309+5*186, and 1=-257*1024+361*729.
-
+# Euclidean back-substitution gives 7=2*56-3*35, 3=-3*309+5*186, and
+# 1=-257*1024+361*729.  The same identities show that every common positive
+# divisor divides the displayed result.
 thm common_divisor_of_fifty_six_and_thirty_five_divides_seven:
     ? forall e Z:
         e > 0
@@ -374,16 +374,19 @@ claim:
     $is_gcd_Z(1024, 729, 1)
 
 gcd_Z(56, 35) = 7
+witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
 gcd_Z(309, 186) = 3
+witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
 gcd_Z(1024, 729) = 1
+witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
 
 """
 Exercise II.7. Scaling all inputs by m scales the gcd by m.
 """
 
+# Scale the two divisor witnesses and the Bezout identity.  Conversely, a
+# common divisor of `m*a` and `m*b` divides the scaled Bezout combination.
 thm exercise_II_7_scaling_gcd:
-    # Following Weil's route for two inputs: scale the two divisibility
-    # witnesses, and scale the Bezout identity to control every common divisor.
     ? forall a, b Z, m N_pos:
         gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
     $is_gcd_Z(a, b, gcd_Z(a, b))

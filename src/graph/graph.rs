@@ -1272,6 +1272,7 @@ impl DepCollector {
             | FnObjHead::Exist(_)
             | FnObjHead::SetBuilder(_)
             | FnObjHead::FnSet(_)
+            | FnObjHead::DefStructField(_)
             | FnObjHead::Induc(_)
             | FnObjHead::DefAlgo(_)
             | FnObjHead::TupleIndex(_)

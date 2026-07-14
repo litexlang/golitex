@@ -2698,6 +2698,99 @@ thm local_extremum_stationary:
     derivative('(a, b), f, x0) = L
     derivative('(a, b), f, x0) = 0
 
+# An interior point sees the same difference quotients whether the ambient
+# domain is the closed interval or its open interior.
+thm derivative_at_restricts_to_open_interval:
+    ? forall a, b R, f fn(x '[a, b]) R, x0 '(a, b), L R:
+        a < b
+        $has_derivative_at('[a, b], f, x0, L)
+        =>:
+            $has_derivative_at('(a, b), fn(x '(a, b)) R {f(x)}, x0, L)
+    by thm open_interval_points_are_limit_points(a, b, x0)
+    $is_limit_point_of_set('(a, b), x0)
+    claim:
+        ? forall epsilon R_pos:
+            exist delta R_pos st {$is_difference_quotient_close_to('(a, b), fn(x '(a, b)) R {f(x)}, x0, L, epsilon, delta)}
+        obtain delta from exist delta R_pos st {$is_difference_quotient_close_to('[a, b], f, x0, L, epsilon, delta)}
+        witness exist delta0 R_pos st {$is_difference_quotient_close_to('(a, b), fn(x '(a, b)) R {f(x)}, x0, L, epsilon, delta0)} from delta:
+            claim:
+                ? forall y '(a, b):
+                    y - x0 != 0
+                    abs(y - x0) < delta
+                    =>:
+                        abs(((fn(x '(a, b)) R {f(x)}(y) - fn(x '(a, b)) R {f(x)}(x0)) / (y - x0)) - L) <= epsilon
+                abs((f(y) - f(x0)) / (y - x0) - L) <= epsilon
+                fn(x '(a, b)) R {f(x)}(y) = f(y)
+                fn(x '(a, b)) R {f(x)}(x0) = f(x0)
+                (fn(x '(a, b)) R {f(x)}(y) - fn(x '(a, b)) R {f(x)}(x0)) / (y - x0) = (f(y) - f(x0)) / (y - x0)
+                abs(((fn(x '(a, b)) R {f(x)}(y) - fn(x '(a, b)) R {f(x)}(x0)) / (y - x0)) - L) = abs((f(y) - f(x0)) / (y - x0) - L)
+                abs(((fn(x '(a, b)) R {f(x)}(y) - fn(x '(a, b)) R {f(x)}(x0)) / (y - x0)) - L) <= epsilon
+            $is_difference_quotient_close_to('(a, b), fn(x '(a, b)) R {f(x)}, x0, L, epsilon, delta0)
+    $has_derivative_at('(a, b), fn(x '(a, b)) R {f(x)}, x0, L)
+
+thm local_extremum_on_closed_interval_is_local_extremum_on_open_interval:
+    ? forall a, b R, f fn(x '[a, b]) R, x0 '(a, b):
+        $is_local_extremum_at('[a, b], f, x0)
+        =>:
+            $is_local_extremum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+    $is_local_maximum_at('[a, b], f, x0) or $is_local_minimum_at('[a, b], f, x0)
+    by cases:
+        ? $is_local_extremum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+        case $is_local_maximum_at('[a, b], f, x0):
+            obtain delta from exist delta R_pos st {$is_local_maximum_witness('[a, b], f, x0, delta)}
+            claim:
+                ? $is_local_maximum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+                witness exist delta0 R_pos st {$is_local_maximum_witness('(a, b), fn(x '(a, b)) R {f(x)}, x0, delta0)} from delta:
+                    claim:
+                        ? forall y '(a, b):
+                            abs(y - x0) < delta
+                            =>:
+                                fn(x '(a, b)) R {f(x)}(y) <= fn(x '(a, b)) R {f(x)}(x0)
+                        f(y) <= f(x0)
+                        fn(x '(a, b)) R {f(x)}(y) = f(y)
+                        fn(x '(a, b)) R {f(x)}(x0) = f(x0)
+                        fn(x '(a, b)) R {f(x)}(y) <= fn(x '(a, b)) R {f(x)}(x0)
+                    $is_local_maximum_witness('(a, b), fn(x '(a, b)) R {f(x)}, x0, delta0)
+                $is_local_maximum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            '(a, b) $subset R
+            $is_local_maximum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            $is_local_maximum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0) or $is_local_minimum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            $is_local_extremum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+        case $is_local_minimum_at('[a, b], f, x0):
+            obtain delta from exist delta R_pos st {$is_local_minimum_witness('[a, b], f, x0, delta)}
+            claim:
+                ? $is_local_minimum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+                witness exist delta0 R_pos st {$is_local_minimum_witness('(a, b), fn(x '(a, b)) R {f(x)}, x0, delta0)} from delta:
+                    claim:
+                        ? forall y '(a, b):
+                            abs(y - x0) < delta
+                            =>:
+                                fn(x '(a, b)) R {f(x)}(x0) <= fn(x '(a, b)) R {f(x)}(y)
+                        f(x0) <= f(y)
+                        fn(x '(a, b)) R {f(x)}(x0) = f(x0)
+                        fn(x '(a, b)) R {f(x)}(y) = f(y)
+                        fn(x '(a, b)) R {f(x)}(x0) <= fn(x '(a, b)) R {f(x)}(y)
+                    $is_local_minimum_witness('(a, b), fn(x '(a, b)) R {f(x)}, x0, delta0)
+                $is_local_minimum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            '(a, b) $subset R
+            $is_local_minimum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            $is_local_maximum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0) or $is_local_minimum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+            $is_local_extremum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+
+thm local_extremum_stationary_on_closed_interval:
+    ? forall a, b R, f fn(x '[a, b]) R, x0 '(a, b), L R:
+        a < b
+        $has_derivative_at('[a, b], f, x0, L)
+        $is_local_extremum_at('[a, b], f, x0)
+        =>:
+            L = 0
+    by thm derivative_at_restricts_to_open_interval(a, b, f, x0, L)
+    $has_derivative_at('(a, b), fn(x '(a, b)) R {f(x)}, x0, L)
+    by thm local_extremum_on_closed_interval_is_local_extremum_on_open_interval(a, b, f, x0)
+    $is_local_extremum_at('(a, b), fn(x '(a, b)) R {f(x)}, x0)
+    by thm local_extremum_stationary_has_derivative_at(a, b, fn(x '(a, b)) R {f(x)}, x0, L)
+    L = 0
+
 """
 The discussion after Proposition 10.2.6.  Differentiability and the open
 interval hypothesis are necessary, and the converse is false.
@@ -2716,6 +2809,10 @@ point has derivative zero.
 # equal endpoint values force an interior extremum unless the function is
 # constant; at that interior extremum the derivative is zero.
 
+prop has_value_distinct_from_left_endpoint(a, b R, g fn(x '[a, b]) R):
+    a <= b
+    exist z '[a, b] st {g(z) != g(a)}
+
 thm rolle_theorem:
     ? forall a, b R, g fn(x '[a, b]) R:
         a < b
@@ -2725,11 +2822,143 @@ thm rolle_theorem:
         g(a) = g(b)
         =>:
             exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
-    # Source handling: Rolle's proof uses the maximum principle, separates
-    # endpoint and interior cases, and then applies Proposition 10.2.6.
-    # proof_debt: the local maximum-principle-to-interior-extremum bridge is
-    # not yet expanded.
-    trust exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
+    $has_value_distinct_from_left_endpoint(a, b, g) or not $has_value_distinct_from_left_endpoint(a, b, g)
+    by cases:
+        ? exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
+        case not $has_value_distinct_from_left_endpoint(a, b, g):
+            claim:
+                ? not exist z '[a, b] st {g(z) != g(a)}
+                by contra:
+                    ? not exist z '[a, b] st {g(z) != g(a)}
+                    exist z '[a, b] st {g(z) != g(a)}
+                    a <= b
+                    $has_value_distinct_from_left_endpoint(a, b, g)
+                    impossible not $has_value_distinct_from_left_endpoint(a, b, g)
+            not exist z '[a, b] st {g(z) != g(a)}
+            claim:
+                ? forall x '[a, b]:
+                    g(x) = g(a)
+                not g(x) != g(a)
+                g(x) = g(a)
+            forall x '[a, b]:
+                g(x) = g(a)
+            b - a > 0
+            (b - a) / 2 > 0
+            (a + b) / 2 - a = (b - a) / 2
+            (a + b) / 2 - a > 0
+            a < (a + b) / 2
+            b - (a + b) / 2 = (b - a) / 2
+            b - (a + b) / 2 > 0
+            (a + b) / 2 < b
+            (a + b) / 2 $in '(a, b)
+            have x0 '(a, b) = (a + b) / 2
+            by thm closed_interval_points_are_limit_points(a, b, x0)
+            $is_limit_point_of_set('[a, b], x0)
+            by thm constant_function_has_derivative_at('[a, b], g, x0, g(a))
+            $has_derivative_at('[a, b], g, x0, 0)
+            witness exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0} from x0, 0:
+                $has_derivative_at('[a, b], g, x0, 0)
+                0 = 0
+        case $has_value_distinct_from_left_endpoint(a, b, g):
+            obtain z from exist z '[a, b] st {g(z) != g(a)}
+            g(z) < g(a) or not g(z) < g(a)
+            by cases:
+                ? exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
+                case g(z) < g(a):
+                    by thm continuous_closed_interval_attains_minimum(a, b, g)
+                    obtain x from exist x '[a, b] st {$is_minimizer_on('[a, b], g, x)}
+                    g(x) <= g(z) < g(a)
+                    g(x) < g(a)
+                    claim:
+                        ? a < x
+                        by contra:
+                            ? a < x
+                            x <= a
+                            a <= x
+                            x = a
+                            g(x) = g(a)
+                            g(x) < g(a)
+                            g(a) <= g(x)
+                            impossible g(x) < g(a)
+                    claim:
+                        ? x < b
+                        by contra:
+                            ? x < b
+                            x >= b
+                            x <= b
+                            x = b
+                            g(x) = g(b)
+                            g(b) = g(a)
+                            g(x) = g(a)
+                            g(x) < g(a)
+                            g(a) <= g(x)
+                            impossible g(x) < g(a)
+                    x $in '(a, b)
+                    have x0 '(a, b) = x
+                    by thm global_minimum_implies_local_minimum('[a, b], g, x0)
+                    $is_local_minimum_at('[a, b], g, x0)
+                    '[a, b] $subset R
+                    $is_local_maximum_at('[a, b], g, x0) or $is_local_minimum_at('[a, b], g, x0)
+                    $is_local_extremum_at('[a, b], g, x0)
+                    $is_differentiable_at('[a, b], g, x0)
+                    obtain L from exist L R st {$has_derivative_at('[a, b], g, x0, L)}
+                    by thm local_extremum_stationary_on_closed_interval(a, b, g, x0, L)
+                    witness exist x1 '(a, b), L1 R st {$has_derivative_at('[a, b], g, x1, L1), L1 = 0} from x0, L:
+                        $has_derivative_at('[a, b], g, x0, L)
+                        L = 0
+                case not g(z) < g(a):
+                    g(z) >= g(a)
+                    g(a) < g(z) or not g(a) < g(z)
+                    by cases:
+                        ? exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
+                        case g(a) < g(z):
+                            by thm continuous_closed_interval_attains_maximum(a, b, g)
+                            obtain x from exist x '[a, b] st {$is_maximizer_on('[a, b], g, x)}
+                            g(a) < g(z) <= g(x)
+                            g(a) < g(x)
+                            claim:
+                                ? a < x
+                                by contra:
+                                    ? a < x
+                                    x <= a
+                                    a <= x
+                                    x = a
+                                    g(x) = g(a)
+                                    g(a) < g(x)
+                                    g(x) >= g(a)
+                                    impossible g(a) < g(x)
+                            claim:
+                                ? x < b
+                                by contra:
+                                    ? x < b
+                                    x >= b
+                                    x <= b
+                                    x = b
+                                    g(x) = g(b)
+                                    g(b) = g(a)
+                                    g(x) = g(a)
+                                    g(a) < g(x)
+                                    g(x) >= g(a)
+                                    impossible g(a) < g(x)
+                            x $in '(a, b)
+                            have x0 '(a, b) = x
+                            by thm global_maximum_implies_local_maximum('[a, b], g, x0)
+                            $is_local_maximum_at('[a, b], g, x0)
+                            '[a, b] $subset R
+                            $is_local_maximum_at('[a, b], g, x0) or $is_local_minimum_at('[a, b], g, x0)
+                            $is_local_extremum_at('[a, b], g, x0)
+                            $is_differentiable_at('[a, b], g, x0)
+                            obtain L from exist L R st {$has_derivative_at('[a, b], g, x0, L)}
+                            by thm local_extremum_stationary_on_closed_interval(a, b, g, x0, L)
+                            witness exist x1 '(a, b), L1 R st {$has_derivative_at('[a, b], g, x1, L1), L1 = 0} from x0, L:
+                                $has_derivative_at('[a, b], g, x0, L)
+                                L = 0
+                        case not g(a) < g(z):
+                            g(a) >= g(z)
+                            g(a) = g(z)
+                            g(z) = g(a)
+                            g(z) != g(a)
+                            impossible g(z) != g(a)
 
 thm rolle_theorem_derivative_value:
     ? forall a, b R, g fn(x '[a, b]) R:
@@ -2765,9 +2994,81 @@ is differentiable on `(a,b)` has an interior point where the derivative equals
 the secant slope `(f(b)-f(a))/(b-a)`.
 """
 
-# The proof applies Rolle's theorem to `f(x)-cx`, where c is the secant slope;
-# the remaining step is to formalize that auxiliary function and simplify its
-# derivative.
+# Let `c` be the secant slope and set `g(x)=f(x)-c(x-a)`.  The three local
+# calculations below show that `g` is continuous, has equal endpoint values,
+# and has derivative `f'(x)-c`; Rolle's theorem then gives the desired point.
+
+thm mean_value_auxiliary_continuous:
+    ? forall a, b R, f fn(x '[a, b]) R:
+        a < b
+        b - a != 0
+        $is_continuous_on('[a, b], f)
+        =>:
+            $is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
+    have c R = (f(b) - f(a)) / (b - a)
+    by thm constant_function_continuous('[a, b], a)
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {a})
+    by thm identity_function_continuous('[a, b])
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {x})
+    by thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {x}, fn(x '[a, b]) R {a})
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {x - a})
+    by thm constant_function_continuous('[a, b], c)
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {c})
+    by thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {c}, fn(x '[a, b]) R {x - a})
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {c * (x - a)})
+    by thm continuity_closed_under_arithmetic('[a, b], f, fn(x '[a, b]) R {c * (x - a)})
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - c * (x - a)})
+    c = (f(b) - f(a)) / (b - a)
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
+
+thm mean_value_auxiliary_equal_endpoints:
+    ? forall a, b R, f fn(x '[a, b]) R:
+        a < b
+        b - a != 0
+        =>:
+            fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(a) = fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(b)
+    have c R = (f(b) - f(a)) / (b - a)
+    c * (b - a) = ((f(b) - f(a)) / (b - a)) * (b - a)
+    ((f(b) - f(a)) / (b - a)) * (b - a) = f(b) - f(a)
+    c * (b - a) = f(b) - f(a)
+    fn(x '[a, b]) R {f(x) - c * (x - a)}(a) = f(a) - c * (a - a)
+    a - a = 0
+    c * (a - a) = 0
+    fn(x '[a, b]) R {f(x) - c * (x - a)}(a) = f(a)
+    fn(x '[a, b]) R {f(x) - c * (x - a)}(b) = f(b) - c * (b - a)
+    f(b) - c * (b - a) = f(b) - (f(b) - f(a))
+    f(b) - (f(b) - f(a)) = f(a)
+    fn(x '[a, b]) R {f(x) - c * (x - a)}(a) = fn(x '[a, b]) R {f(x) - c * (x - a)}(b)
+    c = (f(b) - f(a)) / (b - a)
+    fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(a) = fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(b)
+
+thm mean_value_auxiliary_derivative:
+    ? forall a, b R, f fn(x '[a, b]) R, x0 '(a, b), L R:
+        a < b
+        b - a != 0
+        $has_derivative_at('[a, b], f, x0, L)
+        =>:
+            $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L - ((f(b) - f(a)) / (b - a)))
+    have c R = (f(b) - f(a)) / (b - a)
+    by thm closed_interval_points_are_limit_points(a, b, x0)
+    $is_limit_point_of_set('[a, b], x0)
+    by thm identity_function_has_derivative_at('[a, b], fn(x '[a, b]) R {x}, x0)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {x}, x0, 1)
+    by thm constant_function_has_derivative_at('[a, b], fn(x '[a, b]) R {a}, x0, a)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {a}, x0, 0)
+    by thm derivative_difference_rule('[a, b], fn(x '[a, b]) R {x}, fn(x '[a, b]) R {a}, x0, 1, 0)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {x - a}, x0, 1 - 0)
+    1 - 0 = 1
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {x - a}, x0, 1)
+    by thm derivative_scalar_multiple_rule('[a, b], fn(x '[a, b]) R {x - a}, x0, 1, c)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {c * (x - a)}, x0, c * 1)
+    c * 1 = c
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {c * (x - a)}, x0, c)
+    by thm derivative_difference_rule('[a, b], f, fn(x '[a, b]) R {c * (x - a)}, x0, L, c)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - c * (x - a)}, x0, L - c)
+    c = (f(b) - f(a)) / (b - a)
+    L - c = L - ((f(b) - f(a)) / (b - a))
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L - ((f(b) - f(a)) / (b - a)))
 
 thm mean_value_theorem:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -2778,11 +3079,71 @@ thm mean_value_theorem:
             $is_differentiable_at('[a, b], f, x0)
         =>:
             exist x '(a, b), L R st {$has_derivative_at('[a, b], f, x, L), L = (f(b) - f(a)) / (b - a)}
-    # Source handling: Corollary 10.2.9 applies Rolle's theorem to
-    # `g(x)=f(x)-cx`, with `c` the secant slope.
-    # proof_debt: the auxiliary-function construction and its interior Rolle
-    # application remain unexpanded.
-    trust exist x '(a, b), L R st {$has_derivative_at('[a, b], f, x, L), L = (f(b) - f(a)) / (b - a)}
+    have c R = (f(b) - f(a)) / (b - a)
+    have fn g(x '[a, b]) R = f(x) - c * (x - a)
+    claim:
+        ? forall y '[a, b]:
+            fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(y) = g(y)
+        c = (f(b) - f(a)) / (b - a)
+        fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(y) = f(y) - ((f(b) - f(a)) / (b - a)) * (y - a)
+        f(y) - ((f(b) - f(a)) / (b - a)) * (y - a) = f(y) - c * (y - a)
+        g(y) = f(y) - c * (y - a)
+        fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(y) = g(y)
+    forall y '[a, b]:
+        fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(y) = g(y)
+    by thm mean_value_auxiliary_continuous(a, b, f)
+    $is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
+    $is_continuous_on('[a, b], g)
+    c * (b - a) = ((f(b) - f(a)) / (b - a)) * (b - a)
+    ((f(b) - f(a)) / (b - a)) * (b - a) = f(b) - f(a)
+    c * (b - a) = f(b) - f(a)
+    g(a) = f(a) - c * (a - a)
+    a - a = 0
+    c * (a - a) = 0
+    g(a) = f(a)
+    g(b) = f(b) - c * (b - a)
+    f(b) - c * (b - a) = f(b) - (f(b) - f(a))
+    f(b) - (f(b) - f(a)) = f(a)
+    g(b) = f(a)
+    g(a) = g(b)
+    claim:
+        ? forall x0 '(a, b):
+            $is_differentiable_at('[a, b], g, x0)
+        $is_differentiable_at('[a, b], f, x0)
+        obtain L0 from exist L0 R st {$has_derivative_at('[a, b], f, x0, L0)}
+        by thm mean_value_auxiliary_derivative(a, b, f, x0, L0)
+        $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L0 - ((f(b) - f(a)) / (b - a)))
+        c = (f(b) - f(a)) / (b - a)
+        L0 - c = L0 - ((f(b) - f(a)) / (b - a))
+        $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L0 - c)
+        by thm equal_functions_have_equal_derivatives('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, g, x0, L0 - c)
+        $has_derivative_at('[a, b], g, x0, L0 - c)
+        witness exist L1 R st {$has_derivative_at('[a, b], g, x0, L1)} from L0 - c:
+            $has_derivative_at('[a, b], g, x0, L0 - c)
+        $is_differentiable_at('[a, b], g, x0)
+    forall x0 '(a, b):
+        $is_differentiable_at('[a, b], g, x0)
+    by thm rolle_theorem(a, b, g)
+    obtain x, Lg from exist x '(a, b), Lg R st {$has_derivative_at('[a, b], g, x, Lg), Lg = 0}
+    $is_differentiable_at('[a, b], f, x)
+    obtain Lf from exist Lf R st {$has_derivative_at('[a, b], f, x, Lf)}
+    by thm mean_value_auxiliary_derivative(a, b, f, x, Lf)
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x, Lf - ((f(b) - f(a)) / (b - a)))
+    c = (f(b) - f(a)) / (b - a)
+    Lf - c = Lf - ((f(b) - f(a)) / (b - a))
+    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x, Lf - c)
+    by thm equal_functions_have_equal_derivatives('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, g, x, Lf - c)
+    $has_derivative_at('[a, b], g, x, Lf - c)
+    by thm derivative_value_unique('[a, b], g, x, Lg, Lf - c)
+    Lg = Lf - c
+    Lg = 0
+    Lf - c = 0
+    Lf = c
+    c = (f(b) - f(a)) / (b - a)
+    Lf = (f(b) - f(a)) / (b - a)
+    witness exist x0 '(a, b), L0 R st {$has_derivative_at('[a, b], f, x0, L0), L0 = (f(b) - f(a)) / (b - a)} from x, Lf:
+        $has_derivative_at('[a, b], f, x, Lf)
+        Lf = (f(b) - f(a)) / (b - a)
 
 thm mean_value_theorem_derivative_value:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -3329,8 +3690,7 @@ thm lhopital_rule_second:
             $is_nonzero_on('(a, b], fn(x '(a, b]) R {g(x)})
     # Source handling: the optional proof uses Rolle's theorem to show
     # non-vanishing of `g`, followed by a Cauchy mean-value argument.
-    # proof_debt: this requires the still-unproved Rolle/mean-value theorem
-    # package on subintervals.
+    # proof_debt: this requires a Cauchy mean-value interface on subintervals.
     trust $is_nonzero_on('(a, b], fn(x '(a, b]) R {g(x)})
 
 thm lhopital_rule_second_limit:
@@ -3349,7 +3709,7 @@ thm lhopital_rule_second_limit:
     # Source handling: the optional sequence proof applies Rolle's theorem to
     # `h_n(x)=f(x)g(x_n)-g(x)f(x_n)` and then squeezes the derivative quotient.
     # proof_debt: the sequence-level Cauchy mean-value argument is unavailable
-    # until the Rolle/mean-value package is checked.
+    # until a Cauchy mean-value interface is checked.
     trust $has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
 
 """

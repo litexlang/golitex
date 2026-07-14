@@ -1,8 +1,8 @@
 # Chapter 11: The Riemann integral.
 
+local import chap5
 trust local import chap9
 trust local import chap10
-trust local import chap5
 
 # 11.1 Partitions
 
@@ -59,6 +59,48 @@ thm open_interval_is_connected:
         =>:
             $is_connected_subset_of_R('(a, b))
     # Source handling: Tao says the same argument as for `[1,2]` applies.
+    '(a, b) $subset R
+    '(a, b) $in power_set(R)
+    claim:
+        ? forall x, y '(a, b):
+            x < y
+            =>:
+                '[x, y] $subset '(a, b)
+        claim:
+            ? '[x, y] $subset '(a, b)
+            forall z '[x, y]:
+                a < x <= z
+                z <= y < b
+                a < z
+                z < b
+                z $in '(a, b)
+            '[x, y] $subset '(a, b)
+    $is_connected_subset_of_R('(a, b))
+
+thm closed_interval_is_connected_without_endpoint_order:
+    ? forall a, b R:
+        $is_connected_subset_of_R('[a, b])
+    '[a, b] $subset R
+    '[a, b] $in power_set(R)
+    claim:
+        ? forall x, y '[a, b]:
+            x < y
+            =>:
+                '[x, y] $subset '[a, b]
+        claim:
+            ? '[x, y] $subset '[a, b]
+            forall z '[x, y]:
+                a <= x <= z
+                z <= y <= b
+                a <= z
+                z <= b
+                z $in '[a, b]
+            '[x, y] $subset '[a, b]
+    $is_connected_subset_of_R('[a, b])
+
+thm open_interval_is_connected_without_endpoint_order:
+    ? forall a, b R:
+        $is_connected_subset_of_R('(a, b))
     '(a, b) $subset R
     '(a, b) $in power_set(R)
     claim:
@@ -223,6 +265,445 @@ prop has_interval_endpoints(I power_set(R), a, b R):
 prop is_bounded_interval(I power_set(R)):
     exist a, b R st {$has_interval_endpoints(I, a, b)}
 
+thm interval_endpoint_form_is_a_bounded_interval:
+    ? forall I power_set(R), a, b R:
+        $has_interval_endpoints(I, a, b)
+        =>:
+            $is_bounded_interval(I)
+    witness exist u, v R st {$has_interval_endpoints(I, u, v)} from a, b:
+        $has_interval_endpoints(I, a, b)
+    $is_bounded_interval(I)
+
+thm endpoint_forms_are_bounded_intervals_for_intersection:
+    ? forall a, b R:
+        $is_bounded_interval('[a, b])
+        $is_bounded_interval('[a, b))
+        $is_bounded_interval('(a, b])
+        $is_bounded_interval('(a, b))
+    '[a, b] $subset R
+    '[a, b] $in power_set(R)
+    '[a, b) $subset R
+    '[a, b) $in power_set(R)
+    '(a, b] $subset R
+    '(a, b] $in power_set(R)
+    '(a, b) $subset R
+    '(a, b) $in power_set(R)
+    claim:
+        ? $has_interval_endpoints('[a, b], a, b)
+        '[a, b] = '[a, b]
+        '[a, b] = '[a, b] or '[a, b] = '[a, b) or '[a, b] = '(a, b] or '[a, b] = '(a, b)
+        $has_interval_endpoints('[a, b], a, b)
+    claim:
+        ? $is_bounded_interval('[a, b])
+        witness exist a0, b0 R st {$has_interval_endpoints('[a, b], a0, b0)} from a, b:
+            $has_interval_endpoints('[a, b], a, b)
+    $is_bounded_interval('[a, b])
+    claim:
+        ? $has_interval_endpoints('[a, b), a, b)
+        '[a, b) = '[a, b)
+        '[a, b) = '[a, b] or '[a, b) = '[a, b) or '[a, b) = '(a, b] or '[a, b) = '(a, b)
+        $has_interval_endpoints('[a, b), a, b)
+    claim:
+        ? $is_bounded_interval('[a, b))
+        witness exist a0, b0 R st {$has_interval_endpoints('[a, b), a0, b0)} from a, b:
+            $has_interval_endpoints('[a, b), a, b)
+    $is_bounded_interval('[a, b))
+    claim:
+        ? $has_interval_endpoints('(a, b], a, b)
+        '(a, b] = '(a, b]
+        '(a, b] = '[a, b] or '(a, b] = '[a, b) or '(a, b] = '(a, b] or '(a, b] = '(a, b)
+        $has_interval_endpoints('(a, b], a, b)
+    claim:
+        ? $is_bounded_interval('(a, b])
+        witness exist a0, b0 R st {$has_interval_endpoints('(a, b], a0, b0)} from a, b:
+            $has_interval_endpoints('(a, b], a, b)
+    $is_bounded_interval('(a, b])
+    claim:
+        ? $has_interval_endpoints('(a, b), a, b)
+        '(a, b) = '(a, b)
+        '(a, b) = '[a, b] or '(a, b) = '[a, b) or '(a, b) = '(a, b] or '(a, b) = '(a, b)
+        $has_interval_endpoints('(a, b), a, b)
+    claim:
+        ? $is_bounded_interval('(a, b))
+        witness exist a0, b0 R st {$has_interval_endpoints('(a, b), a0, b0)} from a, b:
+            $has_interval_endpoints('(a, b), a, b)
+    $is_bounded_interval('(a, b))
+
+# The four displayed endpoint forms have the same order-theoretic core.  The
+# following lemmas keep the later intersection proof at that level rather than
+# enumerating all sixteen pairs of open/closed endpoints.
+thm interval_endpoint_member_is_between:
+    ? forall I power_set(R), a, b, z R:
+        $has_interval_endpoints(I, a, b)
+        z $in I
+        =>:
+            a <= z
+            z <= b
+    by cases:
+        ? a <= z
+        ? z <= b
+        case I = '[a, b]:
+            z $in '[a, b]
+            a <= z
+            z <= b
+        case I = '[a, b):
+            z $in '[a, b)
+            a <= z
+            z < b
+            z <= b
+        case I = '(a, b]:
+            z $in '(a, b]
+            a < z
+            a <= z
+            z <= b
+        case I = '(a, b):
+            z $in '(a, b)
+            a < z
+            a <= z
+            z < b
+            z <= b
+
+thm strict_between_interval_endpoints_is_member:
+    ? forall I power_set(R), a, b, z R:
+        $has_interval_endpoints(I, a, b)
+        a < z
+        z < b
+        =>:
+            z $in I
+    by cases:
+        ? z $in I
+        case I = '[a, b]:
+            z $in '[a, b]
+            z $in I
+        case I = '[a, b):
+            z $in '[a, b)
+            z $in I
+        case I = '(a, b]:
+            z $in '(a, b]
+            z $in I
+        case I = '(a, b):
+            z $in '(a, b)
+            z $in I
+
+thm strict_between_intersections_of_interval_endpoint_forms_is_member:
+    ? forall I, J power_set(R), a, b, c, d, z R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) < z
+        z < min(b, d)
+        =>:
+            z $in intersect(I, J)
+    a <= max(a, c)
+    c <= max(a, c)
+    a < z
+    c < z
+    min(b, d) <= b
+    min(b, d) <= d
+    z < b
+    z < min(b, d) <= d
+    z < d
+    by thm strict_between_interval_endpoints_is_member(I, a, b, z)
+    by thm strict_between_interval_endpoints_is_member(J, c, d, z)
+    z $in intersect(I, J)
+
+thm intersection_of_interval_endpoint_forms_member_bounds:
+    ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        =>:
+            max(a, c) <= z
+            z <= min(b, d)
+    have z0 R = z
+    z0 = z
+    z0 $in I
+    z0 $in J
+    by thm interval_endpoint_member_is_between(I, a, b, z0)
+    by thm interval_endpoint_member_is_between(J, c, d, z0)
+    max(a, c) <= z0
+    z0 <= min(b, d)
+    max(a, c) <= z
+    z <= min(b, d)
+
+thm intersection_of_interval_endpoint_forms_member_is_in_closed_hull:
+    ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        =>:
+            z $in '[max(a, c), min(b, d)]
+    have z0 R = z
+    z0 = z
+    by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
+    max(a, c) <= z0
+    z0 <= min(b, d)
+    z0 $in '[max(a, c), min(b, d)]
+    z $in '[max(a, c), min(b, d)]
+
+thm intersection_of_interval_endpoint_forms_member_is_in_closed_open_hull:
+    ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        not min(b, d) $in intersect(I, J)
+        =>:
+            z $in '[max(a, c), min(b, d))
+    have z0 R = z
+    z0 = z
+    z0 $in intersect(I, J)
+    by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
+    claim:
+        ? z0 < min(b, d)
+        by contra:
+            ? z0 < min(b, d)
+            z0 >= min(b, d)
+            z0 = min(b, d)
+            z0 $in intersect(I, J)
+            impossible not min(b, d) $in intersect(I, J)
+    max(a, c) <= z0
+    z0 $in '[max(a, c), min(b, d))
+    z $in '[max(a, c), min(b, d))
+
+thm intersection_of_interval_endpoint_forms_member_is_in_open_closed_hull:
+    ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        not max(a, c) $in intersect(I, J)
+        min(b, d) $in intersect(I, J)
+        =>:
+            z $in '(max(a, c), min(b, d)]
+    have z0 R = z
+    z0 = z
+    z0 $in intersect(I, J)
+    by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
+    claim:
+        ? max(a, c) < z0
+        by contra:
+            ? max(a, c) < z0
+            max(a, c) >= z0
+            max(a, c) = z0
+            z0 $in intersect(I, J)
+            impossible not max(a, c) $in intersect(I, J)
+    z0 <= min(b, d)
+    z0 $in '(max(a, c), min(b, d)]
+    z $in '(max(a, c), min(b, d)]
+
+thm intersection_of_interval_endpoint_forms_member_is_in_open_hull:
+    ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        not max(a, c) $in intersect(I, J)
+        not min(b, d) $in intersect(I, J)
+        =>:
+            z $in '(max(a, c), min(b, d))
+    have z0 R = z
+    z0 = z
+    z0 $in intersect(I, J)
+    by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
+    claim:
+        ? max(a, c) < z0
+        by contra:
+            ? max(a, c) < z0
+            max(a, c) >= z0
+            max(a, c) = z0
+            z0 $in intersect(I, J)
+            impossible not max(a, c) $in intersect(I, J)
+    claim:
+        ? z0 < min(b, d)
+        by contra:
+            ? z0 < min(b, d)
+            z0 >= min(b, d)
+            z0 = min(b, d)
+            z0 $in intersect(I, J)
+            impossible not min(b, d) $in intersect(I, J)
+    z0 $in '(max(a, c), min(b, d))
+    z $in '(max(a, c), min(b, d))
+
+thm closed_between_intersection_of_interval_endpoint_forms_is_member:
+    ? forall I, J power_set(R), a, b, c, d, z R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        min(b, d) $in intersect(I, J)
+        z $in '[max(a, c), min(b, d)]
+        =>:
+            z $in intersect(I, J)
+    max(a, c) < z or max(a, c) >= z
+    by cases:
+        ? z $in intersect(I, J)
+        case max(a, c) < z:
+            z < min(b, d) or z >= min(b, d)
+            by cases:
+                ? z $in intersect(I, J)
+                case z < min(b, d):
+                    by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z)
+                    z $in intersect(I, J)
+                case z >= min(b, d):
+                    z = min(b, d)
+                    z $in intersect(I, J)
+        case max(a, c) >= z:
+            z = max(a, c)
+            z $in intersect(I, J)
+
+thm closed_between_intersection_of_interval_endpoint_forms_is_member_subtype:
+    ? forall I, J power_set(R), a, b, c, d R, z '[max(a, c), min(b, d)]:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        min(b, d) $in intersect(I, J)
+        =>:
+            z $in intersect(I, J)
+    have z0 R = z
+    z0 = z
+    max(a, c) <= z0
+    z0 <= min(b, d)
+    by thm closed_between_intersection_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
+    z0 $in intersect(I, J)
+    z $in intersect(I, J)
+
+thm closed_open_between_intersection_of_interval_endpoint_forms_is_member:
+    ? forall I, J power_set(R), a, b, c, d R, z '[max(a, c), min(b, d)):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        =>:
+            z $in intersect(I, J)
+    have z0 R = z
+    z0 = z
+    max(a, c) < z0 or max(a, c) >= z0
+    by cases:
+        ? z0 $in intersect(I, J)
+        case max(a, c) < z0:
+            z0 < min(b, d)
+            by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
+            z0 $in intersect(I, J)
+        case max(a, c) >= z0:
+            z0 = max(a, c)
+            z0 $in intersect(I, J)
+    z $in intersect(I, J)
+
+thm open_closed_between_intersection_of_interval_endpoint_forms_is_member:
+    ? forall I, J power_set(R), a, b, c, d R, z '(max(a, c), min(b, d)]:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        min(b, d) $in intersect(I, J)
+        =>:
+            z $in intersect(I, J)
+    have z0 R = z
+    z0 = z
+    z0 < min(b, d) or z0 >= min(b, d)
+    by cases:
+        ? z0 $in intersect(I, J)
+        case z0 < min(b, d):
+            max(a, c) < z0
+            by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
+            z0 $in intersect(I, J)
+        case z0 >= min(b, d):
+            z0 = min(b, d)
+            z0 $in intersect(I, J)
+    z $in intersect(I, J)
+
+thm open_between_intersection_of_interval_endpoint_forms_is_member:
+    ? forall I, J power_set(R), a, b, c, d R, z '(max(a, c), min(b, d)):
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        =>:
+            z $in intersect(I, J)
+    have z0 R = z
+    z0 = z
+    max(a, c) < z0
+    z0 < min(b, d)
+    by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
+    z0 $in intersect(I, J)
+    z $in intersect(I, J)
+
+thm intersection_of_interval_endpoint_forms_with_both_endpoints_is_closed:
+    ? forall I, J power_set(R), a, b, c, d R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        min(b, d) $in intersect(I, J)
+        =>:
+            intersect(I, J) = '[max(a, c), min(b, d)]
+    by extension intersect(I, J) = '[max(a, c), min(b, d)]:
+        forall z intersect(I, J):
+            z $in '[max(a, c), min(b, d)]
+        forall z '[max(a, c), min(b, d)]:
+            z $in intersect(I, J)
+
+thm intersection_of_interval_endpoint_forms_with_left_endpoint_is_closed_open:
+    ? forall I, J power_set(R), a, b, c, d R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        max(a, c) $in intersect(I, J)
+        not min(b, d) $in intersect(I, J)
+        =>:
+            intersect(I, J) = '[max(a, c), min(b, d))
+    by extension intersect(I, J) = '[max(a, c), min(b, d)):
+        forall z intersect(I, J):
+            z $in '[max(a, c), min(b, d))
+        forall z '[max(a, c), min(b, d)):
+            z $in intersect(I, J)
+
+thm intersection_of_interval_endpoint_forms_with_right_endpoint_is_open_closed:
+    ? forall I, J power_set(R), a, b, c, d R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        not max(a, c) $in intersect(I, J)
+        min(b, d) $in intersect(I, J)
+        =>:
+            intersect(I, J) = '(max(a, c), min(b, d)]
+    by extension intersect(I, J) = '(max(a, c), min(b, d)]:
+        forall z intersect(I, J):
+            z $in '(max(a, c), min(b, d)]
+        forall z '(max(a, c), min(b, d)]:
+            z $in intersect(I, J)
+
+thm intersection_of_interval_endpoint_forms_without_endpoints_is_open:
+    ? forall I, J power_set(R), a, b, c, d R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(J, c, d)
+        not max(a, c) $in intersect(I, J)
+        not min(b, d) $in intersect(I, J)
+        =>:
+            intersect(I, J) = '(max(a, c), min(b, d))
+    by extension intersect(I, J) = '(max(a, c), min(b, d)):
+        forall z intersect(I, J):
+            z $in '(max(a, c), min(b, d))
+        forall z '(max(a, c), min(b, d)):
+            z $in intersect(I, J)
+
+thm closed_interval_is_bounded_without_endpoint_order:
+    ? forall a, b R:
+        $is_bounded_real_set('[a, b])
+    by cases:
+        ? $is_bounded_real_set('[a, b])
+        case a <= b:
+            by thm closed_interval_is_bounded(a, b)
+            $is_bounded_real_set('[a, b])
+        case not a <= b:
+            by extension '[a, b] = {}:
+                claim:
+                    ? forall x '[a, b]:
+                        x $in {}
+                    a <= x
+                    x <= b
+                    a <= x <= b
+                    a <= b
+                    by contra:
+                        ? x $in {}
+                        not x $in {}
+                        impossible a <= b
+                claim:
+                    ? forall x {}:
+                        x $in '[a, b]
+                    by contra:
+                        ? x $in '[a, b]
+                        not $is_nonempty_set({})
+                        witness $is_nonempty_set({}) from x
+                        impossible $is_nonempty_set({})
+            by thm empty_real_set_is_bounded()
+            $is_bounded_real_set({})
+            $is_bounded_real_set('[a, b])
+
 """
 Lemma 11.1.4.  A subset of the real line is a bounded interval exactly when it
 is both bounded and connected.
@@ -297,12 +778,71 @@ thm bounded_intervals_are_bounded_connected:
         =>:
             $is_bounded_real_set(X)
             $is_connected_subset_of_R(X)
-    # Source handling: this is the reverse direction of Exercise 11.1.1.
-    # proof_debt: check the endpoint-form cases from the Chapter 9 interval
-    # definition.
-    trust:
-        $is_bounded_real_set(X)
-        $is_connected_subset_of_R(X)
+    # Source handling: split the displayed endpoint forms.  Each form is
+    # connected directly; boundedness comes from containment in `[a,b]`.
+    obtain a, b from exist a, b R st {$has_interval_endpoints(X, a, b)}
+    by cases:
+        ? $is_bounded_real_set(X)
+        ? $is_connected_subset_of_R(X)
+        case X = '[a, b]:
+            by thm closed_interval_is_bounded_without_endpoint_order(a, b)
+            $is_bounded_real_set('[a, b])
+            $is_bounded_real_set(X)
+            by thm closed_interval_is_connected_without_endpoint_order(a, b)
+            $is_connected_subset_of_R('[a, b])
+            $is_connected_subset_of_R(X)
+        case X = '[a, b):
+            claim:
+                ? '[a, b) $subset '[a, b]
+                forall x '[a, b):
+                    a <= x
+                    x < b
+                    x <= b
+                    x $in '[a, b]
+                '[a, b) $subset '[a, b]
+            by thm closed_interval_is_bounded_without_endpoint_order(a, b)
+            $is_bounded_real_set('[a, b])
+            by thm bounded_real_set_subset('[a, b), '[a, b])
+            $is_bounded_real_set('[a, b))
+            $is_bounded_real_set(X)
+            by thm closed_open_interval_is_connected(a, b)
+            $is_connected_subset_of_R('[a, b))
+            $is_connected_subset_of_R(X)
+        case X = '(a, b]:
+            claim:
+                ? '(a, b] $subset '[a, b]
+                forall x '(a, b]:
+                    a < x
+                    x <= b
+                    a <= x
+                    x $in '[a, b]
+                '(a, b] $subset '[a, b]
+            by thm closed_interval_is_bounded_without_endpoint_order(a, b)
+            $is_bounded_real_set('[a, b])
+            by thm bounded_real_set_subset('(a, b], '[a, b])
+            $is_bounded_real_set('(a, b])
+            $is_bounded_real_set(X)
+            by thm open_closed_interval_is_connected(a, b)
+            $is_connected_subset_of_R('(a, b])
+            $is_connected_subset_of_R(X)
+        case X = '(a, b):
+            claim:
+                ? '(a, b) $subset '[a, b]
+                forall x '(a, b):
+                    a < x
+                    x < b
+                    a <= x
+                    x <= b
+                    x $in '[a, b]
+                '(a, b) $subset '[a, b]
+            by thm closed_interval_is_bounded_without_endpoint_order(a, b)
+            $is_bounded_real_set('[a, b])
+            by thm bounded_real_set_subset('(a, b), '[a, b])
+            $is_bounded_real_set('(a, b))
+            $is_bounded_real_set(X)
+            by thm open_interval_is_connected_without_endpoint_order(a, b)
+            $is_connected_subset_of_R('(a, b))
+            $is_connected_subset_of_R(X)
 
 # The source lemma is an iff statement; the two named theorems above are the
 # reusable directions used by later proofs.
@@ -4691,6 +5231,51 @@ chapter; integrals of unbounded functions are treated as improper or later
 Lebesgue-style integrals.
 """
 
+# A finite family of possible constant values has a choice function; this
+# packages the heights attached to a partition.
+prop is_constant_selector_for_partition(I power_set(R), P finite_set, f fn(x I) R, c fn(J P) R):
+    forall J P:
+        $has_constant_value_on_subset(I, J, f, c(J))
+
+thm piecewise_constant_partition_has_constant_selector:
+    ? forall I power_set(R), P finite_set, f fn(x I) R:
+        $is_piecewise_constant_with_partition(I, P, f)
+        =>:
+            exist c fn(J P) R st {$is_constant_selector_for_partition(I, P, f, c)}
+    have fn constant_value_set(J P) power_set(R) = {c R: $has_constant_value_on_subset(I, J, f, c)}
+    claim:
+        ? forall A fn_range(constant_value_set):
+            $is_nonempty_set(A)
+        have by preimage J from A $in fn_range(constant_value_set)
+        A = constant_value_set(J)
+        J $in power_set(R)
+        $is_constant_on_subset(I, J, f)
+        obtain c from exist c R st {$has_constant_value_on_subset(I, J, f, c)}
+        constant_value_set(J) = {c R: $has_constant_value_on_subset(I, J, f, c)}
+        c $in constant_value_set(J)
+        c $in A
+        witness $is_nonempty_set(A) from c:
+            c $in A
+    claim:
+        ? exist f fn(A fn_range(constant_value_set)) cup(fn_range(constant_value_set)) st {forall! A fn_range(constant_value_set) => {f(A) $in A}}
+        by axiom_of_choice: set fn_range(constant_value_set)
+    obtain choose_constant from exist f fn(A fn_range(constant_value_set)) cup(fn_range(constant_value_set)) st {forall! A fn_range(constant_value_set) => {f(A) $in A}}
+    claim:
+        ? forall J P:
+            choose_constant(constant_value_set(J)) $in R
+        choose_constant(constant_value_set(J)) $in constant_value_set(J)
+        constant_value_set(J) $in power_set(R)
+        choose_constant(constant_value_set(J)) $in R
+    have fn c(J P) R = choose_constant(constant_value_set(J))
+    witness exist c0 fn(J P) R st {$is_constant_selector_for_partition(I, P, f, c0)} from c:
+        forall J P:
+            c(J) = choose_constant(constant_value_set(J))
+            choose_constant(constant_value_set(J)) $in constant_value_set(J)
+            c(J) $in constant_value_set(J)
+            $has_constant_value_on_subset(I, J, f, c(J))
+        $is_constant_selector_for_partition(I, P, f, c)
+    exist c fn(J P) R st {$is_constant_selector_for_partition(I, P, f, c)}
+
 """
 Lemma 11.3.7.  A piecewise constant function is Riemann integrable, and its
 Riemann integral equals its piecewise constant integral.
@@ -4702,11 +5287,43 @@ thm piecewise_constant_on_bounded_interval_is_bounded:
         $is_piecewise_constant_on(I, f)
         =>:
             $is_bounded_function_on(I, f)
-    # A finite partition supplies finitely many constant values; taking the
-    # maximum of their absolute values gives a uniform bound.
-    # proof_debt: the finite-family maximum construction is not yet exposed by
-    # the Chapter 11 finite-set interface.
-    trust $is_bounded_function_on(I, f)
+    # Choose the finite list of constant heights and bound each value by the
+    # sum of their absolute values plus one.
+    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
+    by thm piecewise_constant_partition_has_constant_selector(I, P, f)
+    obtain c from exist c fn(J P) R st {$is_constant_selector_for_partition(I, P, f, c)}
+    have fn h(J P) R = abs(c(J))
+    claim:
+        ? forall J P:
+            h(J) >= 0
+        h(J) = abs(c(J))
+        abs(c(J)) >= 0
+        h(J) >= 0
+    finite_set_sum(P, fn(J P) R {0}) <= finite_set_sum(P, h)
+    finite_set_sum(P, fn(J P) R {0}) = 0
+    finite_set_sum(P, h) >= 0
+    finite_set_sum(P, h) + 1 > 0
+    finite_set_sum(P, h) + 1 $in R_pos
+    have M R_pos = finite_set_sum(P, h) + 1
+    witness exist M0 R_pos st {$is_function_bounded_by(I, f, M0)} from M:
+        claim:
+            ? forall x I:
+                abs(f(x)) <= M
+            obtain J from exist! J P st {J $in power_set(R), x $in J}
+            J $in P
+            $has_constant_value_on_subset(I, J, f, c(J))
+            f(x) = c(J)
+            h(J) = abs(c(J))
+            abs(f(x)) = abs(c(J)) = h(J)
+            abs(f(x)) <= h(J)
+            h(J) <= finite_set_sum(P, h)
+            abs(f(x)) <= finite_set_sum(P, h)
+            finite_set_sum(P, h) <= finite_set_sum(P, h) + 1
+            abs(f(x)) <= finite_set_sum(P, h) + 1
+            M = finite_set_sum(P, h) + 1
+            abs(f(x)) <= M
+        $is_function_bounded_by(I, f, M)
+    $is_bounded_function_on(I, f)
 
 thm piecewise_constant_functions_are_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R, s R:

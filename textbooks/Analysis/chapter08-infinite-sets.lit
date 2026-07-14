@@ -1,8 +1,8 @@
 # Chapter 8: Infinite sets.
 
-trust local import chap3
+local import chap3
 trust local import chap7
-trust local import chap8finiteproduct
+local import chap8finiteproduct
 
 prop embeds_into(S, T set):
     exist f fn(x S) T st {$is_injective_fn(S, T, f)}

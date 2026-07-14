@@ -49,3 +49,76 @@ thm finite_set_sum_member_le_nonnegative_sum_tmp:
         =>:
             h(x) <= finite_set_sum(P, h)
     h(x) <= finite_set_sum(P, h)
+
+# These are object-level number-theory constructions, not predicate stand-ins.
+# A factorial is a genuine recursive function, with the usual empty-product
+# value at zero and the next positive factor in the recursive branch.
+have fn factorial_tmp(n N) N_pos by induc n from 0:
+    case n = 0: 1
+    case n > 0: n * factorial_tmp(n - 1)
+
+# An additive group is a record containing its operations and distinguished
+# element.  The laws are the struct membership condition itself.
+struct AdditiveGroupTmp<s nonempty_set>:
+    zero s
+    add fn(x, y s) s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(x, add(y, z)) = add(add(x, y), z)
+        forall x s:
+            add(zero, x) = x
+        forall x s:
+            add(x, zero) = x
+        forall x s:
+            add(x, neg(x)) = zero
+        forall x s:
+            add(neg(x), x) = zero
+
+claim:
+    ? forall x, y, z Z:
+        x + (y + z) = (x + y) + z
+    x + (y + z) = (x + y) + z
+
+have fn integer_add_tmp(x, y Z) Z = x + y
+have fn integer_neg_tmp(x Z) Z = -x
+
+thm integer_add_assoc_tmp:
+    ? forall x, y, z Z:
+        integer_add_tmp(x, integer_add_tmp(y, z)) = integer_add_tmp(integer_add_tmp(x, y), z)
+    integer_add_tmp(x, integer_add_tmp(y, z)) = integer_add_tmp(x, y + z) = x + (y + z) = (x + y) + z = integer_add_tmp(x + y, z) = integer_add_tmp(integer_add_tmp(x, y), z)
+
+thm integer_add_zero_left_tmp:
+    ? forall x Z:
+        integer_add_tmp(0, x) = x
+    integer_add_tmp(0, x) = 0 + x = x
+
+thm integer_add_zero_right_tmp:
+    ? forall x Z:
+        integer_add_tmp(x, 0) = x
+    integer_add_tmp(x, 0) = x + 0 = x
+
+thm integer_add_neg_right_tmp:
+    ? forall x Z:
+        integer_add_tmp(x, integer_neg_tmp(x)) = 0
+    integer_add_tmp(x, integer_neg_tmp(x)) = integer_add_tmp(x, -x) = x + -x = 0
+
+thm integer_add_neg_left_tmp:
+    ? forall x Z:
+        integer_add_tmp(integer_neg_tmp(x), x) = 0
+    integer_add_tmp(integer_neg_tmp(x), x) = integer_add_tmp(-x, x) = -x + x = 0
+
+have integer_additive_group_tmp &AdditiveGroupTmp<Z> = (0, integer_add_tmp, integer_neg_tmp)
+
+# A residue class is the image of the integer affine map k |-> a + m*k. The
+# quotient is the image of the map sending a to that concrete subset of Z.
+have fn residue_class_tmp(m N_pos, a Z) power_set(Z) = fn_range(fn(k Z) Z {a + m * k})
+
+have fn residue_quotient_tmp(m N_pos) power_set(power_set(Z)) = fn_range(fn(a Z) power_set(Z) {residue_class_tmp(m, a)})
+
+claim:
+    ? residue_class_tmp(3, 0) $in residue_quotient_tmp(3)
+    residue_quotient_tmp(3) = fn_range(fn(a Z) power_set(Z) {residue_class_tmp(3, a)})
+    residue_class_tmp(3, 0) = fn(a Z) power_set(Z) {residue_class_tmp(3, a)}(0)
+    fn(a Z) power_set(Z) {residue_class_tmp(3, a)}(0) $in fn_range(fn(a Z) power_set(Z) {residue_class_tmp(3, a)})
+    residue_class_tmp(3, 0) $in residue_quotient_tmp(3)

@@ -1,16 +1,23 @@
-# Chapter I — Integers, Rational Numbers, Order, and Divisibility
+# Number Theory for Beginners, Section I.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section I.
+# problem: Record the initial algebraic assumptions for Z and Q, the order
+# conventions, divisibility, well-ordering of positive integers, induction,
+# and the exercises at the end of Section I.
+# proof_idea: Litex already has builtin integer and rational arithmetic.  This
+# file keeps the source assumptions visible, defines the divisibility
+# vocabulary used throughout the book, and marks the broad foundational
+# assumptions as explicit background rather than importing a standard library.
+# litex_code: This file is the runnable Section I sketch.
+# comments: Source statements are paraphrased in source order.  Exercises are
+# listed separately and use checked facts or local proof-debt sketches.
 
 """
-Chapter I — Integers, rational numbers, order, and divisibility.
-
-Write Z for the integers and Q for the rational numbers.  The chapter starts
-from the laws of addition and multiplication: both operations are associative
-and commutative, 0 is the additive neutral element, and multiplication
-distributes over addition.  It also assumes that a+x=b has one solution in Z
-or Q, and that ax=b has one solution in Q when a is nonzero.
+Section I begins by taking sets, subsets, integers Z, rationals Q, and the
+ordinary algebraic laws for addition and multiplication as known.
 """
 
-# The following are the stated algebraic laws for Z and Q.
+# The displayed algebraic laws are builtin arithmetic in Litex.
 
 forall x, y, z Z:
     (x + y) + z = x + (y + z)
@@ -28,13 +35,14 @@ forall x, y, z Q:
     x * y = y * x
     x * (y + z) = x * y + x * z
 
-# The equation a+x=b is solved by x=b-a; uniqueness follows by subtracting a
-# from two alleged solutions.  For a nonzero rational a, ax=b is solved by
-# x=b/a; uniqueness follows by dividing two alleged solutions by a.
+# Section I takes these solution laws as background.  For Litex's builtin
+# integer and rational arithmetic, each witness and its uniqueness are
+# directly checkable.
 claim:
     ? forall a, b Z:
         exist! x Z st {a + x = b}
-    witness exist x Z st {a + x = b} from b - a
+    witness exist x Z st {a + x = b} from b - a:
+        a + (b - a) = b
     forall x1, x2 Z:
         a + x1 = b
         a + x2 = b
@@ -45,7 +53,8 @@ claim:
 claim:
     ? forall a, b Q:
         exist! x Q st {a + x = b}
-    witness exist x Q st {a + x = b} from b - a
+    witness exist x Q st {a + x = b} from b - a:
+        a + (b - a) = b
     forall x1, x2 Q:
         a + x1 = b
         a + x2 = b
@@ -58,7 +67,8 @@ claim:
         a != 0
         =>:
             exist! x Q st {a * x = b}
-    witness exist x Q st {a * x = b} from b / a
+    witness exist x Q st {a * x = b} from b / a:
+        a * (b / a) = b
     forall x1, x2 Q:
         a * x1 = b
         a * x2 = b
@@ -78,15 +88,12 @@ forall a, b Q:
         a * (b / a) = b
 
 """
-Definition. The unique solution of a+x=b is denoted b-a.  If a is a nonzero
-rational, the unique solution of ax=b is denoted b/a.
-
-Order on Q is described by positivity: b>=a means b-a>=0, and b>a means
-b>=a with b!=a.  A rational is positive, zero, or negative; a sum or product
-of positive rationals is positive.
+Section I defines subtraction and rational division by those unique solutions,
+then fixes positivity, order notation, and the fact that positive sums and
+positive products stay positive.
 """
 
-# Litex's builtin order gives these source statements directly.
+# Litex uses builtin order on Q, Z, and the standard relation symbols.
 
 forall x Q:
     x > 0 or x = 0 or x < 0
@@ -126,7 +133,8 @@ prop divides_Z(a, b Z):
 claim:
     ? forall a Z:
         $divides_Z(a, a)
-    witness exist x Z st {a = a * x} from 1
+    witness exist x Z st {a = a * x} from 1:
+        a = a * 1
     $divides_Z(a, a)
 
 claim:
@@ -141,6 +149,8 @@ claim:
         b + c = a * x + a * y = a * (x + y)
     $divides_Z(a, b + c)
 
+# Any common divisor also divides every integer linear combination.  This is
+# the direct algebraic move behind the concrete gcd computations in Section II.
 thm divides_Z_linear_combination:
     ? forall d, a, b, x, y Z:
         $divides_Z(d, a)
@@ -171,7 +181,7 @@ prop is_least_element_of_integer_set(S power_set(Z), m Z):
         x $in Z
         m <= x
 
-# Source handling: This is Chapter I's well-ordering principle for positive
+# Source handling: This is Section I's well-ordering principle for positive
 # integers.
 # trust: The proof is not rebuilt here; later chapters cite this as the
 # book's foundational induction/well-ordering background.
@@ -189,21 +199,21 @@ integers.
 """
 
 sketch:
-    abstract_prop chapter_I_induction_statement(n)
+    abstract_prop section_I_induction_statement(n)
 
     # Source handling: This is the induction principle derived from the least
     # positive integer principle in the text.
     # trust: The abstract predicate version is kept as a local proof
     # skeleton, not as a global theorem about first-class predicates.
     trust:
-        $chapter_I_induction_statement(0)
+        $section_I_induction_statement(0)
         forall n N_pos:
             forall k N:
                 k < n
                 =>:
-                    $chapter_I_induction_statement(k)
+                    $section_I_induction_statement(k)
             =>:
-                $chapter_I_induction_statement(n)
+                $section_I_induction_statement(n)
 
     # Source handling: The text derives this conclusion from the least
     # positive counterexample argument.
@@ -212,7 +222,7 @@ sketch:
     # induction block here.
     trust:
         forall n N:
-            $chapter_I_induction_statement(n)
+            $section_I_induction_statement(n)
 
 """
 Exercise I.1. Derive (-1)(-1)=1 from the distributive law.
@@ -238,7 +248,7 @@ sketch:
                 not $divides_Z(d, x)
 
     # Source handling: The exercise is a first divisor search leading to the
-    # Chapter IV definition of prime.
+    # Section IV definition of prime.
     # trust: A full checked proof needs a finite least-divisor search over
     # integers up to x.
     trust:
@@ -266,7 +276,7 @@ Exercise I.4. Prove by induction that 4^(2n+1)+3^(n+2) is a multiple of 13.
 sketch:
     # Source handling: The source asks for an induction proof.
     # trust: The modular-arithmetic induction is left as local proof debt
-    # until the congruence interface from Chapter V is available.
+    # until the congruence interface from Section V is available.
     trust:
         forall n N:
             $divides_Z(13, 4^(2 * n + 1) + 3^(n + 2))

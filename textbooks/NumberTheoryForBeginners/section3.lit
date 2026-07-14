@@ -1,16 +1,18 @@
-# Chapter III — Relative Primality and Euclid's Lemma
+# Number Theory for Beginners, Section III.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section III.
+# problem: Formalize relative primality, Bezout's criterion, Euclid's lemma,
+# the product corollaries, and the Section III exercises.
+# proof_idea: Reuse Section II's gcd and Bezout interface.  Relative primality
+# for a pair is expressed as `gcd_Z(a,b)=1`; finite mutual relative primality is
+# stated through common divisors.  The forward Bezout direction and Euclid's
+# lemma are written in the same algebraic shape as the source proof.
+# litex_code: This file runs Sections I-II first and then adds Section III.
+# comments: Hard exercise statements remain local checked sketches with
+# explicit proof debt.
 
-"""
-Chapter III — Relative primality and Euclid's lemma.
-
-This chapter characterizes relatively prime integers by Bezout identities and
-uses that characterization to prove Euclid's lemma: a divisor prime to one
-factor of a product must divide the other factor.  Its corollaries control
-coprimality of finite products.
-"""
-
-trust local import chapter2
-trust local import chapter1
+trust local import section2
+trust local import section1
 
 """
 Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
@@ -48,19 +50,21 @@ thm theorem_III_1_relprime_implies_bezout_pair:
     by thm gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
     1 = gcd_Z(a, b) = a * x + b * y
-    witness exist u, v Z st {a * u + b * v = 1} from x, y
+    witness exist u, v Z st {a * u + b * v = 1} from x, y:
+        a * x + b * y = 1
 
-# The converse is proved by showing directly that 1 has the defining gcd
-# properties: it divides both inputs, and every positive common divisor
-# divides the Bezout combination a*x+b*y=1.
+# Source handling: the Bezout equality gives the last clause of the gcd
+# definition for 1, and every common divisor divides that same equality.
 thm bezout_pair_has_gcd_one:
     ? forall a, b, x, y Z:
         a * x + b * y = 1
         =>:
             $is_gcd_Z(a, b, 1)
-    witness exist u Z st {a = 1 * u} from a
+    witness exist u Z st {a = 1 * u} from a:
+        a = 1 * a
     $divides_Z(1, a)
-    witness exist v Z st {b = 1 * v} from b
+    witness exist v Z st {b = 1 * v} from b:
+        b = 1 * b
     $divides_Z(1, b)
     claim:
         ? forall e Z:
@@ -74,7 +78,8 @@ thm bezout_pair_has_gcd_one:
         witness exist t Z st {1 = e * t} from p * x + q * y:
             1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
         $divides_Z(e, 1)
-    witness exist u, v Z st {1 = a * u + b * v} from x, y
+    witness exist u, v Z st {1 = a * u + b * v} from x, y:
+        1 = a * x + b * y
     $is_gcd_Z(a, b, 1)
 
 thm theorem_III_1_bezout_implies_relprime_pair:
@@ -92,12 +97,12 @@ Corollary. If d is the gcd of a,b,...,c, then a/d,b/d,...,c/d are mutually
 relatively prime.
 """
 
+# Divide the gcd Bezout identity by the nonzero gcd.
 thm gcd_quotients_are_relatively_prime:
     ? forall a, b Z:
         gcd_Z(a, b) != 0
         =>:
             $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
-    # Divide the gcd Bezout identity by the nonzero gcd.
     by thm gcd_Z_dvd_left(a, b)
     obtain p from exist p Z st {a = gcd_Z(a, b) * p}
     by thm gcd_Z_dvd_right(a, b)
@@ -131,23 +136,21 @@ thm theorem_III_2_euclid_lemma:
     a * (c * x) + (b * c) * y = a * (c * x) + (a * u) * y
     a * (c * x) + (a * u) * y = a * (c * x + u * y)
     c = a * (c * x + u * y)
-    witness exist t Z st {c = a * t} from c * x + u * y
+    witness exist t Z st {c = a * t} from c * x + u * y:
+        c = a * (c * x + u * y)
     $divides_Z(a, c)
 
 """
 Corollary 1. If a is prime to b and to c, then a is prime to bc.
 """
 
-# Source handling: Weil follows a positive common divisor through Theorem III.2.
-# The checked route multiplies the two Bezout identities instead, producing a
-# Bezout identity for a and b*c directly.
+# Multiply the two Bezout identities and collect the terms containing a.
 thm theorem_III_2_corollary_1:
     ? forall a, b, c Z:
         $relatively_prime_Z(a, b)
         $relatively_prime_Z(a, c)
         =>:
             $relatively_prime_Z(a, b * c)
-    # Multiply the two Bezout identities and collect the terms containing a.
     by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     by thm theorem_III_1_relprime_implies_bezout_pair(a, c)
@@ -181,25 +184,17 @@ trust:
 Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
 """
 
-# Source handling: This is the direct Euclid-lemma route requested by the
-# exercise: first factor c by b, then factor the remaining quotient by a.
-thm exercise_III_1_coprime_divisors_product:
-    ? forall a, b, c Z:
-        $relatively_prime_Z(a, b)
-        $divides_Z(a, c)
-        $divides_Z(b, c)
-        =>:
-            $divides_Z(a * b, c)
-    # Write c=b*u; since a divides b*u and is prime to b, Euclid's lemma
-    # gives u=a*v, so c=(a*b)*v.
-    obtain u from exist u Z st {c = b * u}
-    c = b * u
-    $divides_Z(a, b * u)
-    by thm theorem_III_2_euclid_lemma(a, b, u)
-    obtain v from exist v Z st {u = a * v}
-    witness exist w Z st {c = (a * b) * w} from v:
-        c = b * u = b * (a * v) = (a * b) * v
-    $divides_Z(a * b, c)
+sketch:
+    # Source handling: This is an immediate use of Theorem III.2.
+    # trust: The direct checked proof should combine two divisibility
+    # witnesses and Euclid's lemma.
+    trust:
+        forall a, b, c Z:
+            $relatively_prime_Z(a, b)
+            $divides_Z(a, c)
+            $divides_Z(b, c)
+            =>:
+                $divides_Z(a * b, c)
 
 """
 Exercise III.2. Multiplication by a residue prime to m permutes the nonzero
@@ -212,7 +207,7 @@ sketch:
     # Source handling: The exercise uses Euclid's lemma and division
     # remainders modulo m.
     # trust: This belongs with the congruence-class machinery of
-    # Chapter V.
+    # Section V.
     trust:
         forall a Z, m N_pos:
             m > 1

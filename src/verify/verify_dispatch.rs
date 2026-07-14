@@ -6,8 +6,7 @@ impl Runtime {
     /// This path may use the full verifier stack for the fact shape, including
     /// known forall instantiation, user strategies, definitions, and recursive
     /// proof obligations where those features are part of the ordinary proof
-    /// model. Restricted builtin premises should use
-    /// `verify_fact_restricted_known_builtin` instead.
+    /// model. Restricted builtin premises use the atomic builtin helpers.
     pub fn verify_fact_full(
         &mut self,
         fact: &Fact,

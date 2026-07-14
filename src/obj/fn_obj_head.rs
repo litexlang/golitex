@@ -12,6 +12,7 @@ pub enum FnObjHead {
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
+    DefStructField(DefStructFieldFreeParamObj),
     /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
     FiniteSeqListObj(FiniteSeqListObj),
@@ -34,6 +35,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::Exist(p) => write!(f, "{}", p),
             FnObjHead::SetBuilder(p) => write!(f, "{}", p),
             FnObjHead::FnSet(p) => write!(f, "{}", p),
+            FnObjHead::DefStructField(p) => write!(f, "{}", p),
             FnObjHead::AnonymousFnLiteral(a) => write!(f, "{}", a),
             FnObjHead::FiniteSeqListObj(v) => write!(f, "{}", v),
             FnObjHead::ObjAtIndex(v) => write!(f, "{}", v),
@@ -59,11 +61,11 @@ impl FnObjHead {
                 AtomObj::Exist(p) => Some(FnObjHead::Exist(p)),
                 AtomObj::SetBuilder(p) => Some(FnObjHead::SetBuilder(p)),
                 AtomObj::FnSet(p) => Some(FnObjHead::FnSet(p)),
+                AtomObj::DefStructField(p) => Some(FnObjHead::DefStructField(p)),
                 AtomObj::Induc(p) => Some(FnObjHead::Induc(p)),
                 AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
                 AtomObj::TupleIndex(p) => Some(FnObjHead::TupleIndex(p)),
                 AtomObj::CartIndex(p) => Some(FnObjHead::CartIndex(p)),
-                AtomObj::DefStructField(_) => None,
             },
             _ => None,
         }
@@ -115,6 +117,12 @@ impl From<FnSetFreeParamObj> for FnObjHead {
     }
 }
 
+impl From<DefStructFieldFreeParamObj> for FnObjHead {
+    fn from(p: DefStructFieldFreeParamObj) -> Self {
+        FnObjHead::DefStructField(p)
+    }
+}
+
 impl From<ByInducFreeParamObj> for FnObjHead {
     fn from(p: ByInducFreeParamObj) -> Self {
         FnObjHead::Induc(p)
@@ -149,6 +157,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::Exist(p) => p.into(),
             FnObjHead::SetBuilder(p) => p.into(),
             FnObjHead::FnSet(p) => p.into(),
+            FnObjHead::DefStructField(p) => p.into(),
             FnObjHead::AnonymousFnLiteral(a) => (*a).clone().into(),
             FnObjHead::FiniteSeqListObj(v) => v.into(),
             FnObjHead::ObjAtIndex(v) => v.into(),

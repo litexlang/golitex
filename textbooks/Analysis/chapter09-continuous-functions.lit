@@ -1,8 +1,8 @@
 # Chapter 9: Continuous functions on R.
 
-trust local import chap6
-trust local import chap4
-trust local import chap5
+local import chap4
+local import chap5
+local import chap6
 
 # Sequence and compactness vocabulary from Chapter 6 is reused below.
 # In particular, Chapter 6 supplies the canonical Cauchy, subsequence, and
@@ -2419,6 +2419,17 @@ in `[-M, M]` for some positive real M.
 
 prop is_bounded_real_set(X power_set(R)):
     exist M R_pos st {X $subset '[-M, M]}
+
+thm empty_real_set_is_bounded:
+    ? forall:
+        $is_bounded_real_set({})
+    claim:
+        ? exist M R_pos st {{} $subset '[-M, M]}
+        witness exist M R_pos st {{} $subset '[-M, M]} from 1:
+            1 $in R_pos
+            {} $subset '[-1, 1]
+    exist M R_pos st {{} $subset '[-M, M]}
+    $is_bounded_real_set({})
 
 """
 Example 9.1.23. Finite closed intervals are bounded; one-sided infinite
@@ -7052,26 +7063,105 @@ prop attains_maximum_on(X power_set(R), f fn(x X) R):
 prop attains_minimum_on(X power_set(R), f fn(x X) R):
     exist c X st {$is_minimizer_on(X, f, c)}
 
-# If a point is not a maximizer, then some point of the domain has strictly
-# larger function value.  This is just the contrapositive of the definition of
-# `is_maximizer_on`, and it is used below to make the non-endpoint maximum
-# principle core expose its elementary endpoint witnesses before the remaining
-# supremum/compactness step.
-thm not_maximizer_gives_larger_point:
-    ? forall X power_set(R), f fn(x X) R, c X:
-        not $is_maximizer_on(X, f, c)
+# A symmetric bound supplies an upper bound for a real set.
+thm real_set_member_le_of_symmetric_bound:
+    ? forall Y power_set(R), B R_pos, y Y:
+        Y $subset '[-B, B]
         =>:
-            exist y X st {f(c) < f(y)}
-    by contra:
-        ? exist y X st {f(c) < f(y)}
-        not exist y X st {f(c) < f(y)}
+            y <= B
+    Y $subset '[-B, B]
+    y $in '[-B, B]
+    y <= B
+
+thm bounded_real_set_has_upper_bound:
+    ? forall Y power_set(R):
+        $is_bounded_real_set(Y)
+        =>:
+            $has_upper_bound(Y)
+    obtain B from exist B R_pos st {Y $subset '[-B, B]}
+    claim:
+        ? $is_upper_bound(Y, B)
+        Y $subset R
         claim:
-            ? forall x X:
-                f(x) <= f(c)
-            not f(c) < f(x)
-            f(x) <= f(c)
-        $is_maximizer_on(X, f, c)
-        impossible not $is_maximizer_on(X, f, c)
+            ? forall y Y:
+                y <= B
+            by thm real_set_member_le_of_symmetric_bound(Y, B, y)
+            y <= B
+        $is_upper_bound(Y, B)
+    witness exist B0 R st {$is_upper_bound(Y, B0)} from B:
+        $is_upper_bound(Y, B)
+    $has_upper_bound(Y)
+
+# A least upper bound is adherent to the set it bounds: otherwise subtracting
+# a missing positive neighborhood produces a smaller upper bound.
+thm least_upper_bound_is_adherent:
+    ? forall Y power_set(R), M R:
+        $is_least_upper_bound(Y, M)
+        =>:
+            $is_adherent_point(Y, M)
+    claim:
+        ? forall epsilon R_pos:
+            $is_epsilon_adherent_to_set(Y, M, epsilon)
+        by contra:
+            ? $is_epsilon_adherent_to_set(Y, M, epsilon)
+            not $is_epsilon_adherent_to_set(Y, M, epsilon)
+            claim:
+                ? forall y Y:
+                    y <= M - epsilon
+                claim:
+                    ? not abs(M - y) <= epsilon
+                    by contra:
+                        ? not abs(M - y) <= epsilon
+                        abs(M - y) <= epsilon
+                        witness exist z R st {z $in Y, abs(M - z) <= epsilon} from y:
+                            y $in Y
+                            abs(M - y) <= epsilon
+                        $is_epsilon_adherent_to_set(Y, M, epsilon)
+                        impossible not $is_epsilon_adherent_to_set(Y, M, epsilon)
+                y <= M
+                M - y >= 0
+                abs(M - y) = M - y
+                M - y > epsilon
+                M - y + y > epsilon + y
+                M - y + y = M
+                epsilon + y = y + epsilon
+                M > y + epsilon
+                M - epsilon > y + epsilon - epsilon
+                y + epsilon - epsilon = y
+                M - epsilon > y
+                y < M - epsilon
+                y <= M - epsilon
+            Y $subset R
+            $is_upper_bound(Y, M - epsilon)
+            M <= M - epsilon
+            epsilon > 0
+            M - epsilon < M
+            impossible M <= M - epsilon
+    $is_adherent_point(Y, M)
+
+# The compactness step in the maximum principle: a nonempty sequentially
+# compact set of real numbers contains an upper bound for itself.
+thm nonempty_sequentially_compact_real_set_has_maximum:
+    ? forall Y power_set(R):
+        $is_nonempty_set(Y)
+        $has_sequential_compactness_in_R(Y)
+        =>:
+            exist M Y st {$is_upper_bound(Y, M)}
+    by thm sequentially_compact_real_set_is_closed_and_bounded(Y)
+    closure_of_real_set(Y) = Y
+    $is_bounded_real_set(Y)
+    by thm bounded_real_set_has_upper_bound(Y)
+    $has_upper_bound(Y)
+    by thm least_upper_bound_existence(Y)
+    obtain M from exist M R st {$is_least_upper_bound(Y, M)}
+    by thm least_upper_bound_is_adherent(Y, M)
+    $is_adherent_point(Y, M)
+    M $in closure_of_real_set(Y)
+    closure_of_real_set(Y) = Y
+    M $in Y
+    witness exist M0 Y st {$is_upper_bound(Y, M0)} from M:
+        M $in Y
+        $is_upper_bound(Y, M)
 
 thm neg_order_bridge:
     ? forall u, v R:
@@ -7142,66 +7232,41 @@ Proposition 9.6.7 (Maximum principle). A continuous function on a closed
 bounded interval attains both its maximum and its minimum.
 """
 
-thm continuous_closed_interval_attains_maximum_nonendpoint_core:
-    ? forall a, b R, f fn(x '[a, b]) R:
-        a < b
-        $is_continuous_on('[a, b], f)
-        not $is_maximizer_on('[a, b], f, a)
-        not $is_maximizer_on('[a, b], f, b)
-        =>:
-            $attains_maximum_on('[a, b], f)
-    # In the source: this is exactly the non-endpoint core of Tao's proof of
-    # the maximum half.  The elementary consequence of "not an endpoint
-    # maximizer" is checked first: each endpoint has a strictly larger value
-    # somewhere in the interval.  The remaining part of Tao's proof proves
-    # boundedness, takes the supremum of the image, builds a near-maximizing
-    # sequence, and then uses compactness plus continuity to show that the
-    # subsequential limit attains the supremum.  Those supremum/compactness
-    # construction details are kept here as a named proof obligation.
-    a $in '[a, b]
-    b $in '[a, b]
-    by thm not_maximizer_gives_larger_point('[a, b], f, a)
-    obtain xa from exist xa '[a, b] st {f(a) < f(xa)}
-    f(a) < f(xa)
-    by thm not_maximizer_gives_larger_point('[a, b], f, b)
-    obtain xb from exist xb '[a, b] st {f(b) < f(xb)}
-    f(b) < f(xb)
-    # Source handling: the non-endpoint part of Proposition 9.6.7 constructs a
-    # near-maximizing sequence and applies compactness.
-    # proof_debt: the local sequence/supremum package does not yet check that
-    # construction through to an attained maximum.
-    trust $attains_maximum_on('[a, b], f)
-
 thm continuous_closed_interval_attains_maximum:
     ? forall a, b R, f fn(x '[a, b]) R:
         a < b
         $is_continuous_on('[a, b], f)
         =>:
             $attains_maximum_on('[a, b], f)
-    # In the source: Tao proves the maximum half of Proposition 9.6.7 using
-    # boundedness, the supremum of the image, and a compactness/sequential
-    # argument.  The endpoint-maximizer cases are checked directly here; only
-    # the named non-endpoint core remains as source proof debt.
-    $is_maximizer_on('[a, b], f, a) or not $is_maximizer_on('[a, b], f, a)
-    by cases:
-        ? $attains_maximum_on('[a, b], f)
-        case $is_maximizer_on('[a, b], f, a):
-            a $in '[a, b]
-            witness exist c '[a, b] st {$is_maximizer_on('[a, b], f, c)} from a:
-                c = a
-                $is_maximizer_on('[a, b], f, c)
-        case not $is_maximizer_on('[a, b], f, a):
-            $is_maximizer_on('[a, b], f, b) or not $is_maximizer_on('[a, b], f, b)
-            by cases:
-                ? $attains_maximum_on('[a, b], f)
-                case $is_maximizer_on('[a, b], f, b):
-                    b $in '[a, b]
-                    witness exist c '[a, b] st {$is_maximizer_on('[a, b], f, c)} from b:
-                        c = b
-                        $is_maximizer_on('[a, b], f, c)
-                case not $is_maximizer_on('[a, b], f, b):
-                    by thm continuous_closed_interval_attains_maximum_nonendpoint_core(a, b, f)
-                    $attains_maximum_on('[a, b], f)
+    # The interval is closed and bounded, hence sequentially compact.  Its
+    # continuous image is sequentially compact; its least upper bound belongs
+    # to that image, and a preimage is a maximizer.
+    by thm closure_of_closed_interval(a, b)
+    closure_of_real_set('[a, b]) = '[a, b]
+    by thm closed_interval_is_bounded(a, b)
+    $is_bounded_real_set('[a, b])
+    by thm heine_borel_sequential_compactness_for_real_sets('[a, b])
+    $has_sequential_compactness_in_R('[a, b])
+    by thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact('[a, b], f)
+    $has_sequential_compactness_in_R(fn_range(f))
+    claim:
+        ? $is_nonempty_set(fn_range(f))
+        a $in '[a, b]
+        f(a) $in fn_range(f)
+        witness $is_nonempty_set(fn_range(f)) from f(a):
+            f(a) $in fn_range(f)
+    by thm nonempty_sequentially_compact_real_set_has_maximum(fn_range(f))
+    obtain M from exist M fn_range(f) st {$is_upper_bound(fn_range(f), M)}
+    have by preimage c from M $in fn_range(f)
+    witness exist c0 '[a, b] st {$is_maximizer_on('[a, b], f, c0)} from c:
+        claim:
+            ? forall x '[a, b]:
+                f(x) <= f(c)
+            f(x) $in fn_range(f)
+            f(x) <= M
+            M = f(c)
+            f(x) <= f(c)
+        $is_maximizer_on('[a, b], f, c)
 
 thm continuous_closed_interval_attains_minimum:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -7317,20 +7382,6 @@ thm ivt_left_set_nonempty_in_strict_case:
     witness $is_nonempty_set({x '[a, b]: f(x) <= y}) from a:
         a $in {x '[a, b]: f(x) <= y}
 
-# The same left set does not contain `b` in the strict case, because membership
-# would give `f(b)<=y`, contradicting the endpoint inequality `y<f(b)`.
-thm ivt_right_endpoint_not_in_left_set_strict_case:
-    ? forall a, b R, f fn(x '[a, b]) R, y R:
-        a < b
-        y < f(b)
-        =>:
-            not b $in {x '[a, b]: f(x) <= y}
-    by contra:
-        ? not b $in {x '[a, b]: f(x) <= y}
-        b $in {x '[a, b]: f(x) <= y}
-        f(b) <= y
-        impossible y < f(b)
-
 # The left set is a subset of `[a,b]`, hence bounded by the same closed
 # interval bound.  This records the other prerequisite for taking a supremum in
 # Tao's strict IVT proof.
@@ -7349,6 +7400,185 @@ thm ivt_left_set_bounded_in_strict_case:
     by thm bounded_real_set_subset({x '[a, b]: f(x) <= y}, '[a, b])
     $is_bounded_real_set({x '[a, b]: f(x) <= y})
 
+# The supremum of the left set remains in the closed interval: `a` belongs to
+# the left set, while `b` is an upper bound for it.
+thm ivt_left_set_lub_lies_in_closed_interval:
+    ? forall a, b R, f fn(x '[a, b]) R, y, c R:
+        a < b
+        f(a) < y
+        $is_least_upper_bound({x '[a, b]: f(x) <= y}, c)
+        =>:
+            c $in '[a, b]
+    a $in '[a, b]
+    f(a) <= y
+    a $in {x '[a, b]: f(x) <= y}
+    $is_upper_bound({x '[a, b]: f(x) <= y}, c)
+    a <= c
+    claim:
+        ? $is_upper_bound({x '[a, b]: f(x) <= y}, b)
+        {x '[a, b]: f(x) <= y} $subset R
+        claim:
+            ? forall x {x '[a, b]: f(x) <= y}:
+                x <= b
+            x $in '[a, b]
+            x <= b
+        $is_upper_bound({x '[a, b]: f(x) <= y}, b)
+    c <= b
+    c $in '[a, b]
+
+# Continuity at the supremum prevents its value from lying above `y`: a nearby
+# point of the left set would then have value above `y` as well.
+thm ivt_left_set_lub_value_at_most:
+    ? forall a, b R, f fn(x '[a, b]) R, y, c R:
+        a < b
+        $is_continuous_on('[a, b], f)
+        $is_least_upper_bound({x '[a, b]: f(x) <= y}, c)
+        c $in '[a, b]
+        =>:
+            f(c) <= y
+    have c0 '[a, b] = c
+    by contra:
+        ? f(c0) <= y
+        f(c0) > y
+        f(c0) - y > 0
+        (f(c0) - y) / 2 $in R_pos
+        $is_continuous_at('[a, b], f, c0)
+        $has_function_limit('[a, b], f, c0, f(c0))
+        $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2)
+        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2, delta)}
+        by thm least_upper_bound_is_adherent({x '[a, b]: f(x) <= y}, c)
+        delta / 2 $in R_pos
+        $is_epsilon_adherent_to_set({x '[a, b]: f(x) <= y}, c, delta / 2)
+        obtain z from exist z R st {z $in {x '[a, b]: f(x) <= y}, abs(c - z) <= delta / 2}
+        have z0 '[a, b] = z
+        abs(c - z) <= delta / 2
+        abs(z - c) = abs(c - z)
+        abs(z - c) <= delta / 2
+        delta / 2 < delta
+        abs(z - c) < delta
+        abs(z0 - c0) = abs(z - c)
+        abs(z0 - c0) < delta
+        abs(f(z0) - f(c0)) <= (f(c0) - y) / 2
+        -(f(z0) - f(c0)) <= abs(f(z0) - f(c0))
+        -(f(z0) - f(c0)) <= (f(c0) - y) / 2
+        -(f(z0) - f(c0)) = f(c0) - f(z0)
+        f(c0) - f(z0) <= (f(c0) - y) / 2
+        f(c0) - f(z0) + f(z0) <= (f(c0) - y) / 2 + f(z0)
+        f(c0) - f(z0) + f(z0) = f(c0)
+        f(c0) <= (f(c0) - y) / 2 + f(z0)
+        f(c0) - (f(c0) - y) / 2 <= (f(c0) - y) / 2 + f(z0) - (f(c0) - y) / 2
+        (f(c0) - y) / 2 + f(z0) - (f(c0) - y) / 2 = f(z0)
+        f(c0) - (f(c0) - y) / 2 <= f(z0)
+        (f(c0) - y) / 2 > 0
+        f(c0) - (f(c0) - y) / 2 - y = (f(c0) - y) / 2
+        f(c0) - (f(c0) - y) / 2 - y > 0
+        f(c0) - (f(c0) - y) / 2 > y
+        f(z0) > y
+        z $in {x '[a, b]: f(x) <= y}
+        f(z0) = f(z)
+        f(z) <= y
+        impossible f(z) > y
+    f(c0) <= y
+    f(c0) = f(c)
+    f(c) <= y
+
+# If the supremum had value below `y`, a sufficiently close point to its right
+# would still lie in the left set, contradicting its upper-bound property.
+thm ivt_left_set_lub_value_at_least:
+    ? forall a, b R, f fn(x '[a, b]) R, y, c R:
+        a < b
+        $is_continuous_on('[a, b], f)
+        f(a) < y
+        y < f(b)
+        $is_least_upper_bound({x '[a, b]: f(x) <= y}, c)
+        c $in '[a, b]
+        =>:
+            y <= f(c)
+    have c0 '[a, b] = c
+    by contra:
+        ? y <= f(c0)
+        f(c0) < y
+        claim:
+            ? c < b
+            by contra:
+                ? c < b
+                c >= b
+                c <= b
+                c = b
+                c0 = c
+                f(c0) = f(c)
+                f(c) = f(b)
+                f(c0) = f(b)
+                y < f(b)
+                f(c0) < y < f(b)
+                f(c0) < f(b)
+                f(b) = f(c0)
+                f(c0) < f(b) = f(c0)
+                f(c0) < f(c0)
+                f(c0) <= f(c0)
+                not f(c0) < f(c0)
+                impossible not f(c0) < f(c0)
+        c < b
+        b - c > 0
+        (y - f(c0)) / 2 $in R_pos
+        $is_continuous_at('[a, b], f, c0)
+        $has_function_limit('[a, b], f, c0, f(c0))
+        $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2)
+        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2, delta)}
+        have gap R_pos = b - c
+        gap = b - c
+        min(delta, gap) $in R_pos
+        min(delta, gap) / 2 $in R_pos
+        min(delta, gap) <= gap
+        min(delta, gap) / 2 < min(delta, gap)
+        min(delta, gap) / 2 <= min(delta, gap)
+        min(delta, gap) / 2 <= gap
+        min(delta, gap) / 2 <= b - c
+        a <= c
+        a <= c + min(delta, gap) / 2
+        c + min(delta, gap) / 2 <= c + (b - c)
+        c + (b - c) = b
+        c + min(delta, gap) / 2 <= b
+        c + min(delta, gap) / 2 $in '[a, b]
+        have x '[a, b] = c + min(delta, gap) / 2
+        x = c + min(delta, gap) / 2
+        min(delta, gap) / 2 > 0
+        x - c = min(delta, gap) / 2
+        x - c > 0
+        x > c
+        min(delta, gap) <= delta
+        min(delta, gap) / 2 < min(delta, gap)
+        min(delta, gap) / 2 <= min(delta, gap)
+        min(delta, gap) / 2 <= min(delta, gap) <= delta
+        min(delta, gap) / 2 < min(delta, gap) <= delta
+        min(delta, gap) / 2 < delta
+        min(delta, gap) / 2 <= delta
+        x - c0 = min(delta, gap) / 2
+        x - c0 >= 0
+        abs(x - c0) = x - c0
+        abs(x - c0) <= delta
+        abs(x - c0) < delta
+        abs(f(x) - f(c0)) <= (y - f(c0)) / 2
+        f(x) - f(c0) <= abs(f(x) - f(c0))
+        f(x) - f(c0) <= (y - f(c0)) / 2
+        f(x) - f(c0) + f(c0) <= (y - f(c0)) / 2 + f(c0)
+        f(x) - f(c0) + f(c0) = f(x)
+        (y - f(c0)) / 2 + f(c0) = f(c0) + (y - f(c0)) / 2
+        f(x) <= f(c0) + (y - f(c0)) / 2
+        (y - f(c0)) / 2 > 0
+        y - (f(c0) + (y - f(c0)) / 2) = (y - f(c0)) / 2
+        y - (f(c0) + (y - f(c0)) / 2) > 0
+        f(c0) + (y - f(c0)) / 2 < y
+        f(x) < y
+        f(x) <= y
+        x $in {z '[a, b]: f(z) <= y}
+        $is_upper_bound({z '[a, b]: f(z) <= y}, c)
+        x <= c
+        impossible x > c
+    y <= f(c0)
+    f(c0) = f(c)
+    y <= f(c)
+
 thm intermediate_value_theorem_strict_interior_core:
     ? forall a, b R, f fn(x '[a, b]) R, y R:
         a < b
@@ -7357,22 +7587,27 @@ thm intermediate_value_theorem_strict_interior_core:
         y < f(b)
         =>:
             exist c '[a, b] st {f(c) = y}
-    # In the source: this is the strict-interior part of Tao's proof of the
-    # intermediate value theorem.  The source proof takes the supremum of the
-    # left set `{x in [a,b] : f(x) <= y}` and uses continuity at that cut point
-    # to rule out both `f(c)<y` and `f(c)>y`.  The left-set nonemptiness,
-    # boundedness, and endpoint facts are checked just below; the
-    # supremum/cut-point argument is the named jump left here.
+    # Take the supremum of the left set.  Continuity rules out values both
+    # above and below `y` at the cut point.
     by thm ivt_left_set_nonempty_in_strict_case(a, b, f, y)
     $is_nonempty_set({x '[a, b]: f(x) <= y})
-    by thm ivt_right_endpoint_not_in_left_set_strict_case(a, b, f, y)
-    not b $in {x '[a, b]: f(x) <= y}
     by thm ivt_left_set_bounded_in_strict_case(a, b, f, y)
     $is_bounded_real_set({x '[a, b]: f(x) <= y})
-    # Source handling: the strict case takes the supremum of the left set and
-    # uses continuity at that cut point.
-    # proof_debt: the local supremum cut-point construction is not checked.
-    trust exist c '[a, b] st {f(c) = y}
+    by thm bounded_real_set_has_upper_bound({x '[a, b]: f(x) <= y})
+    $has_upper_bound({x '[a, b]: f(x) <= y})
+    by thm least_upper_bound_existence({x '[a, b]: f(x) <= y})
+    obtain c from exist c R st {$is_least_upper_bound({x '[a, b]: f(x) <= y}, c)}
+    by thm ivt_left_set_lub_lies_in_closed_interval(a, b, f, y, c)
+    c $in '[a, b]
+    by thm ivt_left_set_lub_value_at_most(a, b, f, y, c)
+    f(c) <= y
+    by thm ivt_left_set_lub_value_at_least(a, b, f, y, c)
+    y <= f(c)
+    f(c) = y
+    witness exist c0 '[a, b] st {f(c0) = y} from c:
+        c0 = c
+        f(c0) = f(c)
+        f(c) = y
 
 thm intermediate_value_theorem_increasing_order:
     ? forall a, b R, f fn(x '[a, b]) R, y R:
@@ -7854,6 +8089,131 @@ thm difference_limit_zero_implies_equivalent_sequences:
         $are_eventually_epsilon_close_sequences(a, b, epsilon)
     $are_equivalent_sequences(a, b)
 
+# Equivalent sequences have the same limit: split the error budget between the
+# original sequence and the termwise difference.
+thm equivalent_sequences_share_limit:
+    ? forall a, b seq(R), L R:
+        $are_equivalent_sequences(a, b)
+        $has_limit(a, L)
+        =>:
+            $has_limit(b, L)
+    claim:
+        ? forall epsilon R_pos:
+            $has_eventual_closeness_to(b, L, epsilon)
+        epsilon / 2 $in R_pos
+        $has_eventual_closeness_to(a, L, epsilon / 2)
+        obtain n_a from exist n_a N_pos st {$is_tail_close_to(a, L, epsilon / 2, n_a)}
+        $are_eventually_epsilon_close_sequences(a, b, epsilon / 2)
+        obtain n_ab from exist n_ab N_pos st {$are_epsilon_close_after_index(a, b, epsilon / 2, n_ab)}
+        witness exist n0 N_pos st {$is_tail_close_to(b, L, epsilon, n0)} from max(n_a, n_ab):
+            claim:
+                ? forall n N_pos:
+                    n >= max(n_a, n_ab)
+                    =>:
+                        abs(b(n) - L) < epsilon
+                n >= max(n_a, n_ab) >= n_a
+                n >= max(n_a, n_ab) >= n_ab
+                abs(a(n) - L) < epsilon / 2
+                abs(a(n) - b(n)) < epsilon / 2
+                abs(b(n) - a(n)) = abs(a(n) - b(n))
+                abs(b(n) - a(n)) < epsilon / 2
+                b(n) - L = (b(n) - a(n)) + (a(n) - L)
+                abs(b(n) - L) = abs((b(n) - a(n)) + (a(n) - L))
+                abs((b(n) - a(n)) + (a(n) - L)) <= abs(b(n) - a(n)) + abs(a(n) - L)
+                abs(b(n) - L) <= abs(b(n) - a(n)) + abs(a(n) - L)
+                abs(b(n) - a(n)) + abs(a(n) - L) < epsilon / 2 + epsilon / 2
+                epsilon / 2 + epsilon / 2 = epsilon
+                abs(b(n) - L) < epsilon
+            $is_tail_close_to(b, L, epsilon, n0)
+        $has_eventual_closeness_to(b, L, epsilon)
+    $has_limit(b, L)
+
+thm equivalent_sequences_have_equivalent_common_subsequences:
+    ? forall a, b seq(R), phi fn(n N_pos) N_pos:
+        $are_equivalent_sequences(a, b)
+        $is_subsequence_index(phi)
+        =>:
+            $are_equivalent_sequences(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))})
+    claim:
+        ? forall epsilon R_pos:
+            $are_eventually_epsilon_close_sequences(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))}, epsilon)
+        $are_eventually_epsilon_close_sequences(a, b, epsilon)
+        obtain n0 from exist n0 N_pos st {$are_epsilon_close_after_index(a, b, epsilon, n0)}
+        witness exist n1 N_pos st {$are_epsilon_close_after_index(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))}, epsilon, n1)} from n0:
+            claim:
+                ? forall n N_pos:
+                    n >= n0
+                    =>:
+                        abs(fn(k N_pos) R {a(phi(k))}(n) - fn(k N_pos) R {b(phi(k))}(n)) < epsilon
+                by thm subsequence_index_at_least_identity(phi, n)
+                phi(n) >= n >= n0
+                abs(a(phi(n)) - b(phi(n))) < epsilon
+                fn(k N_pos) R {a(phi(k))}(n) = a(phi(n))
+                fn(k N_pos) R {b(phi(k))}(n) = b(phi(n))
+                abs(fn(k N_pos) R {a(phi(k))}(n) - fn(k N_pos) R {b(phi(k))}(n)) = abs(a(phi(n)) - b(phi(n)))
+                abs(fn(k N_pos) R {a(phi(k))}(n) - fn(k N_pos) R {b(phi(k))}(n)) < epsilon
+            $are_epsilon_close_after_index(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))}, epsilon, n1)
+        $are_eventually_epsilon_close_sequences(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))}, epsilon)
+    $are_equivalent_sequences(fn(n N_pos) R {a(phi(n))}, fn(n N_pos) R {b(phi(n))})
+
+thm sequences_with_common_limit_are_equivalent:
+    ? forall a, b seq(R), L R:
+        $has_limit(a, L)
+        $has_limit(b, L)
+        =>:
+            $are_equivalent_sequences(a, b)
+    claim:
+        ? forall epsilon R_pos:
+            $are_eventually_epsilon_close_sequences(a, b, epsilon)
+        epsilon / 2 $in R_pos
+        $has_eventual_closeness_to(a, L, epsilon / 2)
+        obtain n_a from exist n_a N_pos st {$is_tail_close_to(a, L, epsilon / 2, n_a)}
+        $has_eventual_closeness_to(b, L, epsilon / 2)
+        obtain n_b from exist n_b N_pos st {$is_tail_close_to(b, L, epsilon / 2, n_b)}
+        witness exist n0 N_pos st {$are_epsilon_close_after_index(a, b, epsilon, n0)} from max(n_a, n_b):
+            claim:
+                ? forall n N_pos:
+                    n >= max(n_a, n_b)
+                    =>:
+                        abs(a(n) - b(n)) < epsilon
+                n >= max(n_a, n_b) >= n_a
+                n >= max(n_a, n_b) >= n_b
+                abs(a(n) - L) < epsilon / 2
+                abs(b(n) - L) < epsilon / 2
+                a(n) - b(n) = (a(n) - L) + (L - b(n))
+                abs(a(n) - b(n)) = abs((a(n) - L) + (L - b(n)))
+                abs((a(n) - L) + (L - b(n))) <= abs(a(n) - L) + abs(L - b(n))
+                abs(a(n) - b(n)) <= abs(a(n) - L) + abs(L - b(n))
+                abs(L - b(n)) = abs(b(n) - L)
+                abs(a(n) - L) + abs(L - b(n)) < epsilon / 2 + epsilon / 2
+                epsilon / 2 + epsilon / 2 = epsilon
+                abs(a(n) - b(n)) < epsilon
+            $are_epsilon_close_after_index(a, b, epsilon, n0)
+        $are_eventually_epsilon_close_sequences(a, b, epsilon)
+    $are_equivalent_sequences(a, b)
+
+thm equivalent_subsequence_converges_to_same_limit:
+    ? forall u, v, w seq(R), phi fn(n N_pos) N_pos, L R:
+        $are_equivalent_sequences(u, v)
+        $is_subsequence_along(u, w, phi)
+        $has_limit(w, L)
+        =>:
+            $has_limit(fn(n N_pos) R {v(phi(n))}, L)
+    $is_subsequence_index(phi)
+    by thm equivalent_sequences_have_equivalent_common_subsequences(u, v, phi)
+    $are_equivalent_sequences(fn(n N_pos) R {u(phi(n))}, fn(n N_pos) R {v(phi(n))})
+    claim:
+        ? forall n N_pos:
+            w(n) = fn(k N_pos) R {u(phi(k))}(n)
+        w(n) = u(phi(n))
+        fn(k N_pos) R {u(phi(k))}(n) = u(phi(n))
+        w(n) = fn(k N_pos) R {u(phi(k))}(n)
+    $fn_eq(w, fn(k N_pos) R {u(phi(k))})
+    w = fn(k N_pos) R {u(phi(k))}
+    $are_equivalent_sequences(w, fn(n N_pos) R {v(phi(n))})
+    by thm equivalent_sequences_share_limit(w, fn(n N_pos) R {v(phi(n))}, L)
+    $has_limit(fn(n N_pos) R {v(phi(n))}, L)
+
 """
 Proposition 9.9.8. Uniform continuity is equivalent to preserving equivalence
 of pairs of sequences in the domain.
@@ -8017,6 +8377,141 @@ thm bad_uniform_pair_family_nonempty:
         $has_uniform_delta_for_epsilon(X, f, epsilon)
         not $has_uniform_delta_for_epsilon(X, f, epsilon)
         impossible not $has_uniform_delta_for_epsilon(X, f, epsilon)
+
+prop is_bad_uniform_sequence_pair(X power_set(R), f fn(x X) R, epsilon R_pos, u, v seq(R)):
+    $is_sequence_in_real_set(u, X)
+    $is_sequence_in_real_set(v, X)
+    $are_equivalent_sequences(u, v)
+    forall n N_pos:
+        not abs(f(u(n)) - f(v(n))) < epsilon
+
+prop has_bad_uniform_sequence_pair(X power_set(R), f fn(x X) R):
+    exist epsilon R_pos, u, v seq(R) st {$is_bad_uniform_sequence_pair(X, f, epsilon, u, v)}
+
+thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
+    ? forall X power_set(R), f fn(x X) R:
+        not $is_uniformly_continuous_on(X, f)
+        =>:
+            $has_bad_uniform_sequence_pair(X, f)
+    by thm extract_bad_uniform_epsilon(X, f)
+    obtain epsilon0 from exist epsilon0 R_pos st {$no_uniform_delta_for_epsilon(X, f, epsilon0)}
+    have fn F(n N_pos) power_set(cart(R, R)) = bad_uniform_pair_family(X, f, epsilon0, n)
+    claim:
+        ? forall A fn_range(F):
+            $is_nonempty_set(A)
+        have by preimage k from A $in fn_range(F)
+        A = F(k)
+        by thm bad_uniform_pair_family_nonempty(X, f, epsilon0, k)
+        $is_nonempty_set(bad_uniform_pair_family(X, f, epsilon0, k))
+        F(k) = bad_uniform_pair_family(X, f, epsilon0, k)
+        $is_nonempty_set(F(k))
+        $is_nonempty_set(A)
+    by axiom_of_choice: set fn_range(F):
+        forall A fn_range(F):
+            $is_nonempty_set(A)
+    obtain choose_pair from exist f fn(A fn_range(F)) cup(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
+    claim:
+        ? forall A fn_range(F):
+            choose_pair(A) $in cart(R, R)
+        choose_pair(A) $in A
+        A $in power_set(cart(R, R))
+        A $subset cart(R, R)
+        choose_pair(A) $in cart(R, R)
+    have fn pick_bad_pair(n N_pos) cart(R, R) = choose_pair(F(n))
+    forall n N_pos:
+        pick_bad_pair(n) = choose_pair(F(n))
+    have fn bad_left(n N_pos) R = pick_bad_pair(n)[1]
+    forall n N_pos:
+        bad_left(n) = pick_bad_pair(n)[1]
+    have fn bad_right(n N_pos) R = pick_bad_pair(n)[2]
+    forall n N_pos:
+        bad_right(n) = pick_bad_pair(n)[2]
+    claim:
+        ? forall n N_pos:
+            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
+        pick_bad_pair(n) = choose_pair(F(n))
+        choose_pair(F(n)) $in F(n)
+        pick_bad_pair(n) $in F(n)
+        F(n) = bad_uniform_pair_family(X, f, epsilon0, n)
+        pick_bad_pair(n) $in bad_uniform_pair_family(X, f, epsilon0, n)
+        $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
+    claim:
+        ? $is_sequence_in_real_set(bad_left, X)
+        claim:
+            ? forall n N_pos:
+                bad_left(n) $in X
+            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
+            bad_left(n) = pick_bad_pair(n)[1]
+            pick_bad_pair(n)[1] $in X
+            bad_left(n) $in X
+        $is_sequence_in_real_set(bad_left, X)
+    claim:
+        ? $is_sequence_in_real_set(bad_right, X)
+        claim:
+            ? forall n N_pos:
+                bad_right(n) $in X
+            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
+            bad_right(n) = pick_bad_pair(n)[2]
+            pick_bad_pair(n)[2] $in X
+            bad_right(n) $in X
+        $is_sequence_in_real_set(bad_right, X)
+    claim:
+        ? $are_equivalent_sequences(bad_left, bad_right)
+        claim:
+            ? forall epsilon R_pos:
+                $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
+            1 / epsilon $in R
+            by thm exists_nat_above_real(1 / epsilon)
+            obtain n0 from exist n0 N_pos st {1 / epsilon < n0}
+            witness exist n1 N_pos st {$are_epsilon_close_after_index(bad_left, bad_right, epsilon, n1)} from n0:
+                claim:
+                    ? forall m N_pos:
+                        m >= n0
+                        =>:
+                            abs(bad_left(m) - bad_right(m)) < epsilon
+                    m >= n0
+                    1 / epsilon < n0 <= m
+                    1 / epsilon < m
+                    $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / m, pick_bad_pair(m))
+                    bad_left(m) = pick_bad_pair(m)[1]
+                    bad_right(m) = pick_bad_pair(m)[2]
+                    abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2]) < 1 / m
+                    abs(bad_left(m) - bad_right(m)) = abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2])
+                    abs(bad_left(m) - bad_right(m)) < 1 / m
+                    epsilon > 0
+                    m * epsilon > (1 / epsilon) * epsilon
+                    (1 / epsilon) * epsilon = 1
+                    m * epsilon > 1
+                    1 / m < (m * epsilon) / m
+                    (m * epsilon) / m = epsilon
+                    1 / m < epsilon
+                    abs(bad_left(m) - bad_right(m)) < 1 / m < epsilon
+                    abs(bad_left(m) - bad_right(m)) < epsilon
+                $are_epsilon_close_after_index(bad_left, bad_right, epsilon, n1)
+            $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
+        $are_equivalent_sequences(bad_left, bad_right)
+    claim:
+        ? $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
+        $is_sequence_in_real_set(bad_left, X)
+        $is_sequence_in_real_set(bad_right, X)
+        $are_equivalent_sequences(bad_left, bad_right)
+        claim:
+            ? forall n N_pos:
+                not abs(f(bad_left(n)) - f(bad_right(n))) < epsilon0
+            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
+            bad_left(n) = pick_bad_pair(n)[1]
+            bad_right(n) = pick_bad_pair(n)[2]
+            f(bad_left(n)) = f(pick_bad_pair(n)[1])
+            f(bad_right(n)) = f(pick_bad_pair(n)[2])
+            abs(f(bad_left(n)) - f(bad_right(n))) = abs(f(pick_bad_pair(n)[1]) - f(pick_bad_pair(n)[2]))
+            not abs(f(pick_bad_pair(n)[1]) - f(pick_bad_pair(n)[2])) < epsilon0
+            not abs(f(bad_left(n)) - f(bad_right(n))) < epsilon0
+        forall n N_pos:
+            not abs(f(bad_left(n)) - f(bad_right(n))) < epsilon0
+        $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
+    witness exist epsilon R_pos, u, v seq(R) st {$is_bad_uniform_sequence_pair(X, f, epsilon, u, v)} from epsilon0, bad_left, bad_right:
+        $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
+    $has_bad_uniform_sequence_pair(X, f)
 
 thm equivalent_sequence_preservation_implies_uniform_continuity:
     ? forall X power_set(R), f fn(x X) R:
@@ -8627,24 +9122,23 @@ Theorem 9.9.16. A continuous function on a closed bounded interval is uniformly
 continuous.
 """
 
-thm compact_interval_continuity_preserves_equivalent_sequences:
-    ? forall a, b R, f fn(x '[a, b]) R:
-        a < b
-        $is_continuous_on('[a, b], f)
+thm sequentially_compact_real_set_has_convergent_subsequence_in_set:
+    ? forall X power_set(R), u seq(R):
+        $has_sequential_compactness_in_R(X)
+        $is_sequence_in_real_set(u, X)
         =>:
-            $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
-    # In the source: Tao proves Theorem 9.9.16 by contradiction.  If two
-    # equivalent input sequences had value sequences separated by a fixed
-    # epsilon, Heine-Borel gives a convergent subsequence in `[a,b]`; continuity
-    # at the subsequential limit then contradicts the value separation.  The
-    # compactness extraction and bad-pair construction are the remaining named
-    # proof obligation; the final conversion to uniform continuity is checked
-    # below.
-    # Source handling: Heine-Borel extracts a convergent subsequence from bad
-    # pairs, and continuity contradicts their fixed value separation.
-    # proof_debt: the compactness extraction and bad-pair construction remain
-    # unproved in the local sequence interface.
-    trust $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
+            exist w seq(R) st {$has_subsequence(u, w), $has_limit_in_set(w, X)}
+    obtain w from exist w seq(R) st {$has_subsequence(u, w), $has_limit_in_set(w, X)}
+    witness exist w0 seq(R) st {$has_subsequence(u, w0), $has_limit_in_set(w0, X)} from w:
+        $has_subsequence(u, w)
+        $has_limit_in_set(w, X)
+
+thm subsequence_has_index:
+    ? forall u, w seq(R):
+        $has_subsequence(u, w)
+        =>:
+            exist phi fn(k N_pos) N_pos st {$is_subsequence_along(u, w, phi)}
+    by thm chap6::subsequence_witness_exists(u, w)
 
 thm continuous_closed_interval_uniformly_continuous:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -8652,15 +9146,91 @@ thm continuous_closed_interval_uniformly_continuous:
         $is_continuous_on('[a, b], f)
         =>:
             $is_uniformly_continuous_on('[a, b], f)
-    # Source handling: the text proves equivalent-sequence preservation by
-    # contradiction, compactness, and continuity at a subsequential limit.
-    # proof_debt: that preservation step is supplied by the named theorem
-    # above; Proposition 9.9.8 checks the final conversion to uniform
-    # continuity.
-    by thm compact_interval_continuity_preserves_equivalent_sequences(a, b, f)
-    $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
-    by thm equivalent_sequence_preservation_implies_uniform_continuity('[a, b], f)
+    # If uniform continuity failed, choose bad pairs at scales `1/n`.
+    # Compactness gives a convergent subsequence of the left coordinates;
+    # equivalence carries the right coordinates to the same limit, and
+    # continuity makes their function values eventually close.
+    by contra:
+        ? $is_uniformly_continuous_on('[a, b], f)
+        not $is_uniformly_continuous_on('[a, b], f)
+        by thm not_uniformly_continuous_has_bad_uniform_sequence_pair('[a, b], f)
+        obtain epsilon0, u, v from exist epsilon R_pos, u, v seq(R) st {$is_bad_uniform_sequence_pair('[a, b], f, epsilon, u, v)}
+        $is_bad_uniform_sequence_pair('[a, b], f, epsilon0, u, v)
+        $is_sequence_in_real_set(u, '[a, b])
+        $is_sequence_in_real_set(v, '[a, b])
+        $are_equivalent_sequences(u, v)
+        by thm closure_of_closed_interval(a, b)
+        closure_of_real_set('[a, b]) = '[a, b]
+        by thm closed_interval_is_bounded(a, b)
+        $is_bounded_real_set('[a, b])
+        by thm heine_borel_sequential_compactness_for_real_sets('[a, b])
+        $has_sequential_compactness_in_R('[a, b])
+        by thm sequentially_compact_real_set_has_convergent_subsequence_in_set('[a, b], u)
+        obtain w from exist w seq(R) st {$has_subsequence(u, w), $has_limit_in_set(w, '[a, b])}
+        $has_subsequence(u, w)
+        by thm subsequence_has_index(u, w)
+        obtain phi from exist phi fn(k N_pos) N_pos st {$is_subsequence_along(u, w, phi)}
+        obtain L from exist L R st {L $in '[a, b], $has_limit(w, L)}
+        have fn v_sub(n N_pos) R = v(phi(n))
+        claim:
+            ? $is_sequence_in_real_set(v_sub, '[a, b])
+            claim:
+                ? forall n N_pos:
+                    v_sub(n) $in '[a, b]
+                v_sub(n) = v(phi(n))
+                v(phi(n)) $in '[a, b]
+                v_sub(n) $in '[a, b]
+            $is_sequence_in_real_set(v_sub, '[a, b])
+        by thm equivalent_subsequence_converges_to_same_limit(u, v, w, phi, L)
+        $has_limit(fn(n N_pos) R {v(phi(n))}, L)
+        claim:
+            ? $has_limit(v_sub, L)
+            claim:
+                ? forall n N_pos:
+                    v_sub(n) = fn(k N_pos) R {v(phi(k))}(n)
+                v_sub(n) = v(phi(n))
+                fn(k N_pos) R {v(phi(k))}(n) = v(phi(n))
+                v_sub(n) = fn(k N_pos) R {v(phi(k))}(n)
+            $fn_eq(v_sub, fn(k N_pos) R {v(phi(k))})
+            v_sub = fn(k N_pos) R {v(phi(k))}
+            $has_limit(v_sub, L)
+        $has_limit(v_sub, L)
+        by thm subsequence_inherits_real_set_membership('[a, b], u, w)
+        $is_sequence_in_real_set(w, '[a, b])
+        $is_continuous_at('[a, b], f, L)
+        by thm continuous_at_preserves_convergent_sequences('[a, b], f, L, w)
+        $has_limit(fn(n N_pos) R {f(w(n))}, f(L))
+        by thm continuous_at_preserves_convergent_sequences('[a, b], f, L, v_sub)
+        $has_limit(fn(n N_pos) R {f(v_sub(n))}, f(L))
+        by thm sequences_with_common_limit_are_equivalent(fn(n N_pos) R {f(w(n))}, fn(n N_pos) R {f(v_sub(n))}, f(L))
+        $are_equivalent_sequences(fn(n N_pos) R {f(w(n))}, fn(n N_pos) R {f(v_sub(n))})
+        $are_eventually_epsilon_close_sequences(fn(n N_pos) R {f(w(n))}, fn(n N_pos) R {f(v_sub(n))}, epsilon0)
+        obtain n0 from exist n0 N_pos st {$are_epsilon_close_after_index(fn(n N_pos) R {f(w(n))}, fn(n N_pos) R {f(v_sub(n))}, epsilon0, n0)}
+        n0 >= n0
+        abs(fn(n N_pos) R {f(w(n))}(n0) - fn(n N_pos) R {f(v_sub(n))}(n0)) < epsilon0
+        fn(n N_pos) R {f(w(n))}(n0) = f(w(n0))
+        fn(n N_pos) R {f(v_sub(n))}(n0) = f(v_sub(n0))
+        abs(fn(n N_pos) R {f(w(n))}(n0) - fn(n N_pos) R {f(v_sub(n))}(n0)) = abs(f(w(n0)) - f(v_sub(n0)))
+        abs(f(w(n0)) - f(v_sub(n0))) < epsilon0
+        w(n0) = u(phi(n0))
+        v_sub(n0) = v(phi(n0))
+        f(w(n0)) = f(u(phi(n0)))
+        f(v_sub(n0)) = f(v(phi(n0)))
+        abs(f(w(n0)) - f(v_sub(n0))) = abs(f(u(phi(n0))) - f(v(phi(n0))))
+        not abs(f(u(phi(n0))) - f(v(phi(n0)))) < epsilon0
+        not abs(f(w(n0)) - f(v_sub(n0))) < epsilon0
+        impossible not abs(f(w(n0)) - f(v_sub(n0))) < epsilon0
+
+thm compact_interval_continuity_preserves_equivalent_sequences:
+    ? forall a, b R, f fn(x '[a, b]) R:
+        a < b
+        $is_continuous_on('[a, b], f)
+        =>:
+            $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
+    by thm continuous_closed_interval_uniformly_continuous(a, b, f)
     $is_uniformly_continuous_on('[a, b], f)
+    by thm uniformly_continuous_preserves_equivalent_sequences('[a, b], f)
+    $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
 
 """
 Remark 9.9.17. Boundedness of continuous images, boundedness of uniformly
