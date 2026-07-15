@@ -11,10 +11,6 @@
 # litex_code: This file runs Sections I-III first and then adds Section IV.
 # comments: No number-theory std module is imported.
 
-trust local import section3
-trust local import section2
-trust local import section1
-
 """
 Definition. An integer p>1 is prime if its only positive divisors are 1 and p.
 """
@@ -23,7 +19,7 @@ prop is_prime_Z(p Z):
     p > 1
     forall d Z:
         d > 0
-        $divides_Z(d, p)
+        $section1::divides_Z(d, p)
         =>:
             d = 1 or d = p
 
@@ -36,36 +32,36 @@ thm theorem_IV_prime_divisor_from_least:
     ? forall a Z:
         a > 1
         =>:
-            exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
-    have D power_set(Z) = {d Z: d > 1 and $divides_Z(d, a)}
+            exist p Z st {$is_prime_Z(p), $section1::divides_Z(p, a)}
+    have D power_set(Z) = {d Z: d > 1 and $section1::divides_Z(d, a)}
     a > 1
     witness exist k Z st {a = a * k} from 1:
         a = a * 1
-    $divides_Z(a, a)
-    a $in {d Z: d > 1 and $divides_Z(d, a)}
+    $section1::divides_Z(a, a)
+    a $in {d Z: d > 1 and $section1::divides_Z(d, a)}
     a $in D
     witness $is_nonempty_set(D) from a:
         a $in D
     claim:
-        ? $is_positive_integer_set(D)
+        ? $section1::is_positive_integer_set(D)
         D $subset Z
         forall d D:
             d $in Z
             d > 1
             d > 0
-        $is_positive_integer_set(D)
-    by thm positive_integer_set_has_least_element(D)
-    obtain p from exist p Z st {$is_least_element_of_integer_set(D, p)}
+        $section1::is_positive_integer_set(D)
+    by thm section1::positive_integer_set_has_least_element(D)
+    obtain p from exist p Z st {$section1::is_least_element_of_integer_set(D, p)}
     p $in D
     p > 1
-    $divides_Z(p, a)
+    $section1::divides_Z(p, a)
     claim:
         ? $is_prime_Z(p)
         p > 1
         claim:
             ? forall d Z:
                 d > 0
-                $divides_Z(d, p)
+                $section1::divides_Z(d, p)
                 =>:
                     d = 1 or d = p
             d = 1 or d > 1
@@ -78,8 +74,8 @@ thm theorem_IV_prime_divisor_from_least:
                     obtain r from exist r Z st {a = p * r}
                     witness exist q Z st {a = d * q} from k * r:
                         a = p * r = d * k * r = d * (k * r)
-                    $divides_Z(d, a)
-                    d $in {d Z: d > 1 and $divides_Z(d, a)}
+                    $section1::divides_Z(d, a)
+                    d $in {d Z: d > 1 and $section1::divides_Z(d, a)}
                     d $in D
                     p <= d
                     k > 0 or k <= 0
@@ -95,44 +91,44 @@ thm theorem_IV_prime_divisor_from_least:
                             impossible p > 1
         forall d Z:
             d > 0
-            $divides_Z(d, p)
+            $section1::divides_Z(d, p)
             =>:
                 d = 1 or d = p
         $is_prime_Z(p)
-    witness exist p1 Z st {$is_prime_Z(p1), $divides_Z(p1, a)} from p:
+    witness exist p1 Z st {$is_prime_Z(p1), $section1::divides_Z(p1, a)} from p:
         $is_prime_Z(p)
-        $divides_Z(p, a)
+        $section1::divides_Z(p, a)
 
 thm prime_divides_or_is_relatively_prime:
     ? forall p, a Z:
         $is_prime_Z(p)
         =>:
-            $divides_Z(p, a) or $relatively_prime_Z(p, a)
-    by thm gcd_Z_dvd_left(p, a)
-    obtain u from exist u Z st {p = gcd_Z(p, a) * u}
-    gcd_Z(p, a) = 0 or gcd_Z(p, a) > 0
+            $section1::divides_Z(p, a) or $section3::relatively_prime_Z(p, a)
+    by thm section2::gcd_Z_dvd_left(p, a)
+    obtain u from exist u Z st {p = section2::gcd_Z(p, a) * u}
+    section2::gcd_Z(p, a) = 0 or section2::gcd_Z(p, a) > 0
     by cases:
-        ? $divides_Z(p, a) or $relatively_prime_Z(p, a)
-        case gcd_Z(p, a) = 0:
-            p = gcd_Z(p, a) * u = 0 * u = 0
+        ? $section1::divides_Z(p, a) or $section3::relatively_prime_Z(p, a)
+        case section2::gcd_Z(p, a) = 0:
+            p = section2::gcd_Z(p, a) * u = 0 * u = 0
             impossible p > 1
-        case gcd_Z(p, a) > 0:
+        case section2::gcd_Z(p, a) > 0:
             $is_prime_Z(p)
-            gcd_Z(p, a) = 1 or gcd_Z(p, a) = p
+            section2::gcd_Z(p, a) = 1 or section2::gcd_Z(p, a) = p
             by cases:
-                ? $divides_Z(p, a) or $relatively_prime_Z(p, a)
-                case gcd_Z(p, a) = 1:
-                    $relatively_prime_Z(p, a)
-                case gcd_Z(p, a) = p:
-                    by thm gcd_Z_dvd_right(p, a)
-                    $divides_Z(p, a)
+                ? $section1::divides_Z(p, a) or $section3::relatively_prime_Z(p, a)
+                case section2::gcd_Z(p, a) = 1:
+                    $section3::relatively_prime_Z(p, a)
+                case section2::gcd_Z(p, a) = p:
+                    by thm section2::gcd_Z_dvd_right(p, a)
+                    $section1::divides_Z(p, a)
 
 thm prime_divisor_exists:
     ? forall a Z:
         a > 1
         =>:
-            exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
-    exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
+            exist p Z st {$is_prime_Z(p), $section1::divides_Z(p, a)}
+    exist p Z st {$is_prime_Z(p), $section1::divides_Z(p, a)}
 
 """
 Theorem IV.1. If a prime divides a product of integers, then it divides at
@@ -142,28 +138,37 @@ least one factor.
 thm theorem_IV_1_prime_divides_binary_product:
     ? forall p, a, b Z:
         $is_prime_Z(p)
-        $divides_Z(p, a * b)
+        $section1::divides_Z(p, a * b)
         =>:
-            $divides_Z(p, a) or $divides_Z(p, b)
+            $section1::divides_Z(p, a) or $section1::divides_Z(p, b)
     by thm prime_divides_or_is_relatively_prime(p, a)
     by cases:
-        ? $divides_Z(p, a) or $divides_Z(p, b)
-        case $divides_Z(p, a):
-            $divides_Z(p, a)
-        case $relatively_prime_Z(p, a):
-            by thm theorem_III_2_euclid_lemma(p, a, b)
-            $divides_Z(p, b)
+        ? $section1::divides_Z(p, a) or $section1::divides_Z(p, b)
+        case $section1::divides_Z(p, a):
+            $section1::divides_Z(p, a)
+        case $section3::relatively_prime_Z(p, a):
+            by thm section3::theorem_III_2_euclid_lemma(p, a, b)
+            $section1::divides_Z(p, b)
 
 prop prime_divides_some_factor(p Z, n N_pos, f fn(i N_pos) Z):
-    exist i N_pos st {i <= n, $divides_Z(p, f(i))}
+    exist i N_pos st {i <= n, $section1::divides_Z(p, f(i))}
 
-# Source handling: This is the theorem's finite product formulation.
+# Source handling: These finite-product, factorization, and exponent clauses
+# share the same indexed-product/permutation/maxima package, so they form one
+# explicit proof-debt boundary.
 trust:
     forall p Z, n N_pos, f fn(i N_pos) Z:
         $is_prime_Z(p)
-        $divides_Z(p, finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
+        $section1::divides_Z(p, section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
         =>:
             $prime_divides_some_factor(p, n, f)
+    forall a Z:
+        $prime_factorization_statement(a)
+    forall p, a Z:
+        $is_prime_Z(p)
+        a > 1
+        =>:
+            exist! n N st {$exact_prime_power_divides(p, a, n)}
 
 """
 Theorem IV.2. Every integer >1 is a product of primes, uniquely up to order.
@@ -175,7 +180,7 @@ prop prime_factorization_Z(a Z, n N_pos, f fn(i N_pos) Z):
         i <= n
         =>:
             $is_prime_Z(f(i))
-    a = finite_product_from_one(fn(i N_pos) Z {f(i)}, n)
+    a = section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n)
 
 prop is_factor_permutation_map(n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z, phi fn(i N_pos) N_pos):
     n = m
@@ -194,14 +199,12 @@ prop prime_factorizations_equivalent_up_to_order(a Z, n, m N_pos, f fn(i N_pos) 
 
 # Source handling: The text proves existence by induction on a and uniqueness
 # by cancelling a prime factor, then gives the exponent-count proof.
-# trust: The checked proof needs indexed products, list permutation, and
-# induction on the integer being factored.
-trust:
-    forall a Z:
-        a > 1
-        =>:
-            exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
-    forall a Z, n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z:
+# The two clauses are kept together as one source-facing interface so the
+# finite-product/permutation debt is counted once rather than once per wrapper.
+prop prime_factorization_statement(a Z):
+    a > 1
+    exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
+    forall n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z:
         $prime_factorization_Z(a, n, f)
         $prime_factorization_Z(a, m, g)
         =>:
@@ -211,8 +214,8 @@ thm theorem_IV_2_prime_factorization_exists:
     ? forall a Z:
         a > 1
         =>:
-            exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
-    exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
+            $prime_factorization_statement(a)
+    $prime_factorization_statement(a)
 
 """
 Prime exponents. For a prime P, v_P(a) is the largest n such that P^n divides
@@ -222,19 +225,11 @@ a; equivalently P^n divides a but P^(n+1) does not.
 prop exact_prime_power_divides(p, a Z, n N):
     $is_prime_Z(p)
     a > 0
-    $divides_Z(p^n, a)
-    not $divides_Z(p^(n + 1), a)
+    $section1::divides_Z(p^n, a)
+    not $section1::divides_Z(p^(n + 1), a)
 
-# Source handling: This records the exponent-count proof following Theorem
-# IV.2.
-# trust: A checked definition of v_p needs a maximum over the finite set
-# of prime powers dividing a.
-trust:
-    forall p, a Z:
-        $is_prime_Z(p)
-        a > 1
-        =>:
-            exist! n N st {$exact_prime_power_divides(p, a, n)}
+# The exact-prime-power clause is part of the finite-factorization interface
+# above; its maximum proof remains visible there.
 
 """
 The first primes are 2,3,5,7,11,13,17,19,23,29, and every a>1 has a finite

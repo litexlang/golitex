@@ -444,13 +444,13 @@ mod tests {
     }
 
     #[test]
-    fn project_repl_loads_root_exports_without_running_project_plan() {
+    fn project_repl_discovers_entries_without_running_them() {
         let root = repl_test_dir("project");
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[run]\n./main.lit\n\n[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
+            "[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
         )
         .expect("write config");
         fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
@@ -467,17 +467,13 @@ mod tests {
                 .main_environment
                 .defined_identifiers
                 .contains_key("planned_value"),
-            "the project plan must not run when the REPL starts"
+            "the ordered project entries must not run when the REPL starts"
         );
 
         let (_, import_error) = run_source_code("local import facts", &mut runtime);
-        assert!(import_error.is_none(), "{import_error:?}");
+        assert!(import_error.is_some(), "{import_error:?}");
         let (_, fact_error) = run_source_code("facts::x = 1", &mut runtime);
-        assert!(fact_error.is_none(), "{fact_error:?}");
-        let (_, save_error) = run_source_code("have saved R = facts::x", &mut runtime);
-        assert!(save_error.is_none(), "{save_error:?}");
-        let (_, persistent_error) = run_source_code("saved = 1", &mut runtime);
-        assert!(persistent_error.is_none(), "{persistent_error:?}");
+        assert!(fact_error.is_some(), "{fact_error:?}");
 
         let _ = fs::remove_dir_all(&root);
     }

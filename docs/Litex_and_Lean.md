@@ -1006,7 +1006,7 @@ Litex keeps objects and facts separate. A `prop` defines a predicate form. Apply
 This is not Litex:
 ```text
 forall P Prop:
-    ...
+    # proof body omitted
 ```
 
 **What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.

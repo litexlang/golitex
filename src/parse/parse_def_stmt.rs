@@ -1322,7 +1322,7 @@ impl Runtime {
             _ => {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "have by preimage expects `from z $in fn_range(f)`, `from z $in fn_range_on(f, S)`, or `from z $in replacement(P, A)`".to_string(),
+                        "have by preimage expects `from z $in fn_range(f)` or `from z $in replacement(P, A)`".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));

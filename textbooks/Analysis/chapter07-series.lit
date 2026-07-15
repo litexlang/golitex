@@ -1,9 +1,5 @@
 # Chapter 7: Series.
 
-trust local import chap3
-trust local import chap5
-trust local import chap6
-
 # 7.1 Finite series
 
 """
@@ -286,7 +282,7 @@ thm index_function_step:
                 i <= finite_set_size(s) = n + 1
                 i = n + 1
     claim:
-        ? $is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
+        ? $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
         claim:
             ? forall i1, i2 closed_range(1, finite_set_size(s)):
                 idx(i1) = idx(i2)
@@ -325,9 +321,9 @@ thm index_function_step:
                     idx(i2) = idx(i1) = a
                     i2 = n + 1
                     i1 = i2
-        $is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
+        $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
     claim:
-        ? $is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
+        ? $chap3::is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
         claim:
             ? forall y s:
                 exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
@@ -1011,12 +1007,12 @@ thm geometric_series_from_one_formula:
     x - 0 = x
     $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x)
     claim:
-        ? $is_nonzero_sequence(constant_sequence(1 - x))
+        ? $chap6::is_nonzero_sequence(constant_sequence(1 - x))
         forall k N_pos:
             constant_sequence(1 - x)(k) = 1 - x
             1 - x != 0
             constant_sequence(1 - x)(k) != 0
-        $is_nonzero_sequence(constant_sequence(1 - x))
+        $chap6::is_nonzero_sequence(constant_sequence(1 - x))
     by thm constant_sequence_has_strict_limit(1 - x)
     $chap6::has_limit(constant_sequence(1 - x), 1 - x)
     by thm chap6::seq_div_converges_to(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, constant_sequence(1 - x), x, 1 - x)
@@ -1335,16 +1331,16 @@ thm series_cauchy_criterion_forward:
 
 thm real_closeness_is_symmetric:
     ? forall epsilon R_pos, x, y R:
-        $is_close_in_R(epsilon, x, y)
+        $chap5::is_close_in_R(epsilon, x, y)
         =>:
-            $is_close_in_R(epsilon, y, x)
-    dist_R(x, y) = abs(x - y)
+            $chap5::is_close_in_R(epsilon, y, x)
+    chap5::dist_R(x, y) = abs(x - y)
     x - y = -(y - x)
     abs(x - y) = abs(-(y - x))
     abs(-(y - x)) = abs(y - x)
-    dist_R(y, x) = abs(y - x)
-    dist_R(y, x) = dist_R(x, y)
-    $is_close_in_R(epsilon, y, x)
+    chap5::dist_R(y, x) = abs(y - x)
+    chap5::dist_R(y, x) = chap5::dist_R(x, y)
+    $chap5::is_close_in_R(epsilon, y, x)
 
 thm partial_sums_close_when_first_index_before_second:
     ? forall a seq(R), epsilon R_pos, n0, j, k N_pos:
@@ -1353,7 +1349,7 @@ thm partial_sums_close_when_first_index_before_second:
         k >= n0
         j < k
         =>:
-            $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+            $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
     j + 1 $in N_pos
     j + 1 >= n0
     k >= j + 1
@@ -1367,63 +1363,63 @@ thm partial_sums_close_when_first_index_before_second:
     abs(partial_sum(a, j) - partial_sum(a, k)) = abs(-(partial_sum(a, k) - partial_sum(a, j)))
     abs(-(partial_sum(a, k) - partial_sum(a, j))) = abs(partial_sum(a, k) - partial_sum(a, j))
     abs(partial_sum(a, j) - partial_sum(a, k)) <= epsilon
-    dist_R(partial_sum(a, j), partial_sum(a, k)) = abs(partial_sum(a, j) - partial_sum(a, k))
-    $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+    chap5::dist_R(partial_sum(a, j), partial_sum(a, k)) = abs(partial_sum(a, j) - partial_sum(a, k))
+    $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
 
 thm cauchy_series_tails_make_partial_sums_cauchy_in_R:
     ? forall a seq(R):
         $has_cauchy_series_tails(a)
         =>:
-            $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+            $chap5::is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
     claim:
         ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)}
+            exist n0 N_pos st {$chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)}
         obtain n0 from exist n0 N_pos st {$has_small_tail_sums_after(a, epsilon, n0)}
-        witness exist n1 N_pos st {$is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n1)} from n0:
+        witness exist n1 N_pos st {$chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n1)} from n0:
             claim:
                 ? forall j, k N_pos:
                     j >= n0
                     k >= n0
                     =>:
-                        $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                        $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                 j < k or j >= k
                 by cases:
-                    ? $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                    ? $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                     case j < k:
                         by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, j, k)
-                        $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                        $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                     case j >= k:
                         k < j or k >= j
                         by cases:
-                            ? $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                            ? $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                             case k < j:
                                 by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, k, j)
-                                $is_close_in_R(epsilon, partial_sum(a, k), partial_sum(a, j))
+                                $chap5::is_close_in_R(epsilon, partial_sum(a, k), partial_sum(a, j))
                                 by thm real_closeness_is_symmetric(epsilon, partial_sum(a, k), partial_sum(a, j))
-                                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                                $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                             case k >= j:
                                 j = k
                                 partial_sum(a, j) = partial_sum(a, k)
-                                dist_R(partial_sum(a, j), partial_sum(a, k)) = 0
+                                chap5::dist_R(partial_sum(a, j), partial_sum(a, k)) = 0
                                 0 <= epsilon
-                                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                                $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
             claim:
                 ? forall j, k N_pos:
                     j >= n0
                     k >= n0
                     =>:
-                        $is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
+                        $chap5::is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
                 fn(k N_pos) R {partial_sum(a, k)}(j) = partial_sum(a, j)
                 fn(k N_pos) R {partial_sum(a, k)}(k) = partial_sum(a, k)
-                $is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
-                $is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
-            $is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
-            $is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
-    $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+                $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
+                $chap5::is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
+            $chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
+            $chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
+    $chap5::is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
 
 thm nonstrict_real_limit_gives_series_limit:
     ? forall a seq(R), L R:
-        $has_limit_in_R(a, L)
+        $chap5::has_limit_in_R(a, L)
         =>:
             $has_limit(a, L)
     claim:
@@ -1431,13 +1427,13 @@ thm nonstrict_real_limit_gives_series_limit:
             exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
         epsilon / 2 $in R_pos
         epsilon / 2 < epsilon
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to_in_R(a, L, epsilon / 2, n0)}
+        obtain n0 from exist n0 N_pos st {$chap5::is_tail_close_to_in_R(a, L, epsilon / 2, n0)}
         witness exist n1 N_pos st {$is_tail_close_to(a, L, epsilon, n1)} from n0:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_R(epsilon / 2, a(n), L)
-                    dist_R(a(n), L) = abs(a(n) - L)
+                    $chap5::is_close_in_R(epsilon / 2, a(n), L)
+                    chap5::dist_R(a(n), L) = abs(a(n) - L)
                     abs(a(n) - L) <= epsilon / 2 < epsilon
             $is_tail_close_to(a, L, epsilon, n0)
     $has_limit(a, L)
@@ -1448,9 +1444,9 @@ thm series_cauchy_criterion_reverse:
         =>:
             $is_convergent_series(a)
     by thm cauchy_series_tails_make_partial_sums_cauchy_in_R(a)
-    $is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
-    by thm real_cauchy_sequence_has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)})
-    obtain L from exist L R st {$has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)}, L)}
+    $chap5::is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
+    by thm chap5::real_cauchy_sequence_has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)})
+    obtain L from exist L R st {$chap5::has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)}, L)}
     by thm nonstrict_real_limit_gives_series_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     witness exist M R st {$has_series_sum(a, M)} from L:
@@ -2672,18 +2668,18 @@ thm nonnegative_series_bounded_partial_sums_converge:
         partial_sum(a, k) <= partial_sum(a, k + 1)
         partial_sums(k) <= partial_sums(k + 1)
     claim:
-        ? $is_increasing_sequence(partial_sums)
-        $is_increasing_sequence(partial_sums)
+        ? $chap6::is_increasing_sequence(partial_sums)
+        $chap6::is_increasing_sequence(partial_sums)
     claim:
-        ? $is_bounded_above_sequence(partial_sums)
-        witness exist B R st {$is_sequence_upper_bound(partial_sums, B)} from M:
+        ? $chap6::is_bounded_above_sequence(partial_sums)
+        witness exist B R st {$chap6::is_sequence_upper_bound(partial_sums, B)} from M:
             forall k N_pos:
                 partial_sums(k) = partial_sum(a, k)
                 partial_sum(a, k) <= M
                 partial_sums(k) <= M
-            $is_sequence_upper_bound(partial_sums, M)
-    by thm bounded_increasing_sequence_converges(partial_sums)
-    $is_convergent_sequence(partial_sums)
+            $chap6::is_sequence_upper_bound(partial_sums, M)
+    by thm chap6::bounded_increasing_sequence_converges(partial_sums)
+    $chap6::is_convergent_sequence(partial_sums)
     by thm chap6::convergent_sequence_has_limit(partial_sums)
     exist L R st {$chap6::has_limit(partial_sums, L)}
     obtain L from exist L R st {$chap6::has_limit(partial_sums, L)}

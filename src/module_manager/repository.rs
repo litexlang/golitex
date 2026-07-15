@@ -6,12 +6,6 @@ use std::rc::Rc;
 
 const LITEX_CONFIG: &str = "litex.config";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-struct FileNode {
-    module_id: ModuleId,
-    file_id: FileId,
-}
-
 #[derive(Clone, Copy)]
 pub enum RepositoryFileTarget {
     Module(ModuleId),
@@ -39,9 +33,7 @@ pub fn discover_repository(
 
     discover_module_config(runtime, root_module_id, &config_path, config)?;
     let module_import_edges = scan_repository_dependencies(runtime)?;
-    reject_cyclic_local_imports(runtime)?;
     reject_cyclic_module_imports(runtime, &module_import_edges)?;
-    reject_run_order_dependencies(runtime)?;
     Ok(config_path_string)
 }
 
@@ -71,7 +63,6 @@ pub fn discover_repository_for_file(
         .filter(|directory| directory.join(LITEX_CONFIG).is_file())
         .collect::<Vec<&Path>>();
     roots.reverse();
-
     for root in roots {
         let root_string = path_string(root, file_path, 0)?;
         let mut probe = Runtime::new();
@@ -113,114 +104,22 @@ fn discover_module_config(
     config_path: &Path,
     config: ProjectConfig,
 ) -> Result<(), RuntimeError> {
-    for export in config.exports.iter().cloned() {
-        discover_config_export(runtime, module_id, config_path, export)?;
-    }
-    for run_path in config.run_paths {
-        discover_config_run_target(runtime, module_id, config_path, run_path)?;
-    }
-    Ok(())
-}
-
-fn discover_config_run_target(
-    runtime: &mut Runtime,
-    owner_module_id: ModuleId,
-    config_path: &Path,
-    run_path: ProjectRunPath,
-) -> Result<(), RuntimeError> {
-    let owner_root = runtime
-        .module_manager
-        .module(owner_module_id)
-        .expect("manifest owner module should exist")
-        .module_root_path
-        .clone();
-    let target_path = PathBuf::from(owner_root).join(&run_path.path);
-    let target = if target_path.is_file() {
-        let canonical_path =
-            canonical_file(&target_path, &config_path.to_string_lossy(), run_path.line)?;
-        if canonical_path
-            .extension()
-            .and_then(|extension| extension.to_str())
-            != Some("lit")
-        {
-            return Err(repository_error(
-                "[run] file targets must point to a .lit file".to_string(),
-                &config_path.to_string_lossy(),
-                run_path.line,
-            ));
-        }
-        let source_path = path_string(
-            &canonical_path,
-            &config_path.to_string_lossy(),
-            run_path.line,
-        )?;
-        let Some(file_id) = runtime
+    for export in config.exports {
+        let trusted = export.trusted;
+        let line_file = (
+            export.line,
+            Rc::from(config_path.to_string_lossy().to_string()),
+        );
+        let target = discover_config_export(runtime, module_id, config_path, export)?;
+        let module = runtime
             .module_manager
-            .module(owner_module_id)
-            .and_then(|module| module.file_id_by_source_path(source_path.as_str()))
-        else {
-            return Err(repository_error(
-                format!(
-                    "[run] path `{}` must also be declared in [export]",
-                    run_path.path
-                ),
-                &config_path.to_string_lossy(),
-                run_path.line,
-            ));
-        };
-        ImportTarget::File {
-            module_id: owner_module_id,
-            file_id,
+            .module_mut(module_id)
+            .expect("manifest owner module should exist");
+        module.run_targets.push(target);
+        if trusted {
+            module.trusted_run_targets.insert(target, line_file);
         }
-    } else if target_path.is_dir() {
-        let canonical_root = canonical_directory(
-            &target_path.to_string_lossy(),
-            &config_path.to_string_lossy(),
-            run_path.line,
-        )?;
-        let root_path = path_string(
-            &canonical_root,
-            &config_path.to_string_lossy(),
-            run_path.line,
-        )?;
-        let Some(module_id) = runtime
-            .module_manager
-            .module_by_path
-            .get(&root_path)
-            .copied()
-        else {
-            return Err(repository_error(
-                format!(
-                    "[run] path `{}` must also be declared in [export]",
-                    run_path.path
-                ),
-                &config_path.to_string_lossy(),
-                run_path.line,
-            ));
-        };
-        ImportTarget::Module(module_id)
-    } else {
-        return Err(repository_error(
-            format!(
-                "[run] target `{}` does not exist",
-                target_path.to_string_lossy()
-            ),
-            &config_path.to_string_lossy(),
-            run_path.line,
-        ));
-    };
-    let module = runtime
-        .module_manager
-        .module_mut(owner_module_id)
-        .expect("manifest owner module should exist");
-    if module.run_targets.contains(&target) {
-        return Err(repository_error(
-            format!("duplicate [run] target `{}`", run_path.path),
-            &config_path.to_string_lossy(),
-            run_path.line,
-        ));
     }
-    module.run_targets.push(target);
     Ok(())
 }
 
@@ -229,7 +128,7 @@ fn discover_config_export(
     owner_module_id: ModuleId,
     config_path: &Path,
     export: ProjectExport,
-) -> Result<(), RuntimeError> {
+) -> Result<ImportTarget, RuntimeError> {
     let (owner_root, owner_name, is_root) = {
         let owner = runtime
             .module_manager
@@ -308,6 +207,7 @@ fn discover_config_export(
                     repository_error(message, &config_path.to_string_lossy(), export.line)
                 })?;
         }
+        return Ok(target);
     } else if target_path.is_dir() {
         let canonical_root = canonical_directory(
             &target_path.to_string_lossy(),
@@ -353,6 +253,7 @@ fn discover_config_export(
                 })?;
         }
         discover_module_config(runtime, child_module_id, &child_config_path, child_config)?;
+        return Ok(target);
     } else {
         return Err(repository_error(
             format!(
@@ -363,7 +264,6 @@ fn discover_config_export(
             export.line,
         ));
     }
-    Ok(())
 }
 
 fn scan_repository_dependencies(
@@ -391,8 +291,7 @@ fn scan_repository_dependencies(
         };
 
         for (file_id, source_path) in exported_files {
-            let (imports, imported_modules) =
-                scan_source_dependencies(runtime, module_id, &source_path)?;
+            let imported_modules = scan_source_dependencies(runtime, &source_path)?;
             let edges = module_import_edges
                 .entry(module_id)
                 .or_insert_with(Vec::new);
@@ -411,140 +310,16 @@ fn scan_repository_dependencies(
                 .module_mut(module_id)
                 .and_then(|module| module.file_mut(file_id))
                 .expect("exported file should exist")
-                .local_imports = imports;
-            runtime
-                .module_manager
-                .module_mut(module_id)
-                .and_then(|module| module.file_mut(file_id))
-                .expect("exported file should exist")
                 .imported_modules = imported_modules;
         }
     }
     Ok(module_import_edges)
 }
 
-fn reject_run_order_dependencies(runtime: &Runtime) -> Result<(), RuntimeError> {
-    let module_ids = runtime
-        .module_manager
-        .modules
-        .keys()
-        .copied()
-        .collect::<Vec<ModuleId>>();
-    for module_id in module_ids {
-        let Some(module) = runtime.module_manager.module(module_id) else {
-            continue;
-        };
-        let positions = module
-            .run_targets
-            .iter()
-            .enumerate()
-            .map(|(index, target)| (*target, index))
-            .collect::<HashMap<ImportTarget, usize>>();
-        for (index, target) in module.run_targets.iter().copied().enumerate() {
-            for dependency in run_target_dependencies(runtime, target) {
-                let Some(dependency_index) = positions.get(&dependency).copied() else {
-                    continue;
-                };
-                if dependency_index <= index {
-                    continue;
-                }
-                let source_path = run_target_source_path(runtime, target)
-                    .unwrap_or_else(|| module.main_file_path.clone());
-                return Err(repository_error(
-                    format!(
-                        "[run] target `{}` depends on later [run] target `{}`; move the dependency earlier",
-                        run_target_name(runtime, target),
-                        run_target_name(runtime, dependency),
-                    ),
-                    source_path.as_str(),
-                    0,
-                ));
-            }
-        }
-    }
-    Ok(())
-}
-
-fn run_target_dependencies(runtime: &Runtime, target: ImportTarget) -> Vec<ImportTarget> {
-    match target {
-        ImportTarget::File { module_id, file_id } => runtime
-            .module_manager
-            .module(module_id)
-            .and_then(|module| module.file(file_id))
-            .map(|file| {
-                let mut dependencies = file.local_imports.values().copied().collect::<Vec<_>>();
-                dependencies.extend(
-                    file.imported_modules
-                        .iter()
-                        .copied()
-                        .map(ImportTarget::Module),
-                );
-                dependencies
-            })
-            .unwrap_or_default(),
-        ImportTarget::Module(module_id) => module_import_closure(runtime, module_id)
-            .into_iter()
-            .map(ImportTarget::Module)
-            .collect(),
-    }
-}
-
-fn module_import_closure(runtime: &Runtime, module_id: ModuleId) -> Vec<ModuleId> {
-    let mut visited = HashSet::new();
-    let mut pending = runtime
-        .module_manager
-        .module(module_id)
-        .map(|module| module.imports.clone())
-        .unwrap_or_default();
-    let mut dependencies = vec![];
-    while let Some(candidate) = pending.pop() {
-        if !visited.insert(candidate) {
-            continue;
-        }
-        dependencies.push(candidate);
-        if let Some(module) = runtime.module_manager.module(candidate) {
-            pending.extend(module.imports.iter().copied());
-        }
-    }
-    dependencies
-}
-
-fn run_target_name(runtime: &Runtime, target: ImportTarget) -> String {
-    match target {
-        ImportTarget::File { module_id, file_id } => runtime
-            .module_manager
-            .module(module_id)
-            .and_then(|module| module.file(file_id))
-            .map(|file| file.canonical_name.clone())
-            .unwrap_or_else(|| format!("file#{}", file_id.0)),
-        ImportTarget::Module(module_id) => runtime
-            .module_manager
-            .module(module_id)
-            .map(|module| module.module_name.clone())
-            .filter(|name| !name.is_empty())
-            .unwrap_or_else(|| format!("module#{}", module_id.0)),
-    }
-}
-
-fn run_target_source_path(runtime: &Runtime, target: ImportTarget) -> Option<String> {
-    match target {
-        ImportTarget::File { module_id, file_id } => runtime
-            .module_manager
-            .module(module_id)
-            .and_then(|module| module.file(file_id))
-            .map(|file| file.source_path.clone()),
-        ImportTarget::Module(module_id) => runtime
-            .module_manager
-            .module(module_id)
-            .map(|module| module.main_file_path.clone()),
-    }
-}
-
 fn scan_source_dependencies(
     runtime: &mut Runtime,
-    owner_module_id: ModuleId,
     source_path: &str,
-) -> Result<(HashMap<String, ImportTarget>, Vec<ModuleId>), RuntimeError> {
+) -> Result<Vec<ModuleId>, RuntimeError> {
     let content = fs::read_to_string(source_path).map_err(|error| {
         repository_error(
             format!("failed to read module source `{}`: {}", source_path, error),
@@ -554,10 +329,8 @@ fn scan_source_dependencies(
     })?;
     let mut tokenizer = Tokenizer::new();
     let blocks = tokenizer.parse_blocks(&content, Rc::from(source_path))?;
-    let mut imports = HashMap::new();
     let mut module_imports = vec![];
     for mut block in blocks {
-        reject_nested_local_imports(&block.body)?;
         let first_token = block.header.first().map(String::as_str);
         let is_trust_import =
             first_token == Some(TRUST) && block.header.get(1).map(String::as_str) == Some(IMPORT);
@@ -577,7 +350,7 @@ fn scan_source_dependencies(
                 let ImportTarget::Module(imported_module_id) = target else {
                     return Err(repository_error(
                         format!(
-                            "root export `{}` is a file; files can only be loaded with local import inside their owner module",
+                            "root export `{}` is a file; place it before this source in [export] instead of importing it",
                             global_import.mod_name
                         ),
                         source_path,
@@ -590,133 +363,8 @@ fn scan_source_dependencies(
             }
             continue;
         }
-        let is_local_import =
-            first_token == Some(LOCAL) && block.header.get(1).map(String::as_str) == Some(IMPORT);
-        let is_trust_local_import = first_token == Some(TRUST)
-            && block.header.get(1).map(String::as_str) == Some(LOCAL)
-            && block.header.get(2).map(String::as_str) == Some(IMPORT);
-        if !is_local_import && !is_trust_local_import {
-            continue;
-        }
-        if !block.body.is_empty() {
-            return Err(repository_error(
-                "local import and trust local import cannot have a body".to_string(),
-                source_path,
-                block.line_file.0,
-            ));
-        }
-        let statement = if is_trust_local_import {
-            runtime.parse_trust_stmt(&mut block)?
-        } else {
-            runtime.parse_local_import_stmt(&mut block)?
-        };
-        let local_import = match statement {
-            Stmt::Command(CommandStmt::LocalImportStmt(local_import)) => local_import,
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(trust_local_import)) => {
-                trust_local_import.local_import
-            }
-            _ => unreachable!("local import parser should produce a local import statement"),
-        };
-        let target = runtime
-            .module_manager
-            .module(owner_module_id)
-            .and_then(|module| module.exports.get(&local_import.name))
-            .map(|entry| entry.target(owner_module_id))
-            .ok_or_else(|| {
-                repository_error(
-                    format!(
-                        "local import `{}` is not declared by this module's litex.config",
-                        local_import.name
-                    ),
-                    source_path,
-                    local_import.line_file.0,
-                )
-            })?;
-        if let ImportTarget::Module(imported_module_id) = target {
-            if !module_imports.contains(&imported_module_id) {
-                module_imports.push(imported_module_id);
-            }
-        }
-        if imports.insert(local_import.name.clone(), target).is_some() {
-            return Err(repository_error(
-                format!("duplicate local import `{}`", local_import.name),
-                source_path,
-                local_import.line_file.0,
-            ));
-        }
     }
-    Ok((imports, module_imports))
-}
-
-fn reject_nested_local_imports(blocks: &[TokenBlock]) -> Result<(), RuntimeError> {
-    for block in blocks {
-        let first_token = block.header.first().map(String::as_str);
-        let is_local_import =
-            first_token == Some(LOCAL) && block.header.get(1).map(String::as_str) == Some(IMPORT);
-        let is_trust_local_import = first_token == Some(TRUST)
-            && block.header.get(1).map(String::as_str) == Some(LOCAL)
-            && block.header.get(2).map(String::as_str) == Some(IMPORT);
-        if is_local_import || is_trust_local_import {
-            return Err(repository_error(
-                "local import and trust local import are only allowed as top-level source statements"
-                    .to_string(),
-                block.line_file.1.as_ref(),
-                block.line_file.0,
-            ));
-        }
-        reject_nested_local_imports(&block.body)?;
-    }
-    Ok(())
-}
-
-fn reject_cyclic_local_imports(runtime: &Runtime) -> Result<(), RuntimeError> {
-    let mut edges = HashMap::<FileNode, Vec<FileNode>>::new();
-    for module in runtime.module_manager.modules.values() {
-        for file in module.files.iter() {
-            let node = FileNode {
-                module_id: module.id,
-                file_id: file.id,
-            };
-            let dependencies = file
-                .local_imports
-                .values()
-                .filter_map(|target| match target {
-                    ImportTarget::File { module_id, file_id } => Some(FileNode {
-                        module_id: *module_id,
-                        file_id: *file_id,
-                    }),
-                    ImportTarget::Module(_) => None,
-                })
-                .collect::<Vec<FileNode>>();
-            edges.insert(node, dependencies);
-        }
-    }
-
-    let mut visited = HashSet::new();
-    let mut visiting = HashSet::new();
-    let mut stack = vec![];
-    for node in edges.keys().copied().collect::<Vec<FileNode>>() {
-        if let Some(cycle) =
-            find_local_import_cycle(node, &edges, &mut visited, &mut visiting, &mut stack)
-        {
-            let names = cycle
-                .iter()
-                .map(|cycle_node| file_node_name(runtime, *cycle_node))
-                .collect::<Vec<String>>();
-            let source_path = runtime
-                .module_manager
-                .module(node.module_id)
-                .and_then(|module| module.file(node.file_id))
-                .map(|file| file.source_path.as_str())
-                .unwrap_or("");
-            return Err(repository_error(
-                format!("cyclic local import: {}", names.join(" -> ")),
-                source_path,
-                0,
-            ));
-        }
-    }
-    Ok(())
+    Ok(module_imports)
 }
 
 fn reject_cyclic_module_imports(
@@ -761,40 +409,6 @@ fn reject_cyclic_module_imports(
     Ok(())
 }
 
-fn find_local_import_cycle(
-    node: FileNode,
-    edges: &HashMap<FileNode, Vec<FileNode>>,
-    visited: &mut HashSet<FileNode>,
-    visiting: &mut HashSet<FileNode>,
-    stack: &mut Vec<FileNode>,
-) -> Option<Vec<FileNode>> {
-    if visited.contains(&node) {
-        return None;
-    }
-    if visiting.contains(&node) {
-        let start = stack.iter().position(|item| *item == node).unwrap_or(0);
-        let mut cycle = stack[start..].to_vec();
-        cycle.push(node);
-        return Some(cycle);
-    }
-
-    visiting.insert(node);
-    stack.push(node);
-    if let Some(dependencies) = edges.get(&node) {
-        for dependency in dependencies {
-            if let Some(cycle) =
-                find_local_import_cycle(*dependency, edges, visited, visiting, stack)
-            {
-                return Some(cycle);
-            }
-        }
-    }
-    stack.pop();
-    visiting.remove(&node);
-    visited.insert(node);
-    None
-}
-
 fn find_module_import_cycle(
     module_id: ModuleId,
     edges: &HashMap<ModuleId, Vec<ModuleId>>,
@@ -830,15 +444,6 @@ fn find_module_import_cycle(
     visiting.remove(&module_id);
     visited.insert(module_id);
     None
-}
-
-fn file_node_name(runtime: &Runtime, node: FileNode) -> String {
-    runtime
-        .module_manager
-        .module(node.module_id)
-        .and_then(|module| module.file(node.file_id))
-        .map(|file| file.canonical_name.clone())
-        .unwrap_or_else(|| format!("file#{}", node.file_id.0))
 }
 
 fn canonical_directory(
@@ -969,13 +574,18 @@ mod tests {
     const LARGE_REPOSITORY_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
     #[test]
-    fn repository_exports_and_local_imports_use_canonical_namespaces() {
+    fn ordered_exports_use_canonical_namespaces() {
         run_repository_test_with_large_stack("repository_exports", || {
             let root = repository_test_dir("exports");
             let a = root.join("A");
             let chapters = a.join("chapters");
             fs::create_dir_all(&chapters).expect("create repository fixture");
-            write_project_config(&root, "./main.lit", &[("A", "./A")]);
+            write_project_config(
+                &root,
+                "./main.lit",
+                &[("before", "./before.lit"), ("A", "./A")],
+            );
+            write_file(&root.join("before.lit"), "have before R = 1\n");
             write_file(
                 &root.join("main.lit"),
                 "import A\n\nA::chapters::leaf::x = 1\n",
@@ -989,20 +599,11 @@ mod tests {
                     ("chapters", "./chapters"),
                 ],
             );
-            write_file(
-                &a.join("main.lit"),
-                "local import chap3\nlocal import chapters\n\nchap3::z = 1\n",
-            );
+            write_file(&a.join("main.lit"), "A::chap3::z = 1\n");
             write_file(&a.join("chap2.lit"), "have x R = 1\n");
-            write_file(
-                &a.join("chap3.lit"),
-                "local import chap2\n\nhave z R = chap2::x\n",
-            );
+            write_file(&a.join("chap3.lit"), "have z R = A::chap2::x\n");
             write_project_config(&chapters, "./main.lit", &[("leaf", "./leaf.lit")]);
-            write_file(
-                &chapters.join("main.lit"),
-                "local import leaf\n\nleaf::x = 1\n",
-            );
+            write_file(&chapters.join("main.lit"), "A::chapters::leaf::x = 1\n");
             write_file(&chapters.join("leaf.lit"), "have x R = 1\n");
 
             let (ok, output) = run_repository_with_output(
@@ -1014,6 +615,81 @@ mod tests {
             );
             assert!(ok, "{output}");
             assert!(output.contains("A::chapters::leaf::x = 1"), "{output}");
+
+            let (chapter_ok, chapter_output) = run_source_code_in_file_with_ok(
+                a.join("chap3.lit").to_str().expect("fixture path is UTF-8"),
+            );
+            assert!(chapter_ok, "{chapter_output}");
+            assert!(
+                chapter_output.contains("have before R = 1"),
+                "{chapter_output}"
+            );
+            assert!(chapter_output.contains("have x R = 1"), "{chapter_output}");
+        });
+    }
+
+    #[test]
+    fn earlier_exports_require_explicit_member_names() {
+        run_repository_test_with_large_stack("repository_explicit_members", || {
+            let root = repository_test_dir("explicit-local-members");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(&root, "./main.lit", &[("member", "./member.lit")]);
+            write_file(
+                &root.join("member.lit"),
+                "have value R = 1\n\nprop marked(x R):\n    x = x\n\nthm exported:\n    ? forall x R:\n        x = x\n    x = x\n",
+            );
+
+            write_file(&root.join("main.lit"), "value = 1\n");
+            let (object_ok, object_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!object_ok, "{object_output}");
+            assert!(object_output.contains("not defined"), "{object_output}");
+
+            write_file(&root.join("main.lit"), "$marked(1)\n");
+            let (predicate_ok, predicate_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!predicate_ok, "{predicate_output}");
+            assert!(
+                predicate_output.contains("not defined"),
+                "{predicate_output}"
+            );
+
+            write_file(
+                &root.join("main.lit"),
+                "thm use_exported:\n    ? forall x R:\n        x = x\n    by thm exported(x)\n",
+            );
+            let (theorem_ok, theorem_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!theorem_ok, "{theorem_output}");
+            assert!(theorem_output.contains("not defined"), "{theorem_output}");
+
+            write_file(
+                &root.join("main.lit"),
+                "member::value = 1\n$member::marked(1)\n\nthm use_exported:\n    ? forall x R:\n        x = x\n    by thm member::exported(x)\n",
+            );
+            let (explicit_ok, explicit_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(explicit_ok, "{explicit_output}");
         });
     }
 
@@ -1029,7 +705,33 @@ mod tests {
             );
             write_file(
                 &root.join("main.lit"),
-                "local import geometry\n\n$is_cart(geometry::C)\ncart_dim(geometry::C) = 3\nforall i closed_range(1, 3):\n    proj(geometry::C, i) = R\n",
+                "$is_cart(geometry::C)\ncart_dim(geometry::C) = 3\nforall i closed_range(1, 3):\n    proj(geometry::C, i) = R\n",
+            );
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+        });
+    }
+
+    #[test]
+    fn repository_imported_casewise_have_fn_expands_every_case() {
+        run_repository_test_with_large_stack("repository_imported_casewise_have_fn", || {
+            let root = repository_test_dir("imported-casewise-have-fn");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_project_config(&root, "./main.lit", &[("branch", "./branch.lit")]);
+            write_file(
+                &root.join("branch.lit"),
+                "have fn previous(x R) R = x\n\nhave fn select(x R) R by cases:\n    case x < 0: -1\n    case x >= 0: previous(x)\n",
+            );
+            write_file(
+                &root.join("main.lit"),
+                "branch::previous(0) = 0\nbranch::select(0) = branch::previous(0)\n",
             );
 
             let (ok, output) = run_repository_with_output(
@@ -1075,12 +777,13 @@ mod tests {
             let python_output =
                 crate::to_python::to_python_from_repository_after_builtins(repository_path)
                     .unwrap_or_else(|error| panic!("repository Python failed: {error:?}"));
-            assert_eq!(python_output, "answer = 1.0");
+            assert_eq!(python_output, "x = 1.0\nz = 1.0\nanswer = 1.0");
 
             let chapter_path = root.join("A").join("chap3.lit");
             let chapter_path_string = chapter_path.to_str().expect("chapter path is UTF-8");
             let (chapter_ok, chapter_output) = run_source_code_in_file_with_ok(chapter_path_string);
             assert!(chapter_ok, "{chapter_output}");
+            assert!(chapter_output.contains("have x R = 1"), "{chapter_output}");
             assert!(chapter_output.contains("A::chap2::x"), "{chapter_output}");
 
             let (chapter_runner_ok, chapter_runner_output) =
@@ -1094,10 +797,7 @@ mod tests {
             let chapter_latex =
                 crate::to_latex::to_latex_from_file_after_builtins(chapter_path_string)
                     .unwrap_or_else(|error| panic!("project chapter LaTeX failed: {error:?}"));
-            assert!(
-                chapter_latex.contains("local import chap2"),
-                "{chapter_latex}"
-            );
+            assert!(chapter_latex.contains("chap2"), "{chapter_latex}");
 
             let mut isolated_runtime = Runtime::new_with_builtin_code();
             let (_, isolated_error) = crate::pipeline::run_file_with_project_context(
@@ -1113,28 +813,24 @@ mod tests {
     }
 
     #[test]
-    fn repository_discovery_rejects_local_import_cycles_before_execution() {
-        run_repository_test_with_large_stack("repository_cycle", || {
+    fn later_exports_are_not_visible_to_earlier_files() {
+        run_repository_test_with_large_stack("repository_order", || {
             let root = repository_test_dir("cycle");
             fs::create_dir_all(&root).expect("create repository fixture");
             write_project_config(&root, "./main.lit", &[("a", "./a.lit"), ("b", "./b.lit")]);
-            write_file(&root.join("main.lit"), "local import a\n");
-            write_file(&root.join("a.lit"), "local import b\n");
-            write_file(&root.join("b.lit"), "local import a\n");
+            write_file(&root.join("main.lit"), "a::x = 1\n");
+            write_file(&root.join("a.lit"), "b::x = 1\n");
+            write_file(&root.join("b.lit"), "have x R = 1\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
                 true,
-                false,
+                true,
                 OutputLanguage::English,
                 false,
             );
             assert!(!ok, "{output}");
-            assert!(output.contains("cyclic local import:"), "{output}");
-            assert!(
-                output.contains("a -> b -> a") || output.contains("b -> a -> b"),
-                "{output}"
-            );
+            assert!(output.contains("identifier `b::x` not defined"), "{output}");
         });
     }
 
@@ -1166,13 +862,12 @@ mod tests {
                 output.contains("A -> B -> A") || output.contains("B -> A -> B"),
                 "{output}"
             );
-            assert!(!output.contains("cyclic local import:"), "{output}");
         });
     }
 
     #[test]
-    fn root_file_export_does_not_leak_into_an_imported_module() {
-        run_repository_test_with_large_stack("repository_root_file_scope", || {
+    fn earlier_root_file_exports_are_visible_to_later_child_modules() {
+        run_repository_test_with_large_stack("repository_root_file_visibility", || {
             let root = repository_test_dir("root-file-scope");
             let a = root.join("A");
             fs::create_dir_all(&a).expect("create A fixture");
@@ -1181,10 +876,7 @@ mod tests {
                 "./main.lit",
                 &[("shared", "./shared.lit"), ("A", "./A")],
             );
-            write_file(
-                &root.join("main.lit"),
-                "local import shared\nshared::root_x = 1\nimport A\n",
-            );
+            write_file(&root.join("main.lit"), "shared::root_x = 1\nimport A\n");
             write_file(&root.join("shared.lit"), "have root_x R = 1\n");
             write_project_config(&a, "./main.lit", &[]);
             write_file(&a.join("main.lit"), "shared::root_x = 1\n");
@@ -1196,23 +888,20 @@ mod tests {
                 OutputLanguage::English,
                 false,
             );
-            assert!(!ok, "{output}");
-            assert!(
-                output.contains("identifier `shared::root_x` not defined"),
-                "{output}"
-            );
+            assert!(ok, "{output}");
         });
     }
 
     #[test]
-    fn file_mode_rejects_configs_and_unregistered_local_imports() {
-        run_repository_test_with_large_stack("file_mode_module_syntax", || {
+    fn unregistered_files_run_in_isolation() {
+        run_repository_test_with_large_stack("file_mode_isolation", || {
             let root = repository_test_dir("file-mode");
             fs::create_dir_all(&root).expect("create repository fixture");
             let config = root.join("litex.config");
-            let local_import_script = root.join("local-import-script.lit");
+            let scratch = root.join("scratch.lit");
             write_project_config(&root, "./main.lit", &[]);
-            write_file(&local_import_script, "local import x\n");
+            write_file(&root.join("main.lit"), "1 = 1\n");
+            write_file(&scratch, "1 = 1\n");
 
             let (config_ok, config_output) =
                 run_source_code_in_file_with_ok(config.to_str().expect("fixture path is UTF-8"));
@@ -1222,14 +911,9 @@ mod tests {
                 "{config_output}"
             );
 
-            let (local_ok, local_output) = run_source_code_in_file_with_ok(
-                local_import_script.to_str().expect("fixture path is UTF-8"),
-            );
-            assert!(!local_ok, "{local_output}");
-            assert!(
-                local_output.contains("local import is unavailable in isolated file mode"),
-                "{local_output}"
-            );
+            let (scratch_ok, scratch_output) =
+                run_source_code_in_file_with_ok(scratch.to_str().expect("fixture path is UTF-8"));
+            assert!(scratch_ok, "{scratch_output}");
         });
     }
 
@@ -1253,8 +937,8 @@ mod tests {
     }
 
     #[test]
-    fn registered_file_runs_its_local_import_closure_without_running_unrelated_exports() {
-        run_repository_test_with_large_stack("repository_file_target", || {
+    fn registered_file_runs_its_ordered_prefix_without_later_exports() {
+        run_repository_test_with_large_stack("repository_file_prefix", || {
             let root = repository_test_dir("file-target");
             fs::create_dir_all(&root).expect("create repository fixture");
             write_project_config(
@@ -1269,14 +953,8 @@ mod tests {
             );
             write_file(&root.join("book.lit"), "have title R = 1\n");
             write_file(&root.join("chap6.lit"), "have base R = 1\n");
-            write_file(
-                &root.join("chap7.lit"),
-                "local import chap6\n\nhave result R = chap6::base\n",
-            );
-            write_file(
-                &root.join("python_chapter.lit"),
-                "local import chap6\n\nhave answer R = 1\n",
-            );
+            write_file(&root.join("chap7.lit"), "have result R = chap6::base\n");
+            write_file(&root.join("python_chapter.lit"), "have answer R = 1\n");
             write_file(&root.join("broken.lit"), "1 = 0\n");
 
             let (entry_ok, entry_output) = run_repository_with_output(
@@ -1286,8 +964,8 @@ mod tests {
                 OutputLanguage::English,
                 false,
             );
-            assert!(entry_ok, "{entry_output}");
-            assert!(!entry_output.contains("1 = 0"), "{entry_output}");
+            assert!(!entry_ok, "{entry_output}");
+            assert!(entry_output.contains("1 = 0"), "{entry_output}");
 
             let (chapter_ok, chapter_output) = run_source_code_in_file_with_ok(
                 root.join("chap7.lit")
@@ -1295,6 +973,10 @@ mod tests {
                     .expect("fixture path is UTF-8"),
             );
             assert!(chapter_ok, "{chapter_output}");
+            assert!(
+                chapter_output.contains("have base R = 1"),
+                "{chapter_output}"
+            );
             assert!(
                 chapter_output.contains("result R = chap6::base"),
                 "{chapter_output}"
@@ -1311,42 +993,31 @@ mod tests {
     }
 
     #[test]
-    fn trust_local_import_skips_checks_but_strict_mode_rejects_it() {
-        run_repository_test_with_large_stack("trust_local_import", || {
+    fn trusted_project_exports_skip_checks_but_strict_mode_verifies_them() {
+        run_repository_test_with_large_stack("trust_project_export", || {
             let root = repository_test_dir("trust-local-import");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_project_config(&root, "./book.lit", &[("chap10", "./chap10.lit")]);
-            write_file(&root.join("chap10.lit"), "have bad N = -1\n");
-
-            write_file(
-                &root.join("book.lit"),
-                "local import chap10\nchap10::bad = -1\n",
+            write_ordered_project_config(
+                &root,
+                &[
+                    ("chap10", "./chap10.lit", true),
+                    ("book", "./book.lit", false),
+                ],
             );
+            write_file(&root.join("chap10.lit"), "have bad N = -1\n");
+            write_file(&root.join("book.lit"), "chap10::bad = -1\n");
             let (ordinary_ok, ordinary_output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
                 true,
                 false,
                 OutputLanguage::English,
-                false,
-            );
-            assert!(!ordinary_ok, "{ordinary_output}");
-
-            write_file(
-                &root.join("book.lit"),
-                "trust local import chap10\nchap10::bad = -1\n",
-            );
-            let (trusted_ok, trusted_output) = run_repository_with_output(
-                root.to_str().expect("fixture path is UTF-8"),
-                true,
-                false,
-                OutputLanguage::English,
                 true,
             );
-            assert!(trusted_ok, "{trusted_output}");
+            assert!(ordinary_ok, "{ordinary_output}");
             assert!(
-                trusted_output.contains("\"trust_dependencies\"")
-                    && trusted_output.contains("\"trust_local_import\": 1"),
-                "{trusted_output}"
+                ordinary_output.contains("\"trust_dependencies\"")
+                    && ordinary_output.contains("\"trust_project_export\": 1"),
+                "{ordinary_output}"
             );
 
             let (strict_ok, strict_output) = run_repository_with_output(
@@ -1358,27 +1029,26 @@ mod tests {
             );
             assert!(!strict_ok, "{strict_output}");
             assert!(
-                strict_output.contains("strict mode does not allow trusted imports"),
+                !strict_output.contains("trust_project_export"),
                 "{strict_output}"
             );
         });
     }
 
     #[test]
-    fn strict_run_plan_reuses_a_previously_verified_local_import_without_trust() {
-        run_repository_test_with_large_stack("strict-run-plan-cache", || {
+    fn strict_mode_ignores_project_trust_for_a_valid_prefix() {
+        run_repository_test_with_large_stack("strict-project-export", || {
             let root = repository_test_dir("strict-run-plan-cache");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_run_project_config(
+            write_ordered_project_config(
                 &root,
-                &["./chap1.lit", "./chap2.lit"],
-                &[("chap1", "./chap1.lit"), ("chap2", "./chap2.lit")],
+                &[
+                    ("chap1", "./chap1.lit", false),
+                    ("chap2", "./chap2.lit", true),
+                ],
             );
             write_file(&root.join("chap1.lit"), "have x R = 1\n");
-            write_file(
-                &root.join("chap2.lit"),
-                "trust local import chap1\nchap1::x = 1\n",
-            );
+            write_file(&root.join("chap2.lit"), "chap1::x = 1\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1388,7 +1058,7 @@ mod tests {
                 true,
             );
             assert!(ok, "{output}");
-            assert!(!output.contains("\"trust_local_import\": 1"), "{output}");
+            assert!(!output.contains("\"trust_project_export\": 1"), "{output}");
 
             let chapter_output = run_source_code_in_file_for_cli_with_strict(
                 root.join("chap2.lit")
@@ -1397,10 +1067,7 @@ mod tests {
                 true,
                 true,
             );
-            assert!(
-                chapter_output.contains("strict mode does not allow trusted imports"),
-                "{chapter_output}"
-            );
+            assert!(!chapter_output.contains("\"error\""), "{chapter_output}");
         });
     }
 
@@ -1410,16 +1077,15 @@ mod tests {
             let root = repository_test_dir("run-plan-child-repository");
             let child = root.join("A");
             fs::create_dir_all(&child).expect("create repository fixture");
-            write_run_project_config(
+            write_ordered_project_config(
                 &root,
-                &["./before.lit", "./A", "./after.lit"],
                 &[
-                    ("before", "./before.lit"),
-                    ("A", "./A"),
-                    ("after", "./after.lit"),
+                    ("before", "./before.lit", false),
+                    ("A", "./A", false),
+                    ("after", "./after.lit", false),
                 ],
             );
-            write_run_project_config(&child, &["./main.lit"], &[("main", "./main.lit")]);
+            write_ordered_project_config(&child, &[("main", "./main.lit", false)]);
             write_file(&root.join("before.lit"), "have before R = 1\n");
             write_file(&child.join("main.lit"), "have inner R = 1\n");
             write_file(
@@ -1444,16 +1110,18 @@ mod tests {
     }
 
     #[test]
-    fn run_plan_rejects_a_later_local_dependency_during_discovery() {
+    fn ordered_plan_rejects_a_later_canonical_reference_during_execution() {
         run_repository_test_with_large_stack("run-plan-later-dependency", || {
             let root = repository_test_dir("run-plan-later-dependency");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_run_project_config(
+            write_ordered_project_config(
                 &root,
-                &["./chap1.lit", "./chap2.lit"],
-                &[("chap1", "./chap1.lit"), ("chap2", "./chap2.lit")],
+                &[
+                    ("chap1", "./chap1.lit", false),
+                    ("chap2", "./chap2.lit", false),
+                ],
             );
-            write_file(&root.join("chap1.lit"), "local import chap2\n");
+            write_file(&root.join("chap1.lit"), "chap2::x = 1\n");
             write_file(&root.join("chap2.lit"), "have x R = 1\n");
 
             let (ok, output) = run_repository_with_output(
@@ -1464,7 +1132,10 @@ mod tests {
                 false,
             );
             assert!(!ok, "{output}");
-            assert!(output.contains("depends on later [run] target"), "{output}");
+            assert!(
+                output.contains("identifier `chap2::x` not defined"),
+                "{output}"
+            );
         });
     }
 
@@ -1493,7 +1164,7 @@ thm self_witness_can_be_obtained:
     x = y = x
 "#,
             );
-            write_file(&root.join("book.lit"), "local import chapter\n");
+            write_file(&root.join("book.lit"), "chapter::n = 3\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1512,9 +1183,12 @@ thm self_witness_can_be_obtained:
             let root = repository_test_dir("trust-import");
             let a = root.join("A");
             fs::create_dir_all(&a).expect("create repository fixture");
-            write_project_config(&root, "./book.lit", &[("A", "./A")]);
+            write_ordered_project_config(
+                &root,
+                &[("A", "./A", true), ("book", "./book.lit", false)],
+            );
             write_project_config(&a, "./main.lit", &[("chap10", "./chap10.lit")]);
-            write_file(&a.join("main.lit"), "local import chap10\n");
+            write_file(&a.join("main.lit"), "1 = 1\n");
             write_file(
                 &a.join("chap10.lit"),
                 "abstract_prop trusted_prop(x)\n\nthm trusted_all:\n    ? forall x R:\n        =>:\n            $trusted_prop(x)\n",
@@ -1586,21 +1260,21 @@ thm self_witness_can_be_obtained:
     }
 
     fn write_project_config(root: &Path, run_file: &str, exports: &[(&str, &str)]) {
-        write_run_project_config(root, &[run_file], exports);
+        let mut entries = exports
+            .iter()
+            .map(|(name, path)| (*name, *path, false))
+            .collect::<Vec<_>>();
+        if !entries.iter().any(|(_, path, _)| *path == run_file) {
+            entries.push(("main", run_file, false));
+        }
+        write_ordered_project_config(root, entries.as_slice());
     }
 
-    fn write_run_project_config(root: &Path, run_paths: &[&str], exports: &[(&str, &str)]) {
-        let mut content = format!("[run]\n{}\n\n[export]\n", run_paths.join("\n"));
-        for (index, run_path) in run_paths.iter().copied().enumerate() {
-            let is_exported = exports
-                .iter()
-                .any(|(_, export_path)| *export_path == run_path);
-            if !is_exported {
-                content.push_str(format!("run_file{} = \"{}\"\n", index, run_path).as_str());
-            }
-        }
-        for (name, path) in exports {
-            content.push_str(format!("{} = \"{}\"\n", name, path).as_str());
+    fn write_ordered_project_config(root: &Path, entries: &[(&str, &str, bool)]) {
+        let mut content = String::from("[export]\n");
+        for (name, path, trusted) in entries {
+            let prefix = if *trusted { "trust " } else { "" };
+            content.push_str(format!("{}{} = \"{}\"\n", prefix, name, path).as_str());
         }
         write_file(&root.join("litex.config"), content.as_str());
     }

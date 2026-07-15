@@ -68,18 +68,6 @@ impl TrustImportStmt {
     }
 }
 
-impl LocalImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "LocalImportStmt".to_string()
-    }
-}
-
-impl TrustLocalImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "TrustLocalImportStmt".to_string()
-    }
-}
-
 impl DoNothingStmt {
     pub fn stmt_type_name(&self) -> String {
         "DoNothingStmt".to_string()
@@ -412,21 +400,9 @@ impl ImportStmt {
     }
 }
 
-impl LocalImportStmt {
-    pub fn output_type_string() -> String {
-        "local import statement".to_string()
-    }
-}
-
 impl TrustImportStmt {
     pub fn output_type_string() -> String {
         "trusted import statement".to_string()
-    }
-}
-
-impl TrustLocalImportStmt {
-    pub fn output_type_string() -> String {
-        "trusted local import statement".to_string()
     }
 }
 

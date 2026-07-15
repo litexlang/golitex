@@ -11,10 +11,9 @@ litex [global options] [command]
 
 With no command, `litex` starts the interactive verifier REPL. If the current
 directory directly contains `litex.config`, it discovers that project without
-running its `[run]` plan. The persistent REPL environment can then load any
-root `[export]` on demand with `local import name`. Use `litex -isolated` to
-force the ordinary isolated REPL. Litex does not search parent directories for
-a project configuration.
+running its ordered `[export]` table. Use `litex -isolated` to force the
+ordinary isolated REPL. Litex does not search parent directories for a project
+configuration.
 
 The CLI has one primary command per invocation. Global options are removed
 before the primary command is parsed, so they may appear before or after the
@@ -95,16 +94,16 @@ those flags. `-lang` also consumes the next token globally.
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its `[run]` plan. |
+| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its ordered `[export]` table. |
 | `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
+| `litex -f <file>` | Run the ordered `[export]` prefix through a registered file in its outermost project; otherwise run it as an isolated script. |
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
-| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its ordered `[run]` plan. |
+| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its complete ordered `[export]` table. |
 
-Declare project files and child modules in `[export]` in `litex.config`,
-then bind them with `local import`; ordinary `import Name` names a declared
-root module.
+Declare project files and child modules in ordered `[export]` entries. Earlier
+files are cited with their canonical names such as `chap3::theorem`; ordinary
+`import Name` names a declared root module.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -134,7 +133,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Discover the repository module graph, run its `[run]` plan, and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run its ordered `[export]` table, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -180,10 +179,10 @@ JSON-string `trace` field so a client never has to parse terminal prompts.
 |---------|----------|
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save one prop/function/fact relation graph JSON object. |
 | `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
 | `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
-| `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save a fact-only verification dependency graph. |
+| `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save a fact-only verification dependency graph. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
@@ -213,7 +212,7 @@ theorem without mixing it with the definition graph.
 | `litex -latex` | Start the interactive LaTeX-output REPL. |
 | `litex -latex -e <code>` | Compile a source string to LaTeX. |
 | `litex -latex -f <file>` | Compile a file to LaTeX. |
-| `litex -latex -r <repo>` | Compile the repository `[run]` plan to LaTeX. |
+| `litex -latex -r <repo>` | Compile the repository ordered `[export]` table to LaTeX. |
 
 After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
 If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
@@ -236,19 +235,18 @@ Unknown commands print an error and the help message, then exit with code `2`.
 
 Use `litex.config` to organize a multi-file project:
 
-- list ordered bare paths in `[run]`, for example `./chap7.lit` or `./Algebra`;
-- declare every run target, files, and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
-- use `local import name` inside registered sources;
-- run the project plan with `litex -r <project>` or one registered chapter with `litex -f <file>`.
+- list files and child modules once, in their mathematical order, in `[export]`;
+- give each entry a canonical name, for example `chap7 = "./chap7.lit"`;
+- cite earlier entries directly as `chap7::name`;
+- run the complete book with `litex -r <project>` or one registered chapter's prefix with `litex -f <file>`.
 
 Ordinary `import Name` loads a declared root module.
 
-For an explicitly trusted project dependency, write `trust import Name` or
-`trust local import name` in a registered `.lit` source. Litex still resolves
-the declared project target, reads it, parses it, and checks dependency cycles,
-but skips its well-definedness and proof processing and keeps only its
-environment effects. Trusted imports are rejected by `-strict`; their presence
-is recorded as a `trust_import` or `trust_local_import` dependency in the run.
+For an explicitly trusted project entry, write
+`trust chap7 = "./chap7.lit"` in `[export]`. Ordinary runs skip its proof
+processing but preserve direct environment effects; `-strict` verifies it
+normally. `trust import Name` remains available for a deliberately trusted
+directory-module import and is rejected by `-strict`.
 
 ## Reserved Helper Commands
 

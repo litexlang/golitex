@@ -365,8 +365,8 @@ forall x R:
 #### Union, intersection, set difference
 
 Set operations use ordinary function-call form: `union(A, B)` and
-`intersect(A, B)` for union and intersection, with `set_minus(A, B)` and
-`set_diff(A, B)` for differences.
+`intersect(A, B)` for union and intersection, with `set_minus(A, B)` for
+relative complement and `set_diff(A, B)` for symmetric difference.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
@@ -455,7 +455,7 @@ Later parameter domains may depend on earlier parameters. The return set is not 
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
-The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function whose declared domain is exactly `S`. If you start with a larger-domain `f`, construct the value explicitly: `fn_range_on(fn(x S) T {f(x)}, S)`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+`fn_range(f)` is the image of `f` over its declared domain. To take the image of a larger-domain function only on `S`, make that restriction an explicit function value: `fn_range(fn(x S) T {f(x)})`. If `S` is finite, then `fn_range(fn(x S) T {f(x)})` is finite.
 
 ```litex
 have g set = fn(x R) R
@@ -489,9 +489,9 @@ sketch:
 sketch:
     have a seq(R)
 
-    fn(x 1...3) R {a(x)}(1) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
-    fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $subset R
-    $is_finite_set(fn_range_on(fn(x 1...3) R {a(x)}, 1...3))
+    fn(x 1...3) R {a(x)}(1) $in fn_range(fn(x 1...3) R {a(x)})
+    fn_range(fn(x 1...3) R {a(x)}) $subset R
+    $is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 ```
 
 #### Cartesian product and dimension
@@ -603,7 +603,7 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempt
 
 #### Finite-set size
 
-`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations. It also knows basic upper bounds such as `finite_set_size(intersect(A, B)) <= finite_set_size(A)` and `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`, plus finite-set-size identities for `union`, `set_minus`, and `set_diff`.
+`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` (symmetric difference) are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations. It also knows basic upper bounds such as `finite_set_size(intersect(A, B)) <= finite_set_size(A)` and `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`, plus finite-set-size identities for `union`, `set_minus`, and `set_diff`.
 
 ```litex
 finite_set_size({1, 2, 3}) = 3
@@ -879,8 +879,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `tuple_dim(t)` | `t` must be well-defined and Litex must prove `$is_tuple(t)`. |
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `finite_set_size(S)` | Litex must prove `$is_finite_set(S)`. |
-| `fn_range(f)` | `f` must be well-defined and must have a known function set. |
-| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and `f` must be a unary function declared on exactly `S`. For a larger-domain function, write `fn_range_on(fn(x S) T {f(x)}, S)`. |
+| `fn_range(f)` | `f` must be well-defined and must have a known function set. To image a larger-domain function on `S`, pass the explicit restriction `fn(x S) T {f(x)}`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
 | `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function declared on `S`; for a larger-domain function, use `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
@@ -1107,9 +1106,9 @@ have x R
 by cases:
     ? x = 0 or x != 0
     case x = 0:
-        ...
+        do_nothing
     case x != 0:
-        ...
+        do_nothing
 ```
 
 > Hint: Think of `or` as the factual statement shape, and `by cases` as the proof statement that uses that shape.
@@ -1604,7 +1603,7 @@ w > 0
 
 ### Naming preimages (`have by preimage`)
 
-When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
+When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. For an explicit restriction `fn_range(fn(x S) T {f(x)})`, the witness is stored in `S`.
 
 For replacement sets, `have by preimage x from y $in replacement(P, A)` stores `x $in A` and `$P(x, y)`.
 
@@ -1639,8 +1638,8 @@ sketch:
 sketch:
     have a seq(R)
 
-    fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
-    have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+    fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
+    have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
 
     k $in 1...3
     fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
@@ -2090,9 +2089,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, `local import`, `trust import`,
-and `trust local import` are
-not allowed inside `try:`.
+Control statements such as `clear`, `import`, and `trust import` are not
+allowed inside `try:`.
 
 This is especially useful for incremental proof writing and AI-generated proof
 scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
@@ -2118,71 +2116,42 @@ Use **`import Algebra`** to load a module declared by the root `litex.config` in
 
 There are two project-aware top-level modes:
 
-- **`litex -f file.lit`** finds the outermost enclosing `litex.config` project
-  that registers the file, then runs that file with its `local import`
-  dependency closure. A file not registered by a project stays isolated. Use
-  **`litex -isolated -f file.lit`** to force that old isolated behavior.
-- **`litex -r project/`** first discovers `project/litex.config` and recursively
-  declared child projects, validates paths and names, scans import graphs, rejects
-  local and module cycles, and only then executes the ordered `[run]` plan.
+- **`litex -r project/`** executes every entry in that project's ordered
+  `[export]` table.
+- **`litex -f file.lit`** finds the outermost enclosing project that registers
+  the file and executes its ordered entries from the beginning through that
+  file. Thus `-f chapter05-real-numbers.lit` treats Chapter 5 as the final
+  chapter of the book. A file not registered by a project stays isolated; use
+  **`litex -isolated -f file.lit`** to force isolation.
 
 `litex.config` is project configuration, not Litex source and not a knowledge
-file. It contains an ordered run table and an export table:
+file. Its single `[export]` table both names entries and fixes their order:
 
 ```ini
-[run]
-./chapter01.lit
-./chapter02.lit
-./Algebra
-
 [export]
 chap1 = "./chapter01.lit"
 chap2 = "./chapter02.lit"
 Algebra = "./Algebra"
+trust legacy_background = "./legacy-background.lit"
 ```
 
-Every `[run]` path is a bare relative path and must also be declared in
-`[export]`. Litex runs entries in that order. A `.lit` entry runs one registered
-source; a directory entry runs that child project's complete `[run]` plan before
-the parent continues. A registered target is cached for the whole top-level run,
-so a later `local import chap1` reuses a chapter already run by the plan rather
-than executing it again. A source may not import a target scheduled later in the
-same plan; move that dependency earlier.
-
-An `[export]` target ending in a `.lit` file is a local source. A directory
-target is a child project and must contain its own `litex.config`. Configuration
-declares names and paths but does not itself produce mathematical facts.
-
-Inside a registered source, **`local import name`** can name only
-an entry declared by that module's `[export]` table. It cannot contain a path or
-an alias. The binding is local to that source, but it resolves to the export's
-canonical identity:
+Each `.lit` entry runs one source; a directory entry runs its child project's
+complete ordered table before the parent continues. Earlier entries are cached
+for the whole top-level run and are available only through their canonical name:
 
 <!-- litex:skip-test -->
 ```litex
-# A/chap3.lit
-local import chap2
-chap2::some_fact
+# chapter05-real-numbers.lit
+chap3::some_fact
 ```
 
-The canonical external name is hierarchical, for example
-`A::chap2::some_fact` or `A::chapters::algebra::Group`. A `local import` loads
-its target once per top-level run and caches that target environment in memory;
-an unrelated export is not executed merely because it was declared.
+Bare names still mean local definitions, parameters, or builtins. There is no
+`local import` statement: write the canonical name directly. A reference to a
+later entry fails, so put every prerequisite earlier in `[export]`.
 
-Within the importing source, a bare shared name resolves to a local definition
-first.  If the name is not local or builtin and exactly one active
-`local import` exports it, Litex resolves that bare name to the imported
-chapter.  This lets a later textbook chapter read naturally after, for example,
-`trust local import chap9`.  If two imports provide the same name, write the
-provenance explicitly, such as `chap9::is_continuous_at`; do not rely on an
-arbitrary import order.
-
-**`import A`** names a module exported by the root `litex.config`. Declare
-project files and child modules in `[export]`, then access them with `local
-import` inside the declaring module. Litex has no automatic mathematical
-standard-library imports; write source-local cite packages for unfinished or
-source-specific background.
+**`import A`** remains the cross-project statement for a root directory module
+exported as `A`. It runs that child project's ordered entries if they have not
+already run. Litex has no statement that loads an arbitrary `.lit` path.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2190,41 +2159,21 @@ prefer local definitions, local claims, and explicit proof-debt notes when the
 book is building a concept. Do not hide the main derivation by importing a
 large package and citing a synonym theorem.
 
-There is no Litex statement that loads an arbitrary `.lit` path. Multi-file
-developments declare their entry and sources in `litex.config`, then use
-`local import`; Litex does not provide a file-loading statement that bypasses
-verification for an arbitrary path.
-
-When a declared module or chapter is intentionally trusted, use an explicit
-source-level import policy instead of putting trust in `litex.config`:
-
-<!-- litex:skip-test -->
-```litex
-# chap11.lit
-trust local import chap10
-
-# a registered project source
-trust import Algebra
-```
-
-Trusted imports still resolve the same declared target, parse its source, and
-reject configuration or dependency cycles. They skip well-definedness and proof
-processing in that target and its nested imports, applying direct environment
-effects only. They are rejected by `-strict`, except that `trust local import`
-may reuse the exact file or module that this same strict run has already loaded
-and strictly verified from its `[run]` plan. That reuse is not trusted and adds
-no trusted-import dependency. Every actual trusted import conservatively marks
-the top-level run with an explicit trusted-import dependency.
+Prefix `trust` in `[export]` marks one entry as a deliberately trusted project
+boundary for ordinary runs. It still parses the source and applies direct
+environment effects, while skipping proof processing. `-strict` ignores that
+configuration trust and verifies the same entry normally. Source-level
+`trust import Algebra` remains available for intentionally trusted module
+imports and is rejected by `-strict`.
 
 ---
 
 ### Empty proof steps
 
-A trivial proof step (placeholder or explicit skip). Write `do_nothing` or `...` to skip a proof step.
+A trivial proof step (placeholder or explicit skip). Write `do_nothing`.
 
 ```litex
 do_nothing
-...
 ```
 
 ---
@@ -2385,7 +2334,7 @@ by enumerate finite_set:
 
 # inline by enumerate finite_set: put the forall goal on the header line
 by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
-    ...
+    do_nothing
 ```
 
 The finite domain may also be a named finite-set object when Litex has a
@@ -2758,8 +2707,8 @@ The sections above explain the common use cases. This table is a quick map of th
 | `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `? <fact>` | Internal proof target for `claim`, `thm`, `strategy`, and related proof forms |
-| `import` / `local import` | Verify and load project module interfaces declared in `litex.config` |
-| `trust import` / `trust local import` | Load a declared dependency's environment without verifying its proof process |
+| `import` | Verify and load a root directory module declared in `litex.config` |
+| `trust import` | Load a declared directory module's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -2858,7 +2807,7 @@ bound variable in a set builder.
 | binary union | `union(A, B)` |
 | binary intersection | `intersect(A, B)` |
 | set subtraction | `set_minus(A, B)` |
-| set difference alias form | `set_diff(A, B)` |
+| symmetric difference | `set_diff(A, B)` |
 | union over a family | `cup(F)` |
 | intersection over a family | `cap(F)` |
 | power set | `power_set(A)` |
@@ -2875,7 +2824,7 @@ bound variable in a set builder.
 | tuple length | `tuple_dim((1, 2))` |
 | finite-set size object | `finite_set_size({1, 2})` |
 | function image/range | `fn_range(f)` |
-| function image restricted to a set | `fn_range_on(f, A)` |
+| function image of an explicit restriction | `fn_range(fn(x A) T {f(x)})` |
 | finite-set sum | `finite_set_sum({1, 2}, f)` |
 | finite sum | `sum(1, n, f)` |
 | finite product | `product(1, n, f)` |
@@ -3033,8 +2982,8 @@ code, evaluate an expression, or register a reusable proof pattern.
 | disable a strategy | `stop strategy positive_nonzero` |
 | import a declared root module | `import Algebra` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
-| bind a declared export inside a module source | `local import local` |
-| bind a declared export without running its proof process | `trust local import local` |
+| cite an earlier project file inside a source | `chapter3::local` |
+| mark a project entry as trusted | `trust chapter3 = "./chapter03.lit"` in `[export]` |
 | explicit no-op | `do_nothing`, `...` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |

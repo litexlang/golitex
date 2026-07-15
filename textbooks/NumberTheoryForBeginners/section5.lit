@@ -11,11 +11,6 @@
 # litex_code: This file runs Sections I-IV first and then adds Section V.
 # comments: No external number-theory package is imported.
 
-trust local import section4
-trust local import section3
-trust local import section2
-trust local import section1
-
 """
 Definition. A commutative, or abelian, group is a set G with a binary operation
 written additively, satisfying associativity, commutativity, unique solvability
@@ -53,7 +48,7 @@ sketch:
 """
 Definition. A subgroup is a subset of a group that is a group under the same
 operation.  For additive groups, it is enough for a nonempty subset to be
-closed under subtraction; Theorem II.1 says every subgroup of Z is mZ.
+closed under subtraction; Theorem II.1 says every subgroup of Z is section2::mZ.
 """
 
 prop is_subgroup_of_abelian_group(G set, add fn(x, y G) G, zero G, H power_set(G)):
@@ -66,7 +61,7 @@ prop is_subgroup_of_abelian_group(G set, add fn(x, y G) G, zero G, H power_set(G
 
 prop is_additive_subgroup_of_Z(H power_set(Z)):
     $is_nonempty_set(H)
-    $closed_under_subtraction(H)
+    $section2::closed_under_subtraction(H)
 
 # Source handling: The text cites the proof of Theorem II.1.  The checked
 # Section II interface supplies the same cyclic-subgroup conclusion; this
@@ -75,27 +70,27 @@ thm theorem_V_subgroup_of_Z_is_cyclic:
     ? forall H power_set(Z):
         $is_additive_subgroup_of_Z(H)
         =>:
-            exist! m N st {$is_integer_multiple_set(H, m)}
-    by thm theorem_II_1_subgroups_of_Z(H)
-    obtain m from exist m N st {H = mZ(m)}
-    witness exist m1 N st {$is_integer_multiple_set(H, m1)} from m:
-        H = mZ(m)
+            exist! m N st {$section2::is_integer_multiple_set(H, m)}
+    by thm section2::theorem_II_1_subgroups_of_Z(H)
+    obtain m from exist m N st {H = section2::mZ(m)}
+    witness exist m1 N st {$section2::is_integer_multiple_set(H, m1)} from m:
+        H = section2::mZ(m)
     claim:
         ? forall m1, m2 N:
-            $is_integer_multiple_set(H, m1)
-            $is_integer_multiple_set(H, m2)
+            $section2::is_integer_multiple_set(H, m1)
+            $section2::is_integer_multiple_set(H, m2)
             =>:
                 m1 = m2
-        H = mZ(m1)
-        H = mZ(m2)
-        mZ(m1) = H = mZ(m2)
+        H = section2::mZ(m1)
+        H = section2::mZ(m2)
+        section2::mZ(m1) = H = section2::mZ(m2)
         m1 = m2
     forall m1, m2 N:
-        $is_integer_multiple_set(H, m1)
-        $is_integer_multiple_set(H, m2)
+        $section2::is_integer_multiple_set(H, m1)
+        $section2::is_integer_multiple_set(H, m2)
         =>:
             m1 = m2
-    exist! m N st {$is_integer_multiple_set(H, m)}
+    exist! m N st {$section2::is_integer_multiple_set(H, m)}
 
 """
 Definition. For m>0, integers x and y are congruent modulo m when x-y is a
@@ -103,7 +98,7 @@ multiple of m.
 """
 
 prop congruent_mod(m N_pos, x, y Z):
-    $divides_Z(m, x - y)
+    $section1::divides_Z(m, x - y)
 
 """
 The division lemma from Section II says every integer is congruent modulo m to

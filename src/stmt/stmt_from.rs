@@ -168,18 +168,6 @@ impl From<TrustImportStmt> for Stmt {
     }
 }
 
-impl From<LocalImportStmt> for Stmt {
-    fn from(v: LocalImportStmt) -> Self {
-        CommandStmt::LocalImportStmt(v).into()
-    }
-}
-
-impl From<TrustLocalImportStmt> for Stmt {
-    fn from(v: TrustLocalImportStmt) -> Self {
-        CommandStmt::TrustLocalImportStmt(v).into()
-    }
-}
-
 impl From<DoNothingStmt> for Stmt {
     fn from(v: DoNothingStmt) -> Self {
         CommandStmt::DoNothingStmt(v).into()

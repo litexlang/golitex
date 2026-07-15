@@ -768,15 +768,6 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::FnRangeOn(left_range), Obj::FnRangeOn(right_range)) => self
-                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
-                    &left_range.function,
-                    &left_range.set,
-                    &right_range.function,
-                    &right_range.set,
-                    verify_state,
-                    equality_line_file,
-                ),
             (Obj::Replacement(left_replacement), Obj::Replacement(right_replacement)) => {
                 if left_replacement.prop_name.to_string() != right_replacement.prop_name.to_string()
                 {

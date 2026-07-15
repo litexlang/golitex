@@ -11,8 +11,6 @@
 # comments: The binary-gcd existence, divisor, and Bezout interfaces are
 # checked in this file; no std number-theory modules are imported.
 
-trust local import section1
-
 """
 Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
 a = dq + r with 0 <= r < d.  Equivalently, dq is the largest multiple of d
@@ -201,7 +199,7 @@ prop closed_under_subtraction(M power_set(Z)):
 
 # The notation mZ is a set-valued construction, not a relation between a set
 # and an integer. Its members are exactly the integer multiples of m.
-have fn mZ(m N) power_set(Z) = {x Z: $divides_Z(m, x)}
+have fn mZ(m N) power_set(Z) = {x Z: $section1::divides_Z(m, x)}
 
 # Keep the historical relation exported for later sections, but make it only
 # the equality to the actual mZ value instead of restating its membership law.
@@ -339,7 +337,7 @@ thm zero_subtraction_closed_set:
                         case z = 0:
                             witness exist k Z st {x = 0 * k} from 0:
                                 x = z = 0 = 0 * 0
-                            $divides_Z(0, x)
+                            $section1::divides_Z(0, x)
                             x $in mZ(0)
                         case z < 0:
                             by thm neg_in_subtraction_closed_set(M, z)
@@ -367,7 +365,7 @@ thm positive_mZ_generator_unique:
             m = n
     witness exist k Z st {m = m * k} from 1:
         m = m * 1
-    $divides_Z(m, m)
+    $section1::divides_Z(m, m)
     m $in mZ(m)
     m $in mZ(n)
     obtain a from exist a Z st {m = n * a}
@@ -381,7 +379,7 @@ thm positive_mZ_generator_unique:
         case n > 0:
             witness exist k Z st {n = n * k} from 1:
                 n = n * 1
-            $divides_Z(n, n)
+            $section1::divides_Z(n, n)
             n $in mZ(n)
             n $in mZ(m)
             obtain b from exist b Z st {n = m * b}
@@ -411,7 +409,7 @@ thm zero_mZ_generator_unique:
             n = 0
     witness exist k Z st {n = n * k} from 1:
         n = n * 1
-    $divides_Z(n, n)
+    $section1::divides_Z(n, n)
     n $in mZ(n)
     n $in mZ(0)
     obtain k from exist k Z st {n = 0 * k}
@@ -425,15 +423,15 @@ thm positive_subtraction_closed_set_has_mZ:
         =>:
             exist m N_pos st {M = mZ(m)}
     claim:
-        ? $is_positive_integer_set(positive_elements(M))
+        ? $section1::is_positive_integer_set(positive_elements(M))
         positive_elements(M) $subset Z
         forall x positive_elements(M):
             x $in Z
             x > 0
-        $is_positive_integer_set(positive_elements(M))
-    by thm positive_integer_set_has_least_element(positive_elements(M))
-    exist m Z st {$is_least_element_of_integer_set(positive_elements(M), m)}
-    obtain m from exist m Z st {$is_least_element_of_integer_set(positive_elements(M), m)}
+        $section1::is_positive_integer_set(positive_elements(M))
+    by thm section1::positive_integer_set_has_least_element(positive_elements(M))
+    exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
+    obtain m from exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
     m $in positive_elements(M)
     m $in M
     m > 0
@@ -465,7 +463,7 @@ thm positive_subtraction_closed_set_has_mZ:
                     case r = 0:
                         witness exist k Z st {x = mN * k} from q:
                             x = z = mN * q
-                        $divides_Z(mN, x)
+                        $section1::divides_Z(mN, x)
                         x $in mZ(mN)
                     case r > 0:
                         r $in positive_elements(M)
@@ -669,14 +667,14 @@ given integers, every common divisor divides d, and d is called their gcd.
 # divisor characterization and Bezout representation used in Sections III-IV.
 
 prop is_gcd_Z(a, b Z, d N):
-    $divides_Z(d, a)
-    $divides_Z(d, b)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
     forall e Z:
         e > 0
-        $divides_Z(e, a)
-        $divides_Z(e, b)
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
         =>:
-            $divides_Z(e, d)
+            $section1::divides_Z(e, d)
     exist x, y Z st {d = a * x + b * y}
 
 thm binary_span_eq_mZ_of_gcd:
@@ -693,7 +691,7 @@ thm binary_span_eq_mZ_of_gcd:
             obtain q from exist q Z st {b = d * q}
             witness exist k Z st {x = d * k} from u * p + v * q:
                 x = a * u + b * v = d * p * u + d * q * v = d * (u * p + v * q)
-            $divides_Z(d, x)
+            $section1::divides_Z(d, x)
             x $in mZ(d)
         forall x binary_integer_span(a, b):
             x $in mZ(d)
@@ -730,22 +728,22 @@ thm theorem_II_2_binary_gcd_exists:
         obtain q from exist q Z st {b = d * q}
         witness exist k Z st {d = d * k} from 1:
             d = d * 1
-        $divides_Z(d, d)
+        $section1::divides_Z(d, d)
         d $in mZ(d)
         d $in binary_integer_span(a, b)
         obtain x, y from exist x, y Z st {d = a * x + b * y}
         claim:
             ? forall e Z:
                 e > 0
-                $divides_Z(e, a)
-                $divides_Z(e, b)
+                $section1::divides_Z(e, a)
+                $section1::divides_Z(e, b)
                 =>:
-                    $divides_Z(e, d)
+                    $section1::divides_Z(e, d)
             obtain r from exist r Z st {a = e * r}
             obtain s from exist s Z st {b = e * s}
             witness exist t Z st {d = e * t} from r * x + s * y:
                 d = a * x + b * y = e * r * x + e * s * y = e * (r * x + s * y)
-            $divides_Z(e, d)
+            $section1::divides_Z(e, d)
         $is_gcd_Z(a, b, d)
     witness exist d1 N st {$is_gcd_Z(a, b, d1)} from d:
         $is_gcd_Z(a, b, d)
@@ -781,15 +779,15 @@ have fn gcd_Z by exist!:
 
 thm gcd_Z_dvd_left:
     ? forall a, b Z:
-        $divides_Z(gcd_Z(a, b), a)
+        $section1::divides_Z(gcd_Z(a, b), a)
     $is_gcd_Z(a, b, gcd_Z(a, b))
-    $divides_Z(gcd_Z(a, b), a)
+    $section1::divides_Z(gcd_Z(a, b), a)
 
 thm gcd_Z_dvd_right:
     ? forall a, b Z:
-        $divides_Z(gcd_Z(a, b), b)
+        $section1::divides_Z(gcd_Z(a, b), b)
     $is_gcd_Z(a, b, gcd_Z(a, b))
-    $divides_Z(gcd_Z(a, b), b)
+    $section1::divides_Z(gcd_Z(a, b), b)
 
 thm gcd_Z_bezout:
     ? forall a, b Z:
@@ -831,32 +829,32 @@ thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
         =>:
             $is_gcd_Z(a1, b1, d)
     $is_gcd_Z(a, b, d)
-    $divides_Z(d, a)
-    $divides_Z(d, b)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
     obtain da from exist da Z st {a = d * da}
     obtain db from exist db Z st {b = d * db}
     witness exist da1 Z st {a1 = d * da1} from p * da + q * db:
         a1 = p * a + q * b = p * (d * da) + q * (d * db) = d * (p * da + q * db)
-    $divides_Z(d, a1)
+    $section1::divides_Z(d, a1)
     witness exist db1 Z st {b1 = d * db1} from r * da + s * db:
         b1 = r * a + s * b = r * (d * da) + s * (d * db) = d * (r * da + s * db)
-    $divides_Z(d, b1)
+    $section1::divides_Z(d, b1)
     claim:
         ? forall e Z:
             e > 0
-            $divides_Z(e, a1)
-            $divides_Z(e, b1)
+            $section1::divides_Z(e, a1)
+            $section1::divides_Z(e, b1)
             =>:
-                $divides_Z(e, d)
+                $section1::divides_Z(e, d)
         obtain ea1 from exist ea1 Z st {a1 = e * ea1}
         obtain eb1 from exist eb1 Z st {b1 = e * eb1}
         witness exist ea Z st {a = e * ea} from u * ea1 + v * eb1:
             a = u * a1 + v * b1 = u * (e * ea1) + v * (e * eb1) = e * (u * ea1 + v * eb1)
-        $divides_Z(e, a)
+        $section1::divides_Z(e, a)
         witness exist eb Z st {b = e * eb} from w * ea1 + z * eb1:
             b = w * a1 + z * b1 = w * (e * ea1) + z * (e * eb1) = e * (w * ea1 + z * eb1)
-        $divides_Z(e, b)
-        $divides_Z(e, d)
+        $section1::divides_Z(e, b)
+        $section1::divides_Z(e, d)
     obtain x, y from exist x, y Z st {d = a * x + b * y}
     witness exist x1, y1 Z st {d = a1 * x1 + b1 * y1} from u * x + w * y, v * x + z * y:
         d = a * x + b * y = (u * a1 + v * b1) * x + (w * a1 + z * b1) * y = a1 * (u * x + w * y) + b1 * (v * x + z * y)
@@ -920,60 +918,60 @@ and (1024,729).
 thm common_divisor_of_fifty_six_and_thirty_five_divides_seven:
     ? forall e Z:
         e > 0
-        $divides_Z(e, 56)
-        $divides_Z(e, 35)
+        $section1::divides_Z(e, 56)
+        $section1::divides_Z(e, 35)
         =>:
-            $divides_Z(e, 7)
-    by thm divides_Z_linear_combination(e, 56, 35, 2, -3)
+            $section1::divides_Z(e, 7)
+    by thm section1::divides_Z_linear_combination(e, 56, 35, 2, -3)
     2 * 56 + (-3) * 35 = 7
-    $divides_Z(e, 7)
+    $section1::divides_Z(e, 7)
 
 claim:
     ? $is_gcd_Z(56, 35, 7)
     witness exist x Z st {56 = 7 * x} from 8
-    $divides_Z(7, 56)
+    $section1::divides_Z(7, 56)
     witness exist x Z st {35 = 7 * x} from 5
-    $divides_Z(7, 35)
+    $section1::divides_Z(7, 35)
     witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
     $is_gcd_Z(56, 35, 7)
 
 thm common_divisor_of_three_hundred_nine_and_one_hundred_eighty_six_divides_three:
     ? forall e Z:
         e > 0
-        $divides_Z(e, 309)
-        $divides_Z(e, 186)
+        $section1::divides_Z(e, 309)
+        $section1::divides_Z(e, 186)
         =>:
-            $divides_Z(e, 3)
-    by thm divides_Z_linear_combination(e, 309, 186, -3, 5)
+            $section1::divides_Z(e, 3)
+    by thm section1::divides_Z_linear_combination(e, 309, 186, -3, 5)
     (-3) * 309 + 5 * 186 = 3
-    $divides_Z(e, 3)
+    $section1::divides_Z(e, 3)
 
 claim:
     ? $is_gcd_Z(309, 186, 3)
     witness exist x Z st {309 = 3 * x} from 103
-    $divides_Z(3, 309)
+    $section1::divides_Z(3, 309)
     witness exist x Z st {186 = 3 * x} from 62
-    $divides_Z(3, 186)
+    $section1::divides_Z(3, 186)
     witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
     $is_gcd_Z(309, 186, 3)
 
 thm common_divisor_of_one_thousand_twenty_four_and_seven_hundred_twenty_nine_divides_one:
     ? forall e Z:
         e > 0
-        $divides_Z(e, 1024)
-        $divides_Z(e, 729)
+        $section1::divides_Z(e, 1024)
+        $section1::divides_Z(e, 729)
         =>:
-            $divides_Z(e, 1)
-    by thm divides_Z_linear_combination(e, 1024, 729, -257, 361)
+            $section1::divides_Z(e, 1)
+    by thm section1::divides_Z_linear_combination(e, 1024, 729, -257, 361)
     (-257) * 1024 + 361 * 729 = 1
-    $divides_Z(e, 1)
+    $section1::divides_Z(e, 1)
 
 claim:
     ? $is_gcd_Z(1024, 729, 1)
     witness exist x Z st {1024 = 1 * x} from 1024
-    $divides_Z(1, 1024)
+    $section1::divides_Z(1, 1024)
     witness exist x Z st {729 = 1 * x} from 729
-    $divides_Z(1, 729)
+    $section1::divides_Z(1, 729)
     witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
     $is_gcd_Z(1024, 729, 1)
 
@@ -1000,24 +998,24 @@ thm exercise_II_7_scaling_gcd:
     obtain v from exist v Z st {b = gcd_Z(a, b) * v}
     witness exist u1 Z st {m * a = (m * gcd_Z(a, b)) * u1} from u:
         m * a = m * (gcd_Z(a, b) * u) = (m * gcd_Z(a, b)) * u
-    $divides_Z(m * gcd_Z(a, b), m * a)
+    $section1::divides_Z(m * gcd_Z(a, b), m * a)
     witness exist v1 Z st {m * b = (m * gcd_Z(a, b)) * v1} from v:
         m * b = m * (gcd_Z(a, b) * v) = (m * gcd_Z(a, b)) * v
-    $divides_Z(m * gcd_Z(a, b), m * b)
+    $section1::divides_Z(m * gcd_Z(a, b), m * b)
     claim:
         ? forall e Z:
             e > 0
-            $divides_Z(e, m * a)
-            $divides_Z(e, m * b)
+            $section1::divides_Z(e, m * a)
+            $section1::divides_Z(e, m * b)
             =>:
-                $divides_Z(e, m * gcd_Z(a, b))
+                $section1::divides_Z(e, m * gcd_Z(a, b))
         obtain r from exist r Z st {m * a = e * r}
         obtain s from exist s Z st {m * b = e * s}
         by thm gcd_Z_bezout(a, b)
         obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
         witness exist t Z st {m * gcd_Z(a, b) = e * t} from r * x + s * y:
             m * gcd_Z(a, b) = m * (a * x + b * y) = (m * a) * x + (m * b) * y = (e * r) * x + (e * s) * y = e * (r * x + s * y)
-        $divides_Z(e, m * gcd_Z(a, b))
+        $section1::divides_Z(e, m * gcd_Z(a, b))
     by thm gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
     witness exist u1, v1 Z st {m * gcd_Z(a, b) = (m * a) * u1 + (m * b) * v1} from x, y:

@@ -312,7 +312,7 @@ by enumerate finite_set:
             b = 4
 
 by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) = (2, 4)}:
-    ...
+    do_nothing
 ```
 
 ### 8. Enumerating A Half-Open Range
@@ -378,7 +378,7 @@ by for:
     do_nothing
 
 by for forall! n range(0, 3) => {n < 3}:
-    ...
+    do_nothing
 
 by for:
     ? forall x cart({1, 2}, {3, 4}):
@@ -3079,8 +3079,8 @@ have positive_reals set = {x R: x > 0}
 #### 4. Set Operations
 
 Mathematical meaning: `union`, `intersect`, and `set_minus` are the ordinary
-binary union, intersection, and relative complement of sets.  `set_diff` is the
-symmetric-difference style object used by the current library.
+binary union, intersection, and relative complement of sets. `set_diff` is
+symmetric difference.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
@@ -3134,9 +3134,9 @@ $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 
 #### 8. Function Images
 
-Mathematical meaning: `fn_range(f)` is the image of a function over its whole
-domain.  `fn_range_on(f, S)` is the image of a unary function whose declared
-domain is exactly `S`.
+Mathematical meaning: `fn_range(f)` is the image of a function over its
+declared domain. To image a larger-domain function only on `S`, first make the
+restriction explicit as `fn(x S) T {f(x)}`.
 
 ```litex
 have fn shift(x R) R = x + 1
@@ -3152,11 +3152,11 @@ shift(2) = shift(x)
 ```litex
 have a finite_seq(R, 3) = [1, 2, 3]
 
-fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
-fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $subset R
-$is_finite_set(fn_range_on(fn(x 1...3) R {a(x)}, 1...3))
+fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
+fn_range(fn(x 1...3) R {a(x)}) $subset R
+$is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 
-have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
 k $in 1...3
 fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 ```
@@ -3600,8 +3600,7 @@ Purpose: run checked exploratory code without committing it, or run a checked
 batch that commits only if every nested statement succeeds.
 
 - Well-definedness / structural checks: each nested statement performs its own
-  checks; `try` rejects control statements such as `clear`, `import`, and
-  `local import`.
+  checks; `try` rejects control statements such as `clear` and `import`.
 - Truth verification: nested statements verify normally.
 - Environment effects: `sketch` has no outer effect; `try` commits the child
   environment into the parent environment on success.
@@ -3711,17 +3710,16 @@ do_nothing
 
 #### 25. Module Commands
 
-Purpose: load modules, bind sources declared in `litex.config`,
-or clear the current environment. These examples are syntax only because they
-depend on local project files.
+Purpose: load directory modules declared in `litex.config`, cite earlier
+ordered project sources by canonical name, or clear the current environment.
+These examples are syntax only because they depend on local project files.
 
-- Well-definedness / structural checks: `litex.config` declarations and
-  `local import` bindings are validated during discovery; `import` resolves a
-  module; `clear` has no structural checks. `trust import` and
-  `trust local import` use the same declared targets and validation.
-- Truth verification: imported modules and declared files verify normally when
-  loaded. A trusted import deliberately skips this phase for its target and
-  transitive imports, and is rejected by strict mode.
+- Well-definedness / structural checks: ordered `litex.config` entries are
+  validated during discovery; `import` resolves a directory module; `clear`
+  has no structural checks.
+- Truth verification: project entries verify in `[export]` order. A `trust`
+  entry deliberately skips this phase in an ordinary run; strict mode verifies
+  it normally.
 - Environment effects: module commands update the module manager; `clear`
   removes the current user environment. Imported modules and project export
   nodes remain registered.
@@ -3992,7 +3990,7 @@ claim:
                     by cases:
                         ? c <= n
                         case c <= n:
-                            ...
+                            do_nothing
                         case c >= n + 1:
                             impossible c < n + 1
 

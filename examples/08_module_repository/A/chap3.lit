@@ -1,3 +1,2 @@
-local import chap2
-
-have z R = chap2::x
+A::chap2::x = 1
+have z R = 1

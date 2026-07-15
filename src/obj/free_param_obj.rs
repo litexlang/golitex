@@ -14,6 +14,7 @@ pub enum ParamObjType {
     DefStructField,
     TupleIndex,
     CartIndex,
+    TheoremInstantiation,
 }
 
 impl ParamObjType {
@@ -30,6 +31,9 @@ impl ParamObjType {
             ParamObjType::DefStructField => 8,
             ParamObjType::TupleIndex => 9,
             ParamObjType::CartIndex => 10,
+            ParamObjType::TheoremInstantiation => {
+                unreachable!("theorem instantiation is not a free parameter display kind")
+            }
         }
     }
 }
@@ -329,7 +333,7 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::DefStructField => DefStructFieldFreeParamObj::new(name).into(),
         ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name).into(),
         ParamObjType::CartIndex => CartIndexFreeParamObj::new(name).into(),
-        ParamObjType::Identifier => {
+        ParamObjType::Identifier | ParamObjType::TheoremInstantiation => {
             unreachable!(
                 "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
                 scope
@@ -352,6 +356,9 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         | ParamObjType::DefStructField
         | ParamObjType::TupleIndex
         | ParamObjType::CartIndex => obj_for_bound_param_in_scope(name, binding_kind),
+        ParamObjType::TheoremInstantiation => unreachable!(
+            "param_binding_element_obj_for_store: theorem instantiation is not a binding kind"
+        ),
     }
 }
 

@@ -116,50 +116,6 @@ impl Runtime {
         }
     }
 
-    pub fn get_fn_range_on_function_body(&self, function: &Obj) -> Option<FnSetBody> {
-        self.get_fn_range_function_body(function)
-    }
-
-    pub fn fn_range_on_target_fn_set(
-        &self,
-        fn_range_on: &FnRangeOn,
-        _line_file: LineFile,
-    ) -> Result<FnSet, RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "fn_range_on expects a function with a known function set, got {}",
-                    fn_range_on.function
-                )),
-            )));
-        };
-        if body.params_def_with_set.number_of_params() != 1 {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "fn_range_on expects a unary function, got {}",
-                    fn_range_on.function
-                )),
-            )));
-        }
-        let param = self.generate_random_unused_name();
-        FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![param],
-                fn_range_on.set.as_ref().clone(),
-            )],
-            vec![],
-            body.ret_set.as_ref().clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_cause(
-                    format!("failed to build explicit-domain target for {}", fn_range_on),
-                    e,
-                ),
-            ))
-        })
-    }
-
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
     /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
     pub fn get_known_fn_body_and_equal_to_for_key(
@@ -627,11 +583,9 @@ impl Runtime {
         if self.is_current_parse_module(module_name) {
             return vec![];
         }
-        let active_local_target = self.active_local_import(module_name);
-        let target = active_local_target.or_else(|| {
-            self.module_manager
-                .import_target_by_canonical_name(module_name)
-        });
+        let target = self
+            .module_manager
+            .import_target_by_canonical_name(module_name);
         match target {
             Some(ImportTarget::Module(module_id)) => {
                 let Some(module) = self.module_manager.module(module_id) else {
@@ -639,17 +593,13 @@ impl Runtime {
                 };
                 vec![module.main_environment.as_ref()]
             }
-            Some(ImportTarget::File { module_id, file_id }) => {
-                if active_local_target.is_none() && !module_name.contains(MOD_SIGN) {
-                    return vec![];
-                }
-                self.module_manager
-                    .module(module_id)
-                    .and_then(|module| module.file(file_id))
-                    .filter(|file| file.status == FileStatus::Loaded)
-                    .map(|file| vec![file.environment.as_ref()])
-                    .unwrap_or_default()
-            }
+            Some(ImportTarget::File { module_id, file_id }) => self
+                .module_manager
+                .module(module_id)
+                .and_then(|module| module.file(file_id))
+                .filter(|file| file.status == FileStatus::Loaded)
+                .map(|file| vec![file.environment.as_ref()])
+                .unwrap_or_default(),
             None => vec![],
         }
     }
@@ -856,10 +806,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
-        Obj::FnRangeOn(x) => {
-            collect_module_names_from_obj(&x.function, module_names);
-            collect_module_names_from_obj(&x.set, module_names);
-        }
         Obj::Replacement(x) => {
             collect_module_name_from_atomic_name(&x.prop_name, module_names);
             collect_module_names_from_obj(&x.source_set, module_names);

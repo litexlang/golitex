@@ -1,58 +1,106 @@
 # Section X: finite multiplicative subgroups, roots of unity, and primitive roots.
 
-local import section9
-
+# A finite multiplicative subgroup is a finite carrier with the group
+# structure from Section VII.  This is the carrier-level interface used by the
+# cyclicity theorem, rather than a bare assertion that some element exists.
 prop finite_multiplicative_subgroup(G set, mul fn(x, y G) G, one G):
-    $is_group(G, mul, one)
+    $section7::is_group(G, mul, one)
     $is_finite_set(G)
 
+# The n-th roots of unity are an actual set-valued construction over Z.
 prop root_of_unity_Z(n N_pos, x Z):
     x ^ n = 1
 
 have fn roots_of_unity_Z(n N_pos) power_set(Z) = {x Z: $root_of_unity_Z(n, x)}
 
-prop primitive_root_mod(m N_pos, g Z):
-    $relatively_prime_Z(g, m)
-    exist n N_pos st {g ^ n % m = 1}
+# The order of a residue class is the least positive exponent returning to 1.
+# Primitive root means that this order is the full unit-group cardinality.
+prop multiplicative_order_mod(m N_pos, g Z, n N_pos):
+    g ^ n % m = 1
     forall k N_pos:
         g ^ k % m = 1
         =>:
-            k >= m - 1
+            n <= k
 
-have fn index_mod(m N_pos, g Z) N = 0
+prop primitive_root_mod(m N_pos, g Z):
+    $section3::relatively_prime_Z(g, m)
+    $multiplicative_order_mod(m, g, section6::euler_phi(m))
+
+# A finite subgroup is cyclic when one generator's generated carrier is the
+# whole carrier.  The generated-subgroup object is inherited explicitly from
+# Section VII.
+prop finite_subgroup_has_generator(G set, mul fn(x, y G) G, one G):
+    exist g G st {$section7::generated_subgroup(G, mul, one, g, G)}
 
 prop cyclic_multiplicative_group_mod(m N_pos, g Z):
     $primitive_root_mod(m, g)
-    exist H power_set(Z) st {$is_finite_set(H), finite_set_size(H) = euler_phi(m)}
+    $multiplicative_order_mod(m, g, section6::euler_phi(m))
+
+# For a primitive root, the discrete-log index is the unique representative in
+# the interval [0, phi(m)).  The selected value is a reusable function object;
+# its existence and uniqueness are the remaining finite cyclic counting step.
+prop index_mod_spec(m N_pos, g Z, a Z, x N):
+    $section3::relatively_prime_Z(g, m)
+    $section3::relatively_prime_Z(a, m)
+    g ^ x % m = a % m
+    x < section6::euler_phi(m)
+
+trust:
+    forall m N_pos, g, a Z:
+        $primitive_root_mod(m, g)
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            exist! x N st {$index_mod_spec(m, g, a, x)}
+
+have fn index_mod by exist!:
+    ? forall m N_pos, g, a Z:
+        $primitive_root_mod(m, g)
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            exist! x N st {$index_mod_spec(m, g, a, x)}
+
+# The roots-of-unity version of cyclicity states directly that every root is
+# an integral power of one chosen root, so later statements can use the set
+# object rather than an existentially hidden group.
+prop root_power_generated(n N_pos, g Z, x Z):
+    $root_of_unity_Z(n, x)
+    exist k N st {x = g ^ k}
+
+prop root_generator_spec(n N_pos, g Z):
+    $root_of_unity_Z(n, g)
+    forall x roots_of_unity_Z(n):
+        $root_power_generated(n, g, x)
 
 prop roots_of_unity_form_cyclic_group(n N_pos):
-    exist G set, mul fn(x, y G) G, one G st {$finite_multiplicative_subgroup(G, mul, one)}
+    exist g Z st {$root_generator_spec(n, g)}
 
-prop finite_group_cyclic_claim(G set, mul fn(x, y G) G, one G):
-    exist g G st {g $in G}
-
+# Theorem X.1. Finite multiplicative subgroups of a field are cyclic.  The
+# source theorem is kept as a named interface; the finite root-count argument
+# is the only trust boundary here.
 trust:
     forall G set, mul fn(x, y G) G, one G:
         $finite_multiplicative_subgroup(G, mul, one)
         =>:
-            $finite_group_cyclic_claim(G, mul, one)
+            $finite_subgroup_has_generator(G, mul, one)
 
 thm theorem_X_finite_subgroups_are_cyclic:
     ? forall G set, mul fn(x, y G) G, one G:
         $finite_multiplicative_subgroup(G, mul, one)
         =>:
-            $finite_group_cyclic_claim(G, mul, one)
-    $finite_group_cyclic_claim(G, mul, one)
+            $finite_subgroup_has_generator(G, mul, one)
+    $finite_subgroup_has_generator(G, mul, one)
 
+# The prime-modulus primitive-root theorem is the source application of the
+# finite cyclic subgroup theorem.
 trust:
-    forall m N_pos:
-        $is_prime_Z(m)
+    forall p N_pos:
+        $section4::is_prime_Z(p)
         =>:
-            exist g Z st {$primitive_root_mod(m, g)}
+            exist g Z st {$primitive_root_mod(p, g)}
 
 thm theorem_X_primitive_root_prime_modulus:
-    ? forall m N_pos:
-        $is_prime_Z(m)
+    ? forall p N_pos:
+        $section4::is_prime_Z(p)
         =>:
-            exist g Z st {$primitive_root_mod(m, g)}
-    exist g Z st {$primitive_root_mod(m, g)}
+            exist g Z st {$primitive_root_mod(p, g)}
+    exist g Z st {$primitive_root_mod(p, g)}

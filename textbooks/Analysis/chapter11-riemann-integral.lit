@@ -1,9 +1,5 @@
 # Chapter 11: The Riemann integral.
 
-local import chap5
-trust local import chap9
-trust local import chap10
-
 # 11.1 Partitions
 
 """
@@ -673,12 +669,12 @@ thm intersection_of_interval_endpoint_forms_without_endpoints_is_open:
 
 thm closed_interval_is_bounded_without_endpoint_order:
     ? forall a, b R:
-        $is_bounded_real_set('[a, b])
+        $chap9::is_bounded_real_set('[a, b])
     by cases:
-        ? $is_bounded_real_set('[a, b])
+        ? $chap9::is_bounded_real_set('[a, b])
         case a <= b:
-            by thm closed_interval_is_bounded(a, b)
-            $is_bounded_real_set('[a, b])
+            by thm chap9::closed_interval_is_bounded(a, b)
+            $chap9::is_bounded_real_set('[a, b])
         case not a <= b:
             by extension '[a, b] = {}:
                 claim:
@@ -700,9 +696,9 @@ thm closed_interval_is_bounded_without_endpoint_order:
                         not $is_nonempty_set({})
                         witness $is_nonempty_set({}) from x
                         impossible $is_nonempty_set({})
-            by thm empty_real_set_is_bounded()
-            $is_bounded_real_set({})
-            $is_bounded_real_set('[a, b])
+            by thm chap9::empty_real_set_is_bounded()
+            $chap9::is_bounded_real_set({})
+            $chap9::is_bounded_real_set('[a, b])
 
 """
 Lemma 11.1.4.  A subset of the real line is a bounded interval exactly when it
@@ -711,7 +707,7 @@ is both bounded and connected.
 
 thm bounded_connected_subsets_are_bounded_intervals:
     ? forall X power_set(R):
-        $is_bounded_real_set(X)
+        $chap9::is_bounded_real_set(X)
         $is_connected_subset_of_R(X)
         =>:
             $is_bounded_interval(X)
@@ -776,18 +772,18 @@ thm bounded_intervals_are_bounded_connected:
     ? forall X power_set(R):
         $is_bounded_interval(X)
         =>:
-            $is_bounded_real_set(X)
+            $chap9::is_bounded_real_set(X)
             $is_connected_subset_of_R(X)
     # Source handling: split the displayed endpoint forms.  Each form is
     # connected directly; boundedness comes from containment in `[a,b]`.
     obtain a, b from exist a, b R st {$has_interval_endpoints(X, a, b)}
     by cases:
-        ? $is_bounded_real_set(X)
+        ? $chap9::is_bounded_real_set(X)
         ? $is_connected_subset_of_R(X)
         case X = '[a, b]:
             by thm closed_interval_is_bounded_without_endpoint_order(a, b)
-            $is_bounded_real_set('[a, b])
-            $is_bounded_real_set(X)
+            $chap9::is_bounded_real_set('[a, b])
+            $chap9::is_bounded_real_set(X)
             by thm closed_interval_is_connected_without_endpoint_order(a, b)
             $is_connected_subset_of_R('[a, b])
             $is_connected_subset_of_R(X)
@@ -801,10 +797,10 @@ thm bounded_intervals_are_bounded_connected:
                     x $in '[a, b]
                 '[a, b) $subset '[a, b]
             by thm closed_interval_is_bounded_without_endpoint_order(a, b)
-            $is_bounded_real_set('[a, b])
-            by thm bounded_real_set_subset('[a, b), '[a, b])
-            $is_bounded_real_set('[a, b))
-            $is_bounded_real_set(X)
+            $chap9::is_bounded_real_set('[a, b])
+            by thm chap9::bounded_real_set_subset('[a, b), '[a, b])
+            $chap9::is_bounded_real_set('[a, b))
+            $chap9::is_bounded_real_set(X)
             by thm closed_open_interval_is_connected(a, b)
             $is_connected_subset_of_R('[a, b))
             $is_connected_subset_of_R(X)
@@ -818,10 +814,10 @@ thm bounded_intervals_are_bounded_connected:
                     x $in '[a, b]
                 '(a, b] $subset '[a, b]
             by thm closed_interval_is_bounded_without_endpoint_order(a, b)
-            $is_bounded_real_set('[a, b])
-            by thm bounded_real_set_subset('(a, b], '[a, b])
-            $is_bounded_real_set('(a, b])
-            $is_bounded_real_set(X)
+            $chap9::is_bounded_real_set('[a, b])
+            by thm chap9::bounded_real_set_subset('(a, b], '[a, b])
+            $chap9::is_bounded_real_set('(a, b])
+            $chap9::is_bounded_real_set(X)
             by thm open_closed_interval_is_connected(a, b)
             $is_connected_subset_of_R('(a, b])
             $is_connected_subset_of_R(X)
@@ -836,10 +832,10 @@ thm bounded_intervals_are_bounded_connected:
                     x $in '[a, b]
                 '(a, b) $subset '[a, b]
             by thm closed_interval_is_bounded_without_endpoint_order(a, b)
-            $is_bounded_real_set('[a, b])
-            by thm bounded_real_set_subset('(a, b), '[a, b])
-            $is_bounded_real_set('(a, b))
-            $is_bounded_real_set(X)
+            $chap9::is_bounded_real_set('[a, b])
+            by thm chap9::bounded_real_set_subset('(a, b), '[a, b])
+            $chap9::is_bounded_real_set('(a, b))
+            $chap9::is_bounded_real_set(X)
             by thm open_interval_is_connected_without_endpoint_order(a, b)
             $is_connected_subset_of_R('(a, b))
             $is_connected_subset_of_R(X)
@@ -850,7 +846,7 @@ forall X power_set(R):
     =>:
         $is_bounded_interval(X)
     <=>:
-        $is_bounded_real_set(X)
+        $chap9::is_bounded_real_set(X)
         $is_connected_subset_of_R(X)
 
 """
@@ -1931,7 +1927,7 @@ thm intersection_image_of_two_partition_families_is_finite:
         $is_partition_of_bounded_interval(I, P)
         $is_partition_of_bounded_interval(I, Qpart)
         =>:
-            $is_finite_set(fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+            $is_finite_set(fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}))
     # Source handling: this constructs the finite family underlying Tao's
     # common refinement, before proving that it covers I exactly once.
     $is_partition_of_bounded_interval(I, P)
@@ -1945,25 +1941,25 @@ thm intersection_image_of_two_partition_families_is_finite:
         intersect(p[1], p[2]) $subset p[1]
         intersect(p[1], p[2]) $subset R
         intersect(p[1], p[2]) $in power_set(R)
-    $is_finite_set(fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+    $is_finite_set(fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}))
 
 thm intersection_image_of_two_partition_families_is_partition:
     ? forall I power_set(R), P, Qpart finite_set:
         $is_partition_of_bounded_interval(I, P)
         $is_partition_of_bounded_interval(I, Qpart)
         =>:
-            $is_partition_of_bounded_interval(I, fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+            $is_partition_of_bounded_interval(I, fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}))
     # Source handling: each point lies in one piece of P and one piece of
     # Qpart; their intersection gives the unique common-refinement piece.
     $is_partition_of_bounded_interval(I, P)
     $is_partition_of_bounded_interval(I, Qpart)
     $is_bounded_interval(I)
     claim:
-        ? forall H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+        ? forall H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}):
             H $in power_set(R)
             $is_bounded_interval(H)
             H $subset I
-        have by preimage p from H $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        have by preimage p from H $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
         p[1] $in P
         p[2] $in Qpart
         p[1] $in power_set(R)
@@ -1980,7 +1976,7 @@ thm intersection_image_of_two_partition_families_is_partition:
         H $in power_set(R)
     claim:
         ? forall x I:
-            exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H}
+            exist H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H $in power_set(R), x $in H}
         obtain J from exist J P st {J $in power_set(R), x $in J}
         obtain K from exist K Qpart st {K $in power_set(R), x $in K}
         J $in power_set(R)
@@ -1991,23 +1987,23 @@ thm intersection_image_of_two_partition_families_is_partition:
         (J, K) $in cart(P, Qpart)
         intersect(J, K) $in power_set(R)
         fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) = intersect(J, K)
-        fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
-        intersect(J, K) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
-        witness exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H} from intersect(J, K):
+        fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
+        intersect(J, K) $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
+        witness exist H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H $in power_set(R), x $in H} from intersect(J, K):
             intersect(J, K) $in power_set(R)
             x $in J
             x $in K
             x $in intersect(J, K)
     claim:
-        ? forall x I, H1, H2 fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+        ? forall x I, H1, H2 fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}):
             H1 $in power_set(R)
             H2 $in power_set(R)
             x $in H1
             x $in H2
             =>:
                 H1 = H2
-        have by preimage p1 from H1 $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
-        have by preimage p2 from H2 $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+        have by preimage p1 from H1 $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
+        have by preimage p2 from H2 $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
         p1[1] $in P
         p1[2] $in Qpart
         p2[1] $in P
@@ -2030,8 +2026,8 @@ thm intersection_image_of_two_partition_families_is_partition:
         p1[2] = p2[2]
         H1 = intersect(p1[1], p1[2]) = intersect(p2[1], p2[2]) = H2
     forall x I:
-        exist! H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H $in power_set(R), x $in H}
-    $is_partition_of_bounded_interval(I, fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)))
+        exist! H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H $in power_set(R), x $in H}
+    $is_partition_of_bounded_interval(I, fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}))
 
 thm common_refinement_exists_for_partitions:
     ? forall I power_set(R), P, Qpart finite_set:
@@ -2045,12 +2041,12 @@ thm common_refinement_exists_for_partitions:
     $is_partition_of_bounded_interval(I, P)
     $is_partition_of_bounded_interval(I, Qpart)
     by thm intersection_image_of_two_partition_families_is_finite(I, P, Qpart)
-    witness exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)} from fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+    witness exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)} from fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}):
         by thm intersection_image_of_two_partition_families_is_partition(I, P, Qpart)
         claim:
-            ? forall H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)):
+            ? forall H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}):
                 exist J P, K Qpart st {J $in power_set(R), K $in power_set(R), H = intersect(J, K)}
-            have by preimage p from H $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
+            have by preimage p from H $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
             p[1] $in P
             p[2] $in Qpart
             p[1] $in power_set(R)
@@ -2065,12 +2061,12 @@ thm common_refinement_exists_for_partitions:
                 J $in power_set(R)
                 K $in power_set(R)
                 =>:
-                    exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H = intersect(J, K)}
+                    exist H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H = intersect(J, K)}
             (J, K) $in cart(P, Qpart)
             fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) = intersect(J, K)
-            fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
-            intersect(J, K) $in fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart))
-            witness exist H fn_range_on(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}, cart(P, Qpart)) st {H = intersect(J, K)} from intersect(J, K):
+            fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}((J, K)) $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
+            intersect(J, K) $in fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])})
+            witness exist H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H = intersect(J, K)} from intersect(J, K):
                 intersect(J, K) = intersect(J, K)
 
 
@@ -2245,7 +2241,7 @@ thm constant_on_subset_quotient:
         E $subset I
         $is_constant_on_subset(I, E, f)
         $is_constant_on_subset(I, E, g)
-        $is_nonzero_on(I, g)
+        $chap10::is_nonzero_on(I, g)
         =>:
             $is_constant_on_subset(I, E, fn(x I) R {f(x) / g(x)})
     # Source handling: this is the same-piece quotient step used in Exercise
@@ -2424,7 +2420,7 @@ thm piecewise_constant_same_partition_quotient:
     ? forall I power_set(R), P finite_set, f, g fn(x I) R:
         $is_piecewise_constant_with_partition(I, P, f)
         $is_piecewise_constant_with_partition(I, P, g)
-        $is_nonzero_on(I, g)
+        $chap10::is_nonzero_on(I, g)
         =>:
             $is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) / g(x)})
     # Source handling: this is the same-partition quotient step.
@@ -2698,7 +2694,7 @@ thm piecewise_constant_quotient:
     ? forall I power_set(R), f, g fn(x I) R:
         $is_piecewise_constant_on(I, f)
         $is_piecewise_constant_on(I, g)
-        $is_nonzero_on(I, g)
+        $chap10::is_nonzero_on(I, g)
         =>:
             $is_piecewise_constant_on(I, fn(x I) R {f(x) / g(x)})
     # Source handling: this is the quotient clause of Exercise 11.2.2.
@@ -4633,13 +4629,13 @@ thm lower_riemann_integral_candidate_value_from_member:
 
 prop has_upper_riemann_integral(I power_set(R), f fn(x I) R, U R):
     $is_bounded_interval(I)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     $has_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f))
     $is_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f), U)
 
 prop has_lower_riemann_integral(I power_set(R), f fn(x I) R, L R):
     $is_bounded_interval(I)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
     $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
 
@@ -4806,12 +4802,12 @@ thm lower_bounded_real_set_with_member_has_infimum:
 thm lower_riemann_integral_candidate_values_have_least_upper_bound:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
     # A bounded function has a constant majorant.  Every lower candidate is
     # below that majorant's integral, so Chapter 5 completeness applies.
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     by thm constant_function_is_piecewise_constant(I, M)
     by thm piecewise_constant_integral_of_constant(I, M)
     claim:
@@ -4895,13 +4891,13 @@ thm lower_riemann_integral_candidate_values_have_least_upper_bound:
 thm upper_riemann_integral_candidate_values_have_infimum:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f))
     # A constant majorant supplies one upper candidate, while the opposite
     # constant is below every upper candidate.  Reflect the latter bound
     # through Chapter 5 completeness to obtain the infimum.
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     by thm constant_function_is_piecewise_constant(I, M)
     by thm piecewise_constant_integral_of_constant(I, M)
     claim:
@@ -4952,7 +4948,7 @@ thm upper_riemann_integral_candidate_values_have_infimum:
 have fn upper_riemann_integral by exist!:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist! U R st {$has_upper_riemann_integral(I, f, U)}
     # Source handling: this packages the infimum definition of the upper
@@ -4964,7 +4960,7 @@ have fn upper_riemann_integral by exist!:
         obtain U from exist U R st {$is_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f), U)}
         witness exist U0 R st {$has_upper_riemann_integral(I, f, U0)} from U:
             $is_bounded_interval(I)
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
             $has_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f))
             $is_infimum_of_real_set(upper_riemann_integral_candidate_values(I, f), U)
         $has_upper_riemann_integral(I, f, U)
@@ -4980,7 +4976,7 @@ have fn upper_riemann_integral by exist!:
 have fn lower_riemann_integral by exist!:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist! L R st {$has_lower_riemann_integral(I, f, L)}
     # Source handling: this packages the supremum definition of the lower
@@ -4992,7 +4988,7 @@ have fn lower_riemann_integral by exist!:
         obtain L from exist L R st {$is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)}
         witness exist L0 R st {$has_lower_riemann_integral(I, f, L0)} from L:
             $is_bounded_interval(I)
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
             $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
             $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
         $has_lower_riemann_integral(I, f, L)
@@ -5064,7 +5060,7 @@ the lower integral and both are real.
 thm upper_lower_riemann_integral_bounds:
     ? forall I power_set(R), f fn(x I) R, M R_pos:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         forall x I:
             -M <= f(x)
             f(x) <= M
@@ -5150,7 +5146,7 @@ value.
 
 prop is_riemann_integrable_on(I power_set(R), f fn(x I) R):
     $is_bounded_interval(I)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     upper_riemann_integral(I, f) = lower_riemann_integral(I, f)
 
 prop has_riemann_integral(I power_set(R), f fn(x I) R, s R):
@@ -5167,7 +5163,7 @@ thm riemann_integrable_on_bounded_function:
     ? forall I power_set(R), f fn(x I) R:
         $is_riemann_integrable_on(I, f)
         =>:
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
 
 thm riemann_integrable_upper_eq_lower:
     ? forall I power_set(R), f fn(x I) R:
@@ -5286,7 +5282,7 @@ thm piecewise_constant_on_bounded_interval_is_bounded:
         $is_bounded_interval(I)
         $is_piecewise_constant_on(I, f)
         =>:
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
     # Choose the finite list of constant heights and bound each value by the
     # sum of their absolute values plus one.
     obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
@@ -5305,7 +5301,7 @@ thm piecewise_constant_on_bounded_interval_is_bounded:
     finite_set_sum(P, h) + 1 > 0
     finite_set_sum(P, h) + 1 $in R_pos
     have M R_pos = finite_set_sum(P, h) + 1
-    witness exist M0 R_pos st {$is_function_bounded_by(I, f, M0)} from M:
+    witness exist M0 R_pos st {$chap9::is_function_bounded_by(I, f, M0)} from M:
         claim:
             ? forall x I:
                 abs(f(x)) <= M
@@ -5322,8 +5318,8 @@ thm piecewise_constant_on_bounded_interval_is_bounded:
             abs(f(x)) <= finite_set_sum(P, h) + 1
             M = finite_set_sum(P, h) + 1
             abs(f(x)) <= M
-        $is_function_bounded_by(I, f, M)
-    $is_bounded_function_on(I, f)
+        $chap9::is_function_bounded_by(I, f, M)
+    $chap9::is_bounded_function_on(I, f)
 
 thm piecewise_constant_functions_are_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R, s R:
@@ -5339,7 +5335,7 @@ thm piecewise_constant_functions_are_riemann_integrable:
     $is_partition_of_bounded_interval(I, P)
     $is_bounded_interval(I)
     by thm piecewise_constant_on_bounded_interval_is_bounded(I, f)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     $has_upper_riemann_integral(I, f, upper_riemann_integral(I, f))
     $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
     claim:
@@ -5370,7 +5366,7 @@ thm piecewise_constant_functions_are_riemann_integrable:
         $is_lower_riemann_integral_candidate_value(I, f, s)
     by thm lower_riemann_integral_candidate_value_le_integral(I, f, lower_riemann_integral(I, f), s)
     s <= lower_riemann_integral(I, f)
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
         ? forall x I:
             -M <= f(x)
@@ -5568,7 +5564,7 @@ thm point_or_empty_interval_integral_zero:
     ? forall I power_set(R), f fn(x I) R:
         $is_point_or_empty_interval(I)
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
             integral_on(I, f) = 0
@@ -5621,35 +5617,35 @@ prop has_lower_riemann_sum_piece_contribution(I power_set(R), J power_set(R), f 
 thm bounded_piece_function_values_have_upper_bound:
     ? forall I power_set(R), J power_set(R), f fn(x I) R:
         J $subset I
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
-            $has_upper_bound(function_values_on_subset(I, J, f))
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+            $chap5::has_upper_bound(function_values_on_subset(I, J, f))
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
-        ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+        ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
         claim:
-            ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
             forall x J:
                 x $in I
                 fn(x J) R {f(x)}(x) = f(x)
                 abs(f(x)) <= M
                 abs(fn(x J) R {f(x)}(x)) <= M
-            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
-            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        $is_bounded_function_on(J, fn(x J) R {f(x)})
-    by thm bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
-    $is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
+            $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        witness exist M0 R_pos st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+            $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
+    by thm chap9::bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
+    $chap9::is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
     function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
-    $is_bounded_real_set(function_values_on_subset(I, J, f))
-    by thm bounded_real_set_has_upper_bound(function_values_on_subset(I, J, f))
-    $has_upper_bound(function_values_on_subset(I, J, f))
+    $chap9::is_bounded_real_set(function_values_on_subset(I, J, f))
+    by thm chap9::bounded_real_set_has_upper_bound(function_values_on_subset(I, J, f))
+    $chap5::has_upper_bound(function_values_on_subset(I, J, f))
 
 thm nonempty_piece_function_values_has_least_upper_bound:
     ? forall I power_set(R), J power_set(R), f fn(x I) R:
         J $subset I
         $is_nonempty_set(J)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
     have x J
@@ -5662,7 +5658,7 @@ thm nonempty_piece_function_values_has_least_upper_bound:
     witness $is_nonempty_set(function_values_on_subset(I, J, f)) from f(x):
         f(x) $in function_values_on_subset(I, J, f)
     by thm bounded_piece_function_values_have_upper_bound(I, J, f)
-    $has_upper_bound(function_values_on_subset(I, J, f))
+    $chap5::has_upper_bound(function_values_on_subset(I, J, f))
     by thm chap5::least_upper_bound_existence(function_values_on_subset(I, J, f))
     obtain s from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
     witness exist s0 R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s0)} from s:
@@ -5671,27 +5667,27 @@ thm nonempty_piece_function_values_has_least_upper_bound:
 thm bounded_piece_function_values_have_lower_bound:
     ? forall I power_set(R), J power_set(R), f fn(x I) R:
         J $subset I
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist B R st {$is_lower_bound_of_real_set(function_values_on_subset(I, J, f), B)}
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
-        ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+        ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
         claim:
-            ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
             forall x J:
                 x $in I
                 fn(x J) R {f(x)}(x) = f(x)
                 abs(f(x)) <= M
                 abs(fn(x J) R {f(x)}(x)) <= M
-            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
-            $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        $is_bounded_function_on(J, fn(x J) R {f(x)})
-    by thm bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
-    $is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
+            $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        witness exist M0 R_pos st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+            $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+        $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
+    by thm chap9::bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
+    $chap9::is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
     function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
-    $is_bounded_real_set(function_values_on_subset(I, J, f))
+    $chap9::is_bounded_real_set(function_values_on_subset(I, J, f))
     obtain B from exist B R_pos st {function_values_on_subset(I, J, f) $subset '[-B, B]}
     witness exist B0 R st {$is_lower_bound_of_real_set(function_values_on_subset(I, J, f), B0)} from -B:
         claim:
@@ -5707,7 +5703,7 @@ thm nonempty_piece_function_values_has_infimum:
     ? forall I power_set(R), J power_set(R), f fn(x I) R:
         J $subset I
         $is_nonempty_set(J)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s)}
     have x J
@@ -5728,7 +5724,7 @@ thm upper_riemann_sum_piece_contribution_exists:
     ? forall I power_set(R), P finite_set, J P, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
     P $in power_set(power_set(R))
@@ -5762,7 +5758,7 @@ thm lower_riemann_sum_piece_contribution_exists:
     ? forall I power_set(R), P finite_set, J P, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
     P $in power_set(power_set(R))
@@ -5803,20 +5799,20 @@ prop is_lower_riemann_sum_contribution_family(I power_set(R), P finite_set, f fn
 prop has_upper_riemann_sum(I power_set(R), P finite_set, f fn(x I) R, U R):
     P $in power_set(power_set(R))
     $is_partition_of_bounded_interval(I, P)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U = finite_set_sum(P, c)}
 
 prop has_lower_riemann_sum(I power_set(R), P finite_set, f fn(x I) R, L R):
     P $in power_set(power_set(R))
     $is_partition_of_bounded_interval(I, P)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
 
 thm upper_riemann_sum_exists:
     ? forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist U R st {$has_upper_riemann_sum(I, P, f, U)}
     have fn upper_piece_value_set(J P) power_set(R) = {t R: $has_upper_riemann_sum_piece_contribution(I, J, f, t)}
@@ -5846,7 +5842,7 @@ thm upper_riemann_sum_exists:
     witness exist U0 R st {$has_upper_riemann_sum(I, P, f, U0)} from finite_set_sum(P, c):
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         witness exist c0 fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)} from c:
             forall J P:
                 c(J) = choose_upper(upper_piece_value_set(J))
@@ -5862,7 +5858,7 @@ thm lower_riemann_sum_exists:
     ? forall I power_set(R), P finite_set, f fn(x I) R:
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist L R st {$has_lower_riemann_sum(I, P, f, L)}
     have fn lower_piece_value_set(J P) power_set(R) = {t R: $has_lower_riemann_sum_piece_contribution(I, J, f, t)}
@@ -5892,7 +5888,7 @@ thm lower_riemann_sum_exists:
     witness exist L0 R st {$has_lower_riemann_sum(I, P, f, L0)} from finite_set_sum(P, c):
         P $in power_set(power_set(R))
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         witness exist c0 fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)} from c:
             forall J P:
                 c(J) = choose_lower(lower_piece_value_set(J))
@@ -5932,7 +5928,7 @@ at most the lower Riemann sum.
 thm piecewise_constant_majorant_minorant_compare_riemann_sums:
     ? forall I power_set(R), P finite_set, f, g, h fn(x I) R, sg, sh, U, L R:
         $is_partition_of_bounded_interval(I, P)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         $is_piecewise_constant_with_partition(I, P, g)
         $is_piecewise_constant_with_partition(I, P, h)
         $majorizes_on(I, g, f)
@@ -5960,7 +5956,7 @@ lower Riemann sums.
 thm upper_integral_equals_infimum_of_riemann_sums:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_infimum_of_real_set(upper_riemann_sum_values(I, f))
             $is_infimum_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
@@ -5975,7 +5971,7 @@ thm upper_integral_equals_infimum_of_riemann_sums:
 thm lower_integral_equals_supremum_of_riemann_sums:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_least_upper_bound(lower_riemann_sum_values(I, f))
             $is_least_upper_bound(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
@@ -6019,7 +6015,7 @@ thm riemann_integral_scalar_multiplication_law:
             integral_on(I, fn(x I) R {c * f(x)}) = c * integral_on(I, f)
     # Source handling: this is Theorem 11.4.1(b).
     # proof_debt: scale piecewise constant upper/lower approximations, with a
-    # sign split for `c`.
+    # chap9::sign split for `c`.
     trust:
         $is_riemann_integrable_on(I, fn(x I) R {c * f(x)})
         integral_on(I, fn(x I) R {c * f(x)}) = c * integral_on(I, f)
@@ -6604,27 +6600,27 @@ prop has_small_oscillation_partition(I power_set(R), f fn(x I) R, epsilon R_pos)
 thm uniformly_continuous_on_bounded_interval_is_bounded:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_uniformly_continuous_on(I, f)
+        $chap9::is_uniformly_continuous_on(I, f)
         =>:
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
     # Source handling: Chapter 9 proves the bounded-image result for every
     # bounded subset; take that subset to be the whole interval.
     by thm bounded_intervals_are_bounded_connected(I)
-    $is_bounded_real_set(I)
+    $chap9::is_bounded_real_set(I)
     by thm chap9::uniformly_continuous_maps_bounded_sets_to_bounded_sets(I, f, I)
-    $function_image_of_subset_is_bounded(I, f, I)
-    obtain M from exist M R_pos st {$is_subset_image_bounded_by(I, f, I, M)}
-    witness exist M0 R_pos st {$is_function_bounded_by(I, f, M0)} from M:
+    $chap9::function_image_of_subset_is_bounded(I, f, I)
+    obtain M from exist M R_pos st {$chap9::is_subset_image_bounded_by(I, f, I, M)}
+    witness exist M0 R_pos st {$chap9::is_function_bounded_by(I, f, M0)} from M:
         I $subset I
         forall x I:
             abs(f(x)) <= M
-        $is_function_bounded_by(I, f, M)
-    $is_bounded_function_on(I, f)
+        $chap9::is_function_bounded_by(I, f, M)
+    $chap9::is_bounded_function_on(I, f)
 
 thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
     ? forall I power_set(R), f fn(x I) R, epsilon R_pos:
         $is_bounded_interval(I)
-        $is_uniformly_continuous_on(I, f)
+        $chap9::is_uniformly_continuous_on(I, f)
         =>:
             $has_small_oscillation_partition(I, f, epsilon)
     # Source handling: choose `delta` from uniform continuity, then partition
@@ -6638,7 +6634,7 @@ thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
 thm darbouxs_criterion_from_small_oscillation_partitions:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         forall epsilon R_pos:
             $has_small_oscillation_partition(I, f, epsilon)
         =>:
@@ -6657,14 +6653,14 @@ thm darbouxs_criterion_from_small_oscillation_partitions:
 thm uniformly_continuous_bounded_interval_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_uniformly_continuous_on(I, f)
+        $chap9::is_uniformly_continuous_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: Tao partitions the interval into small equal-length
     # pieces, uses uniform continuity to make each oscillation small, and then
     # applies finite additivity of length.
     by thm uniformly_continuous_on_bounded_interval_is_bounded(I, f)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     claim:
         ? forall epsilon R_pos:
             $has_small_oscillation_partition(I, f, epsilon)
@@ -6677,22 +6673,22 @@ Corollary 11.5.2.  A continuous function on a closed interval `[a,b]` is
 Riemann integrable.
 """
 
-thm continuous_closed_interval_uniformly_continuous:
+thm chap9::continuous_closed_interval_uniformly_continuous:
     ? forall a, b R, f fn(x '[a, b]) R:
         a < b
-        $is_continuous_on('[a, b], f)
+        $chap9::is_continuous_on('[a, b], f)
         =>:
-            $is_uniformly_continuous_on('[a, b], f)
+            $chap9::is_uniformly_continuous_on('[a, b], f)
     # Source handling: this is Theorem 9.9.16, retained locally so the
     # Chapter 11 proof follows the source sequence without duplicating its
     # compactness argument.
     by thm chap9::continuous_closed_interval_uniformly_continuous(a, b, f)
-    $is_uniformly_continuous_on('[a, b], f)
+    $chap9::is_uniformly_continuous_on('[a, b], f)
 
 thm continuous_closed_interval_riemann_integrable:
     ? forall a, b R, f fn(x '[a, b]) R:
         a < b
-        $is_continuous_on('[a, b], f)
+        $chap9::is_continuous_on('[a, b], f)
         =>:
             $is_riemann_integrable_on('[a, b], f)
     # Source handling: Tao combines Theorem 11.5.1 with Theorem 9.9.16, the
@@ -6700,8 +6696,8 @@ thm continuous_closed_interval_riemann_integrable:
     # intervals.
     by thm non_degenerate_interval_forms_are_bounded_intervals(a, b)
     $is_bounded_interval('[a, b])
-    by thm continuous_closed_interval_uniformly_continuous(a, b, f)
-    $is_uniformly_continuous_on('[a, b], f)
+    by thm chap9::continuous_closed_interval_uniformly_continuous(a, b, f)
+    $chap9::is_uniformly_continuous_on('[a, b], f)
     by thm uniformly_continuous_bounded_interval_riemann_integrable('[a, b], f)
     $is_riemann_integrable_on('[a, b], f)
 
@@ -6726,7 +6722,7 @@ prop has_integrable_closed_interval_trim(I power_set(R), f fn(x I) R, eta R_pos)
 thm continuous_bounded_interval_has_integrable_closed_trims:
     ? forall I power_set(R), f fn(x I) R, eta R_pos:
         $is_bounded_interval(I)
-        $is_continuous_on(I, f)
+        $chap9::is_continuous_on(I, f)
         =>:
             $has_integrable_closed_interval_trim(I, f, eta)
     # Source handling: choose a closed subinterval inside `I` whose omitted
@@ -6739,7 +6735,7 @@ thm continuous_bounded_interval_has_integrable_closed_trims:
 thm darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         forall eta R_pos:
             $has_integrable_closed_interval_trim(I, f, eta)
         =>:
@@ -6754,8 +6750,8 @@ thm darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails:
 thm bounded_continuous_bounded_interval_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_continuous_on(I, f)
-        $is_bounded_function_on(I, f)
+        $chap9::is_continuous_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: Tao trims an open or half-open interval to a closed
@@ -6779,7 +6775,7 @@ prop is_piecewise_continuous_with_partition(I power_set(R), P finite_set, f fn(x
         J $in power_set(R)
         J $subset I
         =>:
-            $is_continuous_on(J, fn(x J) R {f(x)})
+            $chap9::is_continuous_on(J, fn(x J) R {f(x)})
 
 prop is_piecewise_continuous_on(I power_set(R), f fn(x I) R):
     exist P finite_set st {$is_piecewise_continuous_with_partition(I, P, f)}
@@ -6808,21 +6804,21 @@ have fn example_11_5_5_function(x '[1, 3]) R by cases:
 
 thm example_11_5_5_not_continuous_on_closed_interval:
     ? forall:
-        not $is_continuous_on('[1, 3], example_11_5_5_function)
+        not $chap9::is_continuous_on('[1, 3], example_11_5_5_function)
     # Source handling: the left-hand values approach `4` at `2`, while the
     # function value is `7`.  Given the continuity radius `delta`, take a
     # point `2 - min(delta / 2, 1 / 2)` in the left-hand piece.  Its value
     # stays at least `3` away from `7`, contradicting epsilon `1`.
     by contra:
-        ? not $is_continuous_on('[1, 3], example_11_5_5_function)
-        $is_continuous_on('[1, 3], example_11_5_5_function)
+        ? not $chap9::is_continuous_on('[1, 3], example_11_5_5_function)
+        $chap9::is_continuous_on('[1, 3], example_11_5_5_function)
         2 $in '[1, 3]
-        $is_continuous_at('[1, 3], example_11_5_5_function, 2)
+        $chap9::is_continuous_at('[1, 3], example_11_5_5_function, 2)
         example_11_5_5_function(2) = 7
-        $has_function_limit('[1, 3], example_11_5_5_function, 2, 7)
+        $chap9::has_function_limit('[1, 3], example_11_5_5_function, 2, 7)
         1 $in R_pos
-        $is_locally_epsilon_close_to('[1, 3], example_11_5_5_function, 2, 7, 1)
-        obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to('[1, 3], example_11_5_5_function, 2, 7, 1, delta)}
+        $chap9::is_locally_epsilon_close_to('[1, 3], example_11_5_5_function, 2, 7, 1)
+        obtain delta from exist delta R_pos st {$chap9::is_delta_neighborhood_close_to('[1, 3], example_11_5_5_function, 2, 7, 1, delta)}
         have h R_pos = min(delta / 2, 1 / 2)
         min(delta / 2, 1 / 2) <= 1 / 2
         h = min(delta / 2, 1 / 2)
@@ -7100,16 +7096,16 @@ thm example_11_5_5_square_piece_continuous:
     ? forall:
         '[1, 2) $subset '[1, 3]
         =>:
-            $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
     # Source handling: on `[1,2)` the displayed function agrees with the
     # polynomial `x^2`, and the arithmetic continuity rules apply on the
     # restricted domain.
-    by thm identity_function_continuous('[1, 2))
-    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x})
-    by thm continuity_closed_under_arithmetic('[1, 2), fn(x '[1, 2)) R {x}, fn(x '[1, 2)) R {x})
-    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x * x})
+    by thm chap9::identity_function_continuous('[1, 2))
+    $chap9::is_continuous_on('[1, 2), fn(x '[1, 2)) R {x})
+    by thm chap9::continuity_closed_under_arithmetic('[1, 2), fn(x '[1, 2)) R {x}, fn(x '[1, 2)) R {x})
+    $chap9::is_continuous_on('[1, 2), fn(x '[1, 2)) R {x * x})
     fn(x '[1, 2)) R {x * x} = fn(x '[1, 2)) R {x^2}
-    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {x^2})
+    $chap9::is_continuous_on('[1, 2), fn(x '[1, 2)) R {x^2})
     claim:
         ? forall x '[1, 2):
             fn(x '[1, 2)) R {example_11_5_5_function(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
@@ -7119,17 +7115,17 @@ thm example_11_5_5_square_piece_continuous:
         fn(x '[1, 2)) R {x^2}(x) = x^2
         fn(x '[1, 2)) R {example_11_5_5_function(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
     fn(x '[1, 2)) R {example_11_5_5_function(x)} = fn(x '[1, 2)) R {x^2}
-    $is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
+    $chap9::is_continuous_on('[1, 2), fn(x '[1, 2)) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_singleton_piece_continuous:
     ? forall:
         {2} $subset '[1, 3]
         =>:
-            $is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
     # Source handling: the restriction to `{2}` is the constant function with
     # value `7`, so it is continuous by the constant-function proof.
-    by thm constant_function_continuous({2}, 7)
-    $is_continuous_on({2}, fn(x {2}) R {7})
+    by thm chap9::constant_function_continuous({2}, 7)
+    $chap9::is_continuous_on({2}, fn(x {2}) R {7})
     claim:
         ? forall x {2}:
             fn(x {2}) R {example_11_5_5_function(x)}(x) = fn(x {2}) R {7}(x)
@@ -7139,26 +7135,26 @@ thm example_11_5_5_singleton_piece_continuous:
         fn(x {2}) R {7}(x) = 7
         fn(x {2}) R {example_11_5_5_function(x)}(x) = fn(x {2}) R {7}(x)
     fn(x {2}) R {example_11_5_5_function(x)} = fn(x {2}) R {7}
-    $is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
+    $chap9::is_continuous_on({2}, fn(x {2}) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_cube_piece_continuous:
     ? forall:
         '(2, 3] $subset '[1, 3]
         =>:
-            $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
     # Source handling: on `(2,3]` the displayed function agrees with the
     # polynomial `x^3`, and the arithmetic continuity rules apply on the
     # restricted domain.
-    by thm identity_function_continuous('(2, 3])
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x})
-    by thm continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x}, fn(x '(2, 3]) R {x})
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x * x})
+    by thm chap9::identity_function_continuous('(2, 3])
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {x})
+    by thm chap9::continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x}, fn(x '(2, 3]) R {x})
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {x * x})
     fn(x '(2, 3]) R {x * x} = fn(x '(2, 3]) R {x^2}
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2})
-    by thm continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x^2}, fn(x '(2, 3]) R {x})
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2 * x})
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2})
+    by thm chap9::continuity_closed_under_arithmetic('(2, 3], fn(x '(2, 3]) R {x^2}, fn(x '(2, 3]) R {x})
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^2 * x})
     fn(x '(2, 3]) R {x^2 * x} = fn(x '(2, 3]) R {x^3}
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^3})
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {x^3})
     claim:
         ? forall x '(2, 3]:
             fn(x '(2, 3]) R {example_11_5_5_function(x)}(x) = fn(x '(2, 3]) R {x^3}(x)
@@ -7168,14 +7164,14 @@ thm example_11_5_5_cube_piece_continuous:
         fn(x '(2, 3]) R {x^3}(x) = x^3
         fn(x '(2, 3]) R {example_11_5_5_function(x)}(x) = fn(x '(2, 3]) R {x^3}(x)
     fn(x '(2, 3]) R {example_11_5_5_function(x)} = fn(x '(2, 3]) R {x^3}
-    $is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
+    $chap9::is_continuous_on('(2, 3], fn(x '(2, 3]) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_partition_piece_continuity:
     ? forall J example_11_5_5_partition_set:
         J $in power_set(R)
         J $subset '[1, 3]
         =>:
-            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
     # Source handling: the three concrete continuity facts above handle
     # `[1,2)`, `{2}`, and `(2,3]` after enumerating the displayed partition.
     by enumerate finite_set:
@@ -7188,19 +7184,19 @@ thm example_11_5_5_partition_piece_continuity:
         J $subset '[1, 3]
         x $in '[1, 3]
     by cases:
-        ? $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+        ? $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
         case J = '[1, 2):
             by thm example_11_5_5_square_piece_continuous()
             fn(x J) R {example_11_5_5_function(x)} = fn(x '[1, 2)) R {example_11_5_5_function(x)}
-            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
         case J = {2}:
             by thm example_11_5_5_singleton_piece_continuous()
             fn(x J) R {example_11_5_5_function(x)} = fn(x {2}) R {example_11_5_5_function(x)}
-            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
         case J = '(2, 3]:
             by thm example_11_5_5_cube_piece_continuous()
             fn(x J) R {example_11_5_5_function(x)} = fn(x '(2, 3]) R {example_11_5_5_function(x)}
-            $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+            $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
 
 thm example_11_5_5_piecewise_continuous_with_displayed_partition:
     ? forall:
@@ -7213,9 +7209,9 @@ thm example_11_5_5_piecewise_continuous_with_displayed_partition:
             J $in power_set(R)
             J $subset '[1, 3]
             =>:
-                $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+                $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
         by thm example_11_5_5_partition_piece_continuity(J)
-        $is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
+        $chap9::is_continuous_on(J, fn(x J) R {example_11_5_5_function(x)})
     $is_piecewise_continuous_with_partition('[1, 3], example_11_5_5_partition_set, example_11_5_5_function)
 
 thm example_11_5_5_piecewise_continuous:
@@ -7255,13 +7251,13 @@ thm bounded_piecewise_continuous_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
         $is_piecewise_continuous_on(I, f)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: Tao proves this in Exercise 11.5.1 using additivity over
     # partition pieces.
     obtain P from exist P finite_set st {$is_piecewise_continuous_with_partition(I, P, f)}
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
         ? forall J P:
             J $in power_set(R)
@@ -7270,20 +7266,20 @@ thm bounded_piecewise_continuous_riemann_integrable:
         J $in power_set(R)
         J $subset I
         $is_bounded_interval(J)
-        $is_continuous_on(J, fn(x J) R {f(x)})
+        $chap9::is_continuous_on(J, fn(x J) R {f(x)})
         claim:
-            ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+            ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
             claim:
-                ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+                ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
                 forall x J:
                     x $in I
                     fn(x J) R {f(x)}(x) = f(x)
                     abs(f(x)) <= M
                     abs(fn(x J) R {f(x)}(x)) <= M
-                $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-            witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
-                $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-            $is_bounded_function_on(J, fn(x J) R {f(x)})
+                $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            witness exist M0 R_pos st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+                $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
         by thm bounded_continuous_bounded_interval_riemann_integrable(J, fn(x J) R {f(x)})
         $is_riemann_integrable_on(J, fn(x J) R {f(x)})
     $is_partition_of_bounded_interval(I, P)
@@ -7301,7 +7297,7 @@ Riemann integrable.
 thm monotone_closed_interval_riemann_integrable:
     ? forall a, b R, f fn(x '[a, b]) R:
         a < b
-        $is_monotone_on('[a, b], f)
+        $chap9::is_monotone_on('[a, b], f)
         =>:
             $is_riemann_integrable_on('[a, b], f)
     # Source handling: Tao handles the increasing case, partitions `[a,b]`
@@ -7324,8 +7320,8 @@ Riemann integrable.
 thm bounded_monotone_bounded_interval_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
-        $is_monotone_on(I, f)
-        $is_bounded_function_on(I, f)
+        $chap9::is_monotone_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: Tao proves this in Exercise 11.6.1 by adapting the
@@ -7346,7 +7342,7 @@ prop is_piecewise_monotone_with_partition(I power_set(R), P finite_set, f fn(x I
     forall J P:
         J $in power_set(R)
         J $subset I
-        $is_monotone_on(J, fn(x J) R {f(x)})
+        $chap9::is_monotone_on(J, fn(x J) R {f(x)})
 
 prop is_piecewise_monotone_on(I power_set(R), f fn(x I) R):
     exist P finite_set st {$is_piecewise_monotone_with_partition(I, P, f)}
@@ -7366,13 +7362,13 @@ thm bounded_piecewise_monotone_with_partition_riemann_integrable:
     ? forall I power_set(R), P finite_set, f fn(x I) R:
         $is_bounded_interval(I)
         $is_piecewise_monotone_with_partition(I, P, f)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: the given partition reduces the claim to finitely many
     # bounded monotone restrictions.  Corollary 11.6.3 handles each piece; the
     # preceding partition theorem combines the pieces.
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
         ? forall J P:
             J $in power_set(R)
@@ -7381,20 +7377,20 @@ thm bounded_piecewise_monotone_with_partition_riemann_integrable:
         J $in power_set(R)
         J $subset I
         $is_bounded_interval(J)
-        $is_monotone_on(J, fn(x J) R {f(x)})
+        $chap9::is_monotone_on(J, fn(x J) R {f(x)})
         claim:
-            ? $is_bounded_function_on(J, fn(x J) R {f(x)})
+            ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
             claim:
-                ? $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+                ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
                 forall x J:
                     x $in I
                     fn(x J) R {f(x)}(x) = f(x)
                     abs(f(x)) <= M
                     abs(fn(x J) R {f(x)}(x)) <= M
-                $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-            witness exist M0 R_pos st {$is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
-                $is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-            $is_bounded_function_on(J, fn(x J) R {f(x)})
+                $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            witness exist M0 R_pos st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+                $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
+            $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
         by thm bounded_monotone_bounded_interval_riemann_integrable(J, fn(x J) R {f(x)})
         $is_riemann_integrable_on(J, fn(x J) R {f(x)})
     by thm riemann_integrable_from_partition_piece_integrability(I, P, f)
@@ -7404,7 +7400,7 @@ thm bounded_piecewise_monotone_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
         $is_piecewise_monotone_on(I, f)
-        $is_bounded_function_on(I, f)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
     # Source handling: choose the partition from the definition, prove
@@ -7461,7 +7457,7 @@ its finite interval integrals is finite.
 
 thm integral_test_series_implies_finite_integral_supremum:
     ? forall f fn(x '[0,)) R, S R:
-        $is_monotone_decreasing_on('[0,), f)
+        $chap9::is_monotone_decreasing_on('[0,), f)
         $is_nonnegative_on('[0,), f)
         $has_series_sum_from_zero(fn(n N) R {f(n)}, S)
         =>:
@@ -7474,7 +7470,7 @@ thm integral_test_series_implies_finite_integral_supremum:
 
 thm integral_test_finite_integral_supremum_implies_series:
     ? forall f fn(x '[0,)) R:
-        $is_monotone_decreasing_on('[0,), f)
+        $chap9::is_monotone_decreasing_on('[0,), f)
         $is_nonnegative_on('[0,), f)
         $has_finite_integral_supremum_on_nonnegative_ray(f)
         =>:
@@ -7538,10 +7534,10 @@ thm real_point_is_rational_or_irrational:
 
 thm dirichlet_rational_indicator_bounded:
     ? forall:
-        $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
     # The indicator only takes the values `0` and `1`, so `1` is a uniform
     # bound on `[0,1]`.
-    witness exist M R_pos st {$is_function_bounded_by('[0, 1], dirichlet_rational_indicator_on_unit, M)} from 1:
+    witness exist M R_pos st {$chap9::is_function_bounded_by('[0, 1], dirichlet_rational_indicator_on_unit, M)} from 1:
         1 $in R_pos
         claim:
             ? forall x '[0, 1]:
@@ -7560,13 +7556,13 @@ thm dirichlet_rational_indicator_bounded:
                     abs(0) = 0
                     0 <= 1
                     abs(dirichlet_rational_indicator_on_unit(x)) <= 1
-        $is_function_bounded_by('[0, 1], dirichlet_rational_indicator_on_unit, 1)
-    $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_function_bounded_by('[0, 1], dirichlet_rational_indicator_on_unit, 1)
+    $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
 
 thm dirichlet_rational_indicator_upper_integral_value:
     ? forall:
         $is_bounded_interval('[0, 1])
-        $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         =>:
             upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 1
     # Source handling: every non-degenerate partition piece contains a rational
@@ -7579,7 +7575,7 @@ thm dirichlet_rational_indicator_upper_integral_value:
 thm dirichlet_rational_indicator_lower_integral_value:
     ? forall:
         $is_bounded_interval('[0, 1])
-        $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         =>:
             lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
     # Source handling: every non-degenerate partition piece contains an
@@ -7591,7 +7587,7 @@ thm dirichlet_rational_indicator_lower_integral_value:
 thm dirichlet_rational_indicator_upper_lower_integrals_separated:
     ? forall:
         $is_bounded_interval('[0, 1])
-        $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         =>:
             upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) != lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit)
     # Once the Darboux values are known, the two integrals are separated by
@@ -7608,14 +7604,14 @@ thm dirichlet_rational_indicator_upper_lower_integrals_separated:
 
 thm dirichlet_rational_indicator_bounded_not_riemann_integrable:
     ? forall:
-        $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+        $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         not $is_riemann_integrable_on('[0, 1], dirichlet_rational_indicator_on_unit)
     # Source handling: Tao's density argument gives upper integral `1` and
     # lower integral `0`; the checked part below is the contradiction with the
     # definition of Riemann integrability.
     by thm non_degenerate_interval_forms_are_bounded_intervals(0, 1)
     by thm dirichlet_rational_indicator_bounded()
-    $is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
+    $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
     by contra:
         ? not $is_riemann_integrable_on('[0, 1], dirichlet_rational_indicator_on_unit)
         $is_riemann_integrable_on('[0, 1], dirichlet_rational_indicator_on_unit)
@@ -7721,7 +7717,7 @@ thm real_order_split_lt_or_ge:
 thm monotone_alpha_interval_length_nonnegative:
     ? forall I power_set(R), alpha fn(x R) R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         =>:
             0 <= alpha_interval_length(alpha, I)
     # On a non-degenerate endpoint interval, monotonicity gives
@@ -8649,7 +8645,7 @@ thm lower_riemann_stieltjes_integral_candidate_value_from_member:
 thm piecewise_constant_stieltjes_minorant_integral_le_majorant_integral:
     ? forall I power_set(R), alpha fn(x R) R, f, g, h fn(x I) R, sg, sh R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         $majorizes_on(I, g, f)
         $minorizes_on(I, h, f)
         $has_piecewise_constant_riemann_stieltjes_integral(I, alpha, g, sg)
@@ -8666,7 +8662,7 @@ thm piecewise_constant_stieltjes_minorant_integral_le_majorant_integral:
 
 thm identity_alpha_is_monotone_increasing:
     ? forall:
-        $is_monotone_increasing_on(R, identity_alpha)
+        $chap9::is_monotone_increasing_on(R, identity_alpha)
     # Source handling: the identity function preserves the order of real
     # inputs, so it is an admissible Stieltjes integrator.
     claim:
@@ -8678,7 +8674,7 @@ thm identity_alpha_is_monotone_increasing:
         identity_alpha(y) = y
         x <= y
         identity_alpha(x) <= identity_alpha(y)
-    $is_monotone_increasing_on(R, identity_alpha)
+    $chap9::is_monotone_increasing_on(R, identity_alpha)
 
 thm identity_alpha_upper_riemann_candidate_value_sets_match:
     ? forall I power_set(R), f fn(x I) R:
@@ -8723,15 +8719,15 @@ thm identity_alpha_lower_riemann_candidate_value_sets_match:
 
 prop has_upper_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(x I) R, U R):
     $is_bounded_interval(I)
-    $is_monotone_increasing_on(R, alpha)
-    $is_bounded_function_on(I, f)
+    $chap9::is_monotone_increasing_on(R, alpha)
+    $chap9::is_bounded_function_on(I, f)
     $has_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f))
     $is_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f), U)
 
 prop has_lower_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(x I) R, L R):
     $is_bounded_interval(I)
-    $is_monotone_increasing_on(R, alpha)
-    $is_bounded_function_on(I, f)
+    $chap9::is_monotone_increasing_on(R, alpha)
+    $chap9::is_bounded_function_on(I, f)
     $has_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
     $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L)
 
@@ -8760,13 +8756,13 @@ thm lower_riemann_stieltjes_integral_value_unique:
 thm lower_riemann_stieltjes_integral_candidate_values_have_least_upper_bound:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
-        $is_bounded_function_on(I, f)
+        $chap9::is_monotone_increasing_on(R, alpha)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
     # Constant alpha-weighted majorants and minorants reduce completeness of
     # the lower candidate set to Chapter 5.
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     by thm constant_function_is_piecewise_constant(I, M)
     by thm piecewise_constant_riemann_stieltjes_integral_of_constant(I, alpha, M)
     claim:
@@ -8850,13 +8846,13 @@ thm lower_riemann_stieltjes_integral_candidate_values_have_least_upper_bound:
 thm upper_riemann_stieltjes_integral_candidate_values_have_infimum:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
-        $is_bounded_function_on(I, f)
+        $chap9::is_monotone_increasing_on(R, alpha)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             $has_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f))
     # The opposite constant minorant is a lower bound for every upper
     # candidate, so the reflected Chapter 5 argument gives an infimum.
-    obtain M from exist M R_pos st {$is_function_bounded_by(I, f, M)}
+    obtain M from exist M R_pos st {$chap9::is_function_bounded_by(I, f, M)}
     by thm constant_function_is_piecewise_constant(I, M)
     by thm piecewise_constant_riemann_stieltjes_integral_of_constant(I, alpha, M)
     claim:
@@ -8907,8 +8903,8 @@ thm upper_riemann_stieltjes_integral_candidate_values_have_infimum:
 have fn upper_riemann_stieltjes_integral by exist!:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
-        $is_bounded_function_on(I, f)
+        $chap9::is_monotone_increasing_on(R, alpha)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist! U R st {$has_upper_riemann_stieltjes_integral(I, alpha, f, U)}
     # Source handling: this packages the upper Riemann-Stieltjes infimum.
@@ -8920,8 +8916,8 @@ have fn upper_riemann_stieltjes_integral by exist!:
         obtain U from exist U R st {$is_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f), U)}
         witness exist U0 R st {$has_upper_riemann_stieltjes_integral(I, alpha, f, U0)} from U:
             $is_bounded_interval(I)
-            $is_monotone_increasing_on(R, alpha)
-            $is_bounded_function_on(I, f)
+            $chap9::is_monotone_increasing_on(R, alpha)
+            $chap9::is_bounded_function_on(I, f)
             $has_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f))
             $is_infimum_of_real_set(upper_riemann_stieltjes_integral_candidate_values(I, alpha, f), U)
         $has_upper_riemann_stieltjes_integral(I, alpha, f, U)
@@ -8937,8 +8933,8 @@ have fn upper_riemann_stieltjes_integral by exist!:
 have fn lower_riemann_stieltjes_integral by exist!:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_bounded_interval(I)
-        $is_monotone_increasing_on(R, alpha)
-        $is_bounded_function_on(I, f)
+        $chap9::is_monotone_increasing_on(R, alpha)
+        $chap9::is_bounded_function_on(I, f)
         =>:
             exist! L R st {$has_lower_riemann_stieltjes_integral(I, alpha, f, L)}
     # Source handling: this packages the lower Riemann-Stieltjes supremum.
@@ -8950,8 +8946,8 @@ have fn lower_riemann_stieltjes_integral by exist!:
         obtain L from exist L R st {$is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L)}
         witness exist L0 R st {$has_lower_riemann_stieltjes_integral(I, alpha, f, L0)} from L:
             $is_bounded_interval(I)
-            $is_monotone_increasing_on(R, alpha)
-            $is_bounded_function_on(I, f)
+            $chap9::is_monotone_increasing_on(R, alpha)
+            $chap9::is_bounded_function_on(I, f)
             $has_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
             $is_least_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), L)
         $has_lower_riemann_stieltjes_integral(I, alpha, f, L)
@@ -8966,8 +8962,8 @@ have fn lower_riemann_stieltjes_integral by exist!:
 
 prop is_riemann_stieltjes_integrable_on(I power_set(R), alpha fn(x R) R, f fn(x I) R):
     $is_bounded_interval(I)
-    $is_monotone_increasing_on(R, alpha)
-    $is_bounded_function_on(I, f)
+    $chap9::is_monotone_increasing_on(R, alpha)
+    $chap9::is_bounded_function_on(I, f)
     upper_riemann_stieltjes_integral(I, alpha, f) = lower_riemann_stieltjes_integral(I, alpha, f)
 
 prop has_riemann_stieltjes_integral(I power_set(R), alpha fn(x R) R, f fn(x I) R, s R):
@@ -8984,13 +8980,13 @@ thm riemann_stieltjes_integrable_monotone_alpha:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_riemann_stieltjes_integrable_on(I, alpha, f)
         =>:
-            $is_monotone_increasing_on(R, alpha)
+            $chap9::is_monotone_increasing_on(R, alpha)
 
 thm riemann_stieltjes_integrable_on_bounded_function:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
         $is_riemann_stieltjes_integrable_on(I, alpha, f)
         =>:
-            $is_bounded_function_on(I, f)
+            $chap9::is_bounded_function_on(I, f)
 
 thm riemann_stieltjes_integrable_upper_eq_lower:
     ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
@@ -9055,9 +9051,9 @@ thm identity_alpha_stieltjes_matches_riemann:
     by thm riemann_integrable_on_bounded_interval(I, f)
     $is_bounded_interval(I)
     by thm riemann_integrable_on_bounded_function(I, f)
-    $is_bounded_function_on(I, f)
+    $chap9::is_bounded_function_on(I, f)
     by thm identity_alpha_is_monotone_increasing()
-    $is_monotone_increasing_on(R, identity_alpha)
+    $chap9::is_monotone_increasing_on(R, identity_alpha)
     $has_upper_riemann_integral(I, f, upper_riemann_integral(I, f))
     $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
     by thm identity_alpha_upper_riemann_candidate_value_sets_match(I, f)
@@ -9147,42 +9143,42 @@ thm first_fundamental_theorem_integral_function_continuous:
         $is_riemann_integrable_on('[a, b], f)
         $is_integral_function_from_left_endpoint(a, b, f, F)
         =>:
-            $is_continuous_on('[a, b], F)
+            $chap9::is_continuous_on('[a, b], F)
     # Source handling: Tao proves continuity by bounding
     # `F(y)-F(x)` by `M|y-x|`.
     # proof_debt: formalize interval additivity and boundedness of integrable
     # functions.
-    trust $is_continuous_on('[a, b], F)
+    trust $chap9::is_continuous_on('[a, b], F)
 
 thm first_fundamental_theorem_integral_function_derivative_at_continuity_point:
     ? forall a, b R, f fn(x '[a, b]) R, F fn(x '[a, b]) R, x0 '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         $is_integral_function_from_left_endpoint(a, b, f, F)
-        $is_continuous_at('[a, b], f, x0)
+        $chap9::is_continuous_at('[a, b], f, x0)
         =>:
-            $has_derivative_at('[a, b], F, x0, f(x0))
+            $chap10::has_derivative_at('[a, b], F, x0, f(x0))
     # Source handling: Tao compares the average integral over `[x0,y]` with
     # the continuous value `f(x0)`.
     # proof_debt: formalize the squeeze estimate for the difference quotient.
-    trust $has_derivative_at('[a, b], F, x0, f(x0))
+    trust $chap10::has_derivative_at('[a, b], F, x0, f(x0))
 
 thm first_fundamental_theorem_of_calculus:
     ? forall a, b R, f fn(x '[a, b]) R, F fn(x '[a, b]) R, x0 '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         $is_integral_function_from_left_endpoint(a, b, f, F)
-        $is_continuous_at('[a, b], f, x0)
+        $chap9::is_continuous_at('[a, b], f, x0)
         =>:
-            $is_continuous_on('[a, b], F)
-            $has_derivative_at('[a, b], F, x0, f(x0))
+            $chap9::is_continuous_on('[a, b], F)
+            $chap10::has_derivative_at('[a, b], F, x0, f(x0))
     # Source handling: this is the combined source-facing statement of
     # Theorem 11.9.1.  The two preceding theorems keep Tao's continuity and
-    # derivative proof routes as separate proof packages.
+    # chap10::derivative proof routes as separate proof packages.
     by thm first_fundamental_theorem_integral_function_continuous(a, b, f, F)
-    $is_continuous_on('[a, b], F)
+    $chap9::is_continuous_on('[a, b], F)
     by thm first_fundamental_theorem_integral_function_derivative_at_continuity_point(a, b, f, F, x0)
-    $has_derivative_at('[a, b], F, x0, f(x0))
+    $chap10::has_derivative_at('[a, b], F, x0, f(x0))
 
 """
 Example 11.9.2.  The monotone function from Exercise 9.8.5 gives an integral
@@ -9195,12 +9191,12 @@ of the integrand, and non-differentiable at its rational discontinuities.
 
 """
 Definition 11.9.3 (Antiderivatives).  An antiderivative of `f` on `I` is a
-differentiable function `F` whose derivative at every point is `f`.
+differentiable function `F` whose chap10::derivative at every point is `f`.
 """
 
 prop is_antiderivative_of(I power_set(R), f fn(x I) R, F fn(x I) R):
     forall x I:
-        $has_derivative_at(I, F, x, f(x))
+        $chap10::has_derivative_at(I, F, x, f(x))
 
 prop differs_by_constant_on(I power_set(R), F, G fn(x I) R, C R):
     forall x I:
@@ -9263,8 +9259,8 @@ thm antiderivatives_differ_by_constant:
             exist C R st {$differs_by_constant_on(I, F, G, C)}
     # Source handling: Tao proves this in Exercise 11.9.2 using the mean-value
     # theorem applied to `F-G`.
-    # proof_debt: show `F-G` has zero derivative and use the Chapter 10
-    # constant-derivative theorem on bounded intervals.
+    # proof_debt: show `F-G` has zero chap10::derivative and use the Chapter 10
+    # constant-chap10::derivative theorem on bounded intervals.
     trust exist C R st {$differs_by_constant_on(I, F, G, C)}
 
 
@@ -9280,29 +9276,29 @@ thm derivative_values_imply_continuous_on_closed_interval_local:
     ? forall a, b R, F, dF fn(x '[a, b]) R:
         a < b
         forall x '[a, b]:
-            $has_derivative_at('[a, b], F, x, dF(x))
+            $chap10::has_derivative_at('[a, b], F, x, dF(x))
         =>:
-            $is_continuous_on('[a, b], F)
+            $chap9::is_continuous_on('[a, b], F)
     # Source handling: this is Corollary 10.1.12 specialized to a concrete
-    # derivative-value function on `[a,b]`.
+    # chap10::derivative-value function on `[a,b]`.
     claim:
-        ? $is_differentiable_on('[a, b], F)
+        ? $chap10::is_differentiable_on('[a, b], F)
         claim:
             ? forall x0 '[a, b]:
-                $is_differentiable_at('[a, b], F, x0)
-            witness exist L R st {$has_derivative_at('[a, b], F, x0, L)} from dF(x0):
-                $has_derivative_at('[a, b], F, x0, dF(x0))
-            $is_differentiable_at('[a, b], F, x0)
-        $is_differentiable_on('[a, b], F)
-    by thm differentiable_on_implies_continuous_on('[a, b], F)
-    $is_continuous_on('[a, b], F)
+                $chap10::is_differentiable_at('[a, b], F, x0)
+            witness exist L R st {$chap10::has_derivative_at('[a, b], F, x0, L)} from dF(x0):
+                $chap10::has_derivative_at('[a, b], F, x0, dF(x0))
+            $chap10::is_differentiable_at('[a, b], F, x0)
+        $chap10::is_differentiable_on('[a, b], F)
+    by thm chap10::differentiable_on_implies_continuous_on('[a, b], F)
+    $chap9::is_continuous_on('[a, b], F)
 
 thm integration_by_parts_product_terms_integrable:
     ? forall a, b R, F, G, dF, dG fn(x '[a, b]) R:
         a < b
         forall x '[a, b]:
-            $has_derivative_at('[a, b], F, x, dF(x))
-            $has_derivative_at('[a, b], G, x, dG(x))
+            $chap10::has_derivative_at('[a, b], F, x, dF(x))
+            $chap10::has_derivative_at('[a, b], G, x, dG(x))
         $is_riemann_integrable_on('[a, b], dF)
         $is_riemann_integrable_on('[a, b], dG)
         =>:
@@ -9314,9 +9310,9 @@ thm integration_by_parts_product_terms_integrable:
     # Corollary 11.5.2 gives their Riemann integrability, and Theorem 11.4.5
     # gives integrability of the two products with `dG` and `dF`.
     by thm derivative_values_imply_continuous_on_closed_interval_local(a, b, F, dF)
-    $is_continuous_on('[a, b], F)
+    $chap9::is_continuous_on('[a, b], F)
     by thm derivative_values_imply_continuous_on_closed_interval_local(a, b, G, dG)
-    $is_continuous_on('[a, b], G)
+    $chap9::is_continuous_on('[a, b], G)
     by thm continuous_closed_interval_riemann_integrable(a, b, F)
     $is_riemann_integrable_on('[a, b], F)
     by thm continuous_closed_interval_riemann_integrable(a, b, G)
@@ -9330,25 +9326,25 @@ thm integration_by_parts_product_derivative_integral_identity:
     ? forall a, b R, F, G, dF, dG fn(x '[a, b]) R:
         a < b
         forall x '[a, b]:
-            $has_derivative_at('[a, b], F, x, dF(x))
-            $has_derivative_at('[a, b], G, x, dG(x))
+            $chap10::has_derivative_at('[a, b], F, x, dF(x))
+            $chap10::has_derivative_at('[a, b], G, x, dG(x))
         $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {F(x) * dG(x)})
         $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {dF(x) * G(x)})
         =>:
             integral_on('[a, b], fn(x '[a, b]) R {F(x) * dG(x)}) + integral_on('[a, b], fn(x '[a, b]) R {dF(x) * G(x)}) = F(b) * G(b) - F(a) * G(a)
     # Source handling: apply the product rule to `F*G`, integrate its
-    # derivative with Theorem 11.9.4, and use linearity to split
+    # chap10::derivative with Theorem 11.9.4, and use linearity to split
     # `(FG)' = F'G + FG'`.
     have fn product_derivative(x '[a, b]) R = dF(x) * G(x) + F(x) * dG(x)
     claim:
         ? $is_antiderivative_of('[a, b], product_derivative, fn(x '[a, b]) R {F(x) * G(x)})
         claim:
             ? forall x '[a, b]:
-                $has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, product_derivative(x))
-            by thm derivative_product_rule('[a, b], F, G, x, dF(x), dG(x))
-            $has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, dF(x) * G(x) + F(x) * dG(x))
+                $chap10::has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, product_derivative(x))
+            by thm chap10::derivative_product_rule('[a, b], F, G, x, dF(x), dG(x))
+            $chap10::has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, dF(x) * G(x) + F(x) * dG(x))
             product_derivative(x) = dF(x) * G(x) + F(x) * dG(x)
-            $has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, product_derivative(x))
+            $chap10::has_derivative_at('[a, b], fn(x '[a, b]) R {F(x) * G(x)}, x, product_derivative(x))
         $is_antiderivative_of('[a, b], product_derivative, fn(x '[a, b]) R {F(x) * G(x)})
     by thm riemann_integral_addition_law('[a, b], fn(x '[a, b]) R {dF(x) * G(x)}, fn(x '[a, b]) R {F(x) * dG(x)})
     $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {dF(x) * G(x) + F(x) * dG(x)})
@@ -9373,8 +9369,8 @@ thm integration_by_parts:
     ? forall a, b R, F, G, dF, dG fn(x '[a, b]) R:
         a < b
         forall x '[a, b]:
-            $has_derivative_at('[a, b], F, x, dF(x))
-            $has_derivative_at('[a, b], G, x, dG(x))
+            $chap10::has_derivative_at('[a, b], F, x, dF(x))
+            $chap10::has_derivative_at('[a, b], G, x, dG(x))
         $is_riemann_integrable_on('[a, b], dF)
         $is_riemann_integrable_on('[a, b], dG)
         =>:
@@ -9401,9 +9397,9 @@ function equals the Riemann integral of `f*alpha'`.
 thm stieltjes_piecewise_constant_as_riemann_integral:
     ? forall a, b R, alpha fn(x R) R, dalpha, f fn(x '[a, b]) R:
         a < b
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
         $is_riemann_integrable_on('[a, b], dalpha)
         $is_piecewise_constant_on('[a, b], f)
         =>:
@@ -9436,9 +9432,9 @@ integrable `f`: `integral f d alpha = integral f alpha' dx`.
 thm stieltjes_to_riemann_integrability_by_piecewise_approximation:
     ? forall a, b R, alpha fn(x R) R, dalpha, f fn(x '[a, b]) R:
         a < b
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
         $is_riemann_integrable_on('[a, b], dalpha)
         $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
         =>:
@@ -9452,9 +9448,9 @@ thm stieltjes_to_riemann_integrability_by_piecewise_approximation:
 thm stieltjes_to_riemann_identity_by_piecewise_approximation:
     ? forall a, b R, alpha fn(x R) R, dalpha, f fn(x '[a, b]) R:
         a < b
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
         $is_riemann_integrable_on('[a, b], dalpha)
         $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
         $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
@@ -9469,9 +9465,9 @@ thm stieltjes_to_riemann_identity_by_piecewise_approximation:
 thm stieltjes_integral_as_riemann_integral:
     ? forall a, b R, alpha fn(x R) R, dalpha, f fn(x '[a, b]) R:
         a < b
-        $is_monotone_increasing_on(R, alpha)
+        $chap9::is_monotone_increasing_on(R, alpha)
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {alpha(t)}, x, dalpha(x))
         $is_riemann_integrable_on('[a, b], dalpha)
         $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
         =>:
@@ -9490,16 +9486,16 @@ thm derivative_values_imply_continuous_on_closed_interval:
     ? forall a, b R, phi fn(x R) R, dphi fn(x '[a, b]) R:
         a < b
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {phi(t)}, x, dphi(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {phi(t)}, x, dphi(x))
         =>:
-            $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+            $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
     # Source handling: this is the Chapter 10 differentiability-implies-
     # continuity theorem specialized to the restricted function on `[a,b]`;
     # the local theorem above carries the single remaining Chapter 10 debt.
     by thm derivative_values_imply_continuous_on_closed_interval_local(a, b, fn(t '[a, b]) R {phi(t)}, dphi)
-    $is_continuous_on('[a, b], fn(t '[a, b]) R {phi(t)})
+    $chap9::is_continuous_on('[a, b], fn(t '[a, b]) R {phi(t)})
     fn(t '[a, b]) R {phi(t)} = fn(x '[a, b]) R {phi(x)}
-    $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+    $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
 
 prop maps_closed_interval_to_closed_interval(a, b, u, v R, phi fn(x R) R):
     a <= b
@@ -9526,8 +9522,8 @@ thm change_of_variables_piecewise_constant:
         a < b
         u = phi(a)
         v = phi(b)
-        $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
-        $is_monotone_increasing_on(R, phi)
+        $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+        $chap9::is_monotone_increasing_on(R, phi)
         $maps_closed_interval_to_closed_interval(a, b, u, v, phi)
         $is_piecewise_constant_on('[u, v], f)
         $is_composition_on_closed_interval(a, b, u, v, phi, f, h)
@@ -9562,8 +9558,8 @@ thm change_of_variables_stieltjes_integrability_by_piecewise_approximation:
         a < b
         u = phi(a)
         v = phi(b)
-        $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
-        $is_monotone_increasing_on(R, phi)
+        $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+        $chap9::is_monotone_increasing_on(R, phi)
         $maps_closed_interval_to_closed_interval(a, b, u, v, phi)
         $is_riemann_integrable_on('[u, v], f)
         $is_composition_on_closed_interval(a, b, u, v, phi, f, h)
@@ -9579,8 +9575,8 @@ thm change_of_variables_stieltjes_identity_by_piecewise_approximation:
         a < b
         u = phi(a)
         v = phi(b)
-        $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
-        $is_monotone_increasing_on(R, phi)
+        $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+        $chap9::is_monotone_increasing_on(R, phi)
         $maps_closed_interval_to_closed_interval(a, b, u, v, phi)
         $is_riemann_integrable_on('[u, v], f)
         $is_composition_on_closed_interval(a, b, u, v, phi, f, h)
@@ -9604,8 +9600,8 @@ thm change_of_variables_stieltjes:
         a < b
         u = phi(a)
         v = phi(b)
-        $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
-        $is_monotone_increasing_on(R, phi)
+        $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+        $chap9::is_monotone_increasing_on(R, phi)
         $maps_closed_interval_to_closed_interval(a, b, u, v, phi)
         $is_riemann_integrable_on('[u, v], f)
         $is_composition_on_closed_interval(a, b, u, v, phi, f, h)
@@ -9627,9 +9623,9 @@ thm change_of_variables_riemann:
         a < b
         u = phi(a)
         v = phi(b)
-        $is_monotone_increasing_on(R, phi)
+        $chap9::is_monotone_increasing_on(R, phi)
         forall x '[a, b]:
-            $has_derivative_at('[a, b], fn(t '[a, b]) R {phi(t)}, x, dphi(x))
+            $chap10::has_derivative_at('[a, b], fn(t '[a, b]) R {phi(t)}, x, dphi(x))
         $is_riemann_integrable_on('[a, b], dphi)
         $maps_closed_interval_to_closed_interval(a, b, u, v, phi)
         $is_riemann_integrable_on('[u, v], f)
@@ -9640,7 +9636,7 @@ thm change_of_variables_riemann:
     # Source handling: Tao combines the Stieltjes change-of-variables formula
     # with the conversion `dphi = phi'(x) dx`.
     by thm derivative_values_imply_continuous_on_closed_interval(a, b, phi, dphi)
-    $is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
+    $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {phi(x)})
     by thm change_of_variables_stieltjes(a, b, u, v, phi, f, h)
     $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
     stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)
@@ -9653,5 +9649,5 @@ thm change_of_variables_riemann:
 # Final audit (2026-07-12): 55 non-exercise markers remain across partition
 # additivity, Darboux/Riemann and Riemann-Stieltjes constructions and laws,
 # integrability criteria, the fundamental theorems, and change of variables.
-# 21 source-exercise markers are excluded; the Chapter 9/10 local imports are
-# separate reuse dependencies.
+# 21 source-exercise markers are excluded; the Chapter 9/10 ordered-export
+# entries are separate reuse dependencies.

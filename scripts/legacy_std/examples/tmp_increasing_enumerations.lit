@@ -156,10 +156,10 @@ trust:
             e(n) = a(n)
         =>:
             $injective_fn(N_pos, S, e)
-            fn_range_on(e, N_pos) = S
+            fn_range(e) = S
 
     forall A, B set, f fn(x A) B:
-        fn_range_on(f, A) = B
+        fn_range(f) = B
         =>:
             $surjective_fn(A, B, f)
 
@@ -178,9 +178,9 @@ claim:
         # Proof debt: follows from the strict increase and no-gap property of
         # the least-order enumeration constructed from finite prefixes.
         $injective_fn(N_pos, S, enum_to_subset)
-        fn_range_on(enum_to_subset, N_pos) = S
+        fn_range(enum_to_subset) = S
     $injective_fn(N_pos, S, enum_to_subset)
-    fn_range_on(enum_to_subset, N_pos) = S
+    fn_range(enum_to_subset) = S
     $surjective_fn(N_pos, S, enum_to_subset)
     $bijective_fn(N_pos, S, enum_to_subset)
     witness exist f fn(x N_pos) S st {$injective_fn(N_pos, S, f)} from enum_to_subset:

@@ -4,8 +4,6 @@ use crate::prelude::*;
 pub enum CommandStmtResult {
     ImportStmt(NonFactualStmtSuccess),
     TrustImportStmt(NonFactualStmtSuccess),
-    LocalImportStmt(NonFactualStmtSuccess),
-    TrustLocalImportStmt(NonFactualStmtSuccess),
     DoNothingStmt(NonFactualStmtSuccess),
     ClearStmt(NonFactualStmtSuccess),
     EvalStmt(NonFactualStmtSuccess),
@@ -20,12 +18,6 @@ impl CommandStmtResult {
             Stmt::Command(CommandStmt::ImportStmt(_)) => CommandStmtResult::ImportStmt(success),
             Stmt::Command(CommandStmt::TrustImportStmt(_)) => {
                 CommandStmtResult::TrustImportStmt(success)
-            }
-            Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
-                CommandStmtResult::LocalImportStmt(success)
-            }
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
-                CommandStmtResult::TrustLocalImportStmt(success)
             }
             Stmt::Command(CommandStmt::DoNothingStmt(_)) => {
                 CommandStmtResult::DoNothingStmt(success)
@@ -47,8 +39,6 @@ impl CommandStmtResult {
         match self {
             CommandStmtResult::ImportStmt(success)
             | CommandStmtResult::TrustImportStmt(success)
-            | CommandStmtResult::LocalImportStmt(success)
-            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
@@ -62,8 +52,6 @@ impl CommandStmtResult {
         match self {
             CommandStmtResult::ImportStmt(success)
             | CommandStmtResult::TrustImportStmt(success)
-            | CommandStmtResult::LocalImportStmt(success)
-            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
@@ -77,8 +65,6 @@ impl CommandStmtResult {
         match self {
             CommandStmtResult::ImportStmt(success)
             | CommandStmtResult::TrustImportStmt(success)
-            | CommandStmtResult::LocalImportStmt(success)
-            | CommandStmtResult::TrustLocalImportStmt(success)
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)

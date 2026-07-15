@@ -363,11 +363,6 @@ impl Runtime {
                 _ => obj.clone(),
             },
             Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
-            Obj::FnRangeOn(fn_range_on) => FnRangeOn::new(
-                self.resolve_obj(&fn_range_on.function),
-                self.resolve_obj(&fn_range_on.set),
-            )
-            .into(),
             Obj::Replacement(replacement) => Replacement::new(
                 replacement.prop_name.clone(),
                 self.resolve_obj(&replacement.source_set),

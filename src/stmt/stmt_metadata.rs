@@ -335,8 +335,6 @@ impl CommandStmt {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.line_file(),
             CommandStmt::TrustImportStmt(stmt) => stmt.line_file(),
-            CommandStmt::LocalImportStmt(stmt) => stmt.line_file.clone(),
-            CommandStmt::TrustLocalImportStmt(stmt) => stmt.line_file(),
             CommandStmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::ClearStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::EvalStmt(stmt) => stmt.line_file.clone(),
@@ -350,8 +348,6 @@ impl CommandStmt {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::TrustImportStmt(stmt) => stmt.stmt_type_name(),
-            CommandStmt::LocalImportStmt(stmt) => stmt.stmt_type_name(),
-            CommandStmt::TrustLocalImportStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::EvalStmt(stmt) => stmt.stmt_type_name(),
@@ -365,8 +361,6 @@ impl CommandStmt {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.output_type_string(),
             CommandStmt::TrustImportStmt(_) => TrustImportStmt::output_type_string(),
-            CommandStmt::LocalImportStmt(_) => LocalImportStmt::output_type_string(),
-            CommandStmt::TrustLocalImportStmt(_) => TrustLocalImportStmt::output_type_string(),
             CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
             CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
             CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),

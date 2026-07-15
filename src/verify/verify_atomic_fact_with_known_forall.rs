@@ -497,7 +497,7 @@ impl Runtime {
             for name in environment.defined_identifiers.keys() {
                 identifiers.insert(
                     format!("{}{}{}", module_name, MOD_SIGN, name),
-                    Identifier::new(name.clone()).into(),
+                    IdentifierWithMod::new(module_name.to_string(), name.clone()).into(),
                 );
             }
         }
@@ -822,11 +822,6 @@ impl Runtime {
             Obj::FnRange(ref left) => {
                 self.match_arg_when_left_is_fn_range(left.function.as_ref(), given_arg)
             }
-            Obj::FnRangeOn(ref left) => self.match_arg_when_left_is_fn_range_on(
-                left.function.as_ref(),
-                left.set.as_ref(),
-                given_arg,
-            ),
             Obj::Replacement(ref left) => self.match_arg_when_left_is_replacement(left, given_arg),
             Obj::Sum(ref left) => self.match_arg_when_left_is_sum(
                 left.start.as_ref(),
@@ -2572,23 +2567,6 @@ impl Runtime {
                     left_function,
                     given.function.as_ref(),
                 ),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_fn_range_on(
-        &mut self,
-        left_function: &Obj,
-        left_set: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::FnRangeOn(ref given) => self.match_arg_binary_then_merge(
-                left_function,
-                left_set,
-                given.function.as_ref(),
-                given.set.as_ref(),
-            ),
             _ => Ok(None),
         }
     }

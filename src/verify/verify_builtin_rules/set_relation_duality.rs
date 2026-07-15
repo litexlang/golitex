@@ -76,33 +76,6 @@ impl Runtime {
             }
         }
 
-        // The restricted range of `f : ... -> T` is a subset of `T`, and of any known superset of `T`.
-        // Example: `have a seq(R)` proves `fn_range_on(a, 1...3) $subset R`.
-        if let Obj::FnRangeOn(fn_range_on) = &subset_fact.left {
-            if let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) {
-                let ret_subset: AtomicFact = SubsetFact::new(
-                    body.ret_set.as_ref().clone(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
-                let ret_subset_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &ret_subset,
-                    verify_state,
-                )?;
-                if ret_subset_result.is_true() {
-                    return Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            subset_fact.clone().into(),
-                            "fn_range_on_subset_codomain".to_string(),
-                            vec![ret_subset_result],
-                        ))
-                        .into(),
-                    );
-                }
-            }
-        }
-
         let converted_superset_fact = SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),

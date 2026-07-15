@@ -84,10 +84,6 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
             Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
-            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
-                self.exec_trust_local_import_stmt(s)
-            }
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
@@ -210,10 +206,6 @@ impl Runtime {
             }
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
             Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
-            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
-                self.exec_trust_local_import_stmt(s)
-            }
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),

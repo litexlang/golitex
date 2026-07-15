@@ -6,8 +6,8 @@ Run this directory in repository mode:
 cargo run -- -r examples/08_module_repository
 ```
 
-The root `litex.config` exports module `A`. `A/litex.config` exports `chap2.lit`
-and `chap3.lit`, and `chap3.lit` binds `chap2` with `local import chap2`.
+The root `litex.config` exports module `A`. `A/litex.config` lists `chap2.lit`
+before `chap3.lit`, so `chap3.lit` can cite `A::chap2::x` directly.
 
-`litex.config` declares the project interface and ordered `[run]` plan.
-Mathematical statements live in the registered `.lit` files named by that plan.
+`litex.config` is the ordered `[export]` table. Mathematical statements live
+in its registered `.lit` files.

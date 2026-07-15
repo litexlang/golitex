@@ -39,14 +39,14 @@ object-introduction family of `have` statements listed below.
 | `N`, `Z`, `Q`, `R` and suffix subsets | Built-in number sets: naturals, integers, rationals, reals, and common subsets such as positive or nonzero values. | Membership facts such as `x $in R_pos` infer the corresponding ambient numeric membership. |
 | Displayed finite sets `{a, b, c}` | A finite set containing the displayed elements. | Elements must be well-defined; finite-set facts and `finite_set_size` facts are inferred for displayed finite sets. |
 | Set builders `{x S: P(x)}` | The subset of `S` whose elements satisfy the predicate in the builder. | The base set and predicate body must be well-defined under the bound variable assumptions. |
-| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric-difference style set objects. | Arguments must be well-defined sets when set facts about the result are used. |
+| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric difference. | Arguments must be well-defined sets when set facts about the result are used. |
 | `power_set(A)` | The set of all subsets of `A`. | `A` must be well-defined; proving `B $in power_set(A)` amounts to proving `B $subset A`. |
 | `range(a, b)`, `closed_range(a, b)`, `a...b` | Integer-style ranges; `range` is half-open and `closed_range`/`...` are closed. | Endpoints must be integer-like where range enumeration facts are used. |
 | Tuple `(a, b, ...)` | An ordered tuple with one-based projection syntax such as `(a, b)[1]`. | Coordinates must be well-defined. |
 | `cart(A, B, ...)` | Cartesian product of the factor sets. | Factor objects must be well-defined sets; tuple membership checks each coordinate against its factor. |
 | `fn(x S) T` | Function-space object from inputs in `S` to values in `T`, possibly with domain side conditions. | Parameter sets, side conditions, and return set must be well-defined. |
 | Anonymous function `fn(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
-| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; `fn_range_on` requires a function declared on exactly `S`, so use `fn_range_on(fn(x S) T {f(x)}, S)` for a larger-domain function. |
+| `fn_range(f)` | The image of a function over its declared domain. | `f` must be a supported function value. For an image restricted to `S`, use `fn_range(fn(x S) T {f(x)})`. |
 | `seq(S)`, `finite_seq(S, n)` | Infinite positive-integer-indexed sequences and finite length-`n` sequences with values in `S`. | `S` must be a set; finite-sequence length must be positive and match literal length when a literal is used. |
 | `matrix(S, r, c)` and matrix literals | Rectangular row-column indexed arrays with entries in `S`. | Row and column counts must be positive; literals must be rectangular and entries must belong to `S`. |
 | `&StructName` and `&StructName{obj}.field` | Struct membership as a record-shaped tuple type, and field access through a struct view. | Struct fields and equivalent facts must be well-defined; field access requires the object to be viewed as that struct. |
@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `local import`, `trust import`, and `trust local import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects control statements such as `clear`, `import`, and `trust import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -124,10 +124,9 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | Ordered bare paths in `[run]` select registered `.lit` files and child project plans; `[export]` declares their canonical names. Paths, names, order dependencies, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface, execution plan, and canonical import graph. |
-| `import` | In project mode resolves a root module export; ordinary import does not load arbitrary `.lit` paths. Checks module cycles and cached status. | Runs the imported module's `[run]` plan once. | Registers import dependencies and reuses cached modules. |
-| `local import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity; a uniquely supplied imported member may then be used bare, while local definitions shadow imports and ambiguous members need `module::name`. |
-| `trust import` / `trust local import` | Use the same declared targets, parsing, path validation, and cycle checks as their ordinary forms. They are rejected in strict mode. | Skip well-definedness and proof processing for the loaded target and its nested dependency closure. | Apply direct environment effects only, and mark the whole top-level run with an explicit trusted-import dependency. |
+| `litex.config` | One ordered `[export]` table names registered `.lit` files and child projects. Earlier entries are available by canonical namespace; paths, names, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface, execution order, and canonical namespaces. |
+| `import` | In project mode resolves a root directory-module export; ordinary import does not load arbitrary `.lit` paths. Checks module cycles and cached status. | Runs the imported module's ordered `[export]` table once. | Registers import dependencies and reuses cached modules. |
+| `trust import` | Uses the same directory-module resolution and is rejected in strict mode. | Skips well-definedness and proof processing for the imported module and nested entries. | Applies direct environment effects and marks the run with an explicit trusted-import dependency. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |

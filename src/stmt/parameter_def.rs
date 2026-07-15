@@ -812,20 +812,6 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::FnRangeOn(x) => {
-            collect_cited_param_indices_from_obj(
-                &x.function,
-                previous_param_indices,
-                shadowed_names,
-                out,
-            );
-            collect_cited_param_indices_from_obj(
-                &x.set,
-                previous_param_indices,
-                shadowed_names,
-                out,
-            );
-        }
         Obj::Replacement(x) => collect_cited_param_indices_from_obj(
             &x.source_set,
             previous_param_indices,

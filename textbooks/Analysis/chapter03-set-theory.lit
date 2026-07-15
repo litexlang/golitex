@@ -828,12 +828,12 @@ sketch:
     projection_factor_on_three(1) = proj(C, 1) = {1, 2}
     projection_factor_on_three(2) = proj(C, 2) = {3, 4}
     projection_factor_on_three(3) = proj(C, 3) = {5, 6}
-    projection_factor_on_three(1) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    projection_factor_on_three(2) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    projection_factor_on_three(3) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {1, 2} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {3, 4} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {5, 6} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    projection_factor_on_three(1) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(2) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(3) $in fn_range(projection_factor_on_three)
+    {1, 2} $in fn_range(projection_factor_on_three)
+    {3, 4} $in fn_range(projection_factor_on_three)
+    {5, 6} $in fn_range(projection_factor_on_three)
 
     1 $in {1, 2}
     3 $in {3, 4}
@@ -845,14 +845,14 @@ sketch:
         1 $in projection_factor_on_three(1)
     witness exist k {1, 2, 3} st {3 $in projection_factor_on_three(k)} from 2:
         3 $in projection_factor_on_three(2)
-    1 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    3 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    5 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    fn_range_on(projection_factor_on_three, {1, 2, 3}) $subset {{1, 2}, {3, 4}, {5, 6}}
-    $is_finite_set(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+    1 $in cup(fn_range(projection_factor_on_three))
+    3 $in cup(fn_range(projection_factor_on_three))
+    5 $in cup(fn_range(projection_factor_on_three))
+    fn_range(projection_factor_on_three) $subset {{1, 2}, {3, 4}, {5, 6}}
+    $is_finite_set(fn_range(projection_factor_on_three))
 
 # When the relation is already presented as a function, its image over a set is
-# simply `fn_range_on(f, A)`: the set of all values `f(x)` with `x` in `A`.
+# simply `fn_range(f)`: the set of all values `f(x)` in its declared domain.
 sketch:
     have fn plus_one_on_three(n {3, 5, 9}) {4, 6, 10} by cases:
         case n = 3: 4
@@ -863,11 +863,11 @@ sketch:
     plus_one_on_three(5) = 6
     plus_one_on_three(9) = 10
 
-    plus_one_on_three(3) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    plus_one_on_three(5) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    plus_one_on_three(9) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    fn_range_on(plus_one_on_three, {3, 5, 9}) $subset {4, 6, 10}
-    $is_finite_set(fn_range_on(plus_one_on_three, {3, 5, 9}))
+    plus_one_on_three(3) $in fn_range(plus_one_on_three)
+    plus_one_on_three(5) $in fn_range(plus_one_on_three)
+    plus_one_on_three(9) $in fn_range(plus_one_on_three)
+    fn_range(plus_one_on_three) $subset {4, 6, 10}
+    $is_finite_set(fn_range(plus_one_on_three))
 
     have fn constant1_on_three(n {3, 5, 9}) {1} by cases:
         case n = 3: 1
@@ -877,14 +877,14 @@ sketch:
     constant1_on_three(3) = 1
     constant1_on_three(5) = 1
     constant1_on_three(9) = 1
-    constant1_on_three(3) $in fn_range_on(constant1_on_three, {3, 5, 9})
-    1 $in fn_range_on(constant1_on_three, {3, 5, 9})
+    constant1_on_three(3) $in fn_range(constant1_on_three)
+    1 $in fn_range(constant1_on_three)
 
     claim:
-        ? forall y fn_range_on(constant1_on_three, {3, 5, 9}):
+        ? forall y fn_range(constant1_on_three):
             y $in {1}
-        y $in fn_range_on(constant1_on_three, {3, 5, 9})
-        have by preimage k from y $in fn_range_on(constant1_on_three, {3, 5, 9})
+        y $in fn_range(constant1_on_three)
+        have by preimage k from y $in fn_range(constant1_on_three)
         k $in {3, 5, 9}
         y = constant1_on_three(k)
         constant1_on_three(k) $in {1}
@@ -892,21 +892,21 @@ sketch:
         y = 1
         y $in {1}
 
-    fn_range_on(constant1_on_three, {3, 5, 9}) $subset {1}
+    fn_range(constant1_on_three) $subset {1}
 
     claim:
         ? forall y {1}:
-            y $in fn_range_on(constant1_on_three, {3, 5, 9})
+            y $in fn_range(constant1_on_three)
         y = 1
-        1 $in fn_range_on(constant1_on_three, {3, 5, 9})
-        y $in fn_range_on(constant1_on_three, {3, 5, 9})
+        1 $in fn_range(constant1_on_three)
+        y $in fn_range(constant1_on_three)
 
-    {1} $subset fn_range_on(constant1_on_three, {3, 5, 9})
+    {1} $subset fn_range(constant1_on_three)
 
     by extension:
-        ? fn_range_on(constant1_on_three, {3, 5, 9}) = {1}
+        ? fn_range(constant1_on_three) = {1}
 
-    finite_set_size(fn_range_on(constant1_on_three, {3, 5, 9})) = finite_set_size({1}) = 1
+    finite_set_size(fn_range(constant1_on_three)) = finite_set_size({1}) = 1
 
 """
 Axiom 3.7 (Infinity). There is a set N of natural numbers containing 0 and
@@ -1752,7 +1752,7 @@ Example 3.4.2. If f:N->N is f(x)=2x, then the forward image of {1,2,3} is
 # witnesses can all be enumerated.  `double_on_three` is the finite-domain
 # version of the global function `double_nat` restricted to `{1,2,3}`.  We first
 # unfold the section vocabulary `is_forward_image_of`, then give the direct
-# image statement `fn_range_on(double_on_three,{1,2,3}) = {2,4,6}`.
+# image statement `fn_range(double_on_three) = {2,4,6}`.
 
 sketch:
     have fn double_nat(n N) N = 2 * n
@@ -1806,48 +1806,48 @@ sketch:
     double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
-    double_on_three(1) $in fn_range_on(double_on_three, {1, 2, 3})
-    double_on_three(2) $in fn_range_on(double_on_three, {1, 2, 3})
-    double_on_three(3) $in fn_range_on(double_on_three, {1, 2, 3})
+    double_on_three(1) $in fn_range(double_on_three)
+    double_on_three(2) $in fn_range(double_on_three)
+    double_on_three(3) $in fn_range(double_on_three)
 
     claim:
-        ? forall y fn_range_on(double_on_three, {1, 2, 3}):
+        ? forall y fn_range(double_on_three):
             y $in {2, 4, 6}
-        y $in fn_range_on(double_on_three, {1, 2, 3})
-        have by preimage k from y $in fn_range_on(double_on_three, {1, 2, 3})
+        y $in fn_range(double_on_three)
+        have by preimage k from y $in fn_range(double_on_three)
         k $in {1, 2, 3}
         double_on_three(k) $in {2, 4, 6}
         y = double_on_three(k)
         y $in {2, 4, 6}
 
-    fn_range_on(double_on_three, {1, 2, 3}) $subset {2, 4, 6}
+    fn_range(double_on_three) $subset {2, 4, 6}
 
     claim:
         ? forall y {2, 4, 6}:
-            y $in fn_range_on(double_on_three, {1, 2, 3})
+            y $in fn_range(double_on_three)
         by cases:
-            ? y $in fn_range_on(double_on_three, {1, 2, 3})
+            ? y $in fn_range(double_on_three)
             case y = 2:
                 double_on_three(1) = 2
                 y = double_on_three(1)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
             case y = 4:
                 double_on_three(2) = 4
                 y = double_on_three(2)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
             case y = 6:
                 double_on_three(3) = 6
                 y = double_on_three(3)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
 
-    {2, 4, 6} $subset fn_range_on(double_on_three, {1, 2, 3})
+    {2, 4, 6} $subset fn_range(double_on_three)
 
     by extension:
-        ? fn_range_on(double_on_three, {1, 2, 3}) = {2, 4, 6}
+        ? fn_range(double_on_three) = {2, 4, 6}
 
-    finite_set_size(fn_range_on(double_on_three, {1, 2, 3})) = finite_set_size({2, 4, 6}) = 3
+    finite_set_size(fn_range(double_on_three)) = finite_set_size({2, 4, 6}) = 3
 
-    have by preimage builtin_k from double_on_three(1) $in fn_range_on(double_on_three, {1, 2, 3})
+    have by preimage builtin_k from double_on_three(1) $in fn_range(double_on_three)
     builtin_k $in {1, 2, 3}
 
 """
@@ -1905,56 +1905,56 @@ sketch:
                         square_on_example(2) = 4
         $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
 
-    square_on_example(-1) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(0) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(1) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(2) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    square_on_example(-1) $in fn_range(square_on_example)
+    square_on_example(0) $in fn_range(square_on_example)
+    square_on_example(1) $in fn_range(square_on_example)
+    square_on_example(2) $in fn_range(square_on_example)
 
     claim:
-        ? forall y fn_range_on(square_on_example, {-1, 0, 1, 2}):
+        ? forall y fn_range(square_on_example):
             y $in {0, 1, 4}
-        y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-        have by preimage z from y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+        y $in fn_range(square_on_example)
+        have by preimage z from y $in fn_range(square_on_example)
         z $in {-1, 0, 1, 2}
         square_on_example(z) $in {0, 1, 4}
         y = square_on_example(z)
         y $in {0, 1, 4}
 
-    fn_range_on(square_on_example, {-1, 0, 1, 2}) $subset {0, 1, 4}
+    fn_range(square_on_example) $subset {0, 1, 4}
 
     claim:
         ? forall y {0, 1, 4}:
-            y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+            y $in fn_range(square_on_example)
         by cases:
-            ? y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+            ? y $in fn_range(square_on_example)
             case y = 0:
                 square_on_example(0) = 0
                 y = square_on_example(0)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
             case y = 1:
                 square_on_example(-1) = 1
                 y = square_on_example(-1)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
             case y = 4:
                 square_on_example(2) = 4
                 y = square_on_example(2)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
 
-    {0, 1, 4} $subset fn_range_on(square_on_example, {-1, 0, 1, 2})
+    {0, 1, 4} $subset fn_range(square_on_example)
 
     by extension:
-        ? fn_range_on(square_on_example, {-1, 0, 1, 2}) = {0, 1, 4}
+        ? fn_range(square_on_example) = {0, 1, 4}
 
-    finite_set_size(fn_range_on(square_on_example, {-1, 0, 1, 2})) = finite_set_size({0, 1, 4}) = 3
+    finite_set_size(fn_range(square_on_example)) = finite_set_size({0, 1, 4}) = 3
     finite_set_size({-1, 0, 1, 2}) = 4
     square_Z(-1) = 1
     square_Z(1) = 1
     -1 != 1
     square_Z(-2) = 4
     square_on_example(2) = 4
-    square_on_example(2) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    square_on_example(2) $in fn_range(square_on_example)
     4 = square_on_example(2)
-    4 $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    4 $in fn_range(square_on_example)
     not -2 $in {-1, 0, 1, 2}
 
 """
@@ -3192,7 +3192,7 @@ sketch:
         case n = 2: 4
         case n = 3: 6
 
-    $is_finite_set(fn_range_on(double_on_three, {1, 2, 3}))
+    $is_finite_set(fn_range(double_on_three))
 
     forall X, Y nonempty_set:
         $is_finite_set(X)

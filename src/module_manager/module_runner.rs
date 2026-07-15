@@ -54,7 +54,6 @@ pub struct FileRunner {
     pub source_path: String,
     pub canonical_name: String,
     pub environment: Box<Environment>,
-    pub local_imports: HashMap<String, ImportTarget>,
     pub imported_modules: Vec<ModuleId>,
     pub status: FileStatus,
     pub execution_mode: ExecutionMode,
@@ -68,7 +67,6 @@ impl FileRunner {
             source_path,
             canonical_name,
             environment: Box::new(Environment::new_empty_env()),
-            local_imports: HashMap::new(),
             imported_modules: vec![],
             status: FileStatus::Unloaded,
             execution_mode: ExecutionMode::Verified,
@@ -86,8 +84,8 @@ pub struct ModuleRunner {
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
     pub exports: HashMap<String, ExportEntry>,
-    pub main_local_imports: HashMap<String, ImportTarget>,
     pub run_targets: Vec<ImportTarget>,
+    pub trusted_run_targets: HashMap<ImportTarget, LineFile>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
@@ -110,8 +108,8 @@ impl ModuleRunner {
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
             exports: HashMap::new(),
-            main_local_imports: HashMap::new(),
             run_targets: vec![],
+            trusted_run_targets: HashMap::new(),
             imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,
@@ -144,17 +142,6 @@ impl ModuleRunner {
     pub fn record_import(&mut self, module_id: ModuleId) {
         if !self.imports.contains(&module_id) {
             self.imports.push(module_id);
-        }
-    }
-
-    pub fn local_import_target(&self, layer: ExecutionLayer, name: &str) -> Option<ImportTarget> {
-        match layer {
-            ExecutionLayer::Main => self.main_local_imports.get(name).copied(),
-            ExecutionLayer::File(file_id) => self
-                .file(file_id)
-                .and_then(|file| file.local_imports.get(name))
-                .copied(),
-            ExecutionLayer::Builtin => None,
         }
     }
 }

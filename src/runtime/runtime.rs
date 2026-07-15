@@ -174,86 +174,12 @@ impl Runtime {
         ));
     }
 
-    pub fn activate_local_import(&mut self, name: String, target: ImportTarget) {
-        self.execution_stack
-            .last_mut()
-            .expect("an execution frame should always exist")
-            .active_local_imports
-            .insert(name, target);
-    }
-
-    pub fn active_local_import(&self, name: &str) -> Option<ImportTarget> {
-        self.execution_stack
-            .last()
-            .and_then(|frame| frame.active_local_imports.get(name))
-            .copied()
-    }
-
     pub fn canonical_module_name_for_parse(&self, name: &str) -> String {
-        let target = self
-            .active_local_import(name)
-            .or_else(|| self.module_manager.import_target_by_canonical_name(name));
+        let target = self.module_manager.import_target_by_canonical_name(name);
         target
             .and_then(|target| self.module_manager.canonical_name_for_target(target))
             .unwrap_or(name)
             .to_string()
-    }
-
-    pub fn unique_active_local_import_member_namespace(&self, name: &str) -> Option<String> {
-        let current_has_name = self.iter_environments_from_top().any(|environment| {
-            environment.defined_identifiers.contains_key(name)
-                || environment.defined_def_props.contains_key(name)
-                || environment.defined_abstract_props.contains_key(name)
-                || environment.defined_algorithms.contains_key(name)
-                || environment.defined_structs.contains_key(name)
-                || environment.defined_templates.contains_key(name)
-                || environment.defined_thm_stmts.contains_key(name)
-                || environment.defined_strategy_stmts.contains_key(name)
-        });
-        if current_has_name {
-            return None;
-        }
-
-        let import_names = self
-            .execution_stack
-            .last()
-            .map(|frame| {
-                frame
-                    .active_local_imports
-                    .keys()
-                    .cloned()
-                    .collect::<Vec<String>>()
-            })
-            .unwrap_or_default();
-        let mut matching_namespaces = vec![];
-        for import_name in import_names {
-            let imported_has_name = self
-                .imported_module_environments(import_name.as_str())
-                .iter()
-                .any(|environment| {
-                    environment.defined_identifiers.contains_key(name)
-                        || environment.defined_def_props.contains_key(name)
-                        || environment.defined_abstract_props.contains_key(name)
-                        || environment.defined_algorithms.contains_key(name)
-                        || environment.defined_structs.contains_key(name)
-                        || environment.defined_templates.contains_key(name)
-                        || environment.defined_thm_stmts.contains_key(name)
-                        || environment.defined_strategy_stmts.contains_key(name)
-                });
-            if !imported_has_name {
-                continue;
-            }
-            let namespace = self.canonical_module_name_for_parse(import_name.as_str());
-            if !matching_namespaces.contains(&namespace) {
-                matching_namespaces.push(namespace);
-            }
-        }
-
-        if matching_namespaces.len() == 1 {
-            matching_namespaces.pop()
-        } else {
-            None
-        }
     }
 
     pub fn pop_execution_frame(&mut self) {
@@ -404,15 +330,12 @@ impl Runtime {
     }
 
     /// Make the discovered repository's root module the persistent environment for an
-    /// interactive REPL without executing its `[run]` plan.
+    /// interactive REPL without executing its ordered `[export]` plan.
     pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
-        let root_exports = self.module_manager.root_exports.clone();
         let module_id = self.current_module_id();
-        let module = self
-            .module_manager
+        self.module_manager
             .module_mut(module_id)
             .expect("repository entry module should exist");
-        module.main_local_imports = root_exports;
         self.execution_stack
             .last_mut()
             .expect("repository REPL should have an execution frame")

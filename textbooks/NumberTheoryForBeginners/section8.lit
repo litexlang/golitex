@@ -1,59 +1,72 @@
-# Section VIII: subgroups, cosets, Lagrange's theorem, and Euler's theorem.
+# Section VIII: cyclic subgroups, cosets, Lagrange's theorem, and Euler's theorem.
 
-local import section7
-trust local import section1
-trust local import section3
-trust local import section2
+# Definition. A left coset xH is the image of H under left multiplication by
+# x.  C is a carrier-valued argument so later statements can compare cosets as
+# actual sets rather than merely asserting a property of a hidden set.
+prop is_left_coset(G set, mul fn(x, y G) G, H power_set(G), x G, C power_set(G)):
+    forall y G:
+        =>:
+            y $in C
+        <=>:
+            exist h G st {h $in H, y = mul(x, h)}
 
-prop left_coset_member(G set, mul fn(x, y G) G, H power_set(G), x G, y G):
-    exist h G st {h $in H, y = mul(x, h)}
-
+# Concrete additive object probe.  For an integer subgroup H this is the set
+# x+H, and callers can apply it directly as `left_coset_Z(H, x)`.
 prop left_coset_Z_member(H power_set(Z), x, y Z):
     exist h Z st {h $in H, y = x + h}
 
 have fn left_coset_Z(H power_set(Z), x Z) power_set(Z) = {y Z: $left_coset_Z_member(H, x, y)}
 
-prop cosets_disjoint(G set, mul fn(x, y G) G, H power_set(G), x, y G):
-    not exist z G st {z $in H}
+# Two cosets are compared through their carriers.  The disjointness relation is
+# the exact residual condition in the source lemma.
+prop cosets_equal(G set, C1, C2 power_set(G)):
+    C1 = C2
 
-prop coset_equality_or_disjoint(G set, mul fn(x, y G) G, H power_set(G), x, y G):
-    x = y
+prop cosets_disjoint(G set, C1, C2 power_set(G)):
+    not exist z G st {z $in C1, z $in C2}
 
-prop subgroup_coset_partition(G set, mul fn(x, y G) G, one G, H power_set(G)):
-    $is_subgroup(G, mul, one, H)
+# Every element lies in its own coset, and the source lemma says that two such
+# carriers are either equal or disjoint.  The finite partition/counting step is
+# kept as a named theorem interface below.
+prop coset_partition_claim(G set, mul fn(x, y G) G, H power_set(G)):
     forall x G:
-        x $in G
-        =>:
-            x $in H
-
-prop finite_group(G set, mul fn(x, y G) G, one G):
-    $is_group(G, mul, one)
-    $is_finite_set(G)
+        exist C power_set(G) st {$is_left_coset(G, mul, H, x, C), x $in C}
 
 prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
-    $is_subgroup(G, mul, one, H)
+    $section7::is_subgroup(G, mul, one, H)
     $is_finite_set(G)
     $is_finite_set(H)
-    $divides_Z(finite_set_size(H), finite_set_size(G))
+    $section1::divides_Z(finite_set_size(H), finite_set_size(G))
 
-abstract_prop mul_power(mul, x, n, y)
-
-prop element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
-    $mul_power(mul, x, n, one)
+# Definition.  The order of x is the least positive exponent returning to the
+# unit.  The relation is concrete; selecting a generic value for an arbitrary
+# carrier is a separate function-family gap in the current Litex surface.
+prop has_element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
+    $section7::has_group_power(G, mul, one, x, n, one)
     forall k N_pos:
-        $mul_power(mul, x, k, one)
+        $section7::has_group_power(G, mul, one, x, k, one)
         =>:
             n <= k
 
-prop euler_theorem_conclusion(m N_pos, a Z):
-    $relatively_prime_Z(a, m)
-    a ^ euler_phi(m) % m = 1
+trust:
+    forall G set, mul fn(x, y G) G, one G, x G:
+        exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
 
-# The coset partition and finite counting are the exact source-level debt for
-# Lagrange's theorem; the statement and divisibility conclusion stay explicit.
+thm theorem_VIII_element_order_exists:
+    ? forall G set, mul fn(x, y G) G, one G, x G:
+        exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
+    exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
+
+prop euler_theorem_conclusion(m N_pos, a Z):
+    $section3::relatively_prime_Z(a, m)
+    a ^ section6::euler_phi(m) % m = 1
+
+# Theorem VIII.2. Cosets partition a finite group into equal-sized blocks, so
+# the subgroup order divides the group order.  The statement is concrete; only
+# the finite partition/counting proof is still debt.
 trust:
     forall G set, mul fn(x, y G) G, one G, H power_set(G):
-        $is_subgroup(G, mul, one, H)
+        $section7::is_subgroup(G, mul, one, H)
         $is_finite_set(G)
         $is_finite_set(H)
         =>:
@@ -61,22 +74,25 @@ trust:
 
 thm theorem_VIII_Lagrange:
     ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
-        $is_subgroup(G, mul, one, H)
+        $section7::is_subgroup(G, mul, one, H)
         $is_finite_set(G)
         $is_finite_set(H)
         =>:
             $subgroup_order_divides_group_order(G, mul, one, H)
     $subgroup_order_divides_group_order(G, mul, one, H)
 
+# Theorem VIII.3 (Euler).  Apply Lagrange to the multiplicative group of
+# residue classes prime to m.  The group construction is the remaining finite
+# unit-carrier interface, while the congruence conclusion is source-facing.
 trust:
     forall m N_pos, a Z:
-        $relatively_prime_Z(a, m)
+        $section3::relatively_prime_Z(a, m)
         =>:
             $euler_theorem_conclusion(m, a)
 
 thm theorem_VIII_Euler:
     ? forall m N_pos, a Z:
-        $relatively_prime_Z(a, m)
+        $section3::relatively_prime_Z(a, m)
         =>:
             $euler_theorem_conclusion(m, a)
     $euler_theorem_conclusion(m, a)

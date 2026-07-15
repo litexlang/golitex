@@ -537,7 +537,7 @@ impl Runtime {
 
         let outer_function: Obj = outer_call.head.as_ref().clone().into();
         let enumerator: Obj = enumerator_call.head.as_ref().clone().into();
-        let Some(outer_body) = self.get_fn_range_on_function_body(&outer_function) else {
+        let Some(outer_body) = self.get_fn_range_function_body(&outer_function) else {
             return Ok(None);
         };
         if ParamGroupWithSet::number_of_params(&outer_body.params_def_with_set) != 1 {
@@ -554,7 +554,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let Some(enumerator_body) = self.get_fn_range_on_function_body(&enumerator) else {
+        let Some(enumerator_body) = self.get_fn_range_function_body(&enumerator) else {
             return Ok(None);
         };
         if ParamGroupWithSet::number_of_params(&enumerator_body.params_def_with_set) != 1 {

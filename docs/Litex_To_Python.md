@@ -19,7 +19,7 @@ litex -python -e "have a R = 1"
 litex -python -r repo_dir
 ```
 
-`-r` compiles the ordered `[run]` plan declared in `repo_dir/litex.config`.
+`-r` compiles the complete ordered `[export]` table declared in `repo_dir/litex.config`.
 
 ## Supported v1 Subset
 
@@ -139,10 +139,10 @@ def twice_step(y, dy):
 
 ## Recursive Algorithm Shape
 
-The v1 Python extractor does not yet emit recursive functions. It rejects
-`have fn as algo ... by induc` and standalone `algo` bodies. Litex itself can
-already express and evaluate recursive algorithms, so this is a backend
-coverage boundary rather than a language-expression boundary.
+The v1 Python extractor emits standalone `algo` bodies with `R` parameters and
+an `R` return value, including calls from an algorithm to itself. It still
+rejects `have fn as algo ... by induc`: that definition form needs a dedicated
+recursive lowering path.
 
 For example, the Fibonacci sequence can be written as a recursive mathematical
 function plus an executable algorithm body:
@@ -174,8 +174,9 @@ def fib(n):
     return fib(n - 1) + fib(n - 2)
 ```
 
-This Python form is not emitted by v1 yet; it is the intended lowering shape
-once recursive extraction is implemented.
+This exact Fibonacci source is outside the current v1 boundary because it uses
+`Z` and `have fn ... by induc`. A standalone `algo` with the supported `R`
+signature is emitted in this same Python shape, including its self-calls.
 
 This is the main reason the Litex-to-programming-language direction should
 scale beyond the current extractor subset. The pure mathematical core of an
@@ -188,7 +189,7 @@ the algorithms used in scientific computation can be expressed in Litex once
 their data and state are made explicit.
 
 The remaining work is backend engineering and numeric contracts. A future
-Python extractor still needs recursive emission, richer data structures,
+Python extractor still needs `by induc` lowering, richer data structures,
 arrays, matrices, library functions, iterative evaluation strategies, and a
 clear contract for exact arithmetic, floating-point arithmetic, or interval
 arithmetic.
@@ -202,10 +203,10 @@ arithmetic.
   variants of those standard sets.
 - `have fn as algo` statements are extraction candidates only when every
   parameter set is exactly `R` and the return set is exactly `R`.
+- Standalone `algo` statements are extraction candidates when the already
+  declared function has that same `R^n -> R` signature.
 - Ordinary proof statements, claims, theorems, non-numeric object definitions,
   and non-`as algo` function definitions are skipped.
-- Standalone `algo` statements are rejected in v1. Use `have fn as algo ...`
-  when a function should be translatable.
 
 If a statement is an extraction candidate but uses unsupported syntax, the
 extractor reports an error instead of silently skipping it.
@@ -218,7 +219,8 @@ Supported expression forms:
 - function parameters
 - previously extracted numeric constants
 - `+`, `-`, `*`, `/`, `^`
-- calls to previously extracted `R^n -> R` functions
+- calls to previously extracted `R^n -> R` functions, including the function
+  currently being emitted for direct self-recursion
 
 Supported case conditions:
 
@@ -227,7 +229,6 @@ Supported case conditions:
 Unsupported in v1:
 
 - function domain restrictions such as `fn(x R: x > 0) R`
-- standalone `algo`
 - `have fn as algo ... by induc`
 - non-`R` function parameters or returns
 - sets, membership facts, abstract propositions, tuples, structures, matrices,
