@@ -190,12 +190,15 @@ impl Runtime {
                     StandardSet::N,
                     verify_state,
                 ),
-            (Obj::Count(count), Obj::StandardSet(StandardSet::N))
-            | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
-            | (Obj::Count(count), Obj::StandardSet(StandardSet::Q))
-            | (Obj::Count(count), Obj::StandardSet(StandardSet::R)) => {
-                self.verify_count_in_standard_number_set(in_fact, count, verify_state)
-            }
+            (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::N))
+            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::Z))
+            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::Q))
+            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::R)) => self
+                .verify_finite_set_size_in_standard_number_set(
+                    in_fact,
+                    finite_set_size,
+                    verify_state,
+                ),
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
@@ -480,18 +483,23 @@ impl Runtime {
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
-                if let Some(result) = self.verify_in_fact_element_in_fn_set_by_known_restriction(
+                let stored_result = self.verify_in_fact_element_in_fn_set_by_stored_definition(
                     element,
                     expected_fn_set,
                     in_fact,
+                )?;
+                if stored_result.is_true() {
+                    return Ok(stored_result);
+                }
+                if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
+                    element,
+                    expected_fn_set,
+                    in_fact,
+                    verify_state,
                 )? {
                     return Ok(result);
                 }
-                self.verify_in_fact_element_in_fn_set_by_stored_definition(
-                    element,
-                    expected_fn_set,
-                    in_fact,
-                )
+                Ok(stored_result)
             }
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();

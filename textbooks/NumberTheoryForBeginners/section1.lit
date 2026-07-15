@@ -192,7 +192,7 @@ prop is_least_element_of_N_set(T set, m N):
 prop every_N_finite_subset_of_n_elements_has_least(n Z):
     forall T finite_set:
         T $subset N
-        count(T) = n
+        finite_set_size(T) = n
         $is_nonempty_set(T)
         =>:
             exist m N st {$is_least_element_of_N_set(T, m)}
@@ -216,19 +216,19 @@ thm intersect_with_singleton:
 thm finite_N_subset_size_one_has_least:
     ? forall T finite_set:
         T $subset N
-        count(T) = 1
+        finite_set_size(T) = 1
         =>:
             exist a N st {$is_least_element_of_N_set(T, a)}
-    count(T) >= 1
+    finite_set_size(T) >= 1
     $is_nonempty_set(T)
     have a T
     a $in T
     a $in N
     by thm intersect_with_singleton(T, a)
     intersect(T, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
-    count(set_minus(T, {a})) = count(T) - count(intersect(T, {a})) = 1 - 1 = 0
+    finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = 1 - 1 = 0
     set_minus(T, {a}) = {}
     witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
         a $in T
@@ -247,7 +247,7 @@ thm finite_N_subset_successor_has_least:
     ? forall n Z, T finite_set:
         n >= 1
         T $subset N
-        count(T) = n + 1
+        finite_set_size(T) = n + 1
         $every_N_finite_subset_of_n_elements_has_least(n)
         $is_nonempty_set(T)
         =>:
@@ -258,10 +258,10 @@ thm finite_N_subset_successor_has_least:
     a $in N
     by thm intersect_with_singleton(T, a)
     intersect(T, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
-    count(set_minus(T, {a})) = count(T) - count(intersect(T, {a})) = (n + 1) - 1 = n
-    count(set_minus(T, {a})) = n >= 1
+    finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = (n + 1) - 1 = n
+    finite_set_size(set_minus(T, {a})) = n >= 1
     $is_nonempty_set(set_minus(T, {a}))
     set_minus(T, {a}) $subset T
     set_minus(T, {a}) $subset N
@@ -315,7 +315,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
             claim:
                 ? forall T finite_set:
                     T $subset N
-                    count(T) = 1
+                    finite_set_size(T) = 1
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
@@ -328,7 +328,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
             claim:
                 ? forall T finite_set:
                     T $subset N
-                    count(T) = n + 1
+                    finite_set_size(T) = n + 1
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
@@ -362,10 +362,10 @@ thm positive_integer_set_has_least_element:
     T $subset N
     witness $is_nonempty_set(T) from a:
         a $in T
-    count(T) >= 1
-    count(T) $in N_pos
-    by thm every_N_finite_subset_has_least_by_count_induction(count(T))
-    $every_N_finite_subset_of_n_elements_has_least(count(T))
+    finite_set_size(T) >= 1
+    finite_set_size(T) $in N_pos
+    by thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
+    $every_N_finite_subset_of_n_elements_has_least(finite_set_size(T))
     exist m N st {$is_least_element_of_N_set(T, m)}
     obtain m from exist m N st {$is_least_element_of_N_set(T, m)}
     m $in T

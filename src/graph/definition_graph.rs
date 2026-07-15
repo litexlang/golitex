@@ -437,13 +437,7 @@ impl DefinitionGraphBuilder {
                 .equal_to
                 .as_ref()
                 .map(|(_, line_file)| line_file)
-                .or_else(|| definition.fn_set.as_ref().map(|(_, line_file)| line_file))
-                .or_else(|| {
-                    definition
-                        .restrict_to
-                        .as_ref()
-                        .and_then(|items| items.first().map(|(_, line_file)| line_file))
-                });
+                .or_else(|| definition.fn_set.as_ref().map(|(_, line_file)| line_file));
             self.ensure_node(
                 node_id.clone(),
                 "fn",
@@ -460,11 +454,6 @@ impl DefinitionGraphBuilder {
             }
             if let Some((equal_to, _)) = definition.equal_to.as_ref() {
                 collector.collect_obj(equal_to);
-            }
-            if let Some(restrictions) = definition.restrict_to.as_ref() {
-                for (fn_set, _) in restrictions {
-                    collector.collect_fn_set_body(fn_set);
-                }
             }
             self.add_dependency_edges(&node_id, collector);
         }

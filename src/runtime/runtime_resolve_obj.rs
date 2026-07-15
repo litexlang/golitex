@@ -322,7 +322,7 @@ impl Runtime {
                     obj.clone()
                 }
             }
-            Obj::Count(count) => match &*count.set {
+            Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
                 Obj::ListSet(list_set) => Number::new(list_set.list.len().to_string()).into(),
                 Obj::ClosedRange(cr) => {
                     if let (Some(a_num), Some(b_num)) = (
@@ -350,8 +350,9 @@ impl Runtime {
                     let mut acc = "1".to_string();
                     for arg in &cart.args {
                         let resolved_arg = self.resolve_obj(arg.as_ref());
-                        let count_obj = Obj::Count(Count::new(resolved_arg));
-                        let n = match self.resolve_obj_to_number(&count_obj) {
+                        let finite_set_size_obj =
+                            Obj::FiniteSetSize(FiniteSetSize::new(resolved_arg));
+                        let n = match self.resolve_obj_to_number(&finite_set_size_obj) {
                             Some(n) => n,
                             None => return obj.clone(),
                         };

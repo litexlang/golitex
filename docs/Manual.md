@@ -255,7 +255,7 @@ There are three layers to keep distinct:
   products, integer ranges, real intervals, tuples, and struct views.
 - **Builtin code facts** are preloaded Litex facts. They include operator
   typing, standard number-set relationships, basic order and comparison
-  principles, set-operator facts, range facts, finite-set count facts, and
+  principles, set-operator facts, range facts, finite-set size facts, and
   background interfaces such as integer/rational representations.
 - **Builtin verification rules** are Rust-level verifier patterns that close
   goals automatically. Arithmetic normalization, order algebra, membership
@@ -288,7 +288,7 @@ Some currently preloaded named theorem interfaces are:
 There are many more anonymous builtin facts than named theorem interfaces. For
 example, Litex preloads facts relating `<=` and `<` to differences, zero-product
 facts, basic `range` and `closed_range` descriptions, finite-set nonemptiness
-from positive count, and common set-operator introduction/elimination facts.
+from positive finite-set size, and common set-operator introduction/elimination facts.
 These facts can often be used by automatic known-`forall` matching without a
 visible `by thm` line.
 
@@ -455,7 +455,7 @@ Later parameter domains may depend on earlier parameters. The return set is not 
 
 The range object `fn_range(f)` means the set of values reached by `f`, using the function set already known for `f`. It is not a separate restriction object. If `f` has return set `T`, then `fn_range(f) $subset T`, `fn_range(f) $in power_set(T)`, and a well-defined value `f(a)` is in `fn_range(f)`.
 
-The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function `f` on the domain set `S`. It is well-defined when Litex can verify that `f` is defined on `S`. When you start with a function on a larger domain, prefer passing an anonymous function such as `fn(x S) T {f(x)}` to APIs that expect a function on `S`. If `S` is finite, then `fn_range_on(f, S)` is finite.
+The preview object `fn_range_on(f, S)` is the convenient function-image interface for a unary function whose declared domain is exactly `S`. If you start with a larger-domain `f`, construct the value explicitly: `fn_range_on(fn(x S) T {f(x)}, S)`. If `S` is finite, then `fn_range_on(f, S)` is finite.
 
 ```litex
 have g set = fn(x R) R
@@ -489,9 +489,9 @@ sketch:
 sketch:
     have a seq(R)
 
-    a(1) $in fn_range_on(a, 1...3)
-    fn_range_on(a, 1...3) $subset R
-    $is_finite_set(fn_range_on(a, 1...3))
+    fn(x 1...3) R {a(x)}(1) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+    fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $subset R
+    $is_finite_set(fn_range_on(fn(x 1...3) R {a(x)}, 1...3))
 ```
 
 #### Cartesian product and dimension
@@ -601,22 +601,22 @@ struct group<s set>:
 
 If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples. A checked `have x &Name<args> = value` supplies that witness after proving the value satisfies the fields and laws.
 
-#### Counting members
+#### Finite-set size
 
-Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`, plus count identities for `union`, `set_minus`, and `set_diff`.
+`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations. It also knows basic upper bounds such as `finite_set_size(intersect(A, B)) <= finite_set_size(A)` and `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`, plus finite-set-size identities for `union`, `set_minus`, and `set_diff`.
 
 ```litex
-count({1, 2, 3}) = 3
+finite_set_size({1, 2, 3}) = 3
 $is_finite_set(cart({1, 2}, {3, 4, 5}))
-count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
+finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5})
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 forall A, B finite_set:
     $is_finite_set(union(A, B))
     $is_finite_set(intersect(A, B))
-count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
-count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
-count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
+finite_set_size(union({1, 2}, {2, 3})) <= finite_set_size({1, 2}) + finite_set_size({2, 3})
+finite_set_size(union({1, 2}, {2, 3})) = finite_set_size({1, 2}) + finite_set_size({2, 3}) - finite_set_size(intersect({1, 2}, {2, 3}))
+finite_set_size(set_minus({1, 2}, {2, 3})) = finite_set_size({1, 2}) - finite_set_size(intersect({1, 2}, {2, 3}))
 ```
 
 #### Finite `sum` and `product`
@@ -666,19 +666,19 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 ```
 
-For a nonempty finite set, an enumeration by a bijection from `1...count(X)` gives the same sum for any bijective ordering.
+For a nonempty finite set, an enumeration by a bijection from `1...finite_set_size(X)` gives the same sum for any bijective ordering.
 
 ```litex
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, count(X)) st {g(i) = x}
+        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
 
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
@@ -686,7 +686,7 @@ thm finite_set_sum_enumeration_well_defined:
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 ```
 
-`finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ count(X)`.
+`finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ finite_set_size(X)`.
 
 ```litex
 finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
@@ -878,11 +878,11 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `proj(C, i)` | `C` must be a Cartesian product, `i` must be provably in `N_pos`, and Litex must prove `i <= cart_dim(C)`. Concrete numeric indices are normalized before this check. |
 | `tuple_dim(t)` | `t` must be well-defined and Litex must prove `$is_tuple(t)`. |
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
-| `count(S)` | Litex must prove `$is_finite_set(S)`. |
+| `finite_set_size(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. |
-| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and Litex must verify that `f` is defined as a unary function on `S`. For a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}` when an API expects a function on `S`. |
+| `fn_range_on(f, S)` | `f` and `S` must be well-defined, and `f` must be a unary function declared on exactly `S`. For a larger-domain function, write `fn_range_on(fn(x S) T {f(x)}, S)`. |
 | `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
-| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function defined on `S`; for a larger-domain function, use an anonymous restriction such as `fn(x S) T {f(x)}`. |
+| `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function declared on `S`; for a larger-domain function, use `fn(x S) T {f(x)}`. |
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
 | Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `'(,a)`, `'(,a]`, `'(a,)`, `'[a,)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
@@ -1312,13 +1312,24 @@ These predicates express inclusion between sets.
 
 ---
 
-### Function Restriction
+### Restricting a Function Value
 
-This low-level compatibility predicate says whether a function can be viewed as having a smaller or more constrained function type. Ordinary code should usually pass a function already written on the intended domain, for example `fn(x E) R {f(x)}` when restricting a larger-domain `f` to `E`.
+Function types are exact. If an interface expects `f fn(x E) R` and you have a
+larger-domain `g`, pass the restricted function value explicitly:
 
-| Predicate | Negated form | Meaning |
-|-----------|--------------|---------|
-| `f $restricts_to T` | `not f $restricts_to T` | Low-level check that `f` can be restricted to the function space `T`. |
+```litex
+have E power_set(R)
+
+prop p(f fn(x E) R):
+    forall x E:
+        f(x) = f(x)
+
+have fn g(x R) R = x
+$p(fn(x E) R {g(x)})
+```
+
+This is Litex's ordinary spelling of the textbook notation `g | E`: it creates
+a function whose declared domain is `E`, rather than silently retyping `g`.
 
 ---
 
@@ -1593,7 +1604,7 @@ w > 0
 
 ### Naming preimages (`have by preimage`)
 
-When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be a restricted range membership `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
+When a range-membership fact `z $in fn_range(f)` is already verified, **`have by preimage`** introduces a fresh preimage witness. The statement stores the witness parameter facts, the function-domain facts, and the equality from the target value back to the function application. The source may also be `z $in fn_range_on(f, S)`; in that case the witness is stored in `S`.
 
 For replacement sets, `have by preimage x from y $in replacement(P, A)` stores `x $in A` and `$P(x, y)`.
 
@@ -1628,11 +1639,11 @@ sketch:
 sketch:
     have a seq(R)
 
-    a(2) $in fn_range_on(a, 1...3)
-    have by preimage k from a(2) $in fn_range_on(a, 1...3)
+    fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+    have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
 
     k $in 1...3
-    a(2) = a(k)
+    fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 ```
 
 ```litex
@@ -2862,7 +2873,7 @@ bound variable in a set builder.
 | projection function from a product | `proj(cart(A, B), 1)` |
 | tuple value | `(1, 2)` |
 | tuple length | `tuple_dim((1, 2))` |
-| finite cardinality/count object | `count({1, 2})` |
+| finite-set size object | `finite_set_size({1, 2})` |
 | function image/range | `fn_range(f)` |
 | function image restricted to a set | `fn_range_on(f, A)` |
 | finite-set sum | `finite_set_sum({1, 2}, f)` |
@@ -2940,7 +2951,6 @@ conjunctive, disjunctive, or negated universal facts.
 | tuple shape predicate | `$is_tuple(t)` |
 | subset relation | `A $subset B` |
 | superset relation | `A $superset B` |
-| low-level function restriction predicate | `f $restricts_to fn(x R) R` |
 | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
 | global function equality | `$fn_eq(f, g)` |
 | negated user predicate | `not $prime(n)` |
@@ -2957,7 +2967,6 @@ conjunctive, disjunctive, or negated universal facts.
 | negated tuple predicate | `not $is_tuple(t)` |
 | negated subset relation | `not A $subset B` |
 | negated superset relation | `not A $superset B` |
-| negated low-level restriction predicate | `not f $restricts_to fn(x R) R` |
 
 #### Facts inside larger facts
 
@@ -5133,23 +5142,9 @@ There is no matching automatic rule when `0` is on the left.
 
 ---
 
-### Function Restriction
-
-For the low-level `$restricts_to` compatibility predicate, inference narrows the recorded function-space information to the more specific function type you gave. In ordinary source code, prefer writing the restricted function value directly as an anonymous function, such as `fn(x E) R {f(x)}`.
-
-```text
-known:
-    $restricts_to(f, smaller_fn_set)
-
-remembered:
-    f can be used with the smaller function set
-```
-
----
-
 ### Facts With No Extra Inference
 
-Some builtin atoms are left as they are for this pass. Examples include negated comparisons, `$is_set`, `not f $restricts_to T`, and similar facts.
+Some builtin atoms are left as they are for this pass. Examples include negated comparisons, `$is_set`, and similar facts.
 
 They can still be used in proofs. Builtin inference simply does not unfold them further here.
 

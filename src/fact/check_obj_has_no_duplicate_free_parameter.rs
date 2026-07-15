@@ -190,7 +190,7 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
-        Obj::Count(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::FiniteSetSize(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.set,
             free_param_type,
             params_already_used,

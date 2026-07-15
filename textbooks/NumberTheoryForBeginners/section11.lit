@@ -1,0 +1,44 @@
+# Section XI: power congruences and quadratic residues.
+
+local import section10
+
+prop solves_power_congruence_mod(m N_pos, k N, a, x Z):
+    exist t Z st {x ^ k - a = m * t}
+
+have fn power_congruence_solution_set(m N_pos, k N, a Z) power_set(Z) = {x Z: $solves_power_congruence_mod(m, k, a, x)}
+
+prop quadratic_residue_mod(p N_pos, a Z):
+    exist x Z st {$solves_power_congruence_mod(p, 2, a, x)}
+
+prop quadratic_nonresidue_mod(p N_pos, a Z):
+    not $quadratic_residue_mod(p, a)
+
+prop power_map_mod(m N_pos, k N, a Z):
+    forall x Z:
+        $solves_power_congruence_mod(m, k, a, x)
+        =>:
+            x $in power_congruence_solution_set(m, k, a)
+
+prop power_congruence_criterion(m N_pos, k N, a Z):
+    exist x Z st {$solves_power_congruence_mod(m, k, a, x)}
+
+trust:
+    forall p N_pos, a Z:
+        $is_prime_Z(p)
+        =>:
+            $quadratic_residue_mod(p, a)
+
+thm theorem_XI_quadratic_residue_split:
+    ? forall p N_pos, a Z:
+        $is_prime_Z(p)
+        =>:
+            $quadratic_residue_mod(p, a)
+    $quadratic_residue_mod(p, a)
+
+thm theorem_XI_power_congruence_criterion:
+    ? forall m N_pos, k N, a Z:
+        $power_congruence_criterion(m, k, a)
+        =>:
+            exist x Z st {$solves_power_congruence_mod(m, k, a, x)}
+    $power_congruence_criterion(m, k, a)
+    exist x Z st {$solves_power_congruence_mod(m, k, a, x)}

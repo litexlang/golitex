@@ -1,0 +1,52 @@
+# Section XIII: Gaussian integers, norm, division, and sums of two squares.
+
+local import section12
+
+prop gaussian_integer(z cart(Z, Z)):
+    z $in cart(Z, Z)
+
+have fn gaussian_norm(z cart(Z, Z)) Z = z[1] ^ 2 + z[2] ^ 2
+
+prop gaussian_norm_nonnegative(z cart(Z, Z)):
+    gaussian_norm(z) >= 0
+
+abstract_prop gaussian_integer_mul(z, w, u)
+abstract_prop gaussian_integer_division(z, w, q, r)
+abstract_prop gaussian_integer_prime(z)
+
+prop gaussian_division_statement(z, w, q, r cart(Z, Z)):
+    $gaussian_integer_division(z, w, q, r)
+
+prop gaussian_prime_statement(z cart(Z, Z)):
+    $gaussian_integer_prime(z)
+
+prop norm_multiplicative(z, w cart(Z, Z), u cart(Z, Z)):
+    $gaussian_integer_mul(z, w, u)
+    gaussian_norm(u) = gaussian_norm(z) * gaussian_norm(w)
+
+prop sum_two_squares_representation(n Z):
+    exist z cart(Z, Z) st {gaussian_norm(z) = n}
+
+prop sum_two_squares_prime_condition(n Z):
+    $sum_two_squares_representation(n)
+
+trust:
+    forall z, w cart(Z, Z):
+        gaussian_norm(w) != 0
+        =>:
+            exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
+
+thm theorem_XIII_gaussian_division:
+    ? forall z, w cart(Z, Z):
+        gaussian_norm(w) != 0
+        =>:
+            exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
+    exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
+
+thm theorem_XIII_sum_of_two_squares:
+    ? forall n Z:
+        $sum_two_squares_prime_condition(n)
+        =>:
+            $sum_two_squares_representation(n)
+    $sum_two_squares_prime_condition(n)
+    $sum_two_squares_representation(n)

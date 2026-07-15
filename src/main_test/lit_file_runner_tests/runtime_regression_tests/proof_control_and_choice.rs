@@ -568,16 +568,16 @@ sketch:
 sketch:
     have a seq(R)
 
-    a(1) $in fn_range_on(a, 1...3)
-    a(2) $in fn_range_on(a, 1...3)
-    fn_range_on(a, 1...3) $subset R
-    fn_range_on(a, 1...3) $in power_set(R)
-    $is_finite_set(fn_range_on(a, 1...3))
-    count(fn_range_on(a, 1...3)) $in N
+    fn(x 1...3) R {a(x)}(1) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+    fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+    fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $subset R
+    fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $in power_set(R)
+    $is_finite_set(fn_range_on(fn(x 1...3) R {a(x)}, 1...3))
+    finite_set_size(fn_range_on(fn(x 1...3) R {a(x)}, 1...3)) $in N
 
-    have by preimage k from a(2) $in fn_range_on(a, 1...3)
+    have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
     k $in 1...3
-    a(2) = a(k)
+    fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();

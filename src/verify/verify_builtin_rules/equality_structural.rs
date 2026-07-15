@@ -534,7 +534,7 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Count(l), Obj::Count(r)) => {
+            (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,

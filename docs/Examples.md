@@ -1998,8 +1998,8 @@ forall i Z:
         i $in range(2, 6)
         i $in 2...5
 
-count(1...5) =  5
-count(range(1, 5)) = 4
+finite_set_size(1...5) =  5
+finite_set_size(range(1, 5)) = 4
 ```
 
 ### 7. Comparison And Chained Inequalities
@@ -2215,30 +2215,30 @@ forall u, v, w R:
 ### 12. Finite Sets
 
 - Category: `obj`
-- Purpose: Shows finite-set literals, membership, and count facts.
+- Purpose: Shows finite-set literals, membership, and finite-set-size facts.
 
 ```litex
 $is_finite_set({1, 2})
-count({1, 2, 3}) = 3
-count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
+finite_set_size({1, 2, 3}) = 3
+finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5})
 
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 $is_finite_set(set_minus({1, 2}, {2, 3}))
 $is_finite_set(set_diff({1, 2}, {2, 3}))
 
-count(intersect({1, 2}, {2, 3})) <= count({1, 2})
-count(intersect({1, 2}, {2, 3})) <= count({2, 3})
-count(set_minus({1, 2}, {2, 3})) <= count({1, 2})
-count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
-count(set_diff({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
+finite_set_size(intersect({1, 2}, {2, 3})) <= finite_set_size({1, 2})
+finite_set_size(intersect({1, 2}, {2, 3})) <= finite_set_size({2, 3})
+finite_set_size(set_minus({1, 2}, {2, 3})) <= finite_set_size({1, 2})
+finite_set_size(union({1, 2}, {2, 3})) <= finite_set_size({1, 2}) + finite_set_size({2, 3})
+finite_set_size(set_diff({1, 2}, {2, 3})) <= finite_set_size({1, 2}) + finite_set_size({2, 3})
 
-count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
-count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
-count(set_diff({1, 2}, {2, 3})) = count(set_minus({1, 2}, {2, 3})) + count(set_minus({2, 3}, {1, 2}))
+finite_set_size(union({1, 2}, {2, 3})) = finite_set_size({1, 2}) + finite_set_size({2, 3}) - finite_set_size(intersect({1, 2}, {2, 3}))
+finite_set_size(set_minus({1, 2}, {2, 3})) = finite_set_size({1, 2}) - finite_set_size(intersect({1, 2}, {2, 3}))
+finite_set_size(set_diff({1, 2}, {2, 3})) = finite_set_size(set_minus({1, 2}, {2, 3})) + finite_set_size(set_minus({2, 3}, {1, 2}))
 
 forall X finite_set:
-    count(X) >= 1
+    finite_set_size(X) >= 1
     =>:
         $is_nonempty_set(X)
 
@@ -2247,8 +2247,8 @@ claim:
         $is_finite_set(X)
         $is_finite_set(Y)
         =>:
-            count(cart(X, Y)) = count(X) * count(Y)
-    count(cart(X, Y)) = count(X) * count(Y)
+            finite_set_size(cart(X, Y)) = finite_set_size(X) * finite_set_size(Y)
+    finite_set_size(cart(X, Y)) = finite_set_size(X) * finite_set_size(Y)
 ```
 
 ### 13. Intervals
@@ -2862,7 +2862,7 @@ finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = finite_set_size(X) * c
 ```
 
 ```litex
@@ -2929,16 +2929,16 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 ## A finite-set sum defined by a bijective enumeration is independent of the enumeration.
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, count(X)) st {g(i) = x}
+        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
 
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
@@ -2958,7 +2958,7 @@ finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)
 ```
 
 ```litex
@@ -3135,8 +3135,8 @@ $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 #### 8. Function Images
 
 Mathematical meaning: `fn_range(f)` is the image of a function over its whole
-domain.  `fn_range_on(f, S)` is the image of a unary function restricted to a
-set `S`.
+domain.  `fn_range_on(f, S)` is the image of a unary function whose declared
+domain is exactly `S`.
 
 ```litex
 have fn shift(x R) R = x + 1
@@ -3152,13 +3152,13 @@ shift(2) = shift(x)
 ```litex
 have a finite_seq(R, 3) = [1, 2, 3]
 
-a(2) $in fn_range_on(a, 1...3)
-fn_range_on(a, 1...3) $subset R
-$is_finite_set(fn_range_on(a, 1...3))
+fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
+fn_range_on(fn(x 1...3) R {a(x)}, 1...3) $subset R
+$is_finite_set(fn_range_on(fn(x 1...3) R {a(x)}, 1...3))
 
-have by preimage k from a(2) $in fn_range_on(a, 1...3)
+have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range_on(fn(x 1...3) R {a(x)}, 1...3)
 k $in 1...3
-a(2) = a(k)
+fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 ```
 
 #### 9. Sequences, Finite Sequences, And Matrices
@@ -3845,15 +3845,15 @@ forall P Point, L Line:
 
 ```litex
 by contra not $is_finite_set(R):
-    forall x 0...count(R):
+    forall x 0...finite_set_size(R):
         x $in Z
         x $in R
 
-    0...count(R) $subset R
+    0...finite_set_size(R) $subset R
 
-    count(R) + 1 = count(R) - 0 + 1 = count(0...count(R)) <= count(R)
+    finite_set_size(R) + 1 = finite_set_size(R) - 0 + 1 = finite_set_size(0...finite_set_size(R)) <= finite_set_size(R)
 
-    impossible count(R) + 1 <= count(R)
+    impossible finite_set_size(R) + 1 <= finite_set_size(R)
 ```
 
 ### 3. A High-Level Cantor-Schroeder-Bernstein Sketch

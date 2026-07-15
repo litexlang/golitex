@@ -1,0 +1,16 @@
+# A generic restriction theorem can receive real subintervals as power-set
+# parameters, then type the anonymous restricted function through the subset.
+thm anonymous_restriction_value:
+    ? forall X, Y power_set(R), f fn(x X) R, y Y:
+        Y $subset X
+        =>:
+            fn(x Y) R {f(x)}(y) = f(y)
+    fn(x Y) R {f(x)}(y) = f(y)
+
+thm closed_interval_restriction_value:
+    ? forall a, b, u, v R, f fn(x '[a, b]) R, y '[u, v]:
+        '[u, v] $subset '[a, b]
+        =>:
+            fn(x '[u, v]) R {f(x)}(y) = f(y)
+    by thm anonymous_restriction_value('[a, b], '[u, v], f, y)
+    fn(x '[u, v]) R {f(x)}(y) = f(y)

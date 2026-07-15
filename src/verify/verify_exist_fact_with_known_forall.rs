@@ -370,7 +370,7 @@ impl Runtime {
             Obj::PowerSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::CartDim(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::TupleDim(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
-            Obj::Count(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
+            Obj::FiniteSetSize(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::FnRange(x) => Self::obj_depends_on_given_exist_param(x.function.as_ref(), names),
             Obj::FnRangeOn(x) => {
                 Self::obj_depends_on_given_exist_param(x.function.as_ref(), names)

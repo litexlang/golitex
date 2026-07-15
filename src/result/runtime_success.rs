@@ -108,6 +108,7 @@ pub struct ByEnumerateRangeVerificationResult {
 #[derive(Clone, Debug)]
 pub struct ByInducVerificationResult {
     pub strong: bool,
+    pub finite_set: bool,
     pub structured: bool,
     pub parameter: String,
     pub start: String,
@@ -802,6 +803,7 @@ impl ByEnumerateRangeVerificationResult {
 impl ByInducVerificationResult {
     pub fn new(
         strong: bool,
+        finite_set: bool,
         structured: bool,
         parameter: String,
         start: String,
@@ -817,6 +819,7 @@ impl ByInducVerificationResult {
     ) -> Self {
         ByInducVerificationResult {
             strong,
+            finite_set,
             structured,
             parameter,
             start,

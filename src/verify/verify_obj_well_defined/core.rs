@@ -121,8 +121,7 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
                 let function_name_obj: Obj = template_obj.clone().into();
                 self.verify_obj_well_defined_and_store_cache(&function_name_obj, verify_state)?;
-                let bodies =
-                    self.get_cloned_object_in_fn_set_or_restrict_candidates(&function_name_obj);
+                let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
                 if bodies.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
@@ -139,8 +138,7 @@ impl Runtime {
             }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                let bodies =
-                    self.get_cloned_object_in_fn_set_or_restrict_candidates(&function_name_obj);
+                let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
                 if bodies.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
@@ -186,7 +184,7 @@ impl Runtime {
             RuntimeErrorStruct::new(
                 None,
                 format!(
-                    "object {} is not well-defined, no restricted function domain matched.",
+                    "object {} is not well-defined, no function domain matched.",
                     fn_obj
                 ),
                 default_line_file(),
@@ -280,7 +278,7 @@ impl Runtime {
         if args.len() != param_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "number of args ({}) does not match fn set with dom param count ({})",
+                    "number of args ({}) does not match fn set with dom param finite_set_size({})",
                     args.len(),
                     param_count
                 )),

@@ -92,6 +92,12 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
         Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }
+        Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => {
+            if let Some(found) = first_disallowed_control_stmt_in_stmts(&s.base_proof) {
+                return Some(found);
+            }
+            first_disallowed_control_stmt_in_stmts(&s.step_proof)
+        }
         Stmt::By(ByStmt::ByInducStmt(s)) => {
             if let Some(found) = first_disallowed_control_stmt_in_stmts(&s.proof) {
                 return Some(found);

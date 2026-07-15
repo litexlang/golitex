@@ -469,7 +469,7 @@ impl Runtime {
                 )));
             }
             let function_name_obj: Obj = (*fo.head).clone().into();
-            let Some(fs_body) = self.get_object_in_fn_set_or_restrict(&function_name_obj) else {
+            let Some(fs_body) = self.get_object_in_fn_set(&function_name_obj) else {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
@@ -485,7 +485,7 @@ impl Runtime {
                 op,
             );
         }
-        if let Some(fs_body) = self.get_cloned_object_in_fn_set_or_restrict(func) {
+        if let Some(fs_body) = self.get_cloned_object_in_fn_set(func) {
             return self.verify_iterated_op_summand_with_stored_fn_set_body(
                 fs_body,
                 start,

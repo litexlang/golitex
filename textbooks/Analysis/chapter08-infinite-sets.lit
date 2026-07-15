@@ -320,60 +320,60 @@ thm empty_set_has_finite_cardinality:
 
 thm positive_count_finite_set_has_cardinality:
     ? forall s finite_set:
-        count(s) >= 1
+        finite_set_size(s) >= 1
         =>:
-            $has_cardinality(s, count(s))
+            $has_cardinality(s, finite_set_size(s))
     by thm finite_set_has_bijective_index(s)
-    obtain idx from exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+    obtain idx from exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
     have fn shift_up by exist!:
-        ? forall i range(0, count(s)):
-            exist! j closed_range(1, count(s)) st {j = i + 1}
+        ? forall i range(0, finite_set_size(s)):
+            exist! j closed_range(1, finite_set_size(s)) st {j = i + 1}
         i >= 0
-        i < count(s)
+        i < finite_set_size(s)
         i + 1 >= 1
-        i + 1 <= count(s)
-        i + 1 $in closed_range(1, count(s))
-        witness exist j closed_range(1, count(s)) st {j = i + 1} from i + 1:
+        i + 1 <= finite_set_size(s)
+        i + 1 $in closed_range(1, finite_set_size(s))
+        witness exist j closed_range(1, finite_set_size(s)) st {j = i + 1} from i + 1:
             i + 1 = i + 1
-        forall j1, j2 closed_range(1, count(s)):
+        forall j1, j2 closed_range(1, finite_set_size(s)):
             j1 = i + 1
             j2 = i + 1
             =>:
                 j1 = j2
-        exist! j closed_range(1, count(s)) st {j = i + 1}
+        exist! j closed_range(1, finite_set_size(s)) st {j = i + 1}
     have fn zero_index_of_s by exist!:
         ? forall x s:
-            exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
-        exist! j closed_range(1, count(s)) st {idx(j) = x}
-        obtain j from exist j closed_range(1, count(s)) st {idx(j) = x}
+            exist! i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x}
+        exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
+        obtain j from exist j closed_range(1, finite_set_size(s)) st {idx(j) = x}
         j >= 1
-        j <= count(s)
+        j <= finite_set_size(s)
         j - 1 >= 0
-        j - 1 < j <= count(s)
-        j - 1 < count(s)
-        j - 1 $in range(0, count(s))
-        witness exist i range(0, count(s)) st {idx(shift_up(i)) = x} from j - 1:
+        j - 1 < j <= finite_set_size(s)
+        j - 1 < finite_set_size(s)
+        j - 1 $in range(0, finite_set_size(s))
+        witness exist i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x} from j - 1:
             shift_up(j - 1) = (j - 1) + 1
             (j - 1) + 1 = j
             idx(shift_up(j - 1)) = idx(j)
             idx(j) = x
             idx(shift_up(j - 1)) = x
-        forall i1, i2 range(0, count(s)):
+        forall i1, i2 range(0, finite_set_size(s)):
             idx(shift_up(i1)) = x
             idx(shift_up(i2)) = x
             =>:
                 shift_up(i1) = i1 + 1
                 shift_up(i2) = i2 + 1
-                exist! j closed_range(1, count(s)) st {idx(j) = x}
+                exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
                 shift_up(i1) = shift_up(i2)
                 i1 + 1 = i2 + 1
                 i1 = (i1 + 1) - 1
                 (i1 + 1) - 1 = (i2 + 1) - 1
                 (i2 + 1) - 1 = i2
                 i1 = i2
-        exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
+        exist! i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x}
     claim:
-        ? $is_injective_fn(s, range(0, count(s)), zero_index_of_s)
+        ? $is_injective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         forall x1, x2 s:
             zero_index_of_s(x1) = zero_index_of_s(x2)
             =>:
@@ -383,42 +383,42 @@ thm positive_count_finite_set_has_cardinality:
                 idx(shift_up(zero_index_of_s(x1))) = idx(shift_up(zero_index_of_s(x2)))
                 x1 = x2
     claim:
-        ? $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
+        ? $is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         claim:
-            ? forall i range(0, count(s)):
+            ? forall i range(0, finite_set_size(s)):
                 exist x s st {i = zero_index_of_s(x)}
             have x s = idx(shift_up(i))
             idx(shift_up(zero_index_of_s(x))) = x
             idx(shift_up(i)) = x
             idx(shift_up(zero_index_of_s(x))) = idx(shift_up(i))
-            exist! j closed_range(1, count(s)) st {idx(j) = idx(shift_up(i))}
+            exist! j closed_range(1, finite_set_size(s)) st {idx(j) = idx(shift_up(i))}
             shift_up(zero_index_of_s(x)) = shift_up(i)
             zero_index_of_s(x) = i
             i = zero_index_of_s(x)
             witness exist x0 s st {i = zero_index_of_s(x0)} from x:
                 i = zero_index_of_s(x)
-        $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
-    $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
-    witness exist f fn(x s) range(0, count(s)) st {$is_bijective_fn(s, range(0, count(s)), f)} from zero_index_of_s:
-        $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
-    $has_equal_cardinality(s, range(0, count(s)))
-    $has_cardinality(s, count(s))
+        $is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    $is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    witness exist f fn(x s) range(0, finite_set_size(s)) st {$is_bijective_fn(s, range(0, finite_set_size(s)), f)} from zero_index_of_s:
+        $is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    $has_equal_cardinality(s, range(0, finite_set_size(s)))
+    $has_cardinality(s, finite_set_size(s))
 
 thm finite_set_has_cardinality_count:
     ? forall s finite_set:
-        $has_cardinality(s, count(s))
-    count(s) = 0 or count(s) > 0
+        $has_cardinality(s, finite_set_size(s))
+    finite_set_size(s) = 0 or finite_set_size(s) > 0
     by cases:
-        ? $has_cardinality(s, count(s))
-        case count(s) = 0:
+        ? $has_cardinality(s, finite_set_size(s))
+        case finite_set_size(s) = 0:
             s = {}
             by thm empty_set_has_cardinality_zero()
             $has_cardinality({}, 0)
-            $has_cardinality(s, count(s))
-        case count(s) > 0:
-            count(s) >= 1
+            $has_cardinality(s, finite_set_size(s))
+        case finite_set_size(s) > 0:
+            finite_set_size(s) >= 1
             by thm positive_count_finite_set_has_cardinality(s)
-            $has_cardinality(s, count(s))
+            $has_cardinality(s, finite_set_size(s))
 
 thm infinite_natural_subset_is_nonempty:
     ? forall X power_set(N):
@@ -460,8 +460,8 @@ thm infinite_natural_subset_has_tail_above:
         by thm subset_of_finite_set_is_finite(X, closed_range(0, a))
         $is_finite_set(X)
         by thm finite_set_has_cardinality_count(X)
-        witness exist n N st {$has_cardinality(X, n)} from count(X):
-            $has_cardinality(X, count(X))
+        witness exist n N st {$has_cardinality(X, n)} from finite_set_size(X):
+            $has_cardinality(X, finite_set_size(X))
         $has_finite_cardinality(X)
         impossible not $has_finite_cardinality(X)
 
@@ -939,17 +939,17 @@ thm subset_of_at_most_countable_is_at_most_countable:
         =>:
             $is_at_most_countable(Y)
     obtain f from exist f fn(x X) N st {$is_injective_fn(X, N, f)}
-    have fn restrict_to_Y(y Y) N = f(y)
+    have fn f_on_Y(y Y) N = f(y)
     claim:
-        ? $is_injective_fn(Y, N, restrict_to_Y)
+        ? $is_injective_fn(Y, N, f_on_Y)
         forall y1, y2 Y:
-            restrict_to_Y(y1) = restrict_to_Y(y2)
+            f_on_Y(y1) = f_on_Y(y2)
             =>:
                 y1 $in X
                 y2 $in X
-                f(y1) = restrict_to_Y(y1) = restrict_to_Y(y2) = f(y2)
+                f(y1) = f_on_Y(y1) = f_on_Y(y2) = f(y2)
                 y1 = y2
-    witness exist f0 fn(x Y) N st {$is_injective_fn(Y, N, f0)} from restrict_to_Y
+    witness exist f0 fn(x Y) N st {$is_injective_fn(Y, N, f0)} from f_on_Y
 
 """
 Proposition 8.1.8. The image of a function from `N` is at most countable.
@@ -2062,9 +2062,9 @@ thm union_of_singleton_family:
                 x $in cup({X})
             X $in {X}
 
-thm constant_general_cart_product_members_restrict_to_function_space:
+thm constant_general_cart_product_members_are_in_function_space:
     ? forall I set, X set, F fn(alpha I) {X}, f general_cart(I, {X}, F):
-        f $restricts_to fn(alpha I) X
+        f $in fn(alpha I) X
     f $in general_cart(I, {X}, F)
     forall alpha I:
         f(alpha) $in F(alpha)
@@ -2073,10 +2073,9 @@ thm constant_general_cart_product_members_restrict_to_function_space:
         F(alpha) = X
         f(alpha) $in F(alpha)
         f(alpha) $in X
-    f $restricts_to fn(alpha I) X
+    f $in fn(alpha I) X
 
 prop is_constant_general_cart_product_candidate(I set, X set, F fn(alpha I) {X}, f fn(alpha I) X):
-    f $restricts_to fn(alpha I)cup({X})
     forall alpha I:
         f(alpha) $in F(alpha)
 
@@ -2085,11 +2084,9 @@ thm function_space_members_satisfy_constant_product_conditions:
         $is_constant_general_cart_product_candidate(I, X, F, f)
     forall alpha I:
         X $in {X}
-        f(alpha) $in cup({X})
-    f $restricts_to fn(alpha I)cup({X})
-    forall alpha I:
         F(alpha) $in {X}
         F(alpha) = X
+        f(alpha) $in X
         f(alpha) $in F(alpha)
 
 thm constant_general_cart_product_is_function_space:
@@ -2100,12 +2097,11 @@ thm constant_general_cart_product_is_function_space:
         claim:
             ? forall f general_cart(I, {X}, F):
                 f $in fn(alpha I) X
-            by thm constant_general_cart_product_members_restrict_to_function_space(I, X, F, f)
+            by thm constant_general_cart_product_members_are_in_function_space(I, X, F, f)
         claim:
             ? forall f fn(alpha I) X:
                 f $in general_cart(I, {X}, F)
             by thm function_space_members_satisfy_constant_product_conditions(I, X, F, f)
-            f $in fn(alpha I)cup({X})
             f $in general_cart(I, {X}, F)
 
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the

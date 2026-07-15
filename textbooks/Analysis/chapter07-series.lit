@@ -131,13 +131,13 @@ described by choosing a bijective enumeration of the finite set, then summing
 the values along the index range.
 """
 
-# Tao's construction chooses a bijection from `1...count(X)` onto `X`.  The
+# Tao's construction chooses a bijection from `1...finite_set_size(X)` onto `X`.  The
 # predicate below says exactly that every element of `X` appears at a unique
 # index in the closed range.
 
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, count(X)) st {g(i) = x}
+        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
 
 # Tao's construction also needs existence of at least one such enumeration.
 # The proof follows the source idea: induct on the size of the nonempty finite
@@ -147,9 +147,9 @@ prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_ran
 prop finite_set_size_has_index(n N_pos):
     forall s finite_set:
         $is_finite_set(s)
-        count(s) = n
+        finite_set_size(s) = n
         =>:
-            exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
 
 thm intersect_with_singleton:
     ? forall s set, a set:
@@ -170,34 +170,34 @@ thm intersect_with_singleton:
 thm remove_singleton_from_singleton_sized_set_is_empty:
     ? forall s finite_set, a set:
         $is_finite_set(s)
-        count(s) = 1
+        finite_set_size(s) = 1
         a $in s
         =>:
             set_minus(s, {a}) = {}
     by thm intersect_with_singleton(s, a)
     intersect(s, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = count(s) - count(intersect(s, {a})) = 1 - 1 = 0
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
     set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
     ? forall s finite_set:
         $is_finite_set(s)
-        count(s) = 1
+        finite_set_size(s) = 1
         =>:
-            exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
-    count(s) >= 1
+            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+    finite_set_size(s) >= 1
     $is_nonempty_set(s)
     have a s
     a $in s
     by thm remove_singleton_from_singleton_sized_set_is_empty(s, a)
     set_minus(s, {a}) = {}
-    have fn idx(i closed_range(1, count(s))) s = a
-    witness exist idx0 fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+    have fn idx(i closed_range(1, finite_set_size(s))) s = a
+    witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
-                exist! i closed_range(1, count(s)) st {idx0(i) = y}
+                exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y}
             by contra:
                 ? y = a
                 y != a
@@ -206,21 +206,21 @@ thm index_function_for_singleton:
                     y $in set_minus(s, {a})
                 impossible set_minus(s, {a}) = {}
             idx0(1) = idx(1) = a
-            witness exist! i closed_range(1, count(s)) st {idx0(i) = y} from 1:
-                1 <= count(s)
+            witness exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y} from 1:
+                1 <= finite_set_size(s)
                 idx0(1) = y
                 claim:
-                    ? forall i1, i2 closed_range(1, count(s)):
+                    ? forall i1, i2 closed_range(1, finite_set_size(s)):
                         idx0(i1) = y
                         idx0(i2) = y
                         =>:
                             i1 = i2
                     i1 >= 1
-                    i1 <= count(s)
+                    i1 <= finite_set_size(s)
                     i1 <= 1
                     i1 = 1
                     i2 >= 1
-                    i2 <= count(s)
+                    i2 <= finite_set_size(s)
                     i2 <= 1
                     i2 = 1
                     i1 = i2
@@ -229,28 +229,28 @@ thm index_function_for_singleton:
 thm index_function_step:
     ? forall n N_pos, s finite_set:
         $is_finite_set(s)
-        count(s) = n + 1
+        finite_set_size(s) = n + 1
         $finite_set_size_has_index(n)
         =>:
-            exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
     n >= 1
     n + 1 >= 1
-    count(s) = n + 1 >= 1
+    finite_set_size(s) = n + 1 >= 1
     $is_nonempty_set(s)
     have a s
     a $in s
     by thm intersect_with_singleton(s, a)
     intersect(s, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = count(s) - count(intersect(s, {a})) = (n + 1) - 1 = n
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = n
-    exist prev fn(i closed_range(1, count(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
-    obtain prev from exist prev fn(i closed_range(1, count(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
+    finite_set_size(set_minus(s, {a})) = n
+    exist prev fn(i closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
+    obtain prev from exist prev fn(i closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
     set_minus(s, {a}) $subset s
-    have fn idx(i closed_range(1, count(s))) s by cases:
+    have fn idx(i closed_range(1, finite_set_size(s))) s by cases:
         case i <= n: prev(i)
         case i = n + 1: a
     idx(1) = prev(1)
@@ -258,7 +258,7 @@ thm index_function_step:
     prev(1) $in s
     idx(1) $in s
     claim:
-        ? forall i closed_range(1, count(s)):
+        ? forall i closed_range(1, finite_set_size(s)):
             idx(i) = a
             =>:
                 i = n + 1
@@ -267,8 +267,8 @@ thm index_function_step:
             ? i = n + 1
             case i <= n:
                 i >= 1
-                i <= n = count(set_minus(s, {a}))
-                i $in closed_range(1, count(set_minus(s, {a})))
+                i <= n = finite_set_size(set_minus(s, {a}))
+                i $in closed_range(1, finite_set_size(set_minus(s, {a})))
                 idx(i) = prev(i)
                 prev(i) $in set_minus(s, {a})
                 idx(i) $in set_minus(s, {a})
@@ -283,12 +283,12 @@ thm index_function_step:
                 a $in set_minus(s, {a})
                 impossible not a $in set_minus(s, {a})
             case i > n:
-                i <= count(s) = n + 1
+                i <= finite_set_size(s) = n + 1
                 i = n + 1
     claim:
-        ? $is_injective_fn(closed_range(1, count(s)), s, idx)
+        ? $is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
         claim:
-            ? forall i1, i2 closed_range(1, count(s)):
+            ? forall i1, i2 closed_range(1, finite_set_size(s)):
                 idx(i1) = idx(i2)
                 =>:
                     i1 = i2
@@ -302,66 +302,66 @@ thm index_function_step:
                         case i2 <= n:
                             i1 >= 1
                             i2 >= 1
-                            i1 <= n = count(set_minus(s, {a}))
-                            i2 <= n = count(set_minus(s, {a}))
-                            i1 $in closed_range(1, count(set_minus(s, {a})))
-                            i2 $in closed_range(1, count(set_minus(s, {a})))
+                            i1 <= n = finite_set_size(set_minus(s, {a}))
+                            i2 <= n = finite_set_size(set_minus(s, {a}))
+                            i1 $in closed_range(1, finite_set_size(set_minus(s, {a})))
+                            i2 $in closed_range(1, finite_set_size(set_minus(s, {a})))
                             idx(i1) = prev(i1)
                             idx(i2) = prev(i2)
                             prev(i1) = prev(i2)
-                            exist! j closed_range(1, count(set_minus(s, {a}))) st {prev(j) = prev(i1)}
+                            exist! j closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(j) = prev(i1)}
                             i1 = i2
                         case i2 > n:
-                            i2 <= count(s) = n + 1
+                            i2 <= finite_set_size(s) = n + 1
                             i2 = n + 1
                             idx(i2) = a
                             idx(i1) = idx(i2) = a
                             i1 = n + 1
                             impossible i1 <= n
                 case i1 > n:
-                    i1 <= count(s) = n + 1
+                    i1 <= finite_set_size(s) = n + 1
                     i1 = n + 1
                     idx(i1) = a
                     idx(i2) = idx(i1) = a
                     i2 = n + 1
                     i1 = i2
-        $is_injective_fn(closed_range(1, count(s)), s, idx)
+        $is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
     claim:
-        ? $is_surjective_fn(closed_range(1, count(s)), s, idx)
+        ? $is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
         claim:
             ? forall y s:
-                exist i closed_range(1, count(s)) st {y = idx(i)}
+                exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
             y = a or y != a
             by cases:
-                ? exist i closed_range(1, count(s)) st {y = idx(i)}
+                ? exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
                 case y = a:
-                    n + 1 <= count(s)
+                    n + 1 <= finite_set_size(s)
                     y = a = idx(n + 1)
-                    witness exist i closed_range(1, count(s)) st {y = idx(i)} from n + 1:
-                        n + 1 <= count(s)
+                    witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from n + 1:
+                        n + 1 <= finite_set_size(s)
                         y = idx(n + 1)
                 case y != a:
                     y $in set_minus(s, {a})
-                    exist i closed_range(1, count(set_minus(s, {a}))) st {prev(i) = y}
-                    obtain j from exist i closed_range(1, count(set_minus(s, {a}))) st {prev(i) = y}
-                    j <= count(set_minus(s, {a}))
+                    exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
+                    obtain j from exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
+                    j <= finite_set_size(set_minus(s, {a}))
                     j <= n
                     n <= n + 1
-                    j <= n <= n + 1 = count(s)
+                    j <= n <= n + 1 = finite_set_size(s)
                     y = prev(j) = idx(j)
-                    witness exist i closed_range(1, count(s)) st {y = idx(i)} from j:
-                        j <= count(s)
+                    witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from j:
+                        j <= finite_set_size(s)
                         y = idx(j)
-    witness exist idx0 fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+    witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
-                exist! i closed_range(1, count(s)) st {idx0(i) = y}
-            exist i closed_range(1, count(s)) st {y = idx(i)}
-            obtain i from exist i closed_range(1, count(s)) st {y = idx(i)}
+                exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y}
+            exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
+            obtain i from exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
             idx(i) = y
-            witness exist! i0 closed_range(1, count(s)) st {idx0(i0) = y} from i:
+            witness exist! i0 closed_range(1, finite_set_size(s)) st {idx0(i0) = y} from i:
                 idx0(i) = idx(i) = y
-                forall i1, i2 closed_range(1, count(s)):
+                forall i1, i2 closed_range(1, finite_set_size(s)):
                     idx0(i1) = y
                     idx0(i2) = y
                     =>:
@@ -379,11 +379,11 @@ thm finite_set_size_has_index_for_all:
             claim:
                 ? forall s finite_set:
                     $is_finite_set(s)
-                    count(s) = 1
+                    finite_set_size(s) = 1
                     =>:
-                        exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                        exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_for_singleton(s)
-                exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
@@ -392,22 +392,22 @@ thm finite_set_size_has_index_for_all:
             claim:
                 ? forall s finite_set:
                     $is_finite_set(s)
-                    count(s) = n + 1
+                    finite_set_size(s) = n + 1
                     =>:
-                        exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                        exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_step(n, s)
-                exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
             $finite_set_size_has_index(n + 1)
 
 thm finite_set_has_bijective_index:
     ? forall s finite_set:
-        count(s) >= 1
+        finite_set_size(s) >= 1
         =>:
-            exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
-    count(s) >= 1
-    count(s) $in N_pos
-    have n N_pos = count(s)
-    count(s) = n
+            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+    finite_set_size(s) >= 1
+    finite_set_size(s) $in N_pos
+    have n N_pos = finite_set_size(s)
+    finite_set_size(s) = n
     by thm finite_set_size_has_index_for_all(n)
     $finite_set_size_has_index(n)
 
@@ -448,48 +448,48 @@ enumerations of the same finite set give the same finite sum.
 # Tao's construction.
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
-            sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
+            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
 
 # The predicate says that `l` is the common value of all bijective-enumeration
 # sums.  We keep Tao's finite real-set hypothesis visible, and we keep the
 # nonempty hypothesis explicit because the closed-range expression
-# `sum(1, count(X), ...)` requires `1 <= count(X)`.
+# `sum(1, finite_set_size(X), ...)` requires `1 <= finite_set_size(X)`.
 
 prop is_finite_set_sum(X finite_set, f fn(x X) R, l R):
     X $subset R
-    count(X) >= 1
-    forall g fn(i closed_range(1, count(X))) X:
+    finite_set_size(X) >= 1
+    forall g fn(i closed_range(1, finite_set_size(X))) X:
         $is_bijection_from_index_range_to_finite_set(X, g)
         =>:
-            sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = l
+            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l
 
 thm finite_set_sum_matches_bijective_enumeration:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         =>:
-            sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = finite_set_sum(X, f)
-    finite_set_sum(X, f) = finite_set_sum(closed_range(1, count(X)), fn(i closed_range(1, count(X))) R {f(g(i))})
-    finite_set_sum(closed_range(1, count(X)), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
-    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = finite_set_sum(X, f)
+            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
+    finite_set_sum(X, f) = finite_set_sum(closed_range(1, finite_set_size(X)), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
+    finite_set_sum(closed_range(1, finite_set_size(X)), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
+    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
 
 thm finite_set_sum_satisfies_self_definition:
     ? forall X finite_set, f fn(x X) R:
         X $subset R
-        count(X) >= 1
+        finite_set_size(X) >= 1
         =>:
             $is_finite_set_sum(X, f, finite_set_sum(X, f))
-    count(X) >= 1
+    finite_set_size(X) >= 1
     claim:
-        ? forall g fn(i closed_range(1, count(X))) X:
+        ? forall g fn(i closed_range(1, finite_set_size(X))) X:
             $is_bijection_from_index_range_to_finite_set(X, g)
             =>:
-                sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = finite_set_sum(X, f)
+                sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
         by thm finite_set_sum_matches_bijective_enumeration(X, f, g)
     $is_finite_set_sum(X, f, finite_set_sum(X, f))
 
@@ -499,7 +499,7 @@ prop has_finite_set_sum(X finite_set, f fn(x X) R):
 thm finite_set_sum_exists:
     ? forall X finite_set, f fn(x X) R:
         X $subset R
-        count(X) >= 1
+        finite_set_size(X) >= 1
         =>:
             $has_finite_set_sum(X, f)
     by thm finite_set_sum_satisfies_self_definition(X, f)
@@ -512,13 +512,13 @@ thm finite_set_sum_exists:
 # matching Tao's idea: once all enumerations give the same sum, that common
 # value is "the" finite-set sum.
 
-template<X finite_set, f fn(x X) R: X $subset R, count(X) >= 1, $has_finite_set_sum(X, f)>:
+template<X finite_set, f fn(x X) R: X $subset R, finite_set_size(X) >= 1, $has_finite_set_sum(X, f)>:
     obtain self_finite_set_sum from exist l R st {$is_finite_set_sum(X, f, l)}
 
 thm self_finite_set_sum_satisfies_definition:
     ? forall X finite_set, f fn(x X) R:
         X $subset R
-        count(X) >= 1
+        finite_set_size(X) >= 1
         =>:
             $is_finite_set_sum(X, f, \self_finite_set_sum<X, f>)
     by thm finite_set_sum_exists(X, f)
@@ -531,19 +531,19 @@ thm finite_set_sum_value_unique:
         $is_finite_set_sum(X, f, l2)
         =>:
             l1 = l2
-    count(X) >= 1
+    finite_set_size(X) >= 1
     by thm finite_set_has_bijective_index(X)
-    exist g fn(i closed_range(1, count(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
-    obtain g from exist g fn(i closed_range(1, count(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
+    exist g fn(i closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
+    obtain g from exist g fn(i closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
     $is_bijection_from_index_range_to_finite_set(X, g)
-    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = l1
-    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = l2
-    l1 = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = l2
+    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l1
+    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
+    l1 = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
 
 thm self_finite_set_sum_matches_builtin:
     ? forall X finite_set, f fn(x X) R:
         X $subset R
-        count(X) >= 1
+        finite_set_size(X) >= 1
         =>:
             \self_finite_set_sum<X, f> = finite_set_sum(X, f)
     by thm self_finite_set_sum_satisfies_definition(X, f)
@@ -757,6 +757,85 @@ prop has_limit(a seq(R), L R):
     forall epsilon R_pos:
         exist N0 N_pos st {$is_tail_close_to(a, L, epsilon, N0)}
 
+# Chapter 6 uses strict epsilon tails, while this chapter's series interface
+# uses closed tails.  A strict tail is also a closed tail with the same index.
+thm strict_eventual_closeness_implies_closed_tail:
+    ? forall a seq(R), L R, epsilon R_pos:
+        $chap6::has_eventual_closeness_to(a, L, epsilon)
+        =>:
+            exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
+    obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(a, L, epsilon, n0)}
+    witness exist n1 N_pos st {$is_tail_close_to(a, L, epsilon, n1)} from n0:
+        forall n N_pos:
+            n >= n0
+            =>:
+                abs(a(n) - L) < epsilon
+                abs(a(n) - L) <= epsilon
+        $is_tail_close_to(a, L, epsilon, n0)
+
+thm strict_limit_implies_closed_limit:
+    ? forall a seq(R), L R:
+        $chap6::has_limit(a, L)
+        =>:
+            $has_limit(a, L)
+    claim:
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
+        by thm chap6::has_limit_gives_eventual_closeness(a, L, epsilon)
+        $chap6::has_eventual_closeness_to(a, L, epsilon)
+        by thm strict_eventual_closeness_implies_closed_tail(a, L, epsilon)
+        exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
+    $has_limit(a, L)
+
+# Pointwise equal sequences have the same strict limit because each epsilon
+# tail transfers unchanged.
+thm strict_limit_extensional:
+    ? forall a, b seq(R), L R:
+        forall n N_pos:
+            a(n) = b(n)
+        $chap6::has_limit(a, L)
+        =>:
+            $chap6::has_limit(b, L)
+    claim:
+        ? forall epsilon R_pos:
+            $chap6::has_eventual_closeness_to(b, L, epsilon)
+        by thm chap6::has_limit_gives_eventual_closeness(a, L, epsilon)
+        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(a, L, epsilon, n0)}
+        witness exist n1 N_pos st {$chap6::is_tail_close_to(b, L, epsilon, n1)} from n0:
+            claim:
+                ? forall n N_pos:
+                    n >= n0
+                    =>:
+                        abs(b(n) - L) < epsilon
+                abs(a(n) - L) < epsilon
+                a(n) = b(n)
+                b(n) - L = a(n) - L
+                abs(b(n) - L) = abs(a(n) - L)
+                abs(b(n) - L) < epsilon
+            $chap6::is_tail_close_to(b, L, epsilon, n0)
+        $chap6::has_eventual_closeness_to(b, L, epsilon)
+    $chap6::has_limit(b, L)
+
+have fn constant_sequence(c R) fn(k N_pos) R = fn(i N_pos) R {c}
+
+thm constant_sequence_has_strict_limit:
+    ? forall c R:
+        $chap6::has_limit(constant_sequence(c), c)
+    claim:
+        ? forall epsilon R_pos:
+            $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon)
+        witness exist n0 N_pos st {$chap6::is_tail_close_to(constant_sequence(c), c, epsilon, n0)} from 1:
+            forall k N_pos:
+                k >= 1
+                =>:
+                    constant_sequence(c)(k) = c
+                    abs(constant_sequence(c)(k) - c) = 0
+                    0 < epsilon
+                    abs(constant_sequence(c)(k) - c) = 0 < epsilon
+            $chap6::is_tail_close_to(constant_sequence(c), c, epsilon, 1)
+        $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon)
+    $chap6::has_limit(constant_sequence(c), c)
+
 prop has_series_sum(a seq(R), L R):
     $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
 
@@ -878,32 +957,43 @@ thm geometric_series_from_one_partial_sum:
 
 have fn geometric_series_from_one_tail(x R) fn(k N_pos) R = fn(n N_pos) R {x^(n + 1)}
 
+thm geometric_series_from_one_tail_has_strict_limit_zero:
+    ? forall x R:
+        abs(x) < 1
+        =>:
+            $chap6::has_limit(geometric_series_from_one_tail(x), 0)
+    by thm chap6::geometric_abs_lt_one_converges_to_zero(x)
+    $chap6::has_limit(chap6::geom_seq(x), 0)
+    by thm chap6::seq_shift_has_limit(chap6::geom_seq(x), 0)
+    $chap6::has_limit(chap6::seq_shift(chap6::geom_seq(x)), 0)
+    claim:
+        ? forall epsilon R_pos:
+            $chap6::has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
+        by thm chap6::has_limit_gives_eventual_closeness(chap6::seq_shift(chap6::geom_seq(x)), 0, epsilon)
+        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(chap6::seq_shift(chap6::geom_seq(x)), 0, epsilon, n0)}
+        witness exist n1 N_pos st {$chap6::is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    abs(chap6::seq_shift(chap6::geom_seq(x))(n) - 0) < epsilon
+                    chap6::seq_shift(chap6::geom_seq(x))(n) = chap6::geom_seq(x)(n + 1)
+                    chap6::geom_seq(x)(n + 1) = x^(n + 1)
+                    geometric_series_from_one_tail(x)(n) = x^(n + 1)
+                    geometric_series_from_one_tail(x)(n) = chap6::seq_shift(chap6::geom_seq(x))(n)
+                    abs(geometric_series_from_one_tail(x)(n) - 0) = abs(chap6::seq_shift(chap6::geom_seq(x))(n) - 0)
+                    abs(geometric_series_from_one_tail(x)(n) - 0) < epsilon
+            $chap6::is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n0)
+        $chap6::has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
+    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
+
 thm geometric_series_from_one_tail_has_limit_zero:
     ? forall x R:
         abs(x) < 1
         =>:
             $has_limit(geometric_series_from_one_tail(x), 0)
-    by thm geometric_abs_lt_one_converges_to_zero(x)
-    $has_limit(geom_seq(x), 0)
-    by thm seq_shift_has_limit(geom_seq(x), 0)
-    $has_limit(seq_shift(geom_seq(x)), 0)
-    claim:
-        ? forall epsilon R_pos:
-            $has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(seq_shift(geom_seq(x)), 0, epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n1)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    abs(seq_shift(geom_seq(x))(n) - 0) <= epsilon
-                    seq_shift(geom_seq(x))(n) = geom_seq(x)(n + 1)
-                    geom_seq(x)(n + 1) = x^(n + 1)
-                    geometric_series_from_one_tail(x)(n) = x^(n + 1)
-                    geometric_series_from_one_tail(x)(n) = seq_shift(geom_seq(x))(n)
-                    abs(geometric_series_from_one_tail(x)(n) - 0) = abs(seq_shift(geom_seq(x))(n) - 0)
-                    abs(geometric_series_from_one_tail(x)(n) - 0) <= epsilon
-            $is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n0)
-        $has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
+    by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
+    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
+    by thm strict_limit_implies_closed_limit(geometric_series_from_one_tail(x), 0)
     $has_limit(geometric_series_from_one_tail(x), 0)
 
 thm geometric_series_from_one_formula:
@@ -912,60 +1002,58 @@ thm geometric_series_from_one_formula:
         1 - x != 0
         =>:
             $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
-    by thm geometric_series_from_one_tail_has_limit_zero(x)
-    $has_limit(geometric_series_from_one_tail(x), 0)
-    claim:
-        ? $has_limit(fn(k N_pos) R {x}, x)
-        claim:
-            ? forall epsilon R_pos:
-                $has_eventual_closeness_to(fn(k N_pos) R {x}, x, epsilon)
-            witness exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {x}, x, epsilon, n0)} from 1:
-                forall k N_pos:
-                    k >= 1
-                    =>:
-                        fn(k N_pos) R {x}(k) = x
-                        abs(fn(k N_pos) R {x}(k) - x) = 0
-                        0 <= epsilon
-                $is_tail_close_to(fn(k N_pos) R {x}, x, epsilon, 1)
-            $has_eventual_closeness_to(fn(k N_pos) R {x}, x, epsilon)
-        $has_limit(fn(k N_pos) R {x}, x)
-    by thm seq_sub_converges_to(fn(k N_pos) R {x}, geometric_series_from_one_tail(x), x, 0)
-    $has_limit(fn(k N_pos) R {x - geometric_series_from_one_tail(x)(k)}, x - 0)
+    by thm constant_sequence_has_strict_limit(x)
+    $chap6::has_limit(constant_sequence(x), x)
+    by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
+    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
+    by thm chap6::seq_sub_converges_to(constant_sequence(x), geometric_series_from_one_tail(x), x, 0)
+    $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x - 0)
     x - 0 = x
-    $has_limit(fn(k N_pos) R {x - geometric_series_from_one_tail(x)(k)}, x)
+    $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x)
     claim:
-        ? $is_nonzero_sequence(fn(k N_pos) R {1 - x})
+        ? $is_nonzero_sequence(constant_sequence(1 - x))
         forall k N_pos:
+            constant_sequence(1 - x)(k) = 1 - x
             1 - x != 0
-        $is_nonzero_sequence(fn(k N_pos) R {1 - x})
+            constant_sequence(1 - x)(k) != 0
+        $is_nonzero_sequence(constant_sequence(1 - x))
+    by thm constant_sequence_has_strict_limit(1 - x)
+    $chap6::has_limit(constant_sequence(1 - x), 1 - x)
+    by thm chap6::seq_div_converges_to(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, constant_sequence(1 - x), x, 1 - x)
+    $chap6::has_limit(fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}, x / (1 - x))
     claim:
-        ? $has_limit(fn(k N_pos) R {1 - x}, 1 - x)
-        claim:
-            ? forall epsilon R_pos:
-                $has_eventual_closeness_to(fn(k N_pos) R {1 - x}, 1 - x, epsilon)
-            witness exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {1 - x}, 1 - x, epsilon, n0)} from 1:
-                forall k N_pos:
-                    k >= 1
-                    =>:
-                        fn(k N_pos) R {1 - x}(k) = 1 - x
-                        abs(fn(k N_pos) R {1 - x}(k) - (1 - x)) = 0
-                        0 <= epsilon
-                $is_tail_close_to(fn(k N_pos) R {1 - x}, 1 - x, epsilon, 1)
-            $has_eventual_closeness_to(fn(k N_pos) R {1 - x}, 1 - x, epsilon)
-        $has_limit(fn(k N_pos) R {1 - x}, 1 - x)
-    by thm seq_div_converges_to(fn(k N_pos) R {x - geometric_series_from_one_tail(x)(k)}, fn(k N_pos) R {1 - x}, x, 1 - x)
+        ? forall n N_pos:
+            fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
+        fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+        constant_sequence(x)(n) = x
+        constant_sequence(1 - x)(n) = 1 - x
+        constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n) = x - geometric_series_from_one_tail(x)(n)
+        fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) / constant_sequence(1 - x)(n)
+        fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
+        fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) / constant_sequence(1 - x)(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
+        fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
+    by thm strict_limit_extensional(fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
+    $chap6::has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     $has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     claim:
+        ? forall k N_pos:
+            partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
+        by thm geometric_series_from_one_partial_sum(x, k)
+        partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
+        geometric_series_from_one_tail(x)(k) = x^(k + 1)
+        (x - geometric_series_from_one_tail(x)(k)) / (1 - x) = (x - x^(k + 1)) / (1 - x)
+        partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
+    claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon)
+            exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n0)}
         obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x), epsilon, n0)}
         witness exist n1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n1)} from n0:
             forall k N_pos:
                 k >= n0
                 =>:
                     abs(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k) - x / (1 - x)) <= epsilon
-                    by thm geometric_series_from_one_partial_sum(x, k)
-                    partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
+                    partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
                     geometric_series_from_one_tail(x)(k) = x^(k + 1)
                     (x - geometric_series_from_one_tail(x)(k)) / (1 - x) = (x - x^(k + 1)) / (1 - x)
                     partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
@@ -975,7 +1063,6 @@ thm geometric_series_from_one_formula:
                     abs(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) - x / (1 - x)) = abs(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k) - x / (1 - x))
                     abs(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) - x / (1 - x)) <= epsilon
             $is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n0)
-        $has_eventual_closeness_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon)
     $has_limit(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
     $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
 

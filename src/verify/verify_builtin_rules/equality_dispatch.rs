@@ -184,14 +184,17 @@ impl Runtime {
         }
 
         if let Some(done) =
-            self.try_verify_cart_count_product_equality(left, right, line_file.clone())
+            self.try_verify_cart_finite_set_size_product_equality(left, right, line_file.clone())
         {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_power_set_count_equality(left, right, line_file.clone(), verify_state)?
-        {
+        if let Some(done) = self.try_verify_power_set_finite_set_size_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -926,29 +929,29 @@ impl Runtime {
         None
     }
 
-    fn try_verify_cart_count_product_equality(
+    fn try_verify_cart_finite_set_size_product_equality(
         &self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
     ) -> Option<StmtResult> {
         // Cardinality of a finite Cartesian product is the product of factor cardinalities.
-        // Example: `count(cart(A, B)) = count(A) * count(B)`.
-        if Self::cart_count_product_shape(left, right)
-            || Self::cart_count_product_shape(right, left)
+        // Example: `finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)`.
+        if Self::cart_finite_set_size_product_shape(left, right)
+            || Self::cart_finite_set_size_product_shape(right, left)
         {
             return Some(Self::set_equality_success(
                 left,
                 right,
                 line_file,
-                "cart_count_product",
+                "cart_finite_set_size_product",
             ));
         }
 
         None
     }
 
-    fn try_verify_power_set_count_equality(
+    fn try_verify_power_set_finite_set_size_equality(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -956,9 +959,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Cardinality of a finite power set is `2` to the cardinality of the base set.
-        // Example: from `$is_finite_set(S)`, prove `count(power_set(S)) = 2^count(S)`.
-        let Some(base_set) = Self::power_set_count_shape(left, right)
-            .or_else(|| Self::power_set_count_shape(right, left))
+        // Example: from `$is_finite_set(S)`, prove `finite_set_size(power_set(S)) = 2^finite_set_size(S)`.
+        let Some(base_set) = Self::power_set_finite_set_size_shape(left, right)
+            .or_else(|| Self::power_set_finite_set_size_shape(right, left))
         else {
             return Ok(None);
         };
@@ -973,7 +976,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "power_set_count_two_pow_count_base".to_string(),
+                "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
                 vec![base_result],
             )
             .into(),
@@ -1141,11 +1144,11 @@ impl Runtime {
             )
     }
 
-    fn cart_count_product_shape(count_side: &Obj, product_side: &Obj) -> bool {
-        let Obj::Count(count) = count_side else {
+    fn cart_finite_set_size_product_shape(finite_set_size_side: &Obj, product_side: &Obj) -> bool {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_side else {
             return false;
         };
-        let Obj::Cart(cart) = count.set.as_ref() else {
+        let Obj::Cart(cart) = finite_set_size.set.as_ref() else {
             return false;
         };
         let Some(expected_product) = Self::count_product_for_cart_args(&cart.args) else {
@@ -1154,16 +1157,16 @@ impl Runtime {
         verify_equality_by_they_are_the_same(&expected_product, product_side)
     }
 
-    fn power_set_count_shape(count_side: &Obj, pow_side: &Obj) -> Option<Obj> {
-        let Obj::Count(count) = count_side else {
+    fn power_set_finite_set_size_shape(finite_set_size_side: &Obj, pow_side: &Obj) -> Option<Obj> {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_side else {
             return None;
         };
-        let Obj::PowerSet(power_set) = count.set.as_ref() else {
+        let Obj::PowerSet(power_set) = finite_set_size.set.as_ref() else {
             return None;
         };
         let two: Obj = Number::new("2".to_string()).into();
-        let base_count: Obj = Count::new(power_set.set.as_ref().clone()).into();
-        let expected_pow: Obj = Pow::new(two, base_count).into();
+        let base_finite_set_size: Obj = FiniteSetSize::new(power_set.set.as_ref().clone()).into();
+        let expected_pow: Obj = Pow::new(two, base_finite_set_size).into();
         if verify_equality_by_they_are_the_same(&expected_pow, pow_side) {
             Some(power_set.set.as_ref().clone())
         } else {
@@ -1174,10 +1177,10 @@ impl Runtime {
     fn count_product_for_cart_args(args: &[Box<Obj>]) -> Option<Obj> {
         let mut iter = args.iter();
         let first = iter.next()?;
-        let mut product: Obj = Count::new(first.as_ref().clone()).into();
+        let mut product: Obj = FiniteSetSize::new(first.as_ref().clone()).into();
         for arg in iter {
-            let factor_count: Obj = Count::new(arg.as_ref().clone()).into();
-            product = Mul::new(product, factor_count).into();
+            let factor_finite_set_size: Obj = FiniteSetSize::new(arg.as_ref().clone()).into();
+            product = Mul::new(product, factor_finite_set_size).into();
         }
         Some(product)
     }

@@ -1,4 +1,4 @@
-// Set unions, intersections, subset, finite_set count, etc.
+// Set unions, intersections, subset, finite-set size, etc.
 
 pub const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
 
@@ -144,37 +144,37 @@ trust:
         $is_finite_set(set_diff(A, B))
 
     forall A finite_set:
-        count(A) $in N
+        finite_set_size(A) $in N
 
     forall A finite_set, B set:
         B $subset A
         =>:
             $is_finite_set(B)
             $is_finite_set(set_minus(A, B))
-            count(set_minus(A, B)) = count(A) - count(B)
+            finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
 
     forall A, B finite_set:
-        count(union(A, B)) = count(A) + count(B) - count(intersect(A, B))
-        count(A) = count(intersect(A, B)) + count(set_minus(A, B))
-        count(B) = count(intersect(A, B)) + count(set_minus(B, A))
-        count(set_minus(A, B)) = count(A) - count(intersect(A, B))
-        count(set_minus(B, A)) = count(B) - count(intersect(A, B))
-        count(set_diff(A, B)) = count(set_minus(A, B)) + count(set_minus(B, A))
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+        finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+        finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+        finite_set_size(set_minus(B, A)) = finite_set_size(B) - finite_set_size(intersect(A, B))
+        finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
 
     forall A, B finite_set:
         A $subset B
         =>:
-            count(A) <= count(B)
+            finite_set_size(A) <= finite_set_size(B)
 
     forall A, B finite_set:
         A $superset B
         =>:
-            count(A) >= count(B)
+            finite_set_size(A) >= finite_set_size(B)
 
     forall A, B finite_set:
-        count(intersect(A, B)) <= count(A)
-        count(intersect(A, B)) <= count(B)
-        count(set_minus(A, B)) <= count(A)
-        count(union(A, B)) <= count(A) + count(B)
-        count(set_diff(A, B)) <= count(A) + count(B)
+        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+        finite_set_size(intersect(A, B)) <= finite_set_size(B)
+        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+        finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 "#;

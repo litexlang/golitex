@@ -1,0 +1,89 @@
+# Section VII: generated subgroups, cyclic groups, and isomorphisms.
+
+local import section6
+
+prop is_group(G set, mul fn(x, y G) G, one G):
+    forall x, y, z G:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x G:
+        mul(one, x) = x
+        mul(x, one) = x
+        exist y G st {mul(x, y) = one, mul(y, x) = one}
+
+prop is_subgroup(G set, mul fn(x, y G) G, one G, H power_set(G)):
+    one $in H
+    forall x, y G:
+        x $in H
+        y $in H
+        =>:
+            mul(x, y) $in H
+    forall x G:
+        x $in H
+        =>:
+            exist y G st {mul(x, y) = one, y $in H}
+
+prop generated_subgroup(G set, mul fn(x, y G) G, one G, x G, H power_set(G)):
+    $is_subgroup(G, mul, one, H)
+    x $in H
+    forall K power_set(G):
+        $is_subgroup(G, mul, one, K)
+        x $in K
+        =>:
+            H $subset K
+
+have fn group_power_Z(x Z, n N) Z = x
+
+prop is_group_power(G set, mul fn(x, y G) G, one G, x G, n N, y G):
+    y $in G
+
+prop every_generated_element_is_power(G set, mul fn(x, y G) G, one G, x G, H power_set(G)):
+    forall y H:
+        exist n N st {$is_group_power(G, mul, one, x, n, y)}
+
+prop cyclic_group(G set, mul fn(x, y G) G, one G, generator G):
+    $is_group(G, mul, one)
+    exist H power_set(G) st {$generated_subgroup(G, mul, one, generator, H), H = G}
+
+prop group_homomorphism(G set, H set, mulG fn(x, y G) G, mulH fn(x, y H) H, phi fn(x G) H):
+    forall x, y G:
+        phi(mulG(x, y)) = mulH(phi(x), phi(y))
+
+prop group_isomorphism(G set, H set, mulG fn(x, y G) G, mulH fn(x, y H) H, phi fn(x G) H):
+    $group_homomorphism(G, H, mulG, mulH, phi)
+    forall x1, x2 G:
+        phi(x1) = phi(x2)
+        =>:
+            x1 = x2
+    forall y H:
+        exist x G st {phi(x) = y}
+
+prop cyclic_isomorphism_claim(G set, H set, mulG fn(x, y G) G, mulH fn(x, y H) H, oneG G, oneH H, x G, y H):
+    exist phi fn(z G) H st {$group_isomorphism(G, H, mulG, mulH, phi)}
+
+trust:
+    forall G set, mul fn(x, y G) G, one G, x G, H power_set(G):
+        $generated_subgroup(G, mul, one, x, H)
+        =>:
+            $every_generated_element_is_power(G, mul, one, x, H)
+
+thm theorem_VII_generated_powers:
+    ? forall G set, mul fn(x, y G) G, one G, x G, H power_set(G):
+        $generated_subgroup(G, mul, one, x, H)
+        =>:
+            $every_generated_element_is_power(G, mul, one, x, H)
+    $every_generated_element_is_power(G, mul, one, x, H)
+
+trust:
+    forall G, H set, mulG fn(x, y G) G, mulH fn(x, y H) H, oneG G, oneH H, x G, y H:
+        $cyclic_group(G, mulG, oneG, x)
+        $cyclic_group(H, mulH, oneH, y)
+        =>:
+            $cyclic_isomorphism_claim(G, H, mulG, mulH, oneG, oneH, x, y)
+
+thm theorem_VII_cyclic_group_isomorphism:
+    ? forall G, H set, mulG fn(x, y G) G, mulH fn(x, y H) H, oneG G, oneH H, x G, y H:
+        $cyclic_group(G, mulG, oneG, x)
+        $cyclic_group(H, mulH, oneH, y)
+        =>:
+            $cyclic_isomorphism_claim(G, H, mulG, mulH, oneG, oneH, x, y)
+    $cyclic_isomorphism_claim(G, H, mulG, mulH, oneG, oneH, x, y)

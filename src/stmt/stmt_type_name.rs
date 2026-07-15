@@ -110,6 +110,12 @@ impl ByEnumerateFiniteSetStmt {
     }
 }
 
+impl ByFiniteSetInducStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByFiniteSetInducStmt".to_string()
+    }
+}
+
 impl ByCasesStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByCasesStmt".to_string()
@@ -125,6 +131,12 @@ impl ByContraStmt {
 impl ByInducStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByInducStmt".to_string()
+    }
+}
+
+impl ByFiniteSetInducStmt {
+    pub fn output_type_string() -> String {
+        "proof by finite-set induction".to_string()
     }
 }
 

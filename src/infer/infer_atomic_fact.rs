@@ -23,7 +23,6 @@ impl Runtime {
             AtomicFact::SubsetFact(subset_fact) => self.infer_subset_fact(subset_fact),
             // `A $superset B` => `forall` fresh `x $in B: x $in A`.
             AtomicFact::SupersetFact(superset_fact) => self.infer_superset_fact(superset_fact),
-            AtomicFact::RestrictFact(rf) => self.infer_restrict_fact(rf),
             // One-sided numeric comparison: if the other side is a resolved constant, infer sign vs 0.
             AtomicFact::LessFact(_)
             | AtomicFact::GreaterFact(_)
@@ -31,7 +30,7 @@ impl Runtime {
             | AtomicFact::GreaterEqualFact(_) => {
                 self.infer_numeric_order_sign_from_order_atomic(atomic_fact)
             }
-            // e.g. negated atoms, `$is_set`, `not f $restricts_to T`: no inference on this path.
+            // e.g. negated atoms and `$is_set`: no inference on this path.
             _ => Ok(InferResult::new()),
         }
     }

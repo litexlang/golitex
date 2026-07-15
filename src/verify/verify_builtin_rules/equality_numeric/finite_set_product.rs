@@ -161,7 +161,7 @@ impl Runtime {
     }
 
     // A constant finite-set factor is the constant raised to the set cardinality.
-    // Example: `finite_set_product(X, fn(x X) R {c}) = c ^ count(X)`.
+    // Example: `finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)`.
     pub(crate) fn try_verify_finite_set_product_constant_factor(
         &mut self,
         left: &Obj,
@@ -196,8 +196,8 @@ impl Runtime {
                 continue;
             }
             let c = (*af.equal_to).clone();
-            let count: Obj = Count::new((*p.set).clone()).into();
-            let expected: Obj = Pow::new(c, count).into();
+            let finite_set_size: Obj = FiniteSetSize::new((*p.set).clone()).into();
+            let expected: Obj = Pow::new(c, finite_set_size).into();
             if self
                 .verify_objs_are_equal_in_equality_builtin(
                     other,

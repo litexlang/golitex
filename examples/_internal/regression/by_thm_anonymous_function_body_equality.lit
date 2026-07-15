@@ -1,0 +1,45 @@
+# A theorem instantiated with an anonymous function may introduce a beta-expanded
+# body.  The stored fact must still match the handwritten rationally equal body.
+abstract_prop is_probe_integrable(f fn(x R) R)
+trust have probe_integral fn(f fn(x R) R) R
+
+thm probe_scalar_multiplication:
+    ? forall f fn(x R) R, c R:
+        $is_probe_integrable(f)
+        =>:
+            $is_probe_integrable(fn(x R) R {c * f(x)})
+            probe_integral(fn(x R) R {c * f(x)}) = c * probe_integral(f)
+    trust:
+        $is_probe_integrable(fn(x R) R {c * f(x)})
+        probe_integral(fn(x R) R {c * f(x)}) = c * probe_integral(f)
+
+thm probe_addition:
+    ? forall f, g fn(x R) R:
+        $is_probe_integrable(f)
+        $is_probe_integrable(g)
+        =>:
+            $is_probe_integrable(fn(x R) R {f(x) + g(x)})
+            probe_integral(fn(x R) R {f(x) + g(x)}) =
+                probe_integral(f) + probe_integral(g)
+    trust:
+        $is_probe_integrable(fn(x R) R {f(x) + g(x)})
+        probe_integral(fn(x R) R {f(x) + g(x)}) =
+            probe_integral(f) + probe_integral(g)
+
+thm probe_subtraction:
+    ? forall f, g fn(x R) R:
+        $is_probe_integrable(f)
+        $is_probe_integrable(g)
+        =>:
+            probe_integral(fn(x R) R {f(x) - g(x)}) =
+                probe_integral(f) - probe_integral(g)
+    by thm probe_scalar_multiplication(g, -1)
+    $is_probe_integrable(fn(x R) R {-1 * g(x)})
+    probe_integral(fn(x R) R {-1 * g(x)}) = -1 * probe_integral(g)
+    by thm probe_addition(f, fn(x R) R {-1 * g(x)})
+    $is_probe_integrable(fn(x R) R {f(x) + (-1 * g(x))})
+    probe_integral(fn(x R) R {f(x) + (-1 * g(x)}) =
+        probe_integral(f) + probe_integral(fn(x R) R {-1 * g(x)})
+    trust:
+        probe_integral(fn(x R) R {f(x) - g(x)}) =
+            probe_integral(f) - probe_integral(g)

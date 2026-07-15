@@ -752,13 +752,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::Count(left_count), Obj::Count(right_count)) => self
-                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
-                    &left_count.set,
-                    &right_count.set,
-                    verify_state,
-                    equality_line_file,
-                ),
+            (
+                Obj::FiniteSetSize(left_finite_set_size),
+                Obj::FiniteSetSize(right_finite_set_size),
+            ) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                &left_finite_set_size.set,
+                &right_finite_set_size.set,
+                verify_state,
+                equality_line_file,
+            ),
             (Obj::FnRange(left_range), Obj::FnRange(right_range)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
                     &left_range.function,

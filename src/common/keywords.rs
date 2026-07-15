@@ -61,7 +61,7 @@ pub const CART: &str = "cart";
 pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
-pub const COUNT: &str = "count";
+pub const FINITE_SET_SIZE: &str = "finite_set_size";
 pub const FN_RANGE: &str = "fn_range";
 pub const FN_RANGE_ON: &str = "fn_range_on";
 pub const REPLACEMENT: &str = "replacement";
@@ -156,7 +156,6 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
-pub const RESTRICTS_TO: &str = "restricts_to";
 pub const STRATEGY: &str = "strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
@@ -236,7 +235,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CART_DIM,
         TUPLE_DIM,
         PROJ,
-        COUNT,
+        FINITE_SET_SIZE,
         FN_RANGE,
         FN_RANGE_ON,
         REPLACEMENT,
@@ -317,7 +316,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         TEMPLATE,
-        RESTRICTS_TO,
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,
@@ -381,7 +379,6 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUBSET
         || atom_name == SUPERSET
         || atom_name == IN
-        || atom_name == RESTRICTS_TO
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
 }
@@ -411,4 +408,5 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Q
         || atom_name == Z
         || atom_name == R
+        || atom_name == FINITE_SET_SIZE
 }

@@ -816,7 +816,9 @@ impl Runtime {
             Obj::FiniteSeqListObj(ref left) => {
                 self.match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
             }
-            Obj::Count(ref left) => self.match_arg_when_left_is_count(left.set.as_ref(), given_arg),
+            Obj::FiniteSetSize(ref left) => {
+                self.match_arg_when_left_is_finite_set_size(left.set.as_ref(), given_arg)
+            }
             Obj::FnRange(ref left) => {
                 self.match_arg_when_left_is_fn_range(left.function.as_ref(), given_arg)
             }
@@ -1797,6 +1799,29 @@ impl Runtime {
         let Obj::AnonymousFn(given) = given_arg else {
             return Ok(None);
         };
+
+        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let given_param_count =
+            ParamGroupWithSet::number_of_params(&given.body.params_def_with_set);
+        if left_param_count != given_param_count {
+            return Ok(None);
+        }
+
+        // Anonymous-function parameter names are binders, not part of the
+        // function value.  Rename both sides to the same internal names before
+        // matching their domains and bodies.  For example, `fn(k R) R {k}` and
+        // `fn(i R) R {i}` must match here.
+        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let left = self.anonymous_fn_with_alpha_renamed_params(left, &alpha_names)?;
+        let given = self.anonymous_fn_with_alpha_renamed_params(given, &alpha_names)?;
+        self.match_alpha_renamed_anonymous_fn_with_params(&left, &given)
+    }
+
+    fn match_alpha_renamed_anonymous_fn_with_params(
+        &mut self,
+        left: &AnonymousFn,
+        given: &AnonymousFn,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
             return Ok(None);
         }
@@ -1879,6 +1904,106 @@ impl Runtime {
             }
         }
         Ok(Some(merged))
+    }
+
+    pub(crate) fn objs_match_for_fact_lookup(
+        &self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<bool, RuntimeError> {
+        if known_arg.to_string() == given_arg.to_string() {
+            return Ok(true);
+        }
+
+        let (Obj::AnonymousFn(known), Obj::AnonymousFn(given)) = (known_arg, given_arg) else {
+            return Ok(false);
+        };
+        self.anonymous_fns_are_alpha_equivalent(known, given)
+    }
+
+    fn anonymous_fns_are_alpha_equivalent(
+        &self,
+        left: &AnonymousFn,
+        right: &AnonymousFn,
+    ) -> Result<bool, RuntimeError> {
+        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let right_param_count =
+            ParamGroupWithSet::number_of_params(&right.body.params_def_with_set);
+        if left_param_count != right_param_count {
+            return Ok(false);
+        }
+
+        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let left = self.anonymous_fn_with_alpha_renamed_params(left, &alpha_names)?;
+        let right = self.anonymous_fn_with_alpha_renamed_params(right, &alpha_names)?;
+        Ok(left.to_string() == right.to_string())
+    }
+
+    fn anonymous_fn_alpha_param_names(param_count: usize) -> Vec<String> {
+        (0..param_count)
+            .map(|index| format!("#anonymous_fn_alpha_{}", index))
+            .collect()
+    }
+
+    fn anonymous_fn_with_alpha_renamed_params(
+        &self,
+        anonymous_fn: &AnonymousFn,
+        alpha_names: &[String],
+    ) -> Result<AnonymousFn, RuntimeError> {
+        let param_names =
+            ParamGroupWithSet::collect_param_names(&anonymous_fn.body.params_def_with_set);
+        if param_names.len() != alpha_names.len() {
+            return Err(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                "internal: anonymous-function alpha rename needs one name per parameter"
+                    .to_string(),
+            ))
+            .into());
+        }
+
+        let mut param_to_alpha_name = HashMap::with_capacity(param_names.len());
+        for (param_name, alpha_name) in param_names.iter().zip(alpha_names.iter()) {
+            param_to_alpha_name.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(alpha_name.clone(), ParamObjType::FnSet),
+            );
+        }
+
+        let mut params_def_with_set =
+            Vec::with_capacity(anonymous_fn.body.params_def_with_set.len());
+        let mut next_alpha_name = 0;
+        for group in anonymous_fn.body.params_def_with_set.iter() {
+            let group_len = group.params.len();
+            let params = alpha_names[next_alpha_name..next_alpha_name + group_len].to_vec();
+            next_alpha_name += group_len;
+            let param_set =
+                self.inst_obj(group.set_obj(), &param_to_alpha_name, ParamObjType::FnSet)?;
+            params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
+        }
+
+        let mut dom_facts = Vec::with_capacity(anonymous_fn.body.dom_facts.len());
+        for dom_fact in anonymous_fn.body.dom_facts.iter() {
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+                None,
+            )?);
+        }
+
+        AnonymousFn::new(
+            params_def_with_set,
+            dom_facts,
+            self.inst_obj(
+                anonymous_fn.body.ret_set.as_ref(),
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+            )?,
+            self.inst_obj(
+                anonymous_fn.equal_to.as_ref(),
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+            )?,
+        )
     }
 
     fn match_arg_in_anonymous_fn_body_with_given_arg(
@@ -2421,16 +2546,17 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_count(
+    fn match_arg_when_left_is_finite_set_size(
         &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Count(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_set,
-                given.set.as_ref(),
-            ),
+            Obj::FiniteSetSize(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_set,
+                    given.set.as_ref(),
+                ),
             _ => Ok(None),
         }
     }

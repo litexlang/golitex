@@ -800,7 +800,7 @@ fn collect_cited_param_indices_from_obj(
                 );
             }
         }
-        Obj::Count(x) => collect_cited_param_indices_from_obj(
+        Obj::FiniteSetSize(x) => collect_cited_param_indices_from_obj(
             &x.set,
             previous_param_indices,
             shadowed_names,

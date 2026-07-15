@@ -1,0 +1,58 @@
+# Section X: finite multiplicative subgroups, roots of unity, and primitive roots.
+
+local import section9
+
+prop finite_multiplicative_subgroup(G set, mul fn(x, y G) G, one G):
+    $is_group(G, mul, one)
+    $is_finite_set(G)
+
+prop root_of_unity_Z(n N_pos, x Z):
+    x ^ n = 1
+
+have fn roots_of_unity_Z(n N_pos) power_set(Z) = {x Z: $root_of_unity_Z(n, x)}
+
+prop primitive_root_mod(m N_pos, g Z):
+    $relatively_prime_Z(g, m)
+    exist n N_pos st {g ^ n % m = 1}
+    forall k N_pos:
+        g ^ k % m = 1
+        =>:
+            k >= m - 1
+
+have fn index_mod(m N_pos, g Z) N = 0
+
+prop cyclic_multiplicative_group_mod(m N_pos, g Z):
+    $primitive_root_mod(m, g)
+    exist H power_set(Z) st {$is_finite_set(H), finite_set_size(H) = euler_phi(m)}
+
+prop roots_of_unity_form_cyclic_group(n N_pos):
+    exist G set, mul fn(x, y G) G, one G st {$finite_multiplicative_subgroup(G, mul, one)}
+
+prop finite_group_cyclic_claim(G set, mul fn(x, y G) G, one G):
+    exist g G st {g $in G}
+
+trust:
+    forall G set, mul fn(x, y G) G, one G:
+        $finite_multiplicative_subgroup(G, mul, one)
+        =>:
+            $finite_group_cyclic_claim(G, mul, one)
+
+thm theorem_X_finite_subgroups_are_cyclic:
+    ? forall G set, mul fn(x, y G) G, one G:
+        $finite_multiplicative_subgroup(G, mul, one)
+        =>:
+            $finite_group_cyclic_claim(G, mul, one)
+    $finite_group_cyclic_claim(G, mul, one)
+
+trust:
+    forall m N_pos:
+        $is_prime_Z(m)
+        =>:
+            exist g Z st {$primitive_root_mod(m, g)}
+
+thm theorem_X_primitive_root_prime_modulus:
+    ? forall m N_pos:
+        $is_prime_Z(m)
+        =>:
+            exist g Z st {$primitive_root_mod(m, g)}
+    exist g Z st {$primitive_root_mod(m, g)}

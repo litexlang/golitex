@@ -36,7 +36,7 @@ pub enum Obj {
     Proj(Proj),
     TupleDim(TupleDim),
     Tuple(Tuple),
-    Count(Count),
+    FiniteSetSize(FiniteSetSize),
     FnRange(FnRange),
     FnRangeOn(FnRangeOn),
     Replacement(Replacement),
@@ -98,7 +98,7 @@ pub enum ObjKind {
     Proj = 27,
     TupleDim = 28,
     Tuple = 29,
-    Count = 30,
+    FiniteSetSize = 30,
     Sum = 31,
     SumOfFiniteSet = 32,
     Product = 33,
@@ -464,7 +464,7 @@ pub struct FiniteSeqListObj {
 }
 
 #[derive(Clone)]
-pub struct Count {
+pub struct FiniteSetSize {
     pub set: Box<Obj>,
 }
 
@@ -891,9 +891,9 @@ impl Tuple {
     }
 }
 
-impl Count {
+impl FiniteSetSize {
     pub fn new(set: Obj) -> Self {
-        Count { set: Box::new(set) }
+        FiniteSetSize { set: Box::new(set) }
     }
 }
 
@@ -1143,7 +1143,7 @@ impl Obj {
             Obj::Proj(_) => ObjKind::Proj,
             Obj::TupleDim(_) => ObjKind::TupleDim,
             Obj::Tuple(_) => ObjKind::Tuple,
-            Obj::Count(_) => ObjKind::Count,
+            Obj::FiniteSetSize(_) => ObjKind::FiniteSetSize,
             Obj::FnRange(_) => ObjKind::FnRange,
             Obj::FnRangeOn(_) => ObjKind::FnRangeOn,
             Obj::Replacement(_) => ObjKind::Replacement,
@@ -1209,7 +1209,7 @@ impl Obj {
             Obj::CartDim(_) => CART_DIM.to_string(),
             Obj::Proj(_) => PROJ.to_string(),
             Obj::TupleDim(_) => TUPLE_DIM.to_string(),
-            Obj::Count(_) => COUNT.to_string(),
+            Obj::FiniteSetSize(_) => FINITE_SET_SIZE.to_string(),
             Obj::FnRange(_) => FN_RANGE.to_string(),
             Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
             Obj::Replacement(_) => REPLACEMENT.to_string(),
@@ -1352,7 +1352,7 @@ impl Obj {
             Obj::Proj(x) => write!(f, "{}", x)?,
             Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
-            Obj::Count(x) => write!(f, "{}", x)?,
+            Obj::FiniteSetSize(x) => write!(f, "{}", x)?,
             Obj::FnRange(x) => write!(f, "{}", x)?,
             Obj::FnRangeOn(x) => write!(f, "{}", x)?,
             Obj::Replacement(x) => write!(f, "{}", x)?,
@@ -1589,7 +1589,9 @@ impl Obj {
                     .collect(),
             )
             .into(),
-            Obj::Count(x) => Count::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
+            Obj::FiniteSetSize(x) => {
+                FiniteSetSize::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
             Obj::FnRange(x) => {
                 FnRange::new(Obj::replace_bound_identifier(*x.function, from, to)).into()
             }
@@ -2136,12 +2138,12 @@ impl fmt::Display for MatrixListObj {
     }
 }
 
-impl fmt::Display for Count {
+impl fmt::Display for FiniteSetSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}",
-            COUNT,
+            FINITE_SET_SIZE,
             braced_vec_to_string(&vec![self.set.as_ref()])
         )
     }
@@ -2734,9 +2736,9 @@ impl From<Tuple> for Obj {
     }
 }
 
-impl From<Count> for Obj {
-    fn from(c: Count) -> Self {
-        Obj::Count(c)
+impl From<FiniteSetSize> for Obj {
+    fn from(c: FiniteSetSize) -> Self {
+        Obj::FiniteSetSize(c)
     }
 }
 

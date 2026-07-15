@@ -234,6 +234,12 @@ impl From<ByEnumerateFiniteSetStmt> for Stmt {
     }
 }
 
+impl From<ByFiniteSetInducStmt> for Stmt {
+    fn from(v: ByFiniteSetInducStmt) -> Self {
+        ByStmt::ByFiniteSetInducStmt(v).into()
+    }
+}
+
 impl From<ByInducStmt> for Stmt {
     fn from(v: ByInducStmt) -> Self {
         ByStmt::ByInducStmt(v).into()

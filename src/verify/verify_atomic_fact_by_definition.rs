@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    // Built-in subset/superset/restricts_to definitions first, then user `prop` iff-clauses.
+    // Built-in subset/superset definitions first, then user `prop` iff-clauses.
     pub(crate) fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -225,14 +225,6 @@ impl Runtime {
                     )?
                 {
                     return Ok(Some(verified_by_superset_definition));
-                }
-                return Ok(None);
-            }
-            AtomicFact::RestrictFact(restrict_fact) => {
-                if let Some(verified_by_restrict_definition) =
-                    self.verify_restrict_fact_using_its_definition(restrict_fact, verify_state)?
-                {
-                    return Ok(Some(verified_by_restrict_definition));
                 }
                 return Ok(None);
             }
