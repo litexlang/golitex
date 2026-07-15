@@ -342,13 +342,6 @@ impl Runtime {
             // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers
             // `z $in T` and `exist x S st {z = f(x)}`.
             Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
-            // Restricted function range: `z $in fn_range_on(f, S)` implies `z` is in
-            // the codomain of `f` and has a preimage in the restricted domain `S`.
-            // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers
-            // `z $in R` and `exist k 1...3 st {z = a(k)}`.
-            Obj::FnRangeOn(fn_range_on) => {
-                self.infer_membership_in_fn_range_on(in_fact, fn_range_on)
-            }
             // Replacement elimination: `y $in replacement(P, A)` infers a preimage witness exists.
             // Example: `y $in replacement(P, A)` infers `exist x A st {$P(x, y)}`.
             Obj::Replacement(replacement) => {
@@ -874,64 +867,6 @@ impl Runtime {
             );
         }
         Ok(infer_result)
-    }
-
-    fn infer_membership_in_fn_range_on(
-        &mut self,
-        in_fact: &InFact,
-        fn_range_on: &FnRangeOn,
-    ) -> Result<InferResult, RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
-            return Ok(InferResult::new());
-        };
-        let Some(restricted_body) = self.fn_range_on_restricted_body(fn_range_on, &body) else {
-            return Ok(InferResult::new());
-        };
-        let codomain_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            restricted_body.ret_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let mut infer_result = InferResult::new();
-        infer_result.push_atomic_fact(&codomain_fact);
-        infer_result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
-        );
-        if let Some(exist_fact) = self.preimage_exist_fact_from_fn_body(
-            in_fact,
-            fn_range_on.function.as_ref(),
-            &restricted_body,
-        )? {
-            infer_result.new_fact(&exist_fact);
-            infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
-            );
-        }
-        Ok(infer_result)
-    }
-
-    fn fn_range_on_restricted_body(
-        &self,
-        fn_range_on: &FnRangeOn,
-        body: &FnSetBody,
-    ) -> Option<FnSetBody> {
-        if body.params_def_with_set.number_of_params() != 1 {
-            return None;
-        }
-        let param_name = body
-            .params_def_with_set
-            .collect_param_names()
-            .first()?
-            .clone();
-        Some(FnSetBody::new(
-            vec![ParamGroupWithSet::new(
-                vec![param_name],
-                fn_range_on.set.as_ref().clone(),
-            )],
-            vec![],
-            body.ret_set.as_ref().clone(),
-        ))
     }
 
     fn preimage_exist_fact_from_fn_body(

@@ -860,8 +860,8 @@ fn python_extractor_skips_non_numeric_have_obj_equal() {
 }
 
 #[test]
-fn python_extractor_rejects_standalone_algo() {
-    run_with_large_stack("python_extractor_rejects_standalone_algo", || {
+fn python_extractor_emits_standalone_algo() {
+    run_with_large_stack("python_extractor_emits_standalone_algo", || {
         let source_code = r#"
 have fn f(x R) R = x
 
@@ -869,14 +869,40 @@ algo f(x):
     x
 "#;
 
-        let error = to_python_from_source_after_builtins(
+        let output = to_python_from_source_after_builtins(
             source_code,
-            "python_extractor_rejects_standalone_algo",
+            "python_extractor_emits_standalone_algo",
         )
-        .expect_err("standalone algo should not be extracted in v1");
-        let error_text = format!("{:?}", error);
-        assert!(error_text.contains("does not support standalone `algo`"));
+        .expect("standalone algo should be extracted in v1");
+        assert!(output.contains("def f(x):"));
+        assert!(output.contains("return x"));
     });
+}
+
+#[test]
+fn python_extractor_emits_self_recursive_standalone_algo() {
+    run_with_large_stack(
+        "python_extractor_emits_self_recursive_standalone_algo",
+        || {
+            let source_code = r#"
+have loop fn(x R) R
+trust:
+    forall x R:
+        loop(x) = loop(x)
+
+algo loop(x):
+    loop(x)
+"#;
+
+            let output = to_python_from_source_after_builtins(
+                source_code,
+                "python_extractor_emits_self_recursive_standalone_algo",
+            )
+            .expect("self-recursive standalone algo should be extracted in v1");
+            assert!(output.contains("def loop(x):"));
+            assert!(output.contains("return loop(x)"));
+        },
+    );
 }
 
 #[test]
@@ -894,6 +920,50 @@ fn python_extractor_rejects_non_real_function_parameters() {
             assert!(error_text.contains("supports only `R` function parameters"));
         },
     );
+}
+
+#[test]
+fn strong_induc_requires_by_prefix() {
+    run_with_large_stack("strong_induc_requires_by_prefix", || {
+        let source_code = r#"
+strong_induc n from 0:
+    do_nothing
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("strong_induc_requires_by_prefix");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "bare strong_induc should fail:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("strong_induc is only valid after `by`"),
+            "bare strong_induc should explain its valid context:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn standalone_ellipsis_is_not_a_noop() {
+    run_with_large_stack("standalone_ellipsis_is_not_a_noop", || {
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("standalone_ellipsis_is_not_a_noop");
+        let (stmt_results, runtime_error) = run_source_code("...", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "standalone ellipsis should not parse as a proof step:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]

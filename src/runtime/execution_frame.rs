@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,7 +21,6 @@ pub struct ExecutionFrame {
     pub source_path: Rc<str>,
     pub execution_mode: ExecutionMode,
     pub local_environment_stack: Vec<Box<Environment>>,
-    pub active_local_imports: HashMap<String, ImportTarget>,
 }
 
 impl ExecutionFrame {
@@ -33,7 +31,6 @@ impl ExecutionFrame {
             source_path: Rc::from(BUILTIN_CODE_PATH),
             execution_mode: ExecutionMode::Verified,
             local_environment_stack: vec![],
-            active_local_imports: HashMap::new(),
         }
     }
 
@@ -53,7 +50,6 @@ impl ExecutionFrame {
             source_path: Rc::from(source_path),
             execution_mode,
             local_environment_stack: vec![],
-            active_local_imports: HashMap::new(),
         }
     }
 }

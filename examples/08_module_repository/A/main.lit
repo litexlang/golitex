@@ -1,3 +1,1 @@
-local import chap3
-
-chap3::z = 1
+A::chap3::z = 1

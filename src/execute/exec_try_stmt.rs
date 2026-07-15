@@ -168,8 +168,6 @@ fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
         Stmt::Command(CommandStmt::ClearStmt(_)) => Some("clear"),
         Stmt::Command(CommandStmt::ImportStmt(_)) => Some("import"),
         Stmt::Command(CommandStmt::TrustImportStmt(_)) => Some("trust import"),
-        Stmt::Command(CommandStmt::LocalImportStmt(_)) => Some("local import"),
-        Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => Some("trust local import"),
         _ => None,
     }
 }

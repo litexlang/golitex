@@ -202,13 +202,6 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
-            (Obj::FnObj(fn_obj), Obj::FnRangeOn(fn_range_on)) => self
-                .verify_in_fact_fn_application_in_fn_range_on(
-                    in_fact,
-                    fn_obj,
-                    fn_range_on,
-                    verify_state,
-                ),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
@@ -444,13 +437,6 @@ impl Runtime {
                 ),
             (Obj::FnRange(fn_range), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_fn_range_in_power_set(in_fact, fn_range, power_set, verify_state),
-            (Obj::FnRangeOn(fn_range_on), Obj::PowerSet(power_set)) => self
-                .verify_in_fact_fn_range_on_in_power_set(
-                    in_fact,
-                    fn_range_on,
-                    power_set,
-                    verify_state,
-                ),
             (_, Obj::PowerSet(power_set)) => {
                 self.verify_in_fact_in_power_set_via_subset(in_fact, power_set, verify_state)
             }

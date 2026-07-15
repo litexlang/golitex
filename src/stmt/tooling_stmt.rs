@@ -12,26 +12,9 @@ pub struct TrustImportStmt {
 }
 
 #[derive(Clone)]
-pub struct LocalImportStmt {
-    pub name: String,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct TrustLocalImportStmt {
-    pub local_import: LocalImportStmt,
-}
-
-#[derive(Clone)]
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub line_file: LineFile,
-}
-
-impl LocalImportStmt {
-    pub fn new(name: String, line_file: LineFile) -> Self {
-        LocalImportStmt { name, line_file }
-    }
 }
 
 impl TrustImportStmt {
@@ -40,27 +23,9 @@ impl TrustImportStmt {
     }
 }
 
-impl TrustLocalImportStmt {
-    pub fn new(local_import: LocalImportStmt) -> Self {
-        TrustLocalImportStmt { local_import }
-    }
-}
-
 impl fmt::Display for TrustImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", TRUST, self.import)
-    }
-}
-
-impl fmt::Display for TrustLocalImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", TRUST, self.local_import)
-    }
-}
-
-impl fmt::Display for LocalImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", LOCAL, IMPORT, self.name)
     }
 }
 
@@ -100,12 +65,6 @@ impl ImportStmt {
 impl TrustImportStmt {
     pub fn line_file(&self) -> LineFile {
         self.import.line_file()
-    }
-}
-
-impl TrustLocalImportStmt {
-    pub fn line_file(&self) -> LineFile {
-        self.local_import.line_file.clone()
     }
 }
 

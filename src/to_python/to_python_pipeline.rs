@@ -17,7 +17,7 @@ pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, Run
         stmts.push(stmt);
     }
 
-    extract_python_from_stmts(&stmts)
+    extract_python_from_stmts(&stmts, runtime)
 }
 
 pub fn to_python_from_source_after_builtins(
@@ -82,7 +82,9 @@ fn to_python_project_target(
                             RepositoryFileTarget::Module(module_id),
                         ),
                     }?;
-                    if !fragment.trim().is_empty() {
+                    if !fragment.trim().is_empty()
+                        && fragment.trim() != "# No Python-extractable Litex definitions."
+                    {
                         fragments.push(fragment);
                     }
                 }
@@ -94,17 +96,43 @@ fn to_python_project_target(
             output
         }
         RepositoryFileTarget::File { module_id, file_id } => {
-            let source_path = runtime
+            let (source_path, status) = {
+                let file = runtime
+                    .module_manager
+                    .module(module_id)
+                    .and_then(|module| module.file(file_id))
+                    .expect("registered project file should exist");
+                (file.source_path.clone(), file.status)
+            };
+            if status == FileStatus::Loaded {
+                return Ok(String::new());
+            }
+            if status == FileStatus::Loading {
+                return Err(file_error(
+                    source_path.as_str(),
+                    "cyclic project entry while generating Python".to_string(),
+                ));
+            }
+            runtime
                 .module_manager
-                .module(module_id)
-                .and_then(|module| module.file(file_id))
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
                 .expect("registered project file should exist")
-                .source_path
-                .clone();
+                .status = FileStatus::Loading;
             runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
             let output = read_source(source_path.as_str())
                 .and_then(|source| to_python(source.as_str(), runtime));
             runtime.pop_execution_frame();
+            runtime
+                .module_manager
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
+                .expect("registered project file should exist")
+                .status = if output.is_ok() {
+                FileStatus::Loaded
+            } else {
+                FileStatus::Unloaded
+            };
             output
         }
     }
@@ -161,7 +189,7 @@ impl PythonExtractor {
         }
     }
 
-    fn extract_stmt(&mut self, stmt: &Stmt) -> Result<(), RuntimeError> {
+    fn extract_stmt(&mut self, stmt: &Stmt, runtime: &Runtime) -> Result<(), RuntimeError> {
         match stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 self.extract_have_obj_equal_stmt(s)
@@ -178,10 +206,7 @@ impl PythonExtractor {
                     "python extractor v1 does not support `have fn as algo ... by induc`",
                 ))
             }
-            Stmt::DefAlgoStmt(s) => Err(python_extract_error(
-                &s.line_file,
-                "python extractor v1 does not support standalone `algo`; use `have fn as algo ...`",
-            )),
+            Stmt::DefAlgoStmt(s) => self.extract_def_algo_stmt(s, runtime),
             _ => Ok(()),
         }
     }
@@ -230,6 +255,7 @@ impl PythonExtractor {
 
         let params = ParamGroupWithSet::collect_param_names(params_def);
         let params_in_scope: HashSet<String> = params.iter().cloned().collect();
+        self.functions.insert(stmt.name.clone());
         let expr = self.python_expr(
             stmt.equal_to_anonymous_fn.equal_to.as_ref(),
             &params_in_scope,
@@ -240,7 +266,6 @@ impl PythonExtractor {
         self.lines
             .push(format!("def {}({}):", stmt.name, params.join(", ")));
         self.lines.push(format!("    return {}", expr));
-        self.functions.insert(stmt.name.clone());
         Ok(())
     }
 
@@ -271,6 +296,7 @@ impl PythonExtractor {
         let params =
             ParamGroupWithSet::collect_param_names(&stmt.fn_set_clause.params_def_with_set);
         let params_in_scope: HashSet<String> = params.iter().cloned().collect();
+        self.functions.insert(stmt.name.clone());
         self.push_blank_line_before_function();
         self.lines
             .push(format!("def {}({}):", stmt.name, params.join(", ")));
@@ -294,7 +320,86 @@ impl PythonExtractor {
 
         self.lines
             .push("    raise AssertionError(\"unreachable verified Litex cases\")".to_string());
+        Ok(())
+    }
+
+    fn extract_def_algo_stmt(
+        &mut self,
+        stmt: &DefAlgoStmt,
+        runtime: &Runtime,
+    ) -> Result<(), RuntimeError> {
+        let function = runtime.declared_identifier_obj(&stmt.name);
+        let Some(fn_set) = runtime.get_fn_range_function_body(&function) else {
+            return Err(python_extract_error(
+                &stmt.line_file,
+                format!(
+                    "python extractor v1 cannot find the function declaration for standalone algorithm `{}`",
+                    stmt.name
+                ),
+            ));
+        };
+        self.validate_real_function_signature(
+            &stmt.name,
+            &fn_set.params_def_with_set,
+            &fn_set.dom_facts,
+            fn_set.ret_set.as_ref(),
+            &stmt.line_file,
+        )?;
+
+        let expected_params = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        if stmt.params.len() != expected_params.len() {
+            return Err(python_extract_error(
+                &stmt.line_file,
+                format!(
+                    "python extractor v1 found {} algorithm parameters for `{}`, but its function declaration has {}",
+                    stmt.params.len(),
+                    stmt.name,
+                    expected_params.len()
+                ),
+            ));
+        }
+        for param in stmt.params.iter() {
+            validate_python_name(param, &stmt.line_file)?;
+        }
+        if stmt.cases.is_empty() && stmt.default_return.is_none() {
+            return Err(python_extract_error(
+                &stmt.line_file,
+                format!(
+                    "python extractor v1 needs a return expression for standalone algorithm `{}`",
+                    stmt.name
+                ),
+            ));
+        }
+
+        let params_in_scope: HashSet<String> = stmt.params.iter().cloned().collect();
         self.functions.insert(stmt.name.clone());
+        self.push_blank_line_before_function();
+        self.lines
+            .push(format!("def {}({}):", stmt.name, stmt.params.join(", ")));
+
+        for (index, case) in stmt.cases.iter().enumerate() {
+            let condition = self.python_atomic_condition(&case.condition, &params_in_scope)?;
+            let expr = self.python_expr(
+                &case.return_stmt.value,
+                &params_in_scope,
+                &case.return_stmt.line_file,
+            )?;
+            let keyword = if index == 0 { "if" } else { "elif" };
+            self.lines.push(format!("    {} {}:", keyword, condition));
+            self.lines.push(format!("        return {}", expr));
+        }
+
+        if let Some(default_return) = &stmt.default_return {
+            let expr = self.python_expr(
+                &default_return.value,
+                &params_in_scope,
+                &default_return.line_file,
+            )?;
+            self.lines.push(format!("    return {}", expr));
+        } else {
+            self.lines
+                .push("    raise AssertionError(\"unreachable verified Litex cases\")".to_string());
+        }
         Ok(())
     }
 
@@ -442,6 +547,7 @@ impl PythonExtractor {
         let name = match atom {
             AtomObj::Identifier(i) => i.name.as_str(),
             AtomObj::FnSet(p) => p.name.as_str(),
+            AtomObj::DefAlgo(p) => p.name.as_str(),
             _ => {
                 return Err(python_extract_error(
                     line_file,
@@ -511,10 +617,10 @@ impl PythonExtractor {
     }
 }
 
-fn extract_python_from_stmts(stmts: &[Stmt]) -> Result<String, RuntimeError> {
+fn extract_python_from_stmts(stmts: &[Stmt], runtime: &Runtime) -> Result<String, RuntimeError> {
     let mut extractor = PythonExtractor::new();
     for stmt in stmts.iter() {
-        extractor.extract_stmt(stmt)?;
+        extractor.extract_stmt(stmt, runtime)?;
     }
     Ok(extractor.finish())
 }

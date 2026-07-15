@@ -68,10 +68,6 @@ impl Obj {
                 .any(|obj| obj.contains_forall_free_param_obj()),
             Obj::FiniteSetSize(x) => x.set.contains_forall_free_param_obj(),
             Obj::FnRange(x) => x.function.contains_forall_free_param_obj(),
-            Obj::FnRangeOn(x) => {
-                x.function.contains_forall_free_param_obj()
-                    || x.set.contains_forall_free_param_obj()
-            }
             Obj::Replacement(x) => x.source_set.contains_forall_free_param_obj(),
             Obj::Sum(x) => {
                 x.start.contains_forall_free_param_obj()

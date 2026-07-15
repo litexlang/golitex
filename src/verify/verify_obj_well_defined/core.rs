@@ -124,10 +124,10 @@ impl Runtime {
                 let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
                 if bodies.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                            "`{}` is not a defined function",
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "function `{}` not defined",
                             fn_obj.head.to_string()
-                        ))),
+                        )),
                     )));
                 }
                 let mut spaces = Vec::with_capacity(bodies.len());
@@ -141,10 +141,10 @@ impl Runtime {
                 let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
                 if bodies.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                            "`{}` is not a defined function",
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "function `{}` not defined",
                             fn_obj.head.to_string()
-                        ))),
+                        )),
                     )));
                 }
                 let mut spaces = Vec::with_capacity(bodies.len());

@@ -1,52 +1,108 @@
 # Section XIII: Gaussian integers, norm, division, and sums of two squares.
 
-local import section12
+# We use the concrete coordinate carrier Z x Z.  The operations are genuine
+# value-producing functions on coordinates, which avoids hiding Gaussian
+# arithmetic inside an abstract predicate.
+have fn gaussian_conjugate(x, y Z) cart(Z, Z) = (x, -y)
 
-prop gaussian_integer(z cart(Z, Z)):
-    z $in cart(Z, Z)
+have fn gaussian_add(x1, y1, x2, y2 Z) cart(Z, Z) = (x1 + x2, y1 + y2)
 
-have fn gaussian_norm(z cart(Z, Z)) Z = z[1] ^ 2 + z[2] ^ 2
+have fn gaussian_mul(x1, y1, x2, y2 Z) cart(Z, Z) = (x1 * x2 - y1 * y2, x1 * y2 + y1 * x2)
 
-prop gaussian_norm_nonnegative(z cart(Z, Z)):
-    gaussian_norm(z) >= 0
+have fn gaussian_norm(x, y Z) Z = x ^ 2 + y ^ 2
 
-abstract_prop gaussian_integer_mul(z, w, u)
-abstract_prop gaussian_integer_division(z, w, q, r)
-abstract_prop gaussian_integer_prime(z)
+prop gaussian_norm_nonnegative(x, y Z):
+    gaussian_norm(x, y) >= 0
 
-prop gaussian_division_statement(z, w, q, r cart(Z, Z)):
-    $gaussian_integer_division(z, w, q, r)
+# Divisibility, units, and associates are coordinate-level relations induced
+# by the concrete multiplication object.
+prop gaussian_divides(ax, ay, bx, b_y Z):
+    exist qx, qy Z st {gaussian_mul(ax, ay, qx, qy) = (bx, b_y)}
 
-prop gaussian_prime_statement(z cart(Z, Z)):
-    $gaussian_integer_prime(z)
+prop gaussian_unit(x, y Z):
+    gaussian_norm(x, y) = 1
 
-prop norm_multiplicative(z, w cart(Z, Z), u cart(Z, Z)):
-    $gaussian_integer_mul(z, w, u)
-    gaussian_norm(u) = gaussian_norm(z) * gaussian_norm(w)
+prop gaussian_associate(ax, ay, bx, b_y Z):
+    exist ex, ey Z st {$gaussian_unit(ex, ey), gaussian_mul(ex, ey, ax, ay) = (bx, b_y)}
+
+# A Gaussian prime has norm greater than one and no divisor other than a unit
+# or an associate.  This is the source definition, now tied to coordinates.
+prop gaussian_prime(x, y Z):
+    gaussian_norm(x, y) > 1
+    forall dx, dy Z:
+        $gaussian_divides(dx, dy, x, y)
+        =>:
+            $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, x, y)
+
+prop norm_multiplicative(x1, y1, x2, y2 Z):
+    gaussian_norm(x1 * x2 - y1 * y2, x1 * y2 + y1 * x2) = gaussian_norm(x1, y1) * gaussian_norm(x2, y2)
+
+# Gaussian division chooses q and r with a strictly smaller remainder norm.
+prop gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry Z):
+    gaussian_norm(bx, b_y) != 0
+    ax = bx * qx - b_y * qy + rx
+    ay = bx * qy + b_y * qx + ry
+    gaussian_norm(rx, ry) < gaussian_norm(bx, b_y)
+
+prop gaussian_prime_factor_claim(x, y Z):
+    gaussian_norm(x, y) > 1
+    exist px, py Z st {$gaussian_prime(px, py), $gaussian_divides(px, py, x, y)}
 
 prop sum_two_squares_representation(n Z):
-    exist z cart(Z, Z) st {gaussian_norm(z) = n}
+    exist x, y Z st {gaussian_norm(x, y) = n}
 
-prop sum_two_squares_prime_condition(n Z):
-    $sum_two_squares_representation(n)
+# For rational primes, the two congruence cases are separated: primes 2 or 1
+# modulo 4 are represented, while primes 3 modulo 4 are not.
+prop prime_two_or_one_mod_four(p N_pos):
+    $section4::is_prime_Z(p)
+    p = 2 or p % 4 = 1
+
+prop prime_three_mod_four(p N_pos):
+    $section4::is_prime_Z(p)
+    p % 4 = 3
+
+prop rational_prime_sum_two_squares_statement(p N_pos):
+    $prime_two_or_one_mod_four(p)
+    $sum_two_squares_representation(p)
+
+prop rational_prime_not_sum_two_squares_statement(p N_pos):
+    $prime_three_mod_four(p)
+    not $sum_two_squares_representation(p)
+
+# The two congruence cases form one source-facing split theorem.  Keeping the
+# positive and negative case props above makes each conclusion reusable while
+# allowing the finite Gaussian-factorization debt to occupy one trust boundary.
+prop rational_prime_split_statement(p N_pos):
+    $rational_prime_sum_two_squares_statement(p) or $rational_prime_not_sum_two_squares_statement(p)
 
 trust:
-    forall z, w cart(Z, Z):
-        gaussian_norm(w) != 0
+    forall ax, ay, bx, b_y Z:
+        gaussian_norm(bx, b_y) != 0
         =>:
-            exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
+            exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
 
 thm theorem_XIII_gaussian_division:
-    ? forall z, w cart(Z, Z):
-        gaussian_norm(w) != 0
+    ? forall ax, ay, bx, b_y Z:
+        gaussian_norm(bx, b_y) != 0
         =>:
-            exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
-    exist q, r cart(Z, Z) st {$gaussian_division_statement(z, w, q, r)}
+            exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
+    exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
+
+trust:
+    forall x, y Z:
+        gaussian_norm(x, y) > 1
+        =>:
+            $gaussian_prime_factor_claim(x, y)
+
+trust:
+    forall p N_pos:
+        $section4::is_prime_Z(p)
+        =>:
+            $rational_prime_split_statement(p)
 
 thm theorem_XIII_sum_of_two_squares:
-    ? forall n Z:
-        $sum_two_squares_prime_condition(n)
+    ? forall p N_pos:
+        $section4::is_prime_Z(p)
         =>:
-            $sum_two_squares_representation(n)
-    $sum_two_squares_prime_condition(n)
-    $sum_two_squares_representation(n)
+            $rational_prime_split_statement(p)
+    $rational_prime_split_statement(p)

@@ -11,36 +11,18 @@ impl Runtime {
             return Ok(TrustImportStmt::new(import).into());
         }
         if tb.current_token_is_equal_to(LOCAL) {
-            let stmt = self.parse_local_import_stmt(tb)?;
-            let Stmt::Command(CommandStmt::LocalImportStmt(local_import)) = stmt else {
-                unreachable!("local import parser should produce a local import statement")
-            };
-            return Ok(TrustLocalImportStmt::new(local_import).into());
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "trust local import has been removed; use `trust name = \"path\"` in litex.config [export]"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         if tb.current_token_is_equal_to(HAVE) {
             return self.parse_trust_have_stmt(tb);
         }
         self.parse_trust_fact_stmt(tb)
-    }
-
-    pub fn parse_local_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(LOCAL)?;
-        tb.skip_token(IMPORT)?;
-        let name = tb.advance()?;
-        is_valid_litex_name(&name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "local import: unexpected token after export name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(LocalImportStmt::new(name, tb.line_file.clone()).into())
     }
 
     pub fn parse_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -62,11 +44,7 @@ impl Runtime {
     }
 
     pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        if tb.current()? == DOT_DOT_DOT {
-            tb.skip_token(DOT_DOT_DOT)?;
-        } else {
-            tb.skip_token(DO_NOTHING)?;
-        }
+        tb.skip_token(DO_NOTHING)?;
         Ok(DoNothingStmt::new(tb.line_file.clone()).into())
     }
 

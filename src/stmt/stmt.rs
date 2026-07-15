@@ -97,8 +97,6 @@ pub enum ProofBlockStmt {
 pub enum CommandStmt {
     ImportStmt(ImportStmt),
     TrustImportStmt(TrustImportStmt),
-    LocalImportStmt(LocalImportStmt),
-    TrustLocalImportStmt(TrustLocalImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     EvalStmt(EvalStmt),

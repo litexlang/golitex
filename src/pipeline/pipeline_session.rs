@@ -313,22 +313,21 @@ mod tests {
     }
 
     #[test]
-    fn project_session_keeps_local_imports_and_previous_blocks() {
+    fn project_session_keeps_previous_blocks() {
         let root = session_test_dir("project");
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[run]\n./main.lit\n\n[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
+            "[export]\nmain = \"./main.lit\"\n",
         )
         .expect("write config");
         fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
-        fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
 
         let input = format!(
             "{}{}artifacts final\nclose\n",
-            run_frame("imports", "local import facts\n"),
-            run_frame("proof", "have y R = facts::x + 1\ny = 2\n"),
+            run_frame("definition", "have x R = 1\n"),
+            run_frame("proof", "have y R = x + 1\ny = 2\n"),
         );
         let mut stdin_reader = Cursor::new(input.into_bytes());
         let mut stdout_writer = Vec::new();
@@ -346,7 +345,7 @@ mod tests {
 
         let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
         assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
-        assert!(output.contains("\"id\":\"imports\",\"ok\":true"));
+        assert!(output.contains("\"id\":\"definition\",\"ok\":true"));
         assert!(output.contains("\"id\":\"proof\",\"ok\":true"));
         assert!(output.contains("y = 2"));
         assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));

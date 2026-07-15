@@ -200,18 +200,6 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        Obj::FnRangeOn(obj) => {
-            check_obj_has_no_duplicate_free_parameter(
-                &obj.function,
-                free_param_type,
-                params_already_used,
-            )?;
-            check_obj_has_no_duplicate_free_parameter(
-                &obj.set,
-                free_param_type,
-                params_already_used,
-            )
-        }
         Obj::Replacement(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.source_set,
             free_param_type,

@@ -1170,10 +1170,6 @@ impl DepCollector {
             Obj::PowerSet(x) => self.collect_obj(&x.set),
             Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
             Obj::FnRange(x) => self.collect_obj(&x.function),
-            Obj::FnRangeOn(x) => {
-                self.collect_obj(&x.function);
-                self.collect_obj(&x.set);
-            }
             Obj::Replacement(x) => {
                 self.deps.push_prop(x.prop_name.to_string());
                 self.collect_obj(&x.source_set);

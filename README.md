@@ -24,55 +24,84 @@
 
 Litex is a readable, fact-oriented formal language for checked mathematics.
 
-The basic loop is small:
+The most useful first mental model has four layers:
+
+| Layer | What it does | Litex examples |
+| --- | --- | --- |
+| **object / expression** | names a number, set, function, or expression; it is not true or false | `x + 1`, `f(x)`, `E` |
+| **definition** | introduces a name and its meaning | `have`, `have fn`, `prop`, `template`, `struct` |
+| **fact** | asserts that a proposition follows in the current context, or marks an explicit assumption | `x <= y`, `$P(x)`, `thm`, `claim`, `trust` |
+| **proof process** | explains why a goal fact is accepted; it is not a new mathematical claim | `by contra`, `by cases`, `by induc`, `obtain`, `witness`, `impossible` |
+
+So the basic mathematical content is usually either a definition or a fact.
+Objects are what definitions and facts talk about; proof processes are the
+language for constructing or checking a fact. This is a beginner's map of the
+mathematical surface, not an exhaustive syntax reference.
+
+## First, Write the Next Fact
+
+```litex
+have x R = 2
+
+x + 1 = 3
+x + 1 > 2
+```
+
+`have x R = 2` introduces the real object `x` and stores the fact `x = 2`.
+The next two lines are facts. Litex checks them using that stored value,
+equality replacement, and arithmetic; the verification output makes those
+rules visible.
+
+> For Lean users: a Lean proof of this routine step will often expose a `by`
+> block with a rewrite such as `rw [h]` and a numerical closing step. In
+> Litex, the writer can state the resulting fact directly; the checker records
+> the matching, replacement, and arithmetic it used. Explicit proof processes
+> remain available when the argument needs them.
+
+That is the basic loop:
 
 1. Write the next mathematical fact.
 2. Litex checks whether it follows from the current context.
 3. If it succeeds, the fact enters the context and can be reused later.
 4. The output explains what was checked, how it was verified, and what changed.
 
-A first Litex file can be this small:
+## Matching and Replacement Are Part of Fact Flow
+
+Here is a small formal syllogism. If `a = b` and `b > c`, then replacing `b`
+by the equal object `a` gives `a > c`.
 
 ```litex
-have x R = 2
-
-x + 1 = 3
-x^2 = 4
+thm equality_replaces_in_order:
+    ? forall a, b, c R:
+        a = b
+        b > c
+        =>:
+            a > c
+    a > c
 ```
 
-The first line introduces a real number `x` and stores the fact `x = 2`.
-The next two lines are mathematical facts. Litex checks them from the stored
-value of `x`, equality substitution, and arithmetic; these are builtin rules
-whose use remains visible in the verification output.
+The body contains the conclusion to be checked. Litex matches the available
+fact `b > c`, uses the equality `a = b` to replace its equal expression, and
+accepts `a > c`. The writer did not have to manually script the replacement,
+but the output still identifies the earlier fact and the verification route.
 
-> For Lean users: Litex packages the equality substitution and
-> arithmetic behind rw [h]; norm_num into its built-in verifier, so
-> users can write the resulting fact directly.1.
+## When a Fact Needs a Proof Process
 
-That is the central interface: **users write facts; Litex grows a verified
-context**.
+Writing the next fact directly is the ordinary case, not the only case. When a
+goal has a genuine proof shape, open the corresponding process:
 
-AI can now generate mathematics faster than conventional review can absorb.
-This creates a review bottleneck and a possible opening for mathematical
-engineering, though we are only beginning to understand what that change means
-in practice. Formal systems are increasingly important, but their interfaces
-still ask writers to cross a substantial gap from ordinary mathematical writing.
+| Need | Litex process |
+| --- | --- |
+| cite a named theorem or make a local intermediate fact | `by thm`, `claim` |
+| prove an existential fact or use one of its witnesses | `witness`, `obtain` |
+| reason from a contradiction | `by contra`, `impossible` |
+| split a proof into alternatives | `by cases` |
+| prove a natural-number statement step by step | `by induc` |
 
-<p align="center">
-  <img src="https://litexlang.com/assets/knowledge_graph.svg" alt="Litex relation graph from Analysis I, Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
-</p>
+These forms operate inside a proof of a fact. They do not replace the central
+question: which mathematical fact should hold next?
 
-Litex aims to make formal mathematics feel like ordinary mathematics: a
-language that covers common LaTeX-style mathematical notation, set theory, and
-basic logic, where routine consequences are written directly as mathematical
-facts rather than as low-level proof scripts. Explicit proof routes remain
-available when the argument needs them.
-
-Litex can also generate a run summary and a dependency graph, giving writers
-and reviewers an inspectable view of what was checked and how the facts in a
-development depend on one another.
-
-## A Small Mathematical Workflow
+## A Checked Context, Not Opaque Automation
 
 Litex is a bet on compressing the writing of mathematical reasoning without
 making its verification opaque. A C compiler lets a programmer describe
@@ -85,43 +114,14 @@ The details are not discarded: Litex checks each statement against the current
 context, records the facts it accepted, and explains the rule or earlier fact
 that justified the result.
 
-Litex is also developing a Litex-to-Lean compiler (not yet released). For the supported verified
-subset, it translates this fact-oriented surface into Lean declarations that
-Lean's kernel can check, with Mathlib as the formal library. The bridge makes
-the compression inspectable: readers can see how a concise Litex fact expands
-into lower-level formal mathematics. The compiler is ongoing work and does not
-yet cover every Litex feature. See
+Litex is also developing a Litex-to-Lean compiler (not yet released). For the
+supported verified subset, it translates this fact-oriented surface into Lean
+declarations that Lean's kernel can check, with Mathlib as the formal library.
+The bridge makes the compression inspectable: readers can see how a concise
+Litex fact expands into lower-level formal mathematics. The compiler is
+ongoing work and does not yet cover every Litex feature. See
 [Litex and Lean](https://litexlang.com/doc/Litex_and_Lean) for the current
 mapping and limits.
-
-Litex tries to reduce formal verification to a small mathematical state:
-
-| Idea | Meaning | Litex shape |
-| --- | --- | --- |
-| **object** | a thing being discussed: a number, set, function, or expression | `have x R = 2` |
-| **prop** | a predicate or relation | `prop positive(x R): x > 0` |
-| **statement** | a fact asserted about objects | `x + 1 = 3` |
-| **fact** | an accepted statement that later lines can reuse | after `x = 2` is accepted, later lines may use `x = 2` |
-
-The proof side is meant to be just as small:
-
-| Proof route | Meaning | Litex shape |
-| --- | --- | --- |
-| builtin reasoning | close routine arithmetic, equality, order, membership, set, or function facts | `2 + 3 = 5` |
-| known fact matching | reuse a fact already in the context | write the target fact again |
-| known `forall` matching | instantiate a universal fact whose premises match the context | `forall x R: ...` then write its conclusion |
-| definition unfolding | use the meaning of a `prop` or definition | `$positive(1)` from `prop positive(x R): x > 0` |
-| theorem call | cite a named theorem explicitly | `by thm self_eq(1)` |
-| local claim | prove an intermediate fact and store it | `claim: ...` |
-| witness | prove an existential or nonempty fact by giving objects | `witness exist x R st {x = 1} from 1` |
-| contradiction | assume the opposite and derive an impossible fact | `by contra: ...` |
-| cases | split into exhaustive cases | `by cases: ...` |
-| induction | prove a base case and an induction step | `by induc n from 0: ...` |
-
-*For ordinary fact-oriented proof work, that is it!* The rest of the language
-mostly names, packages, imports, or structures these same moves. The user's
-attention stays on ordinary mathematical objects and facts, and the verifier
-explains which small proof route accepted each step.
 
 Litex is not trying to replace Lean, Coq, Rocq, Isabelle, or any mature proof
 assistant. It tests a different hypothesis: that a smaller, readable,
@@ -135,6 +135,20 @@ lightweight **proof-carrying policy**. Instead of hard-coding a fixed list of
 `forall` rules; as new context enters, Litex can derive checked consequences
 such as whether an agent action is allowed, forbidden, or needs human review,
 and the output can expose the proof trace behind that decision.
+
+AI can now generate mathematics faster than conventional review can absorb.
+This creates a review bottleneck and a possible opening for mathematical
+engineering, though we are only beginning to understand what that change means
+in practice. Formal systems are increasingly important, but their interfaces
+still ask writers to cross a substantial gap from ordinary mathematical writing.
+
+<p align="center">
+  <img src="https://litexlang.com/assets/knowledge_graph.svg" alt="Litex relation graph from Analysis I, Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
+</p>
+
+Litex can also generate a run summary and a dependency graph, giving writers
+and reviewers an inspectable view of what was checked and how the facts in a
+development depend on one another.
 
 ## Output Explains Every Line
 
@@ -160,7 +174,7 @@ For the tiny file above, the human reading is:
 ```text
 Line 1 succeeded: introduced x as a real number and stored x = 2.
 Line 3 succeeded: verified x + 1 = 3 from x = 2 and arithmetic.
-Line 4 succeeded: verified x^2 = 4 from x = 2 and arithmetic.
+Line 4 succeeded: verified x + 1 > 2 from x = 2 and arithmetic.
 ```
 
 Litex executes once and then projects the same trace into three views:
@@ -211,49 +225,7 @@ are useful, but they do not normally preserve this kind of structured,
 checkable proof trail.
 </sub>
 
-## A Few Litex Examples
-
-### Facts Grow the Context
-
-```litex
-have x R = 2
-
-x + 1 = 3
-x^2 = 4
-```
-
-### The Same Context in Lean
-
-<table>
-  <tr>
-    <th>Litex</th>
-    <th>Lean</th>
-  </tr>
-  <tr>
-    <td valign="top">
-<pre><code>forall x R:
-    x = 2
-    =&gt;:
-        x + 1 = 3
-        x^2 = 4</code></pre>
-    </td>
-    <td valign="top">
-<pre><code>import Mathlib
-
-example (x : ℝ) (h : x = 2) :
-    x + 1 = 3 ∧ x ^ 2 = 4 := by
-  constructor
-  · rw [h]
-    norm_num
-  · rw [h]
-    norm_num</code></pre>
-    </td>
-  </tr>
-</table>
-
-Both snippets express the same arithmetic. Litex presents each consequence as
-the next fact in a context; Lean makes the theorem boundary and proof
-construction explicit.
+## More Litex Examples
 
 ### Finite Sets Look Like Finite Sets
 

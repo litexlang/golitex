@@ -1,23 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_local_import_stmt(
-        &mut self,
-        stmt: &LocalImportStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let message = if self.run_mode == RunMode::File {
-            "local import is unavailable in isolated file mode; run a project with -r"
-        } else {
-            "local import can only be run as a top-level statement"
-        };
-        Err(short_exec_error(
-            stmt.clone().into(),
-            message.to_string(),
-            None,
-            vec![],
-        ))
-    }
-
     pub fn exec_import_stmt(&mut self, stmt: &ImportStmt) -> Result<StmtResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();
@@ -39,18 +22,6 @@ impl Runtime {
         Err(short_exec_error(
             stmt.clone().into(),
             "trust import can only be run as a top-level statement".to_string(),
-            None,
-            vec![],
-        ))
-    }
-
-    pub fn exec_trust_local_import_stmt(
-        &mut self,
-        stmt: &TrustLocalImportStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        Err(short_exec_error(
-            stmt.clone().into(),
-            "trust local import can only be run as a top-level statement".to_string(),
             None,
             vec![],
         ))

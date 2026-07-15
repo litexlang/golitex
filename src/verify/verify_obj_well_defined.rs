@@ -78,7 +78,6 @@ impl Runtime {
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::FiniteSetSize(x) => self.verify_finite_set_size_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
-            Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
             Obj::Replacement(x) => self.verify_replacement_well_defined(x, verify_state),
             Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
             Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),

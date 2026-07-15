@@ -1117,10 +1117,10 @@ fn upgrade_message(version: &str) -> String {
 }
 
 fn help_message() -> String {
-    let result = r#"litex : run Litex interactively in your terminal; use cwd/litex.config for local imports
-litex -f <file> : run a registered project file, or an isolated file when no project registers it
+    let result = r#"litex : run Litex interactively in your terminal; discover cwd/litex.config when present
+litex -f <file> : run a registered project's ordered prefix through this file, or an isolated file when no project registers it
 litex -isolated -f <file> : force isolated file mode
-litex -r <project> : discover project/litex.config, then run its ordered [run] plan
+litex -r <project> : discover project/litex.config, then run its complete ordered [export] table
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
@@ -1141,7 +1141,7 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
 litex -python -f <file> : compile supported verified Litex definitions to Python
 litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <project> : compile supported definitions in the project [run] plan to Python
+litex -python -r <project> : compile supported definitions in the project ordered [export] table to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
@@ -1222,10 +1222,10 @@ mod tests {
     #[test]
     fn help_explains_project_file_and_run_plan_modes() {
         let message = help_message();
-        assert!(message.contains("run a registered project file"));
+        assert!(message.contains("ordered prefix through this file"));
         assert!(message.contains("litex -isolated -f <file>"));
         assert!(message.contains("project/litex.config"));
-        assert!(message.contains("ordered [run] plan"));
+        assert!(message.contains("ordered [export] table"));
     }
 
     #[test]

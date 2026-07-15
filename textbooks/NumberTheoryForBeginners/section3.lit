@@ -11,16 +11,13 @@
 # comments: Hard exercise statements remain local checked sketches with
 # explicit proof debt.
 
-trust local import section2
-trust local import section1
-
 """
 Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
 For two integers, a is prime to b when gcd(a,b)=1.
 """
 
 prop relatively_prime_Z(a, b Z):
-    gcd_Z(a, b) = 1
+    section2::gcd_Z(a, b) = 1
 
 prop mutually_relatively_prime_integer_set(A finite_set):
     A $subset Z
@@ -28,14 +25,14 @@ prop mutually_relatively_prime_integer_set(A finite_set):
         d > 0
         forall a A:
             a $in Z
-            $divides_Z(d, a)
+            $section1::divides_Z(d, a)
         =>:
             d = 1
 
 forall a, b Z:
     $relatively_prime_Z(a, b)
     =>:
-        gcd_Z(a, b) = 1
+        section2::gcd_Z(a, b) = 1
 
 """
 Theorem III.1. Integers a,b,...,c are mutually relatively prime if and only if
@@ -47,9 +44,9 @@ thm theorem_III_1_relprime_implies_bezout_pair:
         $relatively_prime_Z(a, b)
         =>:
             exist x, y Z st {a * x + b * y = 1}
-    by thm gcd_Z_bezout(a, b)
-    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
-    1 = gcd_Z(a, b) = a * x + b * y
+    by thm section2::gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
+    1 = section2::gcd_Z(a, b) = a * x + b * y
     witness exist u, v Z st {a * u + b * v = 1} from x, y:
         a * x + b * y = 1
 
@@ -59,28 +56,28 @@ thm bezout_pair_has_gcd_one:
     ? forall a, b, x, y Z:
         a * x + b * y = 1
         =>:
-            $is_gcd_Z(a, b, 1)
+            $section2::is_gcd_Z(a, b, 1)
     witness exist u Z st {a = 1 * u} from a:
         a = 1 * a
-    $divides_Z(1, a)
+    $section1::divides_Z(1, a)
     witness exist v Z st {b = 1 * v} from b:
         b = 1 * b
-    $divides_Z(1, b)
+    $section1::divides_Z(1, b)
     claim:
         ? forall e Z:
             e > 0
-            $divides_Z(e, a)
-            $divides_Z(e, b)
+            $section1::divides_Z(e, a)
+            $section1::divides_Z(e, b)
             =>:
-                $divides_Z(e, 1)
+                $section1::divides_Z(e, 1)
         obtain p from exist p Z st {a = e * p}
         obtain q from exist q Z st {b = e * q}
         witness exist t Z st {1 = e * t} from p * x + q * y:
             1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
-        $divides_Z(e, 1)
+        $section1::divides_Z(e, 1)
     witness exist u, v Z st {1 = a * u + b * v} from x, y:
         1 = a * x + b * y
-    $is_gcd_Z(a, b, 1)
+    $section2::is_gcd_Z(a, b, 1)
 
 thm theorem_III_1_bezout_implies_relprime_pair:
     ? forall a, b Z:
@@ -89,7 +86,7 @@ thm theorem_III_1_bezout_implies_relprime_pair:
             $relatively_prime_Z(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     by thm bezout_pair_has_gcd_one(a, b, x, y)
-    gcd_Z(a, b) = 1
+    section2::gcd_Z(a, b) = 1
     $relatively_prime_Z(a, b)
 
 """
@@ -100,23 +97,23 @@ relatively prime.
 # Divide the gcd Bezout identity by the nonzero gcd.
 thm gcd_quotients_are_relatively_prime:
     ? forall a, b Z:
-        gcd_Z(a, b) != 0
+        section2::gcd_Z(a, b) != 0
         =>:
-            $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
-    by thm gcd_Z_dvd_left(a, b)
-    obtain p from exist p Z st {a = gcd_Z(a, b) * p}
-    by thm gcd_Z_dvd_right(a, b)
-    obtain q from exist q Z st {b = gcd_Z(a, b) * q}
-    by thm gcd_Z_bezout(a, b)
-    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
-    a / gcd_Z(a, b) = gcd_Z(a, b) * p / gcd_Z(a, b) = p
-    b / gcd_Z(a, b) = gcd_Z(a, b) * q / gcd_Z(a, b) = q
-    gcd_Z(a, b) = a * x + b * y = gcd_Z(a, b) * p * x + gcd_Z(a, b) * q * y = gcd_Z(a, b) * (p * x + q * y)
-    p * x + q * y = gcd_Z(a, b) * (p * x + q * y) / gcd_Z(a, b) = gcd_Z(a, b) / gcd_Z(a, b) = 1
-    witness exist u, v Z st {(a / gcd_Z(a, b)) * u + (b / gcd_Z(a, b)) * v = 1} from x, y:
-        (a / gcd_Z(a, b)) * x + (b / gcd_Z(a, b)) * y = p * x + q * y = 1
-    by thm theorem_III_1_bezout_implies_relprime_pair(a / gcd_Z(a, b), b / gcd_Z(a, b))
-    $relatively_prime_Z(a / gcd_Z(a, b), b / gcd_Z(a, b))
+            $relatively_prime_Z(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+    by thm section2::gcd_Z_dvd_left(a, b)
+    obtain p from exist p Z st {a = section2::gcd_Z(a, b) * p}
+    by thm section2::gcd_Z_dvd_right(a, b)
+    obtain q from exist q Z st {b = section2::gcd_Z(a, b) * q}
+    by thm section2::gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
+    a / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * p / section2::gcd_Z(a, b) = p
+    b / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * q / section2::gcd_Z(a, b) = q
+    section2::gcd_Z(a, b) = a * x + b * y = section2::gcd_Z(a, b) * p * x + section2::gcd_Z(a, b) * q * y = section2::gcd_Z(a, b) * (p * x + q * y)
+    p * x + q * y = section2::gcd_Z(a, b) * (p * x + q * y) / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) / section2::gcd_Z(a, b) = 1
+    witness exist u, v Z st {(a / section2::gcd_Z(a, b)) * u + (b / section2::gcd_Z(a, b)) * v = 1} from x, y:
+        (a / section2::gcd_Z(a, b)) * x + (b / section2::gcd_Z(a, b)) * y = p * x + q * y = 1
+    by thm theorem_III_1_bezout_implies_relprime_pair(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+    $relatively_prime_Z(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
 
 """
 Theorem III.2. If a is prime to b and a divides bc, then a divides c.
@@ -125,9 +122,9 @@ Theorem III.2. If a is prime to b and a divides bc, then a divides c.
 thm theorem_III_2_euclid_lemma:
     ? forall a, b, c Z:
         $relatively_prime_Z(a, b)
-        $divides_Z(a, b * c)
+        $section1::divides_Z(a, b * c)
         =>:
-            $divides_Z(a, c)
+            $section1::divides_Z(a, c)
     by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     obtain u from exist u Z st {b * c = a * u}
@@ -138,7 +135,7 @@ thm theorem_III_2_euclid_lemma:
     c = a * (c * x + u * y)
     witness exist t Z st {c = a * t} from c * x + u * y:
         c = a * (c * x + u * y)
-    $divides_Z(a, c)
+    $section1::divides_Z(a, c)
 
 """
 Corollary 1. If a is prime to b and to c, then a is prime to bc.

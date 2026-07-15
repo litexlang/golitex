@@ -113,7 +113,7 @@ pub use crate::infer::{
 pub use crate::module_manager::{
     discover_repository, discover_repository_for_file, parse_project_config, ExportEntry, FileId,
     FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
-    ProjectConfig, ProjectExport, ProjectRunPath, RepositoryFileTarget, BUILTIN_CODE_PATH,
+    ProjectConfig, ProjectExport, RepositoryFileTarget, BUILTIN_CODE_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -140,7 +140,6 @@ pub use crate::obj::FiniteSetSize;
 pub use crate::obj::FnObj;
 pub use crate::obj::FnObjHead;
 pub use crate::obj::FnRange;
-pub use crate::obj::FnRangeOn;
 pub use crate::obj::FnSet;
 pub use crate::obj::FnSetBody;
 pub use crate::obj::FnSetFreeParamObj;
@@ -353,9 +352,7 @@ pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
-pub use crate::stmt::tooling_stmt::LocalImportStmt;
 pub use crate::stmt::tooling_stmt::TrustImportStmt;
-pub use crate::stmt::tooling_stmt::TrustLocalImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
@@ -460,7 +457,6 @@ pub use crate::common::keywords::FN_EQ;
 pub use crate::common::keywords::FN_EQ_IN;
 pub use crate::common::keywords::FN_LOWER_CASE;
 pub use crate::common::keywords::FN_RANGE;
-pub use crate::common::keywords::FN_RANGE_ON;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FORALL_BANG;

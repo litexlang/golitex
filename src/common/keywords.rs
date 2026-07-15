@@ -63,7 +63,6 @@ pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const FINITE_SET_SIZE: &str = "finite_set_size";
 pub const FN_RANGE: &str = "fn_range";
-pub const FN_RANGE_ON: &str = "fn_range_on";
 pub const REPLACEMENT: &str = "replacement";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
@@ -237,7 +236,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROJ,
         FINITE_SET_SIZE,
         FN_RANGE,
-        FN_RANGE_ON,
         REPLACEMENT,
         SUM,
         FINITE_SET_SUM,
@@ -262,8 +260,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         AND,
         SUBSET,
         SUPERSET,
-        SUCCESS_COLON,
-        UNKNOWN_COLON,
         ALIAS,
         PROP,
         ABSTRACT_PROP,
@@ -409,4 +405,15 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Z
         || atom_name == R
         || atom_name == FINITE_SET_SIZE
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn output_labels_are_not_source_keywords() {
+        assert!(!is_keyword(SUCCESS_COLON));
+        assert!(!is_keyword(UNKNOWN_COLON));
+    }
 }

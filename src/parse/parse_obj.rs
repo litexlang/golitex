@@ -747,7 +747,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -756,7 +756,7 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -764,7 +764,7 @@ impl Runtime {
             let right = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -1142,36 +1142,6 @@ impl Runtime {
                 ))
             })?;
             return Ok(FnRange::new(function).into());
-        }
-        if tok == FN_RANGE_ON {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let function = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let set = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(FnRangeOn::new(function, set).into());
         }
         if tok == REPLACEMENT {
             tb.skip()?;
@@ -1872,8 +1842,6 @@ impl Runtime {
                 .expect("qualified name should have a local name");
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
-        } else if let Some(module_name) = self.unique_active_local_import_member_namespace(&left) {
-            Ok(AtomicName::WithMod(module_name, left))
         } else if let Some(module_name) = self.current_parse_module_name() {
             Ok(AtomicName::WithMod(module_name, left))
         } else {
@@ -1908,9 +1876,6 @@ impl Runtime {
     }
 
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
-        if let Some(module_name) = self.unique_active_local_import_member_namespace(&id.name) {
-            return IdentifierWithMod::new(module_name, id.name).into();
-        }
         if self.name_is_in_builtin_identifier_layer(&id.name) {
             return id.into();
         }
@@ -1921,9 +1886,6 @@ impl Runtime {
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
-        if let Some(module_name) = self.unique_active_local_import_member_namespace(&name) {
-            return AtomicName::WithMod(module_name, name);
-        }
         if self.name_is_in_builtin_prop_layer(&name) {
             return AtomicName::WithoutMod(name);
         }

@@ -92,8 +92,9 @@ derivations. Put the surrounding fact into an adjacent module such as
 The main file should import this module with `import "../chap7_cite"` or the
 analogous relative module import. For repository projects, declare the cite
 package with `export mod` and import its root name. Represent source-order file
-reuse with `export file` in `mod.lit` and `local import` in the dependent
-source; Litex has no statement for loading an arbitrary `.lit` path.
+reuse by placing the source earlier in the ordered `[export]` table and citing
+its canonical name in the dependent source; Litex has no statement for loading
+an arbitrary `.lit` path.
 
 Cite packages are explicit proof-debt interfaces, not completed standard
 library modules. Facts in a cite package should be named `thm` or `claim`

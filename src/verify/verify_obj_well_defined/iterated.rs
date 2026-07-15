@@ -60,8 +60,7 @@ impl Runtime {
             );
             return self.verify_sum_obj_well_defined(&range_sum, verify_state);
         }
-        let fn_range_on = FnRangeOn::new((*x.func).clone(), (*x.set).clone());
-        self.verify_fn_range_on_well_defined(&fn_range_on, verify_state)
+        self.verify_finite_set_iterand_has_exact_domain("finite_set_sum", &x.func, &x.set)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -75,13 +74,54 @@ impl Runtime {
             })
     }
 
+    fn verify_finite_set_iterand_has_exact_domain(
+        &self,
+        operation: &str,
+        function: &Obj,
+        set: &Obj,
+    ) -> Result<(), RuntimeError> {
+        let Some(body) = self.get_fn_range_function_body(function) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{}: {} must be a unary function with a known function set",
+                    operation, function
+                )),
+            )));
+        };
+        if body.params_def_with_set.number_of_params() != 1 || !body.dom_facts.is_empty() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{}: {} must have domain {} exactly; pass an explicit restriction such as fn(x {}) T {{{}(x)}}",
+                    operation, function, set, set, function
+                )),
+            )));
+        }
+        let Some(domain) = body.params_def_with_set.first() else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{}: {} must have domain {} exactly",
+                    operation, function, set
+                )),
+            )));
+        };
+        if domain.set_obj().to_string() != set.to_string() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{}: {} must have domain {} exactly; pass an explicit restriction such as fn(x {}) T {{{}(x)}}",
+                    operation, function, set, set, function
+                )),
+            )));
+        }
+        Ok(())
+    }
+
     pub(in crate::verify) fn verify_finite_set_sum_list_summand_well_defined(
         &mut self,
         list_set: &ListSet,
         func: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(func) else {
+        let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "finite_set_sum: summand must be a unary function; got {}",
@@ -173,8 +213,7 @@ impl Runtime {
             );
             return self.verify_product_obj_well_defined(&range_product, verify_state);
         }
-        let fn_range_on = FnRangeOn::new((*x.func).clone(), (*x.set).clone());
-        self.verify_fn_range_on_well_defined(&fn_range_on, verify_state)
+        self.verify_finite_set_iterand_has_exact_domain("finite_set_product", &x.func, &x.set)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -194,7 +233,7 @@ impl Runtime {
         func: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(func) else {
+        let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "finite_set_product: factor must be a unary function; got {}",

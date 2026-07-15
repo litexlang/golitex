@@ -44,15 +44,20 @@ impl Runtime {
             ))),
             TRUST => self.parse_trust_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
-            LOCAL => self.parse_local_import_stmt(tb),
+            LOCAL => Err(parse_stmt_error(
+                tb,
+                "local import has been removed; place the referenced source earlier in litex.config [export] and use its canonical name",
+            )),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
-            DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
-            STRONG_INDUC => self.parse_strong_induc_stmt(tb),
+            STRONG_INDUC => Err(parse_stmt_error(
+                tb,
+                "strong_induc is only valid after `by`",
+            )),
             BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
@@ -120,15 +125,17 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
-    fn trust_and_local_import_use_the_canonical_forms() {
+    fn trust_forms_parse_and_removed_local_imports_explain_the_migration() {
         for source_code in [
             "trust 1 = 1",
             "trust:\n    1 = 1",
             "trust have x R:\n    x = 1",
-            "local import chapter",
-            "trust local import chapter",
         ] {
             assert!(parse_one_stmt(source_code).is_ok(), "{source_code:?}");
+        }
+        for source_code in ["local import chapter", "trust local import chapter"] {
+            let message = parse_one_stmt_error_message(source_code);
+            assert!(message.contains("has been removed"), "{message}");
         }
     }
 }

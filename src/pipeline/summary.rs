@@ -160,11 +160,7 @@ impl RunSummary {
                 self.proof_blocks += 1;
             }
             Stmt::Command(CommandStmt::ImportStmt(_))
-            | Stmt::Command(CommandStmt::TrustImportStmt(_))
-            | Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
-                self.import_statements += 1;
-            }
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
+            | Stmt::Command(CommandStmt::TrustImportStmt(_)) => {
                 self.import_statements += 1;
             }
             _ => {}

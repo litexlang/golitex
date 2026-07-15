@@ -554,11 +554,20 @@ impl Runtime {
                 ))
                 .into(),
             ),
-            // The image of a finite domain under a function is finite.
-            // Example: from `$is_finite_set(1...3)`, prove `$is_finite_set(fn_range_on(a, 1...3))`.
-            Obj::FnRangeOn(fn_range_on) => {
+            // The image of a finite unary domain under a function is finite.
+            // Example: from `a fn(x 1...3) R`, prove `$is_finite_set(fn_range(a))`.
+            Obj::FnRange(fn_range) => {
+                let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+                    return Ok((StmtUnknown::new()).into());
+                };
+                if body.params_def_with_set.number_of_params() != 1 {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                let Some(domain) = body.params_def_with_set.first() else {
+                    return Ok((StmtUnknown::new()).into());
+                };
                 let domain_finite: AtomicFact = IsFiniteSetFact::new(
-                    fn_range_on.set.as_ref().clone(),
+                    domain.set_obj().clone(),
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
@@ -570,7 +579,7 @@ impl Runtime {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             is_finite_set_fact.clone().into(),
-                            "fn_range_on_is_finite_set_when_domain_is_finite_set".to_string(),
+                            "fn_range_is_finite_set_when_domain_is_finite_set".to_string(),
                             vec![domain_result],
                         ))
                         .into(),

@@ -187,23 +187,22 @@ pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
     None
 }
 
-pub(crate) fn build_function_obj_with_param_names(
-    function_name: &str,
+pub(crate) fn build_declared_function_obj_with_param_names(
+    function_identifier_obj: Obj,
     param_names: &[String],
 ) -> Obj {
-    build_curried_function_obj_from_layers(function_name, &[param_names.to_vec()])
-}
-
-/// One entry per curried stage, e.g. `g(c)(a, b)` → `[vec!["c"], vec!["a", "b"]]`.
-pub(crate) fn build_curried_function_obj_from_layers(
-    function_name: &str,
-    layer_param_names: &[Vec<String>],
-) -> Obj {
-    build_curried_function_obj_from_layers_with_binding(
-        function_name,
-        layer_param_names,
-        ParamObjType::FnSet,
-    )
+    let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(function_identifier_obj)
+        .expect("declared function identifier should be an atom");
+    let params = param_names
+        .iter()
+        .map(|name| {
+            Box::new(obj_for_bound_param_in_scope(
+                name.clone(),
+                ParamObjType::FnSet,
+            ))
+        })
+        .collect();
+    FnObj::new(function_head, vec![params]).into()
 }
 
 pub(crate) fn forall_param_defs_dom_and_map_from_have_fn_clause(
