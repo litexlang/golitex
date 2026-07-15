@@ -203,7 +203,7 @@ impl Runtime {
             FnObjHead::FiniteSeqListObj(_) => return Ok(None),
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                let Some(body) = self.get_object_in_fn_set_or_restrict(&function_name_obj) else {
+                let Some(body) = self.get_object_in_fn_set(&function_name_obj) else {
                     return Ok(None);
                 };
                 FnSetSpace::Set(FnSet::from_body(body.clone())?)

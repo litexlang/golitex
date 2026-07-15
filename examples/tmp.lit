@@ -1,1 +1,0 @@
-have fn mZ(m Z) power_set(Z) = {x power_set(Z): forall! k Z: x % k = 0}

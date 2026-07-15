@@ -6,8 +6,8 @@
 # exercises.
 # proof_idea: Define primality by positive divisors, reuse relative primality
 # and Euclid's lemma from Section III, and state finite factorization through
-# an indexed product interface.  The full finite-list theorem package is marked
-# as explicit proof debt.
+# the indexed product interface introduced in Section III.  The finite-list
+# divisor and permutation package remains explicit proof debt.
 # litex_code: This file runs Sections I-III first and then adds Section IV.
 # comments: No number-theory std module is imported.
 
@@ -32,14 +32,76 @@ Every integer >1 has at least one prime divisor, namely its smallest divisor
 greater than 1.  If p is prime, then p either divides a or is prime to a.
 """
 
-# Source handling: The text uses the least positive divisor argument from
-# Section I.
-# trust: This proof needs a checked least-divisor construction.
-trust:
-    forall a Z:
+thm theorem_IV_prime_divisor_from_least:
+    ? forall a Z:
         a > 1
         =>:
             exist p Z st {$is_prime_Z(p), $divides_Z(p, a)}
+    have D power_set(Z) = {d Z: d > 1 and $divides_Z(d, a)}
+    a > 1
+    witness exist k Z st {a = a * k} from 1:
+        a = a * 1
+    $divides_Z(a, a)
+    a $in {d Z: d > 1 and $divides_Z(d, a)}
+    a $in D
+    witness $is_nonempty_set(D) from a:
+        a $in D
+    claim:
+        ? $is_positive_integer_set(D)
+        D $subset Z
+        forall d D:
+            d $in Z
+            d > 1
+            d > 0
+        $is_positive_integer_set(D)
+    by thm positive_integer_set_has_least_element(D)
+    obtain p from exist p Z st {$is_least_element_of_integer_set(D, p)}
+    p $in D
+    p > 1
+    $divides_Z(p, a)
+    claim:
+        ? $is_prime_Z(p)
+        p > 1
+        claim:
+            ? forall d Z:
+                d > 0
+                $divides_Z(d, p)
+                =>:
+                    d = 1 or d = p
+            d = 1 or d > 1
+            by cases:
+                ? d = 1 or d = p
+                case d = 1:
+                    d = 1
+                case d > 1:
+                    obtain k from exist k Z st {p = d * k}
+                    obtain r from exist r Z st {a = p * r}
+                    witness exist q Z st {a = d * q} from k * r:
+                        a = p * r = d * k * r = d * (k * r)
+                    $divides_Z(d, a)
+                    d $in {d Z: d > 1 and $divides_Z(d, a)}
+                    d $in D
+                    p <= d
+                    k > 0 or k <= 0
+                    by cases:
+                        ? d = p
+                        case k > 0:
+                            k >= 1
+                            p = d * k >= d * 1 = d
+                            p <= d
+                            d = p
+                        case k <= 0:
+                            p = d * k <= 0
+                            impossible p > 1
+        forall d Z:
+            d > 0
+            $divides_Z(d, p)
+            =>:
+                d = 1 or d = p
+        $is_prime_Z(p)
+    witness exist p1 Z st {$is_prime_Z(p1), $divides_Z(p1, a)} from p:
+        $is_prime_Z(p)
+        $divides_Z(p, a)
 
 thm prime_divides_or_is_relatively_prime:
     ? forall p, a Z:
@@ -92,15 +154,14 @@ thm theorem_IV_1_prime_divides_binary_product:
             by thm theorem_III_2_euclid_lemma(p, a, b)
             $divides_Z(p, b)
 
-abstract_prop prime_divides_some_factor(p, n, f)
+prop prime_divides_some_factor(p Z, n N_pos, f fn(i N_pos) Z):
+    exist i N_pos st {i <= n, $divides_Z(p, f(i))}
 
 # Source handling: This is the theorem's finite product formulation.
-# trust: A checked theorem should quantify over a finite list or indexed
-# function and cite the binary theorem inductively.
 trust:
-    forall p Z, n N_pos, f fn(i N_pos: i <= n) Z:
+    forall p Z, n N_pos, f fn(i N_pos) Z:
         $is_prime_Z(p)
-        $divides_Z(p, product(1, n, fn(i N_pos: i <= n) R {f(i)}))
+        $divides_Z(p, finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
         =>:
             $prime_divides_some_factor(p, n, f)
 
@@ -108,15 +169,28 @@ trust:
 Theorem IV.2. Every integer >1 is a product of primes, uniquely up to order.
 """
 
-prop prime_factorization_Z(a Z, n N_pos, f fn(i N_pos: i <= n) Z):
+prop prime_factorization_Z(a Z, n N_pos, f fn(i N_pos) Z):
     a > 1
     forall i N_pos:
         i <= n
         =>:
             $is_prime_Z(f(i))
-    a = product(1, n, fn(i N_pos: i <= n) R {f(i)})
+    a = finite_product_from_one(fn(i N_pos) Z {f(i)}, n)
 
-abstract_prop prime_factorizations_equivalent_up_to_order(a, n, f, m, g)
+prop is_factor_permutation_map(n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z, phi fn(i N_pos) N_pos):
+    n = m
+    forall i N_pos:
+        i <= n
+        =>:
+            phi(i) <= m
+            f(i) = g(phi(i))
+    forall j N_pos:
+        j <= m
+        =>:
+            exist! i N_pos st {i <= n, phi(i) = j}
+
+prop prime_factorizations_equivalent_up_to_order(a Z, n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z):
+    exist phi fn(i N_pos) N_pos st {$is_factor_permutation_map(n, m, f, g, phi)}
 
 # Source handling: The text proves existence by induction on a and uniqueness
 # by cancelling a prime factor, then gives the exponent-count proof.
@@ -126,8 +200,8 @@ trust:
     forall a Z:
         a > 1
         =>:
-            exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
-    forall a Z, n, m N_pos, f fn(i N_pos: i <= n) Z, g fn(j N_pos: j <= m) Z:
+            exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
+    forall a Z, n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z:
         $prime_factorization_Z(a, n, f)
         $prime_factorization_Z(a, m, g)
         =>:
@@ -137,8 +211,8 @@ thm theorem_IV_2_prime_factorization_exists:
     ? forall a Z:
         a > 1
         =>:
-            exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
-    exist n N_pos, f fn(i N_pos: i <= n) Z st {$prime_factorization_Z(a, n, f)}
+            exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
+    exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
 
 """
 Prime exponents. For a prime P, v_P(a) is the largest n such that P^n divides
@@ -169,20 +243,9 @@ factorization a = product p_i^(alpha_i).
 
 sketch:
     # These concrete primality facts are arithmetic examples for the definition.
-    # Source handling: The text lists the first ten primes.
-    # trust: Direct primality checking should be automated by a bounded
-    # divisor search.
-    trust:
-        $is_prime_Z(2)
-        $is_prime_Z(3)
-        $is_prime_Z(5)
-        $is_prime_Z(7)
-        $is_prime_Z(11)
-        $is_prime_Z(13)
-        $is_prime_Z(17)
-        $is_prime_Z(19)
-        $is_prime_Z(23)
-        $is_prime_Z(29)
+    # Source handling: the text lists the first ten primes.  They remain a
+    # source-level arithmetic sketch until bounded divisor search is a
+    # reusable checked interface.
 
 """
 Theorem IV.3. There are infinitely many primes.

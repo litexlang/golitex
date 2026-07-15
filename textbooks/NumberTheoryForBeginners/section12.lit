@@ -1,0 +1,58 @@
+# Section XII: Gauss's lemma, Legendre symbols, and quadratic reciprocity.
+
+local import section11
+
+have fn legendre_symbol_Z(p N_pos, a Z) Z = 0
+
+prop gauss_half_system(p N_pos, a Z, representatives power_set(Z)):
+    $is_finite_set(representatives)
+    forall x representatives:
+        x $in representatives
+        =>:
+            0 < x < p
+
+prop gauss_lemma_conclusion(p N_pos, a Z):
+    $relatively_prime_Z(a, p)
+    legendre_symbol_Z(p, a) != 0
+
+prop legendre_symbol_zero(p N_pos, a Z):
+    $divides_Z(p, a)
+    legendre_symbol_Z(p, a) = 0
+
+abstract_prop euler_criterion_value(p, a)
+
+prop euler_criterion(p N_pos, a Z):
+    $relatively_prime_Z(a, p)
+    $euler_criterion_value(p, a)
+
+prop quadratic_reciprocity_conclusion(p, q N_pos):
+    $is_prime_Z(p)
+    $is_prime_Z(q)
+    p != q
+    legendre_symbol_Z(p, q) * legendre_symbol_Z(q, p) = 1
+
+trust:
+    forall p N_pos, a Z:
+        $relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+
+thm theorem_XII_Gauss_lemma:
+    ? forall p N_pos, a Z:
+        $relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+    $gauss_lemma_conclusion(p, a)
+
+trust:
+    forall p, q N_pos:
+        $quadratic_reciprocity_conclusion(p, q)
+
+thm theorem_XII_quadratic_reciprocity:
+    ? forall p, q N_pos:
+        $is_prime_Z(p)
+        $is_prime_Z(q)
+        p != q
+        =>:
+            $quadratic_reciprocity_conclusion(p, q)
+    $quadratic_reciprocity_conclusion(p, q)

@@ -52,14 +52,14 @@ have z &C::C = (3, 4)
 C::normSq(z) = 25
 C::norm(z) = 5
 
-count({1, 2, 3}) = 3
+finite_set_size({1, 2, 3}) = 3
 
 claim:
     ? forall n N_pos:
-        count(Nat::divisors(2 * n)) = 28
+        finite_set_size(Nat::divisors(2 * n)) = 28
         =>:
-            count(Nat::divisors(2 * n)) = 28
-    count(Nat::divisors(2 * n)) = 28
+            finite_set_size(Nat::divisors(2 * n)) = 28
+    finite_set_size(Nat::divisors(2 * n)) = 28
 
 by thm ZMod::value_ZMod(5)
 $ZMod::value(5, ZMod::ZMod(5))

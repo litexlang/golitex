@@ -178,8 +178,8 @@ impl Runtime {
                 Obj::Tuple(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Count(a) => match right {
-                Obj::Count(b) => a.to_string() == b.to_string(),
+            Obj::FiniteSetSize(a) => match right {
+                Obj::FiniteSetSize(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnRange(a) => match right {

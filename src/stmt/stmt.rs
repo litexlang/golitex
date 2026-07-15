@@ -64,6 +64,7 @@ pub enum ByStmt {
     ByCasesStmt(ByCasesStmt),
     ByContraStmt(ByContraStmt),
     ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
+    ByFiniteSetInducStmt(ByFiniteSetInducStmt),
     ByInducStmt(ByInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),

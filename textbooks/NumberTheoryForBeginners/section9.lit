@@ -1,0 +1,60 @@
+# Section IX: polynomials over a field.
+
+local import section8
+
+prop is_field_carrier(K set):
+    $is_set(K)
+
+prop polynomial_over(K set, p set):
+    p $in K
+
+have fn polynomial_eval_Z(coeff fn(n N) Z, x Z) Z = coeff(0)
+have fn polynomial_degree_Z(coeff fn(n N) Z) N = 0
+
+prop polynomial_zero_Z(coeff fn(n N) Z, x Z):
+    polynomial_eval_Z(coeff, x) = 0
+
+have fn polynomial_root_set_Z(coeff fn(n N) Z) power_set(Z) = {x Z: $polynomial_zero_Z(coeff, x)}
+
+abstract_prop polynomial_division(K, f, g, q, r)
+abstract_prop polynomial_gcd(K, f, g, d)
+abstract_prop polynomial_irreducible(K, f)
+
+prop polynomial_division_statement(K set, f set, g set, q set, r set):
+    $polynomial_division(K, f, g, q, r)
+
+prop polynomial_gcd_statement(K set, f set, g set, d set):
+    $polynomial_gcd(K, f, g, d)
+
+prop polynomial_root_bound(K set, f set, roots power_set(K)):
+    $is_finite_set(roots)
+
+prop polynomial_factorization_over_field(K set, f set):
+    $is_field_carrier(K)
+    exist d set st {$polynomial_gcd(K, f, f, d)}
+
+trust:
+    forall K set, f set, g set:
+        $is_field_carrier(K)
+        =>:
+            exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
+
+thm theorem_IX_polynomial_division:
+    ? forall K set, f set, g set:
+        $is_field_carrier(K)
+        =>:
+            exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
+    exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
+
+trust:
+    forall K set, f set:
+        $is_field_carrier(K)
+        =>:
+            $polynomial_factorization_over_field(K, f)
+
+thm theorem_IX_factorization:
+    ? forall K set, f set:
+        $is_field_carrier(K)
+        =>:
+            $polynomial_factorization_over_field(K, f)
+    $polynomial_factorization_over_field(K, f)

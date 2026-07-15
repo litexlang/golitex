@@ -58,65 +58,35 @@ claim:
 }
 
 #[test]
-fn anonymous_fn_restrict_requires_valid_target_domain_and_return() {
+fn function_space_membership_uses_same_domain_pointwise_values() {
     run_with_large_stack(
-        "anonymous_fn_restrict_requires_valid_target_domain_and_return_large_stack",
+        "function_space_membership_uses_same_domain_pointwise_values",
         || {
-            anonymous_fn_restrict_positive_cases_impl();
-            anonymous_fn_restrict_negative_case_impl();
+            let source_code = r#"
+claim:
+    ? forall I set, X set, f fn(alpha I) cup({X}):
+        forall alpha I:
+            f(alpha) $in X
+        =>:
+            f $in fn(alpha I) X
+    forall alpha I:
+        f(alpha) $in X
+    f $in fn(alpha I) X
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "function_space_membership_uses_same_domain_pointwise_values",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "same-domain pointwise function membership failed:\n{}",
+                run_output
+            );
         },
-    );
-}
-
-fn anonymous_fn_restrict_positive_cases_impl() {
-    let positive_source_code = r#"
-$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) R)
-$restricts_to(fn(x R) R {x + 1}, fn(x closed_range(1, 2)) R)
-$restricts_to(fn(x R: x > 0) R {x}, fn(x N_pos) R)
-$restricts_to(fn(x R) R {x}, fn(x closed_range(1, 2)) N)
-"#;
-
-    let mut positive_runtime = Runtime::new_with_builtin_code();
-    positive_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_positive");
-    let (positive_stmt_results, positive_runtime_error) =
-        run_source_code(positive_source_code, &mut positive_runtime);
-    let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
-        &positive_runtime,
-        &positive_stmt_results,
-        &positive_runtime_error,
-        false,
-    );
-    assert!(
-        positive_run_succeeded,
-        "anonymous fn restrict positive cases failed:\n{}",
-        positive_run_output
-    );
-}
-
-fn anonymous_fn_restrict_negative_case_impl() {
-    let negative_source_code = r#"
-$restricts_to(fn(x R: x > 0) R {x}, fn(x closed_range(-1, 1)) R)
-"#;
-
-    let mut negative_runtime = Runtime::new_with_builtin_code();
-    negative_runtime.new_file_path_new_env_new_name_scope("anonymous_fn_restrict_negative");
-    let (negative_stmt_results, negative_runtime_error) =
-        run_source_code(negative_source_code, &mut negative_runtime);
-    let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
-        &negative_runtime,
-        &negative_stmt_results,
-        &negative_runtime_error,
-        false,
-    );
-    assert!(
-        !negative_run_succeeded,
-        "anonymous fn restrict negative case should fail:\n{}",
-        negative_run_output
-    );
-    assert!(
-        negative_run_output.contains("failed to verify function domain fact"),
-        "negative case should explain the domain failure:\n{}",
-        negative_run_output
     );
 }
 
@@ -719,7 +689,7 @@ finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = finite_set_size(X) * c
 
 sketch:
     have X power_set(Z)
@@ -834,25 +804,25 @@ fn finite_set_sum_bijective_enumerations_are_well_defined() {
         "finite_set_sum_bijective_enumerations_are_well_defined",
         || {
             let source_code = r#"
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, count(X)) st {g(i) = x}
+        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
 
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
-            sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
-    sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))}) = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(h(i))})
+            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
+    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
 
 thm finite_set_sum_template_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
@@ -890,7 +860,7 @@ finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)
 
 sketch:
     have X power_set(Z)

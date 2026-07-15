@@ -34,6 +34,21 @@ impl Runtime {
             );
         }
 
+        // Every finite real interval is a subset of R once its endpoints are
+        // well-defined reals. Example: `'[a, b] $subset R`.
+        if matches!(subset_fact.left, Obj::IntervalObj(_))
+            && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
+        {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    "real_interval_subset_R".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         // The range of `f : ... -> T` is a subset of `T`, and of any known superset of `T`.
         // Example: `have f fn(x S) T` proves `fn_range(f) $subset T`.
         if let Obj::FnRange(fn_range) = &subset_fact.left {

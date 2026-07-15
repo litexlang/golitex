@@ -13,7 +13,7 @@ import Nat
 prop first_n_elements_of_N_subset(S power_set(N), A power_set(N), n N_pos):
     A $subset S
     $is_finite_set(A)
-    count(A) = n
+    finite_set_size(A) = n
     forall x, y N:
         x $in A
         y $in S

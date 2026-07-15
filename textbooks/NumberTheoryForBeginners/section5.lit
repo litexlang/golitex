@@ -46,14 +46,9 @@ sketch:
     abstract_prop nonzero_rationals_are_abelian_group_under_multiplication()
 
     # Source handling: These are the source examples immediately following the
-    # group axioms.
-    # trust: A checked version should build operation functions whose
-    # domains are Z, Q, R, and Q_nz, then prove the group axioms.
-    trust:
-        $integers_are_abelian_group_under_addition()
-        $rationals_are_abelian_group_under_addition()
-        $reals_are_abelian_group_under_addition()
-        $nonzero_rationals_are_abelian_group_under_multiplication()
+    # group axioms.  The four concrete instances remain source-level examples;
+    # their operation functions and law proofs are not part of the theorem-only
+    # translation slice.
 
 """
 Definition. A subgroup is a subset of a group that is a group under the same
@@ -73,14 +68,34 @@ prop is_additive_subgroup_of_Z(H power_set(Z)):
     $is_nonempty_set(H)
     $closed_under_subtraction(H)
 
-# Source handling: The text cites the proof of Theorem II.1.
-# trust: This is checked through the Section II theorem interface rather
-# than by rebuilding a general subgroup theorem here.
-trust:
-    forall H power_set(Z):
+# Source handling: The text cites the proof of Theorem II.1.  The checked
+# Section II interface supplies the same cyclic-subgroup conclusion; this
+# local theorem keeps the source-facing predicate visible in Section V.
+thm theorem_V_subgroup_of_Z_is_cyclic:
+    ? forall H power_set(Z):
         $is_additive_subgroup_of_Z(H)
         =>:
             exist! m N st {$is_integer_multiple_set(H, m)}
+    by thm theorem_II_1_subgroups_of_Z(H)
+    obtain m from exist m N st {H = mZ(m)}
+    witness exist m1 N st {$is_integer_multiple_set(H, m1)} from m:
+        H = mZ(m)
+    claim:
+        ? forall m1, m2 N:
+            $is_integer_multiple_set(H, m1)
+            $is_integer_multiple_set(H, m2)
+            =>:
+                m1 = m2
+        H = mZ(m1)
+        H = mZ(m2)
+        mZ(m1) = H = mZ(m2)
+        m1 = m2
+    forall m1, m2 N:
+        $is_integer_multiple_set(H, m1)
+        $is_integer_multiple_set(H, m2)
+        =>:
+            m1 = m2
+    exist! m N st {$is_integer_multiple_set(H, m)}
 
 """
 Definition. For m>0, integers x and y are congruent modulo m when x-y is a
@@ -299,11 +314,40 @@ have fn residue_class_mod(m N_pos, x Z) power_set(Z) = {y Z: $congruent_mod(m, y
 prop is_congruence_class_mod(m N_pos, C power_set(Z)):
     exist x Z st {C = residue_class_mod(m, x)}
 
+# The quotient carrier is a set of sets.  Keeping it as a value makes the
+# later finite-carrier statement talk about the actual residue classes rather
+# than an opaque placeholder.
+have fn residue_class_carrier_mod(m N_pos) power_set(power_set(Z)) = {C power_set(Z): $is_congruence_class_mod(m, C)}
+
 thm representative_belongs_to_residue_class:
     ? forall m N_pos, x Z:
         x $in residue_class_mod(m, x)
     by thm congruent_mod_reflexive(m, x)
     x $in residue_class_mod(m, x)
+
+thm residue_class_eq_of_congruent:
+    ? forall m N_pos, x, y Z:
+        $congruent_mod(m, x, y)
+        =>:
+            residue_class_mod(m, x) = residue_class_mod(m, y)
+    by extension residue_class_mod(m, x) = residue_class_mod(m, y):
+        claim:
+            ? forall z residue_class_mod(m, x):
+                z $in residue_class_mod(m, y)
+            by thm congruent_mod_transitive(m, z, x, y)
+            $congruent_mod(m, z, y)
+            z $in residue_class_mod(m, y)
+        forall z residue_class_mod(m, x):
+            z $in residue_class_mod(m, y)
+        claim:
+            ? forall z residue_class_mod(m, y):
+                z $in residue_class_mod(m, x)
+            by thm congruent_mod_symmetric(m, x, y)
+            by thm congruent_mod_transitive(m, z, y, x)
+            $congruent_mod(m, z, x)
+            z $in residue_class_mod(m, x)
+        forall z residue_class_mod(m, y):
+            z $in residue_class_mod(m, x)
 
 """
 The equivalence-relation properties imply that two classes are equal when their
@@ -311,24 +355,56 @@ representatives are congruent, and otherwise the classes are disjoint.  The
 integers split into the m classes (0 mod m),...,(m-1 mod m).
 """
 
-abstract_prop congruence_classes_are_disjoint_mod(m, x, y)
-abstract_prop residue_classes_partition_Z_mod(m)
+prop congruence_classes_are_disjoint_mod(m N_pos, x, y Z):
+    forall z Z:
+        z $in residue_class_mod(m, x)
+        z $in residue_class_mod(m, y)
+        =>:
+            $congruent_mod(m, x, y)
 
-# Source handling: The text derives this from reflexivity, symmetry, and
-# transitivity.
-# trust: Equality and disjointness of set-builder classes need a reusable
-# equivalence-class theorem.
-trust:
-    forall m N_pos, x, y Z:
+prop residue_classes_partition_Z_mod(m N_pos):
+    forall x Z:
+        exist r Z st {0 <= r < m, residue_class_mod(m, x) = residue_class_mod(m, r)}
+
+# Source handling: the first theorem is the overlap formulation of disjointness
+# (two classes can overlap only when their representatives are congruent), and
+# the second chooses the standard remainder representative for every class.
+thm theorem_V_residue_classes_disjoint:
+    ? forall m N_pos, x, y Z:
+        $congruence_classes_are_disjoint_mod(m, x, y)
+    claim:
+        ? forall z Z:
+            z $in residue_class_mod(m, x)
+            z $in residue_class_mod(m, y)
+            =>:
+                $congruent_mod(m, x, y)
+        obtain a from exist a Z st {z - x = m * a}
+        obtain b from exist b Z st {z - y = m * b}
+        x - z = -1 * (z - x) = -1 * (m * a) = m * (-a)
+        x - y = x - z + (z - y) = m * (-a) + m * b = m * (-a + b)
+        witness exist k Z st {x - y = m * k} from -a + b:
+            x - y = m * (-a + b)
         $congruent_mod(m, x, y)
+    forall z Z:
+        z $in residue_class_mod(m, x)
+        z $in residue_class_mod(m, y)
         =>:
-            residue_class_mod(m, x) = residue_class_mod(m, y)
-    forall m N_pos, x, y Z:
-        not $congruent_mod(m, x, y)
-        =>:
-            $congruence_classes_are_disjoint_mod(m, x, y)
-    forall m N_pos:
+            $congruent_mod(m, x, y)
+
+thm theorem_V_residue_classes_partition:
+    ? forall m N_pos:
         $residue_classes_partition_Z_mod(m)
+    claim:
+        ? forall x Z:
+            exist r Z st {0 <= r < m, residue_class_mod(m, x) = residue_class_mod(m, r)}
+        by thm standard_remainder_mod_exists_unique(m, x)
+        obtain r from exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
+        by thm residue_class_eq_of_congruent(m, x, r)
+        residue_class_mod(m, x) = residue_class_mod(m, r)
+        witness exist r1 Z st {0 <= r1 < m, residue_class_mod(m, x) = residue_class_mod(m, r1)} from r:
+            0 <= r < m
+            residue_class_mod(m, x) = residue_class_mod(m, r)
+    $residue_classes_partition_Z_mod(m)
 
 """
 Addition of congruence classes is defined by
@@ -339,15 +415,27 @@ chosen representatives.
 have fn residue_class_add_mod(m N_pos, x, y Z) power_set(Z) = residue_class_mod(m, x + y)
 
 # Source handling: This is the well-definedness argument immediately following
-# the class-addition definition.
-# trust: The checked proof needs class equality from representative
-# congruence and the addition property (D).
-trust:
-    forall m N_pos, x, y, x1, y1 Z:
+# the class-addition definition.  Equality of classes lets us move each
+# representative into the other class, then Property (D) finishes the proof.
+thm residue_class_addition_well_defined:
+    ? forall m N_pos, x, y, x1, y1 Z:
         residue_class_mod(m, x) = residue_class_mod(m, x1)
         residue_class_mod(m, y) = residue_class_mod(m, y1)
         =>:
             residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
+    by thm representative_belongs_to_residue_class(m, x)
+    x $in residue_class_mod(m, x1)
+    $congruent_mod(m, x, x1)
+    by thm representative_belongs_to_residue_class(m, y)
+    y $in residue_class_mod(m, y1)
+    $congruent_mod(m, y, y1)
+    by thm congruent_mod_add(m, x, x1, y, y1)
+    $congruent_mod(m, x + y, x1 + y1)
+    by thm residue_class_eq_of_congruent(m, x + y, x1 + y1)
+    residue_class_mod(m, x + y) = residue_class_mod(m, x1 + y1)
+    residue_class_add_mod(m, x, y) = residue_class_mod(m, x + y)
+    residue_class_add_mod(m, x1, y1) = residue_class_mod(m, x1 + y1)
+    residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
 
 """
 Theorem V.1. For m>0, the congruence classes modulo m under addition form an
@@ -355,14 +443,19 @@ abelian group of m elements.  The solution of (x)+(z)=(y) is (y-x), and
 (0 mod m) is the neutral element.
 """
 
-abstract_prop is_set_of_all_residue_classes_mod(m, Classes)
-abstract_prop is_residue_class_addition_operation(m, Classes, add, zero)
+prop is_set_of_all_residue_classes_mod(m N_pos, Classes finite_set):
+    Classes = residue_class_carrier_mod(m)
+
+prop is_residue_class_addition_operation(m N_pos, Classes finite_set, add fn(A, B Classes) Classes, zero Classes):
+    zero = residue_class_mod(m, 0)
+    forall A, B Classes:
+        exist x, y Z st {A = residue_class_mod(m, x), B = residue_class_mod(m, y), add(A, B) = residue_class_add_mod(m, x, y)}
 
 prop congruence_classes_form_additive_group_mod(m N_pos):
-    exist Classes finite_set st {$is_set_of_all_residue_classes_mod(m, Classes), count(Classes) = m}
+    exist Classes finite_set st {$is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m}
     forall Classes finite_set:
         $is_set_of_all_residue_classes_mod(m, Classes)
-        count(Classes) = m
+        finite_set_size(Classes) = m
         =>:
             exist add fn(A, B Classes) Classes, zero Classes st {$is_residue_class_addition_operation(m, Classes, add, zero), $is_abelian_group(Classes, add, zero)}
 

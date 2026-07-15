@@ -1,14 +1,13 @@
 abstract_prop is_riemann_sum(f, a, b, r)
 abstract_prop interval_integral_additive(a, b, c, f, s1, s2)
 
-prop integrable(a, b R, f set):
-    $restricts_to(f, fn(x R: (x - a) * (x - b) <= 0)R)
+prop integrable(a, b R, f fn(x R) R):
     exist r R st {$is_riemann_sum(f, a, b, r)}
 
-template<a, b R, f set: $integrable(a, b, f)>:
+template<a, b R, f fn(x R) R: $integrable(a, b, f)>:
     obtain integral from exist r R st {$is_riemann_sum(f, a, b, r)}
 
-forall a, b R, f set:
+forall a, b R, f fn(x R) R:
     $integrable(a, b, f)
     =>:
         \integral<a, b, f> = \integral<a, b, f>
@@ -65,7 +64,7 @@ strategy affine_two_x_plus_one_integrable:
     trust $integrable(a, b, fn(x R) R {2 * x + 1})
 
 strategy interval_integral_additive_strategy:
-    ? forall a, b, c R, f set, s1, s2 R:
+    ? forall a, b, c R, f fn(x R) R, s1, s2 R:
         a <= b
         b <= c
         $integrable(a, c, f)

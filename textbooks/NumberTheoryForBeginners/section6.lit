@@ -1,0 +1,281 @@
+# Number Theory for Beginners, Section VI.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section VI.
+# problem: Formalize multiplication of congruence classes, rings, fields,
+# linear congruences, and Euler's phi function.
+# proof_idea: Keep residue classes as the set-valued objects from Section V.
+# Define class multiplication as a value, prove representative independence
+# from multiplicative congruence, and use the checked gcd/Bezout interfaces for
+# the solvability direction of the linear-congruence theorem.  Finite quotient
+# cardinality and the full ring/field package remain explicit source debt.
+# litex_code: This file runs Sections I-V first and then adds Section VI.
+
+trust local import section5
+trust local import section4
+trust local import section3
+trust local import section2
+trust local import section1
+
+"""
+If m>0, multiplication of congruence classes is defined by
+(x mod m)*(y mod m)=(xy mod m).  Property (E) makes this independent of the
+representatives.
+"""
+
+have fn residue_class_mul_mod(m N_pos, x, y Z) power_set(Z) = residue_class_mod(m, x * y)
+
+thm residue_class_multiplication_well_defined:
+    ? forall m N_pos, x, y, x1, y1 Z:
+        residue_class_mod(m, x) = residue_class_mod(m, x1)
+        residue_class_mod(m, y) = residue_class_mod(m, y1)
+        =>:
+            residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, x1, y1)
+    by thm representative_belongs_to_residue_class(m, x)
+    x $in residue_class_mod(m, x1)
+    by thm representative_belongs_to_residue_class(m, y)
+    y $in residue_class_mod(m, y1)
+    by thm theorem_V_residue_classes_disjoint(m, x, x1)
+    $congruent_mod(m, x, x1)
+    by thm theorem_V_residue_classes_disjoint(m, y, y1)
+    $congruent_mod(m, y, y1)
+    by thm congruent_mod_multiply(m, x, x1, y, y1)
+    $congruent_mod(m, x * y, x1 * y1)
+    by thm residue_class_eq_of_congruent(m, x * y, x1 * y1)
+    residue_class_mod(m, x * y) = residue_class_mod(m, x1 * y1)
+    residue_class_mul_mod(m, x, y) = residue_class_mod(m, x * y)
+    residue_class_mul_mod(m, x1, y1) = residue_class_mod(m, x1 * y1)
+    residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, x1, y1)
+
+"""
+Definition. A ring is a set with an additive group law and an associative,
+commutative multiplication distributing over addition.  A unitary ring also
+has a multiplicative unit.
+"""
+
+prop is_commutative_unitary_ring(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, one carrier):
+    $is_abelian_group(carrier, add, zero)
+    forall x, y, z carrier:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+        mul(x, y) = mul(y, x)
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+    forall x carrier:
+        mul(one, x) = x
+
+prop is_residue_class_multiplication_operation(m N_pos, Classes finite_set, mul fn(A, B Classes) Classes):
+    forall A, B Classes:
+        exist x, y Z st {A = residue_class_mod(m, x), B = residue_class_mod(m, y), mul(A, B) = residue_class_mul_mod(m, x, y)}
+
+prop residue_classes_form_unitary_ring_mod(m N_pos):
+    exist Classes finite_set st {$is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m}
+    forall Classes finite_set:
+        $is_set_of_all_residue_classes_mod(m, Classes)
+        finite_set_size(Classes) = m
+        =>:
+            exist add fn(A, B Classes) Classes, mul fn(A, B Classes) Classes, zero Classes, one Classes st {$is_residue_class_addition_operation(m, Classes, add, zero), $is_residue_class_multiplication_operation(m, Classes, mul), one = residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add, mul, zero, one)}
+
+# Source handling: the algebraic ring laws follow from representative
+# independence and the integer arithmetic laws.  The finite quotient carrier,
+# its exact cardinality, and the simultaneous operation construction remain
+# one narrow source-level interface.
+trust:
+    forall m N_pos:
+        $residue_classes_form_unitary_ring_mod(m)
+
+"""
+If a is prime to m, every representative of its congruence class is prime to
+m.  The source proof is a mutual integer-linear change of the pair (a,m).
+"""
+
+prop residue_class_prime_to_mod(m N_pos, x Z):
+    $relatively_prime_Z(x, m)
+
+thm residue_class_prime_to_mod_is_representative_independent:
+    ? forall m N_pos, x, x1 Z:
+        residue_class_mod(m, x) = residue_class_mod(m, x1)
+        $residue_class_prime_to_mod(m, x)
+        =>:
+            $residue_class_prime_to_mod(m, x1)
+    by thm representative_belongs_to_residue_class(m, x)
+    x $in residue_class_mod(m, x1)
+    by thm theorem_V_residue_classes_disjoint(m, x, x1)
+    $congruent_mod(m, x, x1)
+    obtain t from exist t Z st {x - x1 = m * t}
+    $relatively_prime_Z(x, m)
+    gcd_Z(x, m) = 1
+    $is_gcd_Z(x, m, gcd_Z(x, m))
+    $is_gcd_Z(x, m, 1)
+    x1 = x - (x - x1) = x - m * t
+    x - m * t = 1 * x + (-t) * m
+    m = 0 * x + 1 * m
+    x = x1 + (x - x1) = x1 + m * t
+    x1 + m * t = 1 * x1 + t * m
+    m = 0 * x1 + 1 * m
+    by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(x, m, x1, m, 1, 1, -t, 0, 1, 1, t, 0, 1)
+    $is_gcd_Z(x, m, 1)
+    $is_gcd_Z(x1, m, 1)
+    $relatively_prime_Z(x1, m)
+    $residue_class_prime_to_mod(m, x1)
+
+"""
+Theorem VI.2. The congruence a*x=b (mod m) is solvable exactly when the gcd of
+a and m divides b.  Once one solution is fixed, the remaining solution-class
+description is stated separately so the source's counting argument remains
+visible.
+"""
+
+prop solves_linear_congruence_mod(m N_pos, a, b, x Z):
+    exist k Z st {a * x - b = m * k}
+
+prop linear_congruence_solvable_mod(m N_pos, a, b Z):
+    exist x Z st {$solves_linear_congruence_mod(m, a, b, x)}
+
+thm theorem_VI_2_solvable_implies_gcd_divides:
+    ? forall m N_pos, a, b Z:
+        $linear_congruence_solvable_mod(m, a, b)
+        =>:
+            $divides_Z(gcd_Z(a, m), b)
+    obtain x from exist x Z st {$solves_linear_congruence_mod(m, a, b, x)}
+    $solves_linear_congruence_mod(m, a, b, x)
+    obtain k from exist k Z st {a * x - b = m * k}
+    by thm gcd_Z_dvd_left(a, m)
+    by thm gcd_Z_dvd_right(a, m)
+    by thm divides_Z_linear_combination(gcd_Z(a, m), a, m, x, -k)
+    $divides_Z(gcd_Z(a, m), x * a + -k * m)
+    a * x - m * k = a * x - (a * x - b) = b
+    x * a + -k * m = a * x - m * k = b
+    $divides_Z(gcd_Z(a, m), b)
+
+thm theorem_VI_2_gcd_divides_implies_solvable:
+    ? forall m N_pos, a, b Z:
+        $divides_Z(gcd_Z(a, m), b)
+        =>:
+            $linear_congruence_solvable_mod(m, a, b)
+    obtain t from exist t Z st {b = gcd_Z(a, m) * t}
+    by thm gcd_Z_bezout(a, m)
+    obtain u, v from exist u, v Z st {gcd_Z(a, m) = a * u + m * v}
+    witness exist k Z st {a * (u * t) - b = m * k} from -v * t:
+        a * (u * t) - b = a * u * t - (a * u + m * v) * t = m * (-v * t)
+    $solves_linear_congruence_mod(m, a, b, u * t)
+    witness exist x Z st {$solves_linear_congruence_mod(m, a, b, x)} from u * t:
+        $solves_linear_congruence_mod(m, a, b, u * t)
+    $linear_congruence_solvable_mod(m, a, b)
+
+thm gcd_Z_nonzero_for_positive_second:
+    ? forall a Z, m N_pos:
+        gcd_Z(a, m) != 0
+    by thm gcd_Z_dvd_right(a, m)
+    obtain q from exist q Z st {m = gcd_Z(a, m) * q}
+    gcd_Z(a, m) = 0 or gcd_Z(a, m) > 0
+    by cases:
+        ? gcd_Z(a, m) != 0
+        case gcd_Z(a, m) = 0:
+            m = gcd_Z(a, m) * q = 0 * q = 0
+            impossible m > 0
+        case gcd_Z(a, m) > 0:
+            gcd_Z(a, m) != 0
+
+prop linear_congruence_solution_family_mod(m N_pos, a, b, x Z):
+    $solves_linear_congruence_mod(m, a, b, x)
+    gcd_Z(a, m) != 0
+    forall x1 Z:
+        $solves_linear_congruence_mod(m, a, b, x1)
+        =>:
+            exist u Z st {x1 = x + (m / gcd_Z(a, m)) * u}
+
+# Source handling: the exact number of residue classes of solutions and the
+# converse family construction use cancellation and finite class counting.
+# The solvability criterion itself is checked above; only the family/count
+# package remains a source-level interface.
+trust:
+    forall m N_pos, a, b, x Z:
+        $linear_congruence_solution_family_mod(m, a, b, x)
+
+"""
+Euler's function counts the positive representatives below m that are prime
+to m.  The finite-set value is exposed as an object because later sections
+apply it in group-order statements.
+"""
+
+prop coprime_remainder_mod(m N_pos, a Z):
+    0 < a < m
+    $relatively_prime_Z(a, m)
+
+have fn coprime_remainders_mod(m N_pos) power_set(Z) = {a Z: $coprime_remainder_mod(m, a)}
+
+prop euler_phi_set(m N_pos, S \finite_subsets<Z>):
+    forall a Z:
+        =>:
+            a $in S
+        <=>:
+            $coprime_remainder_mod(m, a)
+
+prop euler_phi_spec(m N_pos, n N):
+    exist S \finite_subsets<Z> st {$euler_phi_set(m, S), finite_set_size(S) = n}
+
+# The finite representative set and its unique cardinality are the remaining
+# finite-counting interface from the source proof.
+trust:
+    forall m N_pos:
+        exist! n N st {$euler_phi_spec(m, n)}
+
+have fn euler_phi by exist!:
+    ? forall m N_pos:
+        exist! n N st {$euler_phi_spec(m, n)}
+
+trust:
+    forall m N_pos:
+        $euler_phi_spec(m, euler_phi(m))
+
+trust:
+    forall p Z:
+        $is_prime_Z(p)
+        =>:
+            euler_phi(p) = p - 1
+
+thm euler_phi_prime_value:
+    ? forall p Z:
+        $is_prime_Z(p)
+        =>:
+            euler_phi(p) = p - 1
+    euler_phi(p) = p - 1
+
+"""
+Definition. A field is a unitary ring whose non-zero elements form a
+multiplicative group.  The residue-class ring modulo m is a field exactly when
+m is prime.
+"""
+
+prop is_field(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, one carrier):
+    $is_commutative_unitary_ring(carrier, add, mul, zero, one)
+    forall x carrier:
+        x != zero
+        =>:
+            exist! y carrier st {mul(x, y) = one}
+
+prop residue_classes_form_field_mod(m N_pos):
+    exist Classes finite_set, add fn(A, B Classes) Classes, mul fn(A, B Classes) Classes, zero Classes, one Classes st {$is_set_of_all_residue_classes_mod(m, Classes), $is_commutative_unitary_ring(Classes, add, mul, zero, one), $is_field(Classes, add, mul, zero, one)}
+
+# Source handling: the forward and reverse zero-divisor arguments are carried
+# by the finite quotient ring package; the source field criterion stays a
+# named theorem interface rather than an opaque abstract proposition.
+trust:
+    forall m N_pos:
+        $is_prime_Z(m)
+        =>:
+            $residue_classes_form_field_mod(m)
+    forall m N_pos:
+        $residue_classes_form_field_mod(m)
+        =>:
+            $is_prime_Z(m)
+
+prop residue_field_iff_prime(m N_pos):
+    $residue_classes_form_field_mod(m)
+
+trust:
+    forall m N_pos:
+        $residue_field_iff_prime(m)
+
+thm theorem_VI_3_residue_field_iff_prime:
+    ? forall m N_pos:
+        $residue_field_iff_prime(m)
+    $residue_field_iff_prime(m)

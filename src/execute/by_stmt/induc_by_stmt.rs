@@ -488,6 +488,7 @@ impl Runtime {
 
         Ok(ByInducVerificationResult::new(
             stmt.strong,
+            false,
             structured,
             stmt.param.clone(),
             stmt.induc_from.to_string(),

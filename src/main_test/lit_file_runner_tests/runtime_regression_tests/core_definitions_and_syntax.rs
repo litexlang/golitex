@@ -506,29 +506,100 @@ forall i closed_range(1, 3):
 }
 
 #[test]
-fn finite_power_set_has_builtin_cardinality_rules() {
-    run_with_large_stack("finite_power_set_has_builtin_cardinality_rules", || {
+fn finite_power_set_has_builtin_finite_set_size_rules() {
+    run_with_large_stack("finite_power_set_has_builtin_finite_set_size_rules", || {
         let source_code = r#"
 $is_finite_set(power_set({1, 2, 3}))
-count(power_set({1, 2, 3})) = 2^count({1, 2, 3})
-count({1, 2, 3}) = 3
-2^count({1, 2, 3}) = 2^3 = 8
-count(power_set({1, 2, 3})) = 8
+finite_set_size(power_set({1, 2, 3})) = 2^finite_set_size({1, 2, 3})
+finite_set_size({1, 2, 3}) = 3
+2^finite_set_size({1, 2, 3}) = 2^3 = 8
+finite_set_size(power_set({1, 2, 3})) = 8
 "#;
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime
-            .new_file_path_new_env_new_name_scope("finite_power_set_has_builtin_cardinality_rules");
+        runtime.new_file_path_new_env_new_name_scope(
+            "finite_power_set_has_builtin_finite_set_size_rules",
+        );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             run_succeeded,
-            "finite_power_set_has_builtin_cardinality_rules failed:\n{}",
+            "finite_power_set_has_builtin_finite_set_size_rules failed:\n{}",
             run_output
         );
     });
+}
+
+#[test]
+fn finite_set_size_is_canonical_and_count_is_available_for_user_definitions() {
+    run_with_large_stack(
+        "finite_set_size_is_canonical_and_count_is_available_for_user_definitions",
+        || {
+            let source_code = r#"
+finite_set_size({1, 2, 3}) = 3
+finite_set_size(1...5) = 5
+
+have fn count(n N) N = n
+count(2) = 2
+"#;
+
+            let mut runtime = Runtime::new_with_builtin_code();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_size_is_canonical_and_count_is_available_for_user_definitions",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "finite_set_size or user-defined count failed:\n{}",
+                run_output
+            );
+
+            let mut legacy_runtime = Runtime::new_with_builtin_code();
+            legacy_runtime.new_file_path_new_env_new_name_scope("legacy_count_is_not_builtin");
+            let (stmt_results, runtime_error) =
+                run_source_code("count({1, 2}) = 2", &mut legacy_runtime);
+            let (legacy_succeeded, legacy_output) = render_run_source_code_output(
+                &legacy_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+
+            assert!(
+                !legacy_succeeded,
+                "legacy count unexpectedly remained builtin:\n{}",
+                legacy_output
+            );
+
+            let mut wrong_arity_runtime = Runtime::new_with_builtin_code();
+            wrong_arity_runtime
+                .new_file_path_new_env_new_name_scope("finite_set_size_rejects_wrong_arity");
+            let (stmt_results, runtime_error) =
+                run_source_code("finite_set_size({1}, {2}) = 2", &mut wrong_arity_runtime);
+            let (wrong_arity_succeeded, wrong_arity_output) = render_run_source_code_output(
+                &wrong_arity_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+
+            assert!(
+                !wrong_arity_succeeded,
+                "finite_set_size accepted two arguments:\n{}",
+                wrong_arity_output
+            );
+            assert!(
+                wrong_arity_output.contains("finite_set_size expects 1 argument"),
+                "wrong-arity diagnostic should name finite_set_size:\n{}",
+                wrong_arity_output
+            );
+        },
+    );
 }
 
 #[test]

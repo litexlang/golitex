@@ -154,7 +154,7 @@ impl Obj {
                 Obj::Tuple(tuple) => Some(Number::new(tuple.args.len().to_string())),
                 _ => None,
             },
-            Obj::Count(count) => match &*count.set {
+            Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
                 Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
                 Obj::ClosedRange(cr) => {
                     let a = cr.start.evaluate_to_normalized_decimal_number()?;
@@ -170,11 +170,12 @@ impl Obj {
                 Obj::Cart(cart) => {
                     let mut acc = "1".to_string();
                     for arg in cart.args.iter() {
-                        let factor_count = Obj::Count(Count::new((**arg).clone()))
-                            .evaluate_to_normalized_decimal_number()?;
+                        let factor_finite_set_size =
+                            Obj::FiniteSetSize(FiniteSetSize::new((**arg).clone()))
+                                .evaluate_to_normalized_decimal_number()?;
                         acc = mul_signed_decimal_str(
                             acc.trim(),
-                            factor_count.normalized_value.trim(),
+                            factor_finite_set_size.normalized_value.trim(),
                         );
                     }
                     Some(Number::new(acc))

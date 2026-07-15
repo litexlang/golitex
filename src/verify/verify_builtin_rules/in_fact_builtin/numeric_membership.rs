@@ -68,12 +68,12 @@ impl Runtime {
                 FnObjHead::AnonymousFnLiteral(anon) => Some((*anon.body.ret_set).clone()),
                 _ => {
                     let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                    self.get_object_in_fn_set_or_restrict(&function_name_obj)
+                    self.get_object_in_fn_set(&function_name_obj)
                         .map(|fn_set_body| (*fn_set_body.ret_set).clone())
                 }
             },
             _ => self
-                .get_object_in_fn_set_or_restrict(func)
+                .get_object_in_fn_set(func)
                 .map(|fn_set_body| (*fn_set_body.ret_set).clone()),
         }
     }

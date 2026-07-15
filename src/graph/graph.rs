@@ -1168,7 +1168,7 @@ impl DepCollector {
             Obj::Cup(x) => self.collect_obj(&x.left),
             Obj::Cap(x) => self.collect_obj(&x.left),
             Obj::PowerSet(x) => self.collect_obj(&x.set),
-            Obj::Count(x) => self.collect_obj(&x.set),
+            Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
             Obj::FnRange(x) => self.collect_obj(&x.function),
             Obj::FnRangeOn(x) => {
                 self.collect_obj(&x.function);

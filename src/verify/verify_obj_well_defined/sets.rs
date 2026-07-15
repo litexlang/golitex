@@ -479,12 +479,12 @@ impl Runtime {
         Ok(())
     }
 
-    pub(in crate::verify) fn verify_count_well_defined(
+    pub(in crate::verify) fn verify_finite_set_size_well_defined(
         &mut self,
-        x: &Count,
+        x: &FiniteSetSize,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        // `count` is well-defined only for finite sets.
+        // `finite_set_size` is well-defined only for finite sets.
         let is_finite_set_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
@@ -523,21 +523,32 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         let target_fn_set = self.fn_range_on_target_fn_set(x, default_line_file())?;
-        let restrict_fact = RestrictFact::new(
-            x.function.as_ref().clone(),
-            target_fn_set.into(),
-            default_line_file(),
-        );
-        let restrict_result =
-            self.verify_restrict_fact_using_its_definition(&restrict_fact, verify_state)?;
-        match restrict_result {
-            Some(result) if result.is_true() => Ok(()),
-            _ => Err(RuntimeError::from(WellDefinedRuntimeError(
+        let Some(function_body) = self.get_fn_range_on_function_body(&x.function) else {
+            unreachable!("fn_range_on_target_fn_set already checked the function body")
+        };
+        let actual_names =
+            ParamGroupWithSet::collect_param_names(&function_body.params_def_with_set);
+        let expected_names =
+            ParamGroupWithSet::collect_param_names(&target_fn_set.body.params_def_with_set);
+        let same_signature = if actual_names.len() == expected_names.len() {
+            let shared_names = self.generate_random_unused_names(actual_names.len());
+            self.fn_set_alpha_renamed_for_display_compare(&function_body, &shared_names)?
+                .to_string()
+                == self
+                    .fn_set_alpha_renamed_for_display_compare(&target_fn_set.body, &shared_names)?
+                    .to_string()
+        } else {
+            false
+        };
+        if same_signature {
+            Ok(())
+        } else {
+            Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "fn_range_on cannot verify that {} is defined on {}",
-                    x.function, x.set
+                    "fn_range_on requires {} to have domain {} exactly; pass an explicit restriction such as fn(x {}) T {{{}(x)}}",
+                    x.function, x.set, x.set, x.function
                 )),
-            ))),
+            )))
         }
     }
 

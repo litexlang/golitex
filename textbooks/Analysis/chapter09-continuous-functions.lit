@@ -4178,7 +4178,7 @@ thm equal_functions_have_equal_function_limits:
 
 # Restricting the domain to any subset which remains adherent at `x0` preserves
 # the same epsilon-delta limit.
-thm function_limit_restricts_to_adherent_subset:
+thm function_limit_on_adherent_subset:
     ? forall E, F power_set(R), f fn(x E) R, x0, L R:
         F $subset E
         $is_adherent_point(F, x0)
@@ -4205,7 +4205,7 @@ thm function_limit_restricts_to_adherent_subset:
         $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon)
     $has_function_limit(F, fn(x F) R {f(x)}, x0, L)
 
-thm function_limit_restricts_to_nonzero_domain:
+thm function_limit_on_nonzero_domain:
     ? forall E power_set(R), f, g fn(x E) R, x0, L, M R:
         $has_function_limit(E, f, x0, L)
         $has_function_limit(E, g, x0, M)
@@ -4295,7 +4295,7 @@ thm function_limit_quotient:
             $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
     # The quotient law is proved by restricting to the nonzero denominator
     # domain, proving the reciprocal limit there, and multiplying limits.
-    by thm function_limit_restricts_to_nonzero_domain(E, f, g, x0, L, M)
+    by thm function_limit_on_nonzero_domain(E, f, g, x0, L, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L)
     by thm function_limit_reciprocal(E, g, x0, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M)
@@ -4348,7 +4348,7 @@ thm function_limit_quotient_when_nonzero_on_domain:
         y $in {x E: g(x) != 0}
     E $subset {x E: g(x) != 0}
     $is_adherent_point(E, x0)
-    by thm function_limit_restricts_to_adherent_subset({x E: g(x) != 0}, E, quotient_on_nonzero_domain, x0, L / M)
+    by thm function_limit_on_adherent_subset({x E: g(x) != 0}, E, quotient_on_nonzero_domain, x0, L / M)
     $has_function_limit(E, fn(x E) R {quotient_on_nonzero_domain(x)}, x0, L / M)
     claim:
         ? forall y E:
@@ -4843,7 +4843,7 @@ smaller neighborhood of x0 inside the original domain.
 
 have fn local_part(E power_set(R), x0 R, delta R_pos) power_set(R) = {x R: x $in E and x $in '(x0 - delta, x0 + delta)}
 
-thm function_limit_restricts_to_local_part:
+thm function_limit_on_local_part:
     ? forall E power_set(R), f fn(x E) R, x0, L R, delta R_pos:
         $has_function_limit(E, f, x0, L)
         =>:

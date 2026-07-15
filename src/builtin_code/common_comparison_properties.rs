@@ -143,10 +143,10 @@ trust:
     forall a, b Z:
         a <= b
         =>:
-            count(closed_range(a, b)) = b - a + 1
+            finite_set_size(closed_range(a, b)) = b - a + 1
 
     forall a, b Z:
         a < b
         =>:
-            count(range(a, b)) = b - a   
+            finite_set_size(range(a, b)) = b - a
 "#;

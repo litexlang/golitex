@@ -74,6 +74,7 @@ fn runtime_contract_builtin_and_clear() {
 
 mod core_definitions_and_syntax;
 mod definitions_and_runtime;
+mod finite_set_induction;
 mod functions_sets_and_iterated;
 mod numeric_and_set_rules;
 mod output_contracts;

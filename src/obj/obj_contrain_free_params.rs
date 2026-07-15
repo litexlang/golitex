@@ -66,7 +66,7 @@ impl Obj {
                 .args
                 .iter()
                 .any(|obj| obj.contains_forall_free_param_obj()),
-            Obj::Count(x) => x.set.contains_forall_free_param_obj(),
+            Obj::FiniteSetSize(x) => x.set.contains_forall_free_param_obj(),
             Obj::FnRange(x) => x.function.contains_forall_free_param_obj(),
             Obj::FnRangeOn(x) => {
                 x.function.contains_forall_free_param_obj()

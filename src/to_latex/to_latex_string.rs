@@ -538,11 +538,11 @@ impl OneSideInfinityIntervalObj {
     }
 }
 
-impl Count {
+impl FiniteSetSize {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\operatorname{{{}}}\left( {}\right)",
-            COUNT,
+            FINITE_SET_SIZE,
             self.set.to_latex_string()
         )
     }
@@ -1603,17 +1603,6 @@ impl NotNormalAtomicFact {
     }
 }
 
-impl NotRestrictFact {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\neg \left( {} \mathrel{{\$}} \mathrm{{{}}}\, {} \right)",
-            self.obj.to_latex_string(),
-            RESTRICTS_TO,
-            self.obj_cannot_restrict_to_fn_set.to_latex_string()
-        )
-    }
-}
-
 impl NotSubsetFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1761,17 +1750,6 @@ impl Range {
             RANGE,
             self.start.to_latex_string(),
             self.end.to_latex_string()
-        )
-    }
-}
-
-impl RestrictFact {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"{} \mathrel{{\$}} \mathrm{{{}}}\, {}",
-            self.obj.to_latex_string(),
-            RESTRICTS_TO,
-            self.obj_can_restrict_to_fn_set.to_latex_string()
         )
     }
 }
@@ -2016,8 +1994,6 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(x) => x.to_latex_string(),
             AtomicFact::SubsetFact(x) => x.to_latex_string(),
             AtomicFact::SupersetFact(x) => x.to_latex_string(),
-            AtomicFact::RestrictFact(x) => x.to_latex_string(),
-            AtomicFact::NotRestrictFact(x) => x.to_latex_string(),
             AtomicFact::NotNormalAtomicFact(x) => x.to_latex_string(),
             AtomicFact::NotEqualFact(x) => x.to_latex_string(),
             AtomicFact::NotLessFact(x) => x.to_latex_string(),
@@ -2082,7 +2058,7 @@ impl Obj {
             Obj::Proj(x) => x.to_latex_string(),
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
-            Obj::Count(x) => x.to_latex_string(),
+            Obj::FiniteSetSize(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
             Obj::FnRangeOn(x) => x.to_latex_string(),
             Obj::Replacement(x) => x.to_latex_string(),
@@ -2195,6 +2171,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByCasesStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByContraStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByInducStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByForStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByExtensionStmt(x)) => x.to_latex_string(),

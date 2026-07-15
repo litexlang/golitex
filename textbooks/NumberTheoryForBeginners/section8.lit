@@ -1,0 +1,82 @@
+# Section VIII: subgroups, cosets, Lagrange's theorem, and Euler's theorem.
+
+local import section7
+trust local import section1
+trust local import section3
+trust local import section2
+
+prop left_coset_member(G set, mul fn(x, y G) G, H power_set(G), x G, y G):
+    exist h G st {h $in H, y = mul(x, h)}
+
+prop left_coset_Z_member(H power_set(Z), x, y Z):
+    exist h Z st {h $in H, y = x + h}
+
+have fn left_coset_Z(H power_set(Z), x Z) power_set(Z) = {y Z: $left_coset_Z_member(H, x, y)}
+
+prop cosets_disjoint(G set, mul fn(x, y G) G, H power_set(G), x, y G):
+    not exist z G st {z $in H}
+
+prop coset_equality_or_disjoint(G set, mul fn(x, y G) G, H power_set(G), x, y G):
+    x = y
+
+prop subgroup_coset_partition(G set, mul fn(x, y G) G, one G, H power_set(G)):
+    $is_subgroup(G, mul, one, H)
+    forall x G:
+        x $in G
+        =>:
+            x $in H
+
+prop finite_group(G set, mul fn(x, y G) G, one G):
+    $is_group(G, mul, one)
+    $is_finite_set(G)
+
+prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
+    $is_subgroup(G, mul, one, H)
+    $is_finite_set(G)
+    $is_finite_set(H)
+    $divides_Z(finite_set_size(H), finite_set_size(G))
+
+abstract_prop mul_power(mul, x, n, y)
+
+prop element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
+    $mul_power(mul, x, n, one)
+    forall k N_pos:
+        $mul_power(mul, x, k, one)
+        =>:
+            n <= k
+
+prop euler_theorem_conclusion(m N_pos, a Z):
+    $relatively_prime_Z(a, m)
+    a ^ euler_phi(m) % m = 1
+
+# The coset partition and finite counting are the exact source-level debt for
+# Lagrange's theorem; the statement and divisibility conclusion stay explicit.
+trust:
+    forall G set, mul fn(x, y G) G, one G, H power_set(G):
+        $is_subgroup(G, mul, one, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $subgroup_order_divides_group_order(G, mul, one, H)
+
+thm theorem_VIII_Lagrange:
+    ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
+        $is_subgroup(G, mul, one, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $subgroup_order_divides_group_order(G, mul, one, H)
+    $subgroup_order_divides_group_order(G, mul, one, H)
+
+trust:
+    forall m N_pos, a Z:
+        $relatively_prime_Z(a, m)
+        =>:
+            $euler_theorem_conclusion(m, a)
+
+thm theorem_VIII_Euler:
+    ? forall m N_pos, a Z:
+        $relatively_prime_Z(a, m)
+        =>:
+            $euler_theorem_conclusion(m, a)
+    $euler_theorem_conclusion(m, a)

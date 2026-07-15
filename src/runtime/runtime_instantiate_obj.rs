@@ -68,7 +68,9 @@ impl Runtime {
             Obj::Proj(inner) => self.inst_proj(inner, param_to_arg_map, param_obj_type),
             Obj::TupleDim(inner) => self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type),
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
-            Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
+            Obj::FiniteSetSize(inner) => {
+                self.inst_finite_set_size(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
             Obj::Replacement(inner) => {
@@ -796,13 +798,18 @@ impl Runtime {
         Ok(Tuple::new(elements).into())
     }
 
-    pub fn inst_count(
+    pub fn inst_finite_set_size(
         &self,
-        count: &Count,
+        finite_set_size: &FiniteSetSize,
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?).into())
+        Ok(FiniteSetSize::new(self.inst_obj(
+            &finite_set_size.set,
+            param_to_arg_map,
+            param_obj_type,
+        )?)
+        .into())
     }
 
     pub fn inst_fn_range(

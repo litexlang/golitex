@@ -587,34 +587,6 @@ impl Runtime {
                 ])),
                 _ => Ok(None),
             },
-            AtomicFact::RestrictFact(fact_restrict_fact) => match _other {
-                AtomicFact::RestrictFact(other_restrict_fact) => Ok(Some(vec![
-                    (
-                        fact_restrict_fact.obj.clone(),
-                        other_restrict_fact.obj.clone(),
-                    ),
-                    (
-                        fact_restrict_fact.obj_can_restrict_to_fn_set.clone(),
-                        other_restrict_fact.obj_can_restrict_to_fn_set.clone(),
-                    ),
-                ])),
-                _ => Ok(None),
-            },
-            AtomicFact::NotRestrictFact(fact_not_restrict_fact) => match _other {
-                AtomicFact::NotRestrictFact(other_not_restrict_fact) => Ok(Some(vec![
-                    (
-                        fact_not_restrict_fact.obj.clone(),
-                        other_not_restrict_fact.obj.clone(),
-                    ),
-                    (
-                        fact_not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
-                        other_not_restrict_fact
-                            .obj_cannot_restrict_to_fn_set
-                            .clone(),
-                    ),
-                ])),
-                _ => Ok(None),
-            },
             AtomicFact::FnEqualInFact(f) => match _other {
                 AtomicFact::FnEqualInFact(o) => Ok(Some(vec![
                     (f.left.clone(), o.left.clone()),

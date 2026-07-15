@@ -197,7 +197,7 @@ trust:
             a % m = k
 
     forall a finite_set:
-        count(a) = 0
+        finite_set_size(a) = 0
         =>:
             not $is_nonempty_set(a)
             a = {}

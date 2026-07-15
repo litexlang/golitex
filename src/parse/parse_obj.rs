@@ -1099,13 +1099,13 @@ impl Runtime {
             })?;
             return Ok(CartDim::new(value).into());
         }
-        if tok == COUNT {
+        if tok == FINITE_SET_SIZE {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "count expects 1 argument".to_string(),
+                        "finite_set_size expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -1114,12 +1114,12 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "count expects 1 argument".to_string(),
+                        "finite_set_size expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(Count::new(value).into());
+            return Ok(FiniteSetSize::new(value).into());
         }
         if tok == FN_RANGE {
             tb.skip()?;
@@ -2232,6 +2232,18 @@ mod module_qualification_parse_tests {
             panic!("expected bare builtin identifier");
         };
         assert_eq!(id.name, "pi");
+    }
+
+    #[test]
+    fn module_qualification_keeps_finite_set_size_builtin_bare() {
+        let mut rt = Runtime::new();
+        set_test_module_name(&mut rt, "Nat");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "finite_set_size({1, 2})");
+
+        let Obj::FiniteSetSize(_) = obj else {
+            panic!("expected finite_set_size builtin object");
+        };
     }
 
     #[test]

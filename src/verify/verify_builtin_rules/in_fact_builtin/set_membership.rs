@@ -711,14 +711,15 @@ impl Runtime {
     }
 
     // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
-    // Example: if `A finite_set`, then `count(A) $in N` and `count(A) $in R`.
-    pub(super) fn verify_count_in_standard_number_set(
+    // Example: if `A finite_set`, then `finite_set_size(A) $in N` and `finite_set_size(A) $in R`.
+    pub(super) fn verify_finite_set_size_in_standard_number_set(
         &mut self,
         in_fact: &InFact,
-        count: &Count,
+        finite_set_size: &FiniteSetSize,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let finite_fact = IsFiniteSetFact::new((*count.set).clone(), in_fact.line_file.clone());
+        let finite_fact =
+            IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
         let finite_result = self.verify_non_equational_known_then_builtin_rules_only(
             &finite_fact.into(),
             verify_state,
@@ -726,7 +727,7 @@ impl Runtime {
         if finite_result.is_true() {
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
-                "count of a finite set is a natural number",
+                "finite_set_size of a finite set is a natural number",
             ));
         }
         Ok((StmtUnknown::new()).into())

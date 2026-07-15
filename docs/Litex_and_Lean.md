@@ -889,9 +889,9 @@ example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x �
 ```litex
 by contra:
     ? {1, 2, 3} != {1, 2}
-    count({1, 2, 3}) = 3
-    count({1, 2}) = 2
-    count({1, 2, 3}) = count({1, 2})
+    finite_set_size({1, 2, 3}) = 3
+    finite_set_size({1, 2}) = 2
+    finite_set_size({1, 2, 3}) = finite_set_size({1, 2})
     impossible 3 = 2
 ```
 
@@ -903,14 +903,14 @@ example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
   norm_num at hcard
 ```
 
-**What differs.** Litex follows the count contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
+**What differs.** Litex follows the finite-set-size contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
 
 ```litex
 by contra:
     ? {1, 2, 3} != {1, 2}
-    count({1, 2, 3}) = 3
-    count({1, 2}) = 2
-    count({1, 2, 3}) = count({1, 2})
+    finite_set_size({1, 2, 3}) = 3
+    finite_set_size({1, 2}) = 2
+    finite_set_size({1, 2, 3}) = finite_set_size({1, 2})
     impossible 3 = 2
 ```
 

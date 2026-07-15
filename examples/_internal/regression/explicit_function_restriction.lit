@@ -1,0 +1,18 @@
+prop is_integer_endomorphism(f fn(x Z) Z):
+    forall x Z:
+        f(x) = f(x)
+
+have fn g(x R) Z = 0
+
+# A function expected on Z is passed as the explicit value g | Z.
+$is_integer_endomorphism(fn(x Z) Z {g(x)})
+
+thm function_space_membership_from_pointwise_values:
+    ? forall I set, X set, f fn(alpha I) cup({X}):
+        forall alpha I:
+            f(alpha) $in X
+        =>:
+            f $in fn(alpha I) X
+    forall alpha I:
+        f(alpha) $in X
+    f $in fn(alpha I) X

@@ -22,7 +22,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let vs = VerifyState::new(0, true);
         if let Some(result) =
-            self.try_verify_finite_nonempty_set_count_at_least_one(atomic_fact, &vs)?
+            self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, &vs)?
         {
             return Ok(result);
         }
@@ -629,13 +629,13 @@ impl Runtime {
     }
 
     // A nonempty finite set has at least one element.
-    // Example: `$is_finite_set(S)`, `$is_nonempty_set(S)` => `count(S) >= 1`.
-    fn try_verify_finite_nonempty_set_count_at_least_one(
+    // Example: `$is_finite_set(S)`, `$is_nonempty_set(S)` => `finite_set_size(S) >= 1`.
+    fn try_verify_finite_nonempty_set_size_at_least_one(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (count_obj, line_file) = match atomic_fact {
+        let (finite_set_size_obj, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(right) = self.resolve_obj_to_number(&f.right) else {
                     return Ok(None);
@@ -662,10 +662,10 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let Obj::Count(count) = count_obj else {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_obj else {
             return Ok(None);
         };
-        let set = (*count.set).clone();
+        let set = (*finite_set_size.set).clone();
 
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
         let finite_result =
@@ -685,7 +685,7 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 atomic_fact.clone().into(),
                 InferResult::new(),
-                "finite_nonempty_set_count_at_least_one".to_string(),
+                "finite_nonempty_set_size_at_least_one".to_string(),
                 vec![finite_result, nonempty_result],
             )
             .into(),

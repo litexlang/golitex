@@ -7,6 +7,7 @@ mod contra_by_stmt;
 mod enumerate_by_stmt;
 mod enumerate_range_by_stmt;
 mod extension_by_stmt;
+mod finite_set_induc_by_stmt;
 mod for_by_stmt;
 mod helpers_by_stmt;
 mod induc_by_stmt;

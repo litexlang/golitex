@@ -1,0 +1,25 @@
+"""
+Finite-set induction has an explicit empty case and a fresh-element insertion
+case. It stores the resulting universal fact over `finite_set`.
+"""
+
+abstract_prop finite_set_induction_regression(P)
+
+trust $finite_set_induction_regression({})
+
+trust:
+    forall x set, S finite_set:
+        not x $in S
+        $finite_set_induction_regression(S)
+        =>:
+            $finite_set_induction_regression(union({x}, S))
+
+by induc P:
+    ? $finite_set_induction_regression(P)
+    ? from P = {}:
+        $finite_set_induction_regression({})
+    ? induc x, S:
+        $finite_set_induction_regression(S)
+        $finite_set_induction_regression(union({x}, S))
+
+$finite_set_induction_regression({1, 2})

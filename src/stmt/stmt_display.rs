@@ -90,6 +90,7 @@ impl fmt::Display for ByStmt {
             ByStmt::ByCasesStmt(x) => write!(f, "{}", x),
             ByStmt::ByContraStmt(x) => write!(f, "{}", x),
             ByStmt::ByEnumerateFiniteSetStmt(x) => write!(f, "{}", x),
+            ByStmt::ByFiniteSetInducStmt(x) => write!(f, "{}", x),
             ByStmt::ByInducStmt(x) => write!(f, "{}", x),
             ByStmt::ByForStmt(x) => write!(f, "{}", x),
             ByStmt::ByExtensionStmt(x) => write!(f, "{}", x),

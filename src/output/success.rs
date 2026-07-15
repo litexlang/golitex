@@ -754,7 +754,9 @@ fn by_induc_verification_value(
     verification: &ByInducVerificationResult,
     inside_results: &[StmtResult],
 ) -> JsonValue {
-    let proof_type = if verification.strong {
+    let proof_type = if verification.finite_set {
+        "by finite-set induction proof"
+    } else if verification.strong {
         "by strong_induc proof"
     } else {
         "by induc proof"

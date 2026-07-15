@@ -201,7 +201,7 @@ impl Runtime {
     }
 
     // A constant finite-set summand is the set cardinality times the constant.
-    // Example: `finite_set_sum(X, fn(x X) R {c}) = count(X) * c`.
+    // Example: `finite_set_sum(X, fn(x X) R {c}) = finite_set_size(X) * c`.
     pub(crate) fn try_verify_finite_set_sum_constant_summand(
         &mut self,
         left: &Obj,
@@ -236,9 +236,9 @@ impl Runtime {
                 continue;
             }
             let c = (*af.equal_to).clone();
-            let count: Obj = Count::new((*s.set).clone()).into();
-            let m1: Obj = Mul::new(count.clone(), c.clone()).into();
-            let m2: Obj = Mul::new(c, count).into();
+            let finite_set_size: Obj = FiniteSetSize::new((*s.set).clone()).into();
+            let m1: Obj = Mul::new(finite_set_size.clone(), c.clone()).into();
+            let m2: Obj = Mul::new(c, finite_set_size).into();
             if self
                 .verify_objs_are_equal_in_equality_builtin(
                     other,
@@ -773,9 +773,9 @@ impl Runtime {
     }
 
     // Range sums over two bijective enumerations of the same finite set are equal.
-    // Example: from `forall x X: exist! i 1...count(X) st {g(i) = x}` and the
-    // analogous fact for `h`, prove `sum(1, count(X), fn(i 1...count(X)) R {f(g(i))})
-    // = sum(1, count(X), fn(i 1...count(X)) R {f(h(i))})`.
+    // Example: from `forall x X: exist! i 1...finite_set_size(X) st {g(i) = x}` and the
+    // analogous fact for `h`, prove `sum(1, finite_set_size(X), fn(i 1...finite_set_size(X)) R {f(g(i))})
+    // = sum(1, finite_set_size(X), fn(i 1...finite_set_size(X)) R {f(h(i))})`.
     pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
         &mut self,
         left: &Obj,

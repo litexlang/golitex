@@ -101,6 +101,7 @@ impl Runtime {
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
                 self.exec_by_enumerate_finite_set_stmt(s)
             }
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => self.exec_by_finite_set_induc_stmt(s),
             Stmt::By(ByStmt::ByInducStmt(s)) => self.exec_by_induc_stmt(s),
             Stmt::By(ByStmt::ByForStmt(s)) => self.exec_by_for_stmt(s),
             Stmt::By(ByStmt::ByExtensionStmt(s)) => self.exec_by_extension_stmt(s),
@@ -229,6 +230,9 @@ impl Runtime {
             }
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
                 self.exec_by_enumerate_finite_set_stmt_affect_environment_only(s)
+            }
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => {
+                self.exec_by_finite_set_induc_stmt_affect_environment_only(s)
             }
             Stmt::By(ByStmt::ByInducStmt(s)) => self.exec_by_induc_stmt_affect_environment_only(s),
             Stmt::By(ByStmt::ByForStmt(s)) => self.exec_by_for_stmt_affect_environment_only(s),

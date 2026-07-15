@@ -29,7 +29,7 @@ impl Runtime {
             );
         }
 
-        if let Some(result) = self.try_verify_nonempty_finite_set_from_positive_count(
+        if let Some(result) = self.try_verify_nonempty_finite_set_from_positive_finite_set_size(
             is_nonempty_set_fact,
             _verify_state,
         )? {
@@ -484,8 +484,8 @@ impl Runtime {
     }
 
     // A finite set with at least one element is nonempty.
-    // Example: `$is_finite_set(S)`, `count(S) >= 1` => `$is_nonempty_set(S)`.
-    fn try_verify_nonempty_finite_set_from_positive_count(
+    // Example: `$is_finite_set(S)`, `finite_set_size(S) >= 1` => `$is_nonempty_set(S)`.
+    fn try_verify_nonempty_finite_set_from_positive_finite_set_size(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         verify_state: &VerifyState,
@@ -499,15 +499,17 @@ impl Runtime {
             return Ok(None);
         }
 
-        let count_at_least_one: AtomicFact = GreaterEqualFact::new(
-            Count::new(is_nonempty_set_fact.set.clone()).into(),
+        let finite_set_size_at_least_one: AtomicFact = GreaterEqualFact::new(
+            FiniteSetSize::new(is_nonempty_set_fact.set.clone()).into(),
             Number::new("1".to_string()).into(),
             line_file,
         )
         .into();
-        let count_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&count_at_least_one)?;
-        if !count_result.is_true() {
+        let finite_set_size_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                &finite_set_size_at_least_one,
+            )?;
+        if !finite_set_size_result.is_true() {
             return Ok(None);
         }
 
@@ -515,8 +517,8 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 is_nonempty_set_fact.clone().into(),
                 InferResult::new(),
-                "nonempty_finite_set_from_positive_count".to_string(),
-                vec![finite_result, count_result],
+                "nonempty_finite_set_from_positive_finite_set_size".to_string(),
+                vec![finite_result, finite_set_size_result],
             )
             .into(),
         ))

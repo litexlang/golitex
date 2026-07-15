@@ -280,8 +280,11 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(boxed_arg.as_ref(), coverage_by_forall_param);
             }
         }
-        Obj::Count(count) => {
-            mark_forall_param_coverage_in_obj(count.set.as_ref(), coverage_by_forall_param);
+        Obj::FiniteSetSize(finite_set_size) => {
+            mark_forall_param_coverage_in_obj(
+                finite_set_size.set.as_ref(),
+                coverage_by_forall_param,
+            );
         }
         Obj::FnRange(fn_range) => {
             mark_forall_param_coverage_in_obj(fn_range.function.as_ref(), coverage_by_forall_param);
@@ -517,20 +520,6 @@ fn mark_forall_param_coverage_in_atomic_fact(
         AtomicFact::NotSupersetFact(fact) => {
             mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
-        }
-        AtomicFact::RestrictFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.obj, coverage_by_forall_param);
-            mark_forall_param_coverage_in_obj(
-                &fact.obj_can_restrict_to_fn_set,
-                coverage_by_forall_param,
-            );
-        }
-        AtomicFact::NotRestrictFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.obj, coverage_by_forall_param);
-            mark_forall_param_coverage_in_obj(
-                &fact.obj_cannot_restrict_to_fn_set,
-                coverage_by_forall_param,
-            );
         }
         AtomicFact::FnEqualInFact(fact) => {
             mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);

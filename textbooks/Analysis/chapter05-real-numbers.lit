@@ -793,10 +793,10 @@ sequence of rationals. Two formal limits are equal when their Cauchy
 sequences are equivalent.
 """
 
-# This is the main bridge in Chapter 5.  A rational Cauchy sequence represents
-# a real number, and `has_formal_limit_in_Q(a, x)` records that the sequence
-# `a` represents the real `x`.  The rest of the chapter can then use ordinary
-# real arithmetic while still remembering the Cauchy-sequence origin.
+# This chapter records Tao's rational-Cauchy presentation using Litex's builtin
+# `R`.  A rational Cauchy sequence represents a real number when
+# `has_formal_limit_in_Q(a, x)`.  This is a compatibility surface, not a new
+# definition of the builtin real-number carrier.
 
 have fn dist_R(x, y R) R = abs(x - y)
 
@@ -829,6 +829,11 @@ prop has_formal_limit_in_Q(a seq(Q), x R):
 prop has_cauchy_sequence_representative_in_Q(x R):
     exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
 
+# Tao defines reals as equivalence classes of rational Cauchy sequences.  Litex
+# currently supplies `R` as a builtin carrier, so this is an explicit trusted
+# compatibility bridge: it states that every builtin real has such a
+# representative.  It is deliberately local to this chapter, not a builtin
+# axiom and not a definition of `R`.
 thm cauchy_sequence_representative_in_Q_exists:
     ? forall x R:
         $has_cauchy_sequence_representative_in_Q(x)
@@ -932,6 +937,18 @@ thm formal_limit_in_Q_unique:
         abs(x - y) < abs(x - y)
         abs(x - y) != abs(x - y)
         impossible abs(x - y) = abs(x - y)
+
+# Equivalent rational Cauchy representatives determine the same builtin real:
+# transfer the formal limit along equivalence, then use uniqueness of limits.
+thm equivalent_cauchy_sequences_have_same_formal_limit_in_Q:
+    ? forall a, b seq(Q), x, y R:
+        $has_formal_limit_in_Q(a, x)
+        $has_formal_limit_in_Q(b, y)
+        $is_equivalent_cauchy_sequence_in_Q(a, b)
+        =>:
+            x = y
+    by thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q(a, b, x)
+    by thm formal_limit_in_Q_unique(b, x, y)
 
 """
 Example 5.3.2. Informal decimal approximations suggest how a real number such
@@ -2987,11 +3004,11 @@ thm least_upper_bound_unique:
     M2 <= M1
     M1 = M2
 
-# The existence half of Theorem 5.5.9 is proved by bisection/bracketing from
-# sequential completeness of `R`: build lower endpoints in `E` and upper
-# endpoints, show the endpoints have a common limit, and prove that this common
-# limit is the least upper bound.  The local lemmas below isolate the epsilon
-# estimates, common-limit step, and order facts.
+# The checked recursive bisection core above keeps a lower endpoint that is not
+# an upper bound.  The older convergence-facing interface below still asks for
+# lower endpoints in `E`, global monotonicity, and eventual-width estimates;
+# its conversion from the checked core remains explicit proof debt.  The local
+# lemmas below isolate that legacy epsilon/common-limit route.
 
 prop is_cauchy_tail_in_R(a seq(R), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
@@ -3017,10 +3034,433 @@ prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
         =>:
             upper(n) - lower(n) < epsilon
 
+# A recursive bisection needs no choice function from `E`: a lower endpoint is
+# recorded as a number which is not an upper bound.  When the midpoint is not
+# an upper bound it becomes the next lower endpoint; otherwise it becomes the
+# next upper endpoint.
+
+prop is_not_upper_bound(E set, M R):
+    not $is_upper_bound(E, M)
+
+prop is_bisection_pair_state(E set, p cart(R, R)):
+    not $is_upper_bound(E, p[1])
+    $is_upper_bound(E, p[2])
+    p[1] <= p[2]
+
+prop has_bisection_step_invariants(p, q cart(R, R)):
+    p[1] <= q[1]
+    q[2] <= p[2]
+    q[2] - q[1] = (p[2] - p[1]) / 2
+
+prop is_bisection_pair_state_sequence(E set, pair fn(n N) cart(R, R)):
+    forall n N:
+        $is_bisection_pair_state(E, pair(n))
+    forall n N:
+        $has_bisection_step_invariants(pair(n), pair(n + 1))
+
+thm bisection_left_below_midpoint:
+    ? forall x, y R:
+        x <= y
+        =>:
+            x <= (x + y) / 2
+    x + x <= x + y
+    (x + x) / 2 <= (x + y) / 2
+    (x + x) / 2 = x
+    x <= (x + y) / 2
+
+thm bisection_midpoint_below_right:
+    ? forall x, y R:
+        x <= y
+        =>:
+            (x + y) / 2 <= y
+    x + y <= y + y
+    (x + y) / 2 <= (y + y) / 2
+    (y + y) / 2 = y
+    (x + y) / 2 <= y
+
+thm upper_midpoint_step_preserves_bisection_state:
+    ? forall E set, p cart(R, R):
+        $is_bisection_pair_state(E, p)
+        $is_upper_bound(E, (p[1] + p[2]) / 2)
+        =>:
+            $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
+            p[1] <= (p[1] + p[2]) / 2
+            (p[1] + p[2]) / 2 <= p[2]
+            (p[1] + p[2]) / 2 - p[1] = (p[2] - p[1]) / 2
+    not $is_upper_bound(E, p[1])
+    $is_upper_bound(E, (p[1] + p[2]) / 2)
+    p[1] <= p[2]
+    by thm bisection_left_below_midpoint(p[1], p[2])
+    by thm bisection_midpoint_below_right(p[1], p[2])
+    (p[1] + p[2]) / 2 - p[1] = (p[2] - p[1]) / 2
+    $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
+
+thm nonupper_midpoint_step_preserves_bisection_state:
+    ? forall E set, p cart(R, R):
+        $is_bisection_pair_state(E, p)
+        $is_not_upper_bound(E, (p[1] + p[2]) / 2)
+        =>:
+            $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
+            p[1] <= (p[1] + p[2]) / 2
+            (p[1] + p[2]) / 2 <= p[2]
+            p[2] - (p[1] + p[2]) / 2 = (p[2] - p[1]) / 2
+    not $is_upper_bound(E, (p[1] + p[2]) / 2)
+    $is_upper_bound(E, p[2])
+    p[1] <= p[2]
+    by thm bisection_left_below_midpoint(p[1], p[2])
+    by thm bisection_midpoint_below_right(p[1], p[2])
+    p[2] - (p[1] + p[2]) / 2 = (p[2] - p[1]) / 2
+    $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
+
+thm recursive_bisection_pair_states_exist:
+    ? forall E set, a E, b R:
+        E $subset R
+        $is_upper_bound(E, b)
+        =>:
+            exist pair fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair)}
+    have fn step(p cart(R, R)) cart(R, R) by cases:
+        case $is_upper_bound(E, (p[1] + p[2]) / 2): (p[1], (p[1] + p[2]) / 2)
+        case $is_not_upper_bound(E, (p[1] + p[2]) / 2): ((p[1] + p[2]) / 2, p[2])
+    have fn pair(n N) cart(R, R) by induc n from 0:
+        case n = 0: (a - 1, b)
+        case n > 0: step(pair(n - 1))
+    claim:
+        ? $is_bisection_pair_state(E, pair(0))
+        pair(0) = (a - 1, b)
+        by contra:
+            ? not $is_upper_bound(E, pair(0)[1])
+            $is_upper_bound(E, pair(0)[1])
+            pair(0)[1] = (a - 1, b)[1] = a - 1
+            a <= pair(0)[1]
+            a <= a - 1
+            impossible a <= a - 1
+        $is_upper_bound(E, pair(0)[2])
+        pair(0)[2] = (a - 1, b)[2] = b
+        a <= b
+        pair(0)[1] = a - 1
+        a - 1 < a <= b
+        pair(0)[1] <= pair(0)[2]
+        $is_bisection_pair_state(E, pair(0))
+    claim:
+        ? forall n N:
+            $is_bisection_pair_state(E, pair(n))
+        by induc n from 0:
+            ? $is_bisection_pair_state(E, pair(n))
+            ? from n = 0:
+                $is_bisection_pair_state(E, pair(0))
+            ? induc:
+                $is_bisection_pair_state(E, pair(n))
+                n + 1 > 0
+                pair(n + 1) = step(pair((n + 1) - 1))
+                (n + 1) - 1 = n
+                pair((n + 1) - 1) = pair(n)
+                pair(n + 1) = step(pair(n))
+                by cases:
+                    ? $is_bisection_pair_state(E, pair(n + 1))
+                    case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                        by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
+                        $is_bisection_pair_state(E, (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2))
+                        step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                        pair(n + 1) = step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                        $is_bisection_pair_state(E, pair(n + 1))
+                    case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                        by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
+                        $is_bisection_pair_state(E, ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2]))
+                        step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                        pair(n + 1) = step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                        $is_bisection_pair_state(E, pair(n + 1))
+    claim:
+        ? forall n N:
+            $has_bisection_step_invariants(pair(n), pair(n + 1))
+        $is_bisection_pair_state(E, pair(n))
+        n + 1 > 0
+        pair(n + 1) = step(pair((n + 1) - 1))
+        (n + 1) - 1 = n
+        pair((n + 1) - 1) = pair(n)
+        pair(n + 1) = step(pair(n))
+        by cases:
+            ? $has_bisection_step_invariants(pair(n), pair(n + 1))
+            case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
+                pair(n)[1] <= (pair(n)[1] + pair(n)[2]) / 2
+                (pair(n)[1] + pair(n)[2]) / 2 <= pair(n)[2]
+                (pair(n)[1] + pair(n)[2]) / 2 - pair(n)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                pair(n + 1) = step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                pair(n)[1] <= pair(n + 1)[1]
+                pair(n + 1)[2] <= pair(n)[2]
+                pair(n + 1)[2] - pair(n + 1)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                $has_bisection_step_invariants(pair(n), pair(n + 1))
+            case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
+                pair(n)[1] <= (pair(n)[1] + pair(n)[2]) / 2
+                (pair(n)[1] + pair(n)[2]) / 2 <= pair(n)[2]
+                pair(n)[2] - (pair(n)[1] + pair(n)[2]) / 2 = (pair(n)[2] - pair(n)[1]) / 2
+                step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                pair(n + 1) = step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                pair(n)[1] <= pair(n + 1)[1]
+                pair(n + 1)[2] <= pair(n)[2]
+                pair(n + 1)[2] - pair(n + 1)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                $has_bisection_step_invariants(pair(n), pair(n + 1))
+    $is_bisection_pair_state_sequence(E, pair)
+    witness exist pair0 fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair0)} from pair:
+        $is_bisection_pair_state_sequence(E, pair)
+
+prop is_recursive_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
+    E $subset R
+    forall n N_pos:
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    forall n N_pos:
+        lower(n) <= lower(n + 1)
+        upper(n + 1) <= upper(n)
+        upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+
+thm recursive_bisection_bracket_exists:
+    ? forall E set, a E, b R:
+        E $subset R
+        $is_upper_bound(E, b)
+        =>:
+            exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
+    by thm recursive_bisection_pair_states_exist(E, a, b)
+    obtain pair from exist pair fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair)}
+    have fn lower(n N_pos) R = pair(n - 1)[1]
+    have fn upper(n N_pos) R = pair(n - 1)[2]
+    claim:
+        ? forall n N_pos:
+            not $is_upper_bound(E, lower(n))
+            $is_upper_bound(E, upper(n))
+            lower(n) <= upper(n)
+        $is_bisection_pair_state(E, pair(n - 1))
+        lower(n) = pair(n - 1)[1]
+        upper(n) = pair(n - 1)[2]
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    claim:
+        ? forall n N_pos:
+            lower(n) <= lower(n + 1)
+            upper(n + 1) <= upper(n)
+            upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+        $has_bisection_step_invariants(pair(n - 1), pair((n - 1) + 1))
+        pair(n - 1)[1] <= pair((n - 1) + 1)[1]
+        pair((n - 1) + 1)[2] <= pair(n - 1)[2]
+        pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2
+        (n - 1) + 1 = n
+        pair((n - 1) + 1) = pair(n)
+        lower(n) = pair(n - 1)[1]
+        upper(n) = pair(n - 1)[2]
+        lower(n + 1) = pair((n + 1) - 1)[1]
+        upper(n + 1) = pair((n + 1) - 1)[2]
+        (n + 1) - 1 = n
+        pair((n + 1) - 1) = pair(n)
+        lower(n + 1) = pair(n)[1]
+        upper(n + 1) = pair(n)[2]
+        pair((n - 1) + 1)[1] = pair(n)[1]
+        pair((n - 1) + 1)[2] = pair(n)[2]
+        upper(n + 1) - lower(n + 1) = pair(n)[2] - pair(n)[1]
+        pair(n)[2] - pair(n)[1] = pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1]
+        pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2
+        (pair(n - 1)[2] - pair(n - 1)[1]) / 2 = (upper(n) - lower(n)) / 2
+        lower(n) <= lower(n + 1)
+        upper(n + 1) <= upper(n)
+        upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+    $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+    witness exist lower0, upper0 seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+
+# The recursive midpoint construction has an explicit geometric width bound.
+thm bisection_width_after_n_steps:
+    ? forall E set, lower, upper seq(R), n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+    by induc n from 1:
+        ? upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+        ? from n = 1:
+            1 - 1 = 0
+            2^0 = 1
+            (upper(1) - lower(1)) / 1 = upper(1) - lower(1)
+            upper(1) - lower(1) = (upper(1) - lower(1)) / 2^(1 - 1)
+        ? induc:
+            upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+            upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+            n = (n - 1) + 1
+            2^n = 2^((n - 1) + 1)
+            2^((n - 1) + 1) = 2^(n - 1) * 2^1
+            2^1 = 2
+            2^n = 2^(n - 1) * 2
+            n + 1 - 1 = n
+            2^(n + 1 - 1) = 2^n = 2^(n - 1) * 2
+            2^(n - 1) > 0
+            2^(n - 1) != 0
+            2^(n - 1) * 2 != 0
+            (upper(1) - lower(1)) / (2^(n - 1) * 2) = ((upper(1) - lower(1)) / 2^(n - 1)) / 2
+            (upper(1) - lower(1)) / 2^(n + 1 - 1) = (upper(1) - lower(1)) / (2^(n - 1) * 2) = ((upper(1) - lower(1)) / 2^(n - 1)) / 2
+            upper(n + 1) - lower(n + 1) = (upper(1) - lower(1)) / 2^(n + 1 - 1)
+
+thm positive_natural_le_two_power_predecessor:
+    ? forall n N_pos:
+        n <= 2^(n - 1)
+    by induc n from 1:
+        ? n <= 2^(n - 1)
+        ? from n = 1:
+            1 - 1 = 0
+            2^0 = 1
+            1 <= 2^(1 - 1)
+        ? induc:
+            n <= 2^(n - 1)
+            n >= 1
+            2^(n - 1) >= 0
+            2^(n - 1) * 2 >= n * 2
+            n * 2 = n + n
+            n >= 1
+            n + n >= n + 1
+            2^(n - 1) * 2 >= n + 1
+            n = (n - 1) + 1
+            2^n = 2^((n - 1) + 1)
+            2^((n - 1) + 1) = 2^(n - 1) * 2^1
+            2^1 = 2
+            2^n = 2^(n - 1) * 2
+            n + 1 - 1 = n
+            2^(n + 1 - 1) = 2^n = 2^(n - 1) * 2
+            n + 1 <= 2^(n + 1 - 1)
+
+thm recursive_bisection_width_eventually_below:
+    ? forall E set, lower, upper seq(R), epsilon R_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+    have D R = upper(1) - lower(1)
+    lower(1) <= upper(1)
+    upper(1) - lower(1) >= 0
+    D = upper(1) - lower(1)
+    D >= 0
+    D = 0 or D > 0
+    by cases:
+        ? exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        case D = 0:
+            witness exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)} from 1:
+                claim:
+                    ? forall n N_pos:
+                        n >= 1
+                        =>:
+                            upper(n) - lower(n) < epsilon
+                    by thm bisection_width_after_n_steps(E, lower, upper, n)
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    upper(1) - lower(1) = D = 0
+                    upper(n) - lower(n) = 0 / 2^(n - 1) = 0
+                    0 < epsilon
+                    upper(n) - lower(n) < epsilon
+                $is_bracket_width_below_after(lower, upper, epsilon, 1)
+        case D > 0:
+            have Dpos R_pos = D
+            Dpos = D
+            epsilon / Dpos $in R_pos
+            by thm archimedean_property(epsilon / Dpos)
+            obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / Dpos}
+            witness exist n1 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n1)} from n0:
+                claim:
+                    ? forall n N_pos:
+                        n >= n0
+                        =>:
+                            upper(n) - lower(n) < epsilon
+                    by thm bisection_width_after_n_steps(E, lower, upper, n)
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    upper(1) - lower(1) = D
+                    upper(n) - lower(n) = D / 2^(n - 1)
+                    by thm positive_natural_le_two_power_predecessor(n)
+                    n <= 2^(n - 1)
+                    n0 <= n <= 2^(n - 1)
+                    2^(n - 1) > 0
+                    n0 > 0
+                    2^(n - 1) * n0 > 0
+                    D * n0 <= D * 2^(n - 1)
+                    D / 2^(n - 1) = (D * n0) / (2^(n - 1) * n0)
+                    D / n0 = (D * 2^(n - 1)) / (2^(n - 1) * n0)
+                    (D * n0) / (2^(n - 1) * n0) <= (D * 2^(n - 1)) / (2^(n - 1) * n0)
+                    D / 2^(n - 1) <= D / n0
+                    n0 * Dpos > 0
+                    (1 / n0) * (n0 * Dpos) < (epsilon / Dpos) * (n0 * Dpos)
+                    (1 / n0) * (n0 * Dpos) = Dpos
+                    (epsilon / Dpos) * (n0 * Dpos) = epsilon * n0
+                    Dpos < epsilon * n0
+                    Dpos / n0 < (epsilon * n0) / n0
+                    (epsilon * n0) / n0 = epsilon
+                    Dpos / n0 < epsilon
+                    D / n0 = Dpos / n0 < epsilon
+                    upper(n) - lower(n) = D / 2^(n - 1) <= D / n0 < epsilon
+                $is_bracket_width_below_after(lower, upper, epsilon, n0)
+
+thm recursive_bisection_lower_le_add:
+    ? forall E set, lower, upper seq(R), k N, n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            lower(n) <= lower(n + k)
+    by induc k from 0:
+        ? lower(n) <= lower(n + k)
+        ? from k = 0:
+            n + 0 = n
+            lower(n + 0) = lower(n)
+            lower(n) <= lower(n)
+            lower(n) <= lower(n + 0)
+        ? induc:
+            lower(n) <= lower(n + k)
+            n + k $in N_pos
+            lower(n + k) <= lower(n + k + 1)
+            n + (k + 1) = n + k + 1
+            lower(n) <= lower(n + k) <= lower(n + k + 1) = lower(n + (k + 1))
+
+thm recursive_bisection_lower_le_of_le:
+    ? forall E set, lower, upper seq(R), j, k N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        j <= k
+        =>:
+            lower(j) <= lower(k)
+    k - j $in N
+    j + (k - j) = k
+    by thm recursive_bisection_lower_le_add(E, lower, upper, k - j, j)
+    lower(j) <= lower(j + (k - j))
+    lower(j + (k - j)) = lower(k)
+    lower(j) <= lower(k)
+
+thm recursive_bisection_upper_le_add:
+    ? forall E set, lower, upper seq(R), k N, n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            upper(n + k) <= upper(n)
+    by induc k from 0:
+        ? upper(n + k) <= upper(n)
+        ? from k = 0:
+            n + 0 = n
+            upper(n + 0) = upper(n)
+            upper(n) <= upper(n)
+            upper(n + 0) <= upper(n)
+        ? induc:
+            upper(n + k) <= upper(n)
+            n + k $in N_pos
+            upper(n + k + 1) <= upper(n + k)
+            n + (k + 1) = n + k + 1
+            upper(n + (k + 1)) = upper(n + k + 1) <= upper(n + k) <= upper(n)
+
+thm recursive_bisection_upper_le_of_le:
+    ? forall E set, lower, upper seq(R), j, k N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        j <= k
+        =>:
+            upper(k) <= upper(j)
+    k - j $in N
+    j + (k - j) = k
+    by thm recursive_bisection_upper_le_add(E, lower, upper, k - j, j)
+    upper(j + (k - j)) <= upper(j)
+    upper(k) = upper(j + (k - j))
+    upper(k) <= upper(j)
+
 prop is_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
     E $subset R
     forall n N_pos:
-        lower(n) $in E
+        not $is_upper_bound(E, lower(n))
         $is_upper_bound(E, upper(n))
         lower(n) <= upper(n)
     forall j, k N_pos:
@@ -3043,7 +3483,34 @@ thm bisection_bracket_exists:
             $has_bisection_bracket_for_supremum(E)
     have a0 E
     obtain b0 from exist b0 R st {$is_upper_bound(E, b0)}
-    trust exist lower, upper seq(R) st {$is_bisection_bracket_for_supremum(E, lower, upper)}
+    by thm recursive_bisection_bracket_exists(E, a0, b0)
+    obtain lower, upper from exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
+    claim:
+        ? forall n N_pos:
+            not $is_upper_bound(E, lower(n))
+            $is_upper_bound(E, upper(n))
+            lower(n) <= upper(n)
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    claim:
+        ? forall j, k N_pos:
+            j <= k
+            =>:
+                lower(j) <= lower(k)
+                upper(k) <= upper(j)
+        by thm recursive_bisection_lower_le_of_le(E, lower, upper, j, k)
+        lower(j) <= lower(k)
+        by thm recursive_bisection_upper_le_of_le(E, lower, upper, j, k)
+        upper(k) <= upper(j)
+    claim:
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        by thm recursive_bisection_width_eventually_below(E, lower, upper, epsilon)
+        exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+    $is_bisection_bracket_for_supremum(E, lower, upper)
+    witness exist lower0, upper0 seq(R) st {$is_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
+        $is_bisection_bracket_for_supremum(E, lower, upper)
     $has_bisection_bracket_for_supremum(E)
 
 thm bisection_lower_endpoint_tail_close:
@@ -3332,19 +3799,30 @@ thm bisection_lower_limit_below_upper_bound:
         dist_R(lower(n0), L) <= (L - B) / 2
         dist_R(lower(n0), L) = abs(lower(n0) - L)
         abs(lower(n0) - L) <= (L - B) / 2
-        lower(n0) $in E
-        lower(n0) <= B
-        L - lower(n0) >= L - B
         L - B > 0
-        L - B > (L - B) / 2
-        L - lower(n0) >= L - B > (L - B) / 2
-        L - lower(n0) > (L - B) / 2
-        -(lower(n0) - L) = L - lower(n0)
-        -(lower(n0) - L) <= abs(lower(n0) - L)
+        (L - B) / 2 > 0
         abs(lower(n0) - L) >= -(lower(n0) - L)
-        abs(lower(n0) - L) >= L - lower(n0) > (L - B) / 2
-        abs(lower(n0) - L) > (L - B) / 2
-        impossible abs(lower(n0) - L) <= (L - B) / 2
+        -(lower(n0) - L) = L - lower(n0)
+        L - lower(n0) <= abs(lower(n0) - L) <= (L - B) / 2
+        L - lower(n0) <= (L - B) / 2
+        -1 * (L - lower(n0)) >= -1 * ((L - B) / 2)
+        -1 * (L - lower(n0)) = lower(n0) - L
+        -1 * ((L - B) / 2) = -((L - B) / 2)
+        lower(n0) - L >= -((L - B) / 2)
+        lower(n0) - B = (lower(n0) - L) + (L - B)
+        (lower(n0) - L) + (L - B) >= -((L - B) / 2) + (L - B)
+        -((L - B) / 2) + (L - B) = (L - B) / 2
+        lower(n0) - B >= (L - B) / 2 > 0
+        lower(n0) > B
+        claim:
+            ? $is_upper_bound(E, lower(n0))
+            forall y E:
+                y <= B
+                B < lower(n0)
+                y <= lower(n0)
+            $is_upper_bound(E, lower(n0))
+        not $is_upper_bound(E, lower(n0))
+        impossible $is_upper_bound(E, lower(n0))
 
 thm common_limit_of_bisection_bracket_is_lub:
     ? forall E set, lower, upper seq(R), L R:

@@ -91,7 +91,6 @@ impl Runtime {
         false
     }
 
-    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restricts_to` targets.
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
@@ -102,44 +101,12 @@ impl Runtime {
         None
     }
 
-    /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
-    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restricts_to`) for well-defined/calls.
-    pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.as_ref() {
-                return Some(body.clone());
-            }
-            if let Some(restricts) = info.restrict_to.as_ref() {
-                if let Some((rb, _)) = restricts.last() {
-                    return Some(rb.clone());
-                }
-            }
-        }
-
-        None
-    }
-
     pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         self.get_object_in_fn_set(obj)
     }
 
-    pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
-        self.get_object_in_fn_set_or_restrict(obj)
-    }
-
-    pub fn get_cloned_object_in_fn_set_or_restrict_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.clone() {
-                return vec![body];
-            }
-            if let Some(restricts) = info.restrict_to.clone() {
-                return restricts
-                    .into_iter()
-                    .map(|(body, _)| body)
-                    .collect::<Vec<FnSetBody>>();
-            }
-        }
-        Vec::new()
+    pub fn get_cloned_object_in_fn_set_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
+        self.get_cloned_object_in_fn_set(obj).into_iter().collect()
     }
 
     pub fn get_fn_range_function_body(&self, function: &Obj) -> Option<FnSetBody> {
@@ -150,10 +117,7 @@ impl Runtime {
     }
 
     pub fn get_fn_range_on_function_body(&self, function: &Obj) -> Option<FnSetBody> {
-        match function {
-            Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
-            _ => self.get_object_in_fn_set_or_restrict(function),
-        }
+        self.get_fn_range_function_body(function)
     }
 
     pub fn fn_range_on_target_fn_set(
@@ -189,7 +153,7 @@ impl Runtime {
         .map_err(|e| {
             RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_cause(
-                    format!("failed to build restriction target for {}", fn_range_on),
+                    format!("failed to build explicit-domain target for {}", fn_range_on),
                     e,
                 ),
             ))
@@ -890,7 +854,7 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Cup(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::Cap(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
-        Obj::Count(x) => collect_module_names_from_obj(&x.set, module_names),
+        Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
         Obj::FnRangeOn(x) => {
             collect_module_names_from_obj(&x.function, module_names);

@@ -74,14 +74,6 @@ impl AtomicFact {
                 not_superset_fact.left.clone(),
                 not_superset_fact.right.clone(),
             ],
-            AtomicFact::RestrictFact(restrict_fact) => vec![
-                restrict_fact.obj.clone(),
-                restrict_fact.obj_can_restrict_to_fn_set.clone().into(),
-            ],
-            AtomicFact::NotRestrictFact(not_restrict_fact) => vec![
-                not_restrict_fact.obj.clone(),
-                not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
-            ],
             AtomicFact::FnEqualInFact(f) => {
                 vec![f.left.clone(), f.right.clone(), f.set.clone()]
             }
@@ -151,16 +143,6 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(not_superset_fact) => {
                 vec![&not_superset_fact.left, &not_superset_fact.right]
             }
-            AtomicFact::RestrictFact(restrict_fact) => {
-                vec![
-                    &restrict_fact.obj,
-                    &restrict_fact.obj_can_restrict_to_fn_set,
-                ]
-            }
-            AtomicFact::NotRestrictFact(not_restrict_fact) => vec![
-                &not_restrict_fact.obj,
-                &not_restrict_fact.obj_cannot_restrict_to_fn_set,
-            ],
             AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
             AtomicFact::FnEqualFact(f) => vec![&f.left, &f.right],
         }

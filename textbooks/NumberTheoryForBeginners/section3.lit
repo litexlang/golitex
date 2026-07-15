@@ -160,12 +160,21 @@ thm theorem_III_2_corollary_1:
     by thm theorem_III_1_bezout_implies_relprime_pair(a, b * c)
     $relatively_prime_Z(a, b * c)
 
+# Finite products are introduced here, before the later prime-factorization
+# chapter uses them.  The recursive value is the reusable interface; the
+# finite-set enumeration theorem below remains a separate source-level debt.
+have fn finite_product_from_one(a fn(i N_pos) Z, n N) Z by induc n from 0:
+    case n = 0: 1
+    case n > 0: finite_product_from_one(a, n - 1) * a(n)
+
 """
 Corollary 2. If an integer is prime to each of finitely many integers, then it
 is prime to their product.
 """
 
-abstract_prop finite_product_of_integer_set(A, p)
+prop finite_product_of_integer_set(A finite_set, p Z):
+    A $subset Z
+    p = finite_set_product(A, fn(x A) Z {x})
 
 # Source handling: The text proves this by induction from Corollary 1.
 # trust: A checked version needs a finite product interface for integer

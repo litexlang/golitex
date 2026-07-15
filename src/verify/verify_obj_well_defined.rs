@@ -76,7 +76,7 @@ impl Runtime {
             Obj::Proj(x) => self.verify_proj_well_defined(x, verify_state),
             Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
-            Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
+            Obj::FiniteSetSize(x) => self.verify_finite_set_size_well_defined(x, verify_state),
             Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
             Obj::FnRangeOn(x) => self.verify_fn_range_on_well_defined(x, verify_state),
             Obj::Replacement(x) => self.verify_replacement_well_defined(x, verify_state),
