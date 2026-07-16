@@ -103,6 +103,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_square_sum_zero_from_zero_components(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_square_sum_component_zero_from_known_sum_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         // Direct calculation: if both sides normalize to the same computed value, close the
         // equality before falling back to two-sided order. Example: `(-1 * sqrt(2)) ^ 2 = 2`.
         let (result, calculated_left, calculated_right) = self
@@ -611,9 +629,12 @@ impl Runtime {
         // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
-        if let Some(done) =
-            self.try_verify_empty_set_equality_from_not_nonempty(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_empty_set_equality_from_not_nonempty(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -671,6 +692,21 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_integer_mod_negation_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_integer_mod_natural_power_rule(
             left,
             right,
             line_file.clone(),
@@ -1703,6 +1739,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
@@ -1711,7 +1748,8 @@ impl Runtime {
         };
 
         let not_nonempty: AtomicFact = NotIsNonemptySetFact::new(set, line_file.clone()).into();
-        let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_nonempty)?;
+        let sub = self
+            .verify_non_equational_known_then_builtin_rules_only(&not_nonempty, verify_state)?;
         if !sub.is_true() {
             return Ok(None);
         }

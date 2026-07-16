@@ -7,6 +7,7 @@ pub struct ProjectConfig {
     pub module_flatten: bool,
     pub module_flatten_line: Option<usize>,
     pub imports: Vec<ProjectImport>,
+    pub std_imports: Vec<ProjectStdImport>,
     pub exports: Vec<ProjectExport>,
     pub requirements: Vec<ProjectRequirement>,
 }
@@ -17,6 +18,12 @@ pub struct ProjectImport {
     pub path: String,
     pub line: usize,
     pub trusted: bool,
+}
+
+#[derive(Clone)]
+pub struct ProjectStdImport {
+    pub name: String,
+    pub line: usize,
 }
 
 #[derive(Clone)]
@@ -38,6 +45,7 @@ pub struct ProjectRequirement {
 enum ConfigTable {
     Module,
     Import,
+    ImportStd,
     Export,
     Requires,
 }
@@ -51,9 +59,11 @@ pub fn parse_project_config(
     let mut module_flatten_line = None;
     let mut module_flatten_declared = false;
     let mut imports = vec![];
+    let mut std_imports = vec![];
     let mut exports = vec![];
     let mut requirements = vec![];
     let mut import_names = HashSet::new();
+    let mut std_import_names = HashSet::new();
     let mut export_names = HashSet::new();
     let mut requirement_names = HashSet::new();
 
@@ -68,6 +78,7 @@ pub fn parse_project_config(
             current_table = match text {
                 "[module]" => Some(ConfigTable::Module),
                 "[import]" => Some(ConfigTable::Import),
+                "[import std]" => Some(ConfigTable::ImportStd),
                 "[export]" => Some(ConfigTable::Export),
                 "[requires]" => Some(ConfigTable::Requires),
                 "[run]" => return Err(config_error(
@@ -79,7 +90,7 @@ pub fn parse_project_config(
                     return Err(config_error(
                         config_path,
                         line,
-                        "litex.config only supports the [module], [import], [export], and [requires] tables",
+                        "litex.config only supports the [module], [import], [import std], [export], and [requires] tables",
                     ))
                 }
             };
@@ -156,6 +167,28 @@ pub fn parse_project_config(
                     trusted,
                 });
             }
+            Some(ConfigTable::ImportStd) => {
+                if text.contains('=') || text.split_whitespace().count() != 1 {
+                    return Err(config_error(
+                        config_path,
+                        line,
+                        "[import std] expects exactly one standard package name",
+                    ));
+                }
+                is_valid_litex_name(text)
+                    .map_err(|message| config_error(config_path, line, message.as_str()))?;
+                if !std_import_names.insert(text.to_string()) {
+                    return Err(config_error(
+                        config_path,
+                        line,
+                        format!("duplicate standard import name `{}`", text).as_str(),
+                    ));
+                }
+                std_imports.push(ProjectStdImport {
+                    name: text.to_string(),
+                    line,
+                });
+            }
             Some(ConfigTable::Export) => {
                 let Some((raw_key, raw_value)) = text.split_once('=') else {
                     return Err(config_error(
@@ -214,7 +247,7 @@ pub fn parse_project_config(
             None => return Err(config_error(
                 config_path,
                 line,
-                "declare [module], [import], [export], or [requires] before configuration values",
+                "declare [module], [import], [import std], [export], or [requires] before configuration values",
             )),
         }
     }
@@ -302,6 +335,7 @@ pub fn parse_project_config(
         module_flatten,
         module_flatten_line,
         imports,
+        std_imports,
         exports,
         requirements,
     })
@@ -389,6 +423,53 @@ mod tests {
         assert_eq!(config.imports[0].name, "Algebra");
         assert_eq!(config.requirements.len(), 1);
         assert_eq!(config.requirements[0].dependencies, vec!["chap3"]);
+    }
+
+    #[test]
+    fn parses_standard_imports_separately_from_path_imports() {
+        let config = parse_project_config(
+            "[import std]\nbasics\nnumber_theory # standard package\n\n[import]\nAlgebra = \"../algebra\"\n\n[export]\nmain = \"./main.lit\"\n",
+            "litex.config",
+        )
+        .expect("parse standard and path imports");
+        assert_eq!(config.std_imports.len(), 2);
+        assert_eq!(config.std_imports[0].name, "basics");
+        assert_eq!(config.std_imports[0].line, 2);
+        assert_eq!(config.std_imports[1].name, "number_theory");
+        assert_eq!(config.std_imports[1].line, 3);
+        assert_eq!(config.imports.len(), 1);
+        assert_eq!(config.imports[0].name, "Algebra");
+    }
+
+    #[test]
+    fn standard_imports_require_one_unique_package_name_per_line() {
+        for (source, expected) in [
+            (
+                "[import std]\nbasics = \"./basics\"\n\n[export]\nmain = \"./main.lit\"\n",
+                "expects exactly one standard package name",
+            ),
+            (
+                "[import std]\ntrust basics\n\n[export]\nmain = \"./main.lit\"\n",
+                "expects exactly one standard package name",
+            ),
+            (
+                "[import std]\nbasics number_theory\n\n[export]\nmain = \"./main.lit\"\n",
+                "expects exactly one standard package name",
+            ),
+            (
+                "[import std]\n1basics\n\n[export]\nmain = \"./main.lit\"\n",
+                "name first character cannot be a number or symbol",
+            ),
+            (
+                "[import std]\nbasics\nbasics\n\n[export]\nmain = \"./main.lit\"\n",
+                "duplicate standard import name `basics`",
+            ),
+        ] {
+            let Err(error) = parse_project_config(source, "litex.config") else {
+                panic!("invalid standard imports must be rejected");
+            };
+            assert!(format!("{error:?}").contains(expected), "{error:?}");
+        }
     }
 
     #[test]

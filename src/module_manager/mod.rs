@@ -10,7 +10,9 @@ pub use module_runner::{
 };
 pub use project_config::{
     parse_project_config, ProjectConfig, ProjectExport, ProjectImport, ProjectRequirement,
+    ProjectStdImport,
 };
 pub use repository::{
-    discover_repository, discover_repository_for_file, discover_std_module, RepositoryFileTarget,
+    discover_repository, discover_repository_for_file, discover_std_module, resolve_std_root,
+    RepositoryFileTarget,
 };

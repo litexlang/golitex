@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::rc::Rc;
 
 // Stable synthetic source path for the kernel environment, not a user-loadable module.
@@ -16,10 +15,6 @@ pub struct ModuleManager {
     pub builtin_environment: Box<Environment>,
     pub modules: HashMap<ModuleId, ModuleRunner>,
     pub module_by_name: HashMap<String, ModuleId>,
-    /// Standard-library modules loaded for this runtime.  Their names share
-    /// the module lookup table but are tracked separately so `import std ...`
-    /// cannot be confused with a project import.
-    pub std_module_names: HashSet<String>,
     pub module_by_path: HashMap<String, ModuleId>,
     pub root_exports: HashMap<String, ImportTarget>,
     pub exported_files_by_name: HashMap<String, ImportTarget>,
@@ -36,7 +31,6 @@ impl ModuleManager {
             builtin_environment: Box::new(Environment::new_empty_env()),
             modules: HashMap::new(),
             module_by_name: HashMap::new(),
-            std_module_names: HashSet::new(),
             module_by_path: HashMap::new(),
             root_exports: HashMap::new(),
             exported_files_by_name: HashMap::new(),
@@ -183,90 +177,6 @@ impl ModuleManager {
 
     pub fn module_id_by_name(&self, module_name: &str) -> Option<ModuleId> {
         self.module_by_name.get(module_name).copied()
-    }
-
-    pub fn is_std_module_name(&self, module_name: &str) -> bool {
-        self.std_module_names.contains(module_name)
-    }
-
-    pub fn is_std_module_id(&self, module_id: ModuleId) -> bool {
-        let Some(module) = self.module(module_id) else {
-            return false;
-        };
-        self.std_module_names.iter().any(|std_name| {
-            module.module_name == *std_name
-                || module
-                    .module_name
-                    .strip_prefix(std_name)
-                    .is_some_and(|suffix| suffix.starts_with(MOD_SIGN))
-        })
-    }
-
-    pub fn register_std_module(
-        &mut self,
-        module_name: String,
-        module_root_path: String,
-        main_file_path: String,
-    ) -> Result<ModuleId, String> {
-        if self.root_exports.contains_key(&module_name) {
-            return Err(format!(
-                "std module name `{}` is reserved and conflicts with a project root export",
-                module_name
-            ));
-        }
-        if self.module_by_name.contains_key(&module_name) {
-            return Err(format!(
-                "module name `{}` has already been used",
-                module_name
-            ));
-        }
-        let id = self.allocate_module_id();
-        let runner = ModuleRunner::new(
-            id,
-            module_name.clone(),
-            module_root_path.clone(),
-            main_file_path,
-            ModuleStatus::Loading,
-        );
-        self.modules.insert(id, runner);
-        self.module_by_name.insert(module_name.clone(), id);
-        self.module_by_path.entry(module_root_path).or_insert(id);
-        self.std_module_names.insert(module_name);
-        self.loading_import_stack.push(id);
-        Ok(id)
-    }
-
-    pub fn create_discovered_std_module(
-        &mut self,
-        module_name: String,
-        module_root_path: String,
-        main_file_path: String,
-    ) -> Result<ModuleId, String> {
-        if self.root_exports.contains_key(&module_name) {
-            return Err(format!(
-                "std module name `{}` is reserved and conflicts with a project root export",
-                module_name
-            ));
-        }
-        if self.module_by_name.contains_key(&module_name) {
-            return Err(format!(
-                "module name `{}` has already been used",
-                module_name
-            ));
-        }
-        let id = self.allocate_module_id();
-        let runner = ModuleRunner::new(
-            id,
-            module_name.clone(),
-            module_root_path.clone(),
-            main_file_path,
-            ModuleStatus::Discovered,
-        );
-        self.modules.insert(id, runner);
-        self.module_by_name.insert(module_name.clone(), id);
-        self.module_by_path.entry(module_root_path).or_insert(id);
-        self.std_module_names.insert(module_name);
-        Ok(id)
     }
 
     pub fn module_by_import_name(&self, module_name: &str) -> Option<&ModuleRunner> {

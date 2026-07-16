@@ -111,9 +111,9 @@ pub use crate::infer::{
 };
 pub use crate::module_manager::{
     discover_repository, discover_repository_for_file, discover_std_module, parse_project_config,
-    ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId,
-    ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectImport,
-    ProjectRequirement, RepositoryFileTarget, KERNEL_PATH,
+    resolve_std_root, ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget,
+    ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport,
+    ProjectImport, ProjectRequirement, ProjectStdImport, RepositoryFileTarget, KERNEL_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;

@@ -1,0 +1,15 @@
+# Binary set membership rules checked directly by the verifier.
+
+forall A, B set, x A:
+    x $in union(A, B)
+
+forall A, B set, x union(A, B):
+    x $in A or x $in B
+
+forall A, B set, x intersect(A, B):
+    x $in A
+    x $in B
+
+forall A, B set, x set_minus(A, B):
+    x $in A
+    not x $in B

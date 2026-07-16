@@ -70,11 +70,11 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
-The `.deb` package installs the Litex executable. To verify the installation,
-run a direct builtin check:
+The `.deb` package installs the Litex executable together with its standard
+library. To verify that the packaged library is available:
 
 ```bash
-litex -e '1 = 1' | grep '"type": "equality fact"'
+litex -e 'import std basics' | grep '"type": "import statement"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e '1 = 1' | grep '"type": "equality fact"'
+litex -e 'import std basics' | grep '"type": "import statement"'
 ```
 
 ---
@@ -132,7 +132,7 @@ Write-Host "Open a new terminal and run: litex -version"
 What this command changes on the user machine:
 
 1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
-2. Extracts `litex.exe` into `%LOCALAPPDATA%\litex`.
+2. Extracts `litex.exe` and the `std` directory into `%LOCALAPPDATA%\litex`.
 3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
 4. Updates `Path` in the current PowerShell session.
 
@@ -145,7 +145,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "import std basics" | Select-String '"type": "import statement"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -175,14 +175,14 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "import std basics" | Select-String '"type": "import statement"'
 ```
 
 ### Upgrade Litex on Windows
 
 If you installed by **Option A** (PowerShell one-command install), run the same command again.
-It downloads the newer zip, overwrites `%LOCALAPPDATA%\litex\litex.exe`, refreshes
-the installed executable, and keeps your existing user `Path` entry:
+It downloads the newer zip, refreshes `%LOCALAPPDATA%\litex\litex.exe` and its
+`std` directory, and keeps your existing user `Path` entry:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -205,7 +205,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "import std basics" | Select-String '"type": "import statement"'
 ```
 
 ---

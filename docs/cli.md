@@ -37,7 +37,7 @@ parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Ordinary `import std ...` dependencies remain allowed and are recorded in the run summary. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
+| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Ordinary `import std ...` dependencies remain allowed through the normal package loader. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -102,9 +102,10 @@ those flags. `-lang` also consumes the next token globally.
 | `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its complete ordered `[export]` table. |
 
 Declare local project files and child modules in ordered `[export]` entries.
-Declare non-standard packages in `[import]`, and declare each file's direct
-earlier dependencies in `[requires]`. Files cite canonical names such as
-`chap3::theorem`; source-level imports are reserved for `import std Name`.
+Declare non-standard packages in `[import]`, installed standard packages in
+`[import std]`, and each file's direct earlier dependencies in `[requires]`.
+Files cite canonical names such as `chap3::theorem` or `std::basics::theorem`;
+source-level imports are reserved for `import std Name`.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -238,6 +239,7 @@ Use `litex.config` to organize a multi-file project:
 
 - list local files and child modules once, in their mathematical order, in `[export]`;
 - declare non-standard package paths once in `[import]` at a package boundary;
+- declare installed standard packages by one name per line in `[import std]`;
 - give each entry a canonical name, for example `chap7 = "./chap7.lit"`;
 - declare `chap7 = ["chap3"]` in `[requires]` when Chapter 7 needs Chapter 3 under `-f`;
 - cite earlier entries directly as `chap7::name`;
@@ -268,6 +270,8 @@ For an explicitly trusted project entry, write
 processing but preserve direct environment effects; `-strict` verifies it
 normally. For a trusted non-standard package, write
 `trust Algebra = "./Algebra"` in `[import]`.
+Standard package configuration has no path or trust modifier; write simply
+`basics` in `[import std]` and cite `std::basics::...`.
 
 ## Reserved Helper Commands
 

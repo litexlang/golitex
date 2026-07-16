@@ -6,6 +6,19 @@ forall a, b, c R:
     =>:
         a < c
 
+# Negative and nonpositive real terms remain negative or nonpositive under addition.
+forall a, b R:
+    a < 0
+    b <= 0
+    =>:
+        a + b < 0
+
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a + b <= 0
+
 forall a, b, c Z:
     a <= b
     b <= c

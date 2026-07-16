@@ -848,7 +848,7 @@ impl Runtime {
     pub fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
@@ -887,12 +887,35 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let lt_ok = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&lt)?;
+            let lt_ok =
+                self.verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?;
             if lt_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         not_is_nonempty_set_fact.clone().into(),
                         "closed_range_empty_when_end_lt_start".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+        if let Obj::Range(range) = &not_is_nonempty_set_fact.set {
+            // Integer half-open interval `{x in Z | lo <= x < hi}` is empty from a
+            // known `hi <= lo` fact. Example: `range(0, 0) = {}`.
+            let le: AtomicFact = LessEqualFact::new(
+                range.end.as_ref().clone(),
+                range.start.as_ref().clone(),
+                not_is_nonempty_set_fact.line_file.clone(),
+            )
+            .into();
+            let le_ok =
+                self.verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?;
+            if le_ok.is_true() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_is_nonempty_set_fact.clone().into(),
+                        "range_empty_when_end_le_start".to_string(),
                         Vec::new(),
                     ))
                     .into(),

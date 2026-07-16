@@ -383,10 +383,14 @@ have i set = intersect({1, 2}, {2, 3})
 have t set = set_minus({1, 2}, {1})
 ```
 
-When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly. Likewise, **`x $in set_minus(A, B)`** yields **`x $in A`** and **`not x $in B`**.
+When Litex records **`x $in union(A, B)`**, membership inference stores the
+disjunction **`x $in A or x $in B`** for case analysis. For
+**`x $in intersect(A, B)`**, it stores both component memberships; for
+**`x $in set_minus(A, B)`**, it stores **`x $in A`** and **`not x $in B`**.
 
 ```litex
-1 $in union({1}, {2})
+forall A, B set, x union(A, B):
+    x $in A or x $in B
 ```
 
 #### Big union and big intersection (`cup`, `cap`)
@@ -2074,10 +2078,10 @@ the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
 If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements are rejected instead
-of being stored. Ordinary `import std ...` dependencies remain allowed and are
-recorded as trusted inputs, so strict mode is an audit boundary for the current
-run, not a claim that all dependencies are assumption-free. `trust import std
-...` remains rejected.
+of being stored. Ordinary `import std ...` dependencies remain allowed and use
+the same module path as a configured standard package, so strict mode is an
+audit boundary for the current source rather than a claim that every imported
+interface is assumption-free. `trust import std ...` remains rejected.
 
 ```litex
 # three primitive terms:
@@ -2159,7 +2163,7 @@ There are two project-aware top-level modes:
   **`litex -isolated -f file.lit`** to force isolation.
 
 `litex.config` is project configuration, not Litex source and not a knowledge
-file. It has four relevant tables:
+file. It has five relevant tables:
 
 ```ini
 [module]
@@ -2167,6 +2171,9 @@ flatten = false
 
 [import]
 Algebra = "./Algebra"
+
+[import std]
+basics
 
 [export]
 chap1 = "./chapter01.lit"
@@ -2183,6 +2190,14 @@ path import. A repository root and an independently imported package may
 declare path imports. A directory reached through `[export]` is a subpackage;
 it cannot introduce a new path import. It may use packages already declared by
 an ancestor package, through their canonical namespace.
+
+`[import std]` declares installed standard packages with the same package
+dependency role, but no path: each line is one export name from the installed
+`std` root. For example, `basics` makes `std::basics::...` available before
+the project's local exports run. It has no `trust` form and no implicit bare
+alias. Use it for a project-wide dependency; use `import std basics` in a
+source file when an isolated snippet or one source file chooses that package
+on demand.
 
 A package identity is its **mount name**, not merely its directory. An
 `[import]` name is a package name, not a child namespace: if `C` declares
@@ -2232,10 +2247,35 @@ does not work. Flattening is rejected for directory exports, multiple exports,
 and a configuration run directly as `litex -r`, because that entry root has no
 module name.
 
-**`import std A`** is the only source-level module import. It loads the shipped
-standard package named by `std/litex.config` on demand and remains active after
-`clear`. Its package names are reserved against project modules; use
-`A::name` for a named interface.
+**`import std A`** is the only source-level module import. It locates the
+shipped `std` directory and selects the `A` export on demand. The config form
+`[import std]` uses the same ordinary package/export path before project
+exports run. The standard root follows the same export, child-module, and
+flattening rules as every other package; the source syntax only avoids making
+users configure the installed path themselves. It remains active after
+`clear`. Its public names retain the root namespace: use
+`std::A::name` for a named interface. For example:
+
+```ini
+# std/litex.config
+[export]
+basics = "./basics"
+
+# std/basics/litex.config
+[module]
+flatten = true
+
+[export]
+implementation = "./main.lit"
+```
+
+Thus `implementation` is not part of the public name: the bundled package
+exports `std::basics::name`, not `std::basics::implementation::name`.
+
+```litex
+import std basics
+by thm std::basics::nonempty_family_of_nonempty_sets_exists()
+```
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2248,7 +2288,9 @@ boundary for ordinary runs. It still parses the source and applies direct
 environment effects, while skipping proof processing. `-strict` ignores that
 configuration trust and verifies the same entry normally. Use
 `trust Algebra = "./Algebra"` in `[import]` for a deliberately trusted
-non-standard package; `-strict` verifies that package normally.
+non-standard package; `-strict` verifies that package normally. Standard
+packages are named plainly in `[import std]` and have no configuration-level
+`trust` modifier.
 
 ---
 
@@ -3083,6 +3125,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
 | declare a non-standard package | `Algebra = "./Algebra"` in `[import]` |
+| declare an installed standard package | `basics` in `[import std]` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | cite an earlier project file inside a source | `chapter3::local` |
 | declare a file dependency for `-f` | `chapter7 = ["chapter3"]` in `[requires]` |
@@ -4026,6 +4069,19 @@ forall a R_pos, x R:
     a^x $in R_pos
 ```
 
+For a positive real base and real exponents, Litex also checks the
+power-of-power and exponent-addition laws directly.
+
+```litex
+forall a R_pos, b, c R:
+    a^(b+c) = a^b * a^c
+    (a^b)^c = a^(b*c)
+```
+
+The positive-base condition is essential here. Litex does not apply these
+real-exponent rules when the base is merely known to be real or nonzero, because
+arbitrary real powers of nonpositive bases are not generally well-defined.
+
 Natural-number exponents can use the usual exponent-addition law.
 
 ```litex
@@ -4278,6 +4334,22 @@ forall a, b R:
     0 <= b
     =>:
         0 < a + b
+```
+
+Negative and nonpositive real terms satisfy the corresponding addition rules.
+
+```litex
+forall a, b R:
+    a < 0
+    b <= 0
+    =>:
+        a + b < 0
+
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a + b <= 0
 ```
 
 ```litex

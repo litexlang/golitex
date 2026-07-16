@@ -591,17 +591,7 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
-                let root_file_id = module.flattened_export_file.or_else(|| {
-                    if self.module_manager.is_std_module_id(module_id) {
-                        match module.exports.get("main") {
-                            Some(ExportEntry::File { file_id, .. }) => Some(*file_id),
-                            _ => None,
-                        }
-                    } else {
-                        None
-                    }
-                });
-                if let Some(file_id) = root_file_id {
+                if let Some(file_id) = module.flattened_export_file {
                     return module
                         .file(file_id)
                         .filter(|file| file.status == FileStatus::Loaded)
@@ -614,15 +604,6 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
-                // `main` is the physical std entry file; callers use the package root namespace.
-                if self.module_manager.is_std_module_id(module_id)
-                    && matches!(
-                        module.exports.get("main"),
-                        Some(ExportEntry::File { file_id: main_file_id, .. }) if *main_file_id == file_id
-                    )
-                {
-                    return vec![];
-                }
                 module
                     .file(file_id)
                     .filter(|file| file.status == FileStatus::Loaded)
@@ -649,18 +630,7 @@ impl Runtime {
             }
             ExecutionLayer::File(file_id) => module
                 .file(file_id)
-                .map(|file| {
-                    if self.module_manager.is_std_module_id(module_id)
-                        && matches!(
-                            module.exports.get("main"),
-                            Some(ExportEntry::File { file_id: main_file_id, .. }) if *main_file_id == file_id
-                        )
-                    {
-                        module.module_name.as_str()
-                    } else {
-                        file.canonical_name.as_str()
-                    }
-                })
+                .map(|file| file.canonical_name.as_str())
                 .or_else(|| {
                     (!module.module_name.is_empty()).then_some(module.module_name.as_str())
                 }),

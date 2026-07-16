@@ -322,40 +322,15 @@ impl Runtime {
     }
 
     /// Rebuild the module registry between independent runner items while
-    /// reusing the kernel environment and already loaded standard packages.
+    /// reusing the kernel environment.
     #[cfg(test)]
     pub(crate) fn reset_for_isolated_runner_item(&mut self) {
         let path = self.current_file_path_rc().to_string();
-        let std_modules = self
-            .module_manager
-            .modules
-            .values()
-            .filter(|module| {
-                self.module_manager
-                    .is_std_module_name(module.module_name.as_str())
-            })
-            .cloned()
-            .collect::<Vec<ModuleRunner>>();
         let mut module_manager = Box::new(ModuleManager::new(path.as_str()));
         std::mem::swap(
             &mut module_manager.builtin_environment,
             &mut self.module_manager.builtin_environment,
         );
-        for module in std_modules {
-            module_manager
-                .std_module_names
-                .insert(module.module_name.clone());
-            module_manager
-                .module_by_name
-                .insert(module.module_name.clone(), module.id);
-            module_manager
-                .module_by_path
-                .insert(module.module_root_path.clone(), module.id);
-            module_manager.next_module_id = module_manager
-                .next_module_id
-                .max(module.id.0.saturating_add(1));
-            module_manager.modules.insert(module.id, module);
-        }
         self.module_manager = module_manager;
         self.execution_stack = vec![ExecutionFrame::new_builtin()];
         self.parsing_free_param_collection.clear();

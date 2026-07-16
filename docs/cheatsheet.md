@@ -124,8 +124,8 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | `[module] flatten = true` exposes one direct file export at a named module root; `[import]` names non-standard package paths, `[export]` names ordered local entries, and `[requires]` names earlier file dependencies. Configuration graphs, package authority, paths, and names are validated during discovery. | None during discovery. | Declares package capabilities, `-r` order, `-f` dependency closures, and canonical namespaces. |
-| `import std Name` | The only source-level module import. Resolves `Name` in `std/litex.config`; standard packages cannot path-import outside `std`. | Lazily runs the package's declared standard requirements, then the package. | Registers the loaded standard package for the rest of the run. |
+| `litex.config` | `[module] flatten = true` exposes one direct file export at a named module root; `[import]` names non-standard package paths; `[import std]` lists installed standard packages; `[export]` names ordered local entries; and `[requires]` names earlier file dependencies. Configuration graphs, package authority, paths, and names are validated during discovery. | None during discovery. | Declares package capabilities, `-r` order, `-f` dependency closures, and canonical namespaces. |
+| `import std Name` | The only source-level module import. Locates the installed `std` directory, loads its ordinary root configuration, and selects the `Name` export from `std/litex.config`. | Runs that exported package through the ordinary module loader. | Registers the public `std::Name::...` namespace for the rest of the run. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |

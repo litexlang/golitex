@@ -885,6 +885,99 @@ e < 4
 }
 
 #[test]
+fn addition_sign_rules_are_builtin() {
+    run_with_large_stack("addition_sign_rules_are_builtin", || {
+        let positive_cases = [
+            (
+                "strict_negative_left_sum",
+                r#"
+forall a, b R:
+    a < 0
+    b <= 0
+    =>:
+        a + b < 0
+"#,
+                "a + b < 0 from one negative term and one nonpositive term",
+            ),
+            (
+                "strict_negative_right_sum",
+                r#"
+forall a, b R:
+    a <= 0
+    b < 0
+    =>:
+        a + b < 0
+"#,
+                "a + b < 0 from one negative term and one nonpositive term",
+            ),
+            (
+                "weak_negative_sum",
+                r#"
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a + b <= 0
+"#,
+                "a + b <= 0 from a <= 0 and b <= 0",
+            ),
+        ];
+
+        for (name, source_code, expected_reason) in positive_cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(run_succeeded, "{name} should be builtin:\n{run_output}");
+            assert!(
+                run_output.contains(expected_reason),
+                "{name} should report its addition-sign builtin provenance:\n{run_output}"
+            );
+        }
+
+        for (name, source_code) in [
+            (
+                "mixed_sign_sum_is_not_known_negative",
+                r#"
+forall a, b R:
+    a < 0
+    0 < b
+    =>:
+        a + b < 0
+"#,
+            ),
+            (
+                "weakly_nonpositive_sum_is_not_known_strictly_negative",
+                r#"
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a + b < 0
+"#,
+            ),
+        ] {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "{name} must remain unproved without a sufficient sign hypothesis:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("UnknownError"),
+                "{name} should remain an unknown comparison:\n{run_output}"
+            );
+        }
+    });
+}
+
+#[test]
 fn real_order_carrier_uses_known_subset_membership_without_forall_recursion() {
     run_with_large_stack(
         "real_order_carrier_uses_known_subset_membership_without_forall_recursion",
@@ -972,6 +1065,170 @@ forall x Q_nz, n, m Z:
 }
 
 #[test]
+fn positive_real_power_addition_is_builtin() {
+    run_with_large_stack("positive_real_power_addition_is_builtin", || {
+        let cases = [
+            (
+                "positive_real_power_addition_forward",
+                r#"
+forall a R_pos, b, c R:
+    a^(b + c) = a^b * a^c
+"#,
+            ),
+            (
+                "positive_real_power_addition_reverse",
+                r#"
+forall a R_pos, b, c R:
+    a^b * a^c = a^(b + c)
+"#,
+            ),
+            (
+                "positive_real_power_addition_rational_exponents",
+                r#"
+forall x R_pos, q, r Q:
+    x^(q + r) = x^q * x^r
+"#,
+            ),
+        ];
+
+        for (name, source_code) in cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "{name} should be verified directly by the builtin:\n{run_output}"
+            );
+            assert!(
+                run_output.contains(
+                    "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases"
+                ),
+                "{name} should report the positive-real-base builtin provenance:\n{run_output}"
+            );
+        }
+    });
+}
+
+#[test]
+fn real_exponent_power_addition_requires_positive_base() {
+    run_with_large_stack(
+        "real_exponent_power_addition_requires_positive_base",
+        || {
+            let source_code = r#"
+forall a R_nz, b, c R:
+    a^(b + c) = a^b * a^c
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "real_exponent_power_addition_requires_positive_base",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "a merely nonzero real base must not justify arbitrary real powers:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("base and exponent do not satisfy the pow domain"),
+                "failure should preserve the real-power domain boundary:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn positive_real_power_of_power_is_builtin() {
+    run_with_large_stack("positive_real_power_of_power_is_builtin", || {
+        let cases = [
+            (
+                "positive_real_power_of_power_forward",
+                r#"
+forall a R_pos, b, c R:
+    (a^b)^c = a^(b * c)
+"#,
+            ),
+            (
+                "positive_real_power_of_power_reverse",
+                r#"
+forall a R_pos, b, c R:
+    a^(b * c) = (a^b)^c
+"#,
+            ),
+            (
+                "positive_real_power_of_power_nth_root",
+                r#"
+forall x R, n N_pos:
+    x > 0
+    =>:
+        (x^(1 / n))^n = x^((1 / n) * n)
+"#,
+            ),
+        ];
+
+        for (name, source_code) in cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "{name} should be verified directly by the builtin:\n{run_output}"
+            );
+            assert!(
+                run_output.contains(
+                    "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases"
+                ),
+                "{name} should report the positive-real-base builtin provenance:\n{run_output}"
+            );
+        }
+    });
+}
+
+#[test]
+fn real_exponent_power_of_power_requires_positive_base() {
+    run_with_large_stack(
+        "real_exponent_power_of_power_requires_positive_base",
+        || {
+            let source_code = r#"
+((-2)^2)^(1 / 2) = 2
+(-2)^(2 * (1 / 2)) = -2
+((-2)^2)^(1 / 2) = (-2)^(2 * (1 / 2))
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "real_exponent_power_of_power_requires_positive_base",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "the power-of-power rule must reject a well-defined negative-base counterexample:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"error_type\": \"UnknownError\"")
+                    && !run_output.contains("WellDefinedError"),
+                "both sides should be well-defined and the false equality itself should fail:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn reciprocal_power_root_rule_rejects_negative_even_root() {
     run_with_large_stack(
         "reciprocal_power_root_rule_rejects_negative_even_root",
@@ -1044,7 +1301,7 @@ forall x set, A set, B set:
     =>:
         x $in set_minus(A, B)
 
-have x, A, B, C, D, E, F, G, H set
+have x, A, B, C, D, E, F, G, H, U, V set
 
 trust:
     x $in A
@@ -1053,6 +1310,7 @@ trust:
     not x $in D
     x $in intersect(E, F)
     x $in set_minus(G, H)
+    x $in union(U, V)
 
 x $in union(A, H)
 x $in intersect(A, B)
@@ -1062,6 +1320,7 @@ x $in E
 x $in F
 x $in G
 not x $in H
+x $in U or x $in V
 "#;
 
     let mut runtime = Runtime::new();
@@ -1083,6 +1342,11 @@ not x $in H
         run_output
     );
     assert!(
+        run_output.contains("\"type\": \"cite disjunction fact\""),
+        "union elimination should cite the inferred membership disjunction:\n{}",
+        run_output
+    );
+    assert!(
         run_output.contains("intersection membership: member of both sides"),
         "intersection introduction should report its builtin provenance:\n{}",
         run_output
@@ -1093,6 +1357,91 @@ not x $in H
         "set-minus introduction should report its builtin provenance:\n{}",
         run_output
     );
+}
+
+#[test]
+fn binary_union_elimination_does_not_choose_a_side() {
+    for (name, selected_side) in [
+        ("binary_union_does_not_choose_left", "x $in A"),
+        ("binary_union_does_not_choose_right", "x $in B"),
+    ] {
+        let source_code = format!(
+            r#"
+have x, A, B set
+trust x $in union(A, B)
+{selected_side}
+"#
+        );
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(&source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "union elimination must infer only the disjunction, not {selected_side}:\n{run_output}"
+        );
+        assert!(
+            run_output.contains("UnknownError"),
+            "the unjustified selected side should remain unknown:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn empty_half_open_integer_range_is_builtin() {
+    run_with_large_stack("empty_half_open_integer_range_is_builtin", || {
+        let source_code = r#"
+range(0, 0) = {}
+
+forall a, b Z:
+    b <= a
+    =>:
+        not $is_nonempty_set(range(a, b))
+        range(a, b) = {}
+        {} = range(a, b)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("empty_half_open_integer_range_is_builtin");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "empty half-open integer ranges should be builtin:\n{run_output}"
+        );
+        assert!(
+            run_output.contains("range empty when end le start")
+                && run_output.contains("empty set equality from not nonempty"),
+            "the result should expose both range-emptiness and empty-set equality provenance:\n{run_output}"
+        );
+    });
+}
+
+#[test]
+fn nonempty_half_open_integer_range_is_not_empty() {
+    run_with_large_stack("nonempty_half_open_integer_range_is_not_empty", || {
+        let source_code = "range(0, 1) = {}";
+        let mut runtime = Runtime::new();
+        runtime
+            .new_file_path_new_env_new_name_scope("nonempty_half_open_integer_range_is_not_empty");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "a half-open range with an integer member must not equal the empty set:\n{run_output}"
+        );
+        assert!(
+            run_output.contains("UnknownError"),
+            "the false equality should remain unknown:\n{run_output}"
+        );
+    });
 }
 
 #[test]

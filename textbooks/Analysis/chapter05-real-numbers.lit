@@ -4577,7 +4577,7 @@ thm nth_root_power_identity_nonnegative:
             x^(1 / n) = 0^(1 / n) = 0
             (x^(1 / n))^n = 0^n = 0 = x
         case x > 0:
-            (x^(1 / n))^n = x
+            (x^(1 / n))^n = x^((1 / n) * n) = x^1 = x
 
 thm nth_root_power_identity_from_equality:
     ? forall x, y R, n N_pos:
