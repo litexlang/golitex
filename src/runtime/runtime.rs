@@ -32,6 +32,7 @@ pub struct Runtime {
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
+    pub isolated: bool,
     pub output_language: OutputLanguage,
     pub trusted_import_summary: ProofTrustSummary,
 }
@@ -47,6 +48,7 @@ impl Runtime {
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,
+            isolated: false,
             output_language: OutputLanguage::English,
             trusted_import_summary: ProofTrustSummary::new(),
         }
@@ -154,11 +156,12 @@ impl Runtime {
     }
 
     pub fn canonical_module_name_for_parse(&self, name: &str) -> String {
-        let target = self.module_manager.import_target_by_canonical_name(name);
-        target
-            .and_then(|target| self.module_manager.canonical_name_for_target(target))
-            .unwrap_or(name)
-            .to_string()
+        let Some(frame) = self.execution_stack.last() else {
+            return name.to_string();
+        };
+        self.module_manager
+            .canonical_name_for_reference(frame.module_id, name)
+            .unwrap_or_else(|| name.to_string())
     }
 
     pub fn pop_execution_frame(&mut self) {

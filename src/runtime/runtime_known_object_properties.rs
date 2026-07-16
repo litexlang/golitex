@@ -563,13 +563,6 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
-                if let Some(file_id) = module.flattened_export_file {
-                    return module
-                        .file(file_id)
-                        .filter(|file| file.status == FileStatus::Loaded)
-                        .map(|file| vec![file.environment.as_ref()])
-                        .unwrap_or_default();
-                }
                 vec![module.main_environment.as_ref()]
             }
             Some(ImportTarget::File { module_id, file_id }) => {

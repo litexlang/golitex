@@ -82,8 +82,12 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
-            Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
+            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
+                stmt.clone(),
+                "import is only valid as a top-level isolated terminal statement".to_string(),
+                None,
+                vec![],
+            )),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
@@ -202,8 +206,12 @@ impl Runtime {
             | Stmt::Command(CommandStmt::EvalStmt(_)) => {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
-            Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
+            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
+                stmt.clone(),
+                "import is only valid as a top-level isolated terminal statement".to_string(),
+                None,
+                vec![],
+            )),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),

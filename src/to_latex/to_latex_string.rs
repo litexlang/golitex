@@ -1911,25 +1911,6 @@ impl WitnessNonemptySet {
     }
 }
 
-impl ImportGlobalModuleStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ \mathrm{{{}}}\ {}",
-            IMPORT,
-            STD,
-            latex_local_ident(self.mod_name.as_str())
-        )
-    }
-}
-
-impl ImportStmt {
-    pub fn to_latex_string(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(s) => s.to_latex_string(),
-        }
-    }
-}
-
 impl StandardSet {
     pub fn to_latex_string(&self) -> String {
         match self {
@@ -2142,9 +2123,8 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::TrustImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::ImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),

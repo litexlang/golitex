@@ -3609,9 +3609,10 @@ Purpose: cite configured project sources by canonical name, or clear the
 current environment.
 These examples are syntax only because they depend on local project files.
 
-- Well-definedness / structural checks: `[import]`, `[import std]`, `[export]`,
-  and `[requires]` entries are validated during discovery; `clear` has no
-  structural checks.
+- Well-definedness / structural checks: `[hierarchy]`, module-only `[import]`
+  and `[import std]`, direct-child `[export]` entries, and complete configured
+  folder contents are validated during discovery; `clear` has no structural
+  checks.
 - Truth verification: project entries verify in `[export]` order. A `trust`
   entry deliberately skips this phase in an ordinary run; strict mode verifies
   it normally.

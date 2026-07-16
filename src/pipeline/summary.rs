@@ -17,7 +17,6 @@ pub struct RunSummary {
     pub object_definitions: usize,
     pub function_definitions: usize,
     pub alias_statements: usize,
-    pub import_statements: usize,
     pub direct_trust: usize,
     pub indirect_trust: usize,
     pub axioms: usize,
@@ -158,10 +157,6 @@ impl RunSummary {
             }
             Stmt::ProofBlock(_) => {
                 self.proof_blocks += 1;
-            }
-            Stmt::Command(CommandStmt::ImportStmt(_))
-            | Stmt::Command(CommandStmt::TrustImportStmt(_)) => {
-                self.import_statements += 1;
             }
             _ => {}
         }

@@ -71,10 +71,10 @@ sudo apt-get install -f
 ```
 
 The `.deb` package installs the Litex executable together with its standard
-library. To verify that the packaged library is available:
+library. Verify the executable with a checked statement:
 
 ```bash
-litex -e 'import std basics' | grep '"type": "import statement"'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 ### Upgrade Litex on Linux
@@ -92,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e 'import std basics' | grep '"type": "import statement"'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 ---
@@ -145,7 +145,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "import std basics" | Select-String '"type": "import statement"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -175,7 +175,7 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import std basics" | Select-String '"type": "import statement"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 ### Upgrade Litex on Windows
@@ -205,7 +205,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "import std basics" | Select-String '"type": "import statement"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 ---
@@ -218,9 +218,9 @@ Start REPL:
 litex
 ```
 
-When run directly inside a project directory containing `litex.config`, the
-REPL discovers the project without executing its ordered `[export]` table. Use
-`litex -isolated` when you need a standalone REPL.
+The ordinary REPL is always isolated, including when the current directory
+contains `litex.config`. It is a persistent terminal environment, not a
+project run.
 
 Typical successful output:
 
@@ -268,7 +268,7 @@ litex [OPTION...]
 
 Basic behavior:
 
-- **No arguments**: starts the interactive REPL; a `litex.config` directly in the current directory is discovered without running its ordered `[export]` table.
+- **No arguments**: starts an isolated persistent interactive REPL; it does not discover a current-directory project.
 - **With options**: runs code, files, repositories, or helper commands as described below.
 - **Unknown options**: print an error message and exit.
 
@@ -278,10 +278,10 @@ Basic behavior:
 | `-version` | Print the Litex version and exit. |
 | `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
-| `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
+| `-f <file>` | If its direct parent has `litex.config`, trace to the module and run the recursive export prefix through this file; otherwise run it and continue in an isolated REPL with the resulting environment. |
 | `-isolated -f <file>` | Force a file to run without project discovery. |
-| `-isolated` | Force the interactive REPL to ignore a `litex.config` in the current directory. |
-| `-r <project>` | Run the complete ordered `[export]` table declared by `<project>/litex.config`. |
+| `-isolated` | Compatibility spelling for the ordinary isolated REPL. |
+| `-r <project>` | Run a module's whole recursive export tree, or the root prefix through a selected submodule's whole subtree. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <project>` | Run a project and return one wrapper JSON object. |

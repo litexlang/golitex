@@ -3,68 +3,54 @@ use std::fmt;
 
 #[derive(Clone)]
 pub enum ImportStmt {
-    ImportGlobalModule(ImportGlobalModuleStmt),
+    Module(ImportModuleStmt),
+    Std(ImportStdStmt),
 }
 
 #[derive(Clone)]
-pub struct TrustImportStmt {
-    pub import: ImportStmt,
-}
-
-#[derive(Clone)]
-pub struct ImportGlobalModuleStmt {
-    pub mod_name: String,
+pub struct ImportModuleStmt {
+    pub path: String,
+    pub alias: String,
     pub line_file: LineFile,
 }
 
-impl TrustImportStmt {
-    pub fn new(import: ImportStmt) -> Self {
-        TrustImportStmt { import }
-    }
+#[derive(Clone)]
+pub struct ImportStdStmt {
+    pub name: String,
+    pub line_file: LineFile,
 }
 
-impl fmt::Display for TrustImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", TRUST, self.import)
-    }
-}
-
-impl fmt::Display for ImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ImportStmt::ImportGlobalModule(import_global_mod) => write!(f, "{}", import_global_mod),
-        }
-    }
-}
-
-impl ImportGlobalModuleStmt {
-    pub fn new_std(mod_name: String, line_file: LineFile) -> Self {
-        ImportGlobalModuleStmt {
-            mod_name,
+impl ImportModuleStmt {
+    pub fn new(path: String, alias: String, line_file: LineFile) -> Self {
+        Self {
+            path,
+            alias,
             line_file,
         }
     }
 }
 
-impl fmt::Display for ImportGlobalModuleStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", IMPORT, STD, self.mod_name)
+impl ImportStdStmt {
+    pub fn new(name: String, line_file: LineFile) -> Self {
+        Self { name, line_file }
     }
 }
 
 impl ImportStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            ImportStmt::ImportGlobalModule(import_global_mod) => {
-                import_global_mod.line_file.clone()
-            }
+            Self::Module(stmt) => stmt.line_file.clone(),
+            Self::Std(stmt) => stmt.line_file.clone(),
         }
     }
 }
 
-impl TrustImportStmt {
-    pub fn line_file(&self) -> LineFile {
-        self.import.line_file()
+impl fmt::Display for ImportStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Module(stmt) => write!(f, "{} \"{}\" {} {}", IMPORT, stmt.path, AS, stmt.alias),
+            Self::Std(stmt) => write!(f, "{} {} {}", IMPORT, STD, stmt.name),
+        }
     }
 }
 

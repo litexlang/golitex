@@ -15,7 +15,7 @@ pub struct ModuleManager {
     pub root_exports: HashMap<String, ImportTarget>,
     pub exported_files_by_name: HashMap<String, ImportTarget>,
     pub exported_file_by_path: HashMap<String, ImportTarget>,
-    pub loading_import_stack: Vec<ModuleId>,
+    pub loading_module_stack: Vec<ModuleId>,
     pub next_module_id: usize,
     pub entry_module_id: Option<ModuleId>,
     pub entry_path_rc: Rc<str>,
@@ -30,7 +30,7 @@ impl ModuleManager {
             root_exports: HashMap::new(),
             exported_files_by_name: HashMap::new(),
             exported_file_by_path: HashMap::new(),
-            loading_import_stack: vec![],
+            loading_module_stack: vec![],
             next_module_id: 0,
             entry_module_id: None,
             entry_path_rc: Rc::from(""),
@@ -45,6 +45,8 @@ impl ModuleManager {
             String::new(),
             module_root_path,
             main_file_path.to_string(),
+            ProjectHierarchy::Module,
+            None,
             ModuleStatus::Loaded,
         );
         self.modules.insert(id, runner);
@@ -67,6 +69,8 @@ impl ModuleManager {
             String::new(),
             module_root_path.clone(),
             main_file_path.clone(),
+            ProjectHierarchy::Module,
+            None,
             ModuleStatus::Loaded,
         );
         self.modules.insert(id, runner);
@@ -81,6 +85,8 @@ impl ModuleManager {
         module_name: String,
         module_root_path: String,
         main_file_path: String,
+        hierarchy: ProjectHierarchy,
+        parent_module_id: Option<ModuleId>,
     ) -> Result<ModuleId, String> {
         if self.module_by_name.contains_key(&module_name) {
             return Err(format!(
@@ -94,6 +100,8 @@ impl ModuleManager {
             module_name.clone(),
             module_root_path.clone(),
             main_file_path,
+            hierarchy,
+            parent_module_id,
             ModuleStatus::Discovered,
         );
         self.modules.insert(id, runner);
@@ -162,6 +170,46 @@ impl ModuleManager {
         }
     }
 
+    pub fn canonical_name_for_reference(
+        &self,
+        owner_module_id: ModuleId,
+        name: &str,
+    ) -> Option<String> {
+        let mut current_module_id = Some(owner_module_id);
+        while let Some(module_id) = current_module_id {
+            let module = self.module(module_id)?;
+            for config_import in module.config_imports.iter() {
+                if let Some(suffix) = local_reference_suffix(name, config_import.name.as_str()) {
+                    let canonical_root = self
+                        .canonical_name_for_target(ImportTarget::Module(config_import.module_id))?;
+                    let candidate = format!("{}{}", canonical_root, suffix);
+                    if self
+                        .import_target_by_canonical_name(candidate.as_str())
+                        .is_some()
+                    {
+                        return Some(candidate);
+                    }
+                }
+            }
+            for (export_name, export_entry) in module.exports.iter() {
+                if let Some(suffix) = local_reference_suffix(name, export_name.as_str()) {
+                    let canonical_root =
+                        self.canonical_name_for_target(export_entry.target(module_id))?;
+                    let candidate = format!("{}{}", canonical_root, suffix);
+                    if self
+                        .import_target_by_canonical_name(candidate.as_str())
+                        .is_some()
+                    {
+                        return Some(candidate);
+                    }
+                }
+            }
+            current_module_id = module.parent_module_id;
+        }
+        self.import_target_by_canonical_name(name)
+            .map(|_| name.to_string())
+    }
+
     pub fn module(&self, id: ModuleId) -> Option<&ModuleRunner> {
         self.modules.get(&id)
     }
@@ -174,121 +222,18 @@ impl ModuleManager {
         self.module_by_name.get(module_name).copied()
     }
 
-    pub fn module_by_import_name(&self, module_name: &str) -> Option<&ModuleRunner> {
-        let id = self.module_id_by_name(module_name)?;
-        self.module(id)
-    }
-
-    pub fn imported_module_can_be_loaded(
-        &self,
-        module_name: &str,
-        absolute_path: &str,
-    ) -> Result<Option<ModuleId>, String> {
-        if let Some(module_id) = self.module_by_name.get(module_name).copied() {
-            let Some(module) = self.modules.get(&module_id) else {
-                unreachable!("module name index points to a missing module")
-            };
-            if module.module_root_path == absolute_path {
-                if module.status == ModuleStatus::Loading {
-                    let cycle_start_index = self
-                        .loading_import_stack
-                        .iter()
-                        .position(|loading_id| *loading_id == module_id)
-                        .unwrap_or(0);
-                    let mut cycle_names = self.loading_import_stack[cycle_start_index..]
-                        .iter()
-                        .filter_map(|loading_id| self.modules.get(loading_id))
-                        .map(|loading_module| loading_module.module_name.clone())
-                        .collect::<Vec<String>>();
-                    cycle_names.push(module_name.to_string());
-                    return Err(format!("cyclic import: {}", cycle_names.join(" -> ")));
-                }
-                return Ok(Some(module_id));
-            }
-            return Err(format!(
-                "module name `{}` has already been used",
-                module_name
-            ));
-        }
-
-        if let Some(module_id) = self.module_by_path.get(absolute_path).copied() {
-            let Some(module) = self.modules.get(&module_id) else {
-                unreachable!("module path index points to a missing module")
-            };
-            return Err(format!(
-                "module path `{}` has already been imported as module name `{}`",
-                absolute_path, module.module_name
-            ));
-        }
-
-        Ok(None)
-    }
-
-    pub fn begin_loading_import(
-        &mut self,
-        module_name: String,
-        module_root_path: String,
-        main_file_path: String,
-    ) -> Result<ModuleId, String> {
-        if let Some(cycle_start_index) = self.loading_import_stack.iter().position(|module_id| {
-            self.modules
-                .get(module_id)
-                .is_some_and(|module| module.module_root_path == module_root_path)
-        }) {
-            let mut cycle_names = self.loading_import_stack[cycle_start_index..]
-                .iter()
-                .filter_map(|module_id| self.modules.get(module_id))
-                .map(|module| module.module_name.clone())
-                .collect::<Vec<String>>();
-            cycle_names.push(module_name);
-            return Err(format!("cyclic import: {}", cycle_names.join(" -> ")));
-        }
-
-        if self.module_by_name.contains_key(&module_name) {
-            return Err(format!(
-                "module name `{}` has already been used",
-                module_name
-            ));
-        }
-        if let Some(existing_id) = self.module_by_path.get(&module_root_path) {
-            let existing_name = self
-                .modules
-                .get(existing_id)
-                .map(|module| module.module_name.as_str())
-                .unwrap_or("");
-            return Err(format!(
-                "module path `{}` has already been imported as module name `{}`",
-                module_root_path, existing_name
-            ));
-        }
-
-        let id = self.allocate_module_id();
-        let runner = ModuleRunner::new(
-            id,
-            module_name.clone(),
-            module_root_path.clone(),
-            main_file_path,
-            ModuleStatus::Loading,
-        );
-        self.modules.insert(id, runner);
-        self.module_by_name.insert(module_name, id);
-        self.module_by_path.insert(module_root_path, id);
-        self.loading_import_stack.push(id);
-        Ok(id)
-    }
-
-    pub fn finish_loading_import(&mut self, module_id: ModuleId) {
+    pub fn finish_loading_module(&mut self, module_id: ModuleId) {
         if let Some(module) = self.modules.get_mut(&module_id) {
             module.status = ModuleStatus::Loaded;
         }
-        if self.loading_import_stack.last() == Some(&module_id) {
-            self.loading_import_stack.pop();
+        if self.loading_module_stack.last() == Some(&module_id) {
+            self.loading_module_stack.pop();
         } else if let Some(index) = self
-            .loading_import_stack
+            .loading_module_stack
             .iter()
             .rposition(|loading_id| *loading_id == module_id)
         {
-            self.loading_import_stack.remove(index);
+            self.loading_module_stack.remove(index);
         }
     }
 
@@ -298,11 +243,11 @@ impl ModuleManager {
         };
         if module.status == ModuleStatus::Loading {
             let cycle_start_index = self
-                .loading_import_stack
+                .loading_module_stack
                 .iter()
                 .position(|loading_id| *loading_id == module_id)
                 .unwrap_or(0);
-            let mut cycle_names = self.loading_import_stack[cycle_start_index..]
+            let mut cycle_names = self.loading_module_stack[cycle_start_index..]
                 .iter()
                 .filter_map(|loading_id| self.modules.get(loading_id))
                 .map(|loading_module| loading_module.module_name.clone())
@@ -321,7 +266,7 @@ impl ModuleManager {
             .get_mut(&module_id)
             .expect("discovered module should exist")
             .status = ModuleStatus::Loading;
-        self.loading_import_stack.push(module_id);
+        self.loading_module_stack.push(module_id);
         Ok(())
     }
 
@@ -347,4 +292,13 @@ fn module_root_path_for_main_file(main_file_path: &str) -> String {
         .unwrap_or_else(|| std::path::Path::new(""))
         .to_string_lossy()
         .into_owned()
+}
+
+fn local_reference_suffix(name: &str, local_root: &str) -> Option<String> {
+    if name == local_root {
+        return Some(String::new());
+    }
+    name.strip_prefix(local_root)
+        .filter(|suffix| suffix.starts_with(MOD_SIGN))
+        .map(str::to_string)
 }

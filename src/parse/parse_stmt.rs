@@ -132,7 +132,7 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
-    fn trust_forms_parse_and_removed_local_imports_explain_the_migration() {
+    fn trust_forms_and_import_boundaries_parse_as_expected() {
         for source_code in [
             "trust 1 = 1",
             "trust:\n    1 = 1",
@@ -144,6 +144,23 @@ mod parse_stmt_diagnostic_tests {
             let message = parse_one_stmt_error_message(source_code);
             assert!(message.contains("has been removed"), "{message}");
         }
+        let message = parse_one_stmt_error_message("import std basics");
+        assert!(
+            message.contains("only available in an isolated REPL"),
+            "{message}"
+        );
+
+        let mut runtime = Runtime::new();
+        runtime.isolated = true;
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(
+                "import \"../algebra\" as Algebra\nimport std basics",
+                Rc::from("isolated_import_test.lit"),
+            )
+            .expect("tokenize imports");
+        assert!(runtime.parse_stmt(&mut blocks[0]).is_ok());
+        assert!(runtime.parse_stmt(&mut blocks[1]).is_ok());
     }
 
     #[test]

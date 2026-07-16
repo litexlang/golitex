@@ -9,11 +9,10 @@ binary.
 litex [global options] [command]
 ```
 
-With no command, `litex` starts the interactive verifier REPL. If the current
-directory directly contains `litex.config`, it discovers that project without
-running its ordered `[export]` table. Use `litex -isolated` to force the
-ordinary isolated REPL. Litex does not search parent directories for a project
-configuration.
+With no command, `litex` starts an isolated interactive verifier REPL. It does
+not discover `litex.config` in the current directory or search parent
+directories. This terminal is deliberately separate from the fixed module
+tree, so it may load modules interactively.
 
 The CLI has one primary command per invocation. Global options are removed
 before the primary command is parsed, so they may appear before or after the
@@ -37,7 +36,7 @@ parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Ordinary `import std ...` dependencies remain allowed through the normal package loader. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
+| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Configured imports still load normally. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -94,18 +93,37 @@ those flags. `-lang` also consumes the next token globally.
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its ordered `[export]` table. |
-| `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
+| `litex` | Start an isolated interactive verifier REPL. |
+| `litex -isolated` | Compatibility spelling for the same isolated interactive REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run a registered file's transitive `[requires]` closure in its outermost project; otherwise run it as an isolated script. |
+| `litex -f <file>` | If the direct parent has `litex.config`, trace to its module and run the recursive `[export]` prefix through this file. Otherwise run the file, then continue in an isolated REPL with that file's environment. |
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
-| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its complete ordered `[export]` table. |
+| `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 
-Declare local project files and child modules in ordered `[export]` entries.
-Declare non-standard packages in `[import]`, installed standard packages in
-`[import std]`, and each file's direct earlier dependencies in `[requires]`.
-Files cite canonical names such as `chap3::theorem` or `std::basics::theorem`;
-source-level imports are reserved for `import std Name`.
+Declare local project files and child submodules in recursive ordered
+`[export]` entries. Only a `[hierarchy] module` declares non-standard packages
+in `[import]` or installed packages in `[import std]`. Files cite canonical
+names such as `Part2::chap3::theorem` or
+`std::basics::implementation::theorem`. Module source files cannot write
+source-level imports.
+
+The ordinary REPL, and the continued terminal after a successful isolated
+`-f`, may load further interfaces dynamically:
+
+<!-- litex:skip-test -->
+```litex
+import "../Algebra" as Algebra
+Algebra::implementation::some_fact
+
+import std basics
+std::basics::implementation::some_fact
+```
+
+The quoted target must be a folder whose `litex.config` declares
+`[hierarchy] module`. The import runs that module's declared imports and full
+ordered `[export]` tree. The terminal keeps the resulting environment, but the
+imported module's own source files remain non-isolated and therefore cannot
+write dynamic `import` statements.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -235,43 +253,41 @@ Unknown commands print an error and the help message, then exit with code `2`.
 
 ## Project Modules
 
-Use `litex.config` to organize a multi-file project:
+Use `litex.config` to organize a folder tree:
 
-- list local files and child modules once, in their mathematical order, in `[export]`;
-- declare non-standard package paths once in `[import]` at a package boundary;
-- declare installed standard packages by one name per line in `[import std]`;
-- give each entry a canonical name, for example `chap7 = "./chap7.lit"`;
-- declare `chap7 = ["chap3"]` in `[requires]` when Chapter 7 needs Chapter 3 under `-f`;
-- cite earlier entries directly as `chap7::name`;
-- run the complete book with `litex -r <project>` or one registered chapter's dependency closure with `litex -f <file>`.
+- put `module` under `[hierarchy]` at an independently runnable/importable root;
+- put `submodule` under `[hierarchy]` in every exported child folder;
+- list every direct child file and folder exactly once, in mathematical order,
+  under `[export]`;
+- declare external module folders under `[import]` and installed packages under
+  `[import std]`, only in the top-level module;
+- cite earlier entries with their full folder/file aliases, such as
+  `Part2::chap7::name` or `std::basics::implementation::name`.
 
-Package names are mounts: `B = "../B"` and `BF = "../B/F"` are distinct
-declarations even when `BF` is a child directory of `B`. An exported
-subpackage can use both mounts only after its ancestor declares both; Litex
-does not infer `BF` from `B`.
+A configured folder may contain only `litex.config` and the direct children
+listed in `[export]`. Exported folders must be submodules. Imported targets must
+be external module folders; imports cannot target files, submodules, or
+descendants of the importing module.
 
-For a named module with exactly one direct `.lit` export, its `litex.config`
-may expose that file as the module root instead of adding the export name:
+`-r` and `-f` share one recursive left-to-right order. Running a top-level
+module runs the whole tree. Running a submodule traces back to its module,
+executes every preceding entry, then executes the selected submodule in full.
+Running a registered file follows the same prefix and stops after that file. A
+file whose direct parent has no `litex.config` runs in isolation.
 
-```ini
-[module]
-flatten = true
+There is no `[requires]`, `[run]`, or flatten mode. Every folder and file alias
+stays in the canonical namespace. Source-level `import` is reserved for the
+isolated terminal; module source uses its manifest instead.
 
-[export]
-implementation = "./implementation.lit"
-```
-
-If the parent exports the directory as `Y`, callers write `Y::name`, not
-`Y::implementation::name`. A direct `litex -r` root cannot use this setting,
-because it has no module name to expose.
+Each `[import]` declaration creates a private module instance. Two aliases of
+one physical folder remain distinct, and imports internal to an imported module
+do not become public to its importer.
 
 For an explicitly trusted project entry, write
 `trust chap7 = "./chap7.lit"` in `[export]`. Ordinary runs skip its proof
 processing but preserve direct environment effects; `-strict` verifies it
-normally. For a trusted non-standard package, write
-`trust Algebra = "./Algebra"` in `[import]`.
-Standard package configuration has no path or trust modifier; write simply
-`basics` in `[import std]` and cite `std::basics::...`.
+normally. For a trusted non-standard package, use the same `trust` prefix in
+`[import]`. Standard package declarations have no trust modifier.
 
 ## Reserved Helper Commands
 

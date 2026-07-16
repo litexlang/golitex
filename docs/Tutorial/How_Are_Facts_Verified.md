@@ -27,7 +27,7 @@ For example, `1 + 1 = 2` is verified by builtin calculation.
 Litex provides rich builtin rules for atomic facts. Their implementation lives
 in `src/verify/verify_builtin_rules/`. Explicit `std` or project packages can
 provide additional named source facts, but those facts are available only after
-the source imports the package.
+the top-level module imports the package in `litex.config`.
 
 ```litex
 1 + 1 = 2

@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, and `trust import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects the `clear` control statement. Module imports are manifest declarations, not source statements. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -124,8 +124,7 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | `[module] flatten = true` exposes one direct file export at a named module root; `[import]` names non-standard package paths; `[import std]` lists installed standard packages; `[export]` names ordered local entries; and `[requires]` names earlier file dependencies. Configuration graphs, package authority, paths, and names are validated during discovery. | None during discovery. | Declares package capabilities, `-r` order, `-f` dependency closures, and canonical namespaces. |
-| `import std Name` | The only source-level module import. Locates the installed `std` directory, loads its ordinary root configuration, and selects the `Name` export from `std/litex.config`. | Runs that exported package through the ordinary module loader. | Registers the public `std::Name::...` namespace for the rest of the run. |
+| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct child in recursive execution order. Imported targets must be external modules, exported folders must be submodules, and no configured child may be omitted. | None during discovery. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix through a registered file. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |

@@ -110,10 +110,11 @@ pub use crate::infer::{
     StoreFactOutput,
 };
 pub use crate::module_manager::{
-    discover_repository, discover_repository_for_file, discover_std_module, parse_project_config,
-    resolve_std_root, ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget,
-    ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport,
-    ProjectImport, ProjectRequirement, ProjectStdImport, RepositoryFileTarget,
+    discover_isolated_module_import, discover_isolated_std_import, discover_repository,
+    discover_repository_for_file, parse_project_config, resolve_std_root, ConfigImport,
+    ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager,
+    ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
+    ProjectStdImport, RepositoryFileTarget,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -202,9 +203,9 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_run_summary_json, display_run_summary_json_with_runtime, display_runtime_error_json,
-    display_stmt_exec_result_json, render_run_source_code_output, run_latex_repl, run_repl,
-    run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language,
+    display_stmt_exec_result_json, render_run_source_code_output, run_file_with_project_context,
+    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repl_with_detail_output,
+    run_repl_with_detail_output_and_strict, run_repl_with_detail_output_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language_and_isolation, run_repository_with_output,
     run_repository_with_output_style, run_session_with_output_style_and_strict_and_language,
@@ -351,9 +352,9 @@ pub use crate::stmt::parameter_def::Set;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
-pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
+pub use crate::stmt::tooling_stmt::ImportModuleStmt;
+pub use crate::stmt::tooling_stmt::ImportStdStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
-pub use crate::stmt::tooling_stmt::TrustImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;

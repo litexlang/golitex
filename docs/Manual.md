@@ -2077,11 +2077,10 @@ A final artifact should not leave broad `trust` facts unexplained. Either prove
 the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
-If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements are rejected instead
-of being stored. Ordinary `import std ...` dependencies remain allowed and use
-the same module path as a configured standard package, so strict mode is an
-audit boundary for the current source rather than a claim that every imported
-interface is assumption-free. `trust import std ...` remains rejected.
+If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements
+are rejected instead of being stored. Configured imports still load normally,
+so strict mode is an audit boundary for the current run rather than a claim
+that every imported interface is assumption-free.
 
 ```litex
 # three primitive terms:
@@ -2123,8 +2122,8 @@ in a temporary child environment. If any statement fails or is unknown, the
 failure is reported and the outer environment is unchanged. If every statement
 succeeds, Litex merges the child environment into the outer environment, so the
 successful facts and definitions are committed without running the body again.
-Control statements such as `clear`, `import`, and `trust import` are not
-allowed inside `try:`.
+The `clear` control statement is not allowed inside `try:`. Module imports are
+manifest declarations and are not Litex source statements.
 
 This is especially useful for incremental proof writing and AI-generated proof
 scripts. Without `try:`, a long generated block has an all-or-nothing shape: if
@@ -2146,151 +2145,130 @@ x = 1
 
 ### Modules and manifests (preview)
 
-Use project imports for source-level dependencies. A configured package is
-loaded on demand and cited by its declared namespace; no mathematical package
-is initialized automatically. Keep shared background facts in a project or
-source-local cite package, so their proof-debt boundary remains visible in the
-source that chooses to rely on it.
+Litex projects are folder trees. Every participating folder owns one
+`litex.config` and declares one hierarchy role:
 
-There are two project-aware top-level modes:
+- `module` is a top-level, independently runnable/importable module. Its parent
+  folder must not also contain `litex.config`.
+- `submodule` is a folder exported directly by its configured parent. Following
+  `..` repeatedly must eventually reach a `module`.
 
-- **`litex -r project/`** executes every entry in that project's ordered
-  `[export]` table.
-- **`litex -f file.lit`** finds the outermost enclosing project that registers
-  the file and executes that file's explicit `[requires]` closure. Every
-  configured package import is initialized first. A file not registered by a
-  project stays isolated; use
-  **`litex -isolated -f file.lit`** to force isolation.
-
-`litex.config` is project configuration, not Litex source and not a knowledge
-file. It has five relevant tables:
+A module manifest may use `[import]`, `[import std]`, and `[export]`:
 
 ```ini
-[module]
-flatten = false
+[hierarchy]
+module
 
 [import]
-Algebra = "./Algebra"
+Algebra = "../Algebra"
 
 [import std]
 basics
 
 [export]
 chap1 = "./chapter01.lit"
-chap2 = "./chapter02.lit"
-trust legacy_background = "./legacy-background.lit"
-
-[requires]
-chap2 = ["chap1"]
+Part2 = "./Part2"
+chap3 = "./chapter03.lit"
 ```
 
-`[import]` is the explicit path-to-package boundary for non-standard modules.
-It is not a Litex statement: source files never write `import Algebra` or a
-path import. A repository root and an independently imported package may
-declare path imports. A directory reached through `[export]` is a subpackage;
-it cannot introduce a new path import. It may use packages already declared by
-an ancestor package, through their canonical namespace.
+A submodule manifest only declares its role and ordered exports:
 
-`[import std]` declares installed standard packages with the same package
-dependency role, but no path: each line is one export name from the installed
-`std` root. For example, `basics` makes `std::basics::...` available before
-the project's local exports run. It has no `trust` form and no implicit bare
-alias. Use it for a project-wide dependency; use `import std basics` in a
-source file when an isolated snippet or one source file chooses that package
-on demand.
+```ini
+[hierarchy]
+submodule
 
-A package identity is its **mount name**, not merely its directory. An
-`[import]` name is a package name, not a child namespace: if `C` declares
-`B = "../B"`, then `C::D` may use `B::F`. If `C` also needs `B/F` as the
-separately named package `BF`, `C` must declare `BF = "../B/F"` itself.
-`B::F` and `BF` are distinct packages even though they read the same directory;
-Litex never infers the second mount from the first. Only a path repeated in the
-active mount chain is a cycle.
+[export]
+lemma1 = "./lemma01.lit"
+Nested = "./Nested"
+lemma2 = "./lemma02.lit"
+```
 
-`[export]` names local sources and fixes the full-project `-r` order. A
-`[requires]` entry names only earlier local exports. It controls `-f`: Litex
-runs the transitive requirement closure and the selected file, rather than an
-ordered prefix. If a selected file cites a registered project namespace that
-is absent from that closure, Litex reports the first such reference as an
-unknown project dependency before executing the file.
+These manifests obey four structural rules:
 
-Each `.lit` entry runs one source; a directory entry runs its child project's
-complete ordered table when the directory itself is selected. Entries are
-available only through their canonical name:
+1. Every `[export]` path names exactly one direct child file or folder.
+2. Every direct child of a configured folder, except `litex.config` itself,
+   appears exactly once in `[export]`. This includes hidden files and
+   documentation files.
+3. An exported file is a `.lit` file. An exported folder has its own
+   `litex.config` and declares `submodule`.
+4. Only a `module` may import. `[import]` targets an external folder whose
+   manifest declares `module`; it cannot target a file, a submodule, or a
+   descendant of the importing module.
+
+`[import std]` names installed standard-library modules. For example, `basics`
+loads `std/basics/litex.config`. A standard package is an ordinary `module`;
+there is no separate `std/litex.config` package root.
+
+Execution follows one recursive, left-to-right `[export]` order:
+
+- `litex -r path/to/module` runs the module imports first, then its whole export
+  tree from top to bottom and left to right.
+- `litex -r path/to/submodule` traces through configured parents to the
+  top-level module, runs that module imports, runs every earlier entry in the
+  recursive order, and then runs the selected submodule's complete subtree.
+- `litex -f path/to/file.lit` checks only the file's direct parent for
+  `litex.config`. If none exists, the file runs in isolation and then leaves
+  that environment open in an isolated REPL. If one exists,
+  Litex traces to the top-level module and runs the same recursive prefix,
+  stopping after the selected exported file.
+- If a file sits directly in a configured folder but is not exported exactly
+  once, discovery fails.
+
+There is no `[requires]` table and no `[run]` table. Dependency availability is
+the recursive export prefix itself. There is also no flatten mode: every folder
+alias and file alias remains in the canonical name. With the manifests above,
+examples include `chap1::name`, `Part2::lemma1::name`, and
+`std::basics::implementation::name`.
+
+Earlier exported entries can be cited by canonical name:
 
 <!-- litex:skip-test -->
 ```litex
-# chapter05-real-numbers.lit
-chap3::some_fact
+# Part2/lemma02.lit
+Part2::lemma1::some_fact
 ```
 
-Bare names still mean local definitions, parameters, or kernel builtins. There is no
-`local import` statement: write the canonical name directly. A reference to a
-later export must be expressed through `[requires]` before it can support
-`-f`.
+Bare names still mean local definitions, parameters, or kernel builtins. A
+module source file never writes `import` or `trust import`; dependencies belong
+in the top-level module manifest. In contrast, the ordinary `litex` REPL and
+the continued terminal after an isolated `-f` may write:
 
-For a named module which has exactly one direct `.lit` export, write
-`flatten = true` in `[module]` to make that file the module's root interface:
-
-```ini
-# Y/litex.config
-[module]
-flatten = true
-
-[export]
-implementation = "./implementation.lit"
-```
-
-When a parent exports this directory as `Y`, callers use `Y::name`; the
-physical export name is not a second public path, so `Y::implementation::name`
-does not work. Flattening is rejected for directory exports, multiple exports,
-and a configuration run directly as `litex -r`, because that entry root has no
-module name.
-
-**`import std A`** is the only source-level module import. It locates the
-shipped `std` directory and selects the `A` export on demand. The config form
-`[import std]` uses the same ordinary package/export path before project
-exports run. The standard root follows the same export, child-module, and
-flattening rules as every other package; the source syntax only avoids making
-users configure the installed path themselves. It remains active after
-`clear`. Its public names retain the root namespace: use
-`std::A::name` for a named interface. For example:
-
-```ini
-# std/litex.config
-[export]
-basics = "./basics"
-
-# std/basics/litex.config
-[module]
-flatten = true
-
-[export]
-implementation = "./main.lit"
-```
-
-Thus `implementation` is not part of the public name: the bundled package
-exports `std::basics::name`, not `std::basics::implementation::name`.
-
+<!-- litex:skip-test -->
 ```litex
+import "../Algebra" as Algebra
+Algebra::implementation::some_fact
+
 import std basics
-by thm std::basics::nonempty_family_of_nonempty_sets_exists()
+std::basics::implementation::some_fact
 ```
+
+The quoted path must be an independently runnable `module` folder. Each such
+terminal import runs the target module's static `[import]`, `[import std]`, and
+ordered `[export]` plan; its module source still cannot dynamically import.
+
+Each import declaration creates a private module instance identified by its
+mount path. If a module imports the same physical folder as `First` and
+`Second`, `First::implementation::x` and
+`Second::implementation::x` are distinct mounted interfaces. Imports made
+inside `First` are available to First and its exported submodules, but are not
+automatically public to First's importer.
+
+Prefix `trust` in `[export]` marks one project entry as deliberately trusted in
+ordinary runs:
+
+```ini
+[export]
+trust background = "./background.lit"
+main = "./main.lit"
+```
+
+The same prefix is available for non-standard `[import]` entries. `-strict`
+ignores this configuration trust and verifies the target normally. Standard
+packages in `[import std]` have no trust modifier.
 
 For textbook-style developments, treat imports as visible background, not as a
-replacement for the chapter's mathematics. A good Litex translation should
-prefer local definitions, local claims, and explicit proof-debt notes when the
-book is building a concept. Do not hide the main derivation by importing a
-large package and citing a synonym theorem.
-
-Prefix `trust` in `[export]` marks one entry as a deliberately trusted project
-boundary for ordinary runs. It still parses the source and applies direct
-environment effects, while skipping proof processing. `-strict` ignores that
-configuration trust and verifies the same entry normally. Use
-`trust Algebra = "./Algebra"` in `[import]` for a deliberately trusted
-non-standard package; `-strict` verifies that package normally. Standard
-packages are named plainly in `[import std]` and have no configuration-level
-`trust` modifier.
+replacement for the chapter's mathematics. Prefer local definitions, local
+claims, and explicit proof-debt notes when the source is building a concept.
 
 ---
 
@@ -2851,8 +2829,6 @@ The sections above explain the common use cases. This table is a quick map of th
 | `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `? <fact>` | Internal proof target for `claim`, `thm`, `strategy`, and related proof forms |
-| `import` | Verify and load a root directory module declared in `litex.config` |
-| `trust import` | Load a declared directory module's environment without verifying its proof process |
 | `do_nothing` | Explicit no-op proof step |
 | `clear` | Reset the current working context |
 | `witness exist` | Prove an existential by giving witnesses |
@@ -3124,11 +3100,13 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
+| declare a top-level project module | `module` under `[hierarchy]` |
+| declare an exported child folder | `submodule` under `[hierarchy]` |
 | declare a non-standard package | `Algebra = "./Algebra"` in `[import]` |
 | declare an installed standard package | `basics` in `[import std]` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | cite an earlier project file inside a source | `chapter3::local` |
-| declare a file dependency for `-f` | `chapter7 = ["chapter3"]` in `[requires]` |
+| order project dependencies for `-r` and `-f` | place dependencies earlier in recursive `[export]` order |
 | mark a project entry as trusted | `trust chapter3 = "./chapter03.lit"` in `[export]` |
 | explicit no-op | `do_nothing` |
 | clear the current user environment | `clear` |

@@ -4,11 +4,7 @@ impl Runtime {
     pub fn parse_trust_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TRUST)?;
         if tb.current_token_is_equal_to(IMPORT) {
-            let stmt = self.parse_import_stmt(tb)?;
-            let Stmt::Command(CommandStmt::ImportStmt(import)) = stmt else {
-                unreachable!("import parser should produce an import statement")
-            };
-            return Ok(TrustImportStmt::new(import).into());
+            return Err(removed_source_import_error(tb));
         }
         if tb.current_token_is_equal_to(LOCAL) {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -26,28 +22,65 @@ impl Runtime {
     }
 
     pub fn parse_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        if !self.isolated {
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                "source import is only available in an isolated REPL or an isolated .lit file; module files must declare dependencies in litex.config"
+                    .to_string(),
+                tb.line_file.clone(),
+            ))
+            .into());
+        }
+
         tb.skip_token(IMPORT)?;
-        let first_name = tb.advance()?;
-        if first_name != STD {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "non-standard modules belong in litex.config [import]; Litex source only supports `import std Name`"
-                        .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
+        if tb.current_token_is_equal_to(STD) {
+            tb.skip_token(STD)?;
+            let name = tb.advance()?;
+            if !tb.exceed_end_of_head() {
+                return Err(import_parse_error(
+                    tb,
+                    "import std: expected one standard package name",
+                ));
+            }
+            return Ok(CommandStmt::ImportStmt(ImportStmt::Std(ImportStdStmt::new(
+                name,
+                tb.line_file.clone(),
+            )))
+            .into());
         }
-        let mod_name = tb.advance()?;
+
+        tb.skip_token(DOUBLE_QUOTE)?;
+        let mut path_parts = vec![];
+        while !tb.exceed_end_of_head() && !tb.current_token_is_equal_to(DOUBLE_QUOTE) {
+            path_parts.push(tb.advance()?);
+        }
+        if path_parts.is_empty() {
+            return Err(import_parse_error(
+                tb,
+                "import: module path cannot be empty",
+            ));
+        }
+        tb.skip_token(DOUBLE_QUOTE)?;
+        tb.skip_token(AS)?;
+        let alias = tb.advance()?;
+        is_valid_litex_name(alias.as_str()).map_err(|message| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(message, tb.line_file.clone()),
+            ))
+        })?;
         if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "import: unexpected token after module name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
+            return Err(import_parse_error(
+                tb,
+                "import: expected a quoted path followed by as and an alias",
+            ));
         }
-        let import = ImportGlobalModuleStmt::new_std(mod_name, tb.line_file.clone());
-        Ok(ImportStmt::ImportGlobalModule(import).into())
+        Ok(
+            CommandStmt::ImportStmt(ImportStmt::Module(ImportModuleStmt::new(
+                path_parts.join(""),
+                alias,
+                tb.line_file.clone(),
+            )))
+            .into(),
+        )
     }
 
     pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -59,4 +92,21 @@ impl Runtime {
         tb.skip_token(CLEAR)?;
         Ok(ClearStmt::new(tb.line_file.clone()).into())
     }
+}
+
+fn removed_source_import_error(tb: &TokenBlock) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        "trust import has been removed; use terminal `import` in an isolated REPL, or declare a module dependency in litex.config [import] or [import std]"
+            .to_string(),
+        tb.line_file.clone(),
+    ))
+    .into()
+}
+
+fn import_parse_error(tb: &TokenBlock, message: &str) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        message.to_string(),
+        tb.line_file.clone(),
+    ))
+    .into()
 }

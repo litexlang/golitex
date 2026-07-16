@@ -1470,20 +1470,6 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
         Stmt::DefAlgoStmt(_) => vec![statement_environment_effect("define_algorithm", stmt)],
         Stmt::DefThmStmt(_) => vec![statement_environment_effect("define_theorem", stmt)],
         Stmt::DefStrategyStmt(_) => vec![statement_environment_effect("define_strategy", stmt)],
-        Stmt::Command(CommandStmt::ImportStmt(_)) => {
-            vec![statement_environment_effect("load_module", stmt)]
-        }
-        Stmt::Command(CommandStmt::TrustImportStmt(_)) => {
-            let mut effect = statement_environment_effect("load_module", stmt);
-            let JsonValue::Object(fields) = &mut effect else {
-                return vec![effect];
-            };
-            fields.push((
-                "mode".to_string(),
-                JsonValue::JsonString("trusted".to_string()),
-            ));
-            vec![effect]
-        }
         Stmt::Command(CommandStmt::ClearStmt(_)) => {
             vec![statement_environment_effect("clear_environment", stmt)]
         }
