@@ -182,12 +182,12 @@ claim:
         $even(n) or $odd(n)
     by cases $even(n) or $odd(n):
         case n % 2 = 0:
-            by thm std::basics::integer_mod_quotient_remainder(n, 2)
+            by thm std::basics::implementation::integer_mod_quotient_remainder(n, 2)
             obtain k from exist k Z st {n = 2 * k + n % 2}
             n = 2 * k + 0 = 2 * k
             witness exist l Z st {n = 2 * l} from k
         case n % 2 = 1:
-            by thm std::basics::integer_mod_quotient_remainder(n, 2)
+            by thm std::basics::implementation::integer_mod_quotient_remainder(n, 2)
             obtain k from exist k Z st {n = 2 * k + n % 2}
             n = 2 * k + 1
             witness exist l Z st {n = 2 * l + 1} from k
@@ -342,7 +342,7 @@ claim:
         a $in N
         a $in Z
         witness exist c Z st {12 = 5 * c + 0} from a
-        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(12, 5, a, 0)
+        by thm std::basics::implementation::integer_mod_eq_remainder_of_quotient_remainder(12, 5, a, 0)
         12 % 5 = 0
         2 = 12 % 5
         impossible 2 = 0
@@ -718,21 +718,21 @@ claim:
         $mod_eq(x^3, x, 3)
     by cases $mod_eq(x^3, x, 3):
         case x % 3 = 0:
-            by thm std::basics::integer_mod_quotient_remainder(x, 3)
+            by thm std::basics::implementation::integer_mod_quotient_remainder(x, 3)
             obtain k from exist q Z st {x = 3 * q + x % 3}
             x = 3 * k + x % 3 = 3 * k
             witness exist m Z st {x^3 - x = 3 * m} from k * (9 * k^2 - 1):
                 x^3 - x = (3 * k)^3 - 3 * k = 3 * k * (9 * k^2 - 1)
             $mod_eq(x^3, x, 3)
         case x % 3 = 1:
-            by thm std::basics::integer_mod_quotient_remainder(x, 3)
+            by thm std::basics::implementation::integer_mod_quotient_remainder(x, 3)
             obtain k from exist q Z st {x = 3 * q + x % 3}
             x = 3 * k + x % 3 = 3 * k + 1
             witness exist m Z st {x^3 - x = 3 * m} from k * (9 * k^2 + 9 * k + 2):
                 x^3 - x = (3 * k + 1)^3 - (3 * k + 1) = 3 * k * (9 * k^2 + 9 * k + 2)
             $mod_eq(x^3, x, 3)
         case x % 3 = 2:
-            by thm std::basics::integer_mod_quotient_remainder(x, 3)
+            by thm std::basics::implementation::integer_mod_quotient_remainder(x, 3)
             obtain k from exist q Z st {x = 3 * q + x % 3}
             x = 3 * k + x % 3 = 3 * k + 2
             witness exist m Z st {x^3 - x = 3 * m} from 9 * k^3 + 18 * k^2 + 11 * k + 2:

@@ -251,11 +251,13 @@ fn initialize_session_runtime(
     force_isolated: bool,
 ) -> Result<&'static str, RuntimeError> {
     if force_isolated || !directory.join("litex.config").is_file() {
+        runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("session");
         return Ok("isolated");
     }
 
     let root = directory.to_string_lossy().into_owned();
+    runtime.isolated = false;
     discover_repository(runtime, root.as_str())?;
     runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str());
     Ok("project")

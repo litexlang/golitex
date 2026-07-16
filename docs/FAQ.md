@@ -242,8 +242,8 @@ noise.
 
 Second, organize broad mathematical background into source-local cite packages.
 A theorem about groups should live beside the source that needs it; a theorem
-about real analysis should live beside that analysis source. The source imports
-the package when that background is actually needed. This keeps the active
+about real analysis should live beside that analysis source. The owning module
+imports the package in `litex.config` when that background is actually needed. This keeps the active
 known-fact and known-`forall` space closer to the topic of the current proof.
 
 A practical rule of thumb is:

@@ -177,18 +177,17 @@ pub fn run_repository_with_output_style(
     summarize: bool,
 ) -> (bool, String) {
     let mut runtime = Runtime::new();
+    runtime.isolated = false;
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
-    match discover_repository(&mut runtime, repository_path) {
-        Ok(path) => path,
+    let target = match discover_repository(&mut runtime, repository_path) {
+        Ok(target) => target,
         Err(error) => {
             return render_run_source_code_output(&runtime, &vec![], &Some(error), true);
         }
     };
-    let entry_module_id = runtime.current_module_id();
-    let (stmt_results, runtime_error) =
-        run_repository_file_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id));
+    let (stmt_results, runtime_error) = run_repository_file_target(&mut runtime, target);
     let (ok, mut output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
     if summarize {
@@ -240,6 +239,7 @@ pub fn run_file_with_project_context(
     runtime: &mut Runtime,
     force_isolated: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    runtime.isolated = false;
     let path = Path::new(entry_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
     if file_name == Some("litex.config") {
@@ -258,6 +258,8 @@ pub fn run_file_with_project_context(
             Err(error) => return (vec![], Some(error)),
         }
     }
+
+    runtime.isolated = true;
 
     let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,

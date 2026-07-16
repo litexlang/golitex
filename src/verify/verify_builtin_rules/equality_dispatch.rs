@@ -1748,8 +1748,8 @@ impl Runtime {
         };
 
         let not_nonempty: AtomicFact = NotIsNonemptySetFact::new(set, line_file.clone()).into();
-        let sub = self
-            .verify_non_equational_known_then_builtin_rules_only(&not_nonempty, verify_state)?;
+        let sub =
+            self.verify_non_equational_known_then_builtin_rules_only(&not_nonempty, verify_state)?;
         if !sub.is_true() {
             return Ok(None);
         }

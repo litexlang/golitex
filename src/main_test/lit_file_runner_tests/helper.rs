@@ -218,12 +218,6 @@ pub(super) fn litex_snippets_from_markdown_files(
     out
 }
 
-/// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
-/// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
-pub(super) fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
-    collect_lit_files_recursive_under_excluding(manifest_dir, subdir, &[])
-}
-
 pub(super) fn collect_lit_files_recursive_under_excluding(
     manifest_dir: &Path,
     subdir: &str,

@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::to_latex::to_latex;
 use std::io::{self, BufRead, Write};
-use std::path::Path;
 
 #[derive(Clone, Copy)]
 enum ReplOutputMode {
@@ -74,15 +73,9 @@ pub fn run_repl_with_output_style_and_strict_and_language_and_isolation(
     output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
-    force_isolated: bool,
+    _force_isolated: bool,
 ) {
-    return run_repl_loop_internal(
-        version,
-        output_style,
-        strict_mode,
-        output_language,
-        force_isolated,
-    );
+    return run_repl_loop_internal(version, output_style, strict_mode, output_language, false);
 }
 
 pub fn run_latex_repl(version: &str) {
@@ -94,7 +87,7 @@ fn run_repl_loop_internal(
     output_style: OutputStyle,
     strict_mode: bool,
     output_language: OutputLanguage,
-    force_isolated: bool,
+    _force_isolated: bool,
 ) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
@@ -108,7 +101,6 @@ fn run_repl_loop_internal(
         &mut stdin_locked,
         &mut stdout_locked,
         ReplOutputMode::Json,
-        !force_isolated,
     );
     match result {
         Ok(()) => {}
@@ -146,7 +138,6 @@ fn run_repl_loop_with_readers(
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
-        false,
     )
 }
 
@@ -163,7 +154,6 @@ fn run_latex_repl_loop_with_readers(
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Latex,
-        false,
     )
 }
 
@@ -175,7 +165,6 @@ fn run_repl_loop_with_readers_and_mode(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
-    discover_project_from_current_directory: bool,
 ) -> io::Result<()> {
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
     writeln!(
@@ -194,43 +183,45 @@ fn run_repl_loop_with_readers_and_mode(
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
+    initialize_isolated_repl_runtime(&mut runtime);
+    writeln!(stdout_writer, "Isolated REPL.")?;
 
-    let startup = if discover_project_from_current_directory {
-        match std::env::current_dir() {
-            Ok(directory) => {
-                match initialize_repl_runtime_for_directory(&mut runtime, &directory) {
-                    Ok(startup) => startup,
-                    Err(error) => {
-                        writeln!(stdout_writer, "Project REPL could not start.")?;
-                        writeln!(
-                            stdout_writer,
-                            "{}",
-                            display_runtime_error_json(&runtime, &error, true).trim()
-                        )?;
-                        return Ok(());
-                    }
-                }
-            }
-            Err(error) => {
-                writeln!(
-                    stdout_writer,
-                    "Could not inspect the current directory ({}); starting isolated REPL.",
-                    error
-                )?;
-                initialize_isolated_repl_runtime(&mut runtime);
-                ReplStartup::Isolated
-            }
-        }
-    } else {
-        initialize_isolated_repl_runtime(&mut runtime);
-        ReplStartup::Isolated
-    };
+    run_repl_prompt_loop_with_runtime(&mut runtime, stdin_reader, stdout_writer, output_mode)
+}
 
-    match startup {
-        ReplStartup::Isolated => writeln!(stdout_writer, "Isolated REPL.")?,
-        ReplStartup::Project { root } => writeln!(stdout_writer, "Project REPL: {}", root)?,
+pub fn run_isolated_repl_with_runtime(version_banner: &str, runtime: &mut Runtime) {
+    let stdin_handle = io::stdin();
+    let stdout_handle = io::stdout();
+    let mut stdin_locked = stdin_handle.lock();
+    let mut stdout_locked = stdout_handle.lock();
+    let result = run_isolated_repl_with_runtime_and_readers(
+        version_banner,
+        runtime,
+        &mut stdin_locked,
+        &mut stdout_locked,
+    );
+    if let Err(write_error) = result {
+        eprintln!("repl output error: {}", write_error);
     }
+}
 
+fn run_isolated_repl_with_runtime_and_readers(
+    version_banner: &str,
+    runtime: &mut Runtime,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+) -> io::Result<()> {
+    writeln!(stdout_writer, "Litex version {}", version_banner)?;
+    writeln!(stdout_writer, "Continuing isolated REPL. Ctrl+D to exit.")?;
+    run_repl_prompt_loop_with_runtime(runtime, stdin_reader, stdout_writer, ReplOutputMode::Json)
+}
+
+fn run_repl_prompt_loop_with_runtime(
+    runtime: &mut Runtime,
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+    output_mode: ReplOutputMode,
+) -> io::Result<()> {
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();
     let mut collecting_multiline = false;
@@ -253,8 +244,7 @@ fn run_repl_loop_with_readers_and_mode(
         };
 
         if bytes_read == 0 {
-            let output_text =
-                run_repl_source_if_not_empty(&source_buffer, &mut runtime, output_mode);
+            let output_text = run_repl_source_if_not_empty(&source_buffer, runtime, output_mode);
             if !output_text.is_empty() {
                 writeln!(stdout_writer, "{}", output_text)?;
             }
@@ -266,7 +256,7 @@ fn run_repl_loop_with_readers_and_mode(
         if trimmed_line.is_empty() {
             if collecting_multiline {
                 let output_text =
-                    run_repl_source_if_not_empty(&source_buffer, &mut runtime, output_mode);
+                    run_repl_source_if_not_empty(&source_buffer, runtime, output_mode);
                 if !output_text.is_empty() {
                     writeln!(stdout_writer, "{}", output_text)?;
                 }
@@ -288,7 +278,7 @@ fn run_repl_loop_with_readers_and_mode(
             continue;
         }
 
-        let output_text = run_repl_source_if_not_empty(trimmed_line, &mut runtime, output_mode);
+        let output_text = run_repl_source_if_not_empty(trimmed_line, runtime, output_mode);
         if !output_text.is_empty() {
             writeln!(stdout_writer, "{}", output_text)?;
         }
@@ -324,28 +314,9 @@ fn run_repl_source_if_not_empty(
     }
 }
 
-enum ReplStartup {
-    Isolated,
-    Project { root: String },
-}
-
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
+    runtime.isolated = true;
     runtime.new_file_path_new_env_new_name_scope("repl");
-}
-
-fn initialize_repl_runtime_for_directory(
-    runtime: &mut Runtime,
-    directory: &Path,
-) -> Result<ReplStartup, RuntimeError> {
-    if !directory.join("litex.config").is_file() {
-        initialize_isolated_repl_runtime(runtime);
-        return Ok(ReplStartup::Isolated);
-    }
-
-    let root = directory.to_string_lossy().into_owned();
-    discover_repository(runtime, root.as_str())?;
-    runtime.prepare_current_repository_for_repl(format!("{}/<repl>", root).as_str());
-    Ok(ReplStartup::Project { root })
 }
 
 fn repl_line_starts_block(line: &str) -> bool {
@@ -355,18 +326,13 @@ fn repl_line_starts_block(line: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        initialize_repl_runtime_for_directory, run_latex_repl_loop_with_readers,
-        run_repl_loop_with_readers, ReplStartup,
+        run_isolated_repl_with_runtime_and_readers, run_latex_repl_loop_with_readers,
+        run_repl_loop_with_readers,
     };
-    use crate::pipeline::run_source_code;
+    use crate::pipeline::{run_file_with_project_context, run_source_code};
     use crate::runtime::{OutputStyle, Runtime};
     use std::fs;
     use std::io::Cursor;
-    use std::path::PathBuf;
-
-    fn repl_test_dir(name: &str) -> PathBuf {
-        std::env::temp_dir().join(format!("litex-repl-{}-{}", name, std::process::id()))
-    }
 
     #[test]
     fn repl_accepts_multiline_block_after_blank_line() {
@@ -444,74 +410,34 @@ mod tests {
     }
 
     #[test]
-    fn project_repl_discovers_entries_without_running_them() {
-        let root = repl_test_dir("project");
-        let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(&root).expect("create project fixture");
-        fs::write(
-            root.join("litex.config"),
-            "[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
-        )
-        .expect("write config");
-        fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
-        fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
+    fn isolated_file_continues_in_the_same_repl_runtime() {
+        let directory =
+            std::env::temp_dir().join(format!("litex-isolated-file-repl-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&directory);
+        fs::create_dir_all(&directory).expect("create isolated file directory");
+        let file = directory.join("session.lit");
+        fs::write(&file, "have from_file R = 1\n").expect("write isolated source file");
 
         let mut runtime = Runtime::new();
-        let startup = initialize_repl_runtime_for_directory(&mut runtime, &root)
-            .expect("discover project for REPL");
-        assert!(matches!(startup, ReplStartup::Project { .. }));
-        assert!(runtime.current_file_path_rc().ends_with("/<repl>"));
-        assert!(
-            !runtime
-                .current_module()
-                .main_environment
-                .defined_identifiers
-                .contains_key("planned_value"),
-            "the ordered project entries must not run when the REPL starts"
+        let (_, file_error) = run_file_with_project_context(
+            file.to_str().expect("file path is UTF-8"),
+            &mut runtime,
+            false,
         );
+        assert!(file_error.is_none(), "{file_error:?}");
+        assert!(runtime.isolated);
 
-        let (_, import_error) = run_source_code("local import facts", &mut runtime);
-        assert!(import_error.is_some(), "{import_error:?}");
-        let (_, fact_error) = run_source_code("facts::x = 1", &mut runtime);
-        assert!(fact_error.is_some(), "{fact_error:?}");
+        let mut input = Cursor::new(b"from_file = 1\nhave from_repl R = 2\n".as_slice());
+        let mut output = Vec::new();
+        run_isolated_repl_with_runtime_and_readers("test", &mut runtime, &mut input, &mut output)
+            .expect("continue isolated REPL");
+        let output = String::from_utf8(output).expect("UTF-8 REPL output");
+        assert!(output.contains("Continuing isolated REPL."));
+        assert!(output.contains("\"result\": \"success\""), "{output}");
 
-        let _ = fs::remove_dir_all(&root);
-    }
+        let (_, continuation_error) = run_source_code("from_repl = 2", &mut runtime);
+        assert!(continuation_error.is_none(), "{continuation_error:?}");
 
-    #[test]
-    fn repl_without_current_directory_config_stays_isolated() {
-        let root = repl_test_dir("isolated");
-        let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(&root).expect("create isolated fixture");
-
-        let mut runtime = Runtime::new();
-        let startup = initialize_repl_runtime_for_directory(&mut runtime, &root)
-            .expect("start isolated REPL");
-        assert!(matches!(startup, ReplStartup::Isolated));
-        let (_, error) = run_source_code("local import facts", &mut runtime);
-        assert!(error.is_some());
-
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn project_repl_rejects_invalid_current_directory_config() {
-        let root = repl_test_dir("invalid-config");
-        let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(&root).expect("create invalid project fixture");
-        fs::write(
-            root.join("litex.config"),
-            "[export]\nfacts = \"./facts.lit\"\n",
-        )
-        .expect("write invalid config");
-
-        let mut runtime = Runtime::new();
-        let result = initialize_repl_runtime_for_directory(&mut runtime, &root);
-        assert!(
-            result.is_err(),
-            "invalid project configuration must stop startup"
-        );
-
-        let _ = fs::remove_dir_all(&root);
+        let _ = fs::remove_dir_all(&directory);
     }
 }

@@ -159,8 +159,8 @@ pub fn run_graph_for_repo_with_strict_and_language(
     let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
-    match discover_repository(&mut runtime, repo_path) {
-        Ok(path) => path,
+    let target = match discover_repository(&mut runtime, repo_path) {
+        Ok(target) => target,
         Err(error) => {
             return render_graph_result(
                 "repo",
@@ -172,11 +172,8 @@ pub fn run_graph_for_repo_with_strict_and_language(
             );
         }
     };
-    let entry_module_id = runtime.current_module_id();
-    let (stmt_results, runtime_error) = crate::pipeline::run_repository_file_target(
-        &mut runtime,
-        RepositoryFileTarget::Module(entry_module_id),
-    );
+    let (stmt_results, runtime_error) =
+        crate::pipeline::run_repository_file_target(&mut runtime, target);
     render_graph_result(
         "repo",
         repo_path,

@@ -42,23 +42,13 @@ impl DefTemplateStmt {
     }
 }
 
-impl ImportGlobalModuleStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ImportGlobalModuleStmt".to_string()
-    }
-}
-
 impl ImportStmt {
     pub fn stmt_type_name(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
-        }
+        "ImportStmt".to_string()
     }
-}
 
-impl TrustImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "TrustImportStmt".to_string()
+    pub fn output_type_string(&self) -> String {
+        "import statement".to_string()
     }
 }
 
@@ -371,26 +361,6 @@ impl DefAlgoStmt {
 impl DefTemplateStmt {
     pub fn output_type_string() -> String {
         "template definition".to_string()
-    }
-}
-
-impl ImportGlobalModuleStmt {
-    pub fn output_type_string() -> String {
-        "import statement".to_string()
-    }
-}
-
-impl ImportStmt {
-    pub fn output_type_string(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(_) => ImportGlobalModuleStmt::output_type_string(),
-        }
-    }
-}
-
-impl TrustImportStmt {
-    pub fn output_type_string() -> String {
-        "trusted import statement".to_string()
     }
 }
 

@@ -38,6 +38,7 @@ pub enum ExportEntry {
 
 #[derive(Clone)]
 pub struct ConfigImport {
+    pub name: String,
     pub module_id: ModuleId,
     pub line_file: LineFile,
     pub trusted: bool,
@@ -88,12 +89,12 @@ pub struct ModuleRunner {
     pub module_name: String,
     pub module_root_path: String,
     pub main_file_path: String,
+    pub hierarchy: ProjectHierarchy,
+    pub parent_module_id: Option<ModuleId>,
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
-    pub flattened_export_file: Option<FileId>,
     pub exports: HashMap<String, ExportEntry>,
     pub run_targets: Vec<ImportTarget>,
-    pub required_targets: HashMap<ImportTarget, Vec<ImportTarget>>,
     pub trusted_run_targets: HashMap<ImportTarget, LineFile>,
     pub config_imports: Vec<ConfigImport>,
     pub imports: Vec<ModuleId>,
@@ -108,6 +109,8 @@ impl ModuleRunner {
         module_name: String,
         module_root_path: String,
         main_file_path: String,
+        hierarchy: ProjectHierarchy,
+        parent_module_id: Option<ModuleId>,
         status: ModuleStatus,
     ) -> Self {
         ModuleRunner {
@@ -115,12 +118,12 @@ impl ModuleRunner {
             module_name,
             module_root_path,
             main_file_path,
+            hierarchy,
+            parent_module_id,
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
-            flattened_export_file: None,
             exports: HashMap::new(),
             run_targets: vec![],
-            required_targets: HashMap::new(),
             trusted_run_targets: HashMap::new(),
             config_imports: vec![],
             imports: vec![],

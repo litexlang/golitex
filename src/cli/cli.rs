@@ -609,16 +609,25 @@ fn main_flag_file(
         }
     };
 
-    let output =
-        run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation(
-            path_string.as_str(),
-            output_style,
-            strict_mode,
-            output_language,
-            summarize_output,
-            force_isolated,
+    let mut runtime = Runtime::new();
+    runtime.set_output_style(output_style);
+    runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
+    let (stmt_results, runtime_error) =
+        run_file_with_project_context(path_string.as_str(), &mut runtime, force_isolated);
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if summarize_output {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
         );
+        output.push('\n');
+    }
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+    if ok && runtime.isolated {
+        run_isolated_repl_with_runtime(VERSION, &mut runtime);
+    }
 }
 
 fn main_flag_repo(
@@ -1111,10 +1120,10 @@ fn upgrade_message(version: &str) -> String {
 }
 
 fn help_message() -> String {
-    let result = r#"litex : run Litex interactively in your terminal; discover cwd/litex.config when present
-litex -f <file> : run a registered project's ordered prefix through this file, or an isolated file when no project registers it
+    let result = r#"litex : start an isolated persistent REPL; terminal import is available
+litex -f <file> : use a direct-parent litex.config to run the module prefix through this file; otherwise run it and continue in an isolated REPL
 litex -isolated -f <file> : force isolated file mode
-litex -r <project> : discover project/litex.config, then run its complete ordered [export] table
+litex -r <folder> : run a module's recursive [export] tree, or the root prefix through a selected submodule
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
@@ -1135,14 +1144,14 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
 litex -python -f <file> : compile supported verified Litex definitions to Python
 litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <project> : compile supported definitions in the project ordered [export] table to Python
+litex -python -r <project> : compile supported definitions in the selected recursive project run to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -compact : show only result, type, line, and statement for each result
 litex : show normal output with internal statements and direct verification reasons
 litex -detail : include full audit trace details and raw source paths in JSON output
-litex -strict : reject user trust, trust have, and axiom statements; ordinary std imports remain recorded dependencies
+litex -strict : reject user trust, trust have, and axiom statements; configured imports still load normally
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
@@ -1216,10 +1225,10 @@ mod tests {
     #[test]
     fn help_explains_project_file_and_run_plan_modes() {
         let message = help_message();
-        assert!(message.contains("ordered prefix through this file"));
+        assert!(message.contains("module prefix through this file"));
         assert!(message.contains("litex -isolated -f <file>"));
-        assert!(message.contains("project/litex.config"));
-        assert!(message.contains("ordered [export] table"));
+        assert!(message.contains("recursive [export] tree"));
+        assert!(message.contains("selected submodule"));
     }
 
     #[test]

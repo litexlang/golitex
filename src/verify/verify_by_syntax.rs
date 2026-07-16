@@ -8,22 +8,7 @@ impl Runtime {
                 _ => false,
             },
             Obj::Atom(AtomObj::IdentifierWithMod(a)) => match right {
-                Obj::Atom(AtomObj::IdentifierWithMod(b)) => {
-                    if a.mod_name == b.mod_name {
-                        a.to_string() == b.to_string()
-                    } else {
-                        let module_manager = &self.module_manager;
-                        match (
-                            module_manager.module_by_import_name(&a.mod_name),
-                            module_manager.module_by_import_name(&b.mod_name),
-                        ) {
-                            (Some(m1), Some(m2)) => {
-                                m1.module_root_path == m2.module_root_path && a.name == b.name
-                            }
-                            _ => false,
-                        }
-                    }
-                }
+                Obj::Atom(AtomObj::IdentifierWithMod(b)) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnObj(f) => match right {

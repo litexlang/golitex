@@ -31,7 +31,7 @@ pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
     let mut runtime = Runtime::new();
     match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
-        Some(target) => to_python_project_target(&mut runtime, target),
+        Some(target) => to_python_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
             runtime.new_file_path_new_env_new_name_scope(resolved_path.as_str());
@@ -42,9 +42,88 @@ pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
 
 pub fn to_python_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
     let mut runtime = Runtime::new();
-    discover_repository(&mut runtime, repository_path)?;
-    let entry_module_id = runtime.current_module_id();
-    to_python_project_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id))
+    let target = discover_repository(&mut runtime, repository_path)?;
+    to_python_project_run(&mut runtime, target)
+}
+
+fn to_python_project_run(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+) -> Result<String, RuntimeError> {
+    let root_module_id = runtime
+        .module_manager
+        .entry_module_id
+        .expect("discovered project should have an entry module");
+    if target == RepositoryFileTarget::Module(root_module_id) {
+        return to_python_project_target(runtime, target);
+    }
+    if !project_target_is_inside_module(runtime, target, root_module_id) {
+        return Err(file_error(
+            "litex.config",
+            "selected target is not inside the entry module export tree".to_string(),
+        ));
+    }
+    to_python_project_prefix(runtime, root_module_id, target)
+}
+
+fn to_python_project_prefix(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    selected_target: RepositoryFileTarget,
+) -> Result<String, RuntimeError> {
+    let (module_path, config_imports, run_targets) = {
+        let module = runtime
+            .module_manager
+            .module(module_id)
+            .expect("discovered module should exist");
+        (
+            module.main_file_path.clone(),
+            module.config_imports.clone(),
+            module.run_targets.clone(),
+        )
+    };
+    let pushed_frame = runtime.current_module_id() != module_id;
+    if pushed_frame {
+        runtime.push_module_execution_frame(module_id, module_path.as_str());
+    }
+    let output = (|| {
+        let mut fragments = vec![];
+        for config_import in config_imports {
+            let fragment = to_python_project_target(
+                runtime,
+                RepositoryFileTarget::Module(config_import.module_id),
+            )?;
+            push_python_fragment(&mut fragments, fragment);
+        }
+        for run_target in run_targets {
+            let target_matches = repository_target_matches(selected_target, run_target);
+            let target_contains = matches!(
+                run_target,
+                ImportTarget::Module(child_module_id)
+                    if project_target_is_inside_module(runtime, selected_target, child_module_id)
+            );
+            let fragment = if target_contains && !target_matches {
+                let ImportTarget::Module(child_module_id) = run_target else {
+                    unreachable!("only a module target can contain another target")
+                };
+                to_python_project_prefix(runtime, child_module_id, selected_target)?
+            } else {
+                to_python_project_target(runtime, repository_file_target(run_target))?
+            };
+            push_python_fragment(&mut fragments, fragment);
+            if target_matches || target_contains {
+                return Ok(fragments.join("\n"));
+            }
+        }
+        Err(file_error(
+            module_path.as_str(),
+            "selected target is missing from its recursive ordered [export] tree".to_string(),
+        ))
+    })();
+    if pushed_frame {
+        runtime.pop_execution_frame();
+    }
+    output
 }
 
 fn to_python_project_target(
@@ -75,11 +154,7 @@ fn to_python_project_target(
                         runtime,
                         RepositoryFileTarget::Module(config_import.module_id),
                     )?;
-                    if !fragment.trim().is_empty()
-                        && fragment.trim() != "# No Python-extractable Litex definitions."
-                    {
-                        fragments.push(fragment);
-                    }
+                    push_python_fragment(&mut fragments, fragment);
                 }
                 for run_target in run_targets {
                     let fragment = match run_target {
@@ -92,11 +167,7 @@ fn to_python_project_target(
                             RepositoryFileTarget::Module(module_id),
                         ),
                     }?;
-                    if !fragment.trim().is_empty()
-                        && fragment.trim() != "# No Python-extractable Litex definitions."
-                    {
-                        fragments.push(fragment);
-                    }
+                    push_python_fragment(&mut fragments, fragment);
                 }
                 Ok(fragments.join("\n"))
             })();
@@ -146,6 +217,60 @@ fn to_python_project_target(
             output
         }
     }
+}
+
+fn push_python_fragment(fragments: &mut Vec<String>, fragment: String) {
+    if !fragment.trim().is_empty()
+        && fragment.trim() != "# No Python-extractable Litex definitions."
+    {
+        fragments.push(fragment);
+    }
+}
+
+fn repository_target_matches(target: RepositoryFileTarget, import_target: ImportTarget) -> bool {
+    match (target, import_target) {
+        (RepositoryFileTarget::Module(target_module), ImportTarget::Module(module_id)) => {
+            target_module == module_id
+        }
+        (
+            RepositoryFileTarget::File {
+                module_id: target_module,
+                file_id: target_file,
+            },
+            ImportTarget::File { module_id, file_id },
+        ) => target_module == module_id && target_file == file_id,
+        _ => false,
+    }
+}
+
+fn repository_file_target(target: ImportTarget) -> RepositoryFileTarget {
+    match target {
+        ImportTarget::Module(module_id) => RepositoryFileTarget::Module(module_id),
+        ImportTarget::File { module_id, file_id } => {
+            RepositoryFileTarget::File { module_id, file_id }
+        }
+    }
+}
+
+fn project_target_is_inside_module(
+    runtime: &Runtime,
+    target: RepositoryFileTarget,
+    ancestor_module_id: ModuleId,
+) -> bool {
+    let mut module_id = Some(match target {
+        RepositoryFileTarget::Module(module_id) => module_id,
+        RepositoryFileTarget::File { module_id, .. } => module_id,
+    });
+    while let Some(current) = module_id {
+        if current == ancestor_module_id {
+            return true;
+        }
+        module_id = runtime
+            .module_manager
+            .module(current)
+            .and_then(|module| module.parent_module_id);
+    }
+    false
 }
 
 fn resolve_file_path(file_path: &str) -> Result<String, RuntimeError> {

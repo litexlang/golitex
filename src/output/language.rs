@@ -1244,7 +1244,6 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("evaluation statement", "求值语句"),
     ("function implementation", "函数实现"),
     ("template definition", "模板定义"),
-    ("import statement", "导入语句"),
     ("no-op statement", "空操作语句"),
     ("clear statement", "清空语句"),
     ("existence witness", "存在见证"),

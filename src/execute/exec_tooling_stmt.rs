@@ -1,32 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_import_stmt(&mut self, stmt: &ImportStmt) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                "import can only be run as a top-level statement".to_string(),
-                lf,
-                None,
-                vec![],
-            )
-        }));
-    }
-
-    pub fn exec_trust_import_stmt(
-        &mut self,
-        stmt: &TrustImportStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        Err(short_exec_error(
-            stmt.clone().into(),
-            "trust import can only be run as a top-level statement".to_string(),
-            None,
-            vec![],
-        ))
-    }
-
     pub fn exec_do_nothing_stmt(
         &mut self,
         stmt: &DoNothingStmt,

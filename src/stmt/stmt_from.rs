@@ -162,12 +162,6 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
-impl From<TrustImportStmt> for Stmt {
-    fn from(v: TrustImportStmt) -> Self {
-        CommandStmt::TrustImportStmt(v).into()
-    }
-}
-
 impl From<DoNothingStmt> for Stmt {
     fn from(v: DoNothingStmt) -> Self {
         CommandStmt::DoNothingStmt(v).into()

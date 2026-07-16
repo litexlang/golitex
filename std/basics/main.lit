@@ -41,7 +41,7 @@ thm real_pow_operator_type:
     ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
 
 # A nonempty family of nonempty sets is available as a basic set-theoretic
-# witness. Example: `by thm std::basics::nonempty_family_of_nonempty_sets_exists()`.
+# witness. Example: `by thm std::basics::implementation::nonempty_family_of_nonempty_sets_exists()`.
 thm nonempty_family_of_nonempty_sets_exists:
     ? forall:
         exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
@@ -700,7 +700,7 @@ trust:
         finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 
 # The anonymous finite-set facts above are the implementation boundary for
-# these explicit package interfaces. Callers use `by thm std::basics::...` rather
+# these explicit package interfaces. Callers use `by thm std::basics::implementation::...` rather
 # than relying on an imported package to inject facts into bare-name lookup.
 thm subset_of_finite_set_is_finite:
     ? forall A set, B finite_set:
