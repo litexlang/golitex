@@ -591,15 +591,44 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
+                let root_file_id = module.flattened_export_file.or_else(|| {
+                    if self.module_manager.is_std_module_id(module_id) {
+                        match module.exports.get("main") {
+                            Some(ExportEntry::File { file_id, .. }) => Some(*file_id),
+                            _ => None,
+                        }
+                    } else {
+                        None
+                    }
+                });
+                if let Some(file_id) = root_file_id {
+                    return module
+                        .file(file_id)
+                        .filter(|file| file.status == FileStatus::Loaded)
+                        .map(|file| vec![file.environment.as_ref()])
+                        .unwrap_or_default();
+                }
                 vec![module.main_environment.as_ref()]
             }
-            Some(ImportTarget::File { module_id, file_id }) => self
-                .module_manager
-                .module(module_id)
-                .and_then(|module| module.file(file_id))
-                .filter(|file| file.status == FileStatus::Loaded)
-                .map(|file| vec![file.environment.as_ref()])
-                .unwrap_or_default(),
+            Some(ImportTarget::File { module_id, file_id }) => {
+                let Some(module) = self.module_manager.module(module_id) else {
+                    return vec![];
+                };
+                // `main` is the physical std entry file; callers use the package root namespace.
+                if self.module_manager.is_std_module_id(module_id)
+                    && matches!(
+                        module.exports.get("main"),
+                        Some(ExportEntry::File { file_id: main_file_id, .. }) if *main_file_id == file_id
+                    )
+                {
+                    return vec![];
+                }
+                module
+                    .file(file_id)
+                    .filter(|file| file.status == FileStatus::Loaded)
+                    .map(|file| vec![file.environment.as_ref()])
+                    .unwrap_or_default()
+            }
             None => vec![],
         }
     }
@@ -611,7 +640,8 @@ impl Runtime {
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
         let frame = self.execution_stack.last()?;
-        let module = self.module_manager.module(frame.module_id?)?;
+        let module_id = frame.module_id?;
+        let module = self.module_manager.module(module_id)?;
         match frame.layer {
             ExecutionLayer::Builtin => None,
             ExecutionLayer::Main => {
@@ -619,7 +649,18 @@ impl Runtime {
             }
             ExecutionLayer::File(file_id) => module
                 .file(file_id)
-                .map(|file| file.canonical_name.as_str())
+                .map(|file| {
+                    if self.module_manager.is_std_module_id(module_id)
+                        && matches!(
+                            module.exports.get("main"),
+                            Some(ExportEntry::File { file_id: main_file_id, .. }) if *main_file_id == file_id
+                        )
+                    {
+                        module.module_name.as_str()
+                    } else {
+                        file.canonical_name.as_str()
+                    }
+                })
                 .or_else(|| {
                     (!module.module_name.is_empty()).then_some(module.module_name.as_str())
                 }),
@@ -755,6 +796,9 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Mul(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::IntegerQuotient(x) => {
+            collect_module_names_from_two(&x.dividend, &x.divisor, module_names)
+        }
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::Log(x) => collect_module_names_from_two(&x.base, &x.arg, module_names),
         Obj::Max(x) => collect_module_names_from_two(&x.left, &x.right, module_names),

@@ -3,27 +3,35 @@ use crate::verify::verify_equality_by_builtin_rules::objs_equal_by_display_strin
 use std::result::Result;
 
 /// Two atomic facts of the form `s > t` / `s <= t` (or `<` / `>=`) with the same left and right
-/// operands; the disjunction is a trivial order split (totally ordered carriers such as `R`).
-fn order_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool {
+/// operands; callers must additionally establish that the operands are real.
+fn order_split_or_real_line_operands(a: &AtomicFact, b: &AtomicFact) -> Option<(Obj, Obj)> {
     use AtomicFact::*;
     match (a, b) {
-        (GreaterFact(g), LessEqualFact(le)) => {
-            objs_equal_by_display_string(&g.left, &le.left)
-                && objs_equal_by_display_string(&g.right, &le.right)
+        (GreaterFact(g), LessEqualFact(le))
+            if objs_equal_by_display_string(&g.left, &le.left)
+                && objs_equal_by_display_string(&g.right, &le.right) =>
+        {
+            Some((g.left.clone(), g.right.clone()))
         }
-        (LessFact(l), GreaterEqualFact(ge)) => {
-            objs_equal_by_display_string(&l.left, &ge.left)
-                && objs_equal_by_display_string(&l.right, &ge.right)
+        (LessFact(l), GreaterEqualFact(ge))
+            if objs_equal_by_display_string(&l.left, &ge.left)
+                && objs_equal_by_display_string(&l.right, &ge.right) =>
+        {
+            Some((l.left.clone(), l.right.clone()))
         }
-        (LessEqualFact(le), GreaterFact(g)) => {
-            objs_equal_by_display_string(&le.left, &g.left)
-                && objs_equal_by_display_string(&le.right, &g.right)
+        (LessEqualFact(le), GreaterFact(g))
+            if objs_equal_by_display_string(&le.left, &g.left)
+                && objs_equal_by_display_string(&le.right, &g.right) =>
+        {
+            Some((le.left.clone(), le.right.clone()))
         }
-        (GreaterEqualFact(ge), LessFact(l)) => {
-            objs_equal_by_display_string(&ge.left, &l.left)
-                && objs_equal_by_display_string(&ge.right, &l.right)
+        (GreaterEqualFact(ge), LessFact(l))
+            if objs_equal_by_display_string(&ge.left, &l.left)
+                && objs_equal_by_display_string(&ge.right, &l.right) =>
+        {
+            Some((ge.left.clone(), ge.right.clone()))
         }
-        _ => false,
+        _ => None,
     }
 }
 
@@ -53,6 +61,67 @@ fn equality_and_strict_order_need_weak_bound(
         }
         _ => None,
     }
+}
+
+fn real_line_order_or_builtin_match(or_fact: &OrFact) -> Option<(&'static str, Obj, Obj)> {
+    if or_fact.facts.len() == 3 {
+        let mut equality: Option<&EqualFact> = None;
+        let mut less: Option<&LessFact> = None;
+        let mut greater: Option<&GreaterFact> = None;
+        for branch in &or_fact.facts {
+            let AndChainAtomicFact::AtomicFact(atomic) = branch else {
+                return None;
+            };
+            match atomic {
+                AtomicFact::EqualFact(f) if equality.is_none() => equality = Some(f),
+                AtomicFact::LessFact(f) if less.is_none() => less = Some(f),
+                AtomicFact::GreaterFact(f) if greater.is_none() => greater = Some(f),
+                _ => return None,
+            }
+        }
+        let (Some(equality), Some(less), Some(greater)) = (equality, less, greater) else {
+            return None;
+        };
+        let equality_matches_order = (objs_equal_by_display_string(&equality.left, &less.left)
+            && objs_equal_by_display_string(&equality.right, &less.right))
+            || (objs_equal_by_display_string(&equality.left, &less.right)
+                && objs_equal_by_display_string(&equality.right, &less.left));
+        if equality_matches_order
+            && objs_equal_by_display_string(&less.left, &greater.left)
+            && objs_equal_by_display_string(&less.right, &greater.right)
+        {
+            return Some((
+                "or: real-line trichotomy (a = b, a < b, or a > b)",
+                less.left.clone(),
+                less.right.clone(),
+            ));
+        }
+        return None;
+    }
+
+    if or_fact.facts.len() == 2 {
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&or_fact.facts[0], &or_fact.facts[1])
+        else {
+            return None;
+        };
+        let (less_equal, greater_equal) = match (first, second) {
+            (AtomicFact::LessEqualFact(le), AtomicFact::GreaterEqualFact(ge)) => (le, ge),
+            (AtomicFact::GreaterEqualFact(ge), AtomicFact::LessEqualFact(le)) => (le, ge),
+            _ => return None,
+        };
+        if objs_equal_by_display_string(&less_equal.left, &greater_equal.left)
+            && objs_equal_by_display_string(&less_equal.right, &greater_equal.right)
+        {
+            return Some((
+                "or: real-line weak-order comparability (a <= b or a >= b)",
+                less_equal.left.clone(),
+                less_equal.right.clone(),
+            ));
+        }
+    }
+
+    None
 }
 
 fn obj_is_literal_neg_one_for_abs_or_builtin(obj: &Obj) -> bool {
@@ -377,6 +446,23 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.with_well_defined_already_verified();
 
+        if let Some((reason, left, right)) = real_line_order_or_builtin_match(or_fact) {
+            if let Some(steps) = self.verify_objects_are_known_reals(
+                &[&left, &right],
+                &or_fact.line_file,
+                &verify_state_for_children,
+            )? {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        or_fact.clone().into(),
+                        reason.to_string(),
+                        steps,
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         if or_fact.facts.len() == 2 {
             if let (
                 AndChainAtomicFact::AtomicFact(first_atomic),
@@ -394,18 +480,25 @@ impl Runtime {
                         .into(),
                     );
                 }
-                if order_split_or_is_exhaustive_pair(first_atomic, second_atomic)
-                    || order_split_or_is_exhaustive_pair(second_atomic, first_atomic)
+                if let Some((left, right)) =
+                    order_split_or_real_line_operands(first_atomic, second_atomic)
+                        .or_else(|| order_split_or_real_line_operands(second_atomic, first_atomic))
                 {
-                    return Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            or_fact.clone().into(),
-                            "or: complementary order relations (strict vs non-strict) on the same terms"
-                                .to_string(),
-                            Vec::new(),
-                        ))
-                        .into(),
-                    );
+                    if let Some(steps) = self.verify_objects_are_known_reals(
+                        &[&left, &right],
+                        &or_fact.line_file,
+                        &verify_state_for_children,
+                    )? {
+                        return Ok(
+                            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                or_fact.clone().into(),
+                                "or: complementary order relations (strict vs non-strict) on the same real terms"
+                                    .to_string(),
+                                steps,
+                            ))
+                            .into(),
+                        );
+                    }
                 }
                 if let Some(weak_bound) =
                     equality_and_strict_order_need_weak_bound(first_atomic, second_atomic).or_else(
@@ -454,8 +547,21 @@ impl Runtime {
             );
         }
 
+        if let Some(result) = self.try_verify_integer_discrete_split_or_builtin_rule(
+            or_fact,
+            &verify_state_for_children,
+        )? {
+            return Ok(result);
+        }
+
         if let Some(result) =
             self.try_verify_integer_successor_tail_or_from_lower_bound(or_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+
+        if let Some(result) =
+            self.try_verify_zero_product_or(or_fact, &verify_state_for_children)?
         {
             return Ok(result);
         }
@@ -533,6 +639,69 @@ impl Runtime {
             )
             .into(),
         ))
+    }
+
+    // A zero product over R has a zero factor.
+    // Example: from `a * b = 0`, prove `a = 0 or b = 0`.
+    fn try_verify_zero_product_or(
+        &mut self,
+        or_fact: &OrFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if or_fact.facts.len() != 2 {
+            return Ok(None);
+        }
+        let (
+            AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(first)),
+            AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(second)),
+        ) = (&or_fact.facts[0], &or_fact.facts[1])
+        else {
+            return Ok(None);
+        };
+
+        let zero_factor = |equal_fact: &EqualFact| match (&equal_fact.left, &equal_fact.right) {
+            (factor, Obj::Number(number)) if number.normalized_value == "0" => Some(factor.clone()),
+            (Obj::Number(number), factor) if number.normalized_value == "0" => Some(factor.clone()),
+            _ => None,
+        };
+        let Some(first_factor) = zero_factor(first) else {
+            return Ok(None);
+        };
+        let Some(second_factor) = zero_factor(second) else {
+            return Ok(None);
+        };
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let line_file = or_fact.line_file.clone();
+        let Some(mut steps) = self.verify_objects_are_known_reals(
+            &[&first_factor, &second_factor],
+            &line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        for product in [
+            Mul::new(first_factor.clone(), second_factor.clone()).into(),
+            Mul::new(second_factor.clone(), first_factor.clone()).into(),
+        ] {
+            let product_zero_result =
+                self.verify_objs_are_equal_known_only(&product, &zero, line_file.clone());
+            if product_zero_result.is_true() {
+                steps.push(product_zero_result);
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        or_fact.clone().into(),
+                        InferResult::new(),
+                        "zero_product_split: a * b = 0 gives a = 0 or b = 0".to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
     }
 
     fn try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(

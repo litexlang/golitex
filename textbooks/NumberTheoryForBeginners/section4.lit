@@ -153,23 +153,6 @@ thm theorem_IV_1_prime_divides_binary_product:
 prop prime_divides_some_factor(p Z, n N_pos, f fn(i N_pos) Z):
     exist i N_pos st {i <= n, $section1::divides_Z(p, f(i))}
 
-# Source handling: These finite-product, factorization, and exponent clauses
-# share the same indexed-product/permutation/maxima package, so they form one
-# explicit proof-debt boundary.
-trust:
-    forall p Z, n N_pos, f fn(i N_pos) Z:
-        $is_prime_Z(p)
-        $section1::divides_Z(p, section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
-        =>:
-            $prime_divides_some_factor(p, n, f)
-    forall a Z:
-        $prime_factorization_statement(a)
-    forall p, a Z:
-        $is_prime_Z(p)
-        a > 1
-        =>:
-            exist! n N st {$exact_prime_power_divides(p, a, n)}
-
 """
 Theorem IV.2. Every integer >1 is a product of primes, uniquely up to order.
 """
@@ -210,13 +193,6 @@ prop prime_factorization_statement(a Z):
         =>:
             $prime_factorizations_equivalent_up_to_order(a, n, f, m, g)
 
-thm theorem_IV_2_prime_factorization_exists:
-    ? forall a Z:
-        a > 1
-        =>:
-            $prime_factorization_statement(a)
-    $prime_factorization_statement(a)
-
 """
 Prime exponents. For a prime P, v_P(a) is the largest n such that P^n divides
 a; equivalently P^n divides a but P^(n+1) does not.
@@ -230,6 +206,32 @@ prop exact_prime_power_divides(p, a Z, n N):
 
 # The exact-prime-power clause is part of the finite-factorization interface
 # above; its maximum proof remains visible there.
+
+# Source handling: These finite-product, factorization, and exponent clauses
+# share the same indexed-product/permutation package, so they form one explicit
+# proof-debt boundary. Finite maximum selection is not yet a kernel object, so
+# the exact-prime-power debt also includes selecting the maximum of the relevant
+# finite nonempty exponent set.
+trust:
+    forall p Z, n N_pos, f fn(i N_pos) Z:
+        $is_prime_Z(p)
+        $section1::divides_Z(p, section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
+        =>:
+            $prime_divides_some_factor(p, n, f)
+    forall a Z:
+        $prime_factorization_statement(a)
+    forall p, a Z:
+        $is_prime_Z(p)
+        a > 1
+        =>:
+            exist! n N st {$exact_prime_power_divides(p, a, n)}
+
+thm theorem_IV_2_prime_factorization_exists:
+    ? forall a Z:
+        a > 1
+        =>:
+            $prime_factorization_statement(a)
+    $prime_factorization_statement(a)
 
 """
 The first primes are 2,3,5,7,11,13,17,19,23,29, and every a>1 has a finite

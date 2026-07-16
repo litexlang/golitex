@@ -75,11 +75,22 @@ prop rational_prime_not_sum_two_squares_statement(p N_pos):
 prop rational_prime_split_statement(p N_pos):
     $rational_prime_sum_two_squares_statement(p) or $rational_prime_not_sum_two_squares_statement(p)
 
+# Gaussian division, prime-factor descent, and the rational-prime split all
+# share the missing Euclidean Gaussian-integer package.  Their source-facing
+# clauses remain separate inside this single trust boundary.
 trust:
     forall ax, ay, bx, b_y Z:
         gaussian_norm(bx, b_y) != 0
         =>:
             exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
+    forall x, y Z:
+        gaussian_norm(x, y) > 1
+        =>:
+            $gaussian_prime_factor_claim(x, y)
+    forall p N_pos:
+        $section4::is_prime_Z(p)
+        =>:
+            $rational_prime_split_statement(p)
 
 thm theorem_XIII_gaussian_division:
     ? forall ax, ay, bx, b_y Z:
@@ -87,18 +98,6 @@ thm theorem_XIII_gaussian_division:
         =>:
             exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
     exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
-
-trust:
-    forall x, y Z:
-        gaussian_norm(x, y) > 1
-        =>:
-            $gaussian_prime_factor_claim(x, y)
-
-trust:
-    forall p N_pos:
-        $section4::is_prime_Z(p)
-        =>:
-            $rational_prime_split_statement(p)
 
 thm theorem_XIII_sum_of_two_squares:
     ? forall p N_pos:

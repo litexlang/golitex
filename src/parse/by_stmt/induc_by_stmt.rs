@@ -4,8 +4,13 @@ impl Runtime {
     pub fn parse_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
         let param = tb.advance()?;
+        if tb.current()? == IN {
+            tb.skip_token(IN)?;
+            let carrier_set = self.parse_obj(tb)?;
+            return self.parse_by_finite_set_induc_stmt_after_param(tb, param, Some(carrier_set));
+        }
         if tb.current()? == COLON {
-            return self.parse_by_finite_set_induc_stmt_after_param(tb, param);
+            return self.parse_by_finite_set_induc_stmt_after_param(tb, param, None);
         }
         self.parse_induc_stmt_after_param(tb, param, false)
     }

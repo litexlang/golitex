@@ -163,6 +163,15 @@ thm intersect_with_singleton:
             z $in s
             z $in {a}
 
+# Background interface.  Removing one finite subset changes the cardinality
+# by the cardinality of its intersection.  This finite-set counting rule is
+# not yet a direct core inference, so the source keeps it as visible local
+# trust at its first use.
+thm finite_set_size_set_minus:
+    ? forall s, t finite_set:
+        finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
+    trust finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
+
 thm remove_singleton_from_singleton_sized_set_is_empty:
     ? forall s finite_set, a set:
         $is_finite_set(s)
@@ -174,7 +183,9 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
+    by thm finite_set_size_set_minus(s, {a})
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
+    by thm chap3::finite_set_size_zero_is_empty(set_minus(s, {a}))
     set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
@@ -200,7 +211,7 @@ thm index_function_for_singleton:
                 y $in set_minus(s, {a})
                 witness $is_nonempty_set(set_minus(s, {a})) from y:
                     y $in set_minus(s, {a})
-                impossible set_minus(s, {a}) = {}
+                impossible $is_nonempty_set(set_minus(s, {a}))
             idx0(1) = idx(1) = a
             witness exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y} from 1:
                 1 <= finite_set_size(s)
@@ -239,6 +250,7 @@ thm index_function_step:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
+    by thm finite_set_size_set_minus(s, {a})
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
@@ -1015,20 +1027,30 @@ thm geometric_series_from_one_formula:
         $chap6::is_nonzero_sequence(constant_sequence(1 - x))
     by thm constant_sequence_has_strict_limit(1 - x)
     $chap6::has_limit(constant_sequence(1 - x), 1 - x)
-    by thm chap6::seq_div_converges_to(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, constant_sequence(1 - x), x, 1 - x)
-    $chap6::has_limit(fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}, x / (1 - x))
+    have fn geometric_series_from_one_remainder(n N_pos) R = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+    claim:
+        ? $chap6::has_limit(geometric_series_from_one_remainder, x)
+        claim:
+            ? forall n N_pos:
+                fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
+            fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+            geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+            fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
+        by thm strict_limit_extensional(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, geometric_series_from_one_remainder, x)
+    by thm chap6::seq_div_converges_to(geometric_series_from_one_remainder, constant_sequence(1 - x), x, 1 - x)
+    $chap6::has_limit(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, x / (1 - x))
     claim:
         ? forall n N_pos:
-            fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
-        fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+            fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
+        geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
         constant_sequence(x)(n) = x
         constant_sequence(1 - x)(n) = 1 - x
         constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n) = x - geometric_series_from_one_tail(x)(n)
-        fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) / constant_sequence(1 - x)(n)
+        fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = geometric_series_from_one_remainder(n) / constant_sequence(1 - x)(n)
         fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
-        fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(n) / constant_sequence(1 - x)(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
-        fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
-    by thm strict_limit_extensional(fn(i N_pos) R {fn(j N_pos) R {constant_sequence(x)(j) - geometric_series_from_one_tail(x)(j)}(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
+        geometric_series_from_one_remainder(n) / constant_sequence(1 - x)(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
+        fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
+    by thm strict_limit_extensional(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     $chap6::has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     by thm strict_limit_implies_closed_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     $has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
@@ -2125,7 +2147,7 @@ sketch:
         claim:
             ? forall epsilon R_pos:
                 exist n0 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n0)}
-            by thm archimedean_property(epsilon)
+            by thm chap5::archimedean_property(epsilon)
             exist n_bound N_pos st {1 / n_bound < epsilon}
             obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
             witness exist n1 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n1)} from n0:
@@ -2172,8 +2194,7 @@ sketch:
                 $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
                 claim:
                     ? forall n N_pos:
-                        fn(j N_pos) R {abs(alternating_harmonic_terms(j))}(n) = harmonic_terms(n)
-                    fn(j N_pos) R {abs(alternating_harmonic_terms(j))}(n) = abs(alternating_harmonic_terms(n))
+                        abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
                     alternating_harmonic_terms(n) = alternating_series_terms(harmonic_terms)(n)
                     abs(alternating_harmonic_terms(n)) = abs(alternating_series_terms(harmonic_terms)(n))
                     by thm alternating_terms_abs_value(harmonic_terms, n)
@@ -2181,7 +2202,7 @@ sketch:
                     harmonic_terms(n) = 1 / n
                     1 / n > 0
                     abs(harmonic_terms(n)) = harmonic_terms(n)
-                    fn(j N_pos) R {abs(alternating_harmonic_terms(j))}(n) = harmonic_terms(n)
+                    abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
                 by thm series_convergence_extensional(fn(j N_pos) R {abs(alternating_harmonic_terms(j))}, harmonic_terms)
                 $is_convergent_series(harmonic_terms)
                 impossible not $is_convergent_series(harmonic_terms)
@@ -2853,9 +2874,9 @@ thm absolute_series_laws_tail_convergence_reverse:
     $is_convergent_series(fn(j N_pos) R {abs(series_shift(a, k)(j))})
     claim:
         ? forall n N_pos:
-            fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
+            abs(series_shift(a, k)(n)) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
         by thm absolute_shift_abs_terms_match(a, k, n)
-        fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
+        abs(series_shift(a, k)(n)) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
     by thm series_convergence_extensional(fn(j N_pos) R {abs(series_shift(a, k)(j))}, series_shift(fn(i N_pos) R {abs(a(i))}, k))
     $is_convergent_series(series_shift(fn(i N_pos) R {abs(a(i))}, k))
     claim:
@@ -2882,10 +2903,7 @@ thm absolute_series_laws_tail_convergence_reverse:
     $is_convergent_series(fn(i N_pos) R {abs(a(i))})
     claim:
         ? forall n N_pos:
-            fn(i N_pos) R {abs(a(i))}(n) = fn(j N_pos) R {abs(a(j))}(n)
-        fn(i N_pos) R {abs(a(i))}(n) = abs(a(n))
-        fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
-        fn(i N_pos) R {abs(a(i))}(n) = fn(j N_pos) R {abs(a(j))}(n)
+            abs(a(n)) = abs(a(n))
     by thm series_convergence_extensional(fn(i N_pos) R {abs(a(i))}, fn(j N_pos) R {abs(a(j))})
     $is_convergent_series(fn(j N_pos) R {abs(a(j))})
     $is_absolutely_convergent_series(a)
@@ -4115,7 +4133,7 @@ thm positive_part_convergent_from_absolute:
     $is_convergent_series(fn(j N_pos) R {abs(a(j))})
     claim:
         ? forall n N_pos:
-            abs(positive_part_series(a)(n)) <= fn(j N_pos) R {abs(a(j))}(n)
+            abs(positive_part_series(a)(n)) <= abs(a(n))
         positive_part_series(a)(n) = (abs(a(n)) + a(n)) / 2
         by thm positive_part_value_nonnegative(a(n))
         (abs(a(n)) + a(n)) / 2 >= 0
@@ -4124,8 +4142,7 @@ thm positive_part_convergent_from_absolute:
         by thm positive_part_value_le_abs(a(n))
         (abs(a(n)) + a(n)) / 2 <= abs(a(n))
         positive_part_series(a)(n) <= abs(a(n))
-        fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
-        abs(positive_part_series(a)(n)) <= fn(j N_pos) R {abs(a(j))}(n)
+        abs(positive_part_series(a)(n)) <= abs(a(n))
     by thm comparison_test_for_series(positive_part_series(a), fn(j N_pos) R {abs(a(j))})
     $is_absolutely_convergent_series(positive_part_series(a))
     by thm absolute_convergence_test(positive_part_series(a))
@@ -4139,7 +4156,7 @@ thm negative_part_convergent_from_absolute:
     $is_convergent_series(fn(j N_pos) R {abs(a(j))})
     claim:
         ? forall n N_pos:
-            abs(negative_part_series(a)(n)) <= fn(j N_pos) R {abs(a(j))}(n)
+            abs(negative_part_series(a)(n)) <= abs(a(n))
         negative_part_series(a)(n) = (abs(a(n)) - a(n)) / 2
         by thm negative_part_value_nonnegative(a(n))
         (abs(a(n)) - a(n)) / 2 >= 0
@@ -4148,8 +4165,7 @@ thm negative_part_convergent_from_absolute:
         by thm negative_part_value_le_abs(a(n))
         (abs(a(n)) - a(n)) / 2 <= abs(a(n))
         negative_part_series(a)(n) <= abs(a(n))
-        fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
-        abs(negative_part_series(a)(n)) <= fn(j N_pos) R {abs(a(j))}(n)
+        abs(negative_part_series(a)(n)) <= abs(a(n))
     by thm comparison_test_for_series(negative_part_series(a), fn(j N_pos) R {abs(a(j))})
     $is_absolutely_convergent_series(negative_part_series(a))
     by thm absolute_convergence_test(negative_part_series(a))
@@ -4986,7 +5002,7 @@ claim:
     claim:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
-        by thm archimedean_property(epsilon)
+        by thm chap5::archimedean_property(epsilon)
         exist n_bound N_pos st {1 / n_bound < epsilon}
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
         witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:

@@ -98,6 +98,196 @@ impl Runtime {
         Ok(None)
     }
 
+    // Inserting a fresh element splits a finite-set product into the old product and its factor.
+    // Example: from `not x $in S`, prove
+    // `finite_set_product(union({x}, S), f) = finite_set_product(S, f|S) * f(x)`.
+    pub(crate) fn try_verify_finite_set_product_fresh_insertion(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (union_side, product_side) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(union_product) = union_side else {
+                continue;
+            };
+            let Obj::Mul(mul) = product_side else {
+                continue;
+            };
+            let Obj::ProductOfFiniteSet(smaller_product) = mul.left.as_ref() else {
+                continue;
+            };
+            let Obj::Union(union) = union_product.set.as_ref() else {
+                continue;
+            };
+
+            for (singleton_side, smaller_set) in [
+                (union.left.as_ref(), union.right.as_ref()),
+                (union.right.as_ref(), union.left.as_ref()),
+            ] {
+                let Obj::ListSet(singleton) = singleton_side else {
+                    continue;
+                };
+                if singleton.list.len() != 1 {
+                    continue;
+                }
+                let inserted = singleton.list[0].as_ref().clone();
+                let freshness: AtomicFact =
+                    NotInFact::new(inserted.clone(), smaller_set.clone(), line_file.clone()).into();
+                if !self
+                    .verify_non_equational_known_then_builtin_rules_only(&freshness, verify_state)?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        smaller_product.set.as_ref(),
+                        smaller_set,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_finite_set_sum_functions_pointwise_equal(
+                        union_product.func.as_ref(),
+                        smaller_product.func.as_ref(),
+                        smaller_set.clone(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let Some(inserted_factor) =
+                    self.instantiate_unary_function_at(union_product.func.as_ref(), &inserted)?
+                else {
+                    continue;
+                };
+                if !self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        mul.right.as_ref(),
+                        &inserted_factor,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set product after inserting a fresh element",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // Removing a member splits a finite-set product into the remaining product and that member's factor.
+    // Example: from `x $in A`, prove
+    // `finite_set_product(A, f) = finite_set_product(set_minus(A, {x}), f|-) * f(x)`.
+    pub(crate) fn try_verify_finite_set_product_remove_member(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (full_side, product_side) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(full_product) = full_side else {
+                continue;
+            };
+            let Obj::Mul(mul) = product_side else {
+                continue;
+            };
+            let Obj::ProductOfFiniteSet(remaining_product) = mul.left.as_ref() else {
+                continue;
+            };
+            let Obj::SetMinus(remaining_set) = remaining_product.set.as_ref() else {
+                continue;
+            };
+            let Obj::ListSet(singleton) = remaining_set.right.as_ref() else {
+                continue;
+            };
+            if singleton.list.len() != 1 {
+                continue;
+            }
+            let removed = singleton.list[0].as_ref().clone();
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    full_product.set.as_ref(),
+                    remaining_set.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let membership: AtomicFact = InFact::new(
+                removed.clone(),
+                full_product.set.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            if !self
+                .verify_non_equational_known_then_builtin_rules_only(&membership, verify_state)?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_finite_set_sum_functions_pointwise_equal(
+                    full_product.func.as_ref(),
+                    remaining_product.func.as_ref(),
+                    remaining_product.set.as_ref().clone(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let Some(removed_factor) =
+                self.instantiate_unary_function_at(full_product.func.as_ref(), &removed)?
+            else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    mul.right.as_ref(),
+                    &removed_factor,
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set product after removing a member",
+            )));
+        }
+        Ok(None)
+    }
+
     // A finite-set product over an integer closed range agrees with the existing range product.
     // Example: `finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})`.
     pub(crate) fn try_verify_finite_set_product_closed_range_bridge(

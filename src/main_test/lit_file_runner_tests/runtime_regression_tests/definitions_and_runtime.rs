@@ -18,7 +18,7 @@ forall a R_pos, x, y R:
         x = log(a, y)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("positive_real_power_closure_enables_log_inverse");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -44,7 +44,7 @@ forall a, b R_pos, c R:
         a^c = b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("forall_iff_output_reports_direction_checks");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -61,9 +61,16 @@ forall a, b R_pos, c R:
 
 #[test]
 fn definition_namespaces_allow_same_spelling_across_kinds() {
+    run_with_large_stack(
+        "definition_namespaces_allow_same_spelling_across_kinds",
+        definition_namespaces_allow_same_spelling_across_kinds_impl,
+    );
+}
+
+fn definition_namespaces_allow_same_spelling_across_kinds_impl() {
     let source_code = r#"
 have fn SharedName(x R) R = 1
-algo SharedName(x):
+have algo for SharedName(x):
     1
 prop SharedName(x R)
 struct SharedName:
@@ -73,7 +80,7 @@ template<s set>:
     have SharedName set = s
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "definition_namespaces_allow_same_spelling_across_kinds",
     );
@@ -90,6 +97,13 @@ template<s set>:
 
 #[test]
 fn duplicate_definition_names_fail_in_their_namespace() {
+    run_with_large_stack(
+        "duplicate_definition_names_fail_in_their_namespace",
+        duplicate_definition_names_fail_in_their_namespace_impl,
+    );
+}
+
+fn duplicate_definition_names_fail_in_their_namespace_impl() {
     let cases = [
         ("prop", "prop dup_prop(x R)\nprop dup_prop(x R)"),
         (
@@ -113,17 +127,13 @@ fn duplicate_definition_names_fail_in_their_namespace() {
             "template<s set>:\n    have DupTemplate set = s\ntemplate<s set>:\n    have DupTemplate set = s",
         ),
         (
-            "algo",
-            "have fn dup_algo(x R) R = 1\nalgo dup_algo(x):\n    1\nalgo dup_algo(x):\n    1",
-        ),
-        (
-            "auto algo",
-            "have fn as algo dup_auto_algo(x R) R = 1\nalgo dup_auto_algo(x):\n    1",
+            "function implementation",
+            "have fn dup_algo(x R) R = 1\nhave algo for dup_algo(x):\n    1\nhave algo for dup_algo(x):\n    1",
         ),
     ];
 
     for (label, source_code) in cases {
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             format!("duplicate_definition_names_{}", label).as_str(),
         );
@@ -154,7 +164,7 @@ alias prop one_prop <=> is_one
 $one_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("alias_prop_copies_existing_prop_definition");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -181,7 +191,7 @@ alias thm same_one <=> one_eq_one
 by thm same_one(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("alias_thm_copies_existing_theorem_definition");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -205,7 +215,7 @@ alias prop 是一 <=> is_one
 $是一(1)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("unicode_alias_prop_name_works");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -237,7 +247,7 @@ have 甲 R = 1
 甲 = 1
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("unicode_object_name_works");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -263,7 +273,7 @@ alias thm 自反等式 <=> self_eq_en
 by thm 自反等式(1)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("unicode_alias_thm_name_works");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -294,7 +304,7 @@ abstract_prop abstract_target(x)
 alias prop concrete_alias <=> abstract_target
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("alias_prop_rejects_abstract_prop_target");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -331,7 +341,7 @@ thm use_target_thm:
 $target_thm_prop(1)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "thm_definition_stores_forall_fact_for_known_forall_use",
             );
@@ -370,7 +380,7 @@ by thm use_target_thm(1)
 $target_thm_prop(1)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("thm_definition_can_still_be_used_by_thm");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -402,7 +412,7 @@ by thm use_target_thm(1)
 $target_thm_prop(1)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("by_thm_releases_instantiated_then_facts");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -437,7 +447,7 @@ strategy use_target_strategy:
 $target_strategy_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("strategy_definition_auto_enables_strategy");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -484,7 +494,7 @@ claim:
             $target_strategy_prop(z)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "strategy_definition_stores_forall_fact_for_known_forall_use",
     );
@@ -515,7 +525,7 @@ use strategy use_target_strategy
 stop strategy use_target_strategy
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("strategy_definition_use_and_stop_are_stored");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -558,7 +568,7 @@ strategy use_target_strategy:
 by strategy use_target_strategy
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("by_strategy_is_not_a_valid_by_subkeyword");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -610,7 +620,7 @@ use strategy use_negative_strategy
 stop strategy use_negative_strategy
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "strategy_positive_and_negative_atomic_keys_do_not_collide",
     );
@@ -668,7 +678,7 @@ strategy use_target_strategy:
         "{}\nuse strategy use_target_strategy\n$target_strategy_prop(1)\n",
         strategy_setup
     );
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("use_strategy_verifies_matching_atomic_fact");
     let (stmt_results, runtime_error) =
         run_source_code(succeeds_source_code.as_str(), &mut runtime);
@@ -685,7 +695,7 @@ strategy use_target_strategy:
         "{}\nuse strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
         strategy_setup
     );
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("stop_strategy_leaves_known_forall_available");
     let (stmt_results, runtime_error) = run_source_code(stop_source_code.as_str(), &mut runtime);
     let (run_succeeded, run_output) =
@@ -726,7 +736,7 @@ use strategy use_target_strategy
 $target_strategy_prop(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime
         .new_file_path_new_env_new_name_scope("use_strategy_after_stop_in_same_env_removes_stop");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -771,7 +781,7 @@ claim:
     use strategy use_target_strategy
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "child_env_use_strategy_overrides_parent_stop_without_removing_it",
     );
@@ -825,7 +835,7 @@ strategy bad_strategy:
     ];
 
     for (label, source_code, expected_message) in cases {
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope(format!("strategy_rejects_{}", label).as_str());
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -860,7 +870,7 @@ strategy bad_strategy:
             $p(x)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("strategy_rejects_non_atomic_dom_fact");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -888,7 +898,7 @@ strategy bad_strategy:
             x = x
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("strategy_rejects_equal_then_fact");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -907,27 +917,26 @@ strategy bad_strategy:
 }
 
 #[test]
-fn have_fn_as_algo_rejects_non_atomic_case_condition() {
-    let source_code = "\
-have fn as algo bad_algo_case(x, y R) R by cases:
-    case x = 0 and y = 0: 0";
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("have_fn_as_algo_non_atomic_case");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+fn legacy_have_fn_as_algo_reports_migration() {
+    run_with_large_stack("legacy_have_fn_as_algo_reports_migration", || {
+        let source_code = "have fn as algo bad_algo_case(x, y R) R = 0";
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("legacy_have_fn_as_algo_reports_migration");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "non-atomic generated algo case should fail, but succeeded:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("generated algo case")
-            && run_output.contains("currently require atomic case conditions"),
-        "non-atomic generated algo case should report a targeted error:\n{}",
-        run_output
-    );
+        assert!(
+            !run_succeeded,
+            "legacy have fn as algo should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("has been replaced") && run_output.contains("have algo for f(...)"),
+            "legacy have fn as algo should report its migration:\n{}",
+            run_output
+        );
+    });
 }
 
 #[test]
@@ -961,7 +970,7 @@ fn run_isolated_file_from_path_impl() {
         None => panic!("{:?} must be valid UTF-8", file_path),
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
     let normalized_source = remove_windows_carriage_return(source_code.as_str());
 

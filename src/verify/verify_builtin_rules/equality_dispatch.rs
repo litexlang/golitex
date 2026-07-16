@@ -210,6 +210,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_integer_singleton_interval_equality_builtin_rule(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_equality_from_known_antisymmetric_props(left, right, line_file.clone())?
         {
@@ -554,6 +563,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_finite_set_product_fresh_insertion(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_remove_member(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_finite_set_product_closed_range_bridge(
             left,
             right,
@@ -608,6 +635,24 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_integer_quotient_defining_equation(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
             left,
             right,
             line_file.clone(),
@@ -682,6 +727,15 @@ impl Runtime {
             right,
             right,
             left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_indexed_fn_set_definition_equality(
+            left,
+            right,
             line_file.clone(),
             verify_state,
         )? {
@@ -1224,10 +1278,6 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.loading_builtin_code {
-            return Ok(None);
-        }
-
         for (intersection_side, target_side) in [
             (statement_left, statement_right),
             (statement_right, statement_left),
@@ -1282,10 +1332,6 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.loading_builtin_code {
-            return Ok(None);
-        }
-
         let Obj::Intersect(intersection) = intersection_side else {
             return Ok(None);
         };
@@ -1722,6 +1768,12 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[left, right], &line_file, &verify_state)?
+        else {
+            return Ok(None);
+        };
         let Some(left_ge_right) = self.verify_weak_order_subgoal(left, right, line_file.clone())?
         else {
             return Ok(None);
@@ -1730,12 +1782,14 @@ impl Runtime {
         else {
             return Ok(None);
         };
+        steps.push(left_ge_right);
+        steps.push(right_ge_left);
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "equality from a >= b and b >= a".to_string(),
-                vec![left_ge_right, right_ge_left],
+                steps,
             )
             .into(),
         ))
@@ -2154,6 +2208,55 @@ impl Runtime {
             verify_equality_by_they_are_the_same(&in_fact.element, &expected_element)
                 && verify_equality_by_they_are_the_same(&in_fact.set, &expected_set),
         )
+    }
+
+    // Sequence-shaped spaces are exactly their corresponding function spaces.
+    // Example: `matrix(R, 2, 3) = fn(i, j N_pos: i <= 2, j <= 3) R`.
+    fn try_verify_indexed_fn_set_definition_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (indexed_set_side, fn_set_side) in [(left, right), (right, left)] {
+            let Obj::FnSet(fn_set) = fn_set_side else {
+                continue;
+            };
+
+            let (expanded, rule) = match indexed_set_side {
+                Obj::FiniteSeqSet(finite_seq) => (
+                    self.finite_seq_set_to_fn_set(finite_seq, line_file.clone()),
+                    "equality: finite_seq is its bounded positive-index function space",
+                ),
+                Obj::SeqSet(seq) => (
+                    self.seq_set_to_fn_set(seq, line_file.clone()),
+                    "equality: seq is its positive-index function space",
+                ),
+                Obj::MatrixSet(matrix) => (
+                    self.matrix_set_to_fn_set(matrix, line_file.clone()),
+                    "equality: matrix is its bounded positive-index function space",
+                ),
+                _ => continue,
+            };
+            let expanded_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
+                &expanded,
+                fn_set,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if expanded_equality.is_true() {
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    left,
+                    right,
+                    line_file,
+                    rule,
+                    vec![expanded_equality],
+                )));
+            }
+        }
+
+        Ok(None)
     }
 
     // Antisymmetry rule for registered user-defined props.

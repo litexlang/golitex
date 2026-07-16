@@ -241,9 +241,10 @@ check it and reuse accepted facts.
 
 ### Builtin Mathematical Background
 
-Litex starts every run with a builtin mathematical environment. It is loaded
-before the user file and provides ordinary object names, object forms, trusted
-background facts, and verifier-visible rules.
+Litex starts every run with a kernel mathematical environment. It provides
+ordinary object names, object forms, and verifier-visible rules. Reusable
+source-level mathematics stays explicit in a project or source-local cite
+package. The kernel does not preload a mathematical library.
 
 There are three layers to keep distinct:
 
@@ -252,49 +253,44 @@ There are three layers to keep distinct:
   signed variants like `R_pos` and `Z_nz`, arithmetic operators, `abs`, `sqrt`,
   `log`, set displays, set builders, `union`, `intersect`, `set_minus`,
   `power_set`, `cart`, `fn(...)`, `seq(...)`, `matrix(...)`, finite sums and
-  products, integer ranges, real intervals, tuples, and struct views.
-- **Builtin code facts** are preloaded Litex facts. They include operator
-  typing, standard number-set relationships, basic order and comparison
-  principles, set-operator facts, range facts, finite-set size facts, and
-  background interfaces such as integer/rational representations.
+  products, integer ranges, real intervals, tuples, struct views, and the
+  Euclidean integer quotient `integer_quotient(a, d)`.
 - **Builtin verification rules** are Rust-level verifier patterns that close
   goals automatically. Arithmetic normalization, order algebra, membership
-  checks, tuple/product facts, and many equality patterns live at this layer.
+  checks, tuple/product facts, Euclidean quotient/remainder semantics, and
+  many equality patterns live at this layer.
+- **Source-local package objects and facts** are ordinary named Litex
+  interfaces. Import them explicitly from the source or project that owns
+  their proof debt; broad theorem background never appears implicitly.
 
-The builtin code also defines a few global names that can be cited with
-`by thm`. These are theorem interfaces, not new syntax.
+For example, the following membership and order facts are kernel rules rather
+than imported theorem names:
 
 ```litex
-by thm has_rational_between(0, 1)
-exist q Q st {0 < q < 1}
+2 $in union({1, 2}, {2, 3})
+2 $in intersect({1, 2}, {2, 3})
+not 2 $in {1}
+2 $in set_minus({1, 2}, {1})
+
+forall a, b, c R:
+    a <= c
+    b <= c
+    =>:
+        max(a, b) <= c
 ```
 
-Some currently preloaded named theorem interfaces are:
+Treat kernel rules as part of Litex's trusted mathematical background. When a
+theorem is broad, textbook-facing, or domain-specific, keep it in the relevant
+source-local cite package with an explicit proof-debt boundary if needed.
 
-| Name | Meaning |
-|------|---------|
-| `has_rational_between`, `exists_rat_between`, `exists_rat_btwn` | If `a < b` for real numbers, there exists `q Q` with `a < q < b`. |
-| `rational_as_integer_ratio` | Every rational can be written as `p / q` with `p Z` and `q Z_nz`. |
-| `rational_has_unique_reduced_fraction` | Every rational has exactly one `a Z, b N_pos` with `q = a / b` and `$is_reduced_fraction(a, b)`. |
-| `archimedean_property` | For every positive real `e`, there exists `n N_pos` with `1 / n < e`. |
-| `a_lt_c`, `a_le_c`, `a_gt_c`, `a_ge_c` | Named transitivity interfaces for real order chains. |
-| `in_intersect_is_in_both` | Membership in an intersection gives membership in both operands. |
-| `in_set_minus_is_in_first_operand`, `in_set_minus_is_not_in_second_operand` | Membership in `set_minus(A, B)` gives membership in `A` and non-membership in `B`. |
-| `in_cup_via_member_set` | If `Y $in F` and `z $in Y`, then `z $in cup(F)`. |
-| `subset_of_finite_set_is_finite` | A subset of a finite set is finite. |
-| `even_power_abs_bound`, `even_power_bound_by_nonnegative_rhs`, `even_power_bound_by_nonpositive_rhs` | Standard even-power comparison interfaces. |
-| `pos_pow_strict_order_reflects`, `pos_pow_order_reflects` | Positive-base power comparison reflects order when the exponent is at least `1`. |
+For `a Z` and `d N_pos`, `%` uses the Euclidean remainder convention
+`0 <= a % d < d`. The corresponding selected quotient is
+`integer_quotient(a, d) : Z`, with its defining equation available directly:
 
-There are many more anonymous builtin facts than named theorem interfaces. For
-example, Litex preloads facts relating `<=` and `<` to differences, zero-product
-facts, basic `range` and `closed_range` descriptions, finite-set nonemptiness
-from positive finite-set size, and common set-operator introduction/elimination facts.
-These facts can often be used by automatic known-`forall` matching without a
-visible `by thm` line.
-
-Treat this builtin layer as part of Litex's trusted mathematical background.
-When a theorem is broad, textbook-facing, or domain-specific, keep it in the
-relevant source-local cite package instead of adding it globally.
+```litex
+forall a Z, d N_pos:
+    a = d * integer_quotient(a, d) + a % d
+```
 
 ---
 
@@ -348,7 +344,17 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
-Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases, including the natural-exponent convention `0^0 = 1`. Natural-number powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N`, then `a^k $in N_pos`. Floor and ceiling are not builtin operations; when a source needs them, define or cite the required interface in that source's local package.
+The checker has builtin well-definedness and algebra rules for these operators.
+Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex
+can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor,
+it can prove the corresponding quotient equality. For well-definedness, a
+known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor
+like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation
+has core well-definedness cases covering the natural-exponent convention
+`0^0 = 1`. Natural-number powers preserve `Z`, `N`, and `N_pos`: for example,
+if `a $in N_pos` and `k $in N`, then `a^k $in N_pos`. Floor and ceiling are
+not builtin operations; when a source needs them, define or cite the required
+interface in that source's local package.
 
 #### `abs`, `sqrt`, `log`, `max`, `min`
 
@@ -371,6 +377,9 @@ relative complement and `set_diff(A, B)` for symmetric difference.
 ```litex
 2 $in union({1, 2}, {2, 3})
 2 $in intersect({1, 2}, {2, 3})
+not 2 $in {1}
+2 $in set_minus({1, 2}, {1})
+have i set = intersect({1, 2}, {2, 3})
 have t set = set_minus({1, 2}, {1})
 ```
 
@@ -614,9 +623,6 @@ $is_finite_set(intersect({1, 2}, {2, 3}))
 forall A, B finite_set:
     $is_finite_set(union(A, B))
     $is_finite_set(intersect(A, B))
-finite_set_size(union({1, 2}, {2, 3})) <= finite_set_size({1, 2}) + finite_set_size({2, 3})
-finite_set_size(union({1, 2}, {2, 3})) = finite_set_size({1, 2}) + finite_set_size({2, 3}) - finite_set_size(intersect({1, 2}, {2, 3}))
-finite_set_size(set_minus({1, 2}, {2, 3})) = finite_set_size({1, 2}) - finite_set_size(intersect({1, 2}, {2, 3}))
 ```
 
 #### Finite `sum` and `product`
@@ -686,12 +692,23 @@ thm finite_set_sum_enumeration_well_defined:
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 ```
 
-`finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ finite_set_size(X)`.
+`finite_set_product(X, f)` multiplies `f(x)` over the elements of a finite set `X`. Displayed finite sets expand elementwise, the empty product is `1`, closed integer ranges bridge to `product(start, end, f)`, and a constant factor verifies as `c ^ finite_set_size(X)`. A fresh insertion or removal of a known member splits the product into the remaining product and that factor.
 
 ```litex
 finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
 finite_set_product({}, fn(x Z) Z {x}) = 1
 finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
+
+forall x Z, S finite_set:
+    S $subset Z
+    not x $in S
+    =>:
+        finite_set_product(union({x}, S), fn(y union({x}, S)) Z {y}) = finite_set_product(S, fn(y S) Z {y}) * x
+
+forall A finite_set, x A:
+    A $subset Z
+    =>:
+        finite_set_product(A, fn(y A) Z {y}) = finite_set_product(set_minus(A, {x}), fn(y set_minus(A, {x})) Z {y}) * x
 ```
 
 #### Integer intervals as sets
@@ -1492,6 +1509,18 @@ have x R, y Z
 
 This records that `x` belongs to `R` and `y` belongs to `Z`, so later facts can use them.
 
+For one basic real comparison, `have ...:` can introduce a witness directly:
+
+```litex
+have x R:
+    x > 100
+```
+
+The builtin witness rule accepts one atomic comparison using `>`, `<`, `=`,
+`!=`, `>=`, or `<=`, with the new witness on either side of a well-defined real
+expression. It does not search for witnesses for arbitrary multi-line or
+compound properties.
+
 > Hint: `have x S` is not a free way to create an element of any set. Litex must be able to verify that `S` is nonempty, for example by knowing `$is_nonempty_set(S)`, before it can introduce a new object `x` with `x $in S`.
 
 ### What "type" means in Litex?
@@ -1868,20 +1897,20 @@ b < c
 
 > Hint: `trust have` and `trust` both introduce new facts without verification. Use `axiom name:` when a trusted assumption should be a named theorem-like interface. In most cases, put assumptions in a `forall ... =>:` block, or use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
-### Algorithm and evaluation (`algo` / `eval`)
+### Function implementation and evaluation (`have algo for` / `eval`)
 
-**`algo m(x):`** gives an executable presentation of a function (often parallel to **`have fn`**). **`eval m(…)`** runs that algorithm on concrete inputs to simplify results.
+**`have algo for m(x):`** attaches an executable presentation to a function already declared by **`have fn`**. **`eval m(…)`** runs that implementation on concrete inputs to simplify results.
 
-An `algo` is not the same as a function in a programming language such as Python. When you define an `algo`, Litex checks that the case flow really matches the function facts you have given. In the example below, the two cases must agree with the definition of `m`.
+An implementation is not a new function. When you define one, Litex checks that its case flow really matches the function facts you have already given. In the example below, the two cases must agree with the definition of `m`.
 
-`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, including concrete `+`, `-`, `*`, `/`, and non-negative integer powers. Divisions that do not terminate as decimals are kept as normalized rational expressions.
+`eval` does not compute by floating-point approximation. It works with exact symbolic arithmetic, including concrete `+`, `-`, `*`, `/`, and non-negative integer powers. Divisions that do not terminate as decimals are kept as normalized rational expressions.
 
 ```litex
 have fn m(x N_pos) R by cases:
     case x = 1: 1
     case x != 1: 0
 
-algo m(x):
+have algo for m(x):
     case x = 1: 1
     case x != 1: 0
 
@@ -1895,7 +1924,7 @@ have fn g(x Z) Z by cases:
     case x = 0: 0
     case x < 0: x
 
-algo g(x):
+have algo for g(x):
     case x > 0: x
     case x = 0: 0
     case x < 0: x
@@ -1904,7 +1933,7 @@ eval g(3)
 g(3) = 3
 ```
 
-> Hint: Like algorithms in ordinary programming languages, an `algo` can still run forever during evaluation if its recursive calls do not terminate.
+> Hint: Like algorithms in ordinary programming languages, an implementation can still run forever during evaluation if its recursive calls do not terminate.
 
 ---
 
@@ -2045,9 +2074,10 @@ the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
 If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements are rejected instead
-of being stored. Facts loaded from imported modules are still trusted inputs, so
-strict mode is an audit boundary for the current run, not a claim that all
-dependencies are assumption-free.
+of being stored. Ordinary `import std ...` dependencies remain allowed and are
+recorded as trusted inputs, so strict mode is an audit boundary for the current
+run, not a claim that all dependencies are assumption-free. `trust import std
+...` remains rejected.
 
 ```litex
 # three primitive terms:
@@ -2112,32 +2142,66 @@ x = 1
 
 ### Modules and manifests (preview)
 
-Use **`import Algebra`** to load a module declared by the root `litex.config` into its own imported-module environment. An import uses the declared root-module name exactly; aliases are not supported. Importing the same module again is an idempotent no-op.
+Use project imports for source-level dependencies. A configured package is
+loaded on demand and cited by its declared namespace; no mathematical package
+is initialized automatically. Keep shared background facts in a project or
+source-local cite package, so their proof-debt boundary remains visible in the
+source that chooses to rely on it.
 
 There are two project-aware top-level modes:
 
 - **`litex -r project/`** executes every entry in that project's ordered
   `[export]` table.
 - **`litex -f file.lit`** finds the outermost enclosing project that registers
-  the file and executes its ordered entries from the beginning through that
-  file. Thus `-f chapter05-real-numbers.lit` treats Chapter 5 as the final
-  chapter of the book. A file not registered by a project stays isolated; use
+  the file and executes that file's explicit `[requires]` closure. Every
+  configured package import is initialized first. A file not registered by a
+  project stays isolated; use
   **`litex -isolated -f file.lit`** to force isolation.
 
 `litex.config` is project configuration, not Litex source and not a knowledge
-file. Its single `[export]` table both names entries and fixes their order:
+file. It has four relevant tables:
 
 ```ini
+[module]
+flatten = false
+
+[import]
+Algebra = "./Algebra"
+
 [export]
 chap1 = "./chapter01.lit"
 chap2 = "./chapter02.lit"
-Algebra = "./Algebra"
 trust legacy_background = "./legacy-background.lit"
+
+[requires]
+chap2 = ["chap1"]
 ```
 
+`[import]` is the explicit path-to-package boundary for non-standard modules.
+It is not a Litex statement: source files never write `import Algebra` or a
+path import. A repository root and an independently imported package may
+declare path imports. A directory reached through `[export]` is a subpackage;
+it cannot introduce a new path import. It may use packages already declared by
+an ancestor package, through their canonical namespace.
+
+A package identity is its **mount name**, not merely its directory. An
+`[import]` name is a package name, not a child namespace: if `C` declares
+`B = "../B"`, then `C::D` may use `B::F`. If `C` also needs `B/F` as the
+separately named package `BF`, `C` must declare `BF = "../B/F"` itself.
+`B::F` and `BF` are distinct packages even though they read the same directory;
+Litex never infers the second mount from the first. Only a path repeated in the
+active mount chain is a cycle.
+
+`[export]` names local sources and fixes the full-project `-r` order. A
+`[requires]` entry names only earlier local exports. It controls `-f`: Litex
+runs the transitive requirement closure and the selected file, rather than an
+ordered prefix. If a selected file cites a registered project namespace that
+is absent from that closure, Litex reports the first such reference as an
+unknown project dependency before executing the file.
+
 Each `.lit` entry runs one source; a directory entry runs its child project's
-complete ordered table before the parent continues. Earlier entries are cached
-for the whole top-level run and are available only through their canonical name:
+complete ordered table when the directory itself is selected. Entries are
+available only through their canonical name:
 
 <!-- litex:skip-test -->
 ```litex
@@ -2145,13 +2209,33 @@ for the whole top-level run and are available only through their canonical name:
 chap3::some_fact
 ```
 
-Bare names still mean local definitions, parameters, or builtins. There is no
+Bare names still mean local definitions, parameters, or kernel builtins. There is no
 `local import` statement: write the canonical name directly. A reference to a
-later entry fails, so put every prerequisite earlier in `[export]`.
+later export must be expressed through `[requires]` before it can support
+`-f`.
 
-**`import A`** remains the cross-project statement for a root directory module
-exported as `A`. It runs that child project's ordered entries if they have not
-already run. Litex has no statement that loads an arbitrary `.lit` path.
+For a named module which has exactly one direct `.lit` export, write
+`flatten = true` in `[module]` to make that file the module's root interface:
+
+```ini
+# Y/litex.config
+[module]
+flatten = true
+
+[export]
+implementation = "./implementation.lit"
+```
+
+When a parent exports this directory as `Y`, callers use `Y::name`; the
+physical export name is not a second public path, so `Y::implementation::name`
+does not work. Flattening is rejected for directory exports, multiple exports,
+and a configuration run directly as `litex -r`, because that entry root has no
+module name.
+
+**`import std A`** is the only source-level module import. It loads the shipped
+standard package named by `std/litex.config` on demand and remains active after
+`clear`. Its package names are reserved against project modules; use
+`A::name` for a named interface.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. A good Litex translation should
@@ -2162,9 +2246,9 @@ large package and citing a synonym theorem.
 Prefix `trust` in `[export]` marks one entry as a deliberately trusted project
 boundary for ordinary runs. It still parses the source and applies direct
 environment effects, while skipping proof processing. `-strict` ignores that
-configuration trust and verifies the same entry normally. Source-level
-`trust import Algebra` remains available for intentionally trusted module
-imports and is rejected by `-strict`.
+configuration trust and verifies the same entry normally. Use
+`trust Algebra = "./Algebra"` in `[import]` for a deliberately trusted
+non-standard package; `-strict` verifies that package normally.
 
 ---
 
@@ -2180,7 +2264,9 @@ do_nothing
 
 ### Clear environment (`clear`)
 
-**`clear`** drops the current user environment and parse-time name map so later lines start fresh. Builtin facts remain available. Imported modules remain registered and active.
+**`clear`** drops the current user environment and parse-time name map so later
+lines start fresh. Kernel objects remain available. Configured project packages
+remain registered and active.
 
 ```litex
 have a R = 1
@@ -2193,22 +2279,13 @@ a = 2
 ```
 
 The imported module table is separate from the current user environment, so
-`clear` does not disable imports.
-
-<!-- litex:skip-test -->
-```litex
-import Algebra
-
-clear
-
-# Algebra remains active after clear
-```
+`clear` does not disable configured imports.
 
 ---
 
 ### Evaluate an expression (`eval`)
 
-Besides algorithms, **`eval expr`** can reduce closed expressions according to evaluation rules.
+Besides algorithms, **`eval expr`** can reduce closed expressions according to evaluation rules. Its ordinary output reports the resulting stored equality (for example, `1 + 1 / 3 = 4 / 3`) alongside the source `eval` statement.
 
 ```litex
 eval 1 + 1 / 3 # exact rational arithmetic
@@ -2218,12 +2295,12 @@ eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})}) # sum of a sum
 ```
 
-Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
+When `expr` is a named object with a known executable definition, **`eval expr`** unfolds that definition and reports the result using the original name. State any ordinary equality separately; there is no special `eval ... from ...` form.
 
 ```litex
-have a set = sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
+have a R = sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
 
-eval a from sum(1, 3, fn(z N_pos: z <= 3) R {[1, 2, 3](z) * [4, 5, 6](z)})
+eval a
 ```
 
 ---
@@ -2428,6 +2505,31 @@ claim:
 ```
 
 Inside `? strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
+
+**`by induc P:`** is also finite-set structural induction: it checks a goal at
+`P = {}` and after adjoining a fresh element `x` to a smaller finite set `S`.
+To restrict that induction to finite subsets of a particular, already-written
+carrier, use **`by induc P in A:`**. This is an explicit restriction: the
+generated result is `forall P finite_set: P $subset A => ...`; Litex does not
+infer or rename a carrier from the goal.
+
+Inside the carrier-restricted step, `x $in A`, `S $subset A`, `S` is finite,
+and `not x $in S` are available alongside the induction hypothesis. This is
+useful when a theorem's premise applies to every element of one fixed finite
+set.
+
+```litex
+have carrier finite_set
+
+by induc P in carrier:
+    ? $is_finite_set(P)
+    ? from P = {}:
+        $is_finite_set(P)
+    ? induc x, S:
+        $is_finite_set(union({x}, S))
+
+$is_finite_set(carrier)
+```
 
 > Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
@@ -2699,7 +2801,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have fn ... by exist!: ? forall ... exist!` | Define a function from unique existence |
 | `have fn ... by induc ... from ...` | Define a recursive function by decreasing measure |
 | `trust have` | Introduce local names and local assumptions |
-| `algo` / `eval` | Define and run executable mathematical algorithms |
+| `have algo for` / `eval` | Attach and run executable function implementations |
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
 | `axiom name` | Name a trusted `forall` fact without proof, using the same citation interface as `thm` |
@@ -2779,7 +2881,7 @@ bound variable in a set builder.
 | element bound in a set comprehension | `x` in `{x R: x >= 0}` |
 | function parameter inside a function type/body | `x` in `fn(x R) R` |
 | induction parameter inside an induction proof | `n` in `by induc n from 0:` |
-| algorithm parameter inside an `algo` body | `x` in `algo f(x):` |
+| implementation parameter inside a `have algo for` body | `x` in `have algo for f(x):` |
 | struct field name inside a struct equivalence block | `x` in a `struct Point` field condition |
 
 #### Numeric and operator objects
@@ -2963,7 +3065,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a function from unique existence | `have fn choose by exist!:`<br>`? forall x R:`<br>`exist! y R st {y = x}` |
 | define a parameterized object/function family | `template<S set>:`<br>`have A set = S` |
 | introduce local names and assumed facts | `trust have x R:`<br>`x = 1` |
-| define executable algorithm cases | `algo max2(a, b):`<br>`case a >= b: a`<br>`b` |
+| attach executable function cases | `have algo for max2(a, b):`<br>`case a >= b: a`<br>`b` |
 | define a struct view and fields | `struct Point:`<br>`x R`<br>`y R` |
 
 #### Proof, theorem, strategy, and utility statements
@@ -2980,14 +3082,15 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
-| import a declared root module | `import Algebra` |
+| declare a non-standard package | `Algebra = "./Algebra"` in `[import]` |
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | cite an earlier project file inside a source | `chapter3::local` |
+| declare a file dependency for `-f` | `chapter7 = ["chapter3"]` in `[requires]` |
 | mark a project entry as trusted | `trust chapter3 = "./chapter03.lit"` in `[export]` |
-| explicit no-op | `do_nothing`, `...` |
+| explicit no-op | `do_nothing` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |
-| evaluate `rhs` and store the value for known-equal `lhs` | `eval f(2) from f(1 + 1)` |
+| evaluate a named executable definition | `have a R = 1 + 2`<br>`eval a` |
 | prove an existential by giving witnesses | `witness exist x R st {x = 1} from 1` |
 | prove nonemptiness by giving an element | `witness $is_nonempty_set({1, 2}) from 1` |
 
@@ -3175,7 +3278,8 @@ thm every_multiple_of_8_can_be_divided_by_2:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
-witness exist d Z st {8 = 1 * d} from 8
+witness exist d Z st {8 = 8 * d} from 1:
+    8 = 8 * 1
 $can_be_divided_by_8(8)
 by thm every_multiple_of_8_can_be_divided_by_2(8)
 $can_be_divided_by_2(8)
@@ -3210,7 +3314,8 @@ claim:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
-witness exist d Z st {8 = 1 * d} from 8
+witness exist d Z st {8 = 8 * d} from 1:
+    8 = 8 * 1
 $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```

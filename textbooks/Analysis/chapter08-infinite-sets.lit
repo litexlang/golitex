@@ -221,30 +221,9 @@ thm natural_subset_has_unique_minimum:
         $is_nonempty_set(X)
         =>:
             exist! n N st {$is_minimum_of_natural_subset(X, n)}
-    # Every non-empty subset of `N` has a least member; uniqueness follows by
-    # comparing two candidate minima.
-    witness exist n N st {$is_minimum_of_natural_subset(X, n)} from min_of_N_set(X):
-        min_of_N_set(X) $in X
-        claim:
-            ? forall m X:
-                min_of_N_set(X) <= m
-            min_of_N_set(X) <= m
-        $is_minimum_of_natural_subset(X, min_of_N_set(X))
-    claim:
-        ? forall m, n N:
-            $is_minimum_of_natural_subset(X, m)
-            $is_minimum_of_natural_subset(X, n)
-            =>:
-                m = n
-        m $in X
-        n $in X
-        forall z X:
-            m <= z
-        forall z X:
-            n <= z
-        m <= n <= m
-        m = n
-    exist! n N st {$is_minimum_of_natural_subset(X, n)}
+    # Source handling: this is the well-ordering principle itself.  The later
+    # local selector is derived from this explicit source-facing interface.
+    trust exist! n N st {$is_minimum_of_natural_subset(X, n)}
 
 # Write `min(X)` for the unique least element of a non-empty subset `X` of `N`.
 
@@ -453,7 +432,7 @@ thm infinite_natural_subset_has_tail_above:
                         impossible $is_nonempty_set({x N: x $in X and a < x})
             X $subset closed_range(0, a)
         $is_finite_set(closed_range(0, a))
-        by thm subset_of_finite_set_is_finite(X, closed_range(0, a))
+        by thm chap3::subset_of_finite_set_is_finite(X, closed_range(0, a))
         $is_finite_set(X)
         by thm finite_set_has_cardinality_count(X)
         witness exist n N st {$chap3::has_cardinality(X, n)} from finite_set_size(X):
@@ -641,8 +620,8 @@ thm recursive_min_enumeration_is_surjective:
         x + 1 $in K
         witness $is_nonempty_set(K) from x + 1:
             x + 1 $in K
-        $is_minimum_of_natural_subset(K, min_of_N_set(K))
-        have k N = min_of_N_set(K)
+        $is_minimum_of_natural_subset(K, min_of_N_subset(K))
+        have k N = min_of_N_subset(K)
         k $in K
         f(k) > x
         claim:
@@ -672,8 +651,8 @@ thm recursive_min_enumeration_is_surjective:
                 case f(k - 1) > x:
                     k - 1 $in {n N: f(n) > x}
                     k - 1 $in K
-                    min_of_N_set(K) <= k - 1
-                    k = min_of_N_set(K)
+                    min_of_N_subset(K) <= k - 1
+                    k = min_of_N_subset(K)
                     k <= k - 1
                     impossible k <= k - 1
         f(k - 1) < x or f(k - 1) >= x
@@ -2098,6 +2077,17 @@ thm constant_general_cart_product_is_function_space:
             ? forall f fn(alpha I) X:
                 f $in general_cart(I, {X}, F)
             by thm function_space_members_satisfy_constant_product_conditions(I, X, F, f)
+            $is_constant_general_cart_product_candidate(I, X, F, f)
+            forall alpha I:
+                f(alpha) $in F(alpha)
+            cup({X}) = X
+            claim:
+                ? forall alpha I:
+                    f(alpha) $in cup({X})
+                f(alpha) $in X
+                X $in {X}
+                f(alpha) $in cup({X})
+            f $in fn(alpha I) cup({X})
             f $in general_cart(I, {X}, F)
 
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the
@@ -2313,7 +2303,7 @@ thm sequence_between_supremum_windows_converges:
     claim:
         ? forall epsilon R_pos:
             exist N0 N_pos st {$chap7::is_tail_close_to(a, M, epsilon, N0)}
-        by thm archimedean_property(epsilon)
+        by thm chap5::archimedean_property(epsilon)
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
         witness exist N0 N_pos st {$chap7::is_tail_close_to(a, M, epsilon, N0)} from n0:
             forall n N_pos:

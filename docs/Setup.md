@@ -70,7 +70,8 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
-The `.deb` package installs only the Litex executable. To verify it, run:
+The `.deb` package installs the Litex executable. To verify the installation,
+run a direct builtin check:
 
 ```bash
 litex -e '1 = 1' | grep '"type": "equality fact"'
@@ -131,7 +132,7 @@ Write-Host "Open a new terminal and run: litex -version"
 What this command changes on the user machine:
 
 1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
-2. Writes `litex.exe` to `%LOCALAPPDATA%\litex\litex.exe`.
+2. Extracts `litex.exe` into `%LOCALAPPDATA%\litex`.
 3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
 4. Updates `Path` in the current PowerShell session.
 
@@ -191,7 +192,8 @@ $name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
 $zip = Join-Path $env:TEMP $name
-$exe = Join-Path $dir 'litex.exe'New-Item -ItemType Directory -Force -Path $dir | Out-Null
+$exe = Join-Path $dir 'litex.exe'
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest -Uri $url -OutFile $zip
 Expand-Archive -Path $zip -DestinationPath $dir -Force
 Remove-Item -Force $zip

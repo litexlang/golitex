@@ -1130,7 +1130,7 @@ impl Runtime {
         )
     }
 
-    // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and natural-number powers.
+    // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, Euclidean quotient, and natural-number powers.
     // Example: `forall a Z, k N: a^k $in Z`.
     pub(super) fn verify_in_fact_arithmetic_expression_in_z(
         &mut self,
@@ -1159,6 +1159,15 @@ impl Runtime {
             Obj::Sub(s) => require_in_z(&s.left)? && require_in_z(&s.right)?,
             Obj::Mul(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Mod(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
+            Obj::IntegerQuotient(q) => {
+                let divisor_in_n_pos: AtomicFact =
+                    InFact::new((*q.divisor).clone(), n_pos_obj.clone(), lf.clone()).into();
+                require_in_z(&q.dividend)?
+                    && self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
+                        &divisor_in_n_pos,
+                        verify_state,
+                    )?
+            }
             Obj::Pow(p) => {
                 let exponent_in_n: AtomicFact =
                     InFact::new(p.exponent.as_ref().clone(), n_obj.clone(), lf.clone()).into();
@@ -1196,7 +1205,7 @@ impl Runtime {
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N_pos and exponent in N"
+                "Z closure: arithmetic operands in Z; integer_quotient dividend in Z and divisor in N_pos; pow base in Z and exponent in N, or base in N_pos and exponent in N"
                     .to_string(),
                 Vec::new(),
             ))

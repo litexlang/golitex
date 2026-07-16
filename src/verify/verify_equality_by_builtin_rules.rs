@@ -26,6 +26,9 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Mul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Div(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Mod(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::IntegerQuotient(b) => {
+            obj_expr_mentions_bare_id_on_two(b.dividend.as_ref(), b.divisor.as_ref(), id)
+        }
         Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),

@@ -9,7 +9,8 @@
 # congruence algebra directly, and record the quotient-set construction as
 # source-facing proof debt.
 # litex_code: This file runs Sections I-IV first and then adds Section V.
-# comments: No external number-theory package is imported.
+# comments: The kernel Euclidean quotient and remainder rules provide the
+# standard representative construction used below; no source package is imported.
 
 """
 Definition. A commutative, or abelian, group is a set G with a binary operation
@@ -112,19 +113,20 @@ prop has_standard_remainder_mod(m N_pos, x, r Z):
 prop same_remainder_mod(m N_pos, x, y Z):
     x % m = y % m
 
-# The builtin remainder is already in the source interval.  The two directions
+# The first-class Euclidean quotient gives the multiple part of each integer,
+# while `%` gives the representative in the source interval. The two directions
 # below make the book's equivalence with divisibility explicit.
 thm standard_remainder_mod_exists_unique:
     ? forall m N_pos, x Z:
         exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
-    (x - x % m) % m = 0
-    obtain q from exist q Z st {x - x % m = m * q}
+    x = m * integer_quotient(x, m) + x % m
+    x - x % m = (m * integer_quotient(x, m) + x % m) - x % m = m * integer_quotient(x, m)
     witness exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)} from x % m:
         0 <= x % m < m
         $has_standard_remainder_mod(m, x, x % m)
-        x - x % m = m * q
-        witness exist k Z st {x - x % m = m * k} from q:
-            x - x % m = m * q
+        x - x % m = m * integer_quotient(x, m)
+        witness exist k Z st {x - x % m = m * k} from integer_quotient(x, m):
+            x - x % m = m * integer_quotient(x, m)
         $congruent_mod(m, x, x % m)
     forall r, r1 Z:
         0 <= r < m
@@ -143,17 +145,11 @@ thm congruent_mod_has_same_remainder:
         =>:
             $same_remainder_mod(m, x, y)
     obtain k from exist k Z st {x - y = m * k}
-    (y - y % m) % m = 0
-    obtain q from exist q Z st {y - y % m = m * q}
+    y = m * integer_quotient(y, m) + y % m
     x = (x - y) + y = m * k + y = y + m * k
-    y = (y - y % m) + y % m = m * q + y % m
-    x = y + m * k = (m * q + y % m) + m * k = m * (q + k) + y % m
-    have rN N = y % m
-    rN = y % m < m
-    x = m * (q + k) + rN
-    witness exist z Z st {x = m * z + rN} from q + k:
-        x = m * (q + k) + rN
-    x % m = rN
+    x = y + m * k = (m * integer_quotient(y, m) + y % m) + m * k = m * (integer_quotient(y, m) + k) + y % m
+    0 <= y % m < m
+    x = m * (integer_quotient(y, m) + k) + y % m
     x % m = y % m
     $same_remainder_mod(m, x, y)
 
@@ -162,17 +158,13 @@ thm same_remainder_mod_is_congruent:
         $same_remainder_mod(m, x, y)
         =>:
             $congruent_mod(m, x, y)
-    (x - x % m) % m = 0
-    obtain a from exist a Z st {x - x % m = m * a}
-    (y - y % m) % m = 0
-    obtain b from exist b Z st {y - y % m = m * b}
-    x = (x - x % m) + x % m = m * a + x % m
-    y = (y - y % m) + y % m = m * b + y % m
+    x = m * integer_quotient(x, m) + x % m
+    y = m * integer_quotient(y, m) + y % m
     x % m = y % m
-    y = m * b + x % m
-    x - y = (m * a + x % m) - (m * b + x % m) = m * a - m * b = m * (a - b)
-    witness exist k Z st {x - y = m * k} from a - b:
-        x - y = m * (a - b)
+    y = m * integer_quotient(y, m) + x % m
+    x - y = (m * integer_quotient(x, m) + x % m) - (m * integer_quotient(y, m) + x % m) = m * integer_quotient(x, m) - m * integer_quotient(y, m) = m * (integer_quotient(x, m) - integer_quotient(y, m))
+    witness exist k Z st {x - y = m * k} from integer_quotient(x, m) - integer_quotient(y, m):
+        x - y = m * (integer_quotient(x, m) - integer_quotient(y, m))
     $congruent_mod(m, x, y)
 
 """

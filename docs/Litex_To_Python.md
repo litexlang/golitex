@@ -30,9 +30,14 @@ have a R = 1
 have q Q = 1
 have z Z = 3
 
-have fn as algo f(x R) R = x + 1
+have fn f(x R) R = x + 1
+have algo for f(x):
+    x + 1
 
-have fn as algo max2(x, y R) R by cases:
+have fn max2(x, y R) R by cases:
+    case x >= y: x
+    case x < y: y
+have algo for max2(x, y):
     case x >= y: x
     case x < y: y
 ```
@@ -71,11 +76,13 @@ q = (1.0 / 2.0)
 z = 3.0
 ```
 
-Single-expression `have fn as algo` definitions become Python functions with a
+Single-expression `have algo for` implementations become Python functions with a
 single `return`:
 
 ```litex
-have fn as algo f(x R) R = x + 1
+have fn f(x R) R = x + 1
+have algo for f(x):
+    x + 1
 ```
 
 ```python
@@ -86,8 +93,12 @@ def f(x):
 Function calls are allowed only when the callee was already extracted earlier:
 
 ```litex
-have fn as algo f(x R) R = x + 1
-have fn as algo g(x R) R = f(x) + 2
+have fn f(x R) R = x + 1
+have algo for f(x):
+    x + 1
+have fn g(x R) R = f(x) + 2
+have algo for g(x):
+    f(x) + 2
 ```
 
 ```python
@@ -98,10 +109,13 @@ def g(x):
     return (f(x) + 2.0)
 ```
 
-Case-based `have fn as algo` definitions become `if` / `elif` functions:
+Case-based `have algo for` implementations become `if` / `elif` functions:
 
 ```litex
-have fn as algo max2(x, y R) R by cases:
+have fn max2(x, y R) R by cases:
+    case x >= y: x
+    case x < y: y
+have algo for max2(x, y):
     case x >= y: x
     case x < y: y
 ```
@@ -123,8 +137,12 @@ write a numeric update rule, and reuse earlier extracted functions.
 
 ```litex
 have dt R_pos = 1 / 100
-have fn as algo euler_step(y, dy R) R = y + dt * dy
-have fn as algo twice_step(y, dy R) R = euler_step(euler_step(y, dy), dy)
+have fn euler_step(y, dy R) R = y + dt * dy
+have algo for euler_step(y, dy):
+    y + dt * dy
+have fn twice_step(y, dy R) R = euler_step(euler_step(y, dy), dy)
+have algo for twice_step(y, dy):
+    euler_step(euler_step(y, dy), dy)
 ```
 
 ```python
@@ -139,10 +157,8 @@ def twice_step(y, dy):
 
 ## Recursive Algorithm Shape
 
-The v1 Python extractor emits standalone `algo` bodies with `R` parameters and
-an `R` return value, including calls from an algorithm to itself. It still
-rejects `have fn as algo ... by induc`: that definition form needs a dedicated
-recursive lowering path.
+The v1 Python extractor emits `have algo for` bodies with `R` parameters and
+an `R` return value, including calls from an implementation to itself.
 
 For example, the Fibonacci sequence can be written as a recursive mathematical
 function plus an executable algorithm body:
@@ -153,7 +169,7 @@ have fn fib(n Z: n >= 0) Z by induc n from 0:
     case n = 1: 1
     case n > 1: fib(n - 1) + fib(n - 2)
 
-algo fib(n):
+have algo for fib(n):
     case n = 0: 0
     case n = 1: 1
     fib(n - 1) + fib(n - 2)
@@ -175,8 +191,8 @@ def fib(n):
 ```
 
 This exact Fibonacci source is outside the current v1 boundary because it uses
-`Z` and `have fn ... by induc`. A standalone `algo` with the supported `R`
-signature is emitted in this same Python shape, including its self-calls.
+`Z`. A `have algo for` implementation with the supported `R` signature is
+emitted in this same Python shape, including its self-calls.
 
 This is the main reason the Litex-to-programming-language direction should
 scale beyond the current extractor subset. The pure mathematical core of an
@@ -201,12 +217,10 @@ arithmetic.
 - Numeric `have obj equal` statements are extraction candidates when their type
   is one of `R`, `Q`, `Z`, `N`, `N_pos`, or the positive/negative/nonzero
   variants of those standard sets.
-- `have fn as algo` statements are extraction candidates only when every
-  parameter set is exactly `R` and the return set is exactly `R`.
-- Standalone `algo` statements are extraction candidates when the already
-  declared function has that same `R^n -> R` signature.
+- `have algo for f(...)` statements are extraction candidates when the already
+  declared function has an `R^n -> R` signature.
 - Ordinary proof statements, claims, theorems, non-numeric object definitions,
-  and non-`as algo` function definitions are skipped.
+  and function definitions without an implementation are skipped.
 
 If a statement is an extraction candidate but uses unsupported syntax, the
 extractor reports an error instead of silently skipping it.
@@ -229,7 +243,6 @@ Supported case conditions:
 Unsupported in v1:
 
 - function domain restrictions such as `fn(x R: x > 0) R`
-- `have fn as algo ... by induc`
 - non-`R` function parameters or returns
 - sets, membership facts, abstract propositions, tuples, structures, matrices,
   templates, anonymous functions, sums, products, `sqrt`, `log`, `max`, `min`,

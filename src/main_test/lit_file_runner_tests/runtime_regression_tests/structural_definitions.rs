@@ -10,7 +10,7 @@ template<s set: s = s>:
 \id_on_set{R} = R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("template_instantiation_prefers_angle_brackets");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -45,7 +45,7 @@ template id_on_set<s set>:
     have id_on_set set = s
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("template_header_rejects_redundant_name");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -89,7 +89,7 @@ template<s set>:
     have group_quotient fn (g &Group<s>) power_set(s)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "template_can_use_struct_with_function_valued_fields",
             );
@@ -136,7 +136,7 @@ claim:
     @G.op(@G.inv(x), x) = @G.e
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "struct_filter_predicate_unfolds_for_explicit_field_view",
             );
@@ -161,7 +161,7 @@ have A T
 A(1, 2, 3) $in R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "set_alias_to_fn_set_is_nonempty_and_registers_function_type",
     );
@@ -186,7 +186,7 @@ have A \tensor3<R, 3>
 A(1, 2, 3) $in R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type",
     );
@@ -209,7 +209,7 @@ trust a <= b
 a = b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("weak_order_does_not_recursively_prove_equality");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -219,6 +219,268 @@ a = b
         !run_succeeded,
         "recursive equality/order proof should fail, but succeeded:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn real_line_comparison_exist_witnesses_are_builtin_rules() {
+    let source_code = r#"
+have above R:
+    above > 100
+have below R:
+    100 > below
+have equal_to R:
+    equal_to = 100
+have distinct_from R:
+    100 != distinct_from
+exist a, b R st {a >= b}
+exist a, b R st {b <= a}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "real_line_comparison_exist_witnesses_are_builtin_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "real-line comparison witnesses should verify without std facts:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"builtin rule\"")
+            && run_output.contains("exist: real-line comparison witness"),
+        "real-line comparison witnesses should expose builtin provenance:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"type\": \"cite forall fact\""),
+        "real-line comparison witnesses must not cite a source-level forall:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn rational_integer_ratio_representation_is_a_builtin_rule() {
+    let source_code = r#"
+forall q Q:
+    exist a Z, b Z_nz st {q = a / b}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "rational_integer_ratio_representation_is_a_builtin_rule",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "rational integer-ratio representation should verify without std facts:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("exist: rational integer ratio representation"),
+        "rational representation should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn rational_integer_ratio_representation_requires_a_rational_target() {
+    let source_code = r#"
+exist a Z, b Z_nz st {sqrt(2) = a / b}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "rational_integer_ratio_representation_requires_a_rational_target",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "the rational representation builtin must not apply to arbitrary reals:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn real_line_comparison_builtins_require_real_operands() {
+    run_with_large_stack(
+        "real_line_comparison_builtins_require_real_operands",
+        || {
+            let positive_source = r#"
+have a, b R
+a = b or a < b or a > b
+a <= b or a >= b
+a > b or a <= b
+exist x R st {x = a}
+exist x R st {x > a}
+"#;
+            let mut positive_runtime = Runtime::new();
+            positive_runtime.new_file_path_new_env_new_name_scope(
+                "real_line_comparison_builtins_require_real_operands_positive",
+            );
+            let (positive_results, positive_error) =
+                run_source_code(positive_source, &mut positive_runtime);
+            let (positive_succeeded, positive_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_results,
+                &positive_error,
+                false,
+            );
+            assert!(
+                positive_succeeded,
+                "real-line comparison builtins should retain real examples:\n{}",
+                positive_output
+            );
+
+            for (label, source_code) in [
+                ("trichotomy", "have S, T set\nS = T or S < T or S > T"),
+                ("comparability", "have S, T set\nS <= T or S >= T"),
+                ("strict_non_strict_split", "have S, T set\nS > T or S <= T"),
+                ("existence_equality", "have S set\nexist x R st {x = S}"),
+                ("existence_order", "have S set\nexist x R st {x > S}"),
+            ] {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(
+                    format!(
+                        "real_line_comparison_builtins_require_real_operands_{}",
+                        label
+                    )
+                    .as_str(),
+                );
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    !run_succeeded,
+                    "{} must not apply a real-line rule to set operands:\n{}",
+                    label, run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn zero_product_split_requires_real_factors() {
+    let positive_source = r#"
+have a, b R
+trust a * b = 0
+a = 0 or b = 0
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime
+        .new_file_path_new_env_new_name_scope("zero_product_split_requires_real_factors_positive");
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "zero-product splitting should retain real factors:\n{}",
+        positive_output
+    );
+    assert!(
+        positive_output.contains("zero_product_split"),
+        "zero-product splitting should expose its builtin provenance:\n{}",
+        positive_output
+    );
+
+    let non_real_source = r#"
+have A, B set
+trust A * B = 0
+A = 0 or B = 0
+"#;
+    let mut non_real_runtime = Runtime::new();
+    non_real_runtime
+        .new_file_path_new_env_new_name_scope("zero_product_split_requires_real_factors_non_real");
+    let (non_real_results, non_real_error) =
+        run_source_code(non_real_source, &mut non_real_runtime);
+    let (non_real_succeeded, non_real_output) =
+        render_run_source_code_output(&non_real_runtime, &non_real_results, &non_real_error, false);
+    assert!(
+        !non_real_succeeded,
+        "a non-real product must not become a zero-product premise:\n{}",
+        non_real_output
+    );
+}
+
+#[test]
+fn known_forall_existential_matching_requires_exact_atomic_relation() {
+    let equality_as_inequality = r#"
+trust:
+    forall a Z:
+        exist b Z st {b = a}
+have chosen Z:
+    chosen != 100
+"#;
+    let mut equality_runtime = Runtime::new();
+    equality_runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_existential_matching_rejects_equality_as_inequality",
+    );
+    let (equality_results, equality_error) =
+        run_source_code(equality_as_inequality, &mut equality_runtime);
+    let (equality_succeeded, equality_output) =
+        render_run_source_code_output(&equality_runtime, &equality_results, &equality_error, false);
+    assert!(
+        !equality_succeeded,
+        "an equality witness must not verify a distinctness witness:\n{}",
+        equality_output
+    );
+
+    let positive_as_negative = r#"
+abstract_prop p(x)
+trust:
+    forall a Z:
+        exist b Z st {$p(b)}
+have chosen Z:
+    not $p(chosen)
+"#;
+    let mut predicate_runtime = Runtime::new();
+    predicate_runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_existential_matching_rejects_positive_as_negative",
+    );
+    let (predicate_results, predicate_error) =
+        run_source_code(positive_as_negative, &mut predicate_runtime);
+    let (predicate_succeeded, predicate_output) = render_run_source_code_output(
+        &predicate_runtime,
+        &predicate_results,
+        &predicate_error,
+        false,
+    );
+    assert!(
+        !predicate_succeeded,
+        "a positive predicate witness must not verify a negated witness:\n{}",
+        predicate_output
+    );
+
+    let exact_equality = r#"
+trust:
+    forall a Z:
+        exist b Z st {b = a}
+have chosen Z:
+    chosen = 100
+"#;
+    let mut exact_runtime = Runtime::new();
+    exact_runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_existential_matching_still_accepts_exact_equality",
+    );
+    let (exact_results, exact_error) = run_source_code(exact_equality, &mut exact_runtime);
+    let (exact_succeeded, exact_output) =
+        render_run_source_code_output(&exact_runtime, &exact_results, &exact_error, false);
+    assert!(
+        exact_succeeded,
+        "an exact existential relation should still instantiate:\n{}",
+        exact_output
     );
 }
 
@@ -245,7 +507,7 @@ thm use_rel_trans_like:
     $rel(X, a, c)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "known_forall_instantiation_fills_middle_param_from_dom_facts",
             );
@@ -273,7 +535,7 @@ b = a * k1 = a * 0 = 0
 0 * k2 = 0
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "zero_product_cancellation_does_not_recursively_reenter_equality",
     );
@@ -293,9 +555,14 @@ fn exist_unique_infers_component_uniqueness_forall() {
     let source_code = r#"
 abstract_prop p(a, b)
 trust exist! a, b R st {$p(a, b)}
+forall a1, b1, a2, b2 R:
+    $p(a1, b1)
+    $p(a2, b2)
+    =>:
+        a1 = a2 and b1 = b2
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("exist_unique_infers_component_uniqueness_forall");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -304,12 +571,6 @@ trust exist! a, b R st {$p(a, b)}
     assert!(
         run_succeeded,
         "exist! component uniqueness inference failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("forall a1, b1 R, a2, b2 R:")
-            && run_output.contains("a1 = a2 and b1 = b2"),
-        "exist! should infer a component-wise uniqueness forall:\n{}",
         run_output
     );
 }
@@ -327,7 +588,7 @@ forall a1, b1, a2, b2 R:
         b1 = b2
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "exist_unique_component_uniqueness_proves_split_then_facts",
     );
@@ -357,7 +618,7 @@ sketch:
     exist! a, b R st {$p(a, b)}
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime
         .new_file_path_new_env_new_name_scope("exist_unique_still_accepts_tuple_uniqueness_forall");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -389,7 +650,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_question_goal_target");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -421,7 +682,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             "have_fn_by_exist_prove_body_can_establish_target",
         );
@@ -456,7 +717,7 @@ forall x A, y B:
         y = f(x)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             "have_fn_by_exist_releases_unique_witness_direction",
         );
@@ -495,7 +756,7 @@ forall x A, y B:
         y = f(x)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
             );
@@ -530,7 +791,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_requires_question_goal");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -559,7 +820,7 @@ have fn f by exist!:
     ? 1 = 1
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "have_fn_by_exist_question_goal_requires_forall_target",
             );

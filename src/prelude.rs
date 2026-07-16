@@ -5,7 +5,6 @@
 //! `use crate::prelude::*;` so implementation files can focus on kernel logic
 //! instead of long import lists.
 
-pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
@@ -111,9 +110,10 @@ pub use crate::infer::{
     StoreFactOutput,
 };
 pub use crate::module_manager::{
-    discover_repository, discover_repository_for_file, parse_project_config, ExportEntry, FileId,
-    FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
-    ProjectConfig, ProjectExport, RepositoryFileTarget, BUILTIN_CODE_PATH,
+    discover_repository, discover_repository_for_file, discover_std_module, parse_project_config,
+    ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId,
+    ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectImport,
+    ProjectRequirement, RepositoryFileTarget, KERNEL_PATH,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -149,6 +149,7 @@ pub use crate::obj::GeneralCart;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
 pub use crate::obj::InstantiatedTemplateObj;
+pub use crate::obj::IntegerQuotient;
 pub use crate::obj::Intersect;
 pub use crate::obj::IntervalObj;
 pub use crate::obj::IntervalObjStruct;
@@ -372,7 +373,6 @@ pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
-pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
 pub use crate::stmt::StopStrategyStmt;
@@ -471,6 +471,7 @@ pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INJECTIVE;
+pub use crate::common::keywords::INTEGER_QUOTIENT;
 pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::INTERVAL_LITERAL_PREFIX;
 pub use crate::common::keywords::IS_CART;
@@ -533,6 +534,7 @@ pub use crate::common::keywords::SET_MINUS;
 pub use crate::common::keywords::SKETCH;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
+pub use crate::common::keywords::STD;
 pub use crate::common::keywords::STOP;
 pub use crate::common::keywords::STRATEGY;
 pub use crate::common::keywords::STRONG_INDUC;

@@ -37,7 +37,7 @@ parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `trust have`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Ordinary `import std ...` dependencies remain allowed and are recorded in the run summary. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -97,13 +97,14 @@ those flags. `-lang` also consumes the next token globally.
 | `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its ordered `[export]` table. |
 | `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run the ordered `[export]` prefix through a registered file in its outermost project; otherwise run it as an isolated script. |
+| `litex -f <file>` | Run a registered file's transitive `[requires]` closure in its outermost project; otherwise run it as an isolated script. |
 | `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
 | `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its complete ordered `[export]` table. |
 
-Declare project files and child modules in ordered `[export]` entries. Earlier
-files are cited with their canonical names such as `chap3::theorem`; ordinary
-`import Name` names a declared root module.
+Declare local project files and child modules in ordered `[export]` entries.
+Declare non-standard packages in `[import]`, and declare each file's direct
+earlier dependencies in `[requires]`. Files cite canonical names such as
+`chap3::theorem`; source-level imports are reserved for `import std Name`.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -235,18 +236,38 @@ Unknown commands print an error and the help message, then exit with code `2`.
 
 Use `litex.config` to organize a multi-file project:
 
-- list files and child modules once, in their mathematical order, in `[export]`;
+- list local files and child modules once, in their mathematical order, in `[export]`;
+- declare non-standard package paths once in `[import]` at a package boundary;
 - give each entry a canonical name, for example `chap7 = "./chap7.lit"`;
+- declare `chap7 = ["chap3"]` in `[requires]` when Chapter 7 needs Chapter 3 under `-f`;
 - cite earlier entries directly as `chap7::name`;
-- run the complete book with `litex -r <project>` or one registered chapter's prefix with `litex -f <file>`.
+- run the complete book with `litex -r <project>` or one registered chapter's dependency closure with `litex -f <file>`.
 
-Ordinary `import Name` loads a declared root module.
+Package names are mounts: `B = "../B"` and `BF = "../B/F"` are distinct
+declarations even when `BF` is a child directory of `B`. An exported
+subpackage can use both mounts only after its ancestor declares both; Litex
+does not infer `BF` from `B`.
+
+For a named module with exactly one direct `.lit` export, its `litex.config`
+may expose that file as the module root instead of adding the export name:
+
+```ini
+[module]
+flatten = true
+
+[export]
+implementation = "./implementation.lit"
+```
+
+If the parent exports the directory as `Y`, callers write `Y::name`, not
+`Y::implementation::name`. A direct `litex -r` root cannot use this setting,
+because it has no module name to expose.
 
 For an explicitly trusted project entry, write
 `trust chap7 = "./chap7.lit"` in `[export]`. Ordinary runs skip its proof
 processing but preserve direct environment effects; `-strict` verifies it
-normally. `trust import Name` remains available for a deliberately trusted
-directory-module import and is rejected by `-strict`.
+normally. For a trusted non-standard package, write
+`trust Algebra = "./Algebra"` in `[import]`.
 
 ## Reserved Helper Commands
 

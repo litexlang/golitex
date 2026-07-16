@@ -135,7 +135,6 @@ impl fmt::Display for CommandStmt {
             CommandStmt::DoNothingStmt(x) => write!(f, "{}", x),
             CommandStmt::ClearStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalStmt(x) => write!(f, "{}", x),
-            CommandStmt::EvalByStmt(x) => write!(f, "{}", x),
             CommandStmt::UseStrategyStmt(x) => write!(f, "{}", x),
             CommandStmt::StopStrategyStmt(x) => write!(f, "{}", x),
         }

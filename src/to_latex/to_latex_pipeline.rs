@@ -44,9 +44,9 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
     Ok(latex_fragment(&math_blocks))
 }
 
-pub fn to_latex_from_file_after_builtins(file_path: &str) -> Result<String, RuntimeError> {
+pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
         Some(target) => to_latex_project_target(&mut runtime, target),
         None => {
@@ -57,20 +57,15 @@ pub fn to_latex_from_file_after_builtins(file_path: &str) -> Result<String, Runt
     }
 }
 
-pub fn to_latex_from_source_after_builtins(
-    source_code: &str,
-    entry_label: &str,
-) -> Result<String, RuntimeError> {
+pub fn to_latex_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_latex(normalized.as_str(), &mut runtime)
 }
 
-pub fn to_latex_from_repository_after_builtins(
-    repository_path: &str,
-) -> Result<String, RuntimeError> {
-    let mut runtime = Runtime::new_with_builtin_code();
+pub fn to_latex_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
+    let mut runtime = Runtime::new();
     discover_repository(&mut runtime, repository_path)?;
     let entry_module_id = runtime.current_module_id();
     to_latex_project_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id))

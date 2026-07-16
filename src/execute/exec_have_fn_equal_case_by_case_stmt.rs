@@ -204,15 +204,10 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        let infer_result = self.store_have_fn_equal_case_by_case_stmt_facts(
+        self.store_have_fn_equal_case_by_case_stmt_facts(
             have_fn_equal_case_by_case_stmt,
             fn_set_stored,
-        )?;
-        if have_fn_equal_case_by_case_stmt.as_algo {
-            self.exec_have_fn_equal_case_by_case_stmt_as_algo(have_fn_equal_case_by_case_stmt)?;
-        }
-
-        Ok(infer_result)
+        )
     }
 
     pub(crate) fn exec_have_fn_equal_case_by_case_stmt_affect_environment_only(

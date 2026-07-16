@@ -4,8 +4,8 @@ use std::time::Instant;
 
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
-use crate::to_latex::to_latex_from_source_after_builtins;
-use crate::to_python::to_python_from_source_after_builtins;
+use crate::to_latex::to_latex_from_source;
+use crate::to_python::to_python_from_source;
 
 use super::helper::run_with_large_stack;
 
@@ -36,7 +36,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin_and_clear() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::new_with_builtin_code();
+    let mut import_runtime = Runtime::new();
     import_runtime.new_file_path_new_env_new_name_scope("runtime_contract_import");
     import_runtime.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
@@ -55,7 +55,7 @@ fn runtime_contract_builtin_and_clear() {
 
     let clear_source_code =
         "abstract_prop local_prop(x)\ntrust $local_prop(2)\nclear\n$local_prop(2)";
-    let mut clear_runtime = Runtime::new_with_builtin_code();
+    let mut clear_runtime = Runtime::new();
     clear_runtime.new_file_path_new_env_new_name_scope("runtime_contract_clear");
     let (clear_stmt_results, clear_runtime_error) =
         run_source_code(clear_source_code, &mut clear_runtime);

@@ -1,6 +1,130 @@
 use super::*;
 
 impl Runtime {
+    // Binary-union introduction: a member of either side is in the union.
+    // Example: `x $in A` proves `x $in union(A, B)`.
+    pub(super) fn verify_in_fact_in_union_by_member_of_either_side(
+        &mut self,
+        in_fact: &InFact,
+        union: &Union,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        for (side, side_name) in [
+            (union.left.as_ref(), "left"),
+            (union.right.as_ref(), "right"),
+        ] {
+            let member_fact: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                side.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let member_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            if member_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        format!("union membership: member of the {side_name} side"),
+                        vec![member_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
+    // Binary-intersection introduction: a member of both sides is in the intersection.
+    // Example: `x $in A`, `x $in B` prove `x $in intersect(A, B)`.
+    pub(super) fn verify_in_fact_in_intersect_by_member_of_both_sides(
+        &mut self,
+        in_fact: &InFact,
+        intersect: &Intersect,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let left_member_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            intersect.left.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let left_member_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&left_member_fact, verify_state)?;
+        if !left_member_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let right_member_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            intersect.right.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let right_member_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &right_member_fact,
+            verify_state,
+        )?;
+        if !right_member_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "intersection membership: member of both sides".to_string(),
+                vec![left_member_result, right_member_result],
+            )
+            .into(),
+        )
+    }
+
+    // Set-difference introduction: a left member excluded from the right side is in the difference.
+    // Example: `x $in A`, `not x $in B` prove `x $in set_minus(A, B)`.
+    pub(super) fn verify_in_fact_in_set_minus_by_member_and_non_member(
+        &mut self,
+        in_fact: &InFact,
+        set_minus: &SetMinus,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let left_member_fact: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            set_minus.left.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let left_member_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&left_member_fact, verify_state)?;
+        if !left_member_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let right_non_member_fact: AtomicFact = NotInFact::new(
+            in_fact.element.clone(),
+            set_minus.right.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let right_non_member_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &right_non_member_fact,
+            verify_state,
+        )?;
+        if !right_non_member_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "set-minus membership: member of left side and non-member of right side"
+                    .to_string(),
+                vec![left_member_result, right_non_member_result],
+            )
+            .into(),
+        )
+    }
+
     // Family-union introduction: `x $in cup(F)` follows from a member set
     // containing `x`, either as a known existential or as concrete facts.
     // Example: `A $in F` and `x $in A` prove `x $in cup(F)`.

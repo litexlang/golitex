@@ -983,16 +983,14 @@ thm reciprocal_difference_quotient_limit_from_quotient_limit:
     $chap9::has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}, x0, -Lq / g(x0))
     claim:
         ? forall y set_minus(X, {x0}):
-            fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y)
-        fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = reciprocal_constant_on_punctured_domain(y) * quotient_difference_quotient_on_punctured_domain(y)
+            reciprocal_constant_on_punctured_domain(y) * quotient_difference_quotient_on_punctured_domain(y) = (1 / g(y) - 1 / g(x0)) / (y - x0)
         reciprocal_constant_on_punctured_domain(y) = -1 / g(x0)
         quotient_difference_quotient_on_punctured_domain(y) = ((g(y) - g(x0)) / (y - x0)) / g(y)
         y != x0
         y - x0 != 0
         g(y) != 0
         (-1 / g(x0)) * (((g(y) - g(x0)) / (y - x0)) / g(y)) = (1 / g(y) - 1 / g(x0)) / (y - x0)
-        fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y) = (1 / g(y) - 1 / g(x0)) / (y - x0)
-        fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}(y) = fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}(y)
+        reciprocal_constant_on_punctured_domain(y) * quotient_difference_quotient_on_punctured_domain(y) = (1 / g(y) - 1 / g(x0)) / (y - x0)
     by thm chap9::equal_functions_have_equal_function_limits(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {reciprocal_constant_on_punctured_domain(x) * quotient_difference_quotient_on_punctured_domain(x)}, fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, -Lq / g(x0))
     $chap9::has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(1 / g(x) - 1 / g(x0)) / (x - x0)}, x0, -Lq / g(x0))
 
@@ -1818,13 +1816,12 @@ thm example_10_1_16_inner_has_derivative_at:
     $has_derivative_at(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_two(x)}, x0, 1)
     claim:
         ? forall y example_10_1_16_domain:
-            fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_two(x)}(y) = example_10_1_16_numerator(y)
-        fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_two(x)}(y) = example_10_1_16_identity(y) - example_10_1_16_two(y)
+            example_10_1_16_identity(y) - example_10_1_16_two(y) = example_10_1_16_numerator(y)
         example_10_1_16_identity(y) = y
         example_10_1_16_two(y) = 2
         example_10_1_16_identity(y) - example_10_1_16_two(y) = y - 2
         example_10_1_16_numerator(y) = y - 2
-        fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_two(x)}(y) = example_10_1_16_numerator(y)
+        example_10_1_16_identity(y) - example_10_1_16_two(y) = example_10_1_16_numerator(y)
     by thm equal_functions_have_equal_derivatives(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_two(x)}, example_10_1_16_numerator, x0, 1)
     $has_derivative_at(example_10_1_16_domain, example_10_1_16_numerator, x0, 1)
     by thm derivative_difference_rule(example_10_1_16_domain, example_10_1_16_identity, example_10_1_16_one, x0, 1, 0)
@@ -1833,13 +1830,12 @@ thm example_10_1_16_inner_has_derivative_at:
     $has_derivative_at(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_one(x)}, x0, 1)
     claim:
         ? forall y example_10_1_16_domain:
-            fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_one(x)}(y) = example_10_1_16_denominator(y)
-        fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_one(x)}(y) = example_10_1_16_identity(y) - example_10_1_16_one(y)
+            example_10_1_16_identity(y) - example_10_1_16_one(y) = example_10_1_16_denominator(y)
         example_10_1_16_identity(y) = y
         example_10_1_16_one(y) = 1
         example_10_1_16_identity(y) - example_10_1_16_one(y) = y - 1
         example_10_1_16_denominator(y) = y - 1
-        fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_one(x)}(y) = example_10_1_16_denominator(y)
+        example_10_1_16_identity(y) - example_10_1_16_one(y) = example_10_1_16_denominator(y)
     by thm equal_functions_have_equal_derivatives(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_identity(x) - example_10_1_16_one(x)}, example_10_1_16_denominator, x0, 1)
     $has_derivative_at(example_10_1_16_domain, example_10_1_16_denominator, x0, 1)
     claim:
@@ -1861,10 +1857,9 @@ thm example_10_1_16_inner_has_derivative_at:
     $has_derivative_at(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_numerator(x) / example_10_1_16_denominator(x)}, x0, 1 / (x0 - 1) / (x0 - 1))
     claim:
         ? forall y example_10_1_16_domain:
-            fn(x example_10_1_16_domain) R {example_10_1_16_numerator(x) / example_10_1_16_denominator(x)}(y) = example_10_1_16_inner(y)
-        fn(x example_10_1_16_domain) R {example_10_1_16_numerator(x) / example_10_1_16_denominator(x)}(y) = example_10_1_16_numerator(y) / example_10_1_16_denominator(y)
+            example_10_1_16_numerator(y) / example_10_1_16_denominator(y) = example_10_1_16_inner(y)
         example_10_1_16_inner(y) = example_10_1_16_numerator(y) / example_10_1_16_denominator(y)
-        fn(x example_10_1_16_domain) R {example_10_1_16_numerator(x) / example_10_1_16_denominator(x)}(y) = example_10_1_16_inner(y)
+        example_10_1_16_numerator(y) / example_10_1_16_denominator(y) = example_10_1_16_inner(y)
     by thm equal_functions_have_equal_derivatives(example_10_1_16_domain, fn(x example_10_1_16_domain) R {example_10_1_16_numerator(x) / example_10_1_16_denominator(x)}, example_10_1_16_inner, x0, 1 / (x0 - 1) / (x0 - 1))
     $has_derivative_at(example_10_1_16_domain, example_10_1_16_inner, x0, 1 / (x0 - 1) / (x0 - 1))
 
@@ -3525,11 +3520,11 @@ thm negative_derivative_strictly_decreasing:
         $has_derivative_function_on('[a, b], fn(y '[a, b]) R {-1 * f(y)}, fn(y '[a, b]) R {-1 * df(y)})
     claim:
         ? forall x '[a, b]:
-            fn(y '[a, b]) R {-1 * df(y)}(x) > 0
+            -1 * 1 * df(x) > 0
         df(x) < 0
         -1 * df(x) > 0
-        fn(y '[a, b]) R {-1 * df(y)}(x) = -1 * df(x)
-        fn(y '[a, b]) R {-1 * df(y)}(x) > 0
+        -1 * 1 * df(x) = -1 * df(x)
+        -1 * 1 * df(x) > 0
     by thm positive_derivative_strictly_increasing(a, b, fn(y '[a, b]) R {-1 * f(y)}, fn(y '[a, b]) R {-1 * df(y)})
     $chap9::is_strictly_increasing_on('[a, b], fn(y '[a, b]) R {-1 * f(y)})
     claim:

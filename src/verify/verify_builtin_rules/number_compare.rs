@@ -2,10 +2,8 @@ use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
 impl Runtime {
-    // Lit `trust` facts for the nonnegative / positive cone under field operations used to live in
-    // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
-    // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
-    // goals (possibly after `normalize_positive_order_atomic_fact`):
+    // The nonnegative / positive cone under field operations is checked here on normalized
+    // `0 <=` / `0 <` goals (possibly after `normalize_positive_order_atomic_fact`):
     // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
     //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
     // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
@@ -13,14 +11,45 @@ impl Runtime {
     //   from `0 < base` and `exp in R`.
     // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
     //   positive), `0 < a / b`, each with recursive sub-goals on operands.
-    // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
-    // `a != 0 ⇒ 0 < a^2` (strict square). This path also bridges `0 <= u - v` / `0 < u - v` to `v <= u` / `v < u`.
+    // Difference/order bridges and strict-square facts are checked below as target rules, without
+    // loading trusted Lit declarations. This path bridges `0 <= u - v` / `0 < u - v` and
+    // `v <= u` / `v < u` in both directions.
     // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let vs = VerifyState::new(0, true);
+        if let Some(result) = self.try_verify_order_semantics_builtin_rule(atomic_fact, &vs)? {
+            return Ok(result);
+        }
+        // Most rules in this dispatcher are facts about the real-number order.
+        // The direct order-semantics rules above additionally handle integer
+        // discreteness and numeric transitivity after their own type checks.
+        // Example: `a R, b R, a < b` may yield `a <= b`; set-valued operands may not.
+        let (left, right, line_file) = match atomic_fact {
+            AtomicFact::LessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::GreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::LessEqualFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::GreaterEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            AtomicFact::NotLessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::NotGreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::NotLessEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            AtomicFact::NotGreaterEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(StmtUnknown::new().into()),
+        };
+        if self
+            .verify_objects_are_known_reals(&[&left, &right], &line_file, &vs)?
+            .is_none()
+        {
+            return Ok(StmtUnknown::new().into());
+        }
         if let Some(result) =
             self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, &vs)?
         {
@@ -94,6 +123,11 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) = self.verify_abs_order_strict_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_order_from_known_zero_order_on_sub_builtin_rule(atomic_fact)?
+        {
             return Ok(result);
         }
         if let Some(result) =
@@ -1460,33 +1494,49 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let negated: Option<AtomicFact> = match atomic_fact {
-            AtomicFact::GreaterFact(f) => Some(
+        let (neg, left, right, line_file) = match atomic_fact {
+            AtomicFact::GreaterFact(f) => (
                 NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                f.left.clone(),
+                f.right.clone(),
+                f.line_file.clone(),
             ),
-            AtomicFact::LessFact(f) => Some(
+            AtomicFact::LessFact(f) => (
                 NotGreaterEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone())
                     .into(),
+                f.left.clone(),
+                f.right.clone(),
+                f.line_file.clone(),
             ),
-            AtomicFact::GreaterEqualFact(f) => {
-                Some(NotLessFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
-            }
-            AtomicFact::LessEqualFact(f) => Some(
+            AtomicFact::GreaterEqualFact(f) => (
+                NotLessFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                f.left.clone(),
+                f.right.clone(),
+                f.line_file.clone(),
+            ),
+            AtomicFact::LessEqualFact(f) => (
                 NotGreaterFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                f.left.clone(),
+                f.right.clone(),
+                f.line_file.clone(),
             ),
-            _ => None,
+            _ => return Ok(None),
         };
-        let Some(neg) = negated else {
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[&left, &right], &line_file, &verify_state)?
+        else {
             return Ok(None);
         };
         let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&neg)?;
         if sub.is_true() {
+            steps.push(sub);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                     atomic_fact.clone().into(),
                     InferResult::new(),
                     "order_from_known_negated_complement".to_string(),
-                    vec![sub],
+                    steps,
                 )
                 .into(),
             ));
@@ -1683,6 +1733,23 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (left, right, line_file) = match atomic_fact {
+            AtomicFact::NotLessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::NotGreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::NotLessEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            AtomicFact::NotGreaterEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[&left, &right], &line_file, &verify_state)?
+        else {
+            return Ok(None);
+        };
         let candidates: Vec<AtomicFact> = match atomic_fact {
             AtomicFact::NotLessFact(f) => {
                 let lf = f.line_file.clone();
@@ -1717,18 +1784,86 @@ impl Runtime {
         for candidate in candidates {
             let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             if sub.is_true() {
+                steps.push(sub);
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         atomic_fact.clone().into(),
                         InferResult::new(),
                         "negated_order_from_known_equivalent_order".to_string(),
-                        vec![sub],
+                        steps,
                     )
                     .into(),
                 ));
             }
         }
         Ok(None)
+    }
+
+    // Moves a known difference bound back to the corresponding order fact.
+    // Examples: from `a - b <= 0` or `0 <= b - a`, prove `a <= b`.
+    fn verify_order_from_known_zero_order_on_sub_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let (left, right, is_weak, line_file) = match normalized_fact {
+            AtomicFact::LessEqualFact(f) => (f.left, f.right, true, f.line_file),
+            AtomicFact::LessFact(f) => (f.left, f.right, false, f.line_file),
+            _ => return Ok(None),
+        };
+
+        let zero = Self::literal_zero_obj();
+        let direct_difference: Obj = Sub::new(left.clone(), right.clone()).into();
+        let direct_difference_order: AtomicFact = if is_weak {
+            LessEqualFact::new(direct_difference, zero.clone(), line_file.clone()).into()
+        } else {
+            LessFact::new(direct_difference, zero.clone(), line_file.clone()).into()
+        };
+        let direct_difference_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&direct_difference_order)?;
+        if direct_difference_result.is_true() {
+            let reason = if is_weak {
+                "a <= b from a - b <= 0"
+            } else {
+                "a < b from a - b < 0"
+            };
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    reason.to_string(),
+                    vec![direct_difference_result],
+                )
+                .into(),
+            ));
+        }
+
+        let difference: Obj = Sub::new(right, left).into();
+        let difference_order: AtomicFact = if is_weak {
+            LessEqualFact::new(zero, difference, line_file).into()
+        } else {
+            LessFact::new(zero, difference, line_file).into()
+        };
+        let difference_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&difference_order)?;
+        if !difference_result.is_true() {
+            return Ok(None);
+        }
+
+        let reason = if is_weak {
+            "a <= b from 0 <= b - a"
+        } else {
+            "a < b from 0 < b - a"
+        };
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                reason.to_string(),
+                vec![difference_result],
+            )
+            .into(),
+        ))
     }
 
     // Matches Lit `a <= b` <=> `0 <= b - a` (and strict): `0 <= u - v` iff `v <= u`, `0 < u - v` iff `v < u`.
@@ -1944,6 +2079,8 @@ impl Runtime {
         )))
     }
 
+    // An even power or repeated factor is strictly positive when its base is nonzero.
+    // Example: from `a != 0`, prove `0 < a^2` or `0 < a * a`.
     fn verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -1957,34 +2094,46 @@ impl Runtime {
         if less_fact.left.to_string() != "0" {
             return Ok(None);
         }
-        let Obj::Pow(pow_obj) = &less_fact.right else {
-            return Ok(None);
-        };
-        let Obj::Number(exp_num) = pow_obj.exponent.as_ref() else {
-            return Ok(None);
-        };
-        if !normalized_decimal_string_is_even_integer(&exp_num.normalized_value) {
-            return Ok(None);
-        }
-
         let line_file = less_fact.line_file.clone();
-        let base = pow_obj.base.as_ref().clone();
+        let (base, reason) = match &less_fact.right {
+            Obj::Pow(pow_obj) => {
+                let Obj::Number(exp_num) = pow_obj.exponent.as_ref() else {
+                    return Ok(None);
+                };
+                if !normalized_decimal_string_is_even_integer(&exp_num.normalized_value) {
+                    return Ok(None);
+                }
+                (
+                    pow_obj.base.as_ref().clone(),
+                    "0 < a^n for even integer n from a != 0",
+                )
+            }
+            Obj::Mul(mul_obj) if mul_obj.left.to_string() == mul_obj.right.to_string() => {
+                (mul_obj.left.as_ref().clone(), "0 < a * a from a != 0")
+            }
+            _ => return Ok(None),
+        };
         let zero_obj: Obj = Number::new("0".to_string()).into();
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[&base], &line_file, &verify_state)?
+        else {
+            return Ok(None);
+        };
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
-        let neq_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &base_neq_zero,
-            &VerifyState::new(0, true),
-        )?;
+        let neq_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&base_neq_zero, &verify_state)?;
         if !neq_result.is_true() {
             return Ok(None);
         }
+        steps.push(neq_result);
 
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "0 < a^n for even integer n from a != 0".to_string(),
-                vec![neq_result],
+                reason.to_string(),
+                steps,
             ),
         )))
     }

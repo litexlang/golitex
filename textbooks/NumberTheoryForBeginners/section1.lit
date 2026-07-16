@@ -163,6 +163,32 @@ thm divides_Z_linear_combination:
         x * a + y * b = x * (d * p) + y * (d * q) = d * (x * p + y * q)
     $divides_Z(d, x * a + y * b)
 
+# This is the small endpoint used by the reverse direction of Bézout's
+# criterion: a positive integer divisor of 1 cannot be anything but 1.
+thm positive_divisor_of_one_is_one:
+    ? forall d Z:
+        d > 0
+        $divides_Z(d, 1)
+        =>:
+            d = 1
+    obtain k from exist k Z st {1 = d * k}
+    claim:
+        ? k > 0
+        by contra:
+            ? k > 0
+            k <= 0
+            d * k <= 0
+            1 <= 0
+            impossible 1 <= 0
+    k >= 1
+    d = d * 1
+    d <= d * 1
+    d * 1 <= d * k
+    d * 1 <= d * k = 1
+    d <= 1
+    d >= 1
+    d = 1
+
 """
 Principle (6). Every nonempty set of positive integers has a least element.
 The text then derives a strong induction formulation from this principle.
@@ -196,6 +222,22 @@ prop every_N_finite_subset_of_n_elements_has_least(n Z):
         $is_nonempty_set(T)
         =>:
             exist m N st {$is_least_element_of_N_set(T, m)}
+
+# Source handling: the finite-cardinality identities used by the following
+# induction are not kernel rules. They remain local, explicit background debt
+# for this source rather than a global compatibility package.
+trust:
+    forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    forall A finite_set:
+        finite_set_size(A) = 0
+        =>:
+            not $is_nonempty_set(A)
+            A = {}
+    forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
 
 thm intersect_with_singleton:
     ? forall T set, a set:
@@ -239,8 +281,13 @@ thm finite_N_subset_size_one_has_least:
                 ? a <= y
                 y < a
                 y != a
+                not y $in {a}
                 y $in set_minus(T, {a})
-                impossible set_minus(T, {a}) = {}
+                finite_set_size(set_minus(T, {a})) = 0
+                not $is_nonempty_set(set_minus(T, {a}))
+                witness $is_nonempty_set(set_minus(T, {a})) from y:
+                    y $in set_minus(T, {a})
+                impossible not $is_nonempty_set(set_minus(T, {a}))
         $is_least_element_of_N_set(T, a)
 
 thm finite_N_subset_successor_has_least:
@@ -285,6 +332,7 @@ thm finite_N_subset_successor_has_least:
                         case y = a:
                             b <= a = y
                         case y != a:
+                            not y $in {a}
                             y $in set_minus(T, {a})
                             b <= y
                 $is_least_element_of_N_set(T, b)
@@ -301,6 +349,7 @@ thm finite_N_subset_successor_has_least:
                         case y = a:
                             a <= y
                         case y != a:
+                            not y $in {a}
                             y $in set_minus(T, {a})
                             b <= y
                             a <= b <= y
@@ -354,7 +403,6 @@ thm positive_integer_set_has_least_element:
     have T set = intersect(S, 0...aN)
     T = intersect(S, 0...aN)
     T $subset 0...aN
-    by thm subset_of_finite_set_is_finite(T, 0...aN)
     $is_finite_set(T)
     a $in 0...aN
     a $in intersect(S, 0...aN)

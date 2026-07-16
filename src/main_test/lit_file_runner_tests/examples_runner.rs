@@ -16,7 +16,7 @@ use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
-const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/Number-Theory-For-Beginners";
+const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -46,9 +46,9 @@ struct TimedRunSummary {
     wall_ms: f64,
 }
 
-/// Single footer: builtin + per-phase sums/walls + `phase timing` line.
+/// Single footer: runtime setup + per-phase sums/walls + `phase timing` line.
 fn print_run_examples_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     examples_ran: bool,
     example_runs_ms: &[(String, f64)],
     examples_phase_wall_ms: f64,
@@ -58,7 +58,10 @@ fn print_run_examples_timing_summary(
     let examples_sum_ms: f64 = example_runs_ms.iter().map(|(_, ms)| *ms).sum();
     let docs_sum_ms: f64 = doc_runs_ms.iter().map(|(_, ms)| *ms).sum();
     println!("--- timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if examples_ran {
         println!(
             "  phase 1 (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual.md ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
@@ -355,15 +358,15 @@ fn run_textbook_chapters_impl(chapters_subdir: &'static str, textbook_name: &'st
 
 fn run_examples_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, true);
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, false, !examples_summary.ran);
     print_run_examples_timing_summary(
-        builtin_duration_ms,
+        runtime_setup_duration_ms,
         examples_summary.ran,
         examples_summary.run_durations_ms.as_slice(),
         examples_summary.wall_ms,
@@ -374,21 +377,25 @@ fn run_examples_impl() {
 
 fn run_examples_dataset_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, false);
-    print_examples_dataset_timing_summary(builtin_duration_ms, &examples_summary, false);
+    print_examples_dataset_timing_summary(runtime_setup_duration_ms, &examples_summary, false);
 }
 
 fn run_docs_markdown_impl(include_manual_docs: bool) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, include_manual_docs, true);
-    print_docs_timing_summary(builtin_duration_ms, &docs_summary, include_manual_docs);
+    print_docs_timing_summary(
+        runtime_setup_duration_ms,
+        &docs_summary,
+        include_manual_docs,
+    );
 }
 
 fn run_examples_phase1_with_runtime(
@@ -799,7 +806,7 @@ fn push_markdown_run_groups(
 }
 
 fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     let mut run_durations_ms: Vec<(String, f64)> = Vec::new();
     let mut failed_labels: Vec<String> = Vec::new();
     let mut failure_outputs: Vec<String> = Vec::new();
@@ -876,7 +883,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
 }
 
 fn print_examples_dataset_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     examples_summary: &TimedRunSummary,
     include_manual_docs: bool,
 ) {
@@ -887,7 +894,10 @@ fn print_examples_dataset_timing_summary(
         .map(|(_, ms)| *ms)
         .sum();
     println!("--- timing ({}) ---", phase_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if examples_summary.ran {
         println!(
             "  runs: sum of runs: {:.2} ms  |  wall: {:.2} ms",
@@ -897,7 +907,7 @@ fn print_examples_dataset_timing_summary(
 }
 
 fn print_docs_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     docs_summary: &TimedRunSummary,
     include_manual_docs: bool,
 ) {
@@ -908,7 +918,10 @@ fn print_docs_timing_summary(
         .map(|(_, ms)| *ms)
         .sum();
     println!("--- timing ({}) ---", docs_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if docs_summary.ran {
         println!(
             "  snippets: sum of runs: {:.2} ms  |  wall: {:.2} ms",

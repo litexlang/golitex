@@ -38,7 +38,7 @@ impl fmt::Display for ImportStmt {
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: String, line_file: LineFile) -> Self {
+    pub fn new_std(mod_name: String, line_file: LineFile) -> Self {
         ImportGlobalModuleStmt {
             mod_name,
             line_file,
@@ -48,7 +48,7 @@ impl ImportGlobalModuleStmt {
 
 impl fmt::Display for ImportGlobalModuleStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", IMPORT, self.mod_name)
+        write!(f, "{} {} {}", IMPORT, STD, self.mod_name)
     }
 }
 

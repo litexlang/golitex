@@ -131,6 +131,10 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
         }
+        Obj::IntegerQuotient(binary) => {
+            mark_forall_param_coverage_in_obj(binary.dividend.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.divisor.as_ref(), coverage_by_forall_param);
+        }
         Obj::Pow(binary) => {
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);

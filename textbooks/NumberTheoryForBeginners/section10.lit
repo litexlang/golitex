@@ -74,14 +74,17 @@ prop root_generator_spec(n N_pos, g Z):
 prop roots_of_unity_form_cyclic_group(n N_pos):
     exist g Z st {$root_generator_spec(n, g)}
 
-# Theorem X.1. Finite multiplicative subgroups of a field are cyclic.  The
-# source theorem is kept as a named interface; the finite root-count argument
-# is the only trust boundary here.
+# The finite subgroup cyclicity theorem and the prime-modulus primitive-root
+# theorem share the finite-field unit-group/cyclotomic counting package.
 trust:
     forall G set, mul fn(x, y G) G, one G:
         $finite_multiplicative_subgroup(G, mul, one)
         =>:
             $finite_subgroup_has_generator(G, mul, one)
+    forall p N_pos:
+        $section4::is_prime_Z(p)
+        =>:
+            exist g Z st {$primitive_root_mod(p, g)}
 
 thm theorem_X_finite_subgroups_are_cyclic:
     ? forall G set, mul fn(x, y G) G, one G:
@@ -89,14 +92,6 @@ thm theorem_X_finite_subgroups_are_cyclic:
         =>:
             $finite_subgroup_has_generator(G, mul, one)
     $finite_subgroup_has_generator(G, mul, one)
-
-# The prime-modulus primitive-root theorem is the source application of the
-# finite cyclic subgroup theorem.
-trust:
-    forall p N_pos:
-        $section4::is_prime_Z(p)
-        =>:
-            exist g Z st {$primitive_root_mod(p, g)}
 
 thm theorem_X_primitive_root_prime_modulus:
     ? forall p N_pos:

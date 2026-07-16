@@ -24,6 +24,9 @@ impl Obj {
             Obj::Mul(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
             Obj::Div(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
             Obj::Mod(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
+            Obj::IntegerQuotient(x) => {
+                contains_forall_free_param_obj_in_pair(&x.dividend, &x.divisor)
+            }
             Obj::Pow(x) => contains_forall_free_param_obj_in_pair(&x.base, &x.exponent),
             Obj::Abs(x) => x.arg.contains_forall_free_param_obj(),
             Obj::Sqrt(x) => x.arg.contains_forall_free_param_obj(),

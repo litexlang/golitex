@@ -28,7 +28,7 @@ impl ExecutionFrame {
         ExecutionFrame {
             module_id: None,
             layer: ExecutionLayer::Builtin,
-            source_path: Rc::from(BUILTIN_CODE_PATH),
+            source_path: Rc::from(KERNEL_PATH),
             execution_mode: ExecutionMode::Verified,
             local_environment_stack: vec![],
         }

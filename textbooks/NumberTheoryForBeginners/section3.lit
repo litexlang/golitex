@@ -79,6 +79,23 @@ thm bezout_pair_has_gcd_one:
         1 = a * x + b * y
     $section2::is_gcd_Z(a, b, 1)
 
+# This is the source's direct reverse endpoint, recorded separately from the
+# gcd-characterization proof above: any positive common divisor divides the
+# displayed Bézout combination and hence divides 1.
+thm positive_common_divisor_of_bezout_pair_is_one:
+    ? forall a, b, x, y, e Z:
+        e > 0
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
+        a * x + b * y = 1
+        =>:
+            e = 1
+    by thm section1::divides_Z_linear_combination(e, a, b, x, y)
+    x * a + y * b = a * x + b * y = 1
+    $section1::divides_Z(e, 1)
+    by thm section1::positive_divisor_of_one_is_one(e)
+    e = 1
+
 thm theorem_III_1_bezout_implies_relprime_pair:
     ? forall a, b Z:
         exist x, y Z st {a * x + b * y = 1}
@@ -173,11 +190,18 @@ prop finite_product_of_integer_set(A finite_set, p Z):
     A $subset Z
     p = finite_set_product(A, fn(x A) Z {x})
 
-# Source handling: The text proves this by induction from Corollary 1.
-# trust: A checked version needs a finite product interface for integer
-# sets or lists.
-trust:
-    forall a Z, A finite_set, p Z:
+thm relatively_prime_Z_one:
+    ? forall a Z:
+        $relatively_prime_Z(a, 1)
+    witness exist x, y Z st {a * x + 1 * y = 1} from 0, 1:
+        a * 0 + 1 * 1 = 1
+    by thm theorem_III_1_bezout_implies_relprime_pair(a, 1)
+    $relatively_prime_Z(a, 1)
+
+# Induct over finite subsets of the given A.  The carrier keeps each inserted
+# factor inside the original hypothesis, so Corollary 1 supplies the step.
+thm theorem_III_2_corollary_2:
+    ? forall a Z, A finite_set, p Z:
         A $subset Z
         $finite_product_of_integer_set(A, p)
         forall x A:
@@ -185,6 +209,23 @@ trust:
             $relatively_prime_Z(a, x)
         =>:
             $relatively_prime_Z(a, p)
+    by induc P in A:
+        ? $relatively_prime_Z(a, finite_set_product(P, fn(x P) Z {x}))
+        ? from P = {}:
+            by thm relatively_prime_Z_one(a)
+            $relatively_prime_Z(a, 1)
+            finite_set_product({}, fn(x {}) Z {x}) = 1
+            $relatively_prime_Z(a, finite_set_product({}, fn(x {}) Z {x}))
+        ? induc z, S:
+            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}))
+            $relatively_prime_Z(a, z)
+            finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}) = finite_set_product(S, fn(x S) Z {x}) * z
+            by thm theorem_III_2_corollary_1(a, finite_set_product(S, fn(x S) Z {x}), z)
+            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}) * z)
+            $relatively_prime_Z(a, finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}))
+    $relatively_prime_Z(a, finite_set_product(A, fn(x A) Z {x}))
+    p = finite_set_product(A, fn(x A) Z {x})
+    $relatively_prime_Z(a, p)
 
 """
 Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.

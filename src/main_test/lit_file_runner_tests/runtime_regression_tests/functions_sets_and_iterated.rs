@@ -28,7 +28,7 @@ claim:
     x = x
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "obtain_body_well_defined_can_use_forall_domain_fact",
             );
@@ -74,7 +74,7 @@ claim:
     f $in fn(alpha I) X
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "function_space_membership_uses_same_domain_pointwise_values",
             );
@@ -100,7 +100,7 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
     fn_range(fn(x E) R {f(x)}) $subset R
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_fn_restriction_over_abstract_subset_is_well_defined",
             );
@@ -137,7 +137,7 @@ claim:
     fn(x '[1, 2)) R {piece(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "restricted_lambda_can_apply_function_on_larger_numeric_interval",
             );
@@ -168,7 +168,7 @@ forall J power_set(R):
         fn(x J) R {f(x)} = fn(x '[1, 2)) R {f(x)}
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_fn_equality_transports_across_propositionally_equal_param_sets",
             );
@@ -195,7 +195,7 @@ have fn ambient(x '[1, 3]) R = x
 fn(x {2}) R {ambient(x)} = fn(x {2}) R {ambient(x)}
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_fn_body_can_use_singleton_parameter_equality",
             );
@@ -275,7 +275,7 @@ fn(J P) R {0} = c
 finite_set_sum(P, fn(J P) R {0}) = finite_set_sum(P, c)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "conditional_contribution_family_reindexes_to_equal_finite_sum",
             );
@@ -308,7 +308,7 @@ forall f, g fn(x R) R:
 fn(x R: x > 0) R {x} = fn(y R: y > 0) R {y}
 "#;
 
-            let mut positive_runtime = Runtime::new_with_builtin_code();
+            let mut positive_runtime = Runtime::new();
             positive_runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
             );
@@ -330,7 +330,7 @@ fn(x R: x > 0) R {x} = fn(y R: y > 0) R {y}
 fn(x N) R {x} = fn(x R) R {x}
 "#;
 
-            let mut negative_runtime = Runtime::new_with_builtin_code();
+            let mut negative_runtime = Runtime::new();
             negative_runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
             );
@@ -360,7 +360,7 @@ forall a, b seq(R), k N_pos:
     seq_add(a, b)(k) = a(k) + b(k)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("curried_have_fn_equal_unfolds_pointwise");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -382,7 +382,7 @@ forall a, b seq(R):
     seq_add(a, b) $in seq(R)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "fn_application_returning_fn_set_verifies_sequence_membership",
     );
@@ -417,7 +417,7 @@ forall p cart(R, R):
         p[1]^2 + p[2]^2 = 5^2
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "set_valued_have_fn_application_unfolds_for_membership",
     );
@@ -440,7 +440,7 @@ have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R):
 (0, 0) $in line(0, 0, 0)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "set_valued_have_fn_application_keeps_side_conditions",
     );
@@ -464,7 +464,7 @@ forall x, y R:
         abs(x) = abs(y)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("unary_numeric_objects_respect_argument_equality");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -493,7 +493,7 @@ forall f, g fn(x Z) Z:
     product(1, 3, fn(x Z) Z {f(x) * g(x)}) = product(1, 3, fn(y Z) Z {g(y) * f(y)})
 "#;
 
-            let mut positive_runtime = Runtime::new_with_builtin_code();
+            let mut positive_runtime = Runtime::new();
             positive_runtime
                 .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_positive");
             let (positive_stmt_results, positive_runtime_error) =
@@ -514,7 +514,7 @@ forall f, g fn(x Z) Z:
 product(1, 3, fn(x Z) Z {x}) = product(1, 4, fn(y Z) Z {y})
 "#;
 
-            let mut negative_runtime = Runtime::new_with_builtin_code();
+            let mut negative_runtime = Runtime::new();
             negative_runtime
                 .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_negative");
             let (negative_stmt_results, negative_runtime_error) =
@@ -579,7 +579,7 @@ thm finite_series_scalar_mul_test:
     sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("finite_sum_order_uses_pointwise_bounds");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -626,7 +626,7 @@ thm bad_symbolic_empty_product:
             ];
 
             for (name, source_code, expected_message) in cases {
-                let mut runtime = Runtime::new_with_builtin_code();
+                let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope(name);
                 let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -657,7 +657,7 @@ fn nested_iterated_operator_with_positive_index_is_well_defined() {
 eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "nested_iterated_operator_with_positive_index_is_well_defined",
             );
@@ -678,6 +678,20 @@ eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 fn finite_set_sum_core_rules() {
     run_with_large_stack("finite_set_sum_core_rules", || {
         let source_code = r#"
+thm finite_set_sum_in_union_from_left:
+    ? forall z set, A set, B set:
+        z $in A
+        =>:
+            z $in union(A, B)
+    z $in union(A, B)
+
+thm finite_set_sum_in_union_from_right:
+    ? forall z set, A set, B set:
+        z $in B
+        =>:
+            z $in union(A, B)
+    z $in union(A, B)
+
 finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
 finite_set_sum({}, fn(x Z) Z {x}) = 0
 finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
@@ -750,7 +764,7 @@ thm finite_set_sum_triangle_tmp:
     abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -762,6 +776,37 @@ thm finite_set_sum_triangle_tmp:
             run_output
         );
     });
+}
+
+#[test]
+fn restricting_a_function_from_a_union_domain_is_well_defined() {
+    run_with_large_stack(
+        "restricting_a_function_from_a_union_domain_is_well_defined",
+        || {
+            let source_code = r#"
+thm finite_set_sum_disjoint_union_restriction:
+    ? forall X, Y finite_set, f fn(z union(X, Y)) R:
+        intersect(X, Y) = {}
+        =>:
+            finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+    finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "restricting_a_function_from_a_union_domain_is_well_defined",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a function on union(X, Y) should restrict to X and Y:\n{}",
+                run_output
+            );
+        },
+    );
 }
 
 #[test]
@@ -784,7 +829,7 @@ thm finite_fubini_tmp:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("finite_set_sum_cartesian_product_and_fubini");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -830,7 +875,7 @@ thm finite_set_sum_template_enumeration_well_defined:
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "finite_set_sum_bijective_enumerations_are_well_defined",
             );
@@ -866,9 +911,24 @@ sketch:
     have X power_set(Z)
     trust $is_finite_set(X)
     finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
+
+thm finite_set_product_fresh_insertion:
+    ? forall x Z, S finite_set:
+        S $subset Z
+        not x $in S
+        =>:
+            finite_set_product(union({x}, S), fn(y union({x}, S)) Z {y}) = finite_set_product(S, fn(y S) Z {y}) * x
+    finite_set_product(union({x}, S), fn(y union({x}, S)) Z {y}) = finite_set_product(S, fn(y S) Z {y}) * x
+
+thm finite_set_product_remove_member:
+    ? forall A finite_set, x A:
+        A $subset Z
+        =>:
+            finite_set_product(A, fn(y A) Z {y}) = finite_set_product(set_minus(A, {x}), fn(y set_minus(A, {x})) Z {y}) * x
+    finite_set_product(A, fn(y A) Z {y}) = finite_set_product(set_minus(A, {x}), fn(y set_minus(A, {x})) Z {y}) * x
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("finite_set_product_core_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -891,7 +951,7 @@ have f fn(n N_pos, x closed_range(1, n)) R
 f(3, 2) = f(3, 2)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime
                 .new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -913,7 +973,7 @@ fn fn_return_set_cannot_depend_on_params() {
 have f fn(n N_pos) closed_range(1, n)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("fn_return_set_cannot_depend_on_params");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -940,7 +1000,7 @@ a <= b
 a >= b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("known_equality_implies_weak_order");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -968,7 +1028,7 @@ x $in Q
 x $in R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_membership_uses_standard_set_subset_direction",
     );
@@ -997,7 +1057,7 @@ trust $p(x)
 x $in Z
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_membership_narrowing_requires_known_fact",
     );
@@ -1021,7 +1081,7 @@ trust forall a R:
 f(1) = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime
         .new_file_path_new_env_new_name_scope("known_forall_equality_uses_indexed_function_head");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -1044,7 +1104,7 @@ trust forall a R:
 1 + 1 = f(1 + 1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_equality_indexes_forall_param_side_as_wildcard",
     );
@@ -1068,7 +1128,7 @@ trust forall f fn(x R) R, a R:
 g(1) = 1
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_equality_with_forall_param_function_head_uses_fallback_bucket",
     );
@@ -1092,7 +1152,7 @@ trust forall x R:
 $p(1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_prop_indexes_forall_param_arg_as_wildcard",
     );
@@ -1116,7 +1176,7 @@ trust forall x R:
 $p(1 + 1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_expression_arg_shape");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1138,7 +1198,7 @@ trust forall a, b R:
 $p(2, 3 + 1)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_multi_arg_shape");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1161,7 +1221,7 @@ trust forall f fn(x R) R:
 $p(g(2))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_prop_with_forall_param_function_head_uses_fallback_bucket",
     );
@@ -1197,7 +1257,7 @@ claim:
     $p(fn(x R) R {b(x) + c(x)})
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_matches_function_param_application_inside_anonymous_fn_body",
     );
@@ -1224,7 +1284,7 @@ have h fn(x R) R
 $p(fn(x R) R {h(x)})
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_forall_does_not_infer_function_from_single_point_application",
     );
@@ -1264,7 +1324,7 @@ sketch:
             =>:
                 fib(x) = fib(x - 1) + fib(x - 2)
 
-    algo fib(x):
+    have algo for fib(x):
         case x = 0: 0
         case x = 1: 1
         fib(x - 1) + fib(x - 2)
@@ -1273,7 +1333,7 @@ sketch:
     fib(25) = 75025
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "eval_recursive_algo_memoizes_overlapping_calls",
             );

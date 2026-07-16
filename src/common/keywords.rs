@@ -128,6 +128,7 @@ pub const TUPLE: &str = "tuple";
 pub const CASE: &str = "case";
 pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
+pub const STD: &str = "std";
 pub const LOCAL: &str = "local";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
@@ -141,6 +142,7 @@ pub const PREIMAGE: &str = "preimage";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
+pub const INTEGER_QUOTIENT: &str = "integer_quotient";
 pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
 pub const MAX: &str = "max";
@@ -276,6 +278,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CASE,
         TRUST,
         IMPORT,
+        STD,
         LOCAL,
         AS,
         ENUMERATE,
@@ -298,6 +301,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        INTEGER_QUOTIENT,
         SQRT,
         LOG,
         MAX,

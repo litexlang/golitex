@@ -39,28 +39,6 @@ prop power_congruence_prime_solution(p N_pos, k N_pos, a Z, d N_pos, e N):
     $power_congruence_prime_condition(p, k, a, d)
     exist x Z st {$solves_power_congruence_mod(p, k, a, x)}
 
-# The reduced-power criterion is an iff in the source.  The two named
-# directions make the exact proof debt visible and keep the usable solution
-# relation separate from the theorem interface.
-trust:
-    forall p N_pos, k N_pos, a Z, d N_pos, e N:
-        $power_congruence_prime_reduced_condition(p, k, a, d, e)
-        =>:
-            $power_congruence_prime_solution(p, k, a, d, e)
-
-trust:
-    forall p N_pos, k N_pos, a Z, d N_pos, e N:
-        $power_congruence_prime_solution(p, k, a, d, e)
-        =>:
-            $power_congruence_prime_reduced_condition(p, k, a, d, e)
-
-thm theorem_XI_power_congruence_criterion:
-    ? forall p N_pos, k N_pos, a Z, d N_pos, e N:
-        $power_congruence_prime_reduced_condition(p, k, a, d, e)
-        =>:
-            $power_congruence_prime_solution(p, k, a, d, e)
-    $power_congruence_prime_solution(p, k, a, d, e)
-
 # Euler's criterion is the quadratic (k=2) specialization.  The conclusion
 # is stated as an exact residue equation, with the two cases kept separate so
 # no false assertion is made for numbers divisible by p.
@@ -84,7 +62,18 @@ prop euler_nonresidue_condition(p N_pos, a Z, h N):
 prop euler_criterion_split(p N_pos, a Z, h N):
     $euler_residue_condition(p, a, h) or $euler_nonresidue_condition(p, a, h)
 
+# The reduced-power iff and Euler's two cases share the prime finite-field
+# power-map package.  Keep both directions and the split conclusion explicit
+# inside one trust boundary.
 trust:
+    forall p N_pos, k N_pos, a Z, d N_pos, e N:
+        $power_congruence_prime_reduced_condition(p, k, a, d, e)
+        =>:
+            $power_congruence_prime_solution(p, k, a, d, e)
+    forall p N_pos, k N_pos, a Z, d N_pos, e N:
+        $power_congruence_prime_solution(p, k, a, d, e)
+        =>:
+            $power_congruence_prime_reduced_condition(p, k, a, d, e)
     forall p N_pos, a Z, h N:
         $section4::is_prime_Z(p)
         p > 2
@@ -92,6 +81,13 @@ trust:
         2 * h = p - 1
         =>:
             $euler_criterion_split(p, a, h)
+
+thm theorem_XI_power_congruence_criterion:
+    ? forall p N_pos, k N_pos, a Z, d N_pos, e N:
+        $power_congruence_prime_reduced_condition(p, k, a, d, e)
+        =>:
+            $power_congruence_prime_solution(p, k, a, d, e)
+    $power_congruence_prime_solution(p, k, a, d, e)
 
 thm theorem_XI_quadratic_residue_split:
     ? forall p N_pos, a Z, h N:

@@ -1,12 +1,6 @@
 use crate::prelude::*;
-use crate::to_latex::{
-    to_latex_from_file_after_builtins, to_latex_from_repository_after_builtins,
-    to_latex_from_source_after_builtins,
-};
-use crate::to_python::{
-    to_python_from_file_after_builtins, to_python_from_repository_after_builtins,
-    to_python_from_source_after_builtins,
-};
+use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
+use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -77,7 +71,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let mut runtime = Runtime::new_with_builtin_code();
+                let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope("-e");
                 runtime.set_output_style(output_style);
                 runtime.strict_mode = strict_mode;
@@ -953,7 +947,7 @@ fn string_with_trimmed_outer_newlines(text: &str) -> String {
 
 fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
-    match to_latex_from_source_after_builtins(code.as_str(), "-latex -e") {
+    match to_latex_from_source(code.as_str(), "-latex -e") {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -969,7 +963,7 @@ fn compile_file_to_latex(
     force_isolated: bool,
 ) -> String {
     if !force_isolated {
-        return match to_latex_from_file_after_builtins(file_path) {
+        return match to_latex_from_file(file_path) {
             Ok(s) => s,
             Err(e) => {
                 let mut runtime = Runtime::new();
@@ -982,7 +976,7 @@ fn compile_file_to_latex(
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
-    match to_latex_from_source_after_builtins(source.as_str(), file_path) {
+    match to_latex_from_source(source.as_str(), file_path) {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -993,7 +987,7 @@ fn compile_file_to_latex(
 }
 
 fn compile_repo_to_latex(repo_path: &str, output_language: OutputLanguage) -> String {
-    match to_latex_from_repository_after_builtins(repo_path) {
+    match to_latex_from_repository(repo_path) {
         Ok(output) => output,
         Err(error) => {
             let mut runtime = Runtime::new();
@@ -1005,7 +999,7 @@ fn compile_repo_to_latex(repo_path: &str, output_language: OutputLanguage) -> St
 
 fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
-    match to_python_from_source_after_builtins(code.as_str(), "-python -e") {
+    match to_python_from_source(code.as_str(), "-python -e") {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -1021,7 +1015,7 @@ fn compile_file_to_python(
     force_isolated: bool,
 ) -> String {
     if !force_isolated {
-        return match to_python_from_file_after_builtins(file_path) {
+        return match to_python_from_file(file_path) {
             Ok(s) => s,
             Err(e) => {
                 let mut runtime = Runtime::new();
@@ -1034,7 +1028,7 @@ fn compile_file_to_python(
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
-    match to_python_from_source_after_builtins(source.as_str(), file_path) {
+    match to_python_from_source(source.as_str(), file_path) {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -1045,7 +1039,7 @@ fn compile_file_to_python(
 }
 
 fn compile_repo_to_python(repo_path: &str, output_language: OutputLanguage) -> String {
-    match to_python_from_repository_after_builtins(repo_path) {
+    match to_python_from_repository(repo_path) {
         Ok(output) => output,
         Err(error) => {
             let mut runtime = Runtime::new();
@@ -1148,7 +1142,7 @@ litex -upgrade : show upgrade instructions for this platform
 litex -compact : show only result, type, line, and statement for each result
 litex : show normal output with internal statements and direct verification reasons
 litex -detail : include full audit trace details and raw source paths in JSON output
-litex -strict : reject user trust, trust have, and axiom statements after builtin initialization
+litex -strict : reject user trust, trust have, and axiom statements; ordinary std imports remain recorded dependencies
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code

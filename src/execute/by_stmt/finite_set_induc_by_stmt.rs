@@ -4,6 +4,7 @@ use std::collections::HashMap;
 impl Runtime {
     // Finite-set structural induction: establish Phi({}) and
     // x not in S, Phi(S) => Phi(union({x}, S)), then conclude forall finite P, Phi(P).
+    // An explicit carrier restricts P and the inserted x to that carrier.
     // Example: a finite-set sum proof can expose its empty sum and fresh-singleton step.
     pub fn exec_by_finite_set_induc_stmt(
         &mut self,
@@ -165,6 +166,23 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        if let Some(carrier_set) = &stmt.carrier_set {
+            let base_subset: Fact = SubsetFact::new(
+                obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+                carrier_set.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_subset)
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "finite-set induc: failed to assume the base carrier subset".to_string(),
+                        Some(error),
+                        vec![],
+                    )
+                })?;
+        }
         Ok(())
     }
 
@@ -172,11 +190,12 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<(), RuntimeError> {
+        let element_type = match &stmt.carrier_set {
+            Some(carrier_set) => ParamType::Obj(carrier_set.clone()),
+            None => ParamType::Set(Set::new()),
+        };
         let params = ParamDefWithType::new(vec![
-            ParamGroupWithParamType::new(
-                vec![stmt.element_param.clone()],
-                ParamType::Set(Set::new()),
-            ),
+            ParamGroupWithParamType::new(vec![stmt.element_param.clone()], element_type),
             ParamGroupWithParamType::new(
                 vec![stmt.smaller_set_param.clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
@@ -206,6 +225,24 @@ impl Runtime {
                     vec![],
                 )
             })?;
+
+        if let Some(carrier_set) = &stmt.carrier_set {
+            let smaller_subset: Fact = SubsetFact::new(
+                smaller_set.clone(),
+                carrier_set.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(smaller_subset)
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "finite-set induc: failed to assume the smaller carrier subset".to_string(),
+                        Some(error),
+                        vec![],
+                    )
+                })?;
+        }
 
         for fact in stmt.to_prove.iter() {
             let ih = self.finite_set_induc_goal_fact_at_obj(stmt, fact, smaller_set.clone())?;
@@ -275,7 +312,7 @@ impl Runtime {
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<Fact, RuntimeError> {
         let param = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Forall);
-        let param_to_forall = HashMap::from([(stmt.param.clone(), param)]);
+        let param_to_forall = HashMap::from([(stmt.param.clone(), param.clone())]);
         let mut then_facts = Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
@@ -285,12 +322,18 @@ impl Runtime {
                 None,
             )?);
         }
+        let mut dom_facts = Vec::new();
+        if let Some(carrier_set) = &stmt.carrier_set {
+            dom_facts.push(
+                SubsetFact::new(param.clone(), carrier_set.clone(), stmt.line_file.clone()).into(),
+            );
+        }
         Ok(ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![stmt.param.clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
             )]),
-            vec![],
+            dom_facts,
             then_facts,
             stmt.line_file.clone(),
         )?
@@ -304,34 +347,68 @@ impl Runtime {
     ) -> Result<ByInducVerificationResult, RuntimeError> {
         let param = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
         let empty_set: Obj = ListSet::new(vec![]).into();
-        let base_assumptions = vec![
+        let mut base_assumptions = vec![
             (
                 IsFiniteSetFact::new(param.clone(), stmt.line_file.clone()).to_string(),
                 "finite induction parameter".to_string(),
             ),
             (
-                EqualFact::new(param, empty_set, stmt.line_file.clone()).to_string(),
+                EqualFact::new(param.clone(), empty_set, stmt.line_file.clone()).to_string(),
                 "empty base case".to_string(),
             ),
         ];
+        if let Some(carrier_set) = &stmt.carrier_set {
+            base_assumptions.push((
+                SubsetFact::new(param.clone(), carrier_set.clone(), stmt.line_file.clone())
+                    .to_string(),
+                "finite induction carrier".to_string(),
+            ));
+        }
 
         let element = obj_for_bound_param_in_scope(stmt.element_param.clone(), ParamObjType::Induc);
         let smaller_set =
             obj_for_bound_param_in_scope(stmt.smaller_set_param.clone(), ParamObjType::Induc);
         let mut step_assumptions = vec![
             (
-                IsSetFact::new(element.clone(), stmt.line_file.clone()).to_string(),
-                "new element".to_string(),
-            ),
-            (
                 IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).to_string(),
                 "smaller finite set".to_string(),
             ),
             (
-                NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).to_string(),
+                NotInFact::new(element.clone(), smaller_set.clone(), stmt.line_file.clone())
+                    .to_string(),
                 "fresh insertion element".to_string(),
             ),
         ];
+        if let Some(carrier_set) = &stmt.carrier_set {
+            step_assumptions.insert(
+                0,
+                (
+                    InFact::new(element.clone(), carrier_set.clone(), stmt.line_file.clone())
+                        .to_string(),
+                    "new element in the induction carrier".to_string(),
+                ),
+            );
+            step_assumptions.insert(
+                2,
+                (
+                    SubsetFact::new(
+                        smaller_set.clone(),
+                        carrier_set.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .to_string(),
+                    "smaller set in the induction carrier".to_string(),
+                ),
+            );
+        } else {
+            step_assumptions.insert(
+                0,
+                (
+                    IsSetFact::new(element.clone(), stmt.line_file.clone()).to_string(),
+                    "new element".to_string(),
+                ),
+            );
+        }
         for fact in stmt.to_prove.iter() {
             let ih = self.finite_set_induc_goal_fact_at_obj(stmt, fact, smaller_set.clone())?;
             step_assumptions.push((ih.to_string(), "induction hypothesis".to_string()));

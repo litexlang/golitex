@@ -1,5 +1,7 @@
 use crate::pipeline::run_source_code;
 use crate::prelude::*;
+use std::collections::HashSet;
+use std::env;
 use std::fs;
 use std::rc::Rc;
 
@@ -52,37 +54,112 @@ fn run_import_stmt(
     execution_mode: ExecutionMode,
 ) -> Result<StmtResult, RuntimeError> {
     let ImportStmt::ImportGlobalModule(stmt) = import_stmt;
-    if runtime.run_mode == RunMode::Repository {
-        if let Some(target) = runtime.module_manager.root_export(&stmt.mod_name) {
-            let ImportTarget::Module(imported_module_id) = target else {
-                return Err(import_stmt_error(
-                    import_stmt,
-                    format!(
-                        "root export `{}` is a file; place it before this source in [export] instead of importing it",
-                        stmt.mod_name
-                    ),
-                ));
-            };
-            let importing_module_id = runtime.current_module_id();
-            load_discovered_module(
-                imported_module_id,
-                import_stmt.clone().into(),
-                runtime,
-                execution_mode,
-            )?;
-            runtime
-                .module_manager
-                .record_import_dependency(importing_module_id, imported_module_id);
-            return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
+    run_std_module(stmt, runtime, execution_mode)?;
+    Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into())
+}
+
+fn run_std_module(
+    stmt: &ImportGlobalModuleStmt,
+    runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
+) -> Result<(), RuntimeError> {
+    let module_name = stmt.mod_name.as_str();
+    if runtime
+        .module_manager
+        .is_std_module_id(runtime.current_module_id())
+    {
+        return Err(import_stmt_error(
+            &ImportStmt::ImportGlobalModule(stmt.clone()),
+            "standard-package dependencies belong in std/litex.config [requires]".to_string(),
+        ));
+    }
+    if let Some(module_id) = runtime.module_manager.module_id_by_name(module_name) {
+        if !runtime.module_manager.is_std_module_name(module_name) {
+            return Err(import_stmt_error(
+                &ImportStmt::ImportGlobalModule(stmt.clone()),
+                format!(
+                    "std module name `{}` conflicts with a project module",
+                    module_name
+                ),
+            ));
+        }
+        return load_std_module_target(stmt, runtime, execution_mode, module_id);
+    }
+    let module_manager_before = runtime.module_manager.clone();
+    let std_root = resolve_std_root().map_err(|message| {
+        import_stmt_error(&ImportStmt::ImportGlobalModule(stmt.clone()), message)
+    })?;
+    let module_id = discover_std_module(runtime, &std_root, module_name).map_err(|error| {
+        import_stmt_error(
+            &ImportStmt::ImportGlobalModule(stmt.clone()),
+            format!(
+                "failed to discover std module `{}`: {:?}",
+                module_name, error
+            ),
+        )
+    })?;
+    if let Err(error) = load_std_module_target(stmt, runtime, execution_mode, module_id) {
+        runtime.module_manager = module_manager_before;
+        return Err(error);
+    }
+    Ok(())
+}
+
+fn load_std_module_target(
+    stmt: &ImportGlobalModuleStmt,
+    runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
+    module_id: ModuleId,
+) -> Result<(), RuntimeError> {
+    let module_name = stmt.mod_name.as_str();
+    let status = runtime
+        .module_manager
+        .module(module_id)
+        .map(|module| module.status)
+        .unwrap_or(ModuleStatus::Loading);
+    if status == ModuleStatus::Loading {
+        return Err(import_stmt_error(
+            &ImportStmt::ImportGlobalModule(stmt.clone()),
+            format!("cyclic std module import involving `{}`", module_name),
+        ));
+    }
+    if status != ModuleStatus::Loaded {
+        load_discovered_module(
+            module_id,
+            ImportStmt::ImportGlobalModule(stmt.clone()).into(),
+            runtime,
+            execution_mode,
+        )?;
+    }
+    runtime.record_trusted_import(
+        "std_package",
+        module_name.to_string(),
+        stmt.line_file.clone(),
+    );
+    if let Some(importing_module_id) = runtime
+        .execution_stack
+        .last()
+        .and_then(|frame| frame.module_id)
+    {
+        runtime
+            .module_manager
+            .record_import_dependency(importing_module_id, module_id);
+    }
+    Ok(())
+}
+
+fn resolve_std_root() -> Result<std::path::PathBuf, String> {
+    let configured_root = env::var("LITEX_STD_PATH")
+        .ok()
+        .map(std::path::PathBuf::from);
+    let current_dir = env::current_dir().ok();
+    let executable = env::current_exe().ok();
+    for root in standard_library_root_candidates(configured_root, current_dir, executable) {
+        if root.join("litex.config").is_file() {
+            return Ok(root);
         }
     }
-    Err(import_stmt_error(
-        import_stmt,
-        format!(
-            "import `{}` is not a root module declared in litex.config; Litex no longer provides standard-library imports",
-            stmt.mod_name
-        ),
-    ))
+    Err("standard library was not found; searched LITEX_STD_PATH, ./std, and the executable installation paths".to_string())
 }
 
 fn load_discovered_module(
@@ -169,6 +246,11 @@ fn run_repository_file_prefix(
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let execution_mode = runtime.current_execution_mode();
     let root_module_id = runtime.module_manager.entry_module_id.unwrap_or(module_id);
+    if let Err(error) =
+        preflight_repository_file_requirements(runtime, root_module_id, module_id, file_id)
+    {
+        return (vec![], Some(error));
+    }
     run_repository_module_plan_to_file(runtime, root_module_id, execution_mode, module_id, file_id)
 }
 
@@ -271,9 +353,32 @@ fn run_repository_module_plan_to_file(
     target_module_id: ModuleId,
     target_file_id: FileId,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let mut visited_targets = HashSet::new();
+    run_repository_module_requirements_to_file(
+        runtime,
+        module_id,
+        execution_mode,
+        target_module_id,
+        target_file_id,
+        &mut visited_targets,
+    )
+}
+
+fn run_repository_module_requirements_to_file(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+    target_module_id: ModuleId,
+    target_file_id: FileId,
+    visited_targets: &mut HashSet<ImportTarget>,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    if let Some(error) = import_error {
+        return (results, Some(error));
+    }
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
-            vec![],
+            results,
             Some(repository_target_error(
                 "registered project module is missing",
             )),
@@ -284,64 +389,48 @@ fn run_repository_module_plan_to_file(
         module_id: target_module_id,
         file_id: target_file_id,
     };
-    let mut results = vec![];
+    if project_target_is_loaded(runtime, target_file) {
+        return (results, None);
+    }
     for target in run_targets {
-        let target_execution_mode =
-            project_target_execution_mode(runtime, module_id, target, execution_mode);
-        let (mut target_results, runtime_error) = if target == target_file {
-            run_repository_exported_file_target_with_mode(
-                runtime,
-                target_module_id,
-                target_file_id,
-                target_execution_mode,
-            )
-        } else if let ImportTarget::Module(child_module_id) = target {
-            if module_contains_file_target(
-                runtime,
-                child_module_id,
-                target_module_id,
-                target_file_id,
-            ) {
-                run_repository_module_target_until_with_mode(
-                    runtime,
-                    child_module_id,
-                    target_execution_mode,
-                    Some(target_file),
-                )
-            } else {
-                run_repository_module_target_with_mode(
-                    runtime,
-                    child_module_id,
-                    target_execution_mode,
-                )
-            }
-        } else {
-            let ImportTarget::File { module_id, file_id } = target else {
-                unreachable!("project targets are files or modules");
-            };
-            run_repository_exported_file_target_with_mode(
+        if target == target_file {
+            let (mut target_results, runtime_error) = run_repository_target_with_requirements(
                 runtime,
                 module_id,
-                file_id,
-                target_execution_mode,
-            )
-        };
-        results.append(&mut target_results);
-        if let Some(error) = runtime_error {
-            return (results, Some(error));
+                target,
+                execution_mode,
+                visited_targets,
+            );
+            results.append(&mut target_results);
+            return (results, runtime_error);
         }
-        if target == target_file
-            || module_contains_file_target(
+        let ImportTarget::Module(child_module_id) = target else {
+            continue;
+        };
+        if module_contains_file_target(runtime, child_module_id, target_module_id, target_file_id) {
+            let (mut dependency_results, dependency_error) = run_repository_target_dependencies(
                 runtime,
-                match target {
-                    ImportTarget::Module(child_module_id) => child_module_id,
-                    ImportTarget::File { .. } => continue,
-                },
+                module_id,
+                target,
+                execution_mode,
+                visited_targets,
+            );
+            results.append(&mut dependency_results);
+            if let Some(error) = dependency_error {
+                return (results, Some(error));
+            }
+            let target_execution_mode =
+                project_target_execution_mode(runtime, module_id, target, execution_mode);
+            let (mut child_results, child_error) = run_repository_module_requirements_to_file(
+                runtime,
+                child_module_id,
+                target_execution_mode,
                 target_module_id,
                 target_file_id,
-            )
-        {
-            return (results, None);
+                visited_targets,
+            );
+            results.append(&mut child_results);
+            return (results, child_error);
         }
     }
     (
@@ -350,6 +439,368 @@ fn run_repository_module_plan_to_file(
             "registered project file is missing from its ordered [export] plan",
         )),
     )
+}
+
+fn run_repository_target_with_requirements(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+    execution_mode: ExecutionMode,
+    visited_targets: &mut HashSet<ImportTarget>,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (mut results, dependency_error) = run_repository_target_dependencies(
+        runtime,
+        owner_module_id,
+        target,
+        execution_mode,
+        visited_targets,
+    );
+    if let Some(error) = dependency_error {
+        return (results, Some(error));
+    }
+    let target_execution_mode =
+        project_target_execution_mode(runtime, owner_module_id, target, execution_mode);
+    let (mut target_results, target_error) = match target {
+        ImportTarget::File { module_id, file_id } => run_repository_exported_file_target_with_mode(
+            runtime,
+            module_id,
+            file_id,
+            target_execution_mode,
+        ),
+        ImportTarget::Module(module_id) => {
+            run_repository_module_target_with_mode(runtime, module_id, target_execution_mode)
+        }
+    };
+    results.append(&mut target_results);
+    (results, target_error)
+}
+
+fn run_repository_target_dependencies(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+    execution_mode: ExecutionMode,
+    visited_targets: &mut HashSet<ImportTarget>,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    if !visited_targets.insert(target) {
+        return (vec![], None);
+    }
+    let required_targets = runtime
+        .module_manager
+        .module(owner_module_id)
+        .and_then(|module| module.required_targets.get(&target))
+        .cloned()
+        .unwrap_or_default();
+    let mut results = vec![];
+    for required_target in required_targets {
+        let (mut dependency_results, dependency_error) = run_repository_target_with_requirements(
+            runtime,
+            owner_module_id,
+            required_target,
+            execution_mode,
+            visited_targets,
+        );
+        results.append(&mut dependency_results);
+        if let Some(error) = dependency_error {
+            return (results, Some(error));
+        }
+    }
+    (results, None)
+}
+
+fn preflight_repository_file_requirements(
+    runtime: &Runtime,
+    root_module_id: ModuleId,
+    target_module_id: ModuleId,
+    target_file_id: FileId,
+) -> Result<(), RuntimeError> {
+    let mut visible_targets = HashSet::new();
+    let mut selected_files = vec![];
+    collect_config_import_targets(runtime, root_module_id, &mut visible_targets);
+    collect_file_requirement_plan(
+        runtime,
+        root_module_id,
+        target_module_id,
+        target_file_id,
+        &mut visible_targets,
+        &mut selected_files,
+    )?;
+    for target in selected_files {
+        let ImportTarget::File { module_id, file_id } = target else {
+            continue;
+        };
+        let Some(file) = runtime
+            .module_manager
+            .module(module_id)
+            .and_then(|module| module.file(file_id))
+        else {
+            return Err(repository_target_error(
+                "registered project file is missing",
+            ));
+        };
+        let source_path = file.source_path.clone();
+        let source = fs::read_to_string(&source_path).map_err(|error| {
+            ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                format!("failed to read project source `{}`: {}", source_path, error),
+                (0, Rc::from(source_path.as_str())),
+            ))
+        })?;
+        let mut tokenizer = Tokenizer::new();
+        let blocks = tokenizer.parse_blocks(&source, Rc::from(source_path.as_str()))?;
+        let mut references = vec![];
+        collect_project_reference_targets(runtime, blocks.as_slice(), &mut references);
+        for (referenced_target, line_file) in references {
+            if target_is_visible_in_file_plan(runtime, referenced_target, &visible_targets) {
+                continue;
+            }
+            let name = runtime
+                .module_manager
+                .canonical_name_for_target(referenced_target)
+                .unwrap_or("project entry");
+            return Err(
+                ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "unknown project dependency `{}`; add it to [requires] for this file",
+                        name
+                    ),
+                    line_file,
+                ))
+                .into(),
+            );
+        }
+    }
+    Ok(())
+}
+
+fn collect_config_import_targets(
+    runtime: &Runtime,
+    module_id: ModuleId,
+    visible_targets: &mut HashSet<ImportTarget>,
+) {
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return;
+    };
+    for config_import in module.config_imports.iter() {
+        let target = ImportTarget::Module(config_import.module_id);
+        if visible_targets.insert(target) {
+            collect_config_import_targets(runtime, config_import.module_id, visible_targets);
+        }
+    }
+}
+
+fn collect_file_requirement_plan(
+    runtime: &Runtime,
+    module_id: ModuleId,
+    target_module_id: ModuleId,
+    target_file_id: FileId,
+    visible_targets: &mut HashSet<ImportTarget>,
+    selected_files: &mut Vec<ImportTarget>,
+) -> Result<(), RuntimeError> {
+    let module = runtime
+        .module_manager
+        .module(module_id)
+        .ok_or_else(|| repository_target_error("registered project module is missing"))?;
+    let target_file = ImportTarget::File {
+        module_id: target_module_id,
+        file_id: target_file_id,
+    };
+    for config_import in module.config_imports.iter() {
+        if module_contains_file_target(
+            runtime,
+            config_import.module_id,
+            target_module_id,
+            target_file_id,
+        ) {
+            return collect_file_requirement_plan(
+                runtime,
+                config_import.module_id,
+                target_module_id,
+                target_file_id,
+                visible_targets,
+                selected_files,
+            );
+        }
+    }
+    for target in module.run_targets.iter().copied() {
+        if target == target_file {
+            collect_target_requirement_plan(
+                runtime,
+                module_id,
+                target,
+                visible_targets,
+                selected_files,
+            );
+            return Ok(());
+        }
+        let ImportTarget::Module(child_module_id) = target else {
+            continue;
+        };
+        if module_contains_file_target(runtime, child_module_id, target_module_id, target_file_id) {
+            collect_target_dependencies(
+                runtime,
+                module_id,
+                target,
+                visible_targets,
+                selected_files,
+            );
+            return collect_file_requirement_plan(
+                runtime,
+                child_module_id,
+                target_module_id,
+                target_file_id,
+                visible_targets,
+                selected_files,
+            );
+        }
+    }
+    Err(repository_target_error(
+        "registered project file is missing from its [export] plan",
+    ))
+}
+
+fn collect_target_requirement_plan(
+    runtime: &Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+    visible_targets: &mut HashSet<ImportTarget>,
+    selected_files: &mut Vec<ImportTarget>,
+) {
+    collect_target_dependencies(
+        runtime,
+        owner_module_id,
+        target,
+        visible_targets,
+        selected_files,
+    );
+    if visible_targets.insert(target) {
+        collect_target_files(runtime, target, selected_files);
+    }
+}
+
+fn collect_target_dependencies(
+    runtime: &Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+    visible_targets: &mut HashSet<ImportTarget>,
+    selected_files: &mut Vec<ImportTarget>,
+) {
+    let required_targets = runtime
+        .module_manager
+        .module(owner_module_id)
+        .and_then(|module| module.required_targets.get(&target))
+        .cloned()
+        .unwrap_or_default();
+    for required_target in required_targets {
+        collect_target_requirement_plan(
+            runtime,
+            owner_module_id,
+            required_target,
+            visible_targets,
+            selected_files,
+        );
+    }
+}
+
+fn collect_target_files(
+    runtime: &Runtime,
+    target: ImportTarget,
+    selected_files: &mut Vec<ImportTarget>,
+) {
+    match target {
+        ImportTarget::File { .. } => selected_files.push(target),
+        ImportTarget::Module(module_id) => {
+            let Some(module) = runtime.module_manager.module(module_id) else {
+                return;
+            };
+            for child_target in module.run_targets.iter().copied() {
+                collect_target_files(runtime, child_target, selected_files);
+            }
+        }
+    }
+}
+
+fn collect_project_reference_targets(
+    runtime: &Runtime,
+    blocks: &[TokenBlock],
+    references: &mut Vec<(ImportTarget, LineFile)>,
+) {
+    for block in blocks {
+        let mut longest_matches = vec![];
+        for start in 0..block.header.len() {
+            if start > 0 && block.header[start - 1] == MOD_SIGN {
+                continue;
+            }
+            let mut candidate = block.header[start].clone();
+            let mut index = start;
+            let mut longest_match = runtime
+                .module_manager
+                .import_target_by_canonical_name(candidate.as_str());
+            while block.header.get(index + 1).map(String::as_str) == Some(MOD_SIGN) {
+                let Some(next) = block.header.get(index + 2) else {
+                    break;
+                };
+                candidate = format!("{}{}{}", candidate, MOD_SIGN, next);
+                index += 2;
+                if let Some(target) = runtime
+                    .module_manager
+                    .import_target_by_canonical_name(candidate.as_str())
+                {
+                    longest_match = Some(target);
+                }
+            }
+            if let Some(target) = longest_match {
+                longest_matches.push(target);
+            }
+        }
+        for target in longest_matches {
+            if !references.iter().any(|(known, _)| *known == target) {
+                references.push((target, block.line_file.clone()));
+            }
+        }
+        collect_project_reference_targets(runtime, block.body.as_slice(), references);
+    }
+}
+
+fn target_is_visible_in_file_plan(
+    runtime: &Runtime,
+    target: ImportTarget,
+    visible_targets: &HashSet<ImportTarget>,
+) -> bool {
+    if visible_targets.contains(&target) {
+        return true;
+    }
+    let target_module_id = match target {
+        ImportTarget::File { module_id, .. } => module_id,
+        ImportTarget::Module(module_id) => module_id,
+    };
+    visible_targets
+        .iter()
+        .any(|visible_target| match visible_target {
+            ImportTarget::Module(module_id) => {
+                *module_id == target_module_id
+                    || module_contains_module(runtime, *module_id, target_module_id)
+            }
+            ImportTarget::File { .. } => false,
+        })
+}
+
+fn module_contains_module(
+    runtime: &Runtime,
+    module_id: ModuleId,
+    target_module_id: ModuleId,
+) -> bool {
+    if module_id == target_module_id {
+        return true;
+    }
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return false;
+    };
+    module.run_targets.iter().any(|target| match target {
+        ImportTarget::File { .. } => false,
+        ImportTarget::Module(child_module_id) => {
+            module_contains_module(runtime, *child_module_id, target_module_id)
+        }
+    })
 }
 
 fn module_contains_file_target(
@@ -377,16 +828,19 @@ fn run_repository_module_plan_until(
     execution_mode: ExecutionMode,
     last_target: Option<ImportTarget>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    if let Some(error) = import_error {
+        return (results, Some(error));
+    }
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
-            vec![],
+            results,
             Some(repository_target_error(
                 "registered project module is missing",
             )),
         );
     };
     let run_targets = module.run_targets.clone();
-    let mut results = vec![];
     for target in run_targets {
         let target_execution_mode =
             project_target_execution_mode(runtime, module_id, target, execution_mode);
@@ -420,6 +874,74 @@ fn run_repository_module_plan_until(
         );
     }
     (results, None)
+}
+
+fn run_config_imports(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "registered project module is missing",
+            )),
+        );
+    };
+    let config_imports = module.config_imports.clone();
+    let mut results = vec![];
+    for config_import in config_imports {
+        let import_target = ImportTarget::Module(config_import.module_id);
+        let import_execution_mode = config_import_execution_mode(
+            runtime,
+            module_id,
+            import_target,
+            &config_import,
+            execution_mode,
+        );
+        let (mut import_results, import_error) = run_repository_module_target_with_mode(
+            runtime,
+            config_import.module_id,
+            import_execution_mode,
+        );
+        results.append(&mut import_results);
+        if let Some(error) = import_error {
+            return (results, Some(error));
+        }
+        runtime
+            .module_manager
+            .record_import_dependency(module_id, config_import.module_id);
+    }
+    (results, None)
+}
+
+fn config_import_execution_mode(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    import_target: ImportTarget,
+    config_import: &ConfigImport,
+    inherited_mode: ExecutionMode,
+) -> ExecutionMode {
+    if inherited_mode == ExecutionMode::Trusted || runtime.strict_mode || !config_import.trusted {
+        return inherited_mode;
+    }
+    if !project_target_is_loaded(runtime, import_target) {
+        let name = runtime
+            .module_manager
+            .canonical_name_for_target(import_target)
+            .unwrap_or("project import")
+            .to_string();
+        runtime.record_trusted_import(
+            "trust_project_import",
+            name,
+            config_import.line_file.clone(),
+        );
+    }
+    runtime
+        .module_manager
+        .record_import_dependency(owner_module_id, config_import.module_id);
+    ExecutionMode::Trusted
 }
 
 fn project_target_execution_mode(
@@ -577,9 +1099,46 @@ fn import_stmt_error(import_stmt: &ImportStmt, message: String) -> RuntimeError 
     short_exec_error(stmt, message, None, vec![])
 }
 
+fn standard_library_root_candidates(
+    configured_root: Option<std::path::PathBuf>,
+    current_dir: Option<std::path::PathBuf>,
+    executable: Option<std::path::PathBuf>,
+) -> Vec<std::path::PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(root) = configured_root {
+        roots.push(root);
+    }
+    if let Some(dir) = current_dir {
+        roots.push(dir.join("std"));
+    }
+    if let Some(parent) = executable.as_deref().and_then(std::path::Path::parent) {
+        roots.push(parent.join("std"));
+        roots.push(parent.join("..").join("std"));
+        roots.push(parent.join("..").join("share").join("litex").join("std"));
+        roots.push(
+            parent
+                .join("..")
+                .join("..")
+                .join("share")
+                .join("litex")
+                .join("std"),
+        );
+    }
+    roots
+}
+
 #[cfg(test)]
 mod path_import_tests {
     use super::*;
+
+    #[test]
+    fn fresh_runtime_has_no_preloaded_source_modules() {
+        let runtime = Runtime::new();
+
+        assert!(runtime.module_manager.modules.is_empty());
+        assert!(runtime.module_manager.module_by_name.is_empty());
+        assert!(runtime.module_manager.std_module_names.is_empty());
+    }
 
     #[test]
     fn path_imports_do_not_resolve_as_modules() {
@@ -587,7 +1146,7 @@ mod path_import_tests {
             "import \"./Demo\" as Demo",
             "trust import \"./Demo\" as Demo",
         ] {
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("repl");
 
             let (_, runtime_error) = run_source_code(source, &mut runtime);
@@ -598,15 +1157,43 @@ mod path_import_tests {
     }
 
     #[test]
-    fn standard_library_imports_are_rejected() {
-        let mut runtime = Runtime::new_with_builtin_code();
+    fn nonstandard_source_imports_explain_the_config_migration() {
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("repl");
 
         let (_, runtime_error) = run_source_code("import ZMod", &mut runtime);
 
-        let runtime_error = runtime_error.expect("standard-library import should fail");
+        let runtime_error = runtime_error.expect("nonstandard source import should fail");
         assert!(format!("{:?}", runtime_error)
-            .contains("Litex no longer provides standard-library imports"));
+            .contains("non-standard modules belong in litex.config [import]"));
         assert!(runtime.module_manager.module_by_name.is_empty());
+    }
+
+    #[test]
+    fn strict_mode_rejects_user_trust() {
+        let mut runtime = Runtime::new();
+        runtime.strict_mode = true;
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, trust_error) = run_source_code("trust 1 = 1", &mut runtime);
+        assert!(trust_error.is_some(), "strict mode must reject user trust");
+    }
+
+    #[test]
+    fn std_root_candidates_include_deb_share_layout() {
+        let executable = std::path::PathBuf::from("/opt/litex/usr/local/bin/litex");
+        let roots = standard_library_root_candidates(None, None, Some(executable));
+
+        assert!(roots.contains(&std::path::PathBuf::from(
+            "/opt/litex/usr/local/bin/../../share/litex/std"
+        )));
+    }
+
+    #[test]
+    fn std_root_candidates_include_binary_sibling_std_layout() {
+        let executable = std::path::PathBuf::from("/opt/litex/bin/litex");
+        let roots = standard_library_root_candidates(None, None, Some(executable));
+
+        assert!(roots.contains(&std::path::PathBuf::from("/opt/litex/bin/../std")));
     }
 }
