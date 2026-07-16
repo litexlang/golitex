@@ -113,7 +113,7 @@ pub use crate::module_manager::{
     discover_repository, discover_repository_for_file, discover_std_module, parse_project_config,
     resolve_std_root, ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget,
     ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport,
-    ProjectImport, ProjectRequirement, ProjectStdImport, RepositoryFileTarget, KERNEL_PATH,
+    ProjectImport, ProjectRequirement, ProjectStdImport, RepositoryFileTarget,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -388,7 +388,6 @@ pub use crate::common::defaults::default_line_file;
 pub use crate::common::defaults::is_default_line_file;
 pub use crate::common::defaults::LineFile;
 pub use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
-pub use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 pub use crate::common::helper::add_four_spaces_at_beginning;
 pub use crate::common::helper::brace_vec_colon_vec_to_string;
 pub use crate::common::helper::braced_string;

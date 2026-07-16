@@ -2,9 +2,6 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-// Stable synthetic source path for the kernel environment, not a user-loadable module.
-pub const KERNEL_PATH: &str = "kernel";
-
 /// Owns every module participating in one top-level Runtime.
 ///
 /// Module runners refer to dependencies by `ModuleId`; they never hold Runtime
@@ -12,7 +9,6 @@ pub const KERNEL_PATH: &str = "kernel";
 /// inside one per-run registry.
 #[derive(Clone)]
 pub struct ModuleManager {
-    pub builtin_environment: Box<Environment>,
     pub modules: HashMap<ModuleId, ModuleRunner>,
     pub module_by_name: HashMap<String, ModuleId>,
     pub module_by_path: HashMap<String, ModuleId>,
@@ -26,9 +22,8 @@ pub struct ModuleManager {
 }
 
 impl ModuleManager {
-    pub fn new(initial_path: &str) -> Self {
+    pub fn new() -> Self {
         ModuleManager {
-            builtin_environment: Box::new(Environment::new_empty_env()),
             modules: HashMap::new(),
             module_by_name: HashMap::new(),
             module_by_path: HashMap::new(),
@@ -38,7 +33,7 @@ impl ModuleManager {
             loading_import_stack: vec![],
             next_module_id: 0,
             entry_module_id: None,
-            entry_path_rc: Rc::from(initial_path),
+            entry_path_rc: Rc::from(""),
         }
     }
 

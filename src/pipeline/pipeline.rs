@@ -290,6 +290,19 @@ pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    if !runtime.has_active_execution_frame() {
+        return (
+            vec![],
+            Some(
+                ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                    "runtime has no active source context; initialize a file or repository before running source"
+                        .to_string(),
+                ))
+                .into(),
+            ),
+        );
+    }
+
     let mut tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
