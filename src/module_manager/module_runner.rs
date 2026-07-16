@@ -36,6 +36,13 @@ pub enum ExportEntry {
     Module { name: String, module_id: ModuleId },
 }
 
+#[derive(Clone)]
+pub struct ConfigImport {
+    pub module_id: ModuleId,
+    pub line_file: LineFile,
+    pub trusted: bool,
+}
+
 impl ExportEntry {
     pub fn target(&self, owner_module: ModuleId) -> ImportTarget {
         match self {
@@ -83,9 +90,12 @@ pub struct ModuleRunner {
     pub main_file_path: String,
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
+    pub flattened_export_file: Option<FileId>,
     pub exports: HashMap<String, ExportEntry>,
     pub run_targets: Vec<ImportTarget>,
+    pub required_targets: HashMap<ImportTarget, Vec<ImportTarget>>,
     pub trusted_run_targets: HashMap<ImportTarget, LineFile>,
+    pub config_imports: Vec<ConfigImport>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
@@ -107,9 +117,12 @@ impl ModuleRunner {
             main_file_path,
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
+            flattened_export_file: None,
             exports: HashMap::new(),
             run_targets: vec![],
+            required_targets: HashMap::new(),
             trusted_run_targets: HashMap::new(),
+            config_imports: vec![],
             imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,

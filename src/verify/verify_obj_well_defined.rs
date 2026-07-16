@@ -46,6 +46,9 @@ impl Runtime {
             Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),
             Obj::Div(div) => self.verify_div_well_defined(div, verify_state),
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
+            Obj::IntegerQuotient(quotient) => {
+                self.verify_integer_quotient_well_defined(quotient, verify_state)
+            }
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
             Obj::Sqrt(sqrt) => self.verify_sqrt_well_defined(sqrt, verify_state),

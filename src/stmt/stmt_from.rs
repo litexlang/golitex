@@ -186,12 +186,6 @@ impl From<EvalStmt> for Stmt {
     }
 }
 
-impl From<EvalByStmt> for Stmt {
-    fn from(v: EvalByStmt) -> Self {
-        CommandStmt::EvalByStmt(v).into()
-    }
-}
-
 impl From<WitnessExistFact> for Stmt {
     fn from(v: WitnessExistFact) -> Self {
         WitnessStmt::WitnessExistFact(v).into()

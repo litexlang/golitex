@@ -15,6 +15,7 @@ const SOURCE_KIND: &str = "source_kind";
 const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_BUILTIN: &str = "builtin";
 const SOURCE_KIND_MODULE: &str = "module";
+const SOURCE_KIND_STD: &str = "std";
 const SOURCE_KIND_FILE: &str = "file";
 
 fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
@@ -34,11 +35,8 @@ fn display_source_label_for_line_file(
     }
 
     let path = line_file.1.as_ref();
-    if path == BUILTIN_CODE_PATH {
-        return Some((
-            SOURCE_KIND_BUILTIN.to_string(),
-            BUILTIN_CODE_PATH.to_string(),
-        ));
+    if path == KERNEL_PATH {
+        return Some((SOURCE_KIND_BUILTIN.to_string(), KERNEL_PATH.to_string()));
     }
 
     if line_file_is_entry_source(line_file, &runtime.module_manager) {
@@ -46,6 +44,13 @@ fn display_source_label_for_line_file(
     }
 
     for module in runtime.module_manager.modules.values() {
+        if runtime
+            .module_manager
+            .is_std_module_name(module.module_name.as_str())
+            && Path::new(path).starts_with(Path::new(module.module_root_path.as_str()))
+        {
+            return Some((SOURCE_KIND_STD.to_string(), module.module_name.clone()));
+        }
         for file in module.files.iter() {
             if file.source_path == path {
                 return Some((SOURCE_KIND_FILE.to_string(), file.canonical_name.clone()));

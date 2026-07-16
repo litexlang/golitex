@@ -100,7 +100,6 @@ pub enum CommandStmt {
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     EvalStmt(EvalStmt),
-    EvalByStmt(EvalByStmt),
     UseStrategyStmt(UseStrategyStmt),
     StopStrategyStmt(StopStrategyStmt),
 }

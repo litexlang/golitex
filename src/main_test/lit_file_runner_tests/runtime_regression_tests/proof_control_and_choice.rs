@@ -9,7 +9,7 @@ sketch:
 2 = 3
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("sketch_stmt_is_checked_and_local");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -42,7 +42,7 @@ try:
 x = 1
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("try_stmt_is_checked_and_committed");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -78,7 +78,7 @@ try:
 b = 1
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "try_stmt_commit_merges_child_equality_into_parent_equality_class",
             );
@@ -121,7 +121,7 @@ try:
     use strategy use_target_strategy
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "try_stmt_commit_reactivates_parent_stopped_strategy",
             );
@@ -159,7 +159,7 @@ try:
     clear
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_clear_control_statement");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -200,7 +200,7 @@ try:
         clear
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_nested_control_statement");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -229,7 +229,7 @@ try:
     4 = 5
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("try_stmt_unknown_is_reported_and_local");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -270,7 +270,7 @@ try:
     have a R
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("try_stmt_error_is_reported_and_local");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -282,7 +282,9 @@ try:
             run_output
         );
         assert!(
-            run_output.contains("try:") || run_output.contains("have a R"),
+            run_output.contains("try:")
+                || run_output.contains("have a R")
+                || run_output.contains("free parameter `a` is already bound"),
             "try should report the failing inner statement:\n{}",
             run_output
         );
@@ -318,7 +320,7 @@ have info set
 have infc set
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "former_compatibility_words_are_ordinary_identifiers",
     );
@@ -340,7 +342,7 @@ claim:
     1 = 1
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("internal_claim_question_goal_remains_supported");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -367,7 +369,7 @@ claim:
     trust x = 1
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("internal_claim_question_goal_allows_proof_body");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -464,7 +466,7 @@ by induc n from 0:
         $qgoal_induc_p(n + 1)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("question_goal_is_the_only_goal_syntax");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -497,7 +499,7 @@ prop prove(x R):
 
 $prove(1)
 "#;
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("prove_is_available_as_an_identifier");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -518,7 +520,7 @@ fn top_level_question_goal_is_rejected_with_goal_block_hint() {
 ? 1 = 1
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("top_level_question_goal_is_rejected");
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -580,7 +582,7 @@ sketch:
     fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("fn_range_intro_subset_and_preimage_work");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -613,7 +615,7 @@ claim:
 
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("fn_range_membership_infers_preimage_existence");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -637,7 +639,7 @@ sketch:
     have by preimage x from f(1) $in R
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("have_by_preimage_rejects_non_range_source");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -666,7 +668,7 @@ sketch:
     have by preimage x, y from f(1) $in fn_range(f)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("have_by_preimage_checks_witness_count");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -693,7 +695,7 @@ abstract_prop one_arg_relation(x)
 have B set = replacement(one_arg_relation, {1})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("replacement_requires_binary_prop");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -720,7 +722,7 @@ abstract_prop rel(x, y)
 have B set = replacement(rel, {1})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             "replacement_requires_uniqueness_over_source_set",
         );
@@ -767,7 +769,7 @@ x $in {3, 5, 9}
 $rel(x, y)
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "replacement_membership_infers_preimage_and_preimage_stmt_works",
             );
@@ -802,7 +804,7 @@ trust $rel(1, y)
 y $in replacement(rel, {1, 2})
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             "replacement_membership_intro_from_relation_witness",
         );
@@ -834,7 +836,7 @@ forall x R:
         x = x
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("nested_forall_reusing_outer_param_is_rejected");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -861,7 +863,7 @@ by for forall! n range(0, 3) => {n < 3}
 by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon",
     );
@@ -886,7 +888,7 @@ by enumerate finite_set:
         x = 1 or x = 2
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "by_enumerate_finite_set_resolves_named_literal_alias",
     );
@@ -921,7 +923,7 @@ forall I power_set(R), f, g fn(x I) R:
         fn(x I) R {f(x) / g(x)} $in fn(x I) R
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_quotient_lambda_uses_nonzero_on_predicate",
             );
@@ -955,7 +957,7 @@ thm nested_existential_quotient_is_well_defined:
     trust exist delta R_pos st {fn(x E) R {1 / g(x)} $in fn(x E) R}
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",
             );
@@ -981,7 +983,7 @@ forall X power_set(R), x0 X:
     fn(x set_minus(X, {x0})) R {1 / (x - x0)} $in fn(x set_minus(X, {x0})) R
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "anonymous_quotient_lambda_over_punctured_set_is_well_defined",
             );
@@ -1183,7 +1185,7 @@ by zorn_lemma s from leq:
 }
 
 fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(file_label);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
@@ -1342,7 +1344,7 @@ choose(s) $in s
 }
 
 fn run_axiom_of_choice_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(file_label);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)

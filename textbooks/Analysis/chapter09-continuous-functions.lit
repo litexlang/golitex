@@ -526,11 +526,7 @@ thm closure_union_identity:
     closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
     by thm closure_union_subset_reverse(X, Y)
     union(closure_of_real_set(X), closure_of_real_set(Y)) $subset closure_of_real_set(union(X, Y))
-    by extension closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y)):
-        forall z closure_of_real_set(union(X, Y)):
-            z $in union(closure_of_real_set(X), closure_of_real_set(Y))
-        forall z union(closure_of_real_set(X), closure_of_real_set(Y)):
-            z $in closure_of_real_set(union(X, Y))
+    by extension closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
     closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
 
 thm closure_elementary_properties:
@@ -778,11 +774,7 @@ thm closure_of_open_interval:
     '[a, b] $subset closure_of_real_set('(a, b))
     by thm open_interval_closure_subset_closed_interval(a, b)
     closure_of_real_set('(a, b)) $subset '[a, b]
-    by extension closure_of_real_set('(a, b)) = '[a, b]:
-        forall x closure_of_real_set('(a, b)):
-            x $in '[a, b]
-        forall x '[a, b]:
-            x $in closure_of_real_set('(a, b))
+    by extension closure_of_real_set('(a, b)) = '[a, b]
     closure_of_real_set('(a, b)) = '[a, b]
 
 thm closed_interval_closure_subset_closed_interval:
@@ -858,11 +850,7 @@ thm closure_of_closed_interval:
     '[a, b] $subset closure_of_real_set('[a, b])
     by thm closed_interval_closure_subset_closed_interval(a, b)
     closure_of_real_set('[a, b]) $subset '[a, b]
-    by extension closure_of_real_set('[a, b]) = '[a, b]:
-        forall x closure_of_real_set('[a, b]):
-            x $in '[a, b]
-        forall x '[a, b]:
-            x $in closure_of_real_set('[a, b])
+    by extension closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('[a, b]) = '[a, b]
 
 thm finite_interval_containment_relations:
@@ -924,11 +912,7 @@ thm closure_of_open_closed_interval:
     by thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('(a, b]) $subset '[a, b]
-    by extension closure_of_real_set('(a, b]) = '[a, b]:
-        forall x closure_of_real_set('(a, b]):
-            x $in '[a, b]
-        forall x '[a, b]:
-            x $in closure_of_real_set('(a, b])
+    by extension closure_of_real_set('(a, b]) = '[a, b]
     closure_of_real_set('(a, b]) = '[a, b]
 
 thm closure_of_closed_open_interval:
@@ -949,11 +933,7 @@ thm closure_of_closed_open_interval:
     by thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('[a, b)) $subset '[a, b]
-    by extension closure_of_real_set('[a, b)) = '[a, b]:
-        forall x closure_of_real_set('[a, b)):
-            x $in '[a, b]
-        forall x '[a, b]:
-            x $in closure_of_real_set('[a, b))
+    by extension closure_of_real_set('[a, b)) = '[a, b]
     closure_of_real_set('[a, b)) = '[a, b]
 
 thm closure_of_bounded_intervals:
@@ -1051,11 +1031,7 @@ thm closure_of_open_right_ray:
     closure_of_real_set('(a,)) $subset '[a,)
     by thm closed_right_ray_subset_open_right_ray_closure(a)
     '[a,) $subset closure_of_real_set('(a,))
-    by extension closure_of_real_set('(a,)) = '[a,):
-        forall x closure_of_real_set('(a,)):
-            x $in '[a,)
-        forall x '[a,):
-            x $in closure_of_real_set('(a,))
+    by extension closure_of_real_set('(a,)) = '[a,)
     closure_of_real_set('(a,)) = '[a,)
 
 thm closed_right_ray_closure_subset_closed_right_ray:
@@ -1104,11 +1080,7 @@ thm closure_of_closed_right_ray:
     '[a,) $subset closure_of_real_set('[a,))
     by thm closed_right_ray_closure_subset_closed_right_ray(a)
     closure_of_real_set('[a,)) $subset '[a,)
-    by extension closure_of_real_set('[a,)) = '[a,):
-        forall x closure_of_real_set('[a,)):
-            x $in '[a,)
-        forall x '[a,):
-            x $in closure_of_real_set('[a,))
+    by extension closure_of_real_set('[a,)) = '[a,)
     closure_of_real_set('[a,)) = '[a,)
 
 thm endpoint_adherent_to_open_left_ray:
@@ -1187,11 +1159,7 @@ thm closure_of_open_left_ray:
     closure_of_real_set('(,a)) $subset '(,a]
     by thm closed_left_ray_subset_open_left_ray_closure(a)
     '(,a] $subset closure_of_real_set('(,a))
-    by extension closure_of_real_set('(,a)) = '(,a]:
-        forall x closure_of_real_set('(,a)):
-            x $in '(,a]
-        forall x '(,a]:
-            x $in closure_of_real_set('(,a))
+    by extension closure_of_real_set('(,a)) = '(,a]
     closure_of_real_set('(,a)) = '(,a]
 
 thm closed_left_ray_closure_subset_closed_left_ray:
@@ -1235,11 +1203,7 @@ thm closure_of_closed_left_ray:
     '(,a] $subset closure_of_real_set('(,a])
     by thm closed_left_ray_closure_subset_closed_left_ray(a)
     closure_of_real_set('(,a]) $subset '(,a]
-    by extension closure_of_real_set('(,a]) = '(,a]:
-        forall x closure_of_real_set('(,a]):
-            x $in '(,a]
-        forall x '(,a]:
-            x $in closure_of_real_set('(,a])
+    by extension closure_of_real_set('(,a]) = '(,a]
     closure_of_real_set('(,a]) = '(,a]
 
 thm closure_of_one_sided_intervals:
@@ -1312,15 +1276,15 @@ thm sqrt_two_not_rational:
 
 # Translate a rational point by sqrt(2).  The translated point cannot be
 # rational, since subtracting the original rational point would make sqrt(2)
-# rational.  This gives the missing irrational counterpart to the builtin
-# rational-between theorem without adding a separate density axiom.
+# rational.  This gives the irrational counterpart to Chapter 5's
+# rational-between interface without adding a second density assumption.
 thm irrational_density_of_reals:
     ? forall x, y R:
         x < y
         =>:
             exist z set_minus(R, Q) st {x < z < y}
     x - sqrt(2) < y - sqrt(2)
-    by thm has_rational_between(x - sqrt(2), y - sqrt(2))
+    by thm chap5::has_rational_between(x - sqrt(2), y - sqrt(2))
     obtain q from exist q Q st {x - sqrt(2) < q < y - sqrt(2)}
     have z R = q + sqrt(2)
     x - sqrt(2) < q
@@ -1359,7 +1323,7 @@ thm rational_points_are_adherent_everywhere:
         ? forall epsilon R_pos:
             $is_epsilon_adherent_to_set(Q, x, epsilon)
         x < x + epsilon
-        by thm has_rational_between(x, x + epsilon)
+        by thm chap5::has_rational_between(x, x + epsilon)
         obtain q from exist q Q st {x < q < x + epsilon}
         q $in Q
         x < q
@@ -1527,7 +1491,7 @@ thm adherent_integer_point_is_integer:
         claim:
             ? forall epsilon R_pos:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
-            by thm archimedean_property(epsilon)
+            by thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
             witness exist n1 N_pos st {$chap6::is_tail_close_to(a, x, epsilon, n1)} from n0:
                 forall n N_pos:
@@ -1732,7 +1696,7 @@ thm adherent_point_sequence_characterization_forward:
         claim:
             ? forall epsilon R_pos:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
-            by thm archimedean_property(epsilon)
+            by thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
             witness exist n1 N_pos st {$chap6::is_tail_close_to(a, x, epsilon, n1)} from n0:
                 claim:
@@ -3497,7 +3461,7 @@ thm sequence_limit_preservation_implies_function_limit:
                 claim:
                     ? forall eta R_pos:
                         $chap6::has_eventual_closeness_to(bad_sequence, x0, eta)
-                    by thm archimedean_property(eta)
+                    by thm chap5::archimedean_property(eta)
                     obtain n0 from exist n0 N_pos st {1 / n0 < eta}
                     witness exist n1 N_pos st {$chap6::is_tail_close_to(bad_sequence, x0, eta, n1)} from n0:
                         claim:
@@ -5148,7 +5112,7 @@ thm rational_indicator_restricted_limits_at_zero:
             claim:
                 ? forall epsilon R_pos:
                     $is_epsilon_adherent_to_set(Q, 0, epsilon)
-                by thm has_rational_between(0, epsilon)
+                by thm chap5::has_rational_between(0, epsilon)
                 obtain q from exist q Q st {0 < q < epsilon}
                 q $in R
                 q $in Q
@@ -5253,7 +5217,7 @@ thm rational_indicator_no_limit_at_zero:
         1 / 4 $in R_pos
         $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4)
         obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4, delta)}
-        by thm has_rational_between(0, delta)
+        by thm chap5::has_rational_between(0, delta)
         obtain q from exist q Q st {0 < q < delta}
         q $in R
         q - 0 = q
@@ -5514,7 +5478,7 @@ thm rational_indicator_discontinuous_everywhere:
         obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0), 1 / 4, delta)}
 
         x0 < x0 + delta
-        by thm has_rational_between(x0, x0 + delta)
+        by thm chap5::has_rational_between(x0, x0 + delta)
         obtain q from exist q Q st {x0 < q < x0 + delta}
         q - x0 > 0
         abs(q - x0) = q - x0
@@ -7653,24 +7617,44 @@ thm intermediate_value_theorem_decreasing_order:
             exist c '[a, b] st {f(c) = y}
     # In the source: Tao leaves this reversed endpoint order as similar.
     # The proof applies the increasing-order case to `0-f`.
+    have fn reversed_endpoint_function(x '[a, b]) R = 0 - f(x)
     by thm constant_function_continuous('[a, b], 0)
     $is_continuous_on('[a, b], fn(x '[a, b]) R {0})
     by thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {0}, f)
     $is_continuous_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
+    claim:
+        ? forall x '[a, b]:
+            fn(x '[a, b]) R {0 - f(x)}(x) = reversed_endpoint_function(x)
+        fn(x '[a, b]) R {0 - f(x)}(x) = 0 - f(x)
+        reversed_endpoint_function(x) = 0 - f(x)
+        fn(x '[a, b]) R {0 - f(x)}(x) = reversed_endpoint_function(x)
+    claim:
+        ? forall x0 '[a, b]:
+            $is_continuous_at('[a, b], reversed_endpoint_function, x0)
+        by thm interval_member_is_adherent('[a, b], x0)
+        $is_adherent_point('[a, b], x0)
+        $is_continuous_at('[a, b], fn(x '[a, b]) R {0 - f(x)}, x0)
+        $has_function_limit('[a, b], fn(x '[a, b]) R {0 - f(x)}, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
+        by thm equal_functions_have_equal_function_limits('[a, b], fn(x '[a, b]) R {0 - f(x)}, reversed_endpoint_function, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
+        $has_function_limit('[a, b], reversed_endpoint_function, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
+        fn(x '[a, b]) R {0 - f(x)}(x0) = reversed_endpoint_function(x0)
+        $has_function_limit('[a, b], reversed_endpoint_function, x0, reversed_endpoint_function(x0))
+        $is_continuous_at('[a, b], reversed_endpoint_function, x0)
+    $is_continuous_on('[a, b], reversed_endpoint_function)
     by thm neg_order_reverse_bridge(f(a), y)
     0 - f(a) <= 0 - y
     by thm neg_order_reverse_bridge(y, f(b))
     0 - y <= 0 - f(b)
-    fn(x '[a, b]) R {0 - f(x)}(a) = 0 - f(a)
-    fn(x '[a, b]) R {0 - f(x)}(b) = 0 - f(b)
-    fn(x '[a, b]) R {0 - f(x)}(a) <= 0 - y
-    0 - y <= fn(x '[a, b]) R {0 - f(x)}(b)
-    by thm intermediate_value_theorem_increasing_order(a, b, fn(x '[a, b]) R {0 - f(x)}, 0 - y)
-    exist c '[a, b] st {fn(x '[a, b]) R {0 - f(x)}(c) = 0 - y}
-    obtain c from exist c '[a, b] st {fn(x '[a, b]) R {0 - f(x)}(c) = 0 - y}
+    reversed_endpoint_function(a) = 0 - f(a)
+    reversed_endpoint_function(b) = 0 - f(b)
+    reversed_endpoint_function(a) <= 0 - y
+    0 - y <= reversed_endpoint_function(b)
+    by thm intermediate_value_theorem_increasing_order(a, b, reversed_endpoint_function, 0 - y)
+    exist c '[a, b] st {reversed_endpoint_function(c) = 0 - y}
+    obtain c from exist c '[a, b] st {reversed_endpoint_function(c) = 0 - y}
     witness exist c0 '[a, b] st {f(c0) = y} from c:
-        fn(x '[a, b]) R {0 - f(x)}(c) = 0 - y
-        fn(x '[a, b]) R {0 - f(x)}(c) = 0 - f(c)
+        reversed_endpoint_function(c) = 0 - y
+        reversed_endpoint_function(c) = 0 - f(c)
         0 - f(c) = 0 - y
         by thm neg_eq_bridge(f(c), y)
         f(c) = y

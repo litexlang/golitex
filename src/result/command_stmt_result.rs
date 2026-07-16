@@ -7,7 +7,6 @@ pub enum CommandStmtResult {
     DoNothingStmt(NonFactualStmtSuccess),
     ClearStmt(NonFactualStmtSuccess),
     EvalStmt(NonFactualStmtSuccess),
-    EvalByStmt(NonFactualStmtSuccess),
     UseStrategyStmt(NonFactualStmtSuccess),
     StopStrategyStmt(NonFactualStmtSuccess),
 }
@@ -24,7 +23,6 @@ impl CommandStmtResult {
             }
             Stmt::Command(CommandStmt::ClearStmt(_)) => CommandStmtResult::ClearStmt(success),
             Stmt::Command(CommandStmt::EvalStmt(_)) => CommandStmtResult::EvalStmt(success),
-            Stmt::Command(CommandStmt::EvalByStmt(_)) => CommandStmtResult::EvalByStmt(success),
             Stmt::Command(CommandStmt::UseStrategyStmt(_)) => {
                 CommandStmtResult::UseStrategyStmt(success)
             }
@@ -42,7 +40,6 @@ impl CommandStmtResult {
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
-            | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)
             | CommandStmtResult::StopStrategyStmt(success) => success,
         }
@@ -55,7 +52,6 @@ impl CommandStmtResult {
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
-            | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)
             | CommandStmtResult::StopStrategyStmt(success) => success,
         }
@@ -68,7 +64,6 @@ impl CommandStmtResult {
             | CommandStmtResult::DoNothingStmt(success)
             | CommandStmtResult::ClearStmt(success)
             | CommandStmtResult::EvalStmt(success)
-            | CommandStmtResult::EvalByStmt(success)
             | CommandStmtResult::UseStrategyStmt(success)
             | CommandStmtResult::StopStrategyStmt(success) => success,
         }

@@ -7,6 +7,10 @@ impl Runtime {
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             HAVE => match tb.token_at_add_index(1) {
+                ALGO => match tb.token_at_add_index(2) {
+                    FOR => self.parse_have_algo_for_stmt(tb),
+                    _ => Err(parse_stmt_error(tb, "have algo: expected `for f(...)`")),
+                },
                 TUPLE => self.parse_have_tuple_stmt(tb),
                 CART => self.parse_have_cart_stmt(tb),
                 SEQ => self.parse_have_seq_stmt(tb),
@@ -53,7 +57,10 @@ impl Runtime {
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
-            ALGO => self.parse_def_algorithm_stmt(tb),
+            ALGO => Err(parse_stmt_error(
+                tb,
+                "algorithm implementations must use `have algo for f(...)`",
+            )),
             STRONG_INDUC => Err(parse_stmt_error(
                 tb,
                 "strong_induc is only valid after `by`",
@@ -137,5 +144,21 @@ mod parse_stmt_diagnostic_tests {
             let message = parse_one_stmt_error_message(source_code);
             assert!(message.contains("has been removed"), "{message}");
         }
+    }
+
+    #[test]
+    fn function_implementation_syntax_has_targeted_migrations() {
+        assert_eq!(
+            parse_one_stmt_error_message("algo f(x):\n    x"),
+            "algorithm implementations must use `have algo for f(...)`"
+        );
+        assert_eq!(
+            parse_one_stmt_error_message("have algo f(x):\n    x"),
+            "have algo: expected `for f(...)`"
+        );
+        assert_eq!(
+            parse_one_stmt_error_message("have fn as algo f(x R) R = x"),
+            "`have fn as algo` has been replaced by `have fn ...` followed by `have algo for f(...)`"
+        );
     }
 }

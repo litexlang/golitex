@@ -9,7 +9,8 @@
 # consequences of the gcd definition are checked directly.
 # litex_code: This file runs Section I first and then adds Section II.
 # comments: The binary-gcd existence, divisor, and Bezout interfaces are
-# checked in this file; no std number-theory modules are imported.
+# checked in this file. The kernel Euclidean quotient object supplies the
+# quotient-remainder witness without a source-level helper.
 
 """
 Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
@@ -39,18 +40,17 @@ prop has_unique_euclidean_division_Z(a Z, d N_pos):
             q = q1
             r = r1
 
-# The verifier's integer remainder gives the source quotient-remainder
-# construction directly: a - (a % d) is a multiple of d.
+# The first-class Euclidean quotient is the unique integer q characterized by
+# `a = d * q + a % d`. Its defining equation is a kernel rule, so the source
+# proof can choose that q directly without a local trusted interface.
 thm euclidean_division_exists:
     ? forall a Z, d N_pos:
         exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
-    (a - a % d) % d = 0
-    obtain q from exist q Z st {a - a % d = d * q}
-    witness exist q1, r Z st {$euclidean_division_Z(a, d, q1, r)} from q, a % d:
+    witness exist q, r Z st {$euclidean_division_Z(a, d, q, r)} from integer_quotient(a, d), a % d:
         d > 0
-        a = (a - a % d) + a % d = d * q + a % d
+        a = d * integer_quotient(a, d) + a % d
         0 <= a % d < d
-        $euclidean_division_Z(a, d, q, a % d)
+        $euclidean_division_Z(a, d, integer_quotient(a, d), a % d)
 
 thm euclidean_division_remainder_is_mod:
     ? forall a Z, d N_pos, q, r Z:
@@ -126,7 +126,9 @@ thm remainder_bounds_multiple:
         d * 1 = d
         d * z - d * q >= d
         d * z <= d * q + r
-        d * z - d * q <= (d * q + r) - d * q = r
+        d * z - d * q <= (d * q + r) - d * q
+        (d * q + r) - d * q = r
+        d * z - d * q <= r
         d <= r
         impossible d <= r
 

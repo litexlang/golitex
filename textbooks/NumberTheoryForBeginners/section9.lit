@@ -52,29 +52,11 @@ prop polynomial_multiple_ideal(K set, family set, generator set):
 prop polynomial_gcd_generator_claim(K set, family set):
     exist generator set st {$polynomial_multiple_ideal(K, family, generator)}
 
-trust:
-    forall K set, family set:
-        $polynomial_gcd_generator_claim(K, family)
-
-thm theorem_IX_polynomial_gcd_generator:
-    ? forall K set, family set:
-        $polynomial_gcd_generator_claim(K, family)
-    $polynomial_gcd_generator_claim(K, family)
-
 # The division algorithm is the polynomial analogue of Euclidean division for
 # integers: A=BQ+R with R=0 or deg(R)<deg(B).  Its exact object form awaits the
 # polynomial carrier, so the source-facing existential remains named.
 prop polynomial_division_claim(K set, f set, g set):
     exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
-
-trust:
-    forall K set, f set, g set:
-        $polynomial_division_claim(K, f, g)
-
-thm theorem_IX_polynomial_division:
-    ? forall K set, f set, g set:
-        $polynomial_division_claim(K, f, g)
-    $polynomial_division_claim(K, f, g)
 
 # Corollary. A degree-n polynomial has at most n distinct roots.  Here the
 # integer coefficient/evaluation object provides a directly usable root set;
@@ -84,9 +66,26 @@ prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
     $is_finite_set(roots)
     finite_set_size(roots) <= n
 
+# The gcd-generator, division, and root-count theorems all depend on the same
+# missing typed polynomial carrier and Euclidean operation package.  Keep the
+# three source-facing statements in one explicit trust boundary.
 trust:
+    forall K set, family set:
+        $polynomial_gcd_generator_claim(K, family)
+    forall K set, f set, g set:
+        $polynomial_division_claim(K, f, g)
     forall coeff fn(k N) Z, n N:
         $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+
+thm theorem_IX_polynomial_gcd_generator:
+    ? forall K set, family set:
+        $polynomial_gcd_generator_claim(K, family)
+    $polynomial_gcd_generator_claim(K, family)
+
+thm theorem_IX_polynomial_division:
+    ? forall K set, f set, g set:
+        $polynomial_division_claim(K, f, g)
+    $polynomial_division_claim(K, f, g)
 
 thm theorem_IX_root_bound:
     ? forall coeff fn(k N) Z, n N:

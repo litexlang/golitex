@@ -370,3 +370,146 @@ fn known_forall_requirement_error(goal: Fact, cause: RuntimeError) -> RuntimeErr
         vec![],
     )))
 }
+
+impl Runtime {
+    /// Checks that every operand has a known real carrier before a real-order
+    /// builtin rule uses its totality or witness property. A direct `x $in R`
+    /// fact is preferred; a known membership in a standard numeric subcarrier
+    /// such as `N` also suffices.
+    pub(crate) fn verify_objects_are_known_reals(
+        &mut self,
+        objs: &[&Obj],
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let mut seen = Vec::new();
+        let mut steps = Vec::new();
+        for obj in objs {
+            let key = obj.to_string();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.push(key);
+            let in_r: AtomicFact =
+                InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
+            let result =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_r, verify_state)?;
+            if result.is_true() {
+                steps.push(result);
+                continue;
+            }
+
+            // A bound parameter can have a local carrier such as `union(A, B)`.
+            // Use only already-known membership and subset facts to lift that
+            // carrier into a standard numeric set; do not recursively invoke
+            // the general forall engine from a foundational carrier check.
+            let mut found_numeric_subcarrier = false;
+            for source_set in self.known_sets_containing_obj(obj) {
+                let source_membership: AtomicFact =
+                    InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
+                let source_membership_result = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                        &source_membership,
+                    )?;
+                if !source_membership_result.is_true() {
+                    continue;
+                }
+
+                for carrier in [
+                    StandardSet::R,
+                    StandardSet::NPos,
+                    StandardSet::N,
+                    StandardSet::ZNeg,
+                    StandardSet::ZNz,
+                    StandardSet::Z,
+                    StandardSet::Q,
+                    StandardSet::QPos,
+                    StandardSet::QNeg,
+                    StandardSet::QNz,
+                    StandardSet::RPos,
+                    StandardSet::RNeg,
+                    StandardSet::RNz,
+                ] {
+                    let subset: AtomicFact =
+                        SubsetFact::new(source_set.clone(), carrier.into(), line_file.clone())
+                            .into();
+                    let subset_result =
+                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset)?;
+                    if !subset_result.is_true() {
+                        continue;
+                    }
+                    steps.push(source_membership_result);
+                    steps.push(subset_result);
+                    found_numeric_subcarrier = true;
+                    break;
+                }
+                if found_numeric_subcarrier {
+                    break;
+                }
+            }
+            if !found_numeric_subcarrier {
+                return Ok(None);
+            }
+        }
+        Ok(Some(steps))
+    }
+
+    pub(crate) fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
+        let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
+        let lookup_key = (probe.key(), true);
+        let module_names = self.atomic_fact_referenced_module_names(&probe);
+        let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
+        let mut sets = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+
+        for environment in self.iter_environments_from_top() {
+            Self::collect_known_sets_containing_obj_in_environment(
+                environment,
+                &lookup_key,
+                &obj_strings,
+                &mut sets,
+                &mut seen,
+            );
+        }
+        for module_name in module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                Self::collect_known_sets_containing_obj_in_environment(
+                    environment,
+                    &lookup_key,
+                    &obj_strings,
+                    &mut sets,
+                    &mut seen,
+                );
+            }
+        }
+
+        sets
+    }
+
+    fn collect_known_sets_containing_obj_in_environment(
+        environment: &Environment,
+        lookup_key: &(AtomicFactKey, bool),
+        obj_strings: &[String],
+        sets: &mut Vec<Obj>,
+        seen: &mut std::collections::HashSet<String>,
+    ) {
+        let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(lookup_key)
+        else {
+            return;
+        };
+        for obj_string in obj_strings {
+            for ((member_string, _), known_fact) in known_facts_map.iter() {
+                if member_string != obj_string {
+                    continue;
+                }
+                let AtomicFact::InFact(in_fact) = known_fact else {
+                    continue;
+                };
+                let set_string = in_fact.set.to_string();
+                if seen.insert(set_string) {
+                    sets.push(in_fact.set.clone());
+                }
+            }
+        }
+    }
+}

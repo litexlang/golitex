@@ -67,7 +67,7 @@ object-introduction family of `have` statements listed below.
 | `have fn = anonymous_fn` | Function body, function set, return set, and function name are checked. | Verifies the function value belongs to the return set. | Stores the function name, `f $in fn_set`, known function-body data, `f = anonymous_fn`, and inferred facts. |
 | `have fn case_by_case` | Function set, cases, equal-to expressions, and function name are checked. | Verifies case return values and related case obligations. | Stores the function name, function type, and generated case `forall` facts. |
 | `have fn by induc` | Function and induction shapes are checked. | Verifies base and step obligations. | Stores the function definition facts. |
-| `have fn as algo` | Function signature, generated algorithm shape, and function name are checked. | Verifies the function body or cases according to the algorithm-definition rules. | Stores the function definition and its associated algorithm so later `eval` can use it. |
+| `have algo for f(...)` | `f` must already be a function; parameters and case shape are checked against it. | Verifies every executable return and case against the function facts. | Stores the checked implementation so later `eval f(...)` can use it. |
 | `have fn ... by exist!` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
 | `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
 | `have cart` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores set/cart markers, dimension equality, and projection `forall` fact. |
@@ -83,7 +83,7 @@ object-introduction family of `have` statements listed below.
 | `abstract_prop` | Abstract-prop and concrete-prop names must not conflict. | None. | Stores the abstract prop definition. |
 | `struct` | Parameter domains, field types, and equivalent facts must be well-defined; struct name must be unused. | Does not prove equivalent facts. | Stores the struct definition. |
 | `template` | Template parameters and domains must be well-defined; the template body must execute in a local environment. | The body is verified according to ordinary executor behavior. | Stores the template definition. |
-| `algo` | Target function must exist; algorithm parameters must match the function set. | Verifies every case implies the expected return; if there is no default return, verifies case coverage. | Stores the algorithm definition. |
+| `have algo for f(...)` | Target function must exist; implementation parameters must match the function set. | Verifies every case implies the expected return; if there is no default return, verifies case coverage. | Stores the checked implementation. |
 | `thm` | The theorem `forall` must be well-defined; theorem names must be unique. | Executes the proof and verifies every then-clause. | Stores the theorem definition and stores the theorem `forall` fact. |
 | `strategy` | The strategy `forall` must be well-defined; strategy names must be unique. | Executes the proof and verifies every then-clause. | Stores the strategy definition, stores the strategy `forall` fact, and activates the strategy. |
 | `alias prop` | Target prop must exist and must be concrete, not abstract; alias name must be storable. | None. | Stores a copied prop definition under the new name. |
@@ -124,13 +124,11 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | One ordered `[export]` table names registered `.lit` files and child projects. Earlier entries are available by canonical namespace; paths, names, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface, execution order, and canonical namespaces. |
-| `import` | In project mode resolves a root directory-module export; ordinary import does not load arbitrary `.lit` paths. Checks module cycles and cached status. | Runs the imported module's ordered `[export]` table once. | Registers import dependencies and reuses cached modules. |
-| `trust import` | Uses the same directory-module resolution and is rejected in strict mode. | Skips well-definedness and proof processing for the imported module and nested entries. | Applies direct environment effects and marks the run with an explicit trusted-import dependency. |
+| `litex.config` | `[module] flatten = true` exposes one direct file export at a named module root; `[import]` names non-standard package paths, `[export]` names ordered local entries, and `[requires]` names earlier file dependencies. Configuration graphs, package authority, paths, and names are validated during discovery. | None during discovery. | Declares package capabilities, `-r` order, `-f` dependency closures, and canonical namespaces. |
+| `import std Name` | The only source-level module import. Resolves `Name` in `std/litex.config`; standard packages cannot path-import outside `std`. | Lazily runs the package's declared standard requirements, then the package. | Registers the loaded standard package for the rest of the run. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
-| `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |
-| `eval by` | The left and right objects must be well-defined. | Verifies `lhs = rhs`. | Stores `lhs = rhs`, `rhs = value`, and `lhs = value`. |
+| `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |
 | `macro` | The macro name and replacement text must be usable by later expansion sites. | None for the macro definition itself. | Stores the macro expansion rule for following statements in the same file. |
 | `use strategy` | The strategy must exist. | None. | Activates the strategy. |
 | `stop strategy` | The strategy must exist. | None. | Stops the strategy for its target atomic-fact key. |

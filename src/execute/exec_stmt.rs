@@ -87,7 +87,6 @@ impl Runtime {
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
-            Stmt::Command(CommandStmt::EvalByStmt(s)) => self.exec_eval_by_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
@@ -200,8 +199,7 @@ impl Runtime {
             }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
             | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))
-            | Stmt::Command(CommandStmt::EvalStmt(_))
-            | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
+            | Stmt::Command(CommandStmt::EvalStmt(_)) => {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
             Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),

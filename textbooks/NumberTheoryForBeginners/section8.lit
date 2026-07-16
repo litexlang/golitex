@@ -61,9 +61,8 @@ prop euler_theorem_conclusion(m N_pos, a Z):
     $section3::relatively_prime_Z(a, m)
     a ^ section6::euler_phi(m) % m = 1
 
-# Theorem VIII.2. Cosets partition a finite group into equal-sized blocks, so
-# the subgroup order divides the group order.  The statement is concrete; only
-# the finite partition/counting proof is still debt.
+# Theorem VIII.2 and Euler's corollary share the finite coset partition/counting
+# package, so their two source-facing clauses live in one trust boundary.
 trust:
     forall G set, mul fn(x, y G) G, one G, H power_set(G):
         $section7::is_subgroup(G, mul, one, H)
@@ -71,6 +70,10 @@ trust:
         $is_finite_set(H)
         =>:
             $subgroup_order_divides_group_order(G, mul, one, H)
+    forall m N_pos, a Z:
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            $euler_theorem_conclusion(m, a)
 
 thm theorem_VIII_Lagrange:
     ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
@@ -80,15 +83,6 @@ thm theorem_VIII_Lagrange:
         =>:
             $subgroup_order_divides_group_order(G, mul, one, H)
     $subgroup_order_divides_group_order(G, mul, one, H)
-
-# Theorem VIII.3 (Euler).  Apply Lagrange to the multiplicative group of
-# residue classes prime to m.  The group construction is the remaining finite
-# unit-carrier interface, while the congruence conclusion is source-facing.
-trust:
-    forall m N_pos, a Z:
-        $section3::relatively_prime_Z(a, m)
-        =>:
-            $euler_theorem_conclusion(m, a)
 
 thm theorem_VIII_Euler:
     ? forall m N_pos, a Z:

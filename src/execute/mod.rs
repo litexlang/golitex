@@ -12,7 +12,6 @@ mod exec_eval_stmt;
 mod exec_fact_stmt;
 mod exec_have_by_preimage_stmt;
 mod exec_have_exist_obj_stmt;
-mod exec_have_fn_as_algo;
 mod exec_have_fn_by_forall_exist_unique;
 mod exec_have_fn_by_induc;
 mod exec_have_fn_equal_case_by_case_stmt;

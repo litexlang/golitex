@@ -55,7 +55,7 @@ fn run_session_loop_with_readers(
     output_language: OutputLanguage,
     force_isolated: bool,
 ) -> io::Result<()> {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;

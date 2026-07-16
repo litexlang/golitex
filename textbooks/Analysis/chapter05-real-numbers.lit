@@ -173,6 +173,14 @@ Proposition 5.1.11. The sequence 1/n is Cauchy.
 # at most `1/n0 < epsilon/2`; hence both `1/j - 1/k` and its negative are bounded
 # by `epsilon`, so `|1/j - 1/k| <= epsilon`.
 
+# Background interface.  The Archimedean property supplies the reciprocal
+# cutoff used by the rational-sequence estimates below.  The source uses this
+# ordered-field fact as background; its proof remains explicit local trust.
+thm archimedean_property:
+    ? forall epsilon R_pos:
+        exist n N_pos st {1 / n < epsilon}
+    trust exist n N_pos st {1 / n < epsilon}
+
 claim:
     ? $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})
     claim:
@@ -838,6 +846,16 @@ thm cauchy_sequence_representative_in_Q_exists:
         $has_cauchy_sequence_representative_in_Q(x)
     trust $has_cauchy_sequence_representative_in_Q(x)
 
+# Background interface.  Rational density supplies an intermediate rational
+# between two ordered real bounds.  It is a local trusted field fact, not a
+# replacement for the chapter's Cauchy-sequence construction of reals.
+thm has_rational_between:
+    ? forall x, y R:
+        x < y
+        =>:
+            exist q Q st {x < q < y}
+    trust exist q Q st {x < q < y}
+
 thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
     ? forall a, b seq(Q), x R:
         $has_formal_limit_in_Q(a, x)
@@ -864,9 +882,9 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
                     n >= max(n1, n2)
                     =>:
                         abs(b(n) - x) < epsilon
+                max(n1, n2) >= n1
                 n >= n1
                 max(n1, n2) >= n2
-                n >= max(n1, n2) >= n2
                 n >= n2
                 abs(a(n) - x) < epsilon / 2
                 $chap4::is_close_in_Q(eta, a(n), b(n))
@@ -3316,6 +3334,7 @@ thm positive_natural_le_two_power_predecessor:
             n * 2 = n + n
             n >= 1
             n + n >= n + 1
+            2^(n - 1) * 2 >= n * 2 = n + n >= n + 1
             2^(n - 1) * 2 >= n + 1
             n = (n - 1) + 1
             2^n = 2^((n - 1) + 1)

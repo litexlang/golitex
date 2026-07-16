@@ -33,14 +33,13 @@ pub struct Runtime {
     pub output_style: OutputStyle,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
-    pub loading_builtin_code: bool,
     pub trusted_import_summary: ProofTrustSummary,
 }
 
 impl Runtime {
     pub fn new() -> Self {
         Runtime {
-            module_manager: Box::new(ModuleManager::new(BUILTIN_CODE_PATH)),
+            module_manager: Box::new(ModuleManager::new(KERNEL_PATH)),
             execution_stack: vec![ExecutionFrame::new_builtin()],
             run_mode: RunMode::File,
             parsing_free_param_collection: FreeParamCollection::new(),
@@ -49,28 +48,8 @@ impl Runtime {
             output_style: OutputStyle::Normal,
             strict_mode: false,
             output_language: OutputLanguage::English,
-            loading_builtin_code: false,
             trusted_import_summary: ProofTrustSummary::new(),
         }
-    }
-
-    // Same empty runtime as `new`, then runs builtin definitions; panics if that fails.
-    pub fn new_with_builtin_code() -> Self {
-        let mut runtime = Self::new();
-        runtime.loading_builtin_code = true;
-        let (stmt_results, runtime_error) =
-            crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-        if runtime_error.is_some() {
-            let (_, msg) = crate::pipeline::render_run_source_code_output(
-                &runtime,
-                &stmt_results,
-                &runtime_error,
-                true,
-            );
-            panic!("builtin code execution failed: {}", msg);
-        }
-        runtime.loading_builtin_code = false;
-        runtime
     }
 }
 
@@ -104,7 +83,7 @@ impl Runtime {
         self.execution_stack
             .last()
             .map(|frame| frame.source_path.clone())
-            .unwrap_or_else(|| Rc::from(BUILTIN_CODE_PATH))
+            .unwrap_or_else(|| Rc::from(KERNEL_PATH))
     }
 
     pub fn current_module_id(&self) -> ModuleId {
@@ -342,15 +321,41 @@ impl Runtime {
             .source_path = Rc::from(source_label);
     }
 
-    /// Rebuild the module registry between independent runner items while reusing builtins.
+    /// Rebuild the module registry between independent runner items while
+    /// reusing the kernel environment and already loaded standard packages.
     #[cfg(test)]
     pub(crate) fn reset_for_isolated_runner_item(&mut self) {
         let path = self.current_file_path_rc().to_string();
+        let std_modules = self
+            .module_manager
+            .modules
+            .values()
+            .filter(|module| {
+                self.module_manager
+                    .is_std_module_name(module.module_name.as_str())
+            })
+            .cloned()
+            .collect::<Vec<ModuleRunner>>();
         let mut module_manager = Box::new(ModuleManager::new(path.as_str()));
         std::mem::swap(
             &mut module_manager.builtin_environment,
             &mut self.module_manager.builtin_environment,
         );
+        for module in std_modules {
+            module_manager
+                .std_module_names
+                .insert(module.module_name.clone());
+            module_manager
+                .module_by_name
+                .insert(module.module_name.clone(), module.id);
+            module_manager
+                .module_by_path
+                .insert(module.module_root_path.clone(), module.id);
+            module_manager.next_module_id = module_manager
+                .next_module_id
+                .max(module.id.0.saturating_add(1));
+            module_manager.modules.insert(module.id, module);
+        }
         self.module_manager = module_manager;
         self.execution_stack = vec![ExecutionFrame::new_builtin()];
         self.parsing_free_param_collection.clear();

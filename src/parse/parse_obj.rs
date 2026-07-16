@@ -559,6 +559,36 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Sqrt::new(arg).into());
         }
+        if tok == INTEGER_QUOTIENT {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let dividend = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let divisor = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(IntegerQuotient::new(dividend, divisor).into());
+        }
         if tok == MAX {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -2184,15 +2214,16 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
-    fn module_qualification_keeps_builtin_identifier_bare() {
-        let mut rt = Runtime::new_with_builtin_code();
+    fn module_qualification_qualifies_source_identifier() {
+        let mut rt = Runtime::new();
         set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
-        let Obj::Atom(AtomObj::Identifier(id)) = obj else {
-            panic!("expected bare builtin identifier");
+        let Obj::Atom(AtomObj::IdentifierWithMod(id)) = obj else {
+            panic!("expected module-qualified source identifier");
         };
+        assert_eq!(id.mod_name, "Nat");
         assert_eq!(id.name, "pi");
     }
 

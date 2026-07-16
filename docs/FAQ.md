@@ -115,7 +115,7 @@ and mathematical familiarity with as few first-class forms as possible, rather
 than starting from a maximally general programming language or proof-term
 calculus.
 
-## What are builtin objects, builtin facts, and builtin rules?
+## What are builtin objects and builtin rules?
 
 Litex is easiest to understand through four related layers:
 
@@ -128,7 +128,9 @@ Litex is easiest to understand through four related layers:
 - a verification rule is a checker route for deciding whether a fact follows
   from the current context.
 
-Each layer has builtin material.
+Objects, factual forms, and verification routes have builtin support. Ordinary
+source-level facts are not injected into every run: a package fact is available
+only after an explicit import and keeps its package namespace.
 
 A **builtin object** is an object form or name that Litex understands directly.
 Not every builtin word is an object: `not`, `and`, `or`, `forall`, and `exist`
@@ -151,21 +153,26 @@ The point is not that `abs` is impossible to express without a builtin name.
 The point is that writing `abs(x)` lets the verifier connect the expression to
 the usual absolute-value rules without every file rebuilding that interface.
 
-A **builtin fact** is trusted background already present when a user file
-starts. Many of these are loaded as ordinary Litex statements inside the
-builtin environment, such as operator typing facts, common comparison facts,
-and standard relationships among familiar objects. For example, the usual
-trichotomy of real numbers is available as background:
+A **source-level background fact** is an ordinary Litex fact, usually kept in
+an explicitly imported project or source-local cite package. A **builtin
+rule** instead lives in the verifier. For example, the verifier directly
+recognizes the usual real-line trichotomy:
 
 ```litex
 forall x, y R:
     x = y or x < y or x > y
 ```
 
-This kind of fact is important because some ordinary mathematical axioms are
-not single equalities. They may be disjunctions, implications, existence
-facts, or universal facts. Litex needs those fact shapes to be first-class so
-the background axiom can actually be used in later checking.
+Builtin rules can also produce the basic real comparison witnesses used by
+ordinary object definitions:
+
+```litex
+have x R:
+    x > 100
+```
+
+This applies only to a single comparison between a new real witness and a
+well-defined real expression; it is not unrestricted witness search.
 
 A **builtin statement** is a statement form that the executor understands as a
 primitive context action. For example, `have` introduces objects, `forall`
@@ -180,10 +187,10 @@ equivalent forms or doing routine computation. For example, when the goal is
 `x > y`, Litex can use common equivalent forms such as `y < x` or
 `x - y > 0`:
 
-Some of these routes are Rust-level verifier rules, while some common
-equivalences are loaded as builtin `forall` facts in the initial environment.
-The user-facing effect is similar: the verifier can use common mathematical
-background without the current file proving a local lemma first.
+Some of these routes are Rust-level verifier rules, while standard packages
+can provide additional imported `forall` facts. The user-facing effect is
+similar: the verifier can use common mathematical background without the
+current file proving a local lemma first.
 
 ```litex
 forall x, y R:

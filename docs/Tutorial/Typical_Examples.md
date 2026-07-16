@@ -32,7 +32,8 @@ claim:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
-witness exist d Z st {8 = 1 * d} from 8
+witness exist d Z st {8 = 8 * d} from 1:
+    8 = 8 * 1
 $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```

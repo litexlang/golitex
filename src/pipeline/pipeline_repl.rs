@@ -190,7 +190,7 @@ fn run_repl_loop_with_readers_and_mode(
     )?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
@@ -456,7 +456,7 @@ mod tests {
         fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
         fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         let startup = initialize_repl_runtime_for_directory(&mut runtime, &root)
             .expect("discover project for REPL");
         assert!(matches!(startup, ReplStartup::Project { .. }));
@@ -484,7 +484,7 @@ mod tests {
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create isolated fixture");
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         let startup = initialize_repl_runtime_for_directory(&mut runtime, &root)
             .expect("start isolated REPL");
         assert!(matches!(startup, ReplStartup::Isolated));
@@ -505,7 +505,7 @@ mod tests {
         )
         .expect("write invalid config");
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         let result = initialize_repl_runtime_for_directory(&mut runtime, &root);
         assert!(
             result.is_err(),

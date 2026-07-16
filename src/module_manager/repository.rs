@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 const LITEX_CONFIG: &str = "litex.config";
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RepositoryFileTarget {
     Module(ModuleId),
     File {
@@ -31,10 +31,167 @@ pub fn discover_repository(
         )
         .map_err(|message| repository_error(message, repository_path, 0))?;
 
-    discover_module_config(runtime, root_module_id, &config_path, config)?;
-    let module_import_edges = scan_repository_dependencies(runtime)?;
+    let mut mount_stack = vec![root_module_id];
+    discover_module_config(
+        runtime,
+        root_module_id,
+        &config_path,
+        config,
+        true,
+        &mut mount_stack,
+    )?;
+    reject_unauthorized_project_references(runtime)?;
+    let module_import_edges = config_import_edges(runtime);
     reject_cyclic_module_imports(runtime, &module_import_edges)?;
     Ok(config_path_string)
+}
+
+pub fn discover_std_module(
+    runtime: &mut Runtime,
+    std_root: &Path,
+    module_name: &str,
+) -> Result<ModuleId, RuntimeError> {
+    let config_path = require_project_config(std_root, &std_root.to_string_lossy(), 0)?;
+    let config = read_project_config(&config_path)?;
+    if let Some(import) = config.imports.first() {
+        return Err(repository_error(
+            "std/litex.config cannot use [import]".to_string(),
+            &config_path.to_string_lossy(),
+            import.line,
+        ));
+    }
+    let mut loading_names = vec![];
+    discover_std_root_export(
+        runtime,
+        std_root,
+        &config_path,
+        &config,
+        module_name,
+        &mut loading_names,
+    )
+}
+
+fn discover_std_root_export(
+    runtime: &mut Runtime,
+    std_root: &Path,
+    root_config_path: &Path,
+    root_config: &ProjectConfig,
+    module_name: &str,
+    loading_names: &mut Vec<String>,
+) -> Result<ModuleId, RuntimeError> {
+    if loading_names.iter().any(|name| name == module_name) {
+        let start = loading_names
+            .iter()
+            .position(|name| name == module_name)
+            .unwrap_or(0);
+        let mut cycle = loading_names[start..].to_vec();
+        cycle.push(module_name.to_string());
+        return Err(repository_error(
+            format!("cyclic std dependency: {}", cycle.join(" -> ")),
+            &root_config_path.to_string_lossy(),
+            0,
+        ));
+    }
+    if let Some(module_id) = runtime.module_manager.module_id_by_name(module_name) {
+        if runtime.module_manager.is_std_module_name(module_name) {
+            return Ok(module_id);
+        }
+        return Err(repository_error(
+            format!(
+                "std module name `{}` conflicts with a project module",
+                module_name
+            ),
+            &root_config_path.to_string_lossy(),
+            0,
+        ));
+    }
+    let export = root_config
+        .exports
+        .iter()
+        .find(|export| export.name == module_name)
+        .cloned()
+        .ok_or_else(|| {
+            repository_error(
+                format!(
+                    "std module `{}` is not declared in std/litex.config [export]",
+                    module_name
+                ),
+                &root_config_path.to_string_lossy(),
+                0,
+            )
+        })?;
+    let package_root = canonical_directory(
+        &std_root.join(&export.path).to_string_lossy(),
+        &root_config_path.to_string_lossy(),
+        export.line,
+    )?;
+    let package_config_path = require_project_config(
+        &package_root,
+        &root_config_path.to_string_lossy(),
+        export.line,
+    )?;
+    let package_config = read_project_config(&package_config_path)?;
+    let package_root_string = path_string(
+        &package_root,
+        &root_config_path.to_string_lossy(),
+        export.line,
+    )?;
+    let package_config_string = path_string(
+        &package_config_path,
+        &root_config_path.to_string_lossy(),
+        export.line,
+    )?;
+    let module_id = runtime
+        .module_manager
+        .create_discovered_std_module(
+            module_name.to_string(),
+            package_root_string,
+            package_config_string,
+        )
+        .map_err(|message| {
+            repository_error(message, &root_config_path.to_string_lossy(), export.line)
+        })?;
+    loading_names.push(module_name.to_string());
+    let dependencies = root_config
+        .requirements
+        .iter()
+        .find(|requirement| requirement.name == module_name)
+        .map(|requirement| (requirement.dependencies.clone(), requirement.line))
+        .unwrap_or((vec![], export.line));
+    for dependency in dependencies.0 {
+        let dependency_module_id = discover_std_root_export(
+            runtime,
+            std_root,
+            root_config_path,
+            root_config,
+            dependency.as_str(),
+            loading_names,
+        )?;
+        runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("registered std module should exist")
+            .config_imports
+            .push(ConfigImport {
+                module_id: dependency_module_id,
+                line_file: (
+                    dependencies.1,
+                    Rc::from(root_config_path.to_string_lossy().to_string()),
+                ),
+                trusted: false,
+            });
+    }
+    let mut mount_stack = vec![module_id];
+    discover_module_config(
+        runtime,
+        module_id,
+        &package_config_path,
+        package_config,
+        false,
+        &mut mount_stack,
+    )?;
+    loading_names.pop();
+    Ok(module_id)
 }
 
 pub fn discover_repository_for_file(
@@ -69,33 +226,43 @@ pub fn discover_repository_for_file(
         if discover_repository(&mut probe, root_string.as_str()).is_err() {
             continue;
         }
-        if repository_target_for_path(&probe, canonical_file_string.as_str()).is_none() {
+        let targets = repository_targets_for_path(&probe, canonical_file_string.as_str());
+        if targets.is_empty() {
             continue;
         }
+        if targets.len() > 1 {
+            return Err(repository_error(
+                format!(
+                    "source file `{}` is mounted more than once by this repository; run a repository entry point instead of this physical path",
+                    canonical_file_string
+                ),
+                file_path,
+                0,
+            ));
+        }
         discover_repository(runtime, root_string.as_str())?;
-        return Ok(repository_target_for_path(
-            runtime,
-            canonical_file_string.as_str(),
-        ));
+        return Ok(
+            repository_targets_for_path(runtime, canonical_file_string.as_str())
+                .into_iter()
+                .next(),
+        );
     }
     Ok(None)
 }
 
-fn repository_target_for_path(
-    runtime: &Runtime,
-    source_path: &str,
-) -> Option<RepositoryFileTarget> {
+fn repository_targets_for_path(runtime: &Runtime, source_path: &str) -> Vec<RepositoryFileTarget> {
+    let mut targets = vec![];
     for module in runtime.module_manager.modules.values() {
         for file in module.files.iter() {
             if file.source_path == source_path {
-                return Some(RepositoryFileTarget::File {
+                targets.push(RepositoryFileTarget::File {
                     module_id: module.id,
                     file_id: file.id,
                 });
             }
         }
     }
-    None
+    targets
 }
 
 fn discover_module_config(
@@ -103,14 +270,50 @@ fn discover_module_config(
     module_id: ModuleId,
     config_path: &Path,
     config: ProjectConfig,
+    allow_config_imports: bool,
+    mount_stack: &mut Vec<ModuleId>,
 ) -> Result<(), RuntimeError> {
+    if config.module_flatten && runtime.module_manager.entry_module_id == Some(module_id) {
+        return Err(repository_error(
+            "[module] flatten = true requires a named module; it cannot be used by the direct repository root".to_string(),
+            &config_path.to_string_lossy(),
+            config.module_flatten_line.unwrap_or(0),
+        ));
+    }
+    if !allow_config_imports && !config.imports.is_empty() {
+        return Err(repository_error(
+            "only a repository root or an independently imported package may use [import]"
+                .to_string(),
+            &config_path.to_string_lossy(),
+            config.imports[0].line,
+        ));
+    }
+    for import in config.imports.iter().cloned() {
+        let config_import =
+            discover_config_import(runtime, module_id, config_path, import, mount_stack)?;
+        runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("manifest owner module should exist")
+            .config_imports
+            .push(config_import);
+    }
+
+    let module_flatten = config.module_flatten;
     for export in config.exports {
         let trusted = export.trusted;
         let line_file = (
             export.line,
             Rc::from(config_path.to_string_lossy().to_string()),
         );
-        let target = discover_config_export(runtime, module_id, config_path, export)?;
+        let target = discover_config_export(
+            runtime,
+            module_id,
+            config_path,
+            export,
+            module_flatten,
+            mount_stack,
+        )?;
         let module = runtime
             .module_manager
             .module_mut(module_id)
@@ -120,7 +323,170 @@ fn discover_module_config(
             module.trusted_run_targets.insert(target, line_file);
         }
     }
+
+    for requirement in config.requirements {
+        let (target, dependencies) = {
+            let module = runtime
+                .module_manager
+                .module(module_id)
+                .expect("manifest owner module should exist");
+            let target = module
+                .exports
+                .get(&requirement.name)
+                .expect("parsed [requires] target should be exported")
+                .target(module_id);
+            let dependencies = requirement
+                .dependencies
+                .iter()
+                .map(|dependency| {
+                    module
+                        .exports
+                        .get(dependency)
+                        .expect("parsed [requires] dependency should be exported")
+                        .target(module_id)
+                })
+                .collect::<Vec<ImportTarget>>();
+            (target, dependencies)
+        };
+        runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("manifest owner module should exist")
+            .required_targets
+            .insert(target, dependencies);
+    }
     Ok(())
+}
+
+fn reject_active_mount_cycle(
+    runtime: &Runtime,
+    mount_stack: &[ModuleId],
+    child_root_path: &str,
+    child_name: &str,
+    kind: &str,
+    config_path: &Path,
+    line: usize,
+) -> Result<(), RuntimeError> {
+    let Some(start) = mount_stack.iter().position(|module_id| {
+        runtime
+            .module_manager
+            .module(*module_id)
+            .is_some_and(|module| module.module_root_path == child_root_path)
+    }) else {
+        return Ok(());
+    };
+    let mut names = mount_stack[start..]
+        .iter()
+        .filter_map(|module_id| runtime.module_manager.module(*module_id))
+        .map(|module| {
+            if module.module_name.is_empty() {
+                "<root>".to_string()
+            } else {
+                module.module_name.clone()
+            }
+        })
+        .collect::<Vec<String>>();
+    names.push(child_name.to_string());
+    Err(repository_error(
+        format!("{}: {}", kind, names.join(" -> ")),
+        &config_path.to_string_lossy(),
+        line,
+    ))
+}
+
+fn discover_config_import(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    config_path: &Path,
+    import: ProjectImport,
+    mount_stack: &mut Vec<ModuleId>,
+) -> Result<ConfigImport, RuntimeError> {
+    let owner_root = {
+        let owner = runtime
+            .module_manager
+            .module(owner_module_id)
+            .expect("manifest owner module should exist");
+        PathBuf::from(&owner.module_root_path)
+    };
+    let target_path = owner_root.join(&import.path);
+    let canonical_root = canonical_directory(
+        &target_path.to_string_lossy(),
+        &config_path.to_string_lossy(),
+        import.line,
+    )?;
+    let child_config_path =
+        require_project_config(&canonical_root, &config_path.to_string_lossy(), import.line)?;
+    let child_root_string =
+        path_string(&canonical_root, &config_path.to_string_lossy(), import.line)?;
+    let child_config_string = path_string(
+        &child_config_path,
+        &config_path.to_string_lossy(),
+        import.line,
+    )?;
+    // An [import] grants a package capability; unlike [export], it does not
+    // make the imported package a lexical child of its owner.  Thus an import
+    // named B is B, while B's exported F is B::F.
+    let child_name = import.name.clone();
+    reject_active_mount_cycle(
+        runtime,
+        mount_stack,
+        child_root_string.as_str(),
+        child_name.as_str(),
+        "cyclic config import",
+        config_path,
+        import.line,
+    )?;
+    if let Some(existing_module_id) = runtime.module_manager.module_id_by_name(&child_name) {
+        let existing_root = runtime
+            .module_manager
+            .module(existing_module_id)
+            .map(|module| module.module_root_path.clone())
+            .unwrap_or_default();
+        if existing_root == child_root_string {
+            return Ok(ConfigImport {
+                module_id: existing_module_id,
+                line_file: (
+                    import.line,
+                    Rc::from(config_path.to_string_lossy().to_string()),
+                ),
+                trusted: import.trusted,
+            });
+        }
+        return Err(repository_error(
+            format!(
+                "[import] name `{}` is already bound to package path `{}`",
+                child_name, existing_root
+            ),
+            &config_path.to_string_lossy(),
+            import.line,
+        ));
+    }
+    let child_config = read_project_config(&child_config_path)?;
+    let child_module_id = runtime
+        .module_manager
+        .create_discovered_module(child_name, child_root_string, child_config_string)
+        .map_err(|message| {
+            repository_error(message, &config_path.to_string_lossy(), import.line)
+        })?;
+    mount_stack.push(child_module_id);
+    let discovery = discover_module_config(
+        runtime,
+        child_module_id,
+        &child_config_path,
+        child_config,
+        true,
+        mount_stack,
+    );
+    mount_stack.pop();
+    discovery?;
+    Ok(ConfigImport {
+        module_id: child_module_id,
+        line_file: (
+            import.line,
+            Rc::from(config_path.to_string_lossy().to_string()),
+        ),
+        trusted: import.trusted,
+    })
 }
 
 fn discover_config_export(
@@ -128,6 +494,8 @@ fn discover_config_export(
     owner_module_id: ModuleId,
     config_path: &Path,
     export: ProjectExport,
+    module_flatten: bool,
+    mount_stack: &mut Vec<ModuleId>,
 ) -> Result<ImportTarget, RuntimeError> {
     let (owner_root, owner_name, is_root) = {
         let owner = runtime
@@ -171,7 +539,11 @@ fn discover_config_export(
         }
         let source_path =
             path_string(&canonical_path, &config_path.to_string_lossy(), export.line)?;
-        let canonical_name = join_module_name(&owner_name, &export.name);
+        let canonical_name = if module_flatten {
+            owner_name.clone()
+        } else {
+            join_module_name(&owner_name, &export.name)
+        };
         let file_id = runtime
             .module_manager
             .module_mut(owner_module_id)
@@ -187,6 +559,13 @@ fn discover_config_export(
             .map_err(|message| {
                 repository_error(message, &config_path.to_string_lossy(), export.line)
             })?;
+        if module_flatten {
+            runtime
+                .module_manager
+                .module_mut(owner_module_id)
+                .expect("manifest owner module should exist")
+                .flattened_export_file = Some(file_id);
+        }
         runtime
             .module_manager
             .module_mut(owner_module_id)
@@ -209,6 +588,13 @@ fn discover_config_export(
         }
         return Ok(target);
     } else if target_path.is_dir() {
+        if module_flatten {
+            return Err(repository_error(
+                "[module] flatten = true requires its only [export] entry to point directly to a .lit file".to_string(),
+                &config_path.to_string_lossy(),
+                export.line,
+            ));
+        }
         let canonical_root = canonical_directory(
             &target_path.to_string_lossy(),
             &config_path.to_string_lossy(),
@@ -223,6 +609,15 @@ fn discover_config_export(
         let child_config_string = path_string(
             &child_config_path,
             &config_path.to_string_lossy(),
+            export.line,
+        )?;
+        reject_active_mount_cycle(
+            runtime,
+            mount_stack,
+            child_root_string.as_str(),
+            child_name.as_str(),
+            "cyclic package export",
+            config_path,
             export.line,
         )?;
         let child_module_id = runtime
@@ -252,7 +647,17 @@ fn discover_config_export(
                     repository_error(message, &config_path.to_string_lossy(), export.line)
                 })?;
         }
-        discover_module_config(runtime, child_module_id, &child_config_path, child_config)?;
+        mount_stack.push(child_module_id);
+        let discovery = discover_module_config(
+            runtime,
+            child_module_id,
+            &child_config_path,
+            child_config,
+            false,
+            mount_stack,
+        );
+        mount_stack.pop();
+        discovery?;
         return Ok(target);
     } else {
         return Err(repository_error(
@@ -266,9 +671,7 @@ fn discover_config_export(
     }
 }
 
-fn scan_repository_dependencies(
-    runtime: &mut Runtime,
-) -> Result<HashMap<ModuleId, Vec<ModuleId>>, RuntimeError> {
+fn config_import_edges(runtime: &mut Runtime) -> HashMap<ModuleId, Vec<ModuleId>> {
     let mut module_import_edges = HashMap::new();
     let module_ids = runtime
         .module_manager
@@ -277,94 +680,175 @@ fn scan_repository_dependencies(
         .copied()
         .collect::<Vec<ModuleId>>();
     for module_id in module_ids {
-        let exported_files = {
-            let module = runtime
-                .module_manager
-                .module(module_id)
-                .expect("discovered module should exist");
-            let files = module
-                .files
-                .iter()
-                .map(|file| (file.id, file.source_path.clone()))
-                .collect::<Vec<(FileId, String)>>();
-            files
-        };
-
-        for (file_id, source_path) in exported_files {
-            let imported_modules = scan_source_dependencies(runtime, &source_path)?;
-            let edges = module_import_edges
-                .entry(module_id)
-                .or_insert_with(Vec::new);
-            for imported_module in imported_modules.iter().copied() {
-                if !edges.contains(&imported_module) {
-                    edges.push(imported_module);
-                }
-                runtime
-                    .module_manager
-                    .module_mut(module_id)
-                    .expect("discovered module should exist")
-                    .record_import(imported_module);
-            }
-            runtime
-                .module_manager
-                .module_mut(module_id)
-                .and_then(|module| module.file_mut(file_id))
-                .expect("exported file should exist")
-                .imported_modules = imported_modules;
-        }
-    }
-    Ok(module_import_edges)
-}
-
-fn scan_source_dependencies(
-    runtime: &mut Runtime,
-    source_path: &str,
-) -> Result<Vec<ModuleId>, RuntimeError> {
-    let content = fs::read_to_string(source_path).map_err(|error| {
-        repository_error(
-            format!("failed to read module source `{}`: {}", source_path, error),
-            source_path,
-            0,
-        )
-    })?;
-    let mut tokenizer = Tokenizer::new();
-    let blocks = tokenizer.parse_blocks(&content, Rc::from(source_path))?;
-    let mut module_imports = vec![];
-    for mut block in blocks {
-        let first_token = block.header.first().map(String::as_str);
-        let is_trust_import =
-            first_token == Some(TRUST) && block.header.get(1).map(String::as_str) == Some(IMPORT);
-        if first_token == Some(IMPORT) || is_trust_import {
-            let statement = if is_trust_import {
-                runtime.parse_trust_stmt(&mut block)?
-            } else {
-                runtime.parse_import_stmt(&mut block)?
-            };
-            let import = match statement {
-                Stmt::Command(CommandStmt::ImportStmt(import)) => import,
-                Stmt::Command(CommandStmt::TrustImportStmt(trust_import)) => trust_import.import,
-                _ => unreachable!("import parser should produce an import statement"),
-            };
-            let ImportStmt::ImportGlobalModule(global_import) = import;
-            if let Some(target) = runtime.module_manager.root_export(&global_import.mod_name) {
-                let ImportTarget::Module(imported_module_id) = target else {
-                    return Err(repository_error(
-                        format!(
-                            "root export `{}` is a file; place it before this source in [export] instead of importing it",
-                            global_import.mod_name
-                        ),
-                        source_path,
-                        block.line_file.0,
-                    ));
-                };
-                if !module_imports.contains(&imported_module_id) {
-                    module_imports.push(imported_module_id);
-                }
-            }
+        let imported_modules = runtime
+            .module_manager
+            .module(module_id)
+            .expect("discovered module should exist")
+            .config_imports
+            .iter()
+            .map(|config_import| config_import.module_id)
+            .collect::<Vec<ModuleId>>();
+        if imported_modules.is_empty() {
             continue;
         }
+        module_import_edges.insert(module_id, imported_modules.clone());
+        let module = runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("discovered module should exist");
+        for imported_module in imported_modules {
+            module.record_import(imported_module);
+        }
     }
-    Ok(module_imports)
+    module_import_edges
+}
+
+fn reject_unauthorized_project_references(runtime: &Runtime) -> Result<(), RuntimeError> {
+    let files = runtime
+        .module_manager
+        .modules
+        .values()
+        .flat_map(|module| {
+            module
+                .files
+                .iter()
+                .map(|file| (module.id, file.source_path.clone()))
+                .collect::<Vec<(ModuleId, String)>>()
+        })
+        .collect::<Vec<(ModuleId, String)>>();
+    for (owner_module_id, source_path) in files {
+        let source = fs::read_to_string(&source_path).map_err(|error| {
+            repository_error(
+                format!("failed to read module source `{}`: {}", source_path, error),
+                &source_path,
+                0,
+            )
+        })?;
+        let mut tokenizer = Tokenizer::new();
+        let blocks = tokenizer.parse_blocks(&source, Rc::from(source_path.as_str()))?;
+        let mut references = vec![];
+        collect_project_reference_targets(runtime, blocks.as_slice(), &mut references);
+        for (target, line_file) in references {
+            if project_target_is_authorized_for_module(runtime, owner_module_id, target) {
+                continue;
+            }
+            let name = runtime
+                .module_manager
+                .canonical_name_for_target(target)
+                .unwrap_or("project entry");
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                format!(
+                    "project dependency `{}` is not authorized for this subpackage; declare its package in an ancestor litex.config [import]",
+                    name
+                ),
+                line_file,
+            ))
+            .into());
+        }
+    }
+    Ok(())
+}
+
+fn collect_project_reference_targets(
+    runtime: &Runtime,
+    blocks: &[TokenBlock],
+    references: &mut Vec<(ImportTarget, LineFile)>,
+) {
+    for block in blocks {
+        for start in 0..block.header.len() {
+            if start > 0 && block.header[start - 1] == MOD_SIGN {
+                continue;
+            }
+            let mut candidate = block.header[start].clone();
+            let mut index = start;
+            let mut longest_match = runtime
+                .module_manager
+                .import_target_by_canonical_name(candidate.as_str());
+            while block.header.get(index + 1).map(String::as_str) == Some(MOD_SIGN) {
+                let Some(next) = block.header.get(index + 2) else {
+                    break;
+                };
+                candidate = format!("{}{}{}", candidate, MOD_SIGN, next);
+                index += 2;
+                if let Some(target) = runtime
+                    .module_manager
+                    .import_target_by_canonical_name(candidate.as_str())
+                {
+                    longest_match = Some(target);
+                }
+            }
+            if let Some(target) = longest_match {
+                if !references.iter().any(|(known, _)| *known == target) {
+                    references.push((target, block.line_file.clone()));
+                }
+            }
+        }
+        collect_project_reference_targets(runtime, block.body.as_slice(), references);
+    }
+}
+
+fn project_target_is_authorized_for_module(
+    runtime: &Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+) -> bool {
+    if target_belongs_to_export_tree(runtime, owner_module_id, target) {
+        return true;
+    }
+    let owner_name = runtime
+        .module_manager
+        .module(owner_module_id)
+        .map(|module| module.module_name.clone())
+        .unwrap_or_default();
+    for module in runtime.module_manager.modules.values() {
+        if !module_is_ancestor_of(module.module_name.as_str(), owner_name.as_str()) {
+            continue;
+        }
+        for config_import in module.config_imports.iter() {
+            if target_belongs_to_module_name(runtime, target, config_import.module_id) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn target_belongs_to_export_tree(
+    runtime: &Runtime,
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+) -> bool {
+    let Some(module) = runtime.module_manager.module(owner_module_id) else {
+        return false;
+    };
+    module.run_targets.iter().copied().any(|entry| {
+        entry == target || matches!(entry, ImportTarget::Module(module_id) if target_belongs_to_module_name(runtime, target, module_id))
+    })
+}
+
+fn target_belongs_to_module_name(
+    runtime: &Runtime,
+    target: ImportTarget,
+    module_id: ModuleId,
+) -> bool {
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return false;
+    };
+    let Some(target_name) = runtime.module_manager.canonical_name_for_target(target) else {
+        return false;
+    };
+    target_name == module.module_name
+        || target_name
+            .strip_prefix(module.module_name.as_str())
+            .is_some_and(|suffix| suffix.starts_with(MOD_SIGN))
+}
+
+fn module_is_ancestor_of(ancestor_name: &str, module_name: &str) -> bool {
+    ancestor_name.is_empty()
+        || ancestor_name == module_name
+        || module_name
+            .strip_prefix(ancestor_name)
+            .is_some_and(|suffix| suffix.starts_with(MOD_SIGN))
 }
 
 fn reject_cyclic_module_imports(
@@ -580,16 +1064,12 @@ mod tests {
             let a = root.join("A");
             let chapters = a.join("chapters");
             fs::create_dir_all(&chapters).expect("create repository fixture");
-            write_project_config(
-                &root,
-                "./main.lit",
-                &[("before", "./before.lit"), ("A", "./A")],
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nA = \"./A\"\n\n[export]\nbefore = \"./before.lit\"\nmain = \"./main.lit\"\n",
             );
             write_file(&root.join("before.lit"), "have before R = 1\n");
-            write_file(
-                &root.join("main.lit"),
-                "import A\n\nA::chapters::leaf::x = 1\n",
-            );
+            write_file(&root.join("main.lit"), "A::chapters::leaf::x = 1\n");
             write_project_config(
                 &a,
                 "./main.lit",
@@ -620,10 +1100,6 @@ mod tests {
                 a.join("chap3.lit").to_str().expect("fixture path is UTF-8"),
             );
             assert!(chapter_ok, "{chapter_output}");
-            assert!(
-                chapter_output.contains("have before R = 1"),
-                "{chapter_output}"
-            );
             assert!(chapter_output.contains("have x R = 1"), "{chapter_output}");
         });
     }
@@ -769,14 +1245,12 @@ mod tests {
             let (graph_ok, graph_output) = run_graph_for_repo(repository_path, true);
             assert!(graph_ok, "{graph_output}");
 
-            let latex_output =
-                crate::to_latex::to_latex_from_repository_after_builtins(repository_path)
-                    .unwrap_or_else(|error| panic!("repository LaTeX failed: {error:?}"));
+            let latex_output = crate::to_latex::to_latex_from_repository(repository_path)
+                .unwrap_or_else(|error| panic!("repository LaTeX failed: {error:?}"));
             assert!(latex_output.contains("A::chap3"), "{latex_output}");
 
-            let python_output =
-                crate::to_python::to_python_from_repository_after_builtins(repository_path)
-                    .unwrap_or_else(|error| panic!("repository Python failed: {error:?}"));
+            let python_output = crate::to_python::to_python_from_repository(repository_path)
+                .unwrap_or_else(|error| panic!("repository Python failed: {error:?}"));
             assert_eq!(python_output, "x = 1.0\nz = 1.0\nanswer = 1.0");
 
             let chapter_path = root.join("A").join("chap3.lit");
@@ -794,12 +1268,11 @@ mod tests {
                 run_graph_for_file(chapter_path_string, true);
             assert!(chapter_graph_ok, "{chapter_graph_output}");
 
-            let chapter_latex =
-                crate::to_latex::to_latex_from_file_after_builtins(chapter_path_string)
-                    .unwrap_or_else(|error| panic!("project chapter LaTeX failed: {error:?}"));
+            let chapter_latex = crate::to_latex::to_latex_from_file(chapter_path_string)
+                .unwrap_or_else(|error| panic!("project chapter LaTeX failed: {error:?}"));
             assert!(chapter_latex.contains("chap2"), "{chapter_latex}");
 
-            let mut isolated_runtime = Runtime::new_with_builtin_code();
+            let mut isolated_runtime = Runtime::new();
             let (_, isolated_error) = crate::pipeline::run_file_with_project_context(
                 chapter_path_string,
                 &mut isolated_runtime,
@@ -842,12 +1315,21 @@ mod tests {
             let b = root.join("B");
             fs::create_dir_all(&a).expect("create A fixture");
             fs::create_dir_all(&b).expect("create B fixture");
-            write_project_config(&root, "./main.lit", &[("A", "./A"), ("B", "./B")]);
-            write_file(&root.join("main.lit"), "import A\n");
-            write_project_config(&a, "./main.lit", &[]);
-            write_file(&a.join("main.lit"), "import B\n");
-            write_project_config(&b, "./main.lit", &[]);
-            write_file(&b.join("main.lit"), "import A\n");
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nA = \"./A\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&root.join("main.lit"), "1 = 1\n");
+            write_file(
+                &a.join("litex.config"),
+                "[import]\nB = \"../B\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&a.join("main.lit"), "1 = 1\n");
+            write_file(
+                &b.join("litex.config"),
+                "[import]\nA = \"../A\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&b.join("main.lit"), "1 = 1\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -857,26 +1339,22 @@ mod tests {
                 false,
             );
             assert!(!ok, "{output}");
-            assert!(output.contains("cyclic module import:"), "{output}");
-            assert!(
-                output.contains("A -> B -> A") || output.contains("B -> A -> B"),
-                "{output}"
-            );
+            assert!(output.contains("cyclic config import:"), "{output}");
+            assert!(output.contains("A") && output.contains("B"), "{output}");
         });
     }
 
     #[test]
-    fn earlier_root_file_exports_are_visible_to_later_child_modules() {
-        run_repository_test_with_large_stack("repository_root_file_visibility", || {
+    fn config_imported_child_cannot_use_a_parent_export() {
+        run_repository_test_with_large_stack("repository_parent_visibility", || {
             let root = repository_test_dir("root-file-scope");
             let a = root.join("A");
             fs::create_dir_all(&a).expect("create A fixture");
-            write_project_config(
-                &root,
-                "./main.lit",
-                &[("shared", "./shared.lit"), ("A", "./A")],
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nA = \"./A\"\n\n[export]\nshared = \"./shared.lit\"\nmain = \"./main.lit\"\n",
             );
-            write_file(&root.join("main.lit"), "shared::root_x = 1\nimport A\n");
+            write_file(&root.join("main.lit"), "shared::root_x = 1\n");
             write_file(&root.join("shared.lit"), "have root_x R = 1\n");
             write_project_config(&a, "./main.lit", &[]);
             write_file(&a.join("main.lit"), "shared::root_x = 1\n");
@@ -888,7 +1366,325 @@ mod tests {
                 OutputLanguage::English,
                 false,
             );
+            assert!(!ok, "{output}");
+            assert!(
+                output.contains("shared::root_x")
+                    || output.contains("not defined")
+                    || output.contains("not authorized"),
+                "{output}"
+            );
+        });
+    }
+
+    #[test]
+    fn imported_package_grants_dependencies_to_its_exported_subpackages() {
+        run_repository_test_with_large_stack("repository_package_capability", || {
+            let root = repository_test_dir("package-capability");
+            let a = root.join("A");
+            let b = a.join("B");
+            let x = root.join("X");
+            fs::create_dir_all(&b).expect("create subpackage fixture");
+            fs::create_dir_all(&x).expect("create dependency fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nA = \"./A\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&root.join("main.lit"), "A::B::main::result = 1\n");
+            write_file(
+                &a.join("litex.config"),
+                "[import]\nX = \"../X\"\n\n[export]\nB = \"./B\"\nmain = \"./main.lit\"\n",
+            );
+            write_file(&a.join("main.lit"), "A::B::main::result = 1\n");
+            write_file(&b.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(&b.join("main.lit"), "have result R = X::main::value\n");
+            write_file(&x.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(&x.join("main.lit"), "have value R = 1\n");
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
             assert!(ok, "{output}");
+
+            write_file(
+                &b.join("litex.config"),
+                "[import]\nX = \"../../X\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            let (forbidden_ok, forbidden_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!forbidden_ok, "{forbidden_output}");
+            assert!(
+                forbidden_output
+                    .contains("only a repository root or an independently imported package"),
+                "{forbidden_output}"
+            );
+        });
+    }
+
+    #[test]
+    fn explicit_package_mount_is_distinct_from_a_child_export() {
+        run_repository_test_with_large_stack("repository-distinct-mounts", || {
+            let root = repository_test_dir("distinct-package-mounts");
+            let c = root.join("C");
+            let d = c.join("D");
+            let b = root.join("B");
+            let f = b.join("F");
+            fs::create_dir_all(&d).expect("create C::D fixture");
+            fs::create_dir_all(&f).expect("create B::F fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nC = \"./C\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(
+                &c.join("litex.config"),
+                "[import]\nB = \"../B\"\n\n[export]\nD = \"./D\"\n",
+            );
+            write_file(&b.join("litex.config"), "[export]\nF = \"./F\"\n");
+            write_file(&f.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(&f.join("main.lit"), "have value R = 1\n");
+            write_file(&d.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(
+                &d.join("main.lit"),
+                "have from_b R = B::F::main::value\nhave from_bf R = BF::main::value\n",
+            );
+            write_file(
+                &root.join("main.lit"),
+                "C::D::main::from_b = 1\nC::D::main::from_bf = 1\n",
+            );
+
+            let (undeclared_ok, undeclared_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!undeclared_ok, "{undeclared_output}");
+            assert!(undeclared_output.contains("BF"), "{undeclared_output}");
+
+            write_file(
+                &c.join("litex.config"),
+                "[import]\nB = \"../B\"\nBF = \"../B/F\"\n\n[export]\nD = \"./D\"\n",
+            );
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+            assert!(output.contains("B::F::main::value"), "{output}");
+            assert!(output.contains("BF::main::value"), "{output}");
+        });
+    }
+
+    #[test]
+    fn same_named_package_import_is_shared_across_package_boundaries() {
+        run_repository_test_with_large_stack("repository-shared-package-import", || {
+            let root = repository_test_dir("shared-package-import");
+            let b = root.join("B");
+            let c = root.join("C");
+            let d = c.join("D");
+            fs::create_dir_all(&b).expect("create B fixture");
+            fs::create_dir_all(&d).expect("create C::D fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nC = \"./C\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&b.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(&b.join("main.lit"), "have value R = 1\n");
+            write_file(
+                &c.join("litex.config"),
+                "[import]\nB = \"../B\"\n\n[export]\nD = \"./D\"\n",
+            );
+            write_file(&d.join("litex.config"), "[export]\nmain = \"./main.lit\"\n");
+            write_file(&d.join("main.lit"), "have result R = B::main::value\n");
+            write_file(
+                &root.join("main.lit"),
+                "C::D::main::result = 1\nB::main::value = 1\n",
+            );
+
+            let (missing_ok, missing_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!missing_ok, "{missing_output}");
+            assert!(
+                missing_output.contains("project dependency `B::main` is not authorized"),
+                "{missing_output}"
+            );
+
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nC = \"./C\"\nB = \"./B\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+            assert_eq!(output.matches("have value R = 1").count(), 1, "{output}");
+        });
+    }
+
+    #[test]
+    fn module_flatten_exposes_a_single_file_at_the_module_root() {
+        run_repository_test_with_large_stack("repository-module-flatten", || {
+            let root = repository_test_dir("module-flatten");
+            let y = root.join("Y");
+            fs::create_dir_all(&y).expect("create flattened module fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[export]\nY = \"./Y\"\nmain = \"./main.lit\"\n\n[requires]\nmain = [\"Y\"]\n",
+            );
+            write_file(
+                &y.join("litex.config"),
+                "[module]\nflatten = true\n\n[export]\nX = \"./implementation.lit\"\n",
+            );
+            write_file(&y.join("implementation.lit"), "have value R = 1\n");
+            write_file(&root.join("main.lit"), "Y::value = 1\n");
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+            assert!(output.contains("Y::value = 1"), "{output}");
+
+            let (file_ok, file_output) = run_source_code_in_file_with_ok(
+                y.join("implementation.lit")
+                    .to_str()
+                    .expect("implementation path is UTF-8"),
+            );
+            assert!(file_ok, "{file_output}");
+            assert!(file_output.contains("have value R = 1"), "{file_output}");
+
+            write_file(&root.join("main.lit"), "Y::X::value = 1\n");
+            let (legacy_ok, legacy_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!legacy_ok, "{legacy_output}");
+            assert!(legacy_output.contains("Y::X::value"), "{legacy_output}");
+
+            write_file(
+                &y.join("litex.config"),
+                "[module]\nflatten = false\n\n[export]\nX = \"./implementation.lit\"\n",
+            );
+            let (unflattened_ok, unflattened_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(unflattened_ok, "{unflattened_output}");
+        });
+    }
+
+    #[test]
+    fn imported_module_flatten_exposes_its_single_file_at_the_package_root() {
+        run_repository_test_with_large_stack("repository-imported-module-flatten", || {
+            let root = repository_test_dir("imported-module-flatten");
+            let b = root.join("B");
+            fs::create_dir_all(&b).expect("create imported flattened module fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nB = \"./B\"\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(
+                &b.join("litex.config"),
+                "[module]\nflatten = true\n\n[export]\nimplementation = \"./implementation.lit\"\n",
+            );
+            write_file(&b.join("implementation.lit"), "have value R = 1\n");
+            write_file(&root.join("main.lit"), "B::value = 1\n");
+
+            let (ok, output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(ok, "{output}");
+            assert!(output.contains("B::value = 1"), "{output}");
+        });
+    }
+
+    #[test]
+    fn module_flatten_requires_a_named_single_file_module() {
+        run_repository_test_with_large_stack("repository-module-flatten-errors", || {
+            let root = repository_test_dir("module-flatten-errors");
+            let child = root.join("Child");
+            let nested = child.join("Nested");
+            fs::create_dir_all(&nested).expect("create flattened module error fixture");
+
+            write_file(
+                &root.join("litex.config"),
+                "[module]\nflatten = true\n\n[export]\nX = \"./implementation.lit\"\n",
+            );
+            write_file(&root.join("implementation.lit"), "have value R = 1\n");
+            let (root_ok, root_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!root_ok, "{root_output}");
+            assert!(
+                root_output.contains("requires a named module"),
+                "{root_output}"
+            );
+
+            write_file(
+                &root.join("litex.config"),
+                "[export]\nChild = \"./Child\"\n",
+            );
+            write_file(
+                &child.join("litex.config"),
+                "[module]\nflatten = true\n\n[export]\nNested = \"./Nested\"\n",
+            );
+            write_file(
+                &nested.join("litex.config"),
+                "[export]\nimplementation = \"./implementation.lit\"\n",
+            );
+            write_file(&nested.join("implementation.lit"), "have value R = 1\n");
+            let (directory_ok, directory_output) = run_repository_with_output(
+                root.to_str().expect("fixture path is UTF-8"),
+                true,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!directory_ok, "{directory_output}");
+            assert!(
+                directory_output
+                    .contains("requires its only [export] entry to point directly to a .lit file"),
+                "{directory_output}"
+            );
         });
     }
 
@@ -937,19 +1733,13 @@ mod tests {
     }
 
     #[test]
-    fn registered_file_runs_its_ordered_prefix_without_later_exports() {
-        run_repository_test_with_large_stack("repository_file_prefix", || {
+    fn registered_file_runs_only_its_declared_requirements() {
+        run_repository_test_with_large_stack("repository_file_requirements", || {
             let root = repository_test_dir("file-target");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_project_config(
-                &root,
-                "./book.lit",
-                &[
-                    ("chap6", "./chap6.lit"),
-                    ("chap7", "./chap7.lit"),
-                    ("python_chapter", "./python_chapter.lit"),
-                    ("broken", "./broken.lit"),
-                ],
+            write_file(
+                &root.join("litex.config"),
+                "[export]\nchap6 = \"./chap6.lit\"\nchap7 = \"./chap7.lit\"\npython_chapter = \"./python_chapter.lit\"\nbroken = \"./broken.lit\"\nbook = \"./book.lit\"\n\n[requires]\nchap7 = [\"chap6\"]\n",
             );
             write_file(&root.join("book.lit"), "have title R = 1\n");
             write_file(&root.join("chap6.lit"), "have base R = 1\n");
@@ -982,13 +1772,49 @@ mod tests {
                 "{chapter_output}"
             );
 
-            let python_output = crate::to_python::to_python_from_file_after_builtins(
+            let python_output = crate::to_python::to_python_from_file(
                 root.join("python_chapter.lit")
                     .to_str()
                     .expect("fixture path is UTF-8"),
             )
             .unwrap_or_else(|error| panic!("project chapter Python failed: {error:?}"));
             assert_eq!(python_output, "answer = 1.0");
+        });
+    }
+
+    #[test]
+    fn file_target_reports_an_undeclared_project_dependency_as_unknown() {
+        run_repository_test_with_large_stack("repository_unknown_requirement", || {
+            let root = repository_test_dir("unknown-requirement");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_file(
+                &root.join("litex.config"),
+                "[export]\nchap3 = \"./chap3.lit\"\nchap5 = \"./chap5.lit\"\nchap7 = \"./chap7.lit\"\nmain = \"./main.lit\"\n\n[requires]\nchap7 = [\"chap3\"]\n",
+            );
+            write_file(&root.join("chap3.lit"), "have value R = 3\n");
+            write_file(&root.join("chap5.lit"), "have value R = 5\n");
+            write_file(&root.join("chap7.lit"), "have result R = chap3::value\n");
+            write_file(&root.join("main.lit"), "chap7::result = 3\n");
+
+            let (ok, output) = run_source_code_in_file_with_ok(
+                root.join("chap7.lit")
+                    .to_str()
+                    .expect("chapter path is UTF-8"),
+            );
+            assert!(ok, "{output}");
+            assert!(!output.contains("value R = 5"), "{output}");
+
+            write_file(&root.join("chap7.lit"), "have result R = chap5::value\n");
+            let (missing_ok, missing_output) = run_source_code_in_file_with_ok(
+                root.join("chap7.lit")
+                    .to_str()
+                    .expect("chapter path is UTF-8"),
+            );
+            assert!(!missing_ok, "{missing_output}");
+            assert!(
+                missing_output.contains("unknown project dependency `chap5`"),
+                "{missing_output}"
+            );
         });
     }
 
@@ -1040,12 +1866,9 @@ mod tests {
         run_repository_test_with_large_stack("strict-project-export", || {
             let root = repository_test_dir("strict-run-plan-cache");
             fs::create_dir_all(&root).expect("create repository fixture");
-            write_ordered_project_config(
-                &root,
-                &[
-                    ("chap1", "./chap1.lit", false),
-                    ("chap2", "./chap2.lit", true),
-                ],
+            write_file(
+                &root.join("litex.config"),
+                "[export]\nchap1 = \"./chap1.lit\"\ntrust chap2 = \"./chap2.lit\"\n\n[requires]\nchap2 = [\"chap1\"]\n",
             );
             write_file(&root.join("chap1.lit"), "have x R = 1\n");
             write_file(&root.join("chap2.lit"), "chap1::x = 1\n");
@@ -1077,21 +1900,18 @@ mod tests {
             let root = repository_test_dir("run-plan-child-repository");
             let child = root.join("A");
             fs::create_dir_all(&child).expect("create repository fixture");
-            write_ordered_project_config(
-                &root,
-                &[
-                    ("before", "./before.lit", false),
-                    ("A", "./A", false),
-                    ("after", "./after.lit", false),
-                ],
+            write_file(
+                &root.join("litex.config"),
+                "[import]\nA = \"./A\"\n\n[export]\nbefore = \"./before.lit\"\nafter = \"./after.lit\"\nmain = \"./main.lit\"\n",
             );
             write_ordered_project_config(&child, &[("main", "./main.lit", false)]);
             write_file(&root.join("before.lit"), "have before R = 1\n");
             write_file(&child.join("main.lit"), "have inner R = 1\n");
             write_file(
                 &root.join("after.lit"),
-                "import A\nA::main::inner = 1\nhave after R = 1\n",
+                "A::main::inner = 1\nhave after R = 1\n",
             );
+            write_file(&root.join("main.lit"), "1 = 1\n");
 
             let (ok, output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1104,7 +1924,7 @@ mod tests {
             let before = output.find("have before R = 1").expect("before output");
             let inner = output.find("have inner R = 1").expect("child output");
             let after = output.find("have after R = 1").expect("after output");
-            assert!(before < inner && inner < after, "{output}");
+            assert!(inner < before && before < after, "{output}");
             assert_eq!(output.matches("have inner R = 1").count(), 1, "{output}");
         });
     }
@@ -1178,14 +1998,14 @@ thm self_witness_can_be_obtained:
     }
 
     #[test]
-    fn trust_import_is_transitive_and_cannot_be_reused_as_verified() {
-        run_repository_test_with_large_stack("trust_import", || {
+    fn trusted_config_import_is_transitive_and_strict_mode_verifies_it() {
+        run_repository_test_with_large_stack("trusted_config_import", || {
             let root = repository_test_dir("trust-import");
             let a = root.join("A");
             fs::create_dir_all(&a).expect("create repository fixture");
-            write_ordered_project_config(
-                &root,
-                &[("A", "./A", true), ("book", "./book.lit", false)],
+            write_file(
+                &root.join("litex.config"),
+                "[import]\ntrust A = \"./A\"\n\n[export]\nbook = \"./book.lit\"\n",
             );
             write_project_config(&a, "./main.lit", &[("chap10", "./chap10.lit")]);
             write_file(&a.join("main.lit"), "1 = 1\n");
@@ -1196,7 +2016,7 @@ thm self_witness_can_be_obtained:
 
             write_file(
                 &root.join("book.lit"),
-                "trust import A\nby thm A::chap10::trusted_all(2)\n$A::chap10::trusted_prop(2)\n",
+                "by thm A::chap10::trusted_all(2)\n$A::chap10::trusted_prop(2)\n",
             );
             let (trusted_ok, trusted_output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
@@ -1207,21 +2027,20 @@ thm self_witness_can_be_obtained:
             );
             assert!(trusted_ok, "{trusted_output}");
 
-            write_file(&root.join("book.lit"), "trust import A\nimport A\n");
-            let (mixed_ok, mixed_output) = run_repository_with_output(
+            let (strict_ok, strict_output) = run_repository_with_output(
                 root.to_str().expect("fixture path is UTF-8"),
                 true,
-                false,
+                true,
                 OutputLanguage::English,
                 false,
             );
-            assert!(!mixed_ok, "{mixed_output}");
+            assert!(!strict_ok, "{strict_output}");
             assert!(
-                mixed_output.contains("already loaded through trust import"),
-                "{mixed_output}"
+                !strict_output.contains("trust_project_import"),
+                "{strict_output}"
             );
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             discover_repository(&mut runtime, root.to_str().expect("fixture path is UTF-8"))
                 .expect("discover trusted fixture");
             let entry = runtime.current_module_id();
@@ -1229,14 +2048,14 @@ thm self_witness_can_be_obtained:
                 &mut runtime,
                 RepositoryFileTarget::Module(entry),
             );
-            assert!(error.is_some(), "mixed fixture should fail");
+            assert!(error.is_none(), "trusted config fixture should run");
             let trust_summary = runtime.proof_trust_summary_from_stmt_results(&results);
             assert!(
                 trust_summary
                     .dependencies
                     .iter()
-                    .any(|dependency| dependency.kind == "trust_import"),
-                "trusted import must taint the run summary"
+                    .any(|dependency| dependency.kind == "trust_project_import"),
+                "trusted config import must taint the run summary"
             );
         });
     }

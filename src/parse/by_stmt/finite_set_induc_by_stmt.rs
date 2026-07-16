@@ -1,12 +1,14 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Parses `by induc P:` as structural induction over all finite sets.
+    /// Parses `by induc P:` as structural induction over all finite sets, or
+    /// `by induc P in A:` over finite subsets of the explicit carrier `A`.
     /// `by induc n from m:` remains integer induction.
     pub fn parse_by_finite_set_induc_stmt_after_param(
         &mut self,
         tb: &mut TokenBlock,
         param: String,
+        carrier_set: Option<Obj>,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
@@ -62,6 +64,7 @@ impl Runtime {
         Ok(ByFiniteSetInducStmt::new(
             to_prove,
             param,
+            carrier_set,
             element_param,
             smaller_set_param,
             base_proof,

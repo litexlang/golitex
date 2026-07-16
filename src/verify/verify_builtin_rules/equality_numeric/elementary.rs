@@ -382,4 +382,179 @@ impl Runtime {
             .into(),
         ))
     }
+
+    // The Euclidean quotient is characterized by its defining decomposition.
+    // Example: `a Z`, `d N_pos` => `a = d * integer_quotient(a, d) + a % d`.
+    pub(crate) fn try_verify_integer_quotient_defining_equation(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (dividend, decomposition) in [(left, right), (right, left)] {
+            let Obj::Add(sum) = decomposition else {
+                continue;
+            };
+            let Obj::Mul(product) = sum.left.as_ref() else {
+                continue;
+            };
+            let Obj::IntegerQuotient(quotient) = product.right.as_ref() else {
+                continue;
+            };
+            let Obj::Mod(remainder) = sum.right.as_ref() else {
+                continue;
+            };
+            if !objs_equal_by_display_string(dividend, quotient.dividend.as_ref())
+                || !objs_equal_by_display_string(product.left.as_ref(), quotient.divisor.as_ref())
+                || !objs_equal_by_display_string(
+                    remainder.left.as_ref(),
+                    quotient.dividend.as_ref(),
+                )
+                || !objs_equal_by_display_string(
+                    remainder.right.as_ref(),
+                    quotient.divisor.as_ref(),
+                )
+            {
+                continue;
+            }
+
+            let dividend_in_z: AtomicFact = InFact::new(
+                quotient.dividend.as_ref().clone(),
+                StandardSet::Z.into(),
+                line_file.clone(),
+            )
+            .into();
+            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &dividend_in_z,
+                verify_state,
+            )?;
+            if !dividend_result.is_true() {
+                continue;
+            }
+
+            let divisor_in_n_pos: AtomicFact = InFact::new(
+                quotient.divisor.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
+            let divisor_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &divisor_in_n_pos,
+                verify_state,
+            )?;
+            if !divisor_result.is_true() {
+                continue;
+            }
+
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "equality: Euclidean quotient defining equation a = d * integer_quotient(a, d) + a % d"
+                        .to_string(),
+                    vec![dividend_result, divisor_result],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
+    }
+
+    // Euclidean remainder uniqueness identifies a known bounded remainder with `%`.
+    // Example: `a = m * q + r`, `0 <= r < m`, `m > 0` => `a % m = r`.
+    pub(crate) fn try_verify_mod_eq_remainder_from_euclidean_division(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (modulus, dividend, remainder) = match (left, right) {
+            (Obj::Mod(mod_obj), remainder) => {
+                (mod_obj.right.as_ref(), mod_obj.left.as_ref(), remainder)
+            }
+            (remainder, Obj::Mod(mod_obj)) => {
+                (mod_obj.right.as_ref(), mod_obj.left.as_ref(), remainder)
+            }
+            _ => return Ok(None),
+        };
+
+        let candidates = self.get_all_obj_representatives_equal_to_given(dividend);
+        for candidate in candidates {
+            let Obj::Add(sum) = &candidate else {
+                continue;
+            };
+            let Obj::Mul(product) = sum.left.as_ref() else {
+                continue;
+            };
+            if !objs_equal_by_display_string(product.left.as_ref(), modulus)
+                || !objs_equal_by_display_string(sum.right.as_ref(), remainder)
+            {
+                continue;
+            }
+
+            let quotient = product.right.as_ref();
+            let dividend_in_z: AtomicFact =
+                InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into();
+            let divisor_in_n_pos: AtomicFact =
+                InFact::new(modulus.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+            let quotient_in_z: AtomicFact =
+                InFact::new(quotient.clone(), StandardSet::Z.into(), line_file.clone()).into();
+            let remainder_in_n: AtomicFact =
+                InFact::new(remainder.clone(), StandardSet::N.into(), line_file.clone()).into();
+            let remainder_lt_modulus: AtomicFact =
+                LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
+
+            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &dividend_in_z,
+                verify_state,
+            )?;
+            let divisor_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &divisor_in_n_pos,
+                verify_state,
+            )?;
+            let quotient_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &quotient_in_z,
+                verify_state,
+            )?;
+            let remainder_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &remainder_in_n,
+                verify_state,
+            )?;
+            let bound_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &remainder_lt_modulus,
+                verify_state,
+            )?;
+            let decomposition_result =
+                self.verify_objs_are_equal_known_only(dividend, &candidate, line_file.clone());
+            if !dividend_result.is_true()
+                || !divisor_result.is_true()
+                || !quotient_result.is_true()
+                || !remainder_result.is_true()
+                || !bound_result.is_true()
+                || !decomposition_result.is_true()
+            {
+                continue;
+            }
+
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
+                        .to_string(),
+                    vec![
+                        dividend_result,
+                        divisor_result,
+                        quotient_result,
+                        remainder_result,
+                        bound_result,
+                        decomposition_result,
+                    ],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
 }

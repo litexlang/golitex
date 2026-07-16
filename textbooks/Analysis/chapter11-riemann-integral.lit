@@ -3306,7 +3306,7 @@ thm example_11_2_12_refined_partition_member_below_two:
             x $in J
             x >= 2
             x < 2
-            by thm a_le_lt_c(2, x, 2)
+            2 <= x < 2
             impossible 2 < 2
         case J = {3}:
             x $in J
@@ -3342,7 +3342,7 @@ thm example_11_2_12_refined_partition_member_between_two_and_three:
             x $in J
             x < 2
             x >= 2
-            by thm a_le_lt_c(2, x, 2)
+            2 <= x < 2
             impossible 2 < 2
         case J = '[2, 3):
             J = '[2, 3)
@@ -4686,10 +4686,11 @@ thm piecewise_constant_minorant_integral_le_majorant_integral:
         $is_nonnegative_on(I, fn(x I) R {g(x) - h(x)})
     claim:
         ? forall x I:
-            fn(x I) R {0}(x) <= fn(x I) R {g(x) - h(x)}(x)
+            0 <= g(x) - h(x)
         fn(x I) R {0}(x) = 0
         0 <= fn(x I) R {g(x) - h(x)}(x)
-        fn(x I) R {0}(x) <= fn(x I) R {g(x) - h(x)}(x)
+        fn(x I) R {g(x) - h(x)}(x) = g(x) - h(x)
+        0 <= g(x) - h(x)
     by thm piecewise_constant_integral_order_laws(I, fn(x I) R {g(x) - h(x)}, fn(x I) R {0}, sg - sh, 0 * interval_length(I))
     sg - sh >= 0
     sh <= sg
@@ -6673,7 +6674,7 @@ Corollary 11.5.2.  A continuous function on a closed interval `[a,b]` is
 Riemann integrable.
 """
 
-thm chap9::continuous_closed_interval_uniformly_continuous:
+thm continuous_closed_interval_uniformly_continuous:
     ? forall a, b R, f fn(x '[a, b]) R:
         a < b
         $chap9::is_continuous_on('[a, b], f)
@@ -6835,8 +6836,7 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         min(delta / 2, 1 / 2) <= delta / 2
         h <= delta / 2
         delta / 2 < delta
-        by thm a_le_lt_c(h, delta / 2, delta)
-        h < delta
+        h <= delta / 2 < delta
         (2 - h) - 2 = -h
         abs((2 - h) - 2) = abs(-h)
         abs(-h) = abs(h)

@@ -605,6 +605,13 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::IntegerQuotient(x) => collect_cited_param_indices_from_two_objs(
+            &x.dividend,
+            &x.divisor,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Pow(x) => collect_cited_param_indices_from_two_objs(
             &x.base,
             &x.exponent,

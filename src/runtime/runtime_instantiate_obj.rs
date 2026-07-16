@@ -33,6 +33,9 @@ impl Runtime {
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map, param_obj_type),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map, param_obj_type),
+            Obj::IntegerQuotient(inner) => {
+                self.inst_integer_quotient(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type),
@@ -470,6 +473,19 @@ impl Runtime {
         let instantiated_right_obj =
             self.inst_obj(&mod_obj.right, param_to_arg_map, param_obj_type)?;
         Ok(Mod::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_integer_quotient(
+        &self,
+        quotient: &IntegerQuotient,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(IntegerQuotient::new(
+            self.inst_obj(&quotient.dividend, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&quotient.divisor, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
     }
 
     pub fn inst_pow(

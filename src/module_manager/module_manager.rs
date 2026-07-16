@@ -1,9 +1,10 @@
 use crate::prelude::*;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::rc::Rc;
 
-// Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
-pub const BUILTIN_CODE_PATH: &str = "builtin_code";
+// Stable synthetic source path for the kernel environment, not a user-loadable module.
+pub const KERNEL_PATH: &str = "kernel";
 
 /// Owns every module participating in one top-level Runtime.
 ///
@@ -15,6 +16,10 @@ pub struct ModuleManager {
     pub builtin_environment: Box<Environment>,
     pub modules: HashMap<ModuleId, ModuleRunner>,
     pub module_by_name: HashMap<String, ModuleId>,
+    /// Standard-library modules loaded for this runtime.  Their names share
+    /// the module lookup table but are tracked separately so `import std ...`
+    /// cannot be confused with a project import.
+    pub std_module_names: HashSet<String>,
     pub module_by_path: HashMap<String, ModuleId>,
     pub root_exports: HashMap<String, ImportTarget>,
     pub exported_files_by_name: HashMap<String, ImportTarget>,
@@ -31,6 +36,7 @@ impl ModuleManager {
             builtin_environment: Box::new(Environment::new_empty_env()),
             modules: HashMap::new(),
             module_by_name: HashMap::new(),
+            std_module_names: HashSet::new(),
             module_by_path: HashMap::new(),
             root_exports: HashMap::new(),
             exported_files_by_name: HashMap::new(),
@@ -93,18 +99,6 @@ impl ModuleManager {
                 module_name
             ));
         }
-        if let Some(existing_id) = self.module_by_path.get(&module_root_path) {
-            let existing_name = self
-                .modules
-                .get(existing_id)
-                .map(|module| module.module_name.as_str())
-                .unwrap_or("");
-            return Err(format!(
-                "module path `{}` has already been registered as module `{}`",
-                module_root_path, existing_name
-            ));
-        }
-
         let id = self.allocate_module_id();
         let runner = ModuleRunner::new(
             id,
@@ -115,7 +109,7 @@ impl ModuleManager {
         );
         self.modules.insert(id, runner);
         self.module_by_name.insert(module_name, id);
-        self.module_by_path.insert(module_root_path, id);
+        self.module_by_path.entry(module_root_path).or_insert(id);
         Ok(id)
     }
 
@@ -146,19 +140,11 @@ impl ModuleManager {
                 canonical_name
             ));
         }
-        if let Some(existing_target) = self
-            .exported_file_by_path
-            .insert(source_path.clone(), target)
-        {
-            self.exported_files_by_name.remove(&canonical_name);
-            let existing_name = self
-                .canonical_name_for_target(existing_target)
-                .unwrap_or("");
-            return Err(format!(
-                "exported file path `{}` has already been registered as `{}`",
-                source_path, existing_name
-            ));
-        }
+        // A source file may be mounted more than once.  Its canonical package
+        // name, rather than its physical path, is the public identity.
+        self.exported_file_by_path
+            .entry(source_path)
+            .or_insert(target);
         Ok(())
     }
 
@@ -197,6 +183,90 @@ impl ModuleManager {
 
     pub fn module_id_by_name(&self, module_name: &str) -> Option<ModuleId> {
         self.module_by_name.get(module_name).copied()
+    }
+
+    pub fn is_std_module_name(&self, module_name: &str) -> bool {
+        self.std_module_names.contains(module_name)
+    }
+
+    pub fn is_std_module_id(&self, module_id: ModuleId) -> bool {
+        let Some(module) = self.module(module_id) else {
+            return false;
+        };
+        self.std_module_names.iter().any(|std_name| {
+            module.module_name == *std_name
+                || module
+                    .module_name
+                    .strip_prefix(std_name)
+                    .is_some_and(|suffix| suffix.starts_with(MOD_SIGN))
+        })
+    }
+
+    pub fn register_std_module(
+        &mut self,
+        module_name: String,
+        module_root_path: String,
+        main_file_path: String,
+    ) -> Result<ModuleId, String> {
+        if self.root_exports.contains_key(&module_name) {
+            return Err(format!(
+                "std module name `{}` is reserved and conflicts with a project root export",
+                module_name
+            ));
+        }
+        if self.module_by_name.contains_key(&module_name) {
+            return Err(format!(
+                "module name `{}` has already been used",
+                module_name
+            ));
+        }
+        let id = self.allocate_module_id();
+        let runner = ModuleRunner::new(
+            id,
+            module_name.clone(),
+            module_root_path.clone(),
+            main_file_path,
+            ModuleStatus::Loading,
+        );
+        self.modules.insert(id, runner);
+        self.module_by_name.insert(module_name.clone(), id);
+        self.module_by_path.entry(module_root_path).or_insert(id);
+        self.std_module_names.insert(module_name);
+        self.loading_import_stack.push(id);
+        Ok(id)
+    }
+
+    pub fn create_discovered_std_module(
+        &mut self,
+        module_name: String,
+        module_root_path: String,
+        main_file_path: String,
+    ) -> Result<ModuleId, String> {
+        if self.root_exports.contains_key(&module_name) {
+            return Err(format!(
+                "std module name `{}` is reserved and conflicts with a project root export",
+                module_name
+            ));
+        }
+        if self.module_by_name.contains_key(&module_name) {
+            return Err(format!(
+                "module name `{}` has already been used",
+                module_name
+            ));
+        }
+        let id = self.allocate_module_id();
+        let runner = ModuleRunner::new(
+            id,
+            module_name.clone(),
+            module_root_path.clone(),
+            main_file_path,
+            ModuleStatus::Discovered,
+        );
+        self.modules.insert(id, runner);
+        self.module_by_name.insert(module_name.clone(), id);
+        self.module_by_path.entry(module_root_path).or_insert(id);
+        self.std_module_names.insert(module_name);
+        Ok(id)
     }
 
     pub fn module_by_import_name(&self, module_name: &str) -> Option<&ModuleRunner> {

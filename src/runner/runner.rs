@@ -87,7 +87,7 @@ pub fn run_runner_for_file_with_strict_language_and_isolation(
         }
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
@@ -177,7 +177,7 @@ fn run_runner_on_source(
     output_language: OutputLanguage,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;

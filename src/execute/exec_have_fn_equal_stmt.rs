@@ -195,14 +195,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        let infer_result =
-            self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, fn_set_stored)?;
-
-        if have_fn_equal_stmt.as_algo {
-            self.exec_have_fn_equal_stmt_as_algo(have_fn_equal_stmt)?;
-        }
-
-        Ok(infer_result)
+        self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, fn_set_stored)
     }
 
     fn have_fn_equal_stmt_verify_return_value_in_ret_set(

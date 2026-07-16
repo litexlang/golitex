@@ -125,7 +125,7 @@ pub fn run_definition_graph_for_file_with_strict_language_and_isolation(
         }
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
     let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
@@ -166,7 +166,7 @@ pub fn run_definition_graph_for_repo_with_strict_and_language(
     strict_mode: bool,
     _output_language: OutputLanguage,
 ) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
     if let Err(error) = discover_repository(&mut runtime, repo_path) {
@@ -202,7 +202,7 @@ fn run_definition_graph_on_source(
     strict_mode: bool,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;

@@ -104,6 +104,27 @@ impl Runtime {
             }
         }
         match (&in_fact.element, &in_fact.set) {
+            (_, Obj::Union(union)) => {
+                return self.verify_in_fact_in_union_by_member_of_either_side(
+                    in_fact,
+                    union,
+                    verify_state,
+                );
+            }
+            (_, Obj::Intersect(intersect)) => {
+                return self.verify_in_fact_in_intersect_by_member_of_both_sides(
+                    in_fact,
+                    intersect,
+                    verify_state,
+                );
+            }
+            (_, Obj::SetMinus(set_minus)) => {
+                return self.verify_in_fact_in_set_minus_by_member_and_non_member(
+                    in_fact,
+                    set_minus,
+                    verify_state,
+                );
+            }
             (_, Obj::Cup(cup)) => {
                 return self.verify_in_fact_in_cup_by_member_witness(in_fact, cup, verify_state);
             }
@@ -261,6 +282,7 @@ impl Runtime {
                 | Obj::Sub(_)
                 | Obj::Mul(_)
                 | Obj::Mod(_)
+                | Obj::IntegerQuotient(_)
                 | Obj::Pow(_)
                 | Obj::Max(_)
                 | Obj::Min(_)
@@ -329,6 +351,7 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Mod(_)
+                | Obj::IntegerQuotient(_)
                 | Obj::Pow(_)
                 | Obj::Max(_)
                 | Obj::Min(_)

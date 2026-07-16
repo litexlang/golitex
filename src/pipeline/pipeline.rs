@@ -176,7 +176,7 @@ pub fn run_repository_with_output_style(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
@@ -209,7 +209,7 @@ fn run_file_with_output_style(
     summarize: bool,
     force_isolated: bool,
 ) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;

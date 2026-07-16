@@ -772,18 +772,6 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\, {} \operatorname{{{}}} {}",
-            EVAL,
-            self.lhs.to_latex_string(),
-            FROM,
-            self.rhs.to_latex_string()
-        )
-    }
-}
-
 impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
         let head = if self.is_not_exist() {
@@ -1446,6 +1434,16 @@ impl Mod {
     }
 }
 
+impl IntegerQuotient {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{integer\_quotient}}\left({}, {}\right)",
+            self.dividend.to_latex_string(),
+            self.divisor.to_latex_string(),
+        )
+    }
+}
+
 impl Mul {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1916,9 +1914,10 @@ impl WitnessNonemptySet {
 impl ImportGlobalModuleStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            r"\operatorname{{{}}}\ {}",
+            r"\operatorname{{{}}}\ \mathrm{{{}}}\ {}",
             IMPORT,
-            latex_local_ident(&self.mod_name)
+            STD,
+            latex_local_ident(self.mod_name.as_str())
         )
     }
 }
@@ -2024,6 +2023,7 @@ impl Obj {
             Obj::Mul(x) => x.to_latex_string(),
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
+            Obj::IntegerQuotient(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sqrt(x) => x.to_latex_string(),
@@ -2147,7 +2147,6 @@ impl Stmt {
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::EvalByStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::StopStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Witness(WitnessStmt::WitnessExistFact(x)) => x.to_latex_string(),

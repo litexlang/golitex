@@ -30,12 +30,6 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "EvalByStmt".to_string()
-    }
-}
-
 impl DefAlgoStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAlgoStmt".to_string()
@@ -368,15 +362,9 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn output_type_string() -> String {
-        "evaluation by statement".to_string()
-    }
-}
-
 impl DefAlgoStmt {
     pub fn output_type_string() -> String {
-        "algorithm definition".to_string()
+        "function implementation".to_string()
     }
 }
 

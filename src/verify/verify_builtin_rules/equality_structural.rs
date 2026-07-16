@@ -394,6 +394,18 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::IntegerQuotient(l), Obj::IntegerQuotient(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.dividend, &r.dividend),
+                    (&l.divisor, &r.divisor),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Pow(l), Obj::Pow(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.base, &r.base),

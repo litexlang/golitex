@@ -2,6 +2,139 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::result::Result;
 
+fn real_line_comparison_exist_fact_non_witness_operands(
+    exist_fact: &ExistFactEnum,
+) -> Option<Vec<&Obj>> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let param_names = exist_fact.params_def_with_type().collect_param_names();
+    if !(param_names.len() == 1 || param_names.len() == 2) {
+        return None;
+    }
+    if !exist_fact
+        .params_def_with_type()
+        .groups
+        .iter()
+        .all(|group| {
+            matches!(
+                &group.param_type,
+                ParamType::Obj(Obj::StandardSet(StandardSet::R))
+            )
+        })
+    {
+        return None;
+    }
+
+    let ExistBodyFact::AtomicFact(atomic_fact) = &exist_fact.facts()[0] else {
+        return None;
+    };
+    let (left, right) = match atomic_fact {
+        AtomicFact::EqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::LessFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::GreaterFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::GreaterEqualFact(fact) => (&fact.left, &fact.right),
+        _ => return None,
+    };
+
+    let direct_exist_param_name = |obj: &Obj| match obj {
+        Obj::Atom(AtomObj::Exist(param)) => Some(param.name.clone()),
+        _ => None,
+    };
+
+    if param_names.len() == 1 {
+        let witness_name = &param_names[0];
+        let other = if direct_exist_param_name(left).as_deref() == Some(witness_name.as_str()) {
+            right
+        } else if direct_exist_param_name(right).as_deref() == Some(witness_name.as_str()) {
+            left
+        } else {
+            return None;
+        };
+        if Runtime::obj_depends_on_given_exist_param(other, param_names.as_slice()) {
+            return None;
+        }
+        return Some(vec![other]);
+    } else {
+        let (Some(left_name), Some(right_name)) = (
+            direct_exist_param_name(left),
+            direct_exist_param_name(right),
+        ) else {
+            return None;
+        };
+        if left_name == right_name
+            || !param_names.iter().any(|name| name == &left_name)
+            || !param_names.iter().any(|name| name == &right_name)
+        {
+            return None;
+        }
+    }
+
+    Some(vec![])
+}
+
+fn rational_integer_ratio_exist_fact_non_witness_operand(
+    exist_fact: &ExistFactEnum,
+) -> Option<&Obj> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    if params.len() != 2 {
+        return None;
+    }
+    let (numerator_name, numerator_type) = &params[0];
+    let (denominator_name, denominator_type) = &params[1];
+    if !matches!(
+        numerator_type,
+        ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+    ) || !matches!(
+        denominator_type,
+        ParamType::Obj(Obj::StandardSet(StandardSet::ZNz))
+    ) {
+        return None;
+    }
+
+    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    else {
+        return None;
+    };
+
+    let is_selected_ratio = |obj: &Obj| match obj {
+        Obj::Div(div) => {
+            matches!(
+                div.left.as_ref(),
+                Obj::Atom(AtomObj::Exist(param)) if param.name.as_str() == numerator_name.as_str()
+            ) && matches!(
+                div.right.as_ref(),
+                Obj::Atom(AtomObj::Exist(param)) if param.name.as_str() == denominator_name.as_str()
+            )
+        }
+        _ => false,
+    };
+
+    let other = if is_selected_ratio(&equal_fact.left) {
+        &equal_fact.right
+    } else if is_selected_ratio(&equal_fact.right) {
+        &equal_fact.left
+    } else {
+        return None;
+    };
+    if Runtime::obj_depends_on_given_exist_param(
+        other,
+        &[numerator_name.clone(), denominator_name.clone()],
+    ) {
+        return None;
+    }
+    Some(other)
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -26,6 +159,51 @@ impl Runtime {
                     ))
                     .into()
                 });
+            }
+        }
+
+        // The real line has witnesses above, below, equal to, and distinct from every real.
+        // Example: `have x R:` followed by `x > 100`.
+        if let Some(non_witness_operands) =
+            real_line_comparison_exist_fact_non_witness_operands(exist_fact)
+        {
+            if let Some(steps) = self.verify_objects_are_known_reals(
+                non_witness_operands.as_slice(),
+                &exist_fact.line_file(),
+                verify_state,
+            )? {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: real-line comparison witness".to_string(),
+                        steps,
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // Every rational is represented by an integer numerator and a nonzero
+        // integer denominator. Example: `exist a Z, b Z_nz st {q = a / b}`
+        // for `q Q`.
+        if let Some(rational) = rational_integer_ratio_exist_fact_non_witness_operand(exist_fact) {
+            let in_q: AtomicFact = InFact::new(
+                rational.clone(),
+                StandardSet::Q.into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let rational_membership =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
+            if rational_membership.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: rational integer ratio representation".to_string(),
+                        vec![rational_membership],
+                    )
+                    .into(),
+                );
             }
         }
 

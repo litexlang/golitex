@@ -68,23 +68,6 @@ prop gauss_lemma_conclusion(p N_pos, a Z):
     $is_finite_set(gauss_excess_set(p, a))
     legendre_symbol_Z(p, a) = (-1) ^ finite_set_size(gauss_excess_set(p, a))
 
-trust:
-    forall p N_pos, a Z:
-        $section4::is_prime_Z(p)
-        p > 2
-        $section3::relatively_prime_Z(a, p)
-        =>:
-            $gauss_lemma_conclusion(p, a)
-
-thm theorem_XII_Gauss_lemma:
-    ? forall p N_pos, a Z:
-        $section4::is_prime_Z(p)
-        p > 2
-        $section3::relatively_prime_Z(a, p)
-        =>:
-            $gauss_lemma_conclusion(p, a)
-    $gauss_lemma_conclusion(p, a)
-
 # Euler's criterion is recorded with an explicit half-exponent h so its natural
 # domain is visible to the current power operator.
 prop euler_criterion(p N_pos, a Z, h N):
@@ -105,9 +88,27 @@ prop quadratic_reciprocity_conclusion(p, q N_pos, h1 N, h2 N):
     2 * h2 = q - 1
     legendre_symbol_Z(p, q) * legendre_symbol_Z(q, p) = (-1) ^ (h1 * h2)
 
+# Gauss's excess-count identity and quadratic reciprocity share the finite
+# signed-product/lattice-counting proof package, so they form one trust
+# boundary while retaining separate source-facing propositions.
 trust:
+    forall p N_pos, a Z:
+        $section4::is_prime_Z(p)
+        p > 2
+        $section3::relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
     forall p, q N_pos, h1, h2 N:
         $quadratic_reciprocity_conclusion(p, q, h1, h2)
+
+thm theorem_XII_Gauss_lemma:
+    ? forall p N_pos, a Z:
+        $section4::is_prime_Z(p)
+        p > 2
+        $section3::relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+    $gauss_lemma_conclusion(p, a)
 
 thm theorem_XII_quadratic_reciprocity:
     ? forall p, q N_pos, h1, h2 N:

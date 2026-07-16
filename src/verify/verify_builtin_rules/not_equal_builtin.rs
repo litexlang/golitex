@@ -212,6 +212,12 @@ impl Runtime {
         let line_file = not_equal_fact.line_file.clone();
         let x = not_equal_fact.left.clone();
         let y = not_equal_fact.right.clone();
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[&x, &y], &line_file, &verify_state)?
+        else {
+            return Ok(None);
+        };
         let candidates: [AtomicFact; 4] = [
             LessFact::new(x.clone(), y.clone(), line_file.clone()).into(),
             GreaterFact::new(x.clone(), y.clone(), line_file.clone()).into(),
@@ -222,12 +228,13 @@ impl Runtime {
             let sub =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
+                steps.push(sub);
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
-                        vec![sub],
+                        steps,
                     )
                     .into(),
                 ));
@@ -242,10 +249,6 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.loading_builtin_code {
-            return Ok(None);
-        }
-
         let line_file = not_equal_fact.line_file.clone();
         let candidates = [
             (not_equal_fact.left.clone(), not_equal_fact.right.clone()),
@@ -320,65 +323,6 @@ impl Runtime {
             )
             .into(),
         ))
-    }
-
-    fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
-        let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
-        let lookup_key = (probe.key(), true);
-        let module_names = self.atomic_fact_referenced_module_names(&probe);
-        let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
-        let mut sets = Vec::new();
-        let mut seen = std::collections::HashSet::new();
-
-        for environment in self.iter_environments_from_top() {
-            Self::collect_known_sets_containing_obj_in_environment(
-                environment,
-                &lookup_key,
-                &obj_strings,
-                &mut sets,
-                &mut seen,
-            );
-        }
-        for module_name in module_names.iter() {
-            for environment in self.imported_module_environments(module_name) {
-                Self::collect_known_sets_containing_obj_in_environment(
-                    environment,
-                    &lookup_key,
-                    &obj_strings,
-                    &mut sets,
-                    &mut seen,
-                );
-            }
-        }
-
-        sets
-    }
-
-    fn collect_known_sets_containing_obj_in_environment(
-        environment: &Environment,
-        lookup_key: &(AtomicFactKey, bool),
-        obj_strings: &[String],
-        sets: &mut Vec<Obj>,
-        seen: &mut std::collections::HashSet<String>,
-    ) {
-        let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(lookup_key)
-        else {
-            return;
-        };
-        for obj_string in obj_strings {
-            for ((member_string, _), known_fact) in known_facts_map.iter() {
-                if member_string != obj_string {
-                    continue;
-                }
-                let AtomicFact::InFact(in_fact) = known_fact else {
-                    continue;
-                };
-                let set_string = in_fact.set.to_string();
-                if seen.insert(set_string) {
-                    sets.push(in_fact.set.clone());
-                }
-            }
-        }
     }
 
     // Difference nonzero rule: if `a != b` is known, then `a - b != 0`.

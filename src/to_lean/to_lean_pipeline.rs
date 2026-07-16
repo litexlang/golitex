@@ -16,12 +16,9 @@ pub fn to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, Runti
     LeanEmitter::new().emit(&verified_stmts)
 }
 
-pub fn to_lean_from_source_after_builtins(
-    source_code: &str,
-    entry_label: &str,
-) -> Result<String, RuntimeError> {
+pub fn to_lean_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_lean(normalized.as_str(), &mut runtime)
 }
@@ -720,7 +717,7 @@ mod tests {
     #[test]
     fn translates_verified_closed_arithmetic_fact() {
         run_with_large_stack("translates_verified_closed_arithmetic_fact", || {
-            let output = to_lean_from_source_after_builtins("1 + 1 = 2", "to-lean-test").unwrap();
+            let output = to_lean_from_source("1 + 1 = 2", "to-lean-test").unwrap();
 
             assert!(output.starts_with("import Mathlib"));
             assert!(output.contains("namespace LitexGenerated"));
@@ -736,7 +733,7 @@ mod tests {
         run_with_large_stack("translates_verified_real_theorem", || {
             let source =
                 "thm add_comm:\n    ? forall a, b R:\n        a + b = b + a\n    a + b = b + a";
-            let output = to_lean_from_source_after_builtins(source, "to-lean-test").unwrap();
+            let output = to_lean_from_source(source, "to-lean-test").unwrap();
 
             assert!(output.contains("theorem add_comm (a b : ℝ)"));
             assert!(output.contains("nlinarith"));
@@ -747,7 +744,7 @@ mod tests {
     fn introduces_forall_binders_before_claim_steps() {
         run_with_large_stack("introduces_forall_binders_before_claim_steps", || {
             let source = "claim:\n    ? forall x R:\n        x = 1\n        =>:\n            x = 1\n    x = 1";
-            let output = to_lean_from_source_after_builtins(source, "to-lean-test").unwrap();
+            let output = to_lean_from_source(source, "to-lean-test").unwrap();
             let intro = output.find("intro x h1").unwrap();
             let local_fact = output.find("have litex_fact_2").unwrap();
 
@@ -759,7 +756,7 @@ mod tests {
     #[test]
     fn rejects_verified_trust_instead_of_emitting_trust() {
         run_with_large_stack("rejects_verified_trust_instead_of_emitting_trust", || {
-            let result = to_lean_from_source_after_builtins("trust 1 = 2", "to-lean-test");
+            let result = to_lean_from_source("trust 1 = 2", "to-lean-test");
 
             assert!(result.is_err());
         });
@@ -769,7 +766,7 @@ mod tests {
     fn rejects_non_natural_power_exponent() {
         run_with_large_stack("rejects_non_natural_power_exponent", || {
             let source = "thm bad_shape:\n    ? forall x, y R:\n        x^y = x^y\n    x^y = x^y";
-            let result = to_lean_from_source_after_builtins(source, "to-lean-test");
+            let result = to_lean_from_source(source, "to-lean-test");
 
             assert!(result.is_err());
         });

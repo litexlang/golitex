@@ -20,19 +20,16 @@ pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, Run
     extract_python_from_stmts(&stmts, runtime)
 }
 
-pub fn to_python_from_source_after_builtins(
-    source_code: &str,
-    entry_label: &str,
-) -> Result<String, RuntimeError> {
+pub fn to_python_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_python(normalized.as_str(), &mut runtime)
 }
 
-pub fn to_python_from_file_after_builtins(file_path: &str) -> Result<String, RuntimeError> {
+pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
         Some(target) => to_python_project_target(&mut runtime, target),
         None => {
@@ -43,10 +40,8 @@ pub fn to_python_from_file_after_builtins(file_path: &str) -> Result<String, Run
     }
 }
 
-pub fn to_python_from_repository_after_builtins(
-    repository_path: &str,
-) -> Result<String, RuntimeError> {
-    let mut runtime = Runtime::new_with_builtin_code();
+pub fn to_python_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
+    let mut runtime = Runtime::new();
     discover_repository(&mut runtime, repository_path)?;
     let entry_module_id = runtime.current_module_id();
     to_python_project_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id))
@@ -58,12 +53,16 @@ fn to_python_project_target(
 ) -> Result<String, RuntimeError> {
     match target {
         RepositoryFileTarget::Module(module_id) => {
-            let (module_path, run_targets) = {
+            let (module_path, config_imports, run_targets) = {
                 let module = runtime
                     .module_manager
                     .module(module_id)
                     .expect("discovered module should exist");
-                (module.main_file_path.clone(), module.run_targets.clone())
+                (
+                    module.main_file_path.clone(),
+                    module.config_imports.clone(),
+                    module.run_targets.clone(),
+                )
             };
             let pushed_frame = runtime.current_module_id() != module_id;
             if pushed_frame {
@@ -71,6 +70,17 @@ fn to_python_project_target(
             }
             let output = (|| {
                 let mut fragments = vec![];
+                for config_import in config_imports {
+                    let fragment = to_python_project_target(
+                        runtime,
+                        RepositoryFileTarget::Module(config_import.module_id),
+                    )?;
+                    if !fragment.trim().is_empty()
+                        && fragment.trim() != "# No Python-extractable Litex definitions."
+                    {
+                        fragments.push(fragment);
+                    }
+                }
                 for run_target in run_targets {
                     let fragment = match run_target {
                         ImportTarget::File { module_id, file_id } => to_python_project_target(
@@ -194,18 +204,6 @@ impl PythonExtractor {
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 self.extract_have_obj_equal_stmt(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) if s.as_algo => {
-                self.extract_have_fn_equal_stmt(s)
-            }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) if s.as_algo => {
-                self.extract_have_fn_equal_case_by_case_stmt(s)
-            }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(s)) if s.as_algo => {
-                Err(python_extract_error(
-                    &s.line_file,
-                    "python extractor v1 does not support `have fn as algo ... by induc`",
-                ))
-            }
             Stmt::DefAlgoStmt(s) => self.extract_def_algo_stmt(s, runtime),
             _ => Ok(()),
         }
@@ -241,88 +239,6 @@ impl PythonExtractor {
         Ok(())
     }
 
-    fn extract_have_fn_equal_stmt(&mut self, stmt: &HaveFnEqualStmt) -> Result<(), RuntimeError> {
-        let params_def = &stmt.equal_to_anonymous_fn.body.params_def_with_set;
-        let dom_facts = &stmt.equal_to_anonymous_fn.body.dom_facts;
-        let ret_set = stmt.equal_to_anonymous_fn.body.ret_set.as_ref();
-        self.validate_real_function_signature(
-            &stmt.name,
-            params_def,
-            dom_facts,
-            ret_set,
-            &stmt.line_file,
-        )?;
-
-        let params = ParamGroupWithSet::collect_param_names(params_def);
-        let params_in_scope: HashSet<String> = params.iter().cloned().collect();
-        self.functions.insert(stmt.name.clone());
-        let expr = self.python_expr(
-            stmt.equal_to_anonymous_fn.equal_to.as_ref(),
-            &params_in_scope,
-            &stmt.line_file,
-        )?;
-
-        self.push_blank_line_before_function();
-        self.lines
-            .push(format!("def {}({}):", stmt.name, params.join(", ")));
-        self.lines.push(format!("    return {}", expr));
-        Ok(())
-    }
-
-    fn extract_have_fn_equal_case_by_case_stmt(
-        &mut self,
-        stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<(), RuntimeError> {
-        self.validate_real_function_signature(
-            &stmt.name,
-            &stmt.fn_set_clause.params_def_with_set,
-            &stmt.fn_set_clause.dom_facts,
-            &stmt.fn_set_clause.ret_set,
-            &stmt.line_file,
-        )?;
-        if stmt.cases.len() != stmt.equal_tos.len() {
-            return Err(python_extract_error(
-                &stmt.line_file,
-                "python extractor internal error: case count does not match return count",
-            ));
-        }
-        if stmt.cases.is_empty() {
-            return Err(python_extract_error(
-                &stmt.line_file,
-                "python extractor v1 needs at least one case for `have fn as algo ... by cases`",
-            ));
-        }
-
-        let params =
-            ParamGroupWithSet::collect_param_names(&stmt.fn_set_clause.params_def_with_set);
-        let params_in_scope: HashSet<String> = params.iter().cloned().collect();
-        self.functions.insert(stmt.name.clone());
-        self.push_blank_line_before_function();
-        self.lines
-            .push(format!("def {}({}):", stmt.name, params.join(", ")));
-
-        for (index, (case, equal_to)) in stmt.cases.iter().zip(stmt.equal_tos.iter()).enumerate() {
-            let atomic_case = match case {
-                AndChainAtomicFact::AtomicFact(a) => a,
-                AndChainAtomicFact::AndFact(_) | AndChainAtomicFact::ChainFact(_) => {
-                    return Err(python_extract_error(
-                        &stmt.line_file,
-                        "python extractor v1 supports only atomic `case` conditions",
-                    ));
-                }
-            };
-            let condition = self.python_atomic_condition(atomic_case, &params_in_scope)?;
-            let expr = self.python_expr(equal_to, &params_in_scope, &stmt.line_file)?;
-            let keyword = if index == 0 { "if" } else { "elif" };
-            self.lines.push(format!("    {} {}:", keyword, condition));
-            self.lines.push(format!("        return {}", expr));
-        }
-
-        self.lines
-            .push("    raise AssertionError(\"unreachable verified Litex cases\")".to_string());
-        Ok(())
-    }
-
     fn extract_def_algo_stmt(
         &mut self,
         stmt: &DefAlgoStmt,
@@ -333,7 +249,7 @@ impl PythonExtractor {
             return Err(python_extract_error(
                 &stmt.line_file,
                 format!(
-                    "python extractor v1 cannot find the function declaration for standalone algorithm `{}`",
+                    "python extractor v1 cannot find the function declaration for implementation `{}`",
                     stmt.name
                 ),
             ));
@@ -365,7 +281,7 @@ impl PythonExtractor {
             return Err(python_extract_error(
                 &stmt.line_file,
                 format!(
-                    "python extractor v1 needs a return expression for standalone algorithm `{}`",
+                    "python extractor v1 needs a return expression for function implementation `{}`",
                     stmt.name
                 ),
             ));

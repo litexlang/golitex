@@ -772,6 +772,9 @@ impl Runtime {
             Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
+            Obj::IntegerQuotient(ref a) => {
+                self.match_arg_when_left_is_integer_quotient(&a.dividend, &a.divisor, given_arg)
+            }
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
@@ -1314,6 +1317,20 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_integer_quotient(
+        &mut self,
+        dividend: &Obj,
+        divisor: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::IntegerQuotient(given) => {
+                self.match_arg_binary_then_merge(dividend, divisor, &given.dividend, &given.divisor)
+            }
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_pow(
         &mut self,
         left_left: &Obj,
@@ -1653,7 +1670,7 @@ impl Runtime {
         left: &ExistBodyFact,
         given: &ExistBodyFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !exist_body_facts_have_same_shape(left, given) {
+        if !exist_body_facts_have_same_shape(left, given)? {
             return Ok(None);
         }
         let left_args = left.get_args_from_fact_ref();
@@ -2061,6 +2078,14 @@ impl Runtime {
                 given.right.as_ref(),
                 anonymous_fn_body,
             ),
+            (Obj::IntegerQuotient(left), Obj::IntegerQuotient(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.dividend.as_ref(),
+                    left.divisor.as_ref(),
+                    given.dividend.as_ref(),
+                    given.divisor.as_ref(),
+                    anonymous_fn_body,
+                ),
             (Obj::Pow(left), Obj::Pow(given)) => self.match_binary_in_anonymous_fn_body(
                 left.base.as_ref(),
                 left.exponent.as_ref(),
@@ -2965,16 +2990,26 @@ fn push_atomic_fact_in_forall_arg_shape_key_if_new(
     }
 }
 
-fn exist_body_facts_have_same_shape(left: &ExistBodyFact, right: &ExistBodyFact) -> bool {
-    matches!(
-        (left, right),
-        (ExistBodyFact::AtomicFact(_), ExistBodyFact::AtomicFact(_))
-            | (ExistBodyFact::AndFact(_), ExistBodyFact::AndFact(_))
-            | (ExistBodyFact::ChainFact(_), ExistBodyFact::ChainFact(_))
-            | (ExistBodyFact::OrFact(_), ExistBodyFact::OrFact(_))
-            | (
-                ExistBodyFact::InlineForall(_),
-                ExistBodyFact::InlineForall(_)
-            )
-    )
+fn exist_body_facts_have_same_shape(
+    left: &ExistBodyFact,
+    right: &ExistBodyFact,
+) -> Result<bool, RuntimeError> {
+    match (left, right) {
+        (ExistBodyFact::AtomicFact(left), ExistBodyFact::AtomicFact(right)) => {
+            Runtime::_verify_atomic_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::AndFact(left), ExistBodyFact::AndFact(right)) => {
+            Runtime::_verify_and_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::ChainFact(left), ExistBodyFact::ChainFact(right)) => {
+            Runtime::_verify_chain_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::OrFact(left), ExistBodyFact::OrFact(right)) => {
+            Runtime::_verify_or_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::InlineForall(left), ExistBodyFact::InlineForall(right)) => {
+            Ok(left.to_string() == right.to_string())
+        }
+        _ => Ok(false),
+    }
 }

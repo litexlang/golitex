@@ -67,6 +67,14 @@ impl Runtime {
                             current_known_forall.clone(),
                         )
                     };
+                    if Runtime::_verify_exist_fact_the_same_type_and_return_matched_args(
+                        &current_known_forall.0,
+                        given_exist_fact,
+                    )?
+                    .is_none()
+                    {
+                        continue;
+                    }
                     let match_result = self
                         .match_args_in_fact_in_known_forall_fact_with_given_args(
                             &fact_args_in_known_forall,
@@ -245,7 +253,7 @@ impl Runtime {
         }
     }
 
-    fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
+    pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
             Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name == &p.name),
             Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => false,
@@ -272,6 +280,11 @@ impl Runtime {
             Obj::Mod(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),
+                names,
+            ),
+            Obj::IntegerQuotient(x) => Self::obj_pair_depends_on_given_exist_param(
+                x.dividend.as_ref(),
+                x.divisor.as_ref(),
                 names,
             ),
             Obj::Pow(x) => Self::obj_pair_depends_on_given_exist_param(

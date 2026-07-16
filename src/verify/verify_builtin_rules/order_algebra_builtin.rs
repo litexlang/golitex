@@ -1,4 +1,4 @@
-// Structural order on R (+, -, *, /) moved from Lit `BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES`.
+// Structural order on R (+, -, *, /) is implemented as a kernel verification rule.
 // Called from `verify_order_atomic_fact_numeric_builtin_only` before the `0 <=` cone rules.
 //
 // Addition (weak): `a <= b + c` from (`a <= b` and `0 <= c`) or (`a <= c` and `0 <= b`); and
@@ -1258,6 +1258,14 @@ impl Runtime {
             return Ok(Some(r));
         }
 
+        if let Some(r) = self.try_less_equal_from_positive_division_product_bound(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_less_equal_from_positive_denominator_bound(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
         if let (Obj::Add(left_add), Obj::Add(right_add)) = (&f.left, &f.right) {
             if let Some((left_remaining, right_remaining)) =
                 Self::add_common_remaining(left_add, right_add)
@@ -1614,6 +1622,110 @@ impl Runtime {
                         ),
                     )));
                 }
+            }
+        }
+
+        Ok(None)
+    }
+
+    // A positive factor can be moved across a weak inequality and expressed as division.
+    // Example: from `0 < c` and `c * a <= b or a * c <= b`, prove `a <= b / c`.
+    fn try_less_equal_from_positive_division_product_bound(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Div(quotient) = &f.right else {
+            return Ok(None);
+        };
+
+        let denominator = quotient.right.as_ref().clone();
+        let numerator = quotient.left.as_ref().clone();
+        let line_file = f.line_file.clone();
+        let positive_denominator: AtomicFact = LessFact::new(
+            Self::literal_zero_obj(),
+            denominator.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let positive_result = self.verify_order_subgoal(positive_denominator)?;
+        if !positive_result.is_true() {
+            return Ok(None);
+        }
+
+        let left_product: Obj = Mul::new(denominator.clone(), f.left.clone()).into();
+        let right_product: Obj = Mul::new(f.left.clone(), denominator).into();
+        let left_product_bound: AtomicFact =
+            LessEqualFact::new(left_product, numerator.clone(), line_file.clone()).into();
+        let right_product_bound: AtomicFact =
+            LessEqualFact::new(right_product, numerator, line_file).into();
+        let product_bound_or = OrFact::new(
+            vec![left_product_bound.into(), right_product_bound.into()],
+            f.line_file.clone(),
+        );
+        let product_bound_result = self.verify_or_fact_known_then_builtin_rules_only(
+            &product_bound_or,
+            &VerifyState::new(0, true),
+        )?;
+        if !product_bound_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a <= b / c from 0 < c and (c * a <= b or a * c <= b)".to_string(),
+                vec![positive_result, product_bound_result],
+            ),
+        )))
+    }
+
+    // A positive denominator can be moved across a weak quotient inequality.
+    // Example: from `0 < c` and `a / c <= b`, prove `a <= b * c`.
+    fn try_less_equal_from_positive_denominator_bound(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Mul(product) = &f.right else {
+            return Ok(None);
+        };
+
+        let line_file = f.line_file.clone();
+        let candidates = [
+            (
+                product.left.as_ref().clone(),
+                product.right.as_ref().clone(),
+            ),
+            (
+                product.right.as_ref().clone(),
+                product.left.as_ref().clone(),
+            ),
+        ];
+        for (denominator, other_factor) in candidates {
+            let positive_denominator: AtomicFact = LessFact::new(
+                Self::literal_zero_obj(),
+                denominator.clone(),
+                line_file.clone(),
+            )
+            .into();
+            let positive_result = self.verify_order_subgoal(positive_denominator)?;
+            if !positive_result.is_true() {
+                continue;
+            }
+
+            let quotient: Obj = Div::new(f.left.clone(), denominator).into();
+            let quotient_bound: AtomicFact =
+                LessEqualFact::new(quotient, other_factor, line_file.clone()).into();
+            let quotient_bound_result = self.verify_order_subgoal(quotient_bound)?;
+            if quotient_bound_result.is_true() {
+                return Ok(Some(StmtResult::from(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a <= b * c from 0 < c and a / c <= b".to_string(),
+                        vec![positive_result, quotient_bound_result],
+                    ),
+                )));
             }
         }
 

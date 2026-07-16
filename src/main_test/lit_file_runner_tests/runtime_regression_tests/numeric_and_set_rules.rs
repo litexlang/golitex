@@ -1,12 +1,119 @@
 use super::*;
 
 #[test]
+fn direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness() {
+    run_with_large_stack(
+        "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",
+        || {
+            let source_code = r#"
+forall a, b, c R:
+    a <= b
+    b < c
+    =>:
+        a < c
+
+forall a, b, c Z:
+    a <= b
+    b <= c
+    =>:
+        a <= c
+
+forall a, b R:
+    a <= max(a, b)
+    b <= max(a, b)
+    min(a, b) <= a
+    min(a, b) <= b
+
+forall a, b, c R:
+    a <= c
+    b <= c
+    =>:
+        max(a, b) <= c
+
+forall a, b, c R:
+    c <= a
+    c <= b
+    =>:
+        c <= min(a, b)
+
+forall a, b Z:
+    a < b
+    =>:
+        a + 1 <= b
+        a <= b - 1
+
+forall x, n Z:
+    x <= n or x >= n + 1
+
+forall x, n Z:
+    n <= x
+    x < n + 1
+    =>:
+        x = n
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "direct order semantics builtin rules failed:\n{}",
+                run_output
+            );
+            for rule in [
+                "order: transitivity through a shared ordered numeric middle term",
+                "max: each operand is below the binary maximum",
+                "min: the binary minimum is below each operand",
+                "max: least upper bound of two real operands",
+                "min: greatest lower bound of two real operands",
+                "integer successor: a < b gives a + 1 <= b",
+                "integer predecessor: a < b gives a <= b - 1",
+                "or: integer discrete split x <= n or x >= n + 1",
+                "integer singleton interval: n <= x < n + 1 gives x = n",
+            ] {
+                assert!(
+                    run_output.contains(rule),
+                    "missing builtin provenance `{}`:\n{}",
+                    rule,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn integer_discrete_split_does_not_apply_to_reals() {
+    let source_code = r#"
+forall x, n R:
+    x <= n or x >= n + 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("integer_discrete_split_does_not_apply_to_reals");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "integer discrete split must not be accepted over R:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined() {
     let source_code = r#"
 have fn half_power(x R: x >= 0) R = x^(1/2)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined",
     );
@@ -49,7 +156,7 @@ forall a N_pos, n N:
     a^n $in N_pos
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "zero_to_zero_power_uses_natural_exponent_convention",
             );
@@ -79,7 +186,7 @@ forall x R:
     0^x = 0
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "zero_base_real_power_still_requires_positive_exponent",
     );
@@ -130,7 +237,7 @@ forall x, a, b R:
         sqrt(x) = sqrt(a) * sqrt(b)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -176,7 +283,7 @@ forall a, b R:
         sqrt(a) < sqrt(b)
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("sqrt_order_and_quotient_builtin_rules");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -197,7 +304,7 @@ fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
         || {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "direct_calculation_equality_is_reported_before_weak_order_fallback",
             );
@@ -223,7 +330,7 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
         || {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "direct_calculation_builtin_rule_output_localizes_to_zh",
             );
@@ -253,7 +360,7 @@ forall a, b R:
         0 = 2 * a^2 + b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_equality_candidate_uses_rational_expression_simplification",
     );
@@ -280,7 +387,7 @@ forall a, b R:
         0 = 2 * a^2 + b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
     );
@@ -304,7 +411,7 @@ forall a, b R:
 fn builtin_rule_output_hides_internal_complement_helper_name() {
     let source_code = "1 = 1 or 1 != 1";
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "builtin_rule_output_hides_internal_complement_helper_name",
     );
@@ -332,7 +439,7 @@ fn huge_integer_division_returns_error_instead_of_panicking() {
 1 / 99999999999999999999999999999999999999999 = 0
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "huge_integer_division_returns_error_instead_of_panicking",
     );
@@ -358,7 +465,7 @@ forall a, b R:
         0 != a / b
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "quotient_nonzero_from_numerator_nonzero_builtin_rule",
     );
@@ -390,7 +497,7 @@ have d R
 trust d = 1 / (2 / 3 * 4)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
         "known_obj_values_store_simplified_fraction_for_nonfinite_decimal",
     );
@@ -470,7 +577,7 @@ forall a R:
         a + 1 = 11 / 8
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime
         .new_file_path_new_env_new_name_scope("simplified_fraction_known_value_is_used_by_resolve");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -480,33 +587,6 @@ forall a R:
     assert!(
         run_succeeded,
         "simplified_fraction_known_value_is_used_by_resolve failed:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn builtin_rational_has_unique_reduced_fraction() {
-    let source_code = r#"
-have q Q
-
-by thm rational_has_unique_reduced_fraction(q)
-exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
-"#;
-
-    let mut runtime = Runtime::new_with_builtin_code();
-    runtime.new_file_path_new_env_new_name_scope("builtin_rational_has_unique_reduced_fraction");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "builtin_rational_has_unique_reduced_fraction failed:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("unique existence fact"),
-        "reduced-fraction theorem should expose an exist! fact:\n{}",
         run_output
     );
 }
@@ -575,7 +655,7 @@ have phi fn(t '(0, 1)) R
 phi(a) $in R
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("real_interval_membership_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -620,7 +700,7 @@ have right '(,a)
 right $in '(,a)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("real_interval_nonempty_and_well_defined_rules");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -630,6 +710,206 @@ right $in '(,a)
         run_succeeded,
         "real_interval_nonempty_and_well_defined_rules failed:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn strict_even_power_requires_real_base() {
+    run_with_large_stack("strict_even_power_requires_real_base", || {
+        let positive_source = r#"
+have a R
+trust a != 0
+0 < a^2
+"#;
+        let mut positive_runtime = Runtime::new();
+        positive_runtime
+            .new_file_path_new_env_new_name_scope("strict_even_power_requires_real_base_positive");
+        let (positive_results, positive_error) =
+            run_source_code(positive_source, &mut positive_runtime);
+        let (positive_succeeded, positive_output) = render_run_source_code_output(
+            &positive_runtime,
+            &positive_results,
+            &positive_error,
+            false,
+        );
+        assert!(
+            positive_succeeded,
+            "strict even powers should retain real bases:\n{}",
+            positive_output
+        );
+        assert!(
+            positive_output.contains("0 < a^n for even integer n from a != 0"),
+            "strict even-power provenance should remain explicit:\n{}",
+            positive_output
+        );
+
+        let non_real_source = r#"
+have S set
+trust S != 0
+0 < S^2
+"#;
+        let mut non_real_runtime = Runtime::new();
+        non_real_runtime
+            .new_file_path_new_env_new_name_scope("strict_even_power_requires_real_base_non_real");
+        let (non_real_results, non_real_error) =
+            run_source_code(non_real_source, &mut non_real_runtime);
+        let (non_real_succeeded, non_real_output) = render_run_source_code_output(
+            &non_real_runtime,
+            &non_real_results,
+            &non_real_error,
+            false,
+        );
+        assert!(
+            !non_real_succeeded,
+            "a non-real base must not use strict even-power positivity:\n{}",
+            non_real_output
+        );
+    });
+}
+
+#[test]
+fn real_power_and_order_builtins_require_real_operands() {
+    run_with_large_stack(
+        "real_power_and_order_builtins_require_real_operands",
+        || {
+            let positive_source = r#"
+have a, b, c, d, e, f, x R
+have n N_pos
+trust:
+    0 < a
+    0 <= a
+    not a <= x
+    a < b
+    c <= d
+    d <= c
+    3 <= e
+    e < 3
+    2 < f
+0 < a^x
+0 <= a^x
+0 <= a^n
+0 <= a^3
+0 <= a^2
+a > x
+a <= b
+a != b
+c = d
+2 <= e
+e < 4
+0 < f
+"#;
+            let mut positive_runtime = Runtime::new();
+            positive_runtime.new_file_path_new_env_new_name_scope(
+                "real_power_and_order_builtins_require_real_operands_positive",
+            );
+            let (positive_results, positive_error) =
+                run_source_code(positive_source, &mut positive_runtime);
+            let (positive_succeeded, positive_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_results,
+                &positive_error,
+                false,
+            );
+            assert!(
+                positive_succeeded,
+                "real power and order builtins should remain available:\n{}",
+                positive_output
+            );
+
+            for (label, source_code) in [
+                (
+                    "positive_real_exponent",
+                    "have S set\nhave x R\ntrust 0 < S\n0 < S^x",
+                ),
+                (
+                    "nonnegative_real_exponent",
+                    "have S set\nhave x R\ntrust 0 < S\n0 <= S^x",
+                ),
+                (
+                    "positive_integer_exponent",
+                    "have S set\nhave n N_pos\ntrust 0 <= S\n0 <= S^n",
+                ),
+                (
+                    "literal_integer_exponent",
+                    "have S set\ntrust 0 <= S\n0 <= S^3",
+                ),
+                ("even_exponent", "have S set\n0 <= S^2"),
+                (
+                    "power_equality",
+                    "have S set\ntrust S != 0\ntrust S^2 = 0\nS = 0",
+                ),
+                (
+                    "order_from_negated_complement",
+                    "have S, T set\ntrust not S <= T\nS > T",
+                ),
+                (
+                    "negated_order_from_equivalent_order",
+                    "have S, T set\ntrust S <= T\nnot S > T",
+                ),
+                ("strict_to_weak_order", "have S, T set\ntrust S < T\nS <= T"),
+                ("numeric_lower_bound", "have S set\ntrust 3 <= S\n2 <= S"),
+                ("numeric_upper_bound", "have S set\ntrust S < 3\nS < 4"),
+                (
+                    "two_sided_weak_order_equality",
+                    "have S, T set\ntrust S <= T\ntrust T <= S\nS = T",
+                ),
+                (
+                    "strict_order_not_equal",
+                    "have S, T set\ntrust S < T\nS != T",
+                ),
+                ("numeric_sign_inference", "have S set\ntrust 2 < S\n0 < S"),
+                (
+                    "flipped_sign_inference",
+                    "have S set\ntrust S < 0\n-1 * S >= 0",
+                ),
+            ] {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(
+                    format!(
+                        "real_power_and_order_builtins_require_real_operands_{}",
+                        label
+                    )
+                    .as_str(),
+                );
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    !run_succeeded,
+                    "{} must not accept a non-real carrier:\n{}",
+                    label, run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn real_order_carrier_uses_known_subset_membership_without_forall_recursion() {
+    run_with_large_stack(
+        "real_order_carrier_uses_known_subset_membership_without_forall_recursion",
+        || {
+            let source_code = r#"
+have A nonempty_set
+have x A
+trust:
+    A $subset N
+    x < 1
+x <= 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "real_order_carrier_uses_known_subset_membership_without_forall_recursion",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a known A subset N must provide x's real carrier without invoking known forall:\n{}",
+                run_output
+            );
+        },
     );
 }
 
@@ -675,7 +955,7 @@ forall x Q_nz, n, m Z:
 8^(1/3) = 2
 "#;
 
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -700,7 +980,7 @@ fn reciprocal_power_root_rule_rejects_negative_even_root() {
 16^(1/2) = -4
 "#;
 
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
                 "reciprocal_power_root_rule_rejects_negative_even_root",
             );
@@ -736,7 +1016,7 @@ trust:
 $is_nonempty_set(union(C, D))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("union_nonempty_when_either_side_nonempty");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -747,6 +1027,109 @@ $is_nonempty_set(union(C, D))
         "union_nonempty_when_either_side_nonempty failed:\n{}",
         run_output
     );
+}
+
+#[test]
+fn binary_set_membership_introduction_and_elimination_are_builtin() {
+    let source_code = r#"
+forall x set, A set, B set:
+    x $in A
+    x $in B
+    =>:
+        x $in intersect(A, B)
+
+forall x set, A set, B set:
+    x $in A
+    not x $in B
+    =>:
+        x $in set_minus(A, B)
+
+have x, A, B, C, D, E, F, G, H set
+
+trust:
+    x $in A
+    x $in B
+    x $in C
+    not x $in D
+    x $in intersect(E, F)
+    x $in set_minus(G, H)
+
+x $in union(A, H)
+x $in intersect(A, B)
+x $in set_minus(C, D)
+
+x $in E
+x $in F
+x $in G
+not x $in H
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "binary_set_membership_introduction_and_elimination_are_builtin",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "binary_set_membership_introduction_and_elimination_are_builtin failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("union membership: member of the left side"),
+        "union introduction should remain a direct builtin:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("intersection membership: member of both sides"),
+        "intersection introduction should report its builtin provenance:\n{}",
+        run_output
+    );
+    assert!(
+        run_output
+            .contains("set-minus membership: member of left side and non-member of right side"),
+        "set-minus introduction should report its builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn binary_set_membership_introduction_requires_all_prerequisites() {
+    for (label, source_code) in [
+        (
+            "intersection_missing_right_member",
+            r#"
+have x, A, B set
+trust x $in A
+x $in intersect(A, B)
+"#,
+        ),
+        (
+            "set_minus_missing_right_non_member",
+            r#"
+have x, A, B set
+trust x $in A
+x $in set_minus(A, B)
+"#,
+        ),
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("binary_set_membership_introduction_requires_all_prerequisites_{label}")
+                .as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "{label} must not be accepted without every membership prerequisite:\n{}",
+            run_output
+        );
+    }
 }
 
 #[test]
@@ -775,7 +1158,7 @@ A = union(A, {})
 A = union({}, A)
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("union_set_equalities_are_builtin");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -818,7 +1201,7 @@ set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
 union(set_minus(A, B), set_minus(A, C)) = set_minus(A, intersect(B, C))
 "#;
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("common_set_algebra_equalities_are_builtin");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -906,7 +1289,7 @@ forall T set, x1 set, x2 set, x3 set, x4 set:
     ];
 
     for (i, source_code) in cases.iter().enumerate() {
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("literal_set_intersection_filtering_is_builtin");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -953,7 +1336,7 @@ forall T set, x1 set, x2 set, x3 set, x4 set:
             ];
 
             for (i, source_code) in cases.iter().enumerate() {
-                let mut runtime = Runtime::new_with_builtin_code();
+                let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope(
                     "intersection_absorption_and_literal_arity_are_builtin",
                 );
@@ -995,7 +1378,7 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
             "interval literal cannot omit both endpoints; use `R`",
         ),
     ] {
-        let mut runtime = Runtime::new_with_builtin_code();
+        let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             "one_sided_interval_literal_rejects_invalid_delimiters",
         );
@@ -1010,4 +1393,65 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
             run_output
         );
     }
+}
+
+#[test]
+fn integer_quotient_has_euclidean_contract_and_requires_positive_divisor() {
+    let source_code = r#"
+forall a Z, d N_pos:
+    integer_quotient(a, d) $in Z
+    a = d * integer_quotient(a, d) + a % d
+
+forall a Z, m N_pos, q Z, r N:
+    r < m
+    a = m * q + r
+    =>:
+        a % m = r
+
+integer_quotient(-7, 3) = -3
+-7 % 3 = 2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "integer_quotient_has_euclidean_contract_and_requires_positive_divisor",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "integer quotient Euclidean contract failed:\n{}",
+        run_output
+    );
+    for rule in [
+        "equality: Euclidean quotient defining equation a = d * integer_quotient(a, d) + a % d",
+        "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m",
+    ] {
+        assert!(
+            run_output.contains(rule),
+            "missing integer quotient builtin provenance `{}`:\n{}",
+            rule,
+            run_output
+        );
+    }
+
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime
+        .new_file_path_new_env_new_name_scope("integer_quotient_rejects_nonpositive_divisor");
+    let (invalid_results, invalid_error) =
+        run_source_code("integer_quotient(7, -3) = -2", &mut invalid_runtime);
+    let (invalid_succeeded, invalid_output) =
+        render_run_source_code_output(&invalid_runtime, &invalid_results, &invalid_error, false);
+    assert!(
+        !invalid_succeeded,
+        "integer quotient must reject a non-positive divisor:\n{}",
+        invalid_output
+    );
+    assert!(
+        invalid_output.contains("integer_quotient: divisor `-1 * 3` must be in N_pos"),
+        "unexpected integer quotient domain error:\n{}",
+        invalid_output
+    );
 }

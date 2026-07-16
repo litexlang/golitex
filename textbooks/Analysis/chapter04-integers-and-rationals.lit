@@ -1370,9 +1370,9 @@ claim:
     0 <= a % b
     a % b < b
     (a - a % b) % b = 0
-    exist n Z st {a - a % b = n * b}
-    obtain n from exist n Z st {a - a % b = n * b}
-    a - a % b = n * b
+    have n Z = integer_quotient(a, b)
+    a = b * integer_quotient(a, b) + a % b = b * n + a % b
+    a - a % b = b * n = n * b
     a = (a - a % b) + a % b
     (a - a % b) + a % b = n * b + a % b
     n * b <= n * b + a % b
@@ -1412,19 +1412,21 @@ claim:
 # The integer endpoint is unique: two intervals `[n,n+1)` and `[m,m+1)`
 # containing the same rational must have `n=m`.
 
-forall x Q, n, m Z:
-    n <= x
-    x < n + 1
-    m <= x
-    x < m + 1
-    =>:
-        n <= x < m + 1
-        n < m + 1
-        m <= x < n + 1
-        m < n + 1
-        n <= m
-        m <= n
-        n = m
+claim:
+    ? forall x Q, n, m Z:
+        n <= x
+        x < n + 1
+        m <= x
+        x < m + 1
+        =>:
+            n = m
+    n <= x < m + 1
+    n < m + 1
+    m <= x < n + 1
+    m < n + 1
+    n <= (m + 1) - 1 = m
+    m <= (n + 1) - 1 = n
+    n = m
 
 claim:
     ? forall x Q:
@@ -1520,10 +1522,51 @@ Proposition 4.4.4. There is no rational x such that x^2 = 2.
 # residue cases modulo two show that they cannot both be even, since otherwise
 # two would be a common positive divisor of a reduced fraction.
 
+prop is_reduced_fraction(a Z, b N_pos):
+    forall k N_pos:
+        a % k = 0
+        b % k = 0
+        =>:
+            k = 1
+
+# proof_debt: reducing a rational fraction is textbook background, not a
+# semantic rule of the Q carrier.  Keep precisely the interface used by this
+# source proof local until the reduction construction itself is formalized.
+thm rational_has_reduced_fraction:
+    ? forall x Q:
+        exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+    trust exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+
+# A square divisible by two has even base.  This is the source's residue
+# argument, expressed through the Euclidean quotient/remainder primitives.
+thm integer_square_multiple_of_two_has_even_base:
+    ? forall p, r Z:
+        p^2 = 2 * r
+        =>:
+            p % 2 = 0
+    p^2 = 2 * r + 0
+    p^2 % 2 = 0
+    claim:
+        ? p % 2 = 0
+        p % 2 = 0 or p % 2 = 1
+        by cases:
+            ? p % 2 = 0
+            case p % 2 = 0:
+                p % 2 = 0
+            case p % 2 = 1:
+                have s Z = integer_quotient(p, 2)
+                p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + 1
+                p^2 = (2 * s + 1)^2
+                p^2 = 2 * (2 * s^2 + 2 * s) + 1
+                p^2 % 2 = 1
+                impossible p^2 % 2 = 0
+        p % 2 = 0
+    p % 2 = 0
+
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
         exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
-    by thm rational_has_unique_reduced_fraction(x)
+    by thm rational_has_reduced_fraction(x)
     obtain p, q from exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
     claim:
         ? p % 2 != 0 or q % 2 != 0
@@ -1569,16 +1612,10 @@ thm rational_square_not_two:
         witness exist r Z st {p^2 = 2 * r} from q^2:
             p^2 = 2 * q^2
         obtain r from exist r Z st {p^2 = 2 * r}
-        p^2 % 2 = 0
-        by cases:
-            ? p % 2 = 0
-            case p % 2 = 0:
-                p % 2 = 0
-            case p % 2 = 1:
-                p^2 % 2 = (p % 2)^2 % 2 = 1^2 % 2 = 1
-                impossible p^2 % 2 = 0
+        by thm integer_square_multiple_of_two_has_even_base(p, r)
         p % 2 = 0
-        obtain s from exist s Z st {p = 2 * s}
+        have s Z = integer_quotient(p, 2)
+        p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + p % 2 = 2 * s
         p^2 = (2 * s)^2 = 4 * s^2
         4 * s^2 = 2 * q^2
         2 * s^2 = 4 * s^2 / 2
@@ -1590,14 +1627,7 @@ thm rational_square_not_two:
         witness exist t Z st {q^2 = 2 * t} from s^2:
             q^2 = 2 * s^2
         obtain t from exist t Z st {q^2 = 2 * t}
-        q^2 % 2 = 0
-        by cases:
-            ? q % 2 = 0
-            case q % 2 = 0:
-                q % 2 = 0
-            case q % 2 = 1:
-                q^2 % 2 = (q % 2)^2 % 2 = 1^2 % 2 = 1
-                impossible q^2 % 2 = 0
+        by thm integer_square_multiple_of_two_has_even_base(q, t)
         p % 2 != 0 or q % 2 != 0
         by cases:
             ? q % 2 != 0

@@ -586,6 +586,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::IntegerQuotient(left_quotient), Obj::IntegerQuotient(right_quotient)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_quotient.dividend,
+                    &left_quotient.divisor,
+                    &right_quotient.dividend,
+                    &right_quotient.divisor,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Pow(left_pow), Obj::Pow(right_pow)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_pow.base,

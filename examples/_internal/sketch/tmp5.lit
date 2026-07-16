@@ -25,6 +25,16 @@ prop finite_set_size_has_index(n N_pos):
         =>:
             exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
 
+# The induction prototype needs these finite-cardinality identities. They are
+# kept as local debt until finite-cardinality algebra has a dedicated design.
+trust:
+    forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    forall A finite_set:
+        finite_set_size(A) = 0
+        =>:
+            A = {}
+
 thm intersect_with_singleton:
     ? forall s set, a set:
         a $in s
@@ -72,10 +82,11 @@ thm index_function_for_singleton:
         claim forall! y s => {exist i N_pos st {i <= finite_set_size(s), y = idx0(i)}}:
             by contra y = a:
                 y != a
+                not y $in {a}
                 y $in set_minus(s, {a})
                 witness $is_nonempty_set(set_minus(s, {a})) from y:
                     y $in set_minus(s, {a})
-                impossible set_minus(s, {a}) = {}
+                impossible $is_nonempty_set(set_minus(s, {a}))
             idx0(1) = idx(1) = a
             witness exist i N_pos st {i <= finite_set_size(s), y = idx0(i)} from 1:
                 1 <= finite_set_size(s)
@@ -125,6 +136,7 @@ thm index_function_step:
                         n + 1 <= finite_set_size(s)
                         y = idx0(n + 1)
                 case y != a:
+                    not y $in {a}
                     y $in set_minus(s, {a})
                     exist i N_pos st {i <= finite_set_size(set_minus(s, {a})), y = prev(i)}
                     obtain j from exist i N_pos st {i <= finite_set_size(set_minus(s, {a})), y = prev(i)}

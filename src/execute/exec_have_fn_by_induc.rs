@@ -21,15 +21,8 @@ impl Runtime {
         let fn_set_stored = self
             .fn_set_from_fn_set_clause(&flat.fn_set_clause)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        let infer_result = self
-            .store_have_fn_equal_case_by_case_stmt_facts(&flat, &fn_set_stored)
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-
-        if stmt.as_algo {
-            self.exec_have_fn_by_induc_stmt_as_algo(stmt)?;
-        }
-
-        Ok(infer_result)
+        self.store_have_fn_equal_case_by_case_stmt_facts(&flat, &fn_set_stored)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))
     }
 
     pub(crate) fn exec_have_fn_by_induc_stmt_affect_environment_only(

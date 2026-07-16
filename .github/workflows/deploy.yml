@@ -235,7 +235,6 @@ jobs:
 
       - name: Init WiX
         run: cargo wix init --force
-        continue-on-error: true
 
       - name: Build .msi
         shell: bash
@@ -244,6 +243,25 @@ jobs:
           mkdir -p target/release
           cp "litex_${VERSION}_windows_amd64.exe" target/release/litex.exe
           cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
+
+      - name: Smoke test .msi
+        shell: pwsh
+        run: |
+          $msi = "litex_${env:VERSION}_amd64.msi"
+          $install = Start-Process msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart') -Wait -PassThru
+          if ($install.ExitCode -ne 0) {
+              throw "MSI installation failed with exit code $($install.ExitCode)"
+          }
+          $binary = Join-Path $env:ProgramFiles 'litex-lang\bin\litex.exe'
+          if (-not (Test-Path $binary)) {
+              throw "MSI did not install the Litex binary at $binary"
+          }
+          $output = & $binary -e "1 = 1"
+          $outputText = $output -join "`n"
+          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "equality fact"')) {
+              $outputText
+              throw "MSI smoke test failed"
+          }
 
       - name: Upload .msi
         uses: actions/upload-artifact@v4

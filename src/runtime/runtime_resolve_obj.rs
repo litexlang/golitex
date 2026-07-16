@@ -88,6 +88,14 @@ impl Runtime {
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
+            Obj::IntegerQuotient(quotient) => {
+                let result: Obj = IntegerQuotient::new(
+                    self.resolve_obj(&quotient.dividend),
+                    self.resolve_obj(&quotient.divisor),
+                )
+                .into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::Pow(pow) => {
                 let result = self.resolve_pow_after_children(
                     self.resolve_obj(&pow.base),

@@ -23,7 +23,7 @@ use super::fields::{
 use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
 use super::phases::execution_phases_value;
 use super::source::stmt_text_for_json;
-use super::store_facts::store_fact_json_values;
+use super::store_facts::{store_fact_json_values, store_fact_output_json_values};
 use super::{fact_unknown_json_value, stmt_unknown_json_value};
 
 pub fn display_stmt_exec_result_json(
@@ -129,6 +129,13 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 
     if let Some(verification) = non_factual_verification_value(runtime, x) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
+    }
+
+    if !x.reported_store_facts.is_empty() {
+        fields.push((
+            "store_facts".to_string(),
+            JsonValue::Array(store_fact_output_json_values(&x.reported_store_facts)),
+        ));
     }
 
     fields.push((

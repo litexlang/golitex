@@ -338,7 +338,6 @@ impl CommandStmt {
             CommandStmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::ClearStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::EvalStmt(stmt) => stmt.line_file.clone(),
-            CommandStmt::EvalByStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::StopStrategyStmt(stmt) => stmt.line_file.clone(),
         }
@@ -351,7 +350,6 @@ impl CommandStmt {
             CommandStmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::EvalStmt(stmt) => stmt.stmt_type_name(),
-            CommandStmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::StopStrategyStmt(stmt) => stmt.stmt_type_name(),
         }
@@ -364,7 +362,6 @@ impl CommandStmt {
             CommandStmt::DoNothingStmt(_) => DoNothingStmt::output_type_string(),
             CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
             CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),
-            CommandStmt::EvalByStmt(_) => EvalByStmt::output_type_string(),
             CommandStmt::UseStrategyStmt(_) => UseStrategyStmt::output_type_string(),
             CommandStmt::StopStrategyStmt(_) => StopStrategyStmt::output_type_string(),
         }
