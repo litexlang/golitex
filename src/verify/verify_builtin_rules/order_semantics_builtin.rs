@@ -74,6 +74,21 @@ fn integer_discrete_split_subject_and_base(
     None
 }
 
+fn integer_discrete_predecessor_split_subject_and_base(
+    first: &AtomicFact,
+    second: &AtomicFact,
+) -> Option<(Obj, Obj)> {
+    let (base, subject) = weak_order_left_right(first)?;
+    let (predecessor_subject, predecessor) = weak_order_left_right(second)?;
+    let predecessor_base = obj_minus_one_base(&predecessor)?;
+    if objs_equal_by_display_string(&subject, &predecessor_subject)
+        && objs_equal_by_display_string(&base, &predecessor_base)
+    {
+        return Some((subject, base));
+    }
+    None
+}
+
 impl Runtime {
     /// Direct order semantics that formerly required named source-level wrappers.
     /// They are limited to real binary order and integer discreteness, with every premise
@@ -433,9 +448,25 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let Some((subject, base)) = integer_discrete_split_subject_and_base(first, second)
-            .or_else(|| integer_discrete_split_subject_and_base(second, first))
-        else {
+        let (subject, base, reason) = if let Some((subject, base)) =
+            integer_discrete_split_subject_and_base(first, second)
+                .or_else(|| integer_discrete_split_subject_and_base(second, first))
+        {
+            (
+                subject,
+                base,
+                "or: integer discrete split x <= n or x >= n + 1",
+            )
+        } else if let Some((subject, base)) =
+            integer_discrete_predecessor_split_subject_and_base(first, second)
+                .or_else(|| integer_discrete_predecessor_split_subject_and_base(second, first))
+        {
+            (
+                subject,
+                base,
+                "or: integer discrete split x >= n or x <= n - 1",
+            )
+        } else {
             return Ok(None);
         };
         let Some(steps) = self.verify_objects_are_known_integers(
@@ -449,7 +480,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 or_fact.clone().into(),
-                "or: integer discrete split x <= n or x >= n + 1".to_string(),
+                reason.to_string(),
                 steps,
             )
             .into(),

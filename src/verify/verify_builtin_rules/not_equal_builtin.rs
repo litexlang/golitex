@@ -109,6 +109,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) = self
+            .try_verify_product_nonzero_component_from_known_product(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) = self
             .try_verify_square_sum_not_equal_zero_from_nonzero_component(
                 not_equal_fact,
                 verify_state,
@@ -719,6 +725,101 @@ impl Runtime {
             )
             .into(),
         ))
+    }
+
+    // A nonzero product of real factors has no zero factor.
+    // Example: from `a * b != 0`, prove `a != 0` and separately `b != 0`.
+    fn try_verify_product_nonzero_component_from_known_product(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let target = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (target, zero) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
+                target.clone()
+            }
+            (zero, target) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
+                target.clone()
+            }
+            _ => return Ok(None),
+        };
+
+        let mut known_not_equal_facts = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    if matches!(known_fact, AtomicFact::NotEqualFact(_)) {
+                        known_not_equal_facts.push(known_fact.clone());
+                    }
+                }
+            }
+        }
+
+        for known_fact in known_not_equal_facts {
+            let AtomicFact::NotEqualFact(known_not_equal) = known_fact else {
+                continue;
+            };
+            let product = if self
+                .obj_represents_zero_for_not_equal_builtin_rules(&known_not_equal.right)
+            {
+                &known_not_equal.left
+            } else if self.obj_represents_zero_for_not_equal_builtin_rules(&known_not_equal.left) {
+                &known_not_equal.right
+            } else {
+                continue;
+            };
+            let Obj::Mul(product) = product else {
+                continue;
+            };
+
+            let target_matches_left = self.verify_zero_product_factor_matches_target(
+                &target,
+                product.left.as_ref(),
+                not_equal_fact.line_file.clone(),
+                verify_state,
+            )?;
+            let target_matches_right = self.verify_zero_product_factor_matches_target(
+                &target,
+                product.right.as_ref(),
+                not_equal_fact.line_file.clone(),
+                verify_state,
+            )?;
+            if !target_matches_left.is_true() && !target_matches_right.is_true() {
+                continue;
+            }
+
+            let Some(mut steps) = self.verify_objects_are_known_reals(
+                &[product.left.as_ref(), product.right.as_ref()],
+                &not_equal_fact.line_file,
+                verify_state,
+            )?
+            else {
+                continue;
+            };
+            let known_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                &AtomicFact::NotEqualFact(known_not_equal.clone()),
+            )?;
+            if !known_result.is_true() {
+                continue;
+            }
+            steps.push(known_result);
+            if target_matches_left.is_true() {
+                steps.push(target_matches_left);
+            } else {
+                steps.push(target_matches_right);
+            }
+
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_equal_fact.clone().into(),
+                    "product_nonzero_component: a * b != 0 gives a != 0 and b != 0".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
     }
 
     // If `a != 0 or b != 0` is known, then `a^2 + b^2 != 0`.

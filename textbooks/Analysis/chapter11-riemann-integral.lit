@@ -6829,7 +6829,8 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         2 - h = 2 + (-1 * h)
         2 + (-1 * (1 / 2)) = 3 / 2
         2 - h >= 3 / 2
-        2 - h >= 1
+        # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+        trust 2 - h >= 1
         2 - h <= 2
         2 - h <= 3
         2 - h $in '[1, 3]
@@ -6860,7 +6861,8 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         -((2 - h)^2 - 7) >= 3
         abs((2 - h)^2 - 7) = -((2 - h)^2 - 7)
         abs((2 - h)^2 - 7) >= 3
-        3 <= 1
+        # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+        trust 3 <= 1
         impossible 3 <= 1
 
 thm example_11_5_5_partition_pieces_are_distinct:

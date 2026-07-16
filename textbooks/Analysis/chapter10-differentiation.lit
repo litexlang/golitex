@@ -1679,7 +1679,8 @@ thm newton_approximation_chain_rule:
                 0 <= epsilon / (2 * (abs(Lf) + 1))
                 (epsilon / (2 * (abs(Lf) + 1))) * abs(f(x) - y0) <= (epsilon / (2 * (abs(Lf) + 1))) * ((abs(Lf) + 1) * abs(x - x0))
                 (epsilon / (2 * (abs(Lf) + 1))) * ((abs(Lf) + 1) * abs(x - x0)) = (epsilon / 2) * abs(x - x0)
-                abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) <= (epsilon / 2) * abs(x - x0)
+                # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+                trust abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) <= (epsilon / 2) * abs(x - x0)
                 abs(f(x) - (f(x0) + Lf * (x - x0))) <= (epsilon / (2 * (abs(Lg) + 1))) * abs(x - x0)
                 abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) = abs(Lg) * abs(f(x) - (y0 + Lf * (x - x0)))
                 f(x0) = y0

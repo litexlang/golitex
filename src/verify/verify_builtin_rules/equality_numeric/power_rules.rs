@@ -196,6 +196,30 @@ impl Runtime {
                 }
             }
 
+            // Real-exponent addition law requires a positive real base.
+            // Example: `forall a R_pos, m, n R: a^(m+n) = a^m * a^n`.
+            let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+                left_exp,
+                StandardSet::R,
+                line_file.clone(),
+                verify_state,
+            )? && self.obj_is_verified_in_standard_set_for_power_builtin(
+                right_exp,
+                StandardSet::R,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if exponents_are_real
+                && self.obj_is_verified_in_standard_set_for_power_builtin(
+                    combined_power.base.as_ref(),
+                    StandardSet::RPos,
+                    line_file.clone(),
+                    verify_state,
+                )?
+            {
+                return Ok(true);
+            }
+
             // The remaining integer-exponent branch needs a nonzero base so negative
             // exponents do not accidentally justify undefined `0^(-n)`.
             // Example: `forall a R_nz, m, n Z: a^m * a^n = a^(m+n)`.
@@ -254,7 +278,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: a^(m+n) = a^m * a^n for natural exponents over real bases, positive exponents, or integer exponents with nonzero base",
+                "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over real bases, positive integer exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)
@@ -297,6 +321,29 @@ impl Runtime {
             .is_true()
         {
             return Ok(false);
+        }
+
+        // Real-exponent power-of-power law requires a positive real base.
+        // Example: `forall a R_pos, m, n R: (a^m)^n = a^(m*n)`.
+        let base_is_positive_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+            combined_power.base.as_ref(),
+            StandardSet::RPos,
+            line_file.clone(),
+            verify_state,
+        )?;
+        let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+            inner_power.exponent.as_ref(),
+            StandardSet::R,
+            line_file.clone(),
+            verify_state,
+        )? && self.obj_is_verified_in_standard_set_for_power_builtin(
+            nested_power.exponent.as_ref(),
+            StandardSet::R,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if base_is_positive_real && exponents_are_real {
+            return Ok(true);
         }
 
         // Power-of-power law for positive integer exponents:
@@ -360,6 +407,25 @@ impl Runtime {
         )
     }
 
+    // A power of a power can equal the bare base when the exponents multiply to one.
+    // Example: for `a R_pos` and `b R_nz`, `(a^b)^(1 / b) = a`.
+    fn power_of_power_equals_base_holds(
+        &mut self,
+        nested_power: &Pow,
+        base: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        let combined_power = Pow::new(base.clone(), one);
+        self.power_of_power_rule_holds_one_direction(
+            nested_power,
+            &combined_power,
+            line_file,
+            verify_state,
+        )
+    }
+
     pub(crate) fn try_verify_power_of_power_rule(
         &mut self,
         left: &Obj,
@@ -381,6 +447,18 @@ impl Runtime {
                     verify_state,
                 )?
             }
+            (Obj::Pow(nested_power), base) => self.power_of_power_equals_base_holds(
+                nested_power,
+                base,
+                line_file.clone(),
+                verify_state,
+            )?,
+            (base, Obj::Pow(nested_power)) => self.power_of_power_equals_base_holds(
+                nested_power,
+                base,
+                line_file.clone(),
+                verify_state,
+            )?,
             _ => false,
         };
         if holds {
@@ -388,7 +466,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a^m)^n = a^(m*n) for natural exponents over real bases, positive exponents, or integer exponents with nonzero base",
+                "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over real bases, positive integer exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)

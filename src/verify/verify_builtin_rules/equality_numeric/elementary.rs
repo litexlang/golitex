@@ -62,7 +62,7 @@ impl Runtime {
 
     // Zero-product cancellation: from `a * b = 0` and `a != 0`, infer `b = 0` (and symmetrically).
     // Example: from `(x - 1) * y = 0` and `x - 1 != 0`, prove `y = 0`.
-    pub(super) fn verify_zero_product_factor_matches_target(
+    pub(crate) fn verify_zero_product_factor_matches_target(
         &mut self,
         target: &Obj,
         factor: &Obj,

@@ -1584,37 +1584,49 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<AtomicName, RuntimeError> {
         let left = tb.advance()?;
-        validate_litex_name_for_parse(&left, tb.line_file.clone()).map_err(|e| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "replacement expects its first argument to be a prop name".to_string(),
-                tb.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        })?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             let mut parts = vec![left];
             while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
                 tb.skip()?;
                 let part = tb.advance()?;
-                validate_litex_name_for_parse(&part, tb.line_file.clone()).map_err(|e| {
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        "replacement expects its first argument to be a prop name".to_string(),
-                        tb.line_file.clone(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
                 parts.push(part);
             }
             let right = parts
                 .pop()
                 .expect("qualified name should have a local name");
+            for (index, part) in parts.iter().enumerate() {
+                validate_module_path_segment_for_parse(part, index == 0, tb.line_file.clone())
+                    .map_err(|e| {
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            "replacement expects its first argument to be a prop name".to_string(),
+                            tb.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+            }
+            validate_litex_name_for_parse(&right, tb.line_file.clone()).map_err(|e| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "replacement expects its first argument to be a prop name".to_string(),
+                    tb.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
         } else {
+            validate_litex_name_for_parse(&left, tb.line_file.clone()).map_err(|e| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "replacement expects its first argument to be a prop name".to_string(),
+                    tb.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
     }
@@ -1858,23 +1870,27 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<AtomicName, RuntimeError> {
         let left = tb.advance()?;
-        validate_litex_name_for_parse(&left, tb.line_file.clone())?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             let mut parts = vec![left];
             while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
                 tb.skip_token(MOD_SIGN)?;
                 let part = tb.advance()?;
-                validate_litex_name_for_parse(&part, tb.line_file.clone())?;
                 parts.push(part);
             }
             let right = parts
                 .pop()
                 .expect("qualified name should have a local name");
+            for (index, part) in parts.iter().enumerate() {
+                validate_module_path_segment_for_parse(part, index == 0, tb.line_file.clone())?;
+            }
+            validate_litex_name_for_parse(&right, tb.line_file.clone())?;
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
         } else if let Some(module_name) = self.current_parse_module_name() {
+            validate_litex_name_for_parse(&left, tb.line_file.clone())?;
             Ok(AtomicName::WithMod(module_name, left))
         } else {
+            validate_litex_name_for_parse(&left, tb.line_file.clone())?;
             Ok(AtomicName::WithoutMod(left))
         }
     }
@@ -1993,6 +2009,17 @@ fn validate_litex_name_for_parse(name: &str, line_file: LineFile) -> Result<(), 
             RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file),
         ))
     })
+}
+
+fn validate_module_path_segment_for_parse(
+    name: &str,
+    is_root_segment: bool,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    if is_root_segment && name == STD {
+        return Ok(());
+    }
+    validate_litex_name_for_parse(name, line_file)
 }
 
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
@@ -2324,6 +2351,62 @@ mod module_qualification_parse_tests {
             panic!("expected struct object");
         };
         assert_with_mod(&struct_obj.name, "Other", "Struct");
+    }
+
+    #[test]
+    fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
+        let mut rt = Runtime::new();
+
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm std::basics::T(a)");
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
+            panic!("expected by thm stmt");
+        };
+        assert_with_mod(&thm_stmt.name, "std::basics", "T");
+
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\std::basics::Template<2>");
+        let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
+            panic!("expected instantiated template object");
+        };
+        assert_with_mod(&template_obj.template_name, "std::basics", "Template");
+
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&std::basics::Struct");
+        let Obj::StructObj(struct_obj) = struct_obj else {
+            panic!("expected struct object");
+        };
+        assert_with_mod(&struct_obj.name, "std::basics", "Struct");
+
+        let replacement_obj =
+            parse_one_obj_line_with_runtime(&mut rt, "replacement(std::basics::P, A)");
+        let Obj::Replacement(replacement_obj) = replacement_obj else {
+            panic!("expected replacement object");
+        };
+        assert_with_mod(&replacement_obj.prop_name, "std::basics", "P");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "std::basics::value");
+        let Obj::Atom(AtomObj::IdentifierWithMod(obj)) = obj else {
+            panic!("expected module-qualified identifier");
+        };
+        assert_eq!(obj.mod_name, "std::basics");
+        assert_eq!(obj.name, "value");
+
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "$std::basics::P(a)");
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) = fact else {
+            panic!("expected normal atomic fact");
+        };
+        assert_with_mod(&fact.predicate, "std::basics", "P");
+
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks("by thm std(a)", Rc::from("test.lit"))
+            .expect("tokenize theorem reference");
+        assert_eq!(blocks.len(), 1);
+        assert!(rt.parse_stmt(&mut blocks[0]).is_err());
+
+        let mut blocks = tokenizer
+            .parse_blocks("by thm Other::std::T(a)", Rc::from("test.lit"))
+            .expect("tokenize nested module reference");
+        assert_eq!(blocks.len(), 1);
+        assert!(rt.parse_stmt(&mut blocks[0]).is_err());
     }
 
     #[test]

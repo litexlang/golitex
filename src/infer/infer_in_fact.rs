@@ -731,6 +731,32 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
+            // Binary union: storing `x $in union(A, B)` infers the disjunction
+            // `x $in A or x $in B`. Example: `x $in union(A, B)` can split into
+            // the two membership cases.
+            Obj::Union(union) => {
+                let lf = in_fact.line_file.clone();
+                let element_in_left: AtomicFact =
+                    InFact::new(in_fact.element.clone(), (*union.left).clone(), lf.clone()).into();
+                let element_in_right: AtomicFact =
+                    InFact::new(in_fact.element.clone(), (*union.right).clone(), lf.clone()).into();
+                let union_membership_cases: Fact = OrFact::new(
+                    vec![
+                        AndChainAtomicFact::AtomicFact(element_in_left),
+                        AndChainAtomicFact::AtomicFact(element_in_right),
+                    ],
+                    lf,
+                )
+                .into();
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&union_membership_cases);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        union_membership_cases,
+                    )?,
+                );
+                Ok(infer_result)
+            }
             // Binary intersection: storing `x $in intersect(A, B)` yields `x $in A` and `x $in B`.
             // Example: from `t $in intersect({-2, 3}, {y Q : y^2 = 9})`, infer both memberships for case splits.
             Obj::Intersect(intersect) => {

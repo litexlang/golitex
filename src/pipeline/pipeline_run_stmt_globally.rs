@@ -1,7 +1,6 @@
 use crate::pipeline::run_source_code;
 use crate::prelude::*;
 use std::collections::HashSet;
-use std::env;
 use std::fs;
 use std::rc::Rc;
 
@@ -63,103 +62,127 @@ fn run_std_module(
     runtime: &mut Runtime,
     execution_mode: ExecutionMode,
 ) -> Result<(), RuntimeError> {
-    let module_name = stmt.mod_name.as_str();
-    if runtime
-        .module_manager
-        .is_std_module_id(runtime.current_module_id())
-    {
-        return Err(import_stmt_error(
-            &ImportStmt::ImportGlobalModule(stmt.clone()),
-            "standard-package dependencies belong in std/litex.config [requires]".to_string(),
-        ));
-    }
-    if let Some(module_id) = runtime.module_manager.module_id_by_name(module_name) {
-        if !runtime.module_manager.is_std_module_name(module_name) {
-            return Err(import_stmt_error(
-                &ImportStmt::ImportGlobalModule(stmt.clone()),
-                format!(
-                    "std module name `{}` conflicts with a project module",
-                    module_name
-                ),
-            ));
-        }
-        return load_std_module_target(stmt, runtime, execution_mode, module_id);
-    }
+    let package_name = stmt.mod_name.as_str();
     let module_manager_before = runtime.module_manager.clone();
     let std_root = resolve_std_root().map_err(|message| {
         import_stmt_error(&ImportStmt::ImportGlobalModule(stmt.clone()), message)
     })?;
-    let module_id = discover_std_module(runtime, &std_root, module_name).map_err(|error| {
-        import_stmt_error(
-            &ImportStmt::ImportGlobalModule(stmt.clone()),
-            format!(
-                "failed to discover std module `{}`: {:?}",
-                module_name, error
-            ),
+    let std_module_id = match discover_std_module(runtime, &std_root, package_name) {
+        Ok(module_id) => module_id,
+        Err(error) => {
+            runtime.module_manager = module_manager_before;
+            return Err(import_stmt_error(
+                &ImportStmt::ImportGlobalModule(stmt.clone()),
+                format!(
+                    "failed to discover standard package `{}`: {:?}",
+                    package_name, error
+                ),
+            ));
+        }
+    };
+    let cause_stmt: Stmt = ImportStmt::ImportGlobalModule(stmt.clone()).into();
+    let package_target = match discovered_module_export_target(
+        runtime,
+        std_module_id,
+        package_name,
+        cause_stmt.clone(),
+    ) {
+        Ok(target) => target,
+        Err(error) => {
+            runtime.module_manager = module_manager_before;
+            return Err(error);
+        }
+    };
+    let std_status = runtime
+        .module_manager
+        .module(std_module_id)
+        .map(|module| module.status)
+        .unwrap_or(ModuleStatus::Loading);
+    let result = if std_status == ModuleStatus::Discovered {
+        load_discovered_module(std_module_id, cause_stmt, runtime, execution_mode)
+    } else {
+        load_discovered_export_target(
+            std_module_id,
+            package_target,
+            cause_stmt,
+            runtime,
+            execution_mode,
         )
-    })?;
-    if let Err(error) = load_std_module_target(stmt, runtime, execution_mode, module_id) {
+    };
+    if let Err(error) = result {
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
-    Ok(())
-}
-
-fn load_std_module_target(
-    stmt: &ImportGlobalModuleStmt,
-    runtime: &mut Runtime,
-    execution_mode: ExecutionMode,
-    module_id: ModuleId,
-) -> Result<(), RuntimeError> {
-    let module_name = stmt.mod_name.as_str();
-    let status = runtime
-        .module_manager
-        .module(module_id)
-        .map(|module| module.status)
-        .unwrap_or(ModuleStatus::Loading);
-    if status == ModuleStatus::Loading {
-        return Err(import_stmt_error(
-            &ImportStmt::ImportGlobalModule(stmt.clone()),
-            format!("cyclic std module import involving `{}`", module_name),
-        ));
-    }
-    if status != ModuleStatus::Loaded {
-        load_discovered_module(
-            module_id,
-            ImportStmt::ImportGlobalModule(stmt.clone()).into(),
-            runtime,
-            execution_mode,
-        )?;
-    }
-    runtime.record_trusted_import(
-        "std_package",
-        module_name.to_string(),
-        stmt.line_file.clone(),
-    );
     if let Some(importing_module_id) = runtime
         .execution_stack
         .last()
         .and_then(|frame| frame.module_id)
     {
-        runtime
-            .module_manager
-            .record_import_dependency(importing_module_id, module_id);
+        if let ImportTarget::Module(package_module_id) = package_target {
+            runtime
+                .module_manager
+                .record_import_dependency(importing_module_id, package_module_id);
+        }
     }
     Ok(())
 }
 
-fn resolve_std_root() -> Result<std::path::PathBuf, String> {
-    let configured_root = env::var("LITEX_STD_PATH")
-        .ok()
-        .map(std::path::PathBuf::from);
-    let current_dir = env::current_dir().ok();
-    let executable = env::current_exe().ok();
-    for root in standard_library_root_candidates(configured_root, current_dir, executable) {
-        if root.join("litex.config").is_file() {
-            return Ok(root);
-        }
+fn discovered_module_export_target(
+    runtime: &Runtime,
+    module_id: ModuleId,
+    export_name: &str,
+    cause_stmt: Stmt,
+) -> Result<ImportTarget, RuntimeError> {
+    runtime
+        .module_manager
+        .module(module_id)
+        .and_then(|module| module.exports.get(export_name))
+        .map(|entry| entry.target(module_id))
+        .ok_or_else(|| {
+            short_exec_error(
+                cause_stmt,
+                format!(
+                    "selected module does not export standard package `{}`",
+                    export_name
+                ),
+                None,
+                vec![],
+            )
+        })
+}
+
+fn load_discovered_export_target(
+    owner_module_id: ModuleId,
+    target: ImportTarget,
+    cause_stmt: Stmt,
+    runtime: &mut Runtime,
+    execution_mode: ExecutionMode,
+) -> Result<(), RuntimeError> {
+    let (_, import_error) = run_config_imports(runtime, owner_module_id, execution_mode);
+    if let Some(error) = import_error {
+        return Err(short_exec_error(
+            cause_stmt,
+            "failed to load selected module export".to_string(),
+            Some(error),
+            vec![],
+        ));
     }
-    Err("standard library was not found; searched LITEX_STD_PATH, ./std, and the executable installation paths".to_string())
+    let mut visited_targets = HashSet::new();
+    let (_, runtime_error) = run_repository_target_with_requirements(
+        runtime,
+        owner_module_id,
+        target,
+        execution_mode,
+        &mut visited_targets,
+    );
+    runtime_error.map_or(Ok(()), |error| {
+        Err(short_exec_error(
+            cause_stmt,
+            "failed to load selected module export".to_string(),
+            Some(error),
+            vec![],
+        ))
+    })
 }
 
 fn load_discovered_module(
@@ -1099,34 +1122,6 @@ fn import_stmt_error(import_stmt: &ImportStmt, message: String) -> RuntimeError 
     short_exec_error(stmt, message, None, vec![])
 }
 
-fn standard_library_root_candidates(
-    configured_root: Option<std::path::PathBuf>,
-    current_dir: Option<std::path::PathBuf>,
-    executable: Option<std::path::PathBuf>,
-) -> Vec<std::path::PathBuf> {
-    let mut roots = Vec::new();
-    if let Some(root) = configured_root {
-        roots.push(root);
-    }
-    if let Some(dir) = current_dir {
-        roots.push(dir.join("std"));
-    }
-    if let Some(parent) = executable.as_deref().and_then(std::path::Path::parent) {
-        roots.push(parent.join("std"));
-        roots.push(parent.join("..").join("std"));
-        roots.push(parent.join("..").join("share").join("litex").join("std"));
-        roots.push(
-            parent
-                .join("..")
-                .join("..")
-                .join("share")
-                .join("litex")
-                .join("std"),
-        );
-    }
-    roots
-}
-
 #[cfg(test)]
 mod path_import_tests {
     use super::*;
@@ -1137,7 +1132,6 @@ mod path_import_tests {
 
         assert!(runtime.module_manager.modules.is_empty());
         assert!(runtime.module_manager.module_by_name.is_empty());
-        assert!(runtime.module_manager.std_module_names.is_empty());
     }
 
     #[test]
@@ -1177,23 +1171,5 @@ mod path_import_tests {
 
         let (_, trust_error) = run_source_code("trust 1 = 1", &mut runtime);
         assert!(trust_error.is_some(), "strict mode must reject user trust");
-    }
-
-    #[test]
-    fn std_root_candidates_include_deb_share_layout() {
-        let executable = std::path::PathBuf::from("/opt/litex/usr/local/bin/litex");
-        let roots = standard_library_root_candidates(None, None, Some(executable));
-
-        assert!(roots.contains(&std::path::PathBuf::from(
-            "/opt/litex/usr/local/bin/../../share/litex/std"
-        )));
-    }
-
-    #[test]
-    fn std_root_candidates_include_binary_sibling_std_layout() {
-        let executable = std::path::PathBuf::from("/opt/litex/bin/litex");
-        let roots = standard_library_root_candidates(None, None, Some(executable));
-
-        assert!(roots.contains(&std::path::PathBuf::from("/opt/litex/bin/../std")));
     }
 }

@@ -18,3 +18,4 @@ mod power_identities;
 mod power_inverses;
 mod power_rules;
 mod square_root;
+mod square_sums;

@@ -4426,14 +4426,7 @@ thm chapter7_nth_root_power_identity_nonnegative:
         x >= 0
         =>:
             (x^(1 / n))^n = x
-    x = 0 or x > 0
-    by cases:
-        ? (x^(1 / n))^n = x
-        case x = 0:
-            x^(1 / n) = 0^(1 / n) = 0
-            (x^(1 / n))^n = 0^n = 0 = x
-        case x > 0:
-            (x^(1 / n))^n = x
+    by thm chap5::nth_root_power_identity_nonnegative(x, n)
 
 thm chapter7_nth_root_le_one:
     ? forall x R, n N_pos:

@@ -1,0 +1,5 @@
+forall a, b Z:
+    b <= a
+    =>:
+        not $is_nonempty_set(range(a, b))
+        range(a, b) = {}

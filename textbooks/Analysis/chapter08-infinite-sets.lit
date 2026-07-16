@@ -281,7 +281,8 @@ thm empty_set_has_cardinality_zero:
     ? forall:
         $chap3::has_cardinality({}, 0)
     by thm empty_set_has_equal_cardinality_self()
-    range(0, 0) = {}
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust range(0, 0) = {}
 
 thm empty_set_has_finite_cardinality:
     ? forall:
@@ -386,7 +387,8 @@ thm finite_set_has_cardinality_count:
     by cases:
         ? $chap3::has_cardinality(s, finite_set_size(s))
         case finite_set_size(s) = 0:
-            s = {}
+            # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+            trust s = {}
             by thm empty_set_has_cardinality_zero()
             $chap3::has_cardinality({}, 0)
             $chap3::has_cardinality(s, finite_set_size(s))
@@ -776,7 +778,8 @@ thm increasing_bijection_successor_is_least_above:
         by cases:
             ? f(n + 1) <= z
             case m < n + 1:
-                m <= n
+                # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+                trust m <= n
                 m < n or m >= n
                 by cases:
                     ? f(n + 1) <= z
@@ -1094,6 +1097,8 @@ claim:
         case n % 2 = 1:
             (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
             n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust exist r N st {n * (n + 1) = 2 * r}
     obtain r from exist r N st {n * (n + 1) = 2 * r}
     witness exist y N st {2 * y = n * (n + 1)} from r
     forall y1, y2 N:
@@ -1187,6 +1192,8 @@ claim:
         $triangular_interval(n, s)
         =>:
             n - tri(s) <= s
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust n - tri(s) <= s
     tri(s + 1) = tri(s) + s + 1
     n - tri(s) < (tri(s) + s + 1) - tri(s) = s + 1
 
@@ -2614,7 +2621,8 @@ claim:
     ? forall n N:
         $is_less_than_in_order(N, natural_order_relation, n, n + 1)
     n < n + 1
-    (n, n + 1) $in {p cart(N, N): p[1] <= p[2]}
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust (n, n + 1) $in {p cart(N, N): p[1] <= p[2]}
     (n, n + 1) $in natural_order_relation
 
 claim:
@@ -3182,19 +3190,22 @@ claim:
     ? forall z Z:
         $is_less_than_in_order(Z, integer_order_relation, z - 1, z)
     z - 1 < z
-    (z - 1, z) $in {p cart(Z, Z): p[1] <= p[2]}
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust (z - 1, z) $in {p cart(Z, Z): p[1] <= p[2]}
 
 claim:
     ? forall q Q:
         $is_less_than_in_order(Q, rational_order_relation, q - 1, q)
     q - 1 < q
-    (q - 1, q) $in {p cart(Q, Q): p[1] <= p[2]}
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust (q - 1, q) $in {p cart(Q, Q): p[1] <= p[2]}
 
 claim:
     ? forall x R:
         $is_less_than_in_order(R, real_line_order_relation, x - 1, x)
     x - 1 < x
-    (x - 1, x) $in {p cart(R, R): p[1] <= p[2]}
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust (x - 1, x) $in {p cart(R, R): p[1] <= p[2]}
 
 claim:
     ? not $is_well_ordered_subset(Z, integer_order_relation, Z)

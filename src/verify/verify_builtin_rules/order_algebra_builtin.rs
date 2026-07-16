@@ -1428,6 +1428,25 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            // A sum of nonpositive real terms is nonpositive.
+            // Example: `a <= 0, b <= 0 => a + b <= 0`.
+            if let Obj::Add(add) = &f.left {
+                let left_nonpositive: AtomicFact =
+                    LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into();
+                let right_nonpositive: AtomicFact =
+                    LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into();
+                let left_result = self.verify_order_subgoal(left_nonpositive)?;
+                let right_result = self.verify_order_subgoal(right_nonpositive)?;
+                if left_result.is_true() && right_result.is_true() {
+                    return Ok(Some(StmtResult::from(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a + b <= 0 from a <= 0 and b <= 0".to_string(),
+                            vec![left_result, right_result],
+                        ),
+                    )));
+                }
+            }
             if let Obj::Pow(pow) = &f.left {
                 if let Some(r) =
                     self.try_pow_le_zero_odd_exponent_from_nonpositive_base(pow, lf, atomic_fact)?
@@ -2040,6 +2059,35 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            // A sum is strictly negative when one term is negative and the other is nonpositive.
+            // Example: `a < 0, b <= 0 => a + b < 0`.
+            if let Obj::Add(add) = &f.left {
+                let cases: [(AtomicFact, AtomicFact); 2] = [
+                    (
+                        LessFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
+                        LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone())
+                            .into(),
+                    ),
+                    (
+                        LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
+                        LessFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into(),
+                    ),
+                ];
+                for (negative, nonpositive) in cases {
+                    let negative_result = self.verify_order_subgoal(negative)?;
+                    let nonpositive_result = self.verify_order_subgoal(nonpositive)?;
+                    if negative_result.is_true() && nonpositive_result.is_true() {
+                        return Ok(Some(StmtResult::from(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "a + b < 0 from one negative term and one nonpositive term"
+                                    .to_string(),
+                                vec![negative_result, nonpositive_result],
+                            ),
+                        )));
+                    }
+                }
+            }
             if let Obj::Pow(pow) = &f.left {
                 if let Some(r) =
                     self.try_pow_lt_zero_odd_exponent_from_negative_base(pow, lf, atomic_fact)?

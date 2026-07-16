@@ -1,0 +1,876 @@
+
+# Chapter 4 — Proofs With Structure II
+
+# > _Reductio ad absurdum, which Euclid loved so much, is one of a mathematician's finest weapons._
+# >
+# > _– G. H. Hardy_
+
+# In Chapter 2, we started using proof structures that go beyond a single
+# calculation: intermediate facts, case splits, and contradiction arguments. They are
+# about writing the mathematical structure explicitly enough that Litex can check
+# which facts/builtin rule are available to prove the goal.
+
+# This chapter continues that work. We look more systematically at the proof
+# grammar for `forall`, implication, `iff`, uniqueness, contradictory hypotheses,
+# and proof by contradiction.
+
+# The examples are organized as one mathematical problem paired with one Litex idea.
+
+# The main things to watch for while reading are:
+
+# - how a `forall` statement is instantiated by matching the goal;
+# - how an implication becomes a new assumption before `=>:`;
+# - how an "if and only if" proof is split into two ordinary implications;
+# - how uniqueness is unfolded into existence plus a uniqueness argument;
+# - how contradictions are isolated inside a branch.
+
+# 4.1 “For all” and Implication
+
+# 4.1.1
+
+# Problem: Let `a` be a real number and suppose that for all real numbers `x`,
+# `a <= x^2 - 2x`. Show that `a <= -1`.
+
+# The hypothesis gives a whole collection of inequalities, one for each real number
+# `x`. To prove the goal, we only need the particular member of that collection where
+# `x = 1`.
+
+claim:
+    ? forall a R:
+        forall x R:
+            a <= x^2 - 2 * x
+        =>:
+            a <= -1
+    a <= 1^2 - 2 * 1 = -1
+
+# The header
+# `forall a R:` introduces an arbitrary object `a` together with assumption that
+# `a $in R`, so Litex can use real-number arithmetic involving `a`. The hypothesis
+# then says that this fixed `a` satisfies `a <= x^2 - 2 * x` for every real `x`.
+
+# Therefore Litex can verify `a <= 1^2 - 2 * 1 = -1` by matching the known
+# `forall x R: a <= x^2 - 2 * x` with the target inequality and instantiating
+# `x` with `1`. This is the basic way a known `forall` is used: match the shape
+# of the goal against the shape of the quantified fact, then check that the
+# chosen arguments satisfy the quantified assumptions.
+
+# 4.1.2
+
+# Problem: Let `n` be a natural number which is a factor of every natural number
+# `m`. Show that `n = 1`.
+
+# The assumption says that `n` divides every natural number. The useful special
+# case is the smallest positive natural number, `m = 1`: if `n` divides `1`,
+# then `n` cannot be larger than `1`.
+
+sketch:
+    prop dvdN(a N, b N):
+        a >= 1
+        exist c N st {b = a * c}
+
+    claim:
+        ? forall a, b N_pos:
+            $dvdN(a, b)
+            =>:
+                a <= b
+
+        obtain c from exist c N st {b = a * c}
+        by contra c != 0:
+            b = a * c = a * 0 = 0
+            impossible 0 > 0
+        by cases c > 0:
+            case c = 0:
+                impossible c = 0
+            case c > 0:
+                do_nothing
+        c >= 1
+        a = a * 1 <= a * c = b
+
+    claim:
+        ? forall n N:
+            forall m N:
+                $dvdN(n, m)
+            =>:
+                n = 1
+        $dvdN(n, 1)
+        1 > 0
+        n <= 1
+        n >= 1
+        n = 1
+
+# Inside the proof, `$dvdN(n, 1)` is obtained by matching the known hypothesis
+
+# ```text
+# forall m N:
+#     $dvdN(n, m)
+# ```
+
+# with the concrete value `m = 1`. The outer statement `forall n N:` also gives
+# the domain fact `n $in N`, so the proposition `$dvdN(n, 1)` is well-formed.
+
+# 4.1.3
+
+# Problem: Let `a` and `b` be real numbers and suppose that every real number `x`
+# is either at least `a` or at most `b`. Show that `a <= b`.
+
+# Here we use the universal hypothesis at the midpoint `x = (a + b) / 2`. That
+# produces an `or` statement, and `by cases` lets us finish the proof in the two
+# possible branches.
+
+claim:
+    ? forall a, b R:
+        forall x R:
+            x >= a or x <= b
+        =>:
+            a <= b
+    (a + b) / 2 >= a or (a + b) / 2 <= b
+    by cases a <= b:
+        case (a + b) / 2 >= a:
+            b = 2 * ((a + b) / 2) - a >= 2 * a - a = a
+            a <= b
+        case (a + b) / 2 <= b:
+            a = 2 * ((a + b) / 2) - b <= 2 * b - b = b
+            a <= b
+
+# 4.1.4
+
+# Problem: Two real numbers `a` and `b` both have square at most `2`, and each is
+# greater than or equal to every real number whose square is at most `2`. Prove
+# that `a = b`.
+
+forall a, b R:
+    a <= b
+    b <= a
+    =>:
+        a = b
+
+claim:
+    ? forall a, b R:
+        a^2 <= 2
+        b^2 <= 2
+        forall y R:
+            y^2 <= 2
+            =>:
+                y <= a
+        forall y R:
+            y^2 <= 2
+            =>:
+                y <= b
+        =>:
+            a = b
+    a <= b
+    b <= a
+    a = b
+
+# 4.1.5
+
+# Problem: Show that there exists a real number `b` such that for every real
+# number `x`, `b <= x^2 - 2x`.
+
+# This is an existence proof whose witness is a whole lower-bound statement. We
+# choose `b = -1`, and then prove that this chosen value works for every real
+# number `x`.
+
+sketch:
+    prop lower_bound_for_parabola(b R):
+        forall x R:
+            b <= x^2 - 2 * x
+
+    claim:
+        ? exist b R st {$lower_bound_for_parabola(b)}
+        witness exist b R st {$lower_bound_for_parabola(b)} from -1:
+            forall x R:
+                -1 <= -1 + (x - 1)^2 = x^2 - 2 * x
+                -1 <= x^2 - 2 * x
+
+# Inside the `witness` block (witness block is used to prove an existence statement), the line `forall x R:` proves the universal part
+# of the proposition `$lower_bound_for_parabola(-1)`. The calculation rewrites
+# `x^2 - 2x` as `-1 + (x - 1)^2`, which is visibly at least `-1`.
+
+# 4.1.6
+
+# Problem: Show that there exists a real number `c` such that for all real
+# numbers `x` and `y`, if `x^2 + y^2 <= 4`, then `x + y >= c`.
+
+# Again we prove an existence statement by choosing a concrete witness. This time
+# the property of the witness has both universal variables and an implication:
+# for arbitrary `x` and `y`, assuming `x^2 + y^2 <= 4`, prove the desired lower
+# bound for `x + y`.
+
+sketch:
+    prop lower_bound_on_disk(c R):
+        forall x, y R:
+            x^2 + y^2 <= 4
+            =>:
+                x + y >= c
+
+    claim:
+        ? exist c R st {$lower_bound_on_disk(c)}
+        witness exist c R st {$lower_bound_on_disk(c)} from -3:
+            claim:
+                ? forall x, y R:
+                    x^2 + y^2 <= 4
+                    =>:
+                        x + y >= -3
+                (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
+                by thm std::basics::even_power_bound_by_nonnegative_rhs(x + y, 3, 2)
+
+# The calculation shows `(x + y)^2 <= 3^2`. The known fact about squares then
+# turns that into `x + y >= -3`. This is a typical Litex pattern: write the
+# estimate you would write on paper, and let the previously stated rule bridge
+# from the squared inequality to the final inequality.
+
+# The line
+
+# ```text
+# by thm even_power_bound_by_nonnegative_rhs(x + y, 3, 2)
+# ```
+
+# uses a named theorem from the builtin common facts. Its meaning is that if
+# `(x + y)^2 <= 3^2` and `3 >= 0`, then `x + y` lies between `-3` and `3`. After
+# this theorem call is verified, it releases the concrete facts
+# `-3 <= x + y` and `x + y <= 3`, so the claim can verify the lower bound.
+
+# This is exactly where `thm` is the better interface than an anonymous stored
+# fact: the theorem is important enough to remember by name, and the proof wants
+# to call that one theorem with the specific objects and exponent.
+
+# The Litex kernel defines the corresponding common fact in this shape:
+
+# ```text
+# thm even_power_bound_by_nonnegative_rhs:
+#     prove:
+#         forall x, y R, k N_pos:
+#             k % 2 = 0
+#             x^k <= y^k
+#             y >= 0
+#             =>:
+#                 -y <= x
+#                 x <= y
+# ```
+
+# This theorem also illustrates a useful design pattern for `forall` facts.
+
+# Sometimes a theorem needs parameters that do not all appear in the final
+# conclusion. Here the exponent `2` is needed to match the hypothesis
+# `(x + y)^2 <= 3^2`, but it would not appear in a plain conclusion such as
+# `-3 <= x + y`. If a `forall` has more parameters than its conclusion shows,
+# Litex cannot reliably recover the hidden parameters by matching the goal.
+
+# The usual solution is to give the `forall` fact a theorem name and call it
+# with all the parameters needed for matching. Instead of trying to store a bare
+# rule that concludes `-y <= x` and `x <= y`, the proof calls
+# `by thm even_power_bound_by_nonnegative_rhs(x, y, k)`. The call carries `x`,
+# `y`, and `k` explicitly, then releases the ordinary bounds that the proof
+# needs.
+
+# 4.1.7
+
+# Definition: a property is true for all sufficiently large integers if there is
+# some threshold `M` such that the property holds for every `n >= M`.
+
+# The phrase "for all sufficiently large integers" is naturally an existential
+# statement: there exists a threshold `M`, and after that point the property
+# always holds. The proposition below packages the part after a proposed
+# threshold has been chosen.
+
+sketch:
+    prop cubic_eventually_large(M Z):
+        forall n Z:
+            n >= M
+            =>:
+                n^3 >= 4 * n^2 + 7
+
+    # Source handling: this source item records the displayed fact as background mathematics.
+    # trust: its supporting proof is not expanded in this chapter.
+    trust:
+        forall n Z:
+            n >= 5
+            =>:
+                n^3 >= 4 * n^2 + 7
+
+    claim:
+        ? exist M Z st {$cubic_eventually_large(M)}
+        witness exist M Z st {$cubic_eventually_large(M)} from 5:
+            forall n Z:
+                n >= 5
+                =>:
+                    n^3 >= 4 * n^2 + 7
+
+# The proof supplies `M = 5`. The `proof_debt` block records the estimate needed after
+# the threshold is chosen.
+
+# 4.1.8 and 4.1.9
+
+# Prime numbers combine a lower bound and a universal implication about divisors:
+# `p` must be at least `2`, and every divisor of `p` must be either `1` or `p`.
+# The example `p = 2` is small enough that the divisor condition can be checked
+# from the general divisibility facts already established.
+
+sketch:
+    prop prime(a N_pos):
+        2 <= a
+        forall b N_pos:
+            2 <= b < a
+            =>:
+                a % b != 0
+
+    by for:
+        ? forall n range(2, 2):
+            2 % n != 0
+
+    $prime(2)
+
+# 4.2 “If and Only If”
+
+# In Litex, an "if and only if" proof can be unfolded into two separate `claim`s,
+# one for each direction.
+
+# 4.2.1
+
+# Problem: Let `a` be a rational number. Show that `3a + 1 <= 7` iff `a <= 2`.
+
+forall a Q:
+    3 * a + 1 <= 7
+    =>:
+        a = ((3 * a + 1) - 1) / 3 <= (7 - 1) / 3 = 2
+
+forall a Q:
+    a <= 2
+    =>:
+        3 * a + 1 <= 3 * 2 + 1 = 7
+
+forall a Q:
+    =>:
+        a <= 2
+    <=>:
+        3 * a + 1 <= 7
+
+# For a `forall`-level iff fact, put the quantified variables outside:
+
+# ```text
+# forall a Q:
+#     shared_hypothesis
+#     =>:
+#         left_fact
+#     <=>:
+#         right_fact
+# ```
+
+# Read this as: for every rational number `a`, `left_fact` and `right_fact` are
+# equivalent. The two ordinary implication facts establish the two directions;
+# the final `forall ... <=>:` line records them as one reusable translation rule.
+# The same style works for parity:
+
+# ```text
+# forall n Z:
+#     =>:
+#         $odd(n)
+#     <=>:
+#         $mod_eq(n, 1, 2)
+# ```
+
+# The Litex layout keeps both the quantifier and the two directions visible.
+
+# 4.2.2
+
+# Problem: Let `n` be an integer. Show that `5n` is a multiple of `8` iff `n` is.
+
+sketch:
+    prop dvdZ(a Z, b Z):
+        exist c Z st {b = a * c}
+
+    claim:
+        ? forall n, a Z:
+            5 * n = 8 * a
+            =>:
+                $dvdZ(8, n)
+        witness exist c Z st {n = 8 * c} from -3 * a + 2 * n:
+            n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
+
+    claim:
+        ? forall n, a Z:
+            n = 8 * a
+            =>:
+                $dvdZ(8, 5 * n)
+        witness exist c Z st {5 * n = 8 * c} from 5 * a:
+            5 * n = 5 * (8 * a) = 8 * (5 * a)
+
+# 4.2.3 and 4.2.4
+
+# Problem: characterize oddness and evenness by congruence modulo `2`.
+
+prop odd(a Z):
+    exist k Z st {a = 2 * k + 1}
+
+prop mod_eq(a Z, b Z, n Z):
+    exist k Z st {a - b = n * k}
+
+sketch:
+    prop even(a Z):
+        exist k Z st {a = 2 * k}
+
+    claim:
+        ? forall n Z:
+            $odd(n)
+            =>:
+                $mod_eq(n, 1, 2)
+        obtain k from exist k Z st {n = 2 * k + 1}
+        witness exist c Z st {n - 1 = 2 * c} from k:
+            n - 1 = 2 * k + 1 - 1 = 2 * k
+
+    claim:
+        ? forall n Z:
+            $mod_eq(n, 1, 2)
+            =>:
+                $odd(n)
+        obtain k from exist k Z st {n - 1 = 2 * k}
+        witness exist c Z st {n = 2 * c + 1} from k:
+            n = n - 1 + 1 = 2 * k + 1
+
+    claim:
+        ? forall n Z:
+            $even(n)
+            =>:
+                $mod_eq(n, 0, 2)
+        obtain k from exist k Z st {n = 2 * k}
+        witness exist c Z st {n - 0 = 2 * c} from k:
+            n - 0 = n = 2 * k
+
+    claim:
+        ? forall n Z:
+            $mod_eq(n, 0, 2)
+            =>:
+                $even(n)
+        obtain k from exist k Z st {n - 0 = 2 * k}
+        witness exist c Z st {n = 2 * c} from k:
+            n = n - 0 = 2 * k
+
+# 4.2.5 and 4.2.6
+
+# Solving equations is also an iff proof: narrow down all solutions, then check
+# the listed solutions.
+
+claim:
+    ? forall x R:
+        x^2 + x - 6 = 0
+        =>:
+            x = -3 or x = 2
+    (x + 3) * (x - 2) = x^2 + x - 6 = 0
+    x + 3 = 0 or x - 2 = 0
+    by cases x = -3 or x = 2:
+        case x + 3 = 0:
+            x = -3
+        case x - 2 = 0:
+            x = 2
+
+claim:
+    ? forall x R:
+        x = -3 or x = 2
+        =>:
+            x^2 + x - 6 = 0
+    by cases x^2 + x - 6 = 0:
+        case x = -3:
+            do_nothing
+        case x = 2:
+            do_nothing
+
+# Here `do_nothing` is not a placeholder for omitted proof text. It is the
+# explicit no-op statement, used when no extra proof step is
+# needed at that point.
+
+# In the two cases above, the case assumption is enough. Under `case x = -3`,
+# Litex checks the goal `x^2 + x - 6 = 0` after substituting `x = -3`, and the
+# arithmetic identity is immediate. The same happens under `case x = 2`.
+
+# 4.2.7 to 4.2.9
+
+# Once an iff theorem is known, use it as a translation rule. Here oddness is
+# translated to modulo `2`. The `proof_debt` block repeats the Chapter 3 modular facts
+# so the snippet can stand alone.
+
+sketch:
+    prop mod_eq_trans(a Z, b Z, c Z, n Z):
+        $mod_eq(a, c, n)
+
+    claim:
+        ? forall a Z:
+            $odd(a)
+            =>:
+                $mod_eq(a, 1, 2)
+        obtain k from exist k Z st {a = 2 * k + 1}
+        witness exist t Z st {a - 1 = 2 * t} from k:
+            a - 1 = (2 * k + 1) - 1 = 2 * k
+
+    claim:
+        ? forall a Z:
+            $mod_eq(a, 1, 2)
+            =>:
+                $odd(a)
+        obtain k from exist k Z st {a - 1 = 2 * k}
+        witness exist t Z st {a = 2 * t + 1} from k:
+            a = (a - 1) + 1 = 2 * k + 1
+
+    claim:
+        ? forall a, n Z:
+            $mod_eq(a, a, n)
+        witness exist k Z st {a - a = n * k} from 0:
+            a - a = n * 0
+
+    claim:
+        ? forall a, b, c, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(b, c, n)
+            =>:
+                $mod_eq_trans(a, b, c, n)
+        obtain x from exist x Z st {a - b = n * x}
+        obtain y from exist y Z st {b - c = n * y}
+        witness exist k Z st {a - c = n * k} from x + y:
+            a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
+
+    claim:
+        ? forall a, b, c, d, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a + c, b + d, n)
+        obtain x from exist x Z st {a - b = n * x}
+        obtain y from exist y Z st {c - d = n * y}
+        witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
+            (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
+
+    claim:
+        ? forall x, y Z:
+            $odd(x)
+            $odd(y)
+            =>:
+                $odd(x + y + 1)
+        $mod_eq(x, 1, 2)
+        $mod_eq(y, 1, 2)
+        $mod_eq(x + y, 1 + 1, 2)
+        $mod_eq(1, 1, 2)
+        $mod_eq(x + y + 1, 1 + 1 + 1, 2)
+        witness exist k Z st {1 + 1 + 1 - 1 = 2 * k} from 1:
+            1 + 1 + 1 - 1 = 2 * 1
+        $mod_eq(1 + 1 + 1, 1, 2)
+        $mod_eq_trans(x + y + 1, 1 + 1 + 1, 1, 2)
+        $mod_eq(x + y + 1, 1, 2)
+        $odd(x + y + 1)
+
+# 4.3 “There Exists a Unique”
+
+# In Litex, uniqueness can be unfolded into two steps: first give a witness for
+# existence, then prove that any object satisfying the same condition must equal
+# that witness.
+
+# This chapter uses that unfolded form instead of trying to hide the work behind
+# a single symbol. It mirrors the paper proof: "this object works" and "nothing
+# else works."
+
+# 4.3.1
+
+# Problem: Show that there exists a unique real number `a` such that `3a + 1 = 7`.
+
+witness exist a R st {3 * a + 1 = 7} from 2
+
+forall a R:
+    3 * a + 1 = 7
+    =>:
+        a = (3 * a + 1 - 1) / 3 = (7 - 1) / 3 = 2
+
+exist! a R st {3 * a + 1 = 7}
+
+# The final `exist!` line uses the two facts just proved: a witness exists, and
+# any value satisfying the same equation must equal that witness.
+
+# 4.3.2 to 4.3.4
+
+# For more complex uniqueness proofs, split the work into small claims:
+# existence, uniqueness, and any estimate lemmas needed along the way.
+
+# Here the mathematical statement is that the remainder of `14` after division by
+# `5` is uniquely determined. We package the usual remainder conditions into a
+# proposition: `r` is between `0` and `5`, and the built-in modulo expression
+# `14 % 5` is equal to `r`.
+
+sketch:
+    prop remainder_property(r Z):
+        0 <= r
+        r < 5
+        14 % 5 = r
+
+    claim:
+        ? exist r Z st {$remainder_property(r)}
+        witness exist r Z st {$remainder_property(r)} from 4:
+            0 <= 4
+            4 < 5
+            14 % 5 = 4
+
+    claim:
+        ? forall r Z:
+            $remainder_property(r)
+            =>:
+                r = 4
+        r = 14 % 5 = 4
+
+# The first claim proves existence by giving the witness `r = 4`. The final line
+# uses the builtin `%` calculation directly: Litex can compute `14 % 5 = 4`, so
+# the witness satisfies the remainder property.
+
+# The second claim proves uniqueness. If an arbitrary integer `r` satisfies the
+# same property, then the definition gives `14 % 5 = r`. Since the builtin modulo
+# rule also gives `14 % 5 = 4`, the chain `r = 14 % 5 = 4` proves that every such
+# `r` must equal the same value `4`.
+
+# 4.4 Contradictory Hypotheses
+
+# When hypotheses contradict each other, the case is impossible.
+
+# The statement `impossible F` has a precise meaning in Litex. It asks Litex to
+# check that both `F` and the reverse of `F` are true in the current local context.
+# For example, if Litex knows both `x * y <= 0` and `0 < x * y`, then
+# `impossible x * y <= 0` closes the branch.
+
+# This same rule is used inside `by cases` and `by contra`. A case branch may add
+# one side of the contradiction, while earlier hypotheses prove the other side.
+# In a `by contra` block, Litex first assumes the reverse of the goal being
+# proved; the proof then derives an `impossible` fact from that temporary
+# assumption.
+
+# In small examples, the contradiction may be a direct impossible inequality. In
+# larger examples, the contradiction is usually reached after a case split or a
+# translation, such as turning a modular statement into a normalized residue.
+
+# 4.4.1
+
+# Problem: Let `x` and `y` be real numbers, and suppose that `0 < x*y` and
+# `0 <= x`. Show that `0 < y`.
+
+claim:
+    ? forall x, y R:
+        0 < x * y
+        0 <= x
+        =>:
+            0 < y
+    by contra:
+        ? 0 < y
+        y <= 0
+        x * y <= x * 0 = 0
+        impossible x * y <= 0
+
+# 4.4.2
+
+# Problem: Let `t` be an integer with `t < 3` and `t - 1 = 6`. Show that `t != 13`.
+
+# This is the explosion principle: once the hypotheses imply an impossible
+# numeric fact, the branch is closed.
+
+claim:
+    ? forall t Z:
+        t < 3
+        t - 1 = 6
+        =>:
+            t != 13
+    by contra t != 13:
+        t = 13
+        t = 7
+        impossible 13 = 7
+
+# 4.4.3 to 4.4.5
+
+# The modular contradiction and prime-testing examples combine Chapter 3 modular
+# arithmetic, `by cases`, and `impossible`. They are good exercises after the
+# basic contradiction pattern is familiar.
+
+# These are not new proof forms. They are longer versions of the same pattern:
+# split into finitely many cases, finish the possible cases directly, and close
+# the impossible cases by deriving a contradiction.
+
+# 4.5 Proof by Contradiction
+
+# 4.5.1
+
+# Problem: Show that it is not true that every real number `x` satisfies
+# `x^2 >= x`.
+
+# To refute a universal statement, provide a counterexample.
+
+by contra:
+    ? not forall x R:
+        x^2 >= x
+    impossible 0.5^2 >= 0.5
+
+# In this `by contra` proof, Litex temporarily assumes the reverse of the goal:
+# `forall x R: x^2 >= x`. From that universal hypothesis, it gets
+# `0.5^2 >= 0.5`. Direct calculation also gives `not 0.5^2 >= 0.5`, so
+# `impossible 0.5^2 >= 0.5` closes the contradiction.
+
+# 4.5.2
+
+# Problem: Show that `13` is not a multiple of `3`.
+
+# The contradiction is that `$dvdN(3, 13)` would force `13 % 3 = 0`, while direct
+# calculation gives `13 % 3 != 0`.
+
+sketch:
+    prop dvdN(a N, b N):
+        exist c N st {b = a * c}
+
+    claim:
+        ? not $dvdN(3, 13)
+        by contra not $dvdN(3, 13):
+            obtain a from exist k N st {13 = 3 * k}
+            witness exist k Z st {13 = 3 * k + 0} from a
+            by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(13, 3, a, 0)
+            impossible 13 % 3 = 0
+
+# The witness line writes `13 = 3 * k + 0` on purpose. The builtin modulo facts
+# match equations in the form `a = m * r + k`, where the last term is the
+# remainder. To match the remainder with `0`, the equation must include the final
+# `+ 0`; writing only `13 = 3 * k` does not expose the remainder slot that the
+# builtin rule expects.
+
+claim:
+    ? forall a Z, m N_pos, k N:
+        a % m = k
+        =>:
+            exist r Z st {a = m * r + k}
+    by thm std::basics::integer_mod_quotient_remainder(a, m)
+    obtain r from exist q Z st {a = m * q + a % m}
+    witness exist q Z st {a = m * q + k} from r:
+        a = m * r + a % m = m * r + k
+
+claim:
+    ? forall a Z, m N_pos, k N:
+        k < m
+        exist r Z st {a = m * r + k}
+        =>:
+            a % m = k
+    obtain r from exist q Z st {a = m * q + k}
+    by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(a, m, r, k)
+    a % m = k
+
+# 4.5.3
+
+# Problem: Let `x` and `y` be real numbers and suppose `x + y = 0`. Show that it
+# is not possible for both `x` and `y` to be positive.
+
+claim:
+    ? forall x, y R:
+        x + y = 0
+        =>:
+            x <= 0 or y <= 0
+    x > 0 or x <= 0
+    by cases:
+        ? x <= 0 or y <= 0
+        case x <= 0:
+            x <= 0
+        case x > 0:
+            y = x + y - x = 0 - x < 0
+            y <= 0
+
+# `x > 0 or x <= 0` is a builtin comparison split: for comparable real
+# expressions, Litex can use `a > b or a <= b`.
+
+# 4.5.4
+
+# Problem: Show that there does not exist a natural number `n` such that
+# `n^2 = 2`.
+
+claim:
+    ? forall n N:
+        n^2 != 2
+    by thm std::basics::integer_le_or_ge_successor(n, 1)
+    by cases:
+        ? n^2 != 2
+        case n <= 1:
+            n^2 <= 1^2 = 1 < 2
+            n^2 != 2
+        case n >= 1 + 1:
+            n^2 >= 2^2 = 4 > 2
+            n^2 != 2
+
+# `n <= 1 or n >= 2` is the integer comparison split. For integers, Litex can use
+# `n <= m or n >= m + 1`.
+
+# 4.5.5 to 4.5.9
+
+# The remaining examples combine earlier tools:
+
+# - parity can be reduced to modulo `2` and then handled by cases;
+# - `n^2` is never congruent to `2` modulo `3`, proved by a residue split;
+# - a nontrivial factorization proves a number is not prime;
+# - prime tests reduce to excluding possible middle divisors.
+
+# The Litex knowledge point is not a new command, but combining `by cases`,
+# `by contra`, `witness`, `have by exist`, and the modular facts from Chapter 3.
+
+# 4.6 Summary: Litex statements and ideas in this chapter
+
+# This chapter revisits the structural proof tools from Chapter 2 in more
+# logical settings: universal statements, implications, equivalences, uniqueness,
+# contradictory hypotheses, and refutations.
+
+# Litex statements and syntax used
+
+# 1. Nested `forall` statements express hypotheses that can later be instantiated
+#    with concrete values:
+
+#    ```text
+#    forall x R:
+#        a <= x^2 - 2 * x
+#    ```
+
+# 2. Assumptions before `=>:` form the antecedent of an implication. To prove an
+#    implication, write a `forall` block whose body assumes those facts before
+#    proving the facts after `=>:`.
+
+# 3. `prop ...:` packages longer logical properties, such as lower-bound
+#    statements, primality, or uniqueness-style conditions.
+
+# 4. `witness exist ... from ...:` proves existence statements whose witnesses
+#    may themselves have universal or implication properties.
+
+# 5. `by cases:` uses an available disjunction, comparison split, or finite
+#    residue split to prove a goal branch by branch.
+
+# 6. `by contra:` proves a goal by assuming its negation in a temporary local
+#    context and deriving an `impossible` fact.
+
+# 7. `not <FACT>` writes negated facts, including negated universal statements
+#    such as `not forall x R: ...`.
+
+# 8. `impossible <FACT>` closes a contradiction when the current context also
+#    proves the opposite or an incompatible fact.
+
+# 9. `proof_debt:` is used to state standard facts needed by a standalone example, such
+#    as order facts, divisibility bounds, and modular facts.
+
+# Litex knowledge points
+
+# 1. To use a `forall` fact, write the needed instance as a proof line. Litex
+#    matches the line against the universal statement and checks the required
+#    assumptions.
+
+# 2. An implication is handled by context: assumptions before `=>:` are available
+#    while proving the conclusion after `=>:`.
+
+# 3. Existence goals can have rich bodies. A witness block may contain a nested
+#    `forall` proof or an implication proof, not just a calculation.
+
+# 4. An `iff` proof can be organized as two implications, one in each direction.
+
+# 5. A uniqueness proof usually has two parts: first show existence, then show
+#    that any two objects satisfying the property are equal.
+
+# 6. Contradictory hypotheses should be isolated inside `by contra` or a case
+#    branch. The surrounding proof only receives the final proved fact.
+
+# 7. Refuting universal or existential statements often means choosing a
+#    counterexample or showing that any proposed witness leads to an impossible
+#    fact.
+
+# 8. Later proofs can combine earlier chapters' tools freely: proposition
+#    definitions from Chapter 3, witness extraction, modular cases, comparison
+#    splits, and contradiction all work inside the same context-growing proof
+#    model.

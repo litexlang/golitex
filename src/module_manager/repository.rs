@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -49,149 +50,84 @@ pub fn discover_repository(
 pub fn discover_std_module(
     runtime: &mut Runtime,
     std_root: &Path,
-    module_name: &str,
+    package_name: &str,
 ) -> Result<ModuleId, RuntimeError> {
-    let config_path = require_project_config(std_root, &std_root.to_string_lossy(), 0)?;
-    let config = read_project_config(&config_path)?;
-    if let Some(import) = config.imports.first() {
-        return Err(repository_error(
-            "std/litex.config cannot use [import]".to_string(),
-            &config_path.to_string_lossy(),
-            import.line,
-        ));
-    }
-    let mut loading_names = vec![];
-    discover_std_root_export(
-        runtime,
-        std_root,
-        &config_path,
-        &config,
-        module_name,
-        &mut loading_names,
-    )
+    let mut mount_stack = vec![];
+    discover_std_module_with_mount_stack(runtime, std_root, package_name, &mut mount_stack)
 }
 
-fn discover_std_root_export(
+pub fn resolve_std_root() -> Result<PathBuf, String> {
+    let configured_root = env::var("LITEX_STD_PATH").ok().map(PathBuf::from);
+    let current_dir = env::current_dir().ok();
+    let executable = env::current_exe().ok();
+    for root in standard_library_root_candidates(configured_root, current_dir, executable) {
+        if root.join(LITEX_CONFIG).is_file() {
+            return Ok(root);
+        }
+    }
+    Err("standard library was not found; searched LITEX_STD_PATH, ./std, and the executable installation paths".to_string())
+}
+
+fn discover_std_module_with_mount_stack(
     runtime: &mut Runtime,
     std_root: &Path,
-    root_config_path: &Path,
-    root_config: &ProjectConfig,
-    module_name: &str,
-    loading_names: &mut Vec<String>,
+    package_name: &str,
+    mount_stack: &mut Vec<ModuleId>,
 ) -> Result<ModuleId, RuntimeError> {
-    if loading_names.iter().any(|name| name == module_name) {
-        let start = loading_names
-            .iter()
-            .position(|name| name == module_name)
-            .unwrap_or(0);
-        let mut cycle = loading_names[start..].to_vec();
-        cycle.push(module_name.to_string());
-        return Err(repository_error(
-            format!("cyclic std dependency: {}", cycle.join(" -> ")),
-            &root_config_path.to_string_lossy(),
-            0,
-        ));
-    }
-    if let Some(module_id) = runtime.module_manager.module_id_by_name(module_name) {
-        if runtime.module_manager.is_std_module_name(module_name) {
-            return Ok(module_id);
+    let canonical_std_root =
+        canonical_directory(&std_root.to_string_lossy(), &std_root.to_string_lossy(), 0)?;
+    let config_path = require_project_config(
+        &canonical_std_root,
+        &canonical_std_root.to_string_lossy(),
+        0,
+    )?;
+    let config = read_project_config(&config_path)?;
+    let std_root_string = path_string(&canonical_std_root, &config_path.to_string_lossy(), 0)?;
+    let config_path_string = path_string(&config_path, &config_path.to_string_lossy(), 0)?;
+    let std_module_id = match runtime.module_manager.module_id_by_name("std") {
+        Some(module_id) => {
+            let existing_root = runtime
+                .module_manager
+                .module(module_id)
+                .map(|module| module.module_root_path.clone())
+                .unwrap_or_default();
+            if existing_root != std_root_string {
+                return Err(repository_error(
+                    format!(
+                        "standard library root `{}` conflicts with module `std` at `{}`",
+                        std_root_string, existing_root
+                    ),
+                    &config_path.to_string_lossy(),
+                    0,
+                ));
+            }
+            module_id
         }
+        None => runtime
+            .module_manager
+            .create_discovered_module("std".to_string(), std_root_string, config_path_string)
+            .map_err(|message| repository_error(message, &config_path.to_string_lossy(), 0))?,
+    };
+    if mount_stack.contains(&std_module_id) {
         return Err(repository_error(
-            format!(
-                "std module name `{}` conflicts with a project module",
-                module_name
-            ),
-            &root_config_path.to_string_lossy(),
+            "cyclic config import involving `std`".to_string(),
+            &config_path.to_string_lossy(),
             0,
         ));
     }
-    let export = root_config
-        .exports
-        .iter()
-        .find(|export| export.name == module_name)
-        .cloned()
-        .ok_or_else(|| {
-            repository_error(
-                format!(
-                    "std module `{}` is not declared in std/litex.config [export]",
-                    module_name
-                ),
-                &root_config_path.to_string_lossy(),
-                0,
-            )
-        })?;
-    let package_root = canonical_directory(
-        &std_root.join(&export.path).to_string_lossy(),
-        &root_config_path.to_string_lossy(),
-        export.line,
-    )?;
-    let package_config_path = require_project_config(
-        &package_root,
-        &root_config_path.to_string_lossy(),
-        export.line,
-    )?;
-    let package_config = read_project_config(&package_config_path)?;
-    let package_root_string = path_string(
-        &package_root,
-        &root_config_path.to_string_lossy(),
-        export.line,
-    )?;
-    let package_config_string = path_string(
-        &package_config_path,
-        &root_config_path.to_string_lossy(),
-        export.line,
-    )?;
-    let module_id = runtime
-        .module_manager
-        .create_discovered_std_module(
-            module_name.to_string(),
-            package_root_string,
-            package_config_string,
-        )
-        .map_err(|message| {
-            repository_error(message, &root_config_path.to_string_lossy(), export.line)
-        })?;
-    loading_names.push(module_name.to_string());
-    let dependencies = root_config
-        .requirements
-        .iter()
-        .find(|requirement| requirement.name == module_name)
-        .map(|requirement| (requirement.dependencies.clone(), requirement.line))
-        .unwrap_or((vec![], export.line));
-    for dependency in dependencies.0 {
-        let dependency_module_id = discover_std_root_export(
-            runtime,
-            std_root,
-            root_config_path,
-            root_config,
-            dependency.as_str(),
-            loading_names,
-        )?;
-        runtime
-            .module_manager
-            .module_mut(module_id)
-            .expect("registered std module should exist")
-            .config_imports
-            .push(ConfigImport {
-                module_id: dependency_module_id,
-                line_file: (
-                    dependencies.1,
-                    Rc::from(root_config_path.to_string_lossy().to_string()),
-                ),
-                trusted: false,
-            });
-    }
-    let mut mount_stack = vec![module_id];
-    discover_module_config(
+    let selected_config = select_project_exports(&config, &[package_name], &config_path)?;
+    mount_stack.push(std_module_id);
+    let discovery = discover_module_config(
         runtime,
-        module_id,
-        &package_config_path,
-        package_config,
-        false,
-        &mut mount_stack,
-    )?;
-    loading_names.pop();
-    Ok(module_id)
+        std_module_id,
+        &config_path,
+        selected_config,
+        true,
+        mount_stack,
+    );
+    mount_stack.pop();
+    discovery?;
+    Ok(std_module_id)
 }
 
 pub fn discover_repository_for_file(
@@ -280,27 +216,40 @@ fn discover_module_config(
             config.module_flatten_line.unwrap_or(0),
         ));
     }
-    if !allow_config_imports && !config.imports.is_empty() {
+    if !allow_config_imports && (!config.imports.is_empty() || !config.std_imports.is_empty()) {
+        let line = config
+            .imports
+            .first()
+            .map(|import| import.line)
+            .or_else(|| config.std_imports.first().map(|import| import.line))
+            .unwrap_or(0);
         return Err(repository_error(
-            "only a repository root or an independently imported package may use [import]"
-                .to_string(),
+            "only a repository root or an independently imported package may use [import] or [import std]".to_string(),
             &config_path.to_string_lossy(),
-            config.imports[0].line,
+            line,
         ));
     }
     for import in config.imports.iter().cloned() {
         let config_import =
             discover_config_import(runtime, module_id, config_path, import, mount_stack)?;
-        runtime
-            .module_manager
-            .module_mut(module_id)
-            .expect("manifest owner module should exist")
-            .config_imports
-            .push(config_import);
+        append_config_import(runtime, module_id, config_import);
+    }
+    for import in config.std_imports.iter().cloned() {
+        let config_import = discover_config_std_import(runtime, config_path, import, mount_stack)?;
+        append_config_import(runtime, module_id, config_import);
     }
 
     let module_flatten = config.module_flatten;
     for export in config.exports {
+        let already_discovered = runtime
+            .module_manager
+            .module(module_id)
+            .expect("manifest owner module should exist")
+            .exports
+            .contains_key(&export.name);
+        if already_discovered {
+            continue;
+        }
         let trusted = export.trusted;
         let line_file = (
             export.line,
@@ -487,6 +436,87 @@ fn discover_config_import(
         ),
         trusted: import.trusted,
     })
+}
+
+fn discover_config_std_import(
+    runtime: &mut Runtime,
+    config_path: &Path,
+    import: ProjectStdImport,
+    mount_stack: &mut Vec<ModuleId>,
+) -> Result<ConfigImport, RuntimeError> {
+    let std_root = resolve_std_root().map_err(|message| {
+        repository_error(message, &config_path.to_string_lossy(), import.line)
+    })?;
+    let std_module_id =
+        discover_std_module_with_mount_stack(runtime, &std_root, &import.name, mount_stack)?;
+    Ok(ConfigImport {
+        module_id: std_module_id,
+        line_file: (
+            import.line,
+            Rc::from(config_path.to_string_lossy().to_string()),
+        ),
+        trusted: false,
+    })
+}
+
+fn append_config_import(runtime: &mut Runtime, module_id: ModuleId, config_import: ConfigImport) {
+    let module = runtime
+        .module_manager
+        .module_mut(module_id)
+        .expect("manifest owner module should exist");
+    if module.config_imports.iter().any(|existing| {
+        existing.module_id == config_import.module_id && existing.trusted == config_import.trusted
+    }) {
+        return;
+    }
+    module.config_imports.push(config_import);
+}
+
+fn select_project_exports(
+    config: &ProjectConfig,
+    requested_export_names: &[&str],
+    config_path: &Path,
+) -> Result<ProjectConfig, RuntimeError> {
+    let mut selected_names = HashSet::new();
+    let mut pending_names = requested_export_names
+        .iter()
+        .map(|name| (*name).to_string())
+        .collect::<Vec<String>>();
+
+    while let Some(name) = pending_names.pop() {
+        if !selected_names.insert(name.clone()) {
+            continue;
+        }
+        let Some(export) = config.exports.iter().find(|export| export.name == name) else {
+            return Err(repository_error(
+                format!("[export] target `{}` is not declared", name),
+                &config_path.to_string_lossy(),
+                0,
+            ));
+        };
+        if let Some(requirement) = config
+            .requirements
+            .iter()
+            .find(|requirement| requirement.name == export.name)
+        {
+            pending_names.extend(requirement.dependencies.iter().cloned());
+        }
+    }
+
+    let mut selected_config = config.clone();
+    selected_config.exports = config
+        .exports
+        .iter()
+        .filter(|export| selected_names.contains(&export.name))
+        .cloned()
+        .collect();
+    selected_config.requirements = config
+        .requirements
+        .iter()
+        .filter(|requirement| selected_names.contains(&requirement.name))
+        .cloned()
+        .collect();
+    Ok(selected_config)
 }
 
 fn discover_config_export(
@@ -1049,6 +1079,34 @@ fn repository_error(message: String, source_path: &str, line: usize) -> RuntimeE
         (line, Rc::from(source_path)),
     ))
     .into()
+}
+
+fn standard_library_root_candidates(
+    configured_root: Option<PathBuf>,
+    current_dir: Option<PathBuf>,
+    executable: Option<PathBuf>,
+) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(root) = configured_root {
+        roots.push(root);
+    }
+    if let Some(dir) = current_dir {
+        roots.push(dir.join("std"));
+    }
+    if let Some(parent) = executable.as_deref().and_then(Path::parent) {
+        roots.push(parent.join("std"));
+        roots.push(parent.join("..").join("std"));
+        roots.push(parent.join("..").join("share").join("litex").join("std"));
+        roots.push(
+            parent
+                .join("..")
+                .join("..")
+                .join("share")
+                .join("litex")
+                .join("std"),
+        );
+    }
+    roots
 }
 
 #[cfg(test)]
@@ -2060,6 +2118,134 @@ thm self_witness_can_be_obtained:
         });
     }
 
+    #[test]
+    fn config_standard_import_selects_a_generic_std_child_module() {
+        run_repository_test_with_large_stack("config_standard_import", || {
+            let root = repository_test_dir("config-standard-import");
+            let std_root = root.join("installed-std");
+            fs::create_dir_all(&root).expect("create repository fixture");
+            write_standard_library_fixture(&std_root);
+            write_file(
+                &root.join("litex.config"),
+                "[import std]\nbasics\n\n[export]\nmain = \"./main.lit\"\n",
+            );
+            write_file(&root.join("main.lit"), "std::basics::value = 1\n");
+
+            with_standard_library_root(&std_root, || {
+                let mut runtime = Runtime::new();
+                discover_repository(&mut runtime, root.to_str().expect("fixture path is UTF-8"))
+                    .expect("discover standard import fixture");
+                let std_module_id = runtime
+                    .module_manager
+                    .module_id_by_name("std")
+                    .expect("standard root should be a generic module");
+                assert!(runtime
+                    .module_manager
+                    .module_id_by_name("std::basics")
+                    .is_some());
+                assert!(runtime.module_manager.module_id_by_name("basics").is_none());
+                let std_module = runtime
+                    .module_manager
+                    .module(std_module_id)
+                    .expect("standard root should be registered");
+                assert!(std_module.exports.contains_key("basics"));
+                assert!(!std_module.exports.contains_key("other"));
+                let entry_module = runtime.current_module_id();
+                assert!(runtime
+                    .module_manager
+                    .module(entry_module)
+                    .expect("entry module should exist")
+                    .config_imports
+                    .iter()
+                    .any(|import| import.module_id == std_module_id));
+
+                let (results, runtime_error) = crate::pipeline::run_repository_file_target(
+                    &mut runtime,
+                    RepositoryFileTarget::Module(entry_module),
+                );
+                assert!(runtime_error.is_none(), "{runtime_error:?}");
+                assert!(!results.is_empty(), "standard package should execute");
+                assert!(runtime
+                    .module_manager
+                    .module_id_by_name("std::unused")
+                    .is_none());
+            });
+        });
+    }
+
+    #[test]
+    fn source_standard_import_selects_new_children_after_the_std_root_is_loaded() {
+        run_repository_test_with_large_stack("source_standard_import", || {
+            let root = repository_test_dir("source-standard-import");
+            let std_root = root.join("installed-std");
+            fs::create_dir_all(&root).expect("create source fixture");
+            write_standard_library_fixture(&std_root);
+
+            with_standard_library_root(&std_root, || {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("source-standard-import.lit");
+                let (results, runtime_error) = crate::pipeline::run_source_code(
+                    "import std basics\nstd::basics::value = 1\nimport std other\nstd::other::value = 1\n",
+                    &mut runtime,
+                );
+                assert!(runtime_error.is_none(), "{runtime_error:?}");
+                assert!(runtime.module_manager.module_id_by_name("std").is_some());
+                assert!(runtime
+                    .module_manager
+                    .module_id_by_name("std::basics")
+                    .is_some());
+                assert!(runtime
+                    .module_manager
+                    .module_id_by_name("std::other")
+                    .is_some());
+                assert!(runtime.module_manager.module_id_by_name("basics").is_none());
+                let trust_summary = runtime.proof_trust_summary_from_stmt_results(&results);
+                assert!(
+                    !trust_summary
+                        .dependencies
+                        .iter()
+                        .any(|dependency| dependency.kind == "std_package"),
+                    "standard imports use ordinary module execution, not a trust marker"
+                );
+            });
+        });
+    }
+
+    #[test]
+    fn later_standard_import_runs_the_selected_root_requirements() {
+        run_repository_test_with_large_stack("source_standard_import_requirements", || {
+            let root = repository_test_dir("source-standard-import-requirements");
+            let std_root = root.join("installed-std");
+            fs::create_dir_all(&root).expect("create source fixture");
+            write_standard_library_fixture(&std_root);
+
+            with_standard_library_root(&std_root, || {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(
+                    "source-standard-import-requirements.lit",
+                );
+                let (_, runtime_error) = crate::pipeline::run_source_code(
+                    "import std seed\nstd::seed::value = 0\nimport std other\nstd::other::value = 1\n",
+                    &mut runtime,
+                );
+                assert!(runtime_error.is_none(), "{runtime_error:?}");
+            });
+        });
+    }
+
+    #[test]
+    fn standard_library_root_candidates_cover_installed_layouts() {
+        let deb_executable = PathBuf::from("/opt/litex/usr/local/bin/litex");
+        let deb_roots = standard_library_root_candidates(None, None, Some(deb_executable));
+        assert!(deb_roots.contains(&PathBuf::from(
+            "/opt/litex/usr/local/bin/../../share/litex/std"
+        )));
+
+        let sibling_executable = PathBuf::from("/opt/litex/bin/litex");
+        let sibling_roots = standard_library_root_candidates(None, None, Some(sibling_executable));
+        assert!(sibling_roots.contains(&PathBuf::from("/opt/litex/bin/../std")));
+    }
+
     fn run_repository_test_with_large_stack(name: &str, test: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
             .name(name.to_string())
@@ -2096,5 +2282,87 @@ thm self_witness_can_be_obtained:
             content.push_str(format!("{}{} = \"{}\"\n", prefix, name, path).as_str());
         }
         write_file(&root.join("litex.config"), content.as_str());
+    }
+
+    fn write_standard_library_fixture(std_root: &Path) {
+        let basics = std_root.join("basics");
+        let seed = std_root.join("seed");
+        let other = std_root.join("other");
+        let unused = std_root.join("unused");
+        let support = std_root.join("support");
+        fs::create_dir_all(&basics).expect("create basics fixture");
+        fs::create_dir_all(&seed).expect("create seed fixture");
+        fs::create_dir_all(&other).expect("create other fixture");
+        fs::create_dir_all(&unused).expect("create unused fixture");
+        fs::create_dir_all(&support).expect("create support fixture");
+        write_file(
+            &std_root.join("litex.config"),
+            "[import]\nsupport = \"./support\"\n\n[export]\nseed = \"./seed\"\nbasics = \"./basics\"\nother = \"./other\"\nunused = \"./unused\"\n\n[requires]\nother = [\"basics\"]\n",
+        );
+        write_file(
+            &support.join("litex.config"),
+            "[module]\nflatten = true\n\n[export]\nimplementation = \"./main.lit\"\n",
+        );
+        write_file(&support.join("main.lit"), "have value R = 1\n");
+        write_file(
+            &basics.join("litex.config"),
+            "[module]\nflatten = true\n\n[export]\nimplementation = \"./main.lit\"\n",
+        );
+        write_file(&basics.join("main.lit"), "have value R = support::value\n");
+        write_file(
+            &seed.join("litex.config"),
+            "[module]\nflatten = true\n\n[export]\nimplementation = \"./main.lit\"\n",
+        );
+        write_file(&seed.join("main.lit"), "have value R = 0\n");
+        write_file(
+            &other.join("litex.config"),
+            "[module]\nflatten = true\n\n[export]\nimplementation = \"./main.lit\"\n",
+        );
+        write_file(
+            &other.join("main.lit"),
+            "have value R = std::basics::value\n",
+        );
+        write_file(
+            &unused.join("litex.config"),
+            "[module]\nflatten = true\n\n[export]\nimplementation = \"./main.lit\"\n",
+        );
+        write_file(&unused.join("main.lit"), "1 = 0\n");
+    }
+
+    fn with_standard_library_root(std_root: &Path, test: impl FnOnce()) {
+        let lock = standard_library_root_env_lock()
+            .lock()
+            .expect("lock standard library root environment");
+        let _restore = StandardLibraryRootEnvGuard::new();
+        std::env::set_var("LITEX_STD_PATH", std_root);
+        test();
+        drop(lock);
+    }
+
+    fn standard_library_root_env_lock() -> &'static std::sync::Mutex<()> {
+        static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+        LOCK.get_or_init(|| std::sync::Mutex::new(()))
+    }
+
+    struct StandardLibraryRootEnvGuard {
+        previous: Option<std::ffi::OsString>,
+    }
+
+    impl StandardLibraryRootEnvGuard {
+        fn new() -> Self {
+            StandardLibraryRootEnvGuard {
+                previous: std::env::var_os("LITEX_STD_PATH"),
+            }
+        }
+    }
+
+    impl Drop for StandardLibraryRootEnvGuard {
+        fn drop(&mut self) {
+            if let Some(previous) = self.previous.as_ref() {
+                std::env::set_var("LITEX_STD_PATH", previous);
+            } else {
+                std::env::remove_var("LITEX_STD_PATH");
+            }
+        }
     }
 }
