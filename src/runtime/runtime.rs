@@ -39,8 +39,8 @@ pub struct Runtime {
 impl Runtime {
     pub fn new() -> Self {
         Runtime {
-            module_manager: Box::new(ModuleManager::new(KERNEL_PATH)),
-            execution_stack: vec![ExecutionFrame::new_builtin()],
+            module_manager: Box::new(ModuleManager::new()),
+            execution_stack: vec![],
             run_mode: RunMode::File,
             parsing_free_param_collection: FreeParamCollection::new(),
             parsing_local_binding_scope_depth: 0,
@@ -83,14 +83,14 @@ impl Runtime {
         self.execution_stack
             .last()
             .map(|frame| frame.source_path.clone())
-            .unwrap_or_else(|| Rc::from(KERNEL_PATH))
+            .unwrap_or_else(|| Rc::from(""))
     }
 
     pub fn current_module_id(&self) -> ModuleId {
         self.execution_stack
             .last()
-            .and_then(|frame| frame.module_id)
-            .expect("current execution frame is not a module frame")
+            .map(|frame| frame.module_id)
+            .expect("current execution frame should exist")
     }
 
     pub fn current_module(&self) -> &ModuleRunner {
@@ -163,25 +163,19 @@ impl Runtime {
 
     pub fn pop_execution_frame(&mut self) {
         if self.execution_stack.len() <= 1 {
-            unreachable!("cannot pop the builtin execution frame")
+            unreachable!("cannot pop the root user execution frame")
         }
         self.execution_stack.pop();
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
         self.strict_mode
-            && self
-                .execution_stack
-                .last()
-                .and_then(|frame| frame.module_id)
+            && self.execution_stack.last().map(|frame| frame.module_id)
                 == self.module_manager.entry_module_id
     }
 
-    pub fn current_layer(&self) -> ExecutionLayer {
-        self.execution_stack
-            .last()
-            .map(|frame| frame.layer)
-            .expect("an execution frame should always exist")
+    pub(crate) fn has_active_execution_frame(&self) -> bool {
+        !self.execution_stack.is_empty()
     }
 
     pub fn current_execution_mode(&self) -> ExecutionMode {
@@ -200,7 +194,7 @@ impl Runtime {
             .add_dependency(kind, Some(name), line_file);
     }
 
-    fn current_execution_target(&self) -> (Option<ModuleId>, ExecutionLayer) {
+    fn current_execution_target(&self) -> (ModuleId, ExecutionLayer) {
         let frame = self
             .execution_stack
             .last()
@@ -321,18 +315,12 @@ impl Runtime {
             .source_path = Rc::from(source_label);
     }
 
-    /// Rebuild the module registry between independent runner items while
-    /// reusing the kernel environment.
+    /// Rebuild the module registry between independent runner items.
     #[cfg(test)]
     pub(crate) fn reset_for_isolated_runner_item(&mut self) {
         let path = self.current_file_path_rc().to_string();
-        let mut module_manager = Box::new(ModuleManager::new(path.as_str()));
-        std::mem::swap(
-            &mut module_manager.builtin_environment,
-            &mut self.module_manager.builtin_environment,
-        );
-        self.module_manager = module_manager;
-        self.execution_stack = vec![ExecutionFrame::new_builtin()];
+        self.module_manager = Box::new(ModuleManager::new());
+        self.execution_stack.clear();
         self.parsing_free_param_collection.clear();
         self.trusted_import_summary = ProofTrustSummary::new();
         self.new_file_path_new_env_new_name_scope(path.as_str());
@@ -356,15 +344,14 @@ impl Runtime {
 
         let (module_id, layer) = self.current_execution_target();
         match layer {
-            ExecutionLayer::Builtin => self.module_manager.builtin_environment.as_mut(),
             ExecutionLayer::Main => self
                 .module_manager
-                .module_mut(module_id.expect("main execution requires a module"))
+                .module_mut(module_id)
                 .map(|module| module.main_environment.as_mut())
                 .expect("current module should exist"),
             ExecutionLayer::File(file_id) => self
                 .module_manager
-                .module_mut(module_id.expect("file execution requires a module"))
+                .module_mut(module_id)
                 .and_then(|module| module.file_mut(file_id))
                 .map(|file| file.environment.as_mut())
                 .expect("current file environment should exist"),
@@ -395,46 +382,35 @@ impl Runtime {
     }
 
     /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
-    /// The builtin layer at index 0 is left unchanged.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
-        if self.has_user_env() {
-            if self
+        if self
+            .execution_stack
+            .last()
+            .is_some_and(|frame| !frame.local_environment_stack.is_empty())
+        {
+            if let Some(environment) = self
                 .execution_stack
-                .last()
-                .is_some_and(|frame| !frame.local_environment_stack.is_empty())
+                .last_mut()
+                .and_then(|frame| frame.local_environment_stack.last_mut())
             {
-                if let Some(environment) = self
-                    .execution_stack
-                    .last_mut()
-                    .and_then(|frame| frame.local_environment_stack.last_mut())
-                {
-                    **environment = Environment::new_empty_env();
-                }
-            } else {
-                let (module_id, layer) = self.current_execution_target();
-                let module_id = module_id.expect("user execution requires a module");
-                if let Some(module) = self.module_manager.module_mut(module_id) {
-                    match layer {
-                        ExecutionLayer::Builtin => {}
-                        ExecutionLayer::Main => {
-                            module.main_environment = Box::new(Environment::new_empty_env());
-                        }
-                        ExecutionLayer::File(file_id) => {
-                            if let Some(file) = module.file_mut(file_id) {
-                                file.environment = Box::new(Environment::new_empty_env());
-                            }
+                **environment = Environment::new_empty_env();
+            }
+        } else {
+            let (module_id, layer) = self.current_execution_target();
+            if let Some(module) = self.module_manager.module_mut(module_id) {
+                match layer {
+                    ExecutionLayer::Main => {
+                        module.main_environment = Box::new(Environment::new_empty_env());
+                    }
+                    ExecutionLayer::File(file_id) => {
+                        if let Some(file) = module.file_mut(file_id) {
+                            file.environment = Box::new(Environment::new_empty_env());
                         }
                     }
                 }
             }
         }
         self.parsing_free_param_collection.clear();
-    }
-
-    pub fn has_user_env(&self) -> bool {
-        self.execution_stack
-            .last()
-            .is_some_and(|frame| frame.layer != ExecutionLayer::Builtin)
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.

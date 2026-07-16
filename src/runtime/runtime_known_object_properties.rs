@@ -15,9 +15,8 @@ impl Runtime {
             .expect("an execution frame should always exist");
         let local_count = frame.local_environment_stack.len();
         match frame.layer {
-            ExecutionLayer::Builtin => local_count + 1,
-            ExecutionLayer::Main => local_count + 2,
-            ExecutionLayer::File(_) => local_count + 3,
+            ExecutionLayer::Main => local_count + 1,
+            ExecutionLayer::File(_) => local_count + 2,
         }
     }
 
@@ -32,25 +31,15 @@ impl Runtime {
         }
         let layer_index = index - local_count;
         match frame.layer {
-            ExecutionLayer::Builtin => {
-                if layer_index == 0 {
-                    Some(self.module_manager.builtin_environment.as_ref())
-                } else {
-                    None
-                }
-            }
             ExecutionLayer::Main => {
-                let module = self.module_manager.module(frame.module_id?)?;
+                let module = self.module_manager.module(frame.module_id)?;
                 if layer_index == 0 {
                     return Some(module.main_environment.as_ref());
-                }
-                if layer_index == 1 {
-                    return Some(self.module_manager.builtin_environment.as_ref());
                 }
                 None
             }
             ExecutionLayer::File(current_file_id) => {
-                let module = self.module_manager.module(frame.module_id?)?;
+                let module = self.module_manager.module(frame.module_id)?;
                 let current_file = module.file(current_file_id)?;
                 if layer_index == 0 {
                     return Some(current_file.environment.as_ref());
@@ -58,26 +47,9 @@ impl Runtime {
                 if layer_index == 1 {
                     return Some(module.main_environment.as_ref());
                 }
-                if layer_index == 2 {
-                    return Some(self.module_manager.builtin_environment.as_ref());
-                }
                 None
             }
         }
-    }
-
-    pub fn environment_is_builtin_by_top_index(&self, index: usize) -> bool {
-        self.environment_by_top_index(index)
-            .is_some_and(|environment| {
-                std::ptr::eq(
-                    environment,
-                    self.module_manager.builtin_environment.as_ref(),
-                )
-            })
-    }
-
-    pub fn builtin_environment(&self) -> &Environment {
-        self.module_manager.builtin_environment.as_ref()
     }
 
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
@@ -621,10 +593,9 @@ impl Runtime {
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
         let frame = self.execution_stack.last()?;
-        let module_id = frame.module_id?;
+        let module_id = frame.module_id;
         let module = self.module_manager.module(module_id)?;
         match frame.layer {
-            ExecutionLayer::Builtin => None,
             ExecutionLayer::Main => {
                 (!module.module_name.is_empty()).then_some(module.module_name.as_str())
             }

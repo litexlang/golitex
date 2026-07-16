@@ -14,7 +14,7 @@ pub(super) fn print_known_forall_profile_summary(label: &str) {
     }
     let p = crate::verify::known_forall_profile::snapshot();
     println!(
-        "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_builtin={} arg_matches={} requirement_failures={}",
+        "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} arg_matches={} requirement_failures={}",
         label,
         p.entries,
         p.successes,
@@ -23,8 +23,6 @@ pub(super) fn print_known_forall_profile_summary(label: &str) {
         p.exact_candidate_attempts,
         p.fallback_candidate_attempts,
         p.other_candidate_attempts,
-        p.user_candidate_attempts,
-        p.builtin_candidate_attempts,
         p.arg_matches,
         p.requirement_failures,
     );

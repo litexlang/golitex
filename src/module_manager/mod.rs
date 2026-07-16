@@ -3,7 +3,7 @@ mod module_runner;
 mod project_config;
 mod repository;
 
-pub use module_manager::{ModuleManager, KERNEL_PATH};
+pub use module_manager::ModuleManager;
 pub use module_runner::{
     ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId,
     ModuleRunner, ModuleStatus,

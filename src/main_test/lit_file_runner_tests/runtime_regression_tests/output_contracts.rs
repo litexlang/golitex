@@ -496,36 +496,21 @@ claim:
 }
 
 #[test]
-fn kernel_citation_source_uses_safe_kernel_label() {
+fn source_execution_requires_an_active_context() {
     let mut runtime = Runtime::new();
-    let (_, kernel_error) = run_source_code(
-        "abstract_prop kernel_citation_prop(a)\ntrust forall a R:\n    $kernel_citation_prop(a)",
-        &mut runtime,
-    );
+    let (stmt_results, runtime_error) = run_source_code("1 = 1", &mut runtime);
     assert!(
-        kernel_error.is_none(),
-        "kernel citation fixture should define its fact: {:?}",
-        kernel_error
+        stmt_results.is_empty(),
+        "an unconfigured runtime must not execute source"
     );
-
-    let source_code = "have a R\n$kernel_citation_prop(a)";
-    runtime.new_file_path_new_env_new_name_scope("builtin_citation_source");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
+    let error = runtime_error.expect("unconfigured runtime should return an error");
     assert!(
-        run_succeeded,
-        "builtin citation run failed:\n{}",
-        run_output
+        error
+            .trace_message()
+            .contains("runtime has no active source context"),
+        "unexpected unconfigured-runtime error: {}",
+        error.trace_message()
     );
-    assert!(
-        run_output.contains("\"source_kind\": \"builtin\""),
-        "kernel citation output:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"source\": \"kernel\""));
-    assert!(!run_output.contains("\"path\""));
 }
 
 #[test]

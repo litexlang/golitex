@@ -13,7 +13,6 @@ use super::language::localize_json_value;
 
 const SOURCE_KIND: &str = "source_kind";
 const SOURCE_KIND_ENTRY: &str = "entry";
-const SOURCE_KIND_BUILTIN: &str = "builtin";
 const SOURCE_KIND_MODULE: &str = "module";
 const SOURCE_KIND_FILE: &str = "file";
 
@@ -34,9 +33,6 @@ fn display_source_label_for_line_file(
     }
 
     let path = line_file.1.as_ref();
-    if path == KERNEL_PATH {
-        return Some((SOURCE_KIND_BUILTIN.to_string(), KERNEL_PATH.to_string()));
-    }
 
     if line_file_is_entry_source(line_file, &runtime.module_manager) {
         return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
@@ -129,7 +125,7 @@ pub(crate) fn source_ref_json_fields(
                 JsonValue::JsonString(source_kind.clone()),
             ));
             fields.push((JSON_KEY_SOURCE.to_string(), JsonValue::JsonString(source)));
-            if runtime.detail_output && source_kind != SOURCE_KIND_BUILTIN {
+            if runtime.detail_output {
                 fields.push((
                     "path".to_string(),
                     JsonValue::JsonString(source_line_file.1.as_ref().to_string()),

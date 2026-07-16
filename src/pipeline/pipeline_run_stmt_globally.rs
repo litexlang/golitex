@@ -113,11 +113,7 @@ fn run_std_module(
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
-    if let Some(importing_module_id) = runtime
-        .execution_stack
-        .last()
-        .and_then(|frame| frame.module_id)
-    {
+    if let Some(importing_module_id) = runtime.execution_stack.last().map(|frame| frame.module_id) {
         if let ImportTarget::Module(package_module_id) = package_target {
             runtime
                 .module_manager

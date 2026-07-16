@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::verify::known_forall_profile::{self, KnownForallEnvKind, KnownForallSearchPhase};
+use crate::verify::known_forall_profile::{self, KnownForallSearchPhase};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
@@ -77,7 +77,6 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
-                let env_kind = self.known_forall_env_kind(stack_idx);
                 let (atomic_fact_in_known_forall, current_known_forall) = {
                     let env = self
                         .environment_by_top_index(stack_idx)
@@ -93,10 +92,7 @@ impl Runtime {
                     };
                     (current_known_forall.0.clone(), current_known_forall.clone())
                 };
-                known_forall_profile::record_candidate_attempt(
-                    KnownForallSearchPhase::Fallback,
-                    env_kind,
-                );
+                known_forall_profile::record_candidate_attempt(KnownForallSearchPhase::Fallback);
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
                     &atomic_fact_in_known_forall,
                     given_fact,
@@ -180,7 +176,6 @@ impl Runtime {
                 if let Some(fact_verified) = self
                     .try_verify_known_forall_candidate_with_matching_fact(
                         KnownForallSearchPhase::Fallback,
-                        KnownForallEnvKind::User,
                         atomic_fact_in_known_forall,
                         forall_rc,
                         &matching_atomic_fact,
@@ -225,7 +220,6 @@ impl Runtime {
     fn try_verify_known_forall_candidate(
         &mut self,
         phase: KnownForallSearchPhase,
-        env_kind: KnownForallEnvKind,
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
@@ -233,7 +227,6 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
-            env_kind,
             atomic_fact_in_known_forall_fact,
             forall_rc,
             given_atomic_fact,
@@ -245,14 +238,13 @@ impl Runtime {
     fn try_verify_known_forall_candidate_with_matching_fact(
         &mut self,
         phase: KnownForallSearchPhase,
-        env_kind: KnownForallEnvKind,
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        known_forall_profile::record_candidate_attempt(phase, env_kind);
+        known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
             matching_atomic_fact,
@@ -416,7 +408,6 @@ impl Runtime {
 
         for j in 0..bucket_count {
             let entry_idx = bucket_count - 1 - j;
-            let env_kind = self.known_forall_env_kind(stack_idx);
             let candidate = {
                 let env = self
                     .environment_by_top_index(stack_idx)
@@ -432,7 +423,6 @@ impl Runtime {
             };
             if let Some(fact_verified) = self.try_verify_known_forall_candidate(
                 phase,
-                env_kind,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 atomic_fact,
@@ -475,7 +465,6 @@ impl Runtime {
         for (atomic_fact_in_known_forall_fact, forall_rc) in candidates {
             if let Some(fact_verified) = self.try_verify_known_forall_candidate_with_matching_fact(
                 phase,
-                KnownForallEnvKind::User,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 &matching_atomic_fact,
@@ -502,13 +491,6 @@ impl Runtime {
             }
         }
         identifiers
-    }
-
-    fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {
-        if self.environment_is_builtin_by_top_index(stack_idx) {
-            return KnownForallEnvKind::Builtin;
-        }
-        KnownForallEnvKind::User
     }
 
     fn verify_args_satisfy_forall_requirements(

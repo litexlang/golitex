@@ -1899,30 +1899,8 @@ impl Runtime {
         self.current_parse_namespace().map(str::to_string)
     }
 
-    fn name_is_in_builtin_identifier_layer(&self, name: &str) -> bool {
-        if is_builtin_identifier_name(name) {
-            return true;
-        }
-        self.builtin_environment()
-            .defined_identifiers
-            .contains_key(name)
-    }
-
-    fn name_is_in_builtin_prop_layer(&self, name: &str) -> bool {
-        if is_builtin_predicate(name) {
-            return true;
-        }
-        self.builtin_environment()
-            .defined_def_props
-            .contains_key(name)
-            || self
-                .builtin_environment()
-                .defined_abstract_props
-                .contains_key(name)
-    }
-
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
-        if self.name_is_in_builtin_identifier_layer(&id.name) {
+        if is_builtin_identifier_name(&id.name) {
             return id.into();
         }
         let Some(module_name) = self.current_parse_module_name() else {
@@ -1932,7 +1910,7 @@ impl Runtime {
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
-        if self.name_is_in_builtin_prop_layer(&name) {
+        if is_builtin_predicate(&name) {
             return AtomicName::WithoutMod(name);
         }
         let Some(module_name) = self.current_parse_module_name() else {
@@ -2076,7 +2054,7 @@ mod module_qualification_parse_tests {
     }
 
     fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
-        if rt.current_layer() == ExecutionLayer::Builtin {
+        if rt.execution_stack.is_empty() {
             rt.new_file_path_new_env_new_name_scope("test.lit");
         }
         rt.current_module_mut().module_name = module_name.to_string();
@@ -2264,33 +2242,6 @@ mod module_qualification_parse_tests {
         let Obj::FiniteSetSize(_) = obj else {
             panic!("expected finite_set_size builtin object");
         };
-    }
-
-    #[test]
-    fn module_qualification_keeps_builtin_layer_predicate_bare() {
-        let mut rt = Runtime::new();
-        rt.module_manager
-            .builtin_environment
-            .defined_abstract_props
-            .insert(
-                "builtin_prop".to_string(),
-                DefAbstractPropStmt::new(
-                    "builtin_prop".to_string(),
-                    vec!["x".to_string()],
-                    default_line_file(),
-                ),
-            );
-        set_test_module_name(&mut rt, "Nat");
-
-        let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
-
-        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(atomic_fact)) = fact else {
-            panic!("expected normal atomic fact");
-        };
-        let AtomicName::WithoutMod(name) = &atomic_fact.predicate else {
-            panic!("expected bare builtin-layer predicate");
-        };
-        assert_eq!(name, "builtin_prop");
     }
 
     #[test]
