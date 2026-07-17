@@ -233,7 +233,7 @@ fn discover_std_module_with_mount_stack(
         .module(owner_module_id)
         .map(|module| module.module_name.clone())
         .unwrap_or_default();
-    let local_name = format!("std{}{}", MOD_SIGN, package_name);
+    let local_name = package_name.to_string();
     let module_name = join_module_name(owner_name.as_str(), local_name.as_str());
     reject_active_mount_cycle(
         runtime,
@@ -277,7 +277,7 @@ fn discover_std_single_file_module(
         .module(owner_module_id)
         .map(|module| module.module_name.clone())
         .unwrap_or_default();
-    let local_name = format!("std{}{}", MOD_SIGN, package_name);
+    let local_name = package_name.to_string();
     let module_name = join_module_name(owner_name.as_str(), local_name.as_str());
     reject_active_mount_cycle(
         runtime,
@@ -366,6 +366,8 @@ fn discover_module_config(
     config: ProjectConfig,
     mount_stack: &mut Vec<ModuleId>,
 ) -> Result<(), RuntimeError> {
+    let module_flatten = config.module_flatten;
+    let module_flatten_line = config.module_flatten_line;
     let module_hierarchy = runtime
         .module_manager
         .module(module_id)
@@ -420,6 +422,20 @@ fn discover_module_config(
         if trusted {
             module.trusted_run_targets.insert(target, line_file);
         }
+    }
+    if module_flatten {
+        let module = runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("manifest owner module should exist");
+        let Some(ImportTarget::File { file_id, .. }) = module.run_targets.first().copied() else {
+            return Err(repository_error(
+                "[module] flatten requires exactly one exported file".to_string(),
+                &config_path.to_string_lossy(),
+                module_flatten_line.unwrap_or(config.hierarchy_line),
+            ));
+        };
+        module.flattened_export_file = Some(file_id);
     }
     Ok(())
 }
@@ -572,7 +588,7 @@ fn discover_config_std_import(
         mount_stack,
     )?;
     Ok(ConfigImport {
-        name: format!("std{}{}", MOD_SIGN, import.name),
+        name: import.name,
         module_id: std_module_id,
         line_file: (
             import.line,
@@ -1612,7 +1628,7 @@ after = "./after.lit"
     }
 
     #[test]
-    fn file_without_a_direct_parent_config_runs_in_isolation() {
+    fn file_without_a_direct_parent_config_requires_isolated_flag() {
         run_repository_test_with_large_stack("isolated-direct-parent", || {
             let fixture = Fixture::new("isolated-direct-parent");
             let root = fixture.path("root");
@@ -1633,8 +1649,11 @@ main = "./main.lit"
 
             let file = path_string_for_test(&root.join("unconfigured/deep.lit"));
             let (ok, output) = run_source_code_in_file_with_ok(file.as_str());
-            assert!(ok, "{output}");
-            assert!(output.contains("isolated_value"), "{output}");
+            assert!(!ok, "{output}");
+            assert!(
+                output.contains("requires a litex.config in the same folder"),
+                "{output}"
+            );
         });
     }
 
@@ -1655,14 +1674,26 @@ api = "./api.lit"
 "#,
             );
             write_file(&module_root.join("api.lit"), "have value R = 7\n");
-            write_file(&std_root.join("basics.lit"), "have std_value R = 2\n");
+            write_file(
+                &std_root.join("basics/litex.config"),
+                r#"[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&std_root.join("basics/main.lit"), "have std_value R = 2\n");
             write_file(&file_path, "have seed R = 1\n");
 
             with_standard_library_root(&std_root, || {
                 let mut runtime = Runtime::new();
                 let file = path_string_for_test(&file_path);
                 let (_, file_error) =
-                    run_file_with_project_context(file.as_str(), &mut runtime, false);
+                    run_file_with_project_context(file.as_str(), &mut runtime, true);
                 assert!(file_error.is_none(), "{file_error:?}");
                 assert!(runtime.isolated);
 
@@ -1676,7 +1707,7 @@ api = "./api.lit"
 
                 let module_path = path_string_for_test(&module_root);
                 let source = format!(
-                    "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nstd::basics::std_value = 2\nseed = 1\n",
+                    "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nbasics::std_value = 2\nseed = 1\n",
                     module_path
                 );
                 let (stmt_results, runtime_error) = run_source_code(source.as_str(), &mut runtime);
@@ -2096,12 +2127,24 @@ main = "./main.lit"
     }
 
     #[test]
-    fn standard_imports_load_independent_module_packages_without_flattening() {
+    fn standard_imports_expose_flattened_package_names() {
         run_repository_test_with_large_stack("standard-import", || {
             let fixture = Fixture::new("standard-import");
             let root = fixture.path("root");
             let std_root = fixture.path("std");
-            write_file(&std_root.join("basics.lit"), "have value R = 1\n");
+            write_file(
+                &std_root.join("basics/litex.config"),
+                r#"[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&std_root.join("basics/main.lit"), "have value R = 1\n");
             write_file(
                 &root.join("litex.config"),
                 r#"[hierarchy]
@@ -2116,7 +2159,7 @@ main = "./main.lit"
             );
             write_file(
                 &root.join("main.lit"),
-                "std::basics::value = 1\nhave answer R = 1\n",
+                "basics::value = 1\nhave answer R = 1\n",
             );
 
             with_standard_library_root(&std_root, || {

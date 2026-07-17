@@ -254,7 +254,15 @@ pub fn run_file_with_project_context(
     if !force_isolated {
         match discover_repository_for_file(runtime, entry_file_path) {
             Ok(Some(target)) => return run_repository_file_target(runtime, target),
-            Ok(None) => {}
+            Ok(None) => {
+                return (
+                    vec![],
+                    Some(file_target_error(
+                        entry_file_path,
+                        "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
+                    )),
+                )
+            }
             Err(error) => return (vec![], Some(error)),
         }
     }

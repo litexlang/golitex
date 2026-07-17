@@ -422,7 +422,7 @@ mod tests {
         let (_, file_error) = run_file_with_project_context(
             file.to_str().expect("file path is UTF-8"),
             &mut runtime,
-            false,
+            true,
         );
         assert!(file_error.is_none(), "{file_error:?}");
         assert!(runtime.isolated);

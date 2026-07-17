@@ -426,7 +426,7 @@ by extension:
         ? forall y union({x R: x < 0}, {x R: x > 0}):
             y $in {x R: x != 0}
 
-        by thm std::basics::in_union_is_in_left_or_right(y, {x R: x < 0}, {x R: x > 0})
+        by thm basics::in_union_is_in_left_or_right(y, {x R: x < 0}, {x R: x > 0})
         by cases y $in {x R: x != 0}:
             case y $in {x R: x < 0}:
                 do_nothing
@@ -455,7 +455,7 @@ by extension:
 
 by extension union({1, 2}, {2, 4}) = {1, 2, 4}:
     claim forall! x union({1, 2}, {2, 4}) => {x $in {1, 2, 4}}:
-        by thm std::basics::in_union_is_in_left_or_right(x, {1, 2}, {2, 4})
+        by thm basics::in_union_is_in_left_or_right(x, {1, 2}, {2, 4})
         by cases x $in {1, 2, 4}:
             case x $in {1, 2}:
                 by cases x $in {1, 2, 4}:
@@ -483,7 +483,7 @@ by extension union({1, 2}, {2, 4}) = {1, 2, 4}:
 
 by extension union({1, 2}, {2, 4}) = {1, 2, 4}:
     claim forall! x union({1, 2}, {2, 4}) => {x $in {1, 2, 4}}:
-        by thm std::basics::in_union_is_in_left_or_right(x, {1, 2}, {2, 4})
+        by thm basics::in_union_is_in_left_or_right(x, {1, 2}, {2, 4})
         by cases x $in {1, 2, 4}:
             case x $in {1, 2}:
                 by enumerate finite_set:
@@ -628,7 +628,7 @@ by extension set_minus(Z, {n Z: n % 2 = 0}) = {n Z: n % 2 = 1}:
             x $in {n Z: n % 2 = 0}
             x % 2 = 0
             impossible x % 2 = 1
-        by thm std::basics::in_set_minus_from_first_and_not_second(x, Z, {n Z: n % 2 = 0})
+        by thm basics::in_set_minus_from_first_and_not_second(x, Z, {n Z: n % 2 = 0})
         x $in set_minus(Z, {n Z: n % 2 = 0})
 
 set_minus(Z, {n Z: n % 2 = 0}) = {n Z: n % 2 = 1}
@@ -730,7 +730,7 @@ by extension union({x R: -1 < x}, {x R: x < 1}) = R:
         ? forall a union({x R: -1 < x}, {x R: x < 1}):
             a $in R
 
-        by thm std::basics::in_union_is_in_left_or_right(a, {x R: -1 < x}, {x R: x < 1})
+        by thm basics::in_union_is_in_left_or_right(a, {x R: -1 < x}, {x R: x < 1})
         by cases a $in R:
             case a $in {x R: -1 < x}:
                 do_nothing

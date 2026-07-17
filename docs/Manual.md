@@ -2145,13 +2145,15 @@ x = 1
 
 ### Modules and manifests (preview)
 
-Litex projects are folder trees. Every participating folder owns one
-`litex.config` and declares one hierarchy role:
+Mathematical developments are usually an ordered tree, not an unordered bag of
+files: a book might run `chap1`, then `chap2`, then `Part2`, whose own children
+also have a fixed order. Litex makes that tree explicit. Every participating
+folder owns one `litex.config` and declares one hierarchy role:
 
-- `module` is a top-level, independently runnable/importable module. Its parent
-  folder must not also contain `litex.config`.
-- `submodule` is a folder exported directly by its configured parent. Following
-  `..` repeatedly must eventually reach a `module`.
+- `module` is the root of one independently runnable and importable tree. Its
+  parent folder must not also contain `litex.config`.
+- `submodule` is a child folder exported directly by its configured parent.
+  Following `..` repeatedly must eventually reach a `module`.
 
 A module manifest may use `[import]`, `[import std]`, and `[export]`:
 
@@ -2196,8 +2198,9 @@ These manifests obey four structural rules:
    descendant of the importing module.
 
 `[import std]` names installed standard-library modules. For example, `basics`
-loads `std/basics.lit`. A standard package is an ordinary `module`;
-there is no separate `std/litex.config` package root.
+loads the ordinary module folder `std/basics`. Standard packages are mounted by
+their package name, so its public names are `basics::name`, not
+`std::basics::name`; there is no separate `std/litex.config` package root.
 
 Execution follows one recursive, left-to-right `[export]` order:
 
@@ -2207,18 +2210,39 @@ Execution follows one recursive, left-to-right `[export]` order:
   top-level module, runs that module imports, runs every earlier entry in the
   recursive order, and then runs the selected submodule's complete subtree.
 - `litex -f path/to/file.lit` checks only the file's direct parent for
-  `litex.config`. If none exists, the file runs in isolation and then leaves
-  that environment open in an isolated REPL. If one exists,
-  Litex traces to the top-level module and runs the same recursive prefix,
-  stopping after the selected exported file.
+  `litex.config`. If one exists, Litex traces to the top-level module and runs
+  the same recursive prefix, stopping after the selected exported file. If it
+  does not exist, this command fails rather than guessing an isolated run.
+- `litex -isolated -f path/to/file.lit` is the explicit standalone-file mode.
+  It does not discover a project tree, and after the file succeeds its
+  environment remains open in an isolated REPL.
 - If a file sits directly in a configured folder but is not exported exactly
   once, discovery fails.
 
 There is no `[requires]` table and no `[run]` table. Dependency availability is
-the recursive export prefix itself. There is also no flatten mode: every folder
-alias and file alias remains in the canonical name. With the manifests above,
-examples include `chap1::name`, `Part2::lemma1::name`, and
-`std::basics::name`.
+the recursive export prefix itself. This is why `-r` and ordinary `-f` respect
+the source order: before Litex reaches a node, it has run every earlier sibling
+and every necessary earlier ancestor entry, but not later chapters.
+
+Normally every folder and file alias remains in the canonical name. A module
+whose whole public interface is one `.lit` file may opt out of that one extra
+file layer:
+
+```ini
+[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+```
+
+`flatten = true` is valid only for a `module` with exactly one `.lit` export.
+If this folder is imported as `Algebra`, definitions from `main.lit` are cited
+as `Algebra::name`, rather than `Algebra::main::name`. This is how
+`std/basics` exposes `basics::name`.
 
 Earlier exported entries can be cited by canonical name:
 
@@ -2230,8 +2254,9 @@ Part2::lemma1::some_fact
 
 Bare names still mean local definitions, parameters, or kernel builtins. A
 module source file never writes `import` or `trust import`; dependencies belong
-in the top-level module manifest. In contrast, the ordinary `litex` REPL and
-the continued terminal after an isolated `-f` may write:
+in the top-level module manifest. Its runtime is non-isolated, so dynamic
+imports are rejected. In contrast, plain `litex` and the continued terminal
+after `litex -isolated -f` use an isolated runtime and may write:
 
 <!-- litex:skip-test -->
 ```litex
@@ -2239,7 +2264,7 @@ import "../Algebra" as Algebra
 Algebra::implementation::some_fact
 
 import std basics
-std::basics::some_fact
+basics::some_fact
 ```
 
 The quoted path must be an independently runnable `module` folder. Each such

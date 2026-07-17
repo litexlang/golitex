@@ -278,7 +278,7 @@ Basic behavior:
 | `-version` | Print the Litex version and exit. |
 | `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
-| `-f <file>` | If its direct parent has `litex.config`, trace to the module and run the recursive export prefix through this file; otherwise run it and continue in an isolated REPL with the resulting environment. |
+| `-f <file>` | Require `litex.config` in the direct parent, trace to the module, and run the recursive export prefix through this file. Use `-isolated -f <file>` for a standalone file and its continued isolated REPL. |
 | `-isolated -f <file>` | Force a file to run without project discovery. |
 | `-isolated` | Compatibility spelling for the ordinary isolated REPL. |
 | `-r <project>` | Run a module's whole recursive export tree, or the root prefix through a selected submodule's whole subtree. |
