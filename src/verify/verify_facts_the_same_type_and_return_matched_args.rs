@@ -253,28 +253,7 @@ impl Runtime {
                     }
                     Ok(Some(matched_args))
                 }
-                AtomicFact::NotNormalAtomicFact(other_not_normal_atomic_fact) => {
-                    if fact_normal_atomic_fact.predicate.to_string()
-                        != other_not_normal_atomic_fact.predicate.to_string()
-                    {
-                        return Ok(None);
-                    }
-                    if fact_normal_atomic_fact.body.len() != other_not_normal_atomic_fact.body.len()
-                    {
-                        return Ok(None);
-                    }
-
-                    let mut matched_args: Vec<(Obj, Obj)> =
-                        Vec::with_capacity(fact_normal_atomic_fact.body.len());
-                    for (fact_arg, other_arg) in fact_normal_atomic_fact
-                        .body
-                        .iter()
-                        .zip(other_not_normal_atomic_fact.body.iter())
-                    {
-                        matched_args.push((fact_arg.clone(), other_arg.clone()));
-                    }
-                    Ok(Some(matched_args))
-                }
+                AtomicFact::NotNormalAtomicFact(_) => Ok(None),
                 _ => Ok(None),
             },
             AtomicFact::EqualFact(f) => match _other {
@@ -311,28 +290,7 @@ impl Runtime {
                     }
                     Ok(Some(matched_args))
                 }
-                AtomicFact::NormalAtomicFact(other_normal_atomic_fact) => {
-                    if fact_not_normal_atomic_fact.predicate.to_string()
-                        != other_normal_atomic_fact.predicate.to_string()
-                    {
-                        return Ok(None);
-                    }
-                    if fact_not_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len()
-                    {
-                        return Ok(None);
-                    }
-
-                    let mut matched_args: Vec<(Obj, Obj)> =
-                        Vec::with_capacity(fact_not_normal_atomic_fact.body.len());
-                    for (fact_arg, other_arg) in fact_not_normal_atomic_fact
-                        .body
-                        .iter()
-                        .zip(other_normal_atomic_fact.body.iter())
-                    {
-                        matched_args.push((fact_arg.clone(), other_arg.clone()));
-                    }
-                    Ok(Some(matched_args))
-                }
+                AtomicFact::NormalAtomicFact(_) => Ok(None),
                 _ => Ok(None),
             },
             AtomicFact::NotEqualFact(fact_not_equal_fact) => match _other {
@@ -587,34 +545,6 @@ impl Runtime {
                 ])),
                 _ => Ok(None),
             },
-            AtomicFact::RestrictFact(fact_restrict_fact) => match _other {
-                AtomicFact::RestrictFact(other_restrict_fact) => Ok(Some(vec![
-                    (
-                        fact_restrict_fact.obj.clone(),
-                        other_restrict_fact.obj.clone(),
-                    ),
-                    (
-                        fact_restrict_fact.obj_can_restrict_to_fn_set.clone(),
-                        other_restrict_fact.obj_can_restrict_to_fn_set.clone(),
-                    ),
-                ])),
-                _ => Ok(None),
-            },
-            AtomicFact::NotRestrictFact(fact_not_restrict_fact) => match _other {
-                AtomicFact::NotRestrictFact(other_not_restrict_fact) => Ok(Some(vec![
-                    (
-                        fact_not_restrict_fact.obj.clone(),
-                        other_not_restrict_fact.obj.clone(),
-                    ),
-                    (
-                        fact_not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
-                        other_not_restrict_fact
-                            .obj_cannot_restrict_to_fn_set
-                            .clone(),
-                    ),
-                ])),
-                _ => Ok(None),
-            },
             AtomicFact::FnEqualInFact(f) => match _other {
                 AtomicFact::FnEqualInFact(o) => Ok(Some(vec![
                     (f.left.clone(), o.left.clone()),
@@ -764,18 +694,8 @@ impl Runtime {
                     return Ok(false);
                 }
             }
-            (
-                AtomicFact::NormalAtomicFact(fact_normal_atomic_fact),
-                AtomicFact::NotNormalAtomicFact(other_not_normal_atomic_fact),
-            ) => {
-                if fact_normal_atomic_fact.predicate.to_string()
-                    != other_not_normal_atomic_fact.predicate.to_string()
-                {
-                    return Ok(false);
-                }
-                if fact_normal_atomic_fact.body.len() != other_not_normal_atomic_fact.body.len() {
-                    return Ok(false);
-                }
+            (AtomicFact::NormalAtomicFact(_), AtomicFact::NotNormalAtomicFact(_)) => {
+                return Ok(false);
             }
             (
                 AtomicFact::NotNormalAtomicFact(fact_not_normal_atomic_fact),
@@ -791,18 +711,8 @@ impl Runtime {
                     return Ok(false);
                 }
             }
-            (
-                AtomicFact::NotNormalAtomicFact(fact_not_normal_atomic_fact),
-                AtomicFact::NormalAtomicFact(other_normal_atomic_fact),
-            ) => {
-                if fact_not_normal_atomic_fact.predicate.to_string()
-                    != other_normal_atomic_fact.predicate.to_string()
-                {
-                    return Ok(false);
-                }
-                if fact_not_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len() {
-                    return Ok(false);
-                }
+            (AtomicFact::NotNormalAtomicFact(_), AtomicFact::NormalAtomicFact(_)) => {
+                return Ok(false);
             }
             _ => {
                 if std::mem::discriminant(fact) != std::mem::discriminant(other) {

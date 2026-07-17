@@ -490,16 +490,4 @@ fn merge_known_fn_info_map_entry(
     if let Some(equal_to) = child_info.equal_to {
         parent_info.equal_to = Some(equal_to);
     }
-    if let Some(child_restricts) = child_info.restrict_to {
-        let parent_restricts = parent_info.restrict_to.get_or_insert_with(Vec::new);
-        let mut seen = HashSet::new();
-        for (body, _) in parent_restricts.iter() {
-            seen.insert(body.to_string());
-        }
-        for (body, line_file) in child_restricts {
-            if seen.insert(body.to_string()) {
-                parent_restricts.push((body, line_file));
-            }
-        }
-    }
 }

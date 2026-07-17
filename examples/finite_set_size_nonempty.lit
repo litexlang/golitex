@@ -1,0 +1,15 @@
+# Finite cardinality and nonemptiness are linked by builtin rules.
+
+thm nonempty_finite_set_has_positive_finite_set_size:
+    ? forall T finite_set:
+        $is_nonempty_set(T)
+        =>:
+            finite_set_size(T) >= 1
+    finite_set_size(T) >= 1
+
+thm positive_finite_set_size_finite_set_is_nonempty:
+    ? forall T finite_set:
+        finite_set_size(T) >= 1
+        =>:
+            $is_nonempty_set(T)
+    $is_nonempty_set(T)

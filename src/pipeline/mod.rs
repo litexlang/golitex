@@ -20,8 +20,8 @@ pub use pipeline::{
     run_source_code_in_repository_for_cli_with_summary_and_language,
 };
 pub use pipeline_repl::{
-    run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language,
+    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repl_with_detail_output,
+    run_repl_with_detail_output_and_strict, run_repl_with_detail_output_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language_and_isolation,
 };

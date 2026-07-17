@@ -47,7 +47,7 @@ fn run_tmp_lit_file(file_name: &str) {
         None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
     let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
 
@@ -107,7 +107,7 @@ fn print_tmp_lit_in_all_output_languages() {
         ];
 
         for (language_code, output_language) in languages {
-            let mut runtime = Runtime::new_with_builtin_code();
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(path_str);
             runtime.output_language = output_language;
 

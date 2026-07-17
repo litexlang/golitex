@@ -63,8 +63,12 @@ Here `n` is arbitrary.  The proof must work for any integer the context gives
 us.  Existential statements reverse the choice:
 
 ```litex
-forall n Z:
-    exist m Z st {m > n}
+claim:
+    ? forall n Z:
+        exist m Z st {m > n}
+    witness exist m Z st {m > n} from n + 1:
+        n + 1 $in Z
+        n < n + 1
 ```
 
 To prove an existential fact, we may provide a witness.  The witness may depend

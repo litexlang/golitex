@@ -76,7 +76,7 @@ For textbook chapter files, follow the source order when introducing local
 definitions. Do not put a large block of chapter-wide `prop` or
 `abstract_prop` declarations at the top unless the source itself starts that
 way. If Litex already has a builtin concept or standard predicate such as
-membership, subset, finite sets, `count`, tuples, Cartesian products, or
+membership, subset, finite sets, `finite_set_size`, tuples, Cartesian products, or
 function equality, use it directly instead of adding a Tao-specific wrapper.
 Record broad proof debt in nearby comments or todo files; only introduce a
 named prop when it is a real source definition or a reusable local interface
@@ -92,8 +92,9 @@ derivations. Put the surrounding fact into an adjacent module such as
 The main file should import this module with `import "../chap7_cite"` or the
 analogous relative module import. For repository projects, declare the cite
 package with `export mod` and import its root name. Represent source-order file
-reuse with `export file` in `mod.lit` and `local import` in the dependent
-source; Litex has no statement for loading an arbitrary `.lit` path.
+reuse by placing the source earlier in the ordered `[export]` table and citing
+its canonical name in the dependent source; Litex has no statement for loading
+an arbitrary `.lit` path.
 
 Cite packages are explicit proof-debt interfaces, not completed standard
 library modules. Facts in a cite package should be named `thm` or `claim`
@@ -314,7 +315,7 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 9. Avoid proof scaffolding that only repeats the same proposition. After `by thm ...`, do not add an identical conclusion line or wrap the call in a `claim` / `?` goal block unless the verifier needs that exact intermediate fact to fold a prop, bind a local variable, or expose a `forall`/`exist` shape. Try the direct theorem call first, then keep the extra line only when a verifier run shows it is needed.
 
-10. Avoid duplicate nearby facts such as repeating `$is_finite_set(T)` after it was just established, or writing both `count(s) >= 1` and `count(s) $in N_pos` when a typed binding such as `have n N_pos = count(s)` can be made directly. Keep these restatements only when they are the smallest verifier-checkable bridge.
+10. Avoid duplicate nearby facts such as repeating `$is_finite_set(T)` after it was just established, or writing both `finite_set_size(s) >= 1` and `finite_set_size(s) $in N_pos` when a typed binding such as `have n N_pos = finite_set_size(s)` can be made directly. Keep these restatements only when they are the smallest verifier-checkable bridge.
 
 11. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 

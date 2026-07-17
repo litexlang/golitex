@@ -260,7 +260,7 @@ field.
 ```litex
 # Atomic fact verification route gallery.
 
-# Direct builtin facts.
+# Facts verified by builtin rules.
 1 = 1
 1 < 2
 1 $in R

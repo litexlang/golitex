@@ -3,7 +3,16 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
-        self.parse_induc_stmt_after_keyword(tb, false)
+        let param = tb.advance()?;
+        if tb.current()? == IN {
+            tb.skip_token(IN)?;
+            let carrier_set = self.parse_obj(tb)?;
+            return self.parse_by_finite_set_induc_stmt_after_param(tb, param, Some(carrier_set));
+        }
+        if tb.current()? == COLON {
+            return self.parse_by_finite_set_induc_stmt_after_param(tb, param, None);
+        }
+        self.parse_induc_stmt_after_param(tb, param, false)
     }
 
     pub fn parse_strong_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -17,7 +26,15 @@ impl Runtime {
         strong: bool,
     ) -> Result<Stmt, RuntimeError> {
         let param = tb.advance()?;
+        self.parse_induc_stmt_after_param(tb, param, strong)
+    }
 
+    fn parse_induc_stmt_after_param(
+        &mut self,
+        tb: &mut TokenBlock,
+        param: String,
+        strong: bool,
+    ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FROM)?;
         let induc_from = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;

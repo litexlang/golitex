@@ -1,12 +1,6 @@
 use crate::prelude::*;
-use crate::to_latex::{
-    to_latex_from_file_after_builtins, to_latex_from_repository_after_builtins,
-    to_latex_from_source_after_builtins,
-};
-use crate::to_python::{
-    to_python_from_file_after_builtins, to_python_from_repository_after_builtins,
-    to_python_from_source_after_builtins,
-};
+use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
+use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -77,7 +71,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let mut runtime = Runtime::new_with_builtin_code();
+                let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope("-e");
                 runtime.set_output_style(output_style);
                 runtime.strict_mode = strict_mode;
@@ -199,6 +193,100 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                     println!("saved graph JSON to {}", save_path);
+                } else {
+                    println!("{}", trimmed_output);
+                }
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
+            "-factgraph" => {
+                index += 1;
+                let (ok, output, save_path) = match main_flag_fact_graph(
+                    &args,
+                    &mut index,
+                    output_style,
+                    strict_mode,
+                    output_language,
+                    force_isolated,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                let trimmed_output = string_with_trimmed_outer_newlines(output.as_str());
+                if let Some(save_path) = save_path {
+                    let path = Path::new(save_path.as_str());
+                    if let Some(parent) = path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            if let Err(error) = fs::create_dir_all(parent) {
+                                eprintln!(
+                                    "failed to create fact graph output directory for {}: {}",
+                                    save_path, error
+                                );
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    if let Err(error) = fs::write(path, format!("{}\n", trimmed_output)) {
+                        eprintln!(
+                            "failed to write fact graph JSON to {}: {}",
+                            save_path, error
+                        );
+                        process::exit(1);
+                    }
+                    println!("saved fact graph JSON to {}", save_path);
+                } else {
+                    println!("{}", trimmed_output);
+                }
+                if !ok {
+                    process::exit(1);
+                }
+                return;
+            }
+            "-defgraph" => {
+                index += 1;
+                let (ok, output, save_path) = match main_flag_definition_graph(
+                    &args,
+                    &mut index,
+                    output_style,
+                    strict_mode,
+                    output_language,
+                    force_isolated,
+                ) {
+                    Ok(output) => output,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
+                let trimmed_output = string_with_trimmed_outer_newlines(output.as_str());
+                if let Some(save_path) = save_path {
+                    let path = Path::new(save_path.as_str());
+                    if let Some(parent) = path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            if let Err(error) = fs::create_dir_all(parent) {
+                                eprintln!(
+                                    "failed to create definition graph output directory for {}: {}",
+                                    save_path, error
+                                );
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    if let Err(error) = fs::write(path, format!("{}\n", trimmed_output)) {
+                        eprintln!(
+                            "failed to write definition graph JSON to {}: {}",
+                            save_path, error
+                        );
+                        process::exit(1);
+                    }
+                    println!("saved definition graph JSON to {}", save_path);
                 } else {
                     println!("{}", trimmed_output);
                 }
@@ -521,16 +609,25 @@ fn main_flag_file(
         }
     };
 
-    let output =
-        run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation(
-            path_string.as_str(),
-            output_style,
-            strict_mode,
-            output_language,
-            summarize_output,
-            force_isolated,
+    let mut runtime = Runtime::new();
+    runtime.set_output_style(output_style);
+    runtime.strict_mode = strict_mode;
+    runtime.output_language = output_language;
+    let (stmt_results, runtime_error) =
+        run_file_with_project_context(path_string.as_str(), &mut runtime, force_isolated);
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if summarize_output {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
         );
+        output.push('\n');
+    }
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+    if ok && runtime.isolated {
+        run_isolated_repl_with_runtime(VERSION, &mut runtime);
+    }
 }
 
 fn main_flag_repo(
@@ -665,6 +762,128 @@ fn main_flag_graph(
     }
 }
 
+fn main_flag_fact_graph(
+    args: &[String],
+    index: &mut usize,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+) -> Result<(bool, String, Option<String>), String> {
+    let target_flag = read_any_value_after_flag(args, index, "-factgraph")?;
+    let hide_file_paths = !output_style.is_detailed();
+    match target_flag.as_str() {
+        "-e" => {
+            let code = read_non_flag_value_after_flag(args, index, "-e")?;
+            let save_path = read_optional_fact_graph_save_path(args, index)?;
+            let output = if strict_mode {
+                run_fact_graph_for_code_strict_with_language(
+                    code.as_str(),
+                    "-factgraph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            } else {
+                run_fact_graph_for_code_with_language(
+                    code.as_str(),
+                    "-factgraph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            };
+            Ok((output.0, output.1, save_path))
+        }
+        "-f" => {
+            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
+            let save_path = read_optional_fact_graph_save_path(args, index)?;
+            let output = run_fact_graph_for_file_with_strict_language_and_isolation(
+                file_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+                force_isolated,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        "-r" => {
+            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
+            let save_path = read_optional_fact_graph_save_path(args, index)?;
+            let output = run_fact_graph_for_repo_with_strict_and_language(
+                repo_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        _ => Err(
+            "-factgraph must be followed by one of: -f <file> [json], -e <code> [json], -r <repo> [json]"
+                .to_string(),
+        ),
+    }
+}
+
+fn main_flag_definition_graph(
+    args: &[String],
+    index: &mut usize,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+) -> Result<(bool, String, Option<String>), String> {
+    let target_flag = read_any_value_after_flag(args, index, "-defgraph")?;
+    let hide_file_paths = !output_style.is_detailed();
+    match target_flag.as_str() {
+        "-e" => {
+            let code = read_non_flag_value_after_flag(args, index, "-e")?;
+            let save_path = read_optional_definition_graph_save_path(args, index)?;
+            let output = if strict_mode {
+                run_definition_graph_for_code_strict_with_language(
+                    code.as_str(),
+                    "-defgraph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            } else {
+                run_definition_graph_for_code_with_language(
+                    code.as_str(),
+                    "-defgraph -e",
+                    hide_file_paths,
+                    output_language,
+                )
+            };
+            Ok((output.0, output.1, save_path))
+        }
+        "-f" => {
+            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
+            let save_path = read_optional_definition_graph_save_path(args, index)?;
+            let output = run_definition_graph_for_file_with_strict_language_and_isolation(
+                file_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+                force_isolated,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        "-r" => {
+            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
+            let save_path = read_optional_definition_graph_save_path(args, index)?;
+            let output = run_definition_graph_for_repo_with_strict_and_language(
+                repo_path.as_str(),
+                hide_file_paths,
+                strict_mode,
+                output_language,
+            );
+            Ok((output.0, output.1, save_path))
+        }
+        _ => Err(
+            "-defgraph must be followed by one of: -f <file> [json], -e <code> [json], -r <repo> [json]"
+                .to_string(),
+        ),
+    }
+}
+
 fn read_optional_graph_save_path(
     args: &[String],
     index: &mut usize,
@@ -687,13 +906,57 @@ fn read_optional_graph_save_path(
     Ok(save_path)
 }
 
+fn read_optional_fact_graph_save_path(
+    args: &[String],
+    index: &mut usize,
+) -> Result<Option<String>, String> {
+    let save_path = match args.get(*index) {
+        Some(candidate) if !candidate.starts_with('-') => {
+            *index += 1;
+            Some(candidate.clone())
+        }
+        _ => None,
+    };
+
+    if let Some(unexpected) = args.get(*index) {
+        return Err(format!(
+            "unexpected argument after -factgraph target: {}",
+            unexpected
+        ));
+    }
+
+    Ok(save_path)
+}
+
+fn read_optional_definition_graph_save_path(
+    args: &[String],
+    index: &mut usize,
+) -> Result<Option<String>, String> {
+    let save_path = match args.get(*index) {
+        Some(candidate) if !candidate.starts_with('-') => {
+            *index += 1;
+            Some(candidate.clone())
+        }
+        _ => None,
+    };
+
+    if let Some(unexpected) = args.get(*index) {
+        return Err(format!(
+            "unexpected argument after -defgraph target: {}",
+            unexpected
+        ));
+    }
+
+    Ok(save_path)
+}
+
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
 }
 
 fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
-    match to_latex_from_source_after_builtins(code.as_str(), "-latex -e") {
+    match to_latex_from_source(code.as_str(), "-latex -e") {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -709,7 +972,7 @@ fn compile_file_to_latex(
     force_isolated: bool,
 ) -> String {
     if !force_isolated {
-        return match to_latex_from_file_after_builtins(file_path) {
+        return match to_latex_from_file(file_path) {
             Ok(s) => s,
             Err(e) => {
                 let mut runtime = Runtime::new();
@@ -722,7 +985,7 @@ fn compile_file_to_latex(
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
-    match to_latex_from_source_after_builtins(source.as_str(), file_path) {
+    match to_latex_from_source(source.as_str(), file_path) {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -733,7 +996,7 @@ fn compile_file_to_latex(
 }
 
 fn compile_repo_to_latex(repo_path: &str, output_language: OutputLanguage) -> String {
-    match to_latex_from_repository_after_builtins(repo_path) {
+    match to_latex_from_repository(repo_path) {
         Ok(output) => output,
         Err(error) => {
             let mut runtime = Runtime::new();
@@ -745,7 +1008,7 @@ fn compile_repo_to_latex(repo_path: &str, output_language: OutputLanguage) -> St
 
 fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_return(code);
-    match to_python_from_source_after_builtins(code.as_str(), "-python -e") {
+    match to_python_from_source(code.as_str(), "-python -e") {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -761,7 +1024,7 @@ fn compile_file_to_python(
     force_isolated: bool,
 ) -> String {
     if !force_isolated {
-        return match to_python_from_file_after_builtins(file_path) {
+        return match to_python_from_file(file_path) {
             Ok(s) => s,
             Err(e) => {
                 let mut runtime = Runtime::new();
@@ -774,7 +1037,7 @@ fn compile_file_to_python(
         Ok(content) => remove_windows_carriage_return(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
-    match to_python_from_source_after_builtins(source.as_str(), file_path) {
+    match to_python_from_source(source.as_str(), file_path) {
         Ok(s) => s,
         Err(e) => {
             let mut runtime = Runtime::new();
@@ -785,7 +1048,7 @@ fn compile_file_to_python(
 }
 
 fn compile_repo_to_python(repo_path: &str, output_language: OutputLanguage) -> String {
-    match to_python_from_repository_after_builtins(repo_path) {
+    match to_python_from_repository(repo_path) {
         Ok(output) => output,
         Err(error) => {
             let mut runtime = Runtime::new();
@@ -857,10 +1120,10 @@ fn upgrade_message(version: &str) -> String {
 }
 
 fn help_message() -> String {
-    let result = r#"litex : run Litex interactively in your terminal; use cwd/litex.config for local imports
-litex -f <file> : run a registered project file, or an isolated file when no project registers it
-litex -isolated -f <file> : force isolated file mode
-litex -r <project> : discover project/litex.config, then run its ordered [run] plan
+    let result = r#"litex : start an isolated persistent REPL; terminal import is available
+litex -f <file> : require a direct-parent litex.config and run the module prefix through this file
+litex -isolated -f <file> : run any standalone file and continue in an isolated REPL
+litex -r <folder> : run a module's recursive [export] tree, or the root prefix through a selected submodule
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
@@ -869,20 +1132,26 @@ litex -session : run a machine-readable project REPL for framed code blocks
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
 litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
+litex -factgraph -f <file> <json> : run a file and save a fact-only verification dependency graph JSON object
+litex -factgraph -e <code> <json> : run source code and save a fact-only verification dependency graph JSON object
+litex -factgraph -r <project> <json> : run a project and save a fact-only verification dependency graph JSON object
+litex -defgraph -f <file> <json> : run a file and save an environment-backed definition dependency graph JSON object
+litex -defgraph -e <code> <json> : run source code and save an environment-backed definition dependency graph JSON object
+litex -defgraph -r <project> <json> : run a project and save an environment-backed definition dependency graph JSON object
 litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
 litex -python -f <file> : compile supported verified Litex definitions to Python
 litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <project> : compile supported definitions in the project [run] plan to Python
+litex -python -r <project> : compile supported definitions in the selected recursive project run to Python
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
 litex -compact : show only result, type, line, and statement for each result
 litex : show normal output with internal statements and direct verification reasons
 litex -detail : include full audit trace details and raw source paths in JSON output
-litex -strict : reject user trust, trust have, and axiom statements after builtin initialization
+litex -strict : reject user trust, trust have, and axiom statements; configured imports still load normally
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
@@ -942,12 +1211,24 @@ mod tests {
     }
 
     #[test]
+    fn help_lists_fact_graph_command() {
+        let message = help_message();
+        assert!(message.contains("litex -factgraph -f <file> <json>"));
+    }
+
+    #[test]
+    fn help_lists_definition_graph_command() {
+        let message = help_message();
+        assert!(message.contains("litex -defgraph -f <file> <json>"));
+    }
+
+    #[test]
     fn help_explains_project_file_and_run_plan_modes() {
         let message = help_message();
-        assert!(message.contains("run a registered project file"));
+        assert!(message.contains("module prefix through this file"));
         assert!(message.contains("litex -isolated -f <file>"));
-        assert!(message.contains("project/litex.config"));
-        assert!(message.contains("ordered [run] plan"));
+        assert!(message.contains("recursive [export] tree"));
+        assert!(message.contains("selected submodule"));
     }
 
     #[test]

@@ -92,6 +92,12 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
         Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }
+        Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => {
+            if let Some(found) = first_disallowed_control_stmt_in_stmts(&s.base_proof) {
+                return Some(found);
+            }
+            first_disallowed_control_stmt_in_stmts(&s.step_proof)
+        }
         Stmt::By(ByStmt::ByInducStmt(s)) => {
             if let Some(found) = first_disallowed_control_stmt_in_stmts(&s.proof) {
                 return Some(found);
@@ -160,10 +166,6 @@ fn first_disallowed_control_stmt_in_template_def(
 fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
     match stmt {
         Stmt::Command(CommandStmt::ClearStmt(_)) => Some("clear"),
-        Stmt::Command(CommandStmt::ImportStmt(_)) => Some("import"),
-        Stmt::Command(CommandStmt::TrustImportStmt(_)) => Some("trust import"),
-        Stmt::Command(CommandStmt::LocalImportStmt(_)) => Some("local import"),
-        Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => Some("trust local import"),
         _ => None,
     }
 }

@@ -1,0 +1,17 @@
+# Euclidean quotient and remainder are kernel objects/rules, not an imported source package.
+
+forall a Z, d N_pos:
+    integer_quotient(a, d) $in Z
+    a = d * integer_quotient(a, d) + a % d
+
+# A bounded decomposition has the Euclidean remainder.
+forall a Z, m N_pos, q Z, r N:
+    r < m
+    a = m * q + r
+    =>:
+        a % m = r
+
+# Negative dividends use non-negative Euclidean remainders.
+integer_quotient(-7, 3) = -3
+-7 % 3 = 2
+-7 = 3 * integer_quotient(-7, 3) + -7 % 3

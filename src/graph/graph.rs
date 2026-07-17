@@ -24,13 +24,15 @@ struct GraphEdge {
 }
 
 #[derive(Default)]
-struct DepSet {
-    props: Vec<String>,
-    fns: Vec<String>,
+pub(crate) struct DepSet {
+    pub(crate) props: Vec<String>,
+    pub(crate) fns: Vec<String>,
+    pub(crate) structs: Vec<String>,
+    pub(crate) templates: Vec<String>,
 }
 
-struct DepCollector {
-    deps: DepSet,
+pub(crate) struct DepCollector {
+    pub(crate) deps: DepSet,
     local_names: HashSet<String>,
 }
 
@@ -113,7 +115,7 @@ pub fn run_graph_for_file_with_strict_language_and_isolation(
         }
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
     let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
@@ -154,11 +156,11 @@ pub fn run_graph_for_repo_with_strict_and_language(
     strict_mode: bool,
     _output_language: OutputLanguage,
 ) -> (bool, String) {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
-    match discover_repository(&mut runtime, repo_path) {
-        Ok(path) => path,
+    let target = match discover_repository(&mut runtime, repo_path) {
+        Ok(target) => target,
         Err(error) => {
             return render_graph_result(
                 "repo",
@@ -170,11 +172,8 @@ pub fn run_graph_for_repo_with_strict_and_language(
             );
         }
     };
-    let entry_module_id = runtime.current_module_id();
-    let (stmt_results, runtime_error) = crate::pipeline::run_repository_file_target(
-        &mut runtime,
-        RepositoryFileTarget::Module(entry_module_id),
-    );
+    let (stmt_results, runtime_error) =
+        crate::pipeline::run_repository_file_target(&mut runtime, target);
     render_graph_result(
         "repo",
         repo_path,
@@ -193,7 +192,7 @@ fn run_graph_on_source(
     strict_mode: bool,
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(target_label);
     runtime.detail_output = !hide_file_paths;
     runtime.strict_mode = strict_mode;
@@ -886,33 +885,45 @@ impl DepSet {
             self.fns.push(name);
         }
     }
+
+    fn push_struct(&mut self, name: String) {
+        if !self.structs.contains(&name) {
+            self.structs.push(name);
+        }
+    }
+
+    fn push_template(&mut self, name: String) {
+        if !self.templates.contains(&name) {
+            self.templates.push(name);
+        }
+    }
 }
 
 impl DepCollector {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             deps: DepSet::default(),
             local_names: HashSet::new(),
         }
     }
 
-    fn add_local_name(&mut self, name: &str) {
+    pub(crate) fn add_local_name(&mut self, name: &str) {
         self.local_names.insert(name.to_string());
     }
 
-    fn add_param_def_with_type(&mut self, params: &ParamDefWithType) {
+    pub(crate) fn add_param_def_with_type(&mut self, params: &ParamDefWithType) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    fn add_param_def_with_set(&mut self, params: &ParamDefWithSet) {
+    pub(crate) fn add_param_def_with_set(&mut self, params: &ParamDefWithSet) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    fn collect_param_def_with_type_deps(&mut self, params: &ParamDefWithType) {
+    pub(crate) fn collect_param_def_with_type_deps(&mut self, params: &ParamDefWithType) {
         for group in params.groups.iter() {
             if let ParamType::Obj(obj) = &group.param_type {
                 self.collect_obj(obj);
@@ -920,13 +931,13 @@ impl DepCollector {
         }
     }
 
-    fn collect_param_def_with_set_deps(&mut self, params: &ParamDefWithSet) {
+    pub(crate) fn collect_param_def_with_set_deps(&mut self, params: &ParamDefWithSet) {
         for group in params.groups.iter() {
             self.collect_obj(&group.param_type);
         }
     }
 
-    fn collect_fn_set_clause(&mut self, clause: &FnSetClause) {
+    pub(crate) fn collect_fn_set_clause(&mut self, clause: &FnSetClause) {
         self.collect_param_def_with_set_deps(&clause.params_def_with_set);
         self.add_param_def_with_set(&clause.params_def_with_set);
         for fact in clause.dom_facts.iter() {
@@ -935,7 +946,7 @@ impl DepCollector {
         self.collect_obj(&clause.ret_set);
     }
 
-    fn collect_fn_set_body(&mut self, body: &FnSetBody) {
+    pub(crate) fn collect_fn_set_body(&mut self, body: &FnSetBody) {
         self.collect_param_def_with_set_deps(&body.params_def_with_set);
         self.add_param_def_with_set(&body.params_def_with_set);
         for fact in body.dom_facts.iter() {
@@ -944,14 +955,14 @@ impl DepCollector {
         self.collect_obj(&body.ret_set);
     }
 
-    fn collect_anonymous_fn(&mut self, anonymous_fn: &AnonymousFn) {
+    pub(crate) fn collect_anonymous_fn(&mut self, anonymous_fn: &AnonymousFn) {
         let old = self.local_names.clone();
         self.collect_fn_set_body(&anonymous_fn.body);
         self.collect_obj(&anonymous_fn.equal_to);
         self.local_names = old;
     }
 
-    fn collect_have_fn_by_induc_case(&mut self, case: &HaveFnByInducCase) {
+    pub(crate) fn collect_have_fn_by_induc_case(&mut self, case: &HaveFnByInducCase) {
         self.collect_and_chain_atomic_fact(&case.case_fact);
         match &case.body {
             HaveFnByInducCaseBody::EqualTo(obj) => self.collect_obj(obj),
@@ -963,7 +974,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_fact(&mut self, fact: &Fact) {
+    pub(crate) fn collect_fact(&mut self, fact: &Fact) {
         match fact {
             Fact::AtomicFact(a) => self.collect_atomic_fact(a),
             Fact::ExistFact(e) => self.collect_exist_fact(e),
@@ -981,7 +992,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_forall_fact(&mut self, fact: &ForallFact) {
+    pub(crate) fn collect_forall_fact(&mut self, fact: &ForallFact) {
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&fact.params_def_with_type);
         self.add_param_def_with_type(&fact.params_def_with_type);
@@ -994,7 +1005,7 @@ impl DepCollector {
         self.local_names = old;
     }
 
-    fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
+    pub(crate) fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
         let body = fact.body();
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&body.params_def_with_type);
@@ -1005,7 +1016,7 @@ impl DepCollector {
         self.local_names = old;
     }
 
-    fn collect_exist_body_fact(&mut self, fact: &ExistBodyFact) {
+    pub(crate) fn collect_exist_body_fact(&mut self, fact: &ExistBodyFact) {
         match fact {
             ExistBodyFact::AtomicFact(a) => self.collect_atomic_fact(a),
             ExistBodyFact::AndFact(a) => self.collect_and_fact(a),
@@ -1015,7 +1026,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_or_and_chain_atomic_fact(&mut self, fact: &OrAndChainAtomicFact) {
+    pub(crate) fn collect_or_and_chain_atomic_fact(&mut self, fact: &OrAndChainAtomicFact) {
         match fact {
             OrAndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
             OrAndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
@@ -1024,7 +1035,10 @@ impl DepCollector {
         }
     }
 
-    fn collect_exist_or_and_chain_atomic_fact(&mut self, fact: &ExistOrAndChainAtomicFact) {
+    pub(crate) fn collect_exist_or_and_chain_atomic_fact(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+    ) {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
             ExistOrAndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
@@ -1034,7 +1048,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_and_chain_atomic_fact(&mut self, fact: &AndChainAtomicFact) {
+    pub(crate) fn collect_and_chain_atomic_fact(&mut self, fact: &AndChainAtomicFact) {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
             AndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
@@ -1042,19 +1056,19 @@ impl DepCollector {
         }
     }
 
-    fn collect_and_fact(&mut self, fact: &AndFact) {
+    pub(crate) fn collect_and_fact(&mut self, fact: &AndFact) {
         for atomic in fact.facts.iter() {
             self.collect_atomic_fact(atomic);
         }
     }
 
-    fn collect_or_fact(&mut self, fact: &OrFact) {
+    pub(crate) fn collect_or_fact(&mut self, fact: &OrFact) {
         for branch in fact.facts.iter() {
             self.collect_and_chain_atomic_fact(branch);
         }
     }
 
-    fn collect_chain_fact(&mut self, fact: &ChainFact) {
+    pub(crate) fn collect_chain_fact(&mut self, fact: &ChainFact) {
         for prop_name in fact.prop_names.iter() {
             let name = prop_name.to_string();
             if !is_builtin_predicate(&name) {
@@ -1066,7 +1080,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_atomic_fact(&mut self, fact: &AtomicFact) {
+    pub(crate) fn collect_atomic_fact(&mut self, fact: &AtomicFact) {
         match fact {
             AtomicFact::NormalAtomicFact(f) => {
                 self.deps.push_prop(f.predicate.to_string());
@@ -1088,7 +1102,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_obj(&mut self, obj: &Obj) {
+    pub(crate) fn collect_obj(&mut self, obj: &Obj) {
         match obj {
             Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => {}
             Obj::FnObj(fn_obj) => {
@@ -1104,6 +1118,7 @@ impl DepCollector {
             Obj::Mul(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Div(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Mod(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::IntegerQuotient(x) => self.collect_two_objs(&x.dividend, &x.divisor),
             Obj::Pow(x) => self.collect_two_objs(&x.base, &x.exponent),
             Obj::Log(x) => self.collect_two_objs(&x.base, &x.arg),
             Obj::Max(x) => self.collect_two_objs(&x.left, &x.right),
@@ -1151,12 +1166,8 @@ impl DepCollector {
             Obj::Cup(x) => self.collect_obj(&x.left),
             Obj::Cap(x) => self.collect_obj(&x.left),
             Obj::PowerSet(x) => self.collect_obj(&x.set),
-            Obj::Count(x) => self.collect_obj(&x.set),
+            Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
             Obj::FnRange(x) => self.collect_obj(&x.function),
-            Obj::FnRangeOn(x) => {
-                self.collect_obj(&x.function);
-                self.collect_obj(&x.set);
-            }
             Obj::Replacement(x) => {
                 self.deps.push_prop(x.prop_name.to_string());
                 self.collect_obj(&x.source_set);
@@ -1213,17 +1224,20 @@ impl DepCollector {
             }
             Obj::AnonymousFn(x) => self.collect_anonymous_fn(x),
             Obj::StructObj(x) => {
+                self.deps.push_struct(x.name.to_string());
                 for param in x.params.iter() {
                     self.collect_obj(param);
                 }
             }
             Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                self.deps.push_struct(x.struct_obj.name.to_string());
                 for param in x.struct_obj.params.iter() {
                     self.collect_obj(param);
                 }
                 self.collect_obj(&x.obj);
             }
             Obj::InstantiatedTemplateObj(x) => {
+                self.deps.push_template(x.template_name.to_string());
                 for arg in x.args.iter() {
                     self.collect_obj(arg);
                 }
@@ -1231,7 +1245,7 @@ impl DepCollector {
         }
     }
 
-    fn collect_fn_head(&mut self, head: &FnObjHead) {
+    pub(crate) fn collect_fn_head(&mut self, head: &FnObjHead) {
         match head {
             FnObjHead::Identifier(identifier) => {
                 if !self.local_names.contains(&identifier.name)
@@ -1257,12 +1271,16 @@ impl DepCollector {
                 self.collect_obj(&obj_at_index.index);
             }
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                self.deps
+                    .push_struct(field_access.struct_obj.name.to_string());
                 for param in field_access.struct_obj.params.iter() {
                     self.collect_obj(param);
                 }
                 self.collect_obj(&field_access.obj);
             }
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
+                self.deps
+                    .push_template(template_obj.template_name.to_string());
                 for arg in template_obj.args.iter() {
                     self.collect_obj(arg);
                 }
@@ -1272,6 +1290,7 @@ impl DepCollector {
             | FnObjHead::Exist(_)
             | FnObjHead::SetBuilder(_)
             | FnObjHead::FnSet(_)
+            | FnObjHead::DefStructField(_)
             | FnObjHead::Induc(_)
             | FnObjHead::DefAlgo(_)
             | FnObjHead::TupleIndex(_)
@@ -1279,13 +1298,13 @@ impl DepCollector {
         }
     }
 
-    fn collect_two_objs(&mut self, left: &Obj, right: &Obj) {
+    pub(crate) fn collect_two_objs(&mut self, left: &Obj, right: &Obj) {
         self.collect_obj(left);
         self.collect_obj(right);
     }
 }
 
-fn by_thm_names_in_stmts(stmts: &[Stmt]) -> Vec<String> {
+pub(crate) fn by_thm_names_in_stmts(stmts: &[Stmt]) -> Vec<String> {
     let mut out = Vec::new();
     for stmt in stmts.iter() {
         collect_by_thm_names_in_stmt(stmt, &mut out);

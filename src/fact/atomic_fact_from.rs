@@ -84,18 +84,6 @@ impl From<SupersetFact> for AtomicFact {
     }
 }
 
-impl From<RestrictFact> for AtomicFact {
-    fn from(f: RestrictFact) -> Self {
-        AtomicFact::RestrictFact(f)
-    }
-}
-
-impl From<NotRestrictFact> for AtomicFact {
-    fn from(f: NotRestrictFact) -> Self {
-        AtomicFact::NotRestrictFact(f)
-    }
-}
-
 impl From<NotNormalAtomicFact> for AtomicFact {
     fn from(f: NotNormalAtomicFact) -> Self {
         AtomicFact::NotNormalAtomicFact(f)
@@ -272,18 +260,6 @@ impl From<SubsetFact> for Fact {
 
 impl From<SupersetFact> for Fact {
     fn from(f: SupersetFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
-
-impl From<RestrictFact> for Fact {
-    fn from(f: RestrictFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
-
-impl From<NotRestrictFact> for Fact {
-    fn from(f: NotRestrictFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }

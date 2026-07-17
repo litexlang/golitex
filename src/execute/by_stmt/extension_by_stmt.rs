@@ -48,6 +48,18 @@ impl Runtime {
 
                 let unused_name = rt.generate_random_unused_name();
 
+                let left_to_right_subset_fact: AtomicFact = SubsetFact::new(
+                    stmt.left.clone(),
+                    stmt.right.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
+                let left_to_right_subset_result = rt
+                    .verify_atomic_fact_by_known_atomic_or_builtin_only(
+                        &left_to_right_subset_fact,
+                        &VerifyState::new(0, false),
+                    )?;
+
                 let left_to_right_forall_fact = ForallFact::new(
                     ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                         vec![unused_name.clone()],
@@ -63,8 +75,10 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                let left_to_right_result = rt
-                    .verify_fact_return_err_if_not_true(
+                let left_to_right_result = if left_to_right_subset_result.is_true() {
+                    left_to_right_subset_result
+                } else {
+                    rt.verify_fact_return_err_if_not_true(
                         &left_to_right_forall_fact,
                         &VerifyState::new(0, false),
                     )
@@ -78,8 +92,21 @@ impl Runtime {
                             Some(verify_error),
                             vec![],
                         )
-                    })?;
+                    })?
+                };
                 inside_results.push(left_to_right_result);
+
+                let right_to_left_subset_fact: AtomicFact = SubsetFact::new(
+                    stmt.right.clone(),
+                    stmt.left.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
+                let right_to_left_subset_result = rt
+                    .verify_atomic_fact_by_known_atomic_or_builtin_only(
+                        &right_to_left_subset_fact,
+                        &VerifyState::new(0, false),
+                    )?;
 
                 let right_to_left_forall_fact = ForallFact::new(
                     ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -96,8 +123,10 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                let right_to_left_result = rt
-                    .verify_fact_return_err_if_not_true(
+                let right_to_left_result = if right_to_left_subset_result.is_true() {
+                    right_to_left_subset_result
+                } else {
+                    rt.verify_fact_return_err_if_not_true(
                         &right_to_left_forall_fact,
                         &VerifyState::new(0, false),
                     )
@@ -111,7 +140,8 @@ impl Runtime {
                             Some(verify_error),
                             vec![],
                         )
-                    })?;
+                    })?
+                };
                 inside_results.push(right_to_left_result);
 
                 Ok::<_, RuntimeError>((

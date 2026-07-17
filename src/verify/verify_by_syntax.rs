@@ -8,22 +8,7 @@ impl Runtime {
                 _ => false,
             },
             Obj::Atom(AtomObj::IdentifierWithMod(a)) => match right {
-                Obj::Atom(AtomObj::IdentifierWithMod(b)) => {
-                    if a.mod_name == b.mod_name {
-                        a.to_string() == b.to_string()
-                    } else {
-                        let module_manager = &self.module_manager;
-                        match (
-                            module_manager.module_by_import_name(&a.mod_name),
-                            module_manager.module_by_import_name(&b.mod_name),
-                        ) {
-                            (Some(m1), Some(m2)) => {
-                                m1.module_root_path == m2.module_root_path && a.name == b.name
-                            }
-                            _ => false,
-                        }
-                    }
-                }
+                Obj::Atom(AtomObj::IdentifierWithMod(b)) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnObj(f) => match right {
@@ -52,6 +37,10 @@ impl Runtime {
             },
             Obj::Mod(a) => match right {
                 Obj::Mod(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::IntegerQuotient(a) => match right {
+                Obj::IntegerQuotient(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Pow(a) => match right {
@@ -178,16 +167,12 @@ impl Runtime {
                 Obj::Tuple(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Count(a) => match right {
-                Obj::Count(b) => a.to_string() == b.to_string(),
+            Obj::FiniteSetSize(a) => match right {
+                Obj::FiniteSetSize(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnRange(a) => match right {
                 Obj::FnRange(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::FnRangeOn(a) => match right {
-                Obj::FnRangeOn(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Replacement(a) => match right {

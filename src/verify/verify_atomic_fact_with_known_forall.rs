@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::verify::known_forall_profile::{self, KnownForallEnvKind, KnownForallSearchPhase};
+use crate::verify::known_forall_profile::{self, KnownForallSearchPhase};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
@@ -77,7 +77,6 @@ impl Runtime {
             };
             for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
-                let env_kind = self.known_forall_env_kind(stack_idx);
                 let (atomic_fact_in_known_forall, current_known_forall) = {
                     let env = self
                         .environment_by_top_index(stack_idx)
@@ -93,10 +92,7 @@ impl Runtime {
                     };
                     (current_known_forall.0.clone(), current_known_forall.clone())
                 };
-                known_forall_profile::record_candidate_attempt(
-                    KnownForallSearchPhase::Fallback,
-                    env_kind,
-                );
+                known_forall_profile::record_candidate_attempt(KnownForallSearchPhase::Fallback);
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
                     &atomic_fact_in_known_forall,
                     given_fact,
@@ -180,7 +176,6 @@ impl Runtime {
                 if let Some(fact_verified) = self
                     .try_verify_known_forall_candidate_with_matching_fact(
                         KnownForallSearchPhase::Fallback,
-                        KnownForallEnvKind::User,
                         atomic_fact_in_known_forall,
                         forall_rc,
                         &matching_atomic_fact,
@@ -225,7 +220,6 @@ impl Runtime {
     fn try_verify_known_forall_candidate(
         &mut self,
         phase: KnownForallSearchPhase,
-        env_kind: KnownForallEnvKind,
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
@@ -233,7 +227,6 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
-            env_kind,
             atomic_fact_in_known_forall_fact,
             forall_rc,
             given_atomic_fact,
@@ -245,14 +238,13 @@ impl Runtime {
     fn try_verify_known_forall_candidate_with_matching_fact(
         &mut self,
         phase: KnownForallSearchPhase,
-        env_kind: KnownForallEnvKind,
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        known_forall_profile::record_candidate_attempt(phase, env_kind);
+        known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
             matching_atomic_fact,
@@ -416,7 +408,6 @@ impl Runtime {
 
         for j in 0..bucket_count {
             let entry_idx = bucket_count - 1 - j;
-            let env_kind = self.known_forall_env_kind(stack_idx);
             let candidate = {
                 let env = self
                     .environment_by_top_index(stack_idx)
@@ -432,7 +423,6 @@ impl Runtime {
             };
             if let Some(fact_verified) = self.try_verify_known_forall_candidate(
                 phase,
-                env_kind,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 atomic_fact,
@@ -475,7 +465,6 @@ impl Runtime {
         for (atomic_fact_in_known_forall_fact, forall_rc) in candidates {
             if let Some(fact_verified) = self.try_verify_known_forall_candidate_with_matching_fact(
                 phase,
-                KnownForallEnvKind::User,
                 atomic_fact_in_known_forall_fact,
                 forall_rc,
                 &matching_atomic_fact,
@@ -497,18 +486,11 @@ impl Runtime {
             for name in environment.defined_identifiers.keys() {
                 identifiers.insert(
                     format!("{}{}{}", module_name, MOD_SIGN, name),
-                    Identifier::new(name.clone()).into(),
+                    IdentifierWithMod::new(module_name.to_string(), name.clone()).into(),
                 );
             }
         }
         identifiers
-    }
-
-    fn known_forall_env_kind(&self, stack_idx: usize) -> KnownForallEnvKind {
-        if self.environment_is_builtin_by_top_index(stack_idx) {
-            return KnownForallEnvKind::Builtin;
-        }
-        KnownForallEnvKind::User
     }
 
     fn verify_args_satisfy_forall_requirements(
@@ -772,6 +754,9 @@ impl Runtime {
             Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
+            Obj::IntegerQuotient(ref a) => {
+                self.match_arg_when_left_is_integer_quotient(&a.dividend, &a.divisor, given_arg)
+            }
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
@@ -816,15 +801,12 @@ impl Runtime {
             Obj::FiniteSeqListObj(ref left) => {
                 self.match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
             }
-            Obj::Count(ref left) => self.match_arg_when_left_is_count(left.set.as_ref(), given_arg),
+            Obj::FiniteSetSize(ref left) => {
+                self.match_arg_when_left_is_finite_set_size(left.set.as_ref(), given_arg)
+            }
             Obj::FnRange(ref left) => {
                 self.match_arg_when_left_is_fn_range(left.function.as_ref(), given_arg)
             }
-            Obj::FnRangeOn(ref left) => self.match_arg_when_left_is_fn_range_on(
-                left.function.as_ref(),
-                left.set.as_ref(),
-                given_arg,
-            ),
             Obj::Replacement(ref left) => self.match_arg_when_left_is_replacement(left, given_arg),
             Obj::Sum(ref left) => self.match_arg_when_left_is_sum(
                 left.start.as_ref(),
@@ -1317,6 +1299,20 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_integer_quotient(
+        &mut self,
+        dividend: &Obj,
+        divisor: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::IntegerQuotient(given) => {
+                self.match_arg_binary_then_merge(dividend, divisor, &given.dividend, &given.divisor)
+            }
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_pow(
         &mut self,
         left_left: &Obj,
@@ -1656,7 +1652,7 @@ impl Runtime {
         left: &ExistBodyFact,
         given: &ExistBodyFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !exist_body_facts_have_same_shape(left, given) {
+        if !exist_body_facts_have_same_shape(left, given)? {
             return Ok(None);
         }
         let left_args = left.get_args_from_fact_ref();
@@ -1797,6 +1793,29 @@ impl Runtime {
         let Obj::AnonymousFn(given) = given_arg else {
             return Ok(None);
         };
+
+        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let given_param_count =
+            ParamGroupWithSet::number_of_params(&given.body.params_def_with_set);
+        if left_param_count != given_param_count {
+            return Ok(None);
+        }
+
+        // Anonymous-function parameter names are binders, not part of the
+        // function value.  Rename both sides to the same internal names before
+        // matching their domains and bodies.  For example, `fn(k R) R {k}` and
+        // `fn(i R) R {i}` must match here.
+        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let left = self.anonymous_fn_with_alpha_renamed_params(left, &alpha_names)?;
+        let given = self.anonymous_fn_with_alpha_renamed_params(given, &alpha_names)?;
+        self.match_alpha_renamed_anonymous_fn_with_params(&left, &given)
+    }
+
+    fn match_alpha_renamed_anonymous_fn_with_params(
+        &mut self,
+        left: &AnonymousFn,
+        given: &AnonymousFn,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
             return Ok(None);
         }
@@ -1881,6 +1900,106 @@ impl Runtime {
         Ok(Some(merged))
     }
 
+    pub(crate) fn objs_match_for_fact_lookup(
+        &self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<bool, RuntimeError> {
+        if known_arg.to_string() == given_arg.to_string() {
+            return Ok(true);
+        }
+
+        let (Obj::AnonymousFn(known), Obj::AnonymousFn(given)) = (known_arg, given_arg) else {
+            return Ok(false);
+        };
+        self.anonymous_fns_are_alpha_equivalent(known, given)
+    }
+
+    fn anonymous_fns_are_alpha_equivalent(
+        &self,
+        left: &AnonymousFn,
+        right: &AnonymousFn,
+    ) -> Result<bool, RuntimeError> {
+        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let right_param_count =
+            ParamGroupWithSet::number_of_params(&right.body.params_def_with_set);
+        if left_param_count != right_param_count {
+            return Ok(false);
+        }
+
+        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let left = self.anonymous_fn_with_alpha_renamed_params(left, &alpha_names)?;
+        let right = self.anonymous_fn_with_alpha_renamed_params(right, &alpha_names)?;
+        Ok(left.to_string() == right.to_string())
+    }
+
+    fn anonymous_fn_alpha_param_names(param_count: usize) -> Vec<String> {
+        (0..param_count)
+            .map(|index| format!("#anonymous_fn_alpha_{}", index))
+            .collect()
+    }
+
+    fn anonymous_fn_with_alpha_renamed_params(
+        &self,
+        anonymous_fn: &AnonymousFn,
+        alpha_names: &[String],
+    ) -> Result<AnonymousFn, RuntimeError> {
+        let param_names =
+            ParamGroupWithSet::collect_param_names(&anonymous_fn.body.params_def_with_set);
+        if param_names.len() != alpha_names.len() {
+            return Err(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                "internal: anonymous-function alpha rename needs one name per parameter"
+                    .to_string(),
+            ))
+            .into());
+        }
+
+        let mut param_to_alpha_name = HashMap::with_capacity(param_names.len());
+        for (param_name, alpha_name) in param_names.iter().zip(alpha_names.iter()) {
+            param_to_alpha_name.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(alpha_name.clone(), ParamObjType::FnSet),
+            );
+        }
+
+        let mut params_def_with_set =
+            Vec::with_capacity(anonymous_fn.body.params_def_with_set.len());
+        let mut next_alpha_name = 0;
+        for group in anonymous_fn.body.params_def_with_set.iter() {
+            let group_len = group.params.len();
+            let params = alpha_names[next_alpha_name..next_alpha_name + group_len].to_vec();
+            next_alpha_name += group_len;
+            let param_set =
+                self.inst_obj(group.set_obj(), &param_to_alpha_name, ParamObjType::FnSet)?;
+            params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
+        }
+
+        let mut dom_facts = Vec::with_capacity(anonymous_fn.body.dom_facts.len());
+        for dom_fact in anonymous_fn.body.dom_facts.iter() {
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+                None,
+            )?);
+        }
+
+        AnonymousFn::new(
+            params_def_with_set,
+            dom_facts,
+            self.inst_obj(
+                anonymous_fn.body.ret_set.as_ref(),
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+            )?,
+            self.inst_obj(
+                anonymous_fn.equal_to.as_ref(),
+                &param_to_alpha_name,
+                ParamObjType::FnSet,
+            )?,
+        )
+    }
+
     fn match_arg_in_anonymous_fn_body_with_given_arg(
         &mut self,
         known_arg: &Obj,
@@ -1941,6 +2060,14 @@ impl Runtime {
                 given.right.as_ref(),
                 anonymous_fn_body,
             ),
+            (Obj::IntegerQuotient(left), Obj::IntegerQuotient(given)) => self
+                .match_binary_in_anonymous_fn_body(
+                    left.dividend.as_ref(),
+                    left.divisor.as_ref(),
+                    given.dividend.as_ref(),
+                    given.divisor.as_ref(),
+                    anonymous_fn_body,
+                ),
             (Obj::Pow(left), Obj::Pow(given)) => self.match_binary_in_anonymous_fn_body(
                 left.base.as_ref(),
                 left.exponent.as_ref(),
@@ -2421,16 +2548,17 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_count(
+    fn match_arg_when_left_is_finite_set_size(
         &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Count(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_set,
-                given.set.as_ref(),
-            ),
+            Obj::FiniteSetSize(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_set,
+                    given.set.as_ref(),
+                ),
             _ => Ok(None),
         }
     }
@@ -2446,23 +2574,6 @@ impl Runtime {
                     left_function,
                     given.function.as_ref(),
                 ),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_fn_range_on(
-        &mut self,
-        left_function: &Obj,
-        left_set: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::FnRangeOn(ref given) => self.match_arg_binary_then_merge(
-                left_function,
-                left_set,
-                given.function.as_ref(),
-                given.set.as_ref(),
-            ),
             _ => Ok(None),
         }
     }
@@ -2861,16 +2972,26 @@ fn push_atomic_fact_in_forall_arg_shape_key_if_new(
     }
 }
 
-fn exist_body_facts_have_same_shape(left: &ExistBodyFact, right: &ExistBodyFact) -> bool {
-    matches!(
-        (left, right),
-        (ExistBodyFact::AtomicFact(_), ExistBodyFact::AtomicFact(_))
-            | (ExistBodyFact::AndFact(_), ExistBodyFact::AndFact(_))
-            | (ExistBodyFact::ChainFact(_), ExistBodyFact::ChainFact(_))
-            | (ExistBodyFact::OrFact(_), ExistBodyFact::OrFact(_))
-            | (
-                ExistBodyFact::InlineForall(_),
-                ExistBodyFact::InlineForall(_)
-            )
-    )
+fn exist_body_facts_have_same_shape(
+    left: &ExistBodyFact,
+    right: &ExistBodyFact,
+) -> Result<bool, RuntimeError> {
+    match (left, right) {
+        (ExistBodyFact::AtomicFact(left), ExistBodyFact::AtomicFact(right)) => {
+            Runtime::_verify_atomic_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::AndFact(left), ExistBodyFact::AndFact(right)) => {
+            Runtime::_verify_and_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::ChainFact(left), ExistBodyFact::ChainFact(right)) => {
+            Runtime::_verify_chain_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::OrFact(left), ExistBodyFact::OrFact(right)) => {
+            Runtime::_verify_or_fact_the_same_type_ref(left, right)
+        }
+        (ExistBodyFact::InlineForall(left), ExistBodyFact::InlineForall(right)) => {
+            Ok(left.to_string() == right.to_string())
+        }
+        _ => Ok(false),
+    }
 }

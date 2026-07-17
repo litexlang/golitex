@@ -45,6 +45,14 @@ impl Runtime {
                 }
             }
         }
+        if let Some(result) = self
+            .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts(
+                atomic_fact,
+                &module_names,
+            )?
+        {
+            return Ok(result);
+        }
 
         let arg = args[0].clone();
         let arg_resolved = self.resolve_obj(&arg);
@@ -82,6 +90,14 @@ impl Runtime {
                     return Ok(result);
                 }
             }
+        }
+        if let Some(result) = self
+            .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts(
+                atomic_fact,
+                &module_names,
+            )?
+        {
+            return Ok(result);
         }
 
         let left = args[0].clone();
@@ -136,6 +152,14 @@ impl Runtime {
                     return Ok(result);
                 }
             }
+        }
+        if let Some(result) = self
+            .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts(
+                atomic_fact,
+                &module_names,
+            )?
+        {
+            return Ok(result);
         }
 
         let mut new_args: Vec<Obj> = Vec::with_capacity(args.len());
@@ -263,8 +287,6 @@ impl Runtime {
             AtomicFact::NotInFact(_) => NotInFact::new(left, right, line_file).into(),
             AtomicFact::NotSubsetFact(_) => NotSubsetFact::new(left, right, line_file).into(),
             AtomicFact::NotSupersetFact(_) => NotSupersetFact::new(left, right, line_file).into(),
-            AtomicFact::RestrictFact(_) => RestrictFact::new(left, right, line_file).into(),
-            AtomicFact::NotRestrictFact(_) => NotRestrictFact::new(left, right, line_file).into(),
             AtomicFact::FnEqualFact(_) => FnEqualFact::new(left, right, line_file).into(),
             AtomicFact::NormalAtomicFact(x) => {
                 NormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
@@ -443,6 +465,105 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts(
+        &self,
+        atomic_fact: &AtomicFact,
+        module_names: &[String],
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !atomic_fact
+            .args_ref()
+            .iter()
+            .any(|arg| matches!(arg, Obj::AnonymousFn(_)))
+        {
+            return Ok(None);
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(result) = self
+                .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
+                    environment,
+                    atomic_fact,
+                )?
+            {
+                return Ok(Some(result));
+            }
+        }
+        for module_name in module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                if let Some(result) = self
+                    .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
+                        environment,
+                        atomic_fact,
+                    )?
+                {
+                    return Ok(Some(result));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
+        &self,
+        environment: &Environment,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
+        let mut known_facts = Vec::new();
+        match atomic_fact.number_of_args() {
+            1 => {
+                if let Some(facts) = environment.known_atomic_facts_with_1_arg.get(&lookup_key) {
+                    known_facts.extend(facts.values());
+                }
+            }
+            2 => {
+                if let Some(facts) = environment.known_atomic_facts_with_2_args.get(&lookup_key) {
+                    known_facts.extend(facts.values());
+                }
+            }
+            _ => {
+                if let Some(facts) = environment
+                    .known_atomic_facts_with_0_or_more_than_2_args
+                    .get(&lookup_key)
+                {
+                    known_facts.extend(facts.iter());
+                }
+            }
+        }
+
+        let given_args = atomic_fact.args_ref();
+        for known_fact in known_facts {
+            let known_args = known_fact.args_ref();
+            if known_args.len() != given_args.len() {
+                continue;
+            }
+            let mut all_args_match = true;
+            for (known_arg, given_arg) in known_args.iter().zip(given_args.iter()) {
+                if !self.objs_match_for_fact_lookup(known_arg, given_arg)? {
+                    all_args_match = false;
+                    break;
+                }
+            }
+            if all_args_match {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                        atomic_fact.clone().into(),
+                        VerifiedByResult::cited_fact(
+                            atomic_fact.clone().into(),
+                            known_fact.clone().into(),
+                            None,
+                        ),
+                        Vec::new(),
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
     }
 }
 

@@ -226,13 +226,14 @@ impl Runtime {
                         ),
                     )));
                 };
-                Ok(HaveFnEqualStmt::new(
-                    instance_name.to_string(),
-                    anonymous_fn,
-                    s.as_algo,
-                    line_file.clone(),
+                Ok(
+                    HaveFnEqualStmt::new(
+                        instance_name.to_string(),
+                        anonymous_fn,
+                        line_file.clone(),
+                    )
+                    .into(),
                 )
-                .into())
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(s) => {
                 let fn_set_clause = self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
@@ -258,7 +259,6 @@ impl Runtime {
                     fn_set_clause,
                     cases,
                     equal_tos,
-                    s.as_algo,
                     line_file.clone(),
                 )
                 .into())
@@ -279,7 +279,6 @@ impl Runtime {
                     measure,
                     lower_bound,
                     cases,
-                    s.as_algo,
                     line_file.clone(),
                 )
                 .into())

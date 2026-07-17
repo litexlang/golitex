@@ -3,398 +3,112 @@ use crate::prelude::*;
 use std::fs;
 use std::rc::Rc;
 
-fn trusted_import_not_allowed_in_strict_mode(stmt: Stmt) -> RuntimeError {
-    short_exec_error(
-        stmt,
-        "strict mode does not allow trusted imports".to_string(),
-        None,
-        vec![],
-    )
-}
-
 pub fn run_stmt_at_global_env(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     match stmt {
-        Stmt::Command(CommandStmt::ImportStmt(import_stmt)) => {
-            let execution_mode = runtime.current_execution_mode();
-            let result = run_import_stmt(import_stmt, runtime, execution_mode);
-            return runtime
-                .finish_statement_execution(result, execution_mode == ExecutionMode::Trusted);
+        Stmt::Command(CommandStmt::ImportStmt(import)) => {
+            let result = run_isolated_import(import, runtime);
+            runtime.finish_statement_execution(result, false)
         }
-        Stmt::Command(CommandStmt::TrustImportStmt(trust_import_stmt)) => {
-            if runtime.strict_mode {
-                return runtime.finish_statement_execution(
-                    Err(trusted_import_not_allowed_in_strict_mode(stmt.clone())),
-                    false,
-                );
-            }
-            runtime.record_trusted_import(
-                "trust_import",
-                trust_import_stmt.import.to_string(),
-                trust_import_stmt.line_file(),
-            );
-            let result =
-                run_import_stmt(&trust_import_stmt.import, runtime, ExecutionMode::Trusted)
-                    .map(|_| NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
-            return runtime.finish_statement_execution(result, true);
-        }
-        Stmt::Command(CommandStmt::LocalImportStmt(local_import_stmt)) => {
-            let execution_mode = runtime.current_execution_mode();
-            let result = run_local_import_stmt(local_import_stmt, runtime, execution_mode);
-            return runtime
-                .finish_statement_execution(result, execution_mode == ExecutionMode::Trusted);
-        }
-        Stmt::Command(CommandStmt::TrustLocalImportStmt(trust_local_import_stmt)) => {
-            if runtime.strict_mode {
-                if trusted_local_import_can_reuse_strict_cache(
-                    &trust_local_import_stmt.local_import,
-                    runtime,
-                ) {
-                    let result = run_local_import_stmt(
-                        &trust_local_import_stmt.local_import,
-                        runtime,
-                        ExecutionMode::Verified,
-                    )
-                    .map(|_| NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
-                    return runtime.finish_statement_execution(result, false);
-                }
-                return runtime.finish_statement_execution(
-                    Err(trusted_import_not_allowed_in_strict_mode(stmt.clone())),
-                    false,
-                );
-            }
-            runtime.record_trusted_import(
-                "trust_local_import",
-                trust_local_import_stmt.local_import.name.clone(),
-                trust_local_import_stmt.line_file(),
-            );
-            let result = run_local_import_stmt(
-                &trust_local_import_stmt.local_import,
-                runtime,
-                ExecutionMode::Trusted,
-            )
-            .map(|_| NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into());
-            return runtime.finish_statement_execution(result, true);
-        }
-        _ => {
-            return runtime.exec_stmt(stmt);
-        }
+        _ => runtime.exec_stmt(stmt),
     }
-}
-
-fn run_import_stmt(
-    import_stmt: &ImportStmt,
-    runtime: &mut Runtime,
-    execution_mode: ExecutionMode,
-) -> Result<StmtResult, RuntimeError> {
-    let ImportStmt::ImportGlobalModule(stmt) = import_stmt;
-    if runtime.run_mode == RunMode::Repository {
-        if let Some(target) = runtime.module_manager.root_export(&stmt.mod_name) {
-            let ImportTarget::Module(imported_module_id) = target else {
-                return Err(import_stmt_error(
-                    import_stmt,
-                    format!(
-                        "root export `{}` is a file; files can only be loaded with local import inside their owner module",
-                        stmt.mod_name
-                    ),
-                ));
-            };
-            let importing_module_id = runtime.current_module_id();
-            load_discovered_module(
-                imported_module_id,
-                import_stmt.clone().into(),
-                runtime,
-                execution_mode,
-            )?;
-            runtime
-                .module_manager
-                .record_import_dependency(importing_module_id, imported_module_id);
-            return Ok(NonFactualStmtSuccess::new_with_stmt(import_stmt.clone().into()).into());
-        }
-    }
-    Err(import_stmt_error(
-        import_stmt,
-        format!(
-            "import `{}` is not a root module declared in litex.config; Litex no longer provides standard-library imports",
-            stmt.mod_name
-        ),
-    ))
-}
-
-fn run_local_import_stmt(
-    local_import_stmt: &LocalImportStmt,
-    runtime: &mut Runtime,
-    execution_mode: ExecutionMode,
-) -> Result<StmtResult, RuntimeError> {
-    if runtime.run_mode != RunMode::Repository {
-        return runtime.exec_local_import_stmt(local_import_stmt);
-    }
-    let module_id = runtime.current_module_id();
-    let target = resolve_local_import_target(local_import_stmt, runtime)?;
-
-    match target {
-        ImportTarget::File { module_id, file_id } => {
-            load_exported_file(
-                module_id,
-                file_id,
-                local_import_stmt.clone().into(),
-                runtime,
-                execution_mode,
-            )?;
-        }
-        ImportTarget::Module(imported_module_id) => {
-            load_discovered_module(
-                imported_module_id,
-                local_import_stmt.clone().into(),
-                runtime,
-                execution_mode,
-            )?;
-            runtime
-                .module_manager
-                .record_import_dependency(module_id, imported_module_id);
-        }
-    }
-    runtime.activate_local_import(local_import_stmt.name.clone(), target);
-    Ok(NonFactualStmtSuccess::new_with_stmt(local_import_stmt.clone().into()).into())
-}
-
-fn resolve_local_import_target(
-    local_import_stmt: &LocalImportStmt,
-    runtime: &Runtime,
-) -> Result<ImportTarget, RuntimeError> {
-    let module_id = runtime.current_module_id();
-    let layer = runtime.current_layer();
-    runtime
-        .module_manager
-        .module(module_id)
-        .and_then(|module| module.local_import_target(layer, &local_import_stmt.name))
-        .ok_or_else(|| {
-            short_exec_error(
-                local_import_stmt.clone().into(),
-                format!(
-                    "local import `{}` was not declared for this source by its module's litex.config",
-                    local_import_stmt.name
-                ),
-                None,
-                vec![],
-            )
-        })
-}
-
-fn trusted_local_import_can_reuse_strict_cache(
-    local_import_stmt: &LocalImportStmt,
-    runtime: &Runtime,
-) -> bool {
-    if runtime.run_mode != RunMode::Repository {
-        return false;
-    }
-    let Ok(target) = resolve_local_import_target(local_import_stmt, runtime) else {
-        return false;
-    };
-    match target {
-        ImportTarget::File { module_id, file_id } => runtime
-            .module_manager
-            .module(module_id)
-            .and_then(|module| module.file(file_id))
-            .is_some_and(|file| {
-                file.status == FileStatus::Loaded
-                    && file.execution_mode == ExecutionMode::Verified
-                    && file.strictly_verified
-            }),
-        ImportTarget::Module(module_id) => {
-            runtime
-                .module_manager
-                .module(module_id)
-                .is_some_and(|module| {
-                    module.status == ModuleStatus::Loaded
-                        && module.execution_mode == ExecutionMode::Verified
-                        && module.strictly_verified
-                })
-        }
-    }
-}
-
-fn load_discovered_module(
-    module_id: ModuleId,
-    cause_stmt: Stmt,
-    runtime: &mut Runtime,
-    execution_mode: ExecutionMode,
-) -> Result<(), RuntimeError> {
-    let (status, loaded_mode) = runtime
-        .module_manager
-        .module(module_id)
-        .map(|module| (module.status, module.execution_mode))
-        .ok_or_else(|| {
-            short_exec_error(
-                cause_stmt.clone(),
-                "discovered module is missing".to_string(),
-                None,
-                vec![],
-            )
-        })?;
-    match status {
-        ModuleStatus::Loaded => {
-            if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
-                return Err(short_exec_error(
-                    cause_stmt,
-                    "module was already loaded through trust import; restart the run before importing it normally"
-                        .to_string(),
-                    None,
-                    vec![],
-                ));
-            }
-            return Ok(());
-        }
-        ModuleStatus::Loading => {
-            let module_name = runtime
-                .module_manager
-                .module(module_id)
-                .map(|module| module.module_name.clone())
-                .unwrap_or_default();
-            return Err(short_exec_error(
-                cause_stmt,
-                format!("cyclic module import involving `{}`", module_name),
-                None,
-                vec![],
-            ));
-        }
-        ModuleStatus::Discovered => {}
-    }
-
-    let module_name = runtime
-        .module_manager
-        .module(module_id)
-        .map(|module| module.module_name.clone())
-        .unwrap_or_default();
-    let (_, runtime_error) =
-        run_repository_module_target_with_mode(runtime, module_id, execution_mode);
-    if let Some(error) = runtime_error {
-        return Err(short_exec_error(
-            cause_stmt,
-            format!("failed to load discovered module `{}`", module_name),
-            Some(error),
-            vec![],
-        ));
-    }
-    Ok(())
-}
-
-fn load_exported_file(
-    module_id: ModuleId,
-    file_id: FileId,
-    cause_stmt: Stmt,
-    runtime: &mut Runtime,
-    execution_mode: ExecutionMode,
-) -> Result<(), RuntimeError> {
-    let (status, source_path, canonical_name, loaded_mode) = runtime
-        .module_manager
-        .module(module_id)
-        .and_then(|module| module.file(file_id))
-        .map(|file| {
-            (
-                file.status,
-                file.source_path.clone(),
-                file.canonical_name.clone(),
-                file.execution_mode,
-            )
-        })
-        .ok_or_else(|| {
-            short_exec_error(
-                cause_stmt.clone(),
-                "exported file is missing".to_string(),
-                None,
-                vec![],
-            )
-        })?;
-    match status {
-        FileStatus::Loaded => {
-            if execution_mode == ExecutionMode::Verified && loaded_mode == ExecutionMode::Trusted {
-                return Err(short_exec_error(
-                    cause_stmt,
-                    "file was already loaded through trust local import; restart the run before importing it normally"
-                        .to_string(),
-                    None,
-                    vec![],
-                ));
-            }
-            return Ok(());
-        }
-        FileStatus::Loading => {
-            return Err(short_exec_error(
-                cause_stmt,
-                format!("cyclic local import involving `{}`", canonical_name),
-                None,
-                vec![],
-            ));
-        }
-        FileStatus::Unloaded => {}
-    }
-
-    let module_manager_before = runtime.module_manager.clone();
-    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
-        .expect("exported file should exist")
-        .status = FileStatus::Loading;
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
-        .expect("exported file should exist")
-        .execution_mode = execution_mode;
-    let content = fs::read_to_string(&source_path).map_err(|error| {
-        runtime.module_manager = module_manager_before.clone();
-        short_exec_error(
-            cause_stmt.clone(),
-            format!("failed to read exported file `{}`: {}", source_path, error),
-            None,
-            vec![],
-        )
-    })?;
-    runtime.parsing_free_param_collection = FreeParamCollection::new();
-    runtime.push_file_execution_frame_with_mode(module_id, file_id, &source_path, execution_mode);
-    let (_, runtime_error) = run_source_code(&content, runtime);
-    runtime.pop_execution_frame();
-    runtime.parsing_free_param_collection = parsing_free_params_before;
-    if let Some(error) = runtime_error {
-        runtime.module_manager = module_manager_before;
-        return Err(short_exec_error(
-            cause_stmt,
-            format!("failed to load exported file `{}`", canonical_name),
-            Some(error),
-            vec![],
-        ));
-    }
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
-        .expect("exported file should exist")
-        .status = FileStatus::Loaded;
-    let strictly_verified = runtime.strict_mode && execution_mode == ExecutionMode::Verified;
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
-        .expect("exported file should exist")
-        .strictly_verified = strictly_verified;
-    Ok(())
 }
 
 pub fn run_repository_file_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    match target {
-        RepositoryFileTarget::Module(module_id) => run_repository_module_target(runtime, module_id),
-        RepositoryFileTarget::File { module_id, file_id } => {
-            run_repository_exported_file_target(runtime, module_id, file_id)
-        }
+    let isolated_before = runtime.isolated;
+    runtime.isolated = false;
+    let result = match target {
+        RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
+        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target),
+    };
+    runtime.isolated = isolated_before;
+    result
+}
+
+fn run_isolated_import(
+    import: &ImportStmt,
+    runtime: &mut Runtime,
+) -> Result<StmtResult, RuntimeError> {
+    if !runtime.isolated {
+        return Err(short_exec_error(
+            import.clone().into(),
+            "source import is only available in an isolated terminal".to_string(),
+            None,
+            vec![],
+        ));
     }
+
+    let module_manager_before = runtime.module_manager.clone();
+    let discovery = match import {
+        ImportStmt::Module(stmt) => discover_isolated_module_import(
+            runtime,
+            stmt.path.as_str(),
+            stmt.alias.as_str(),
+            stmt.line_file.clone(),
+        ),
+        ImportStmt::Std(stmt) => {
+            discover_isolated_std_import(runtime, stmt.name.as_str(), stmt.line_file.clone())
+        }
+    };
+    let module_id = match discovery {
+        Ok(module_id) => module_id,
+        Err(error) => {
+            runtime.module_manager = module_manager_before;
+            return Err(error);
+        }
+    };
+    let isolated_before = runtime.isolated;
+    runtime.isolated = false;
+    let (_, runtime_error) = run_repository_module_target(runtime, module_id);
+    runtime.isolated = isolated_before;
+    if let Some(error) = runtime_error {
+        runtime.module_manager = module_manager_before;
+        return Err(error);
+    }
+    Ok(NonFactualStmtSuccess::new_with_stmt(import.clone().into()).into())
+}
+
+fn run_repository_module_prefix(
+    runtime: &mut Runtime,
+    target_module_id: ModuleId,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let root_module_id = runtime
+        .module_manager
+        .entry_module_id
+        .unwrap_or(target_module_id);
+    if root_module_id == target_module_id {
+        return run_repository_module_target(runtime, root_module_id);
+    }
+    run_repository_prefix(runtime, RepositoryFileTarget::Module(target_module_id))
+}
+
+fn run_repository_prefix(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let execution_mode = runtime.current_execution_mode();
+    let target_module_id = match target {
+        RepositoryFileTarget::Module(module_id) => module_id,
+        RepositoryFileTarget::File { module_id, .. } => module_id,
+    };
+    let root_module_id = runtime
+        .module_manager
+        .entry_module_id
+        .unwrap_or(target_module_id);
+    if !module_is_descendant_of(runtime, target_module_id, root_module_id) {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "selected target is not inside the entry module export tree",
+            )),
+        );
+    }
+    run_repository_module_plan_to_target(runtime, root_module_id, execution_mode, target)
 }
 
 fn run_repository_module_target(
@@ -428,7 +142,7 @@ fn run_repository_module_target_with_mode(
             return (
                 vec![],
                 Some(repository_target_error(
-                    "module was already loaded through trust import; restart the run before importing it normally",
+                    "module was already loaded through a trusted configuration entry; restart the run before loading it normally",
                 )),
             );
         }
@@ -471,7 +185,7 @@ fn run_repository_module_target_with_mode(
         runtime.module_manager = module_manager_before;
         return result;
     }
-    runtime.module_manager.finish_loading_import(module_id);
+    runtime.module_manager.finish_loading_module(module_id);
     runtime
         .module_manager
         .module_mut(module_id)
@@ -480,7 +194,245 @@ fn run_repository_module_target_with_mode(
     result
 }
 
+fn run_repository_module_prefix_with_mode(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+    target: RepositoryFileTarget,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "registered project module is missing",
+            )),
+        );
+    };
+    if runtime.current_module_id() == module_id {
+        return run_repository_module_plan_to_target(runtime, module_id, execution_mode, target);
+    }
+    if module.status == ModuleStatus::Loaded {
+        return (vec![], None);
+    }
+    if module.status == ModuleStatus::Loading {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "cyclic module import while running project prefix",
+            )),
+        );
+    }
+    let module_manager_before = runtime.module_manager.clone();
+    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
+    if let Err(message) = runtime
+        .module_manager
+        .begin_loading_discovered_module(module_id)
+    {
+        return (vec![], Some(repository_target_error(message.as_str())));
+    }
+    let module_path = runtime
+        .module_manager
+        .module(module_id)
+        .expect("registered project module should exist")
+        .main_file_path
+        .clone();
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .expect("registered project module should exist")
+        .execution_mode = execution_mode;
+    runtime.parsing_free_param_collection = FreeParamCollection::new();
+    runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
+    let result = run_repository_module_plan_to_target(runtime, module_id, execution_mode, target);
+    runtime.pop_execution_frame();
+    runtime.parsing_free_param_collection = parsing_free_params_before;
+    if result.1.is_some() {
+        runtime.module_manager = module_manager_before;
+        return result;
+    }
+    runtime.module_manager.finish_loading_module(module_id);
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .expect("registered project module should exist")
+        .strictly_verified = runtime.strict_mode && execution_mode == ExecutionMode::Verified;
+    result
+}
+
+fn run_repository_module_plan_to_target(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+    selected_target: RepositoryFileTarget,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    if let Some(error) = import_error {
+        return (results, Some(error));
+    }
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return (
+            results,
+            Some(repository_target_error(
+                "registered project module is missing",
+            )),
+        );
+    };
+    let source_path = module.main_file_path.clone();
+    if source_path.ends_with(".lit") {
+        let (mut source_results, source_error) =
+            run_repository_source_file(runtime, source_path.as_str());
+        results.append(&mut source_results);
+        return (results, source_error);
+    }
+    let run_targets = module.run_targets.clone();
+    for target in run_targets {
+        let target_execution_mode =
+            project_target_execution_mode(runtime, module_id, target, execution_mode);
+        let target_matches = repository_target_matches_import_target(selected_target, target);
+        let target_contains = match target {
+            ImportTarget::Module(child_module_id) => {
+                repository_target_is_inside_module(runtime, selected_target, child_module_id)
+            }
+            ImportTarget::File { .. } => false,
+        };
+        let (mut target_results, runtime_error) = if target_contains && !target_matches {
+            let ImportTarget::Module(child_module_id) = target else {
+                unreachable!("only a module target can contain another project target")
+            };
+            run_repository_module_prefix_with_mode(
+                runtime,
+                child_module_id,
+                target_execution_mode,
+                selected_target,
+            )
+        } else {
+            run_repository_import_target(runtime, target, target_execution_mode)
+        };
+        results.append(&mut target_results);
+        if let Some(error) = runtime_error {
+            return (results, Some(error));
+        }
+        if target_matches || target_contains {
+            return (results, None);
+        }
+    }
+    (
+        results,
+        Some(repository_target_error(
+            "selected target is missing from its recursive ordered [export] tree",
+        )),
+    )
+}
+
 fn run_repository_module_plan(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    if let Some(error) = import_error {
+        return (results, Some(error));
+    }
+    let Some(module) = runtime.module_manager.module(module_id) else {
+        return (
+            results,
+            Some(repository_target_error(
+                "registered project module is missing",
+            )),
+        );
+    };
+    let source_path = module.main_file_path.clone();
+    if source_path.ends_with(".lit") {
+        let (mut source_results, source_error) =
+            run_repository_source_file(runtime, source_path.as_str());
+        results.append(&mut source_results);
+        return (results, source_error);
+    }
+    let run_targets = module.run_targets.clone();
+    for target in run_targets {
+        let target_execution_mode =
+            project_target_execution_mode(runtime, module_id, target, execution_mode);
+        let (mut target_results, runtime_error) =
+            run_repository_import_target(runtime, target, target_execution_mode);
+        results.append(&mut target_results);
+        if let Some(error) = runtime_error {
+            return (results, Some(error));
+        }
+    }
+    (results, None)
+}
+
+fn run_repository_import_target(
+    runtime: &mut Runtime,
+    target: ImportTarget,
+    execution_mode: ExecutionMode,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    match target {
+        ImportTarget::File { module_id, file_id } => run_repository_exported_file_target_with_mode(
+            runtime,
+            module_id,
+            file_id,
+            execution_mode,
+        ),
+        ImportTarget::Module(module_id) => {
+            run_repository_module_target_with_mode(runtime, module_id, execution_mode)
+        }
+    }
+}
+
+fn repository_target_matches_import_target(
+    target: RepositoryFileTarget,
+    import_target: ImportTarget,
+) -> bool {
+    match (target, import_target) {
+        (RepositoryFileTarget::Module(target_module), ImportTarget::Module(module_id)) => {
+            target_module == module_id
+        }
+        (
+            RepositoryFileTarget::File {
+                module_id: target_module,
+                file_id: target_file,
+            },
+            ImportTarget::File { module_id, file_id },
+        ) => target_module == module_id && target_file == file_id,
+        _ => false,
+    }
+}
+
+fn repository_target_is_inside_module(
+    runtime: &Runtime,
+    target: RepositoryFileTarget,
+    module_id: ModuleId,
+) -> bool {
+    let target_module_id = match target {
+        RepositoryFileTarget::Module(target_module_id) => target_module_id,
+        RepositoryFileTarget::File {
+            module_id: target_module_id,
+            ..
+        } => target_module_id,
+    };
+    module_is_descendant_of(runtime, target_module_id, module_id)
+}
+
+fn module_is_descendant_of(
+    runtime: &Runtime,
+    module_id: ModuleId,
+    ancestor_module_id: ModuleId,
+) -> bool {
+    let mut current_module_id = Some(module_id);
+    while let Some(current) = current_module_id {
+        if current == ancestor_module_id {
+            return true;
+        }
+        current_module_id = runtime
+            .module_manager
+            .module(current)
+            .and_then(|module| module.parent_module_id);
+    }
+    false
+}
+
+fn run_config_imports(
     runtime: &mut Runtime,
     module_id: ModuleId,
     execution_mode: ExecutionMode,
@@ -493,37 +445,101 @@ fn run_repository_module_plan(
             )),
         );
     };
-    let run_targets = module.run_targets.clone();
+    let config_imports = module.config_imports.clone();
     let mut results = vec![];
-    for target in run_targets {
-        let (mut target_results, runtime_error) = match target {
-            ImportTarget::File { module_id, file_id } => {
-                run_repository_exported_file_target_with_mode(
-                    runtime,
-                    module_id,
-                    file_id,
-                    execution_mode,
-                )
-            }
-            ImportTarget::Module(module_id) => {
-                run_repository_module_target_with_mode(runtime, module_id, execution_mode)
-            }
-        };
-        results.append(&mut target_results);
-        if let Some(error) = runtime_error {
+    for config_import in config_imports {
+        let import_target = ImportTarget::Module(config_import.module_id);
+        let import_execution_mode = config_import_execution_mode(
+            runtime,
+            module_id,
+            import_target,
+            &config_import,
+            execution_mode,
+        );
+        let (mut import_results, import_error) = run_repository_module_target_with_mode(
+            runtime,
+            config_import.module_id,
+            import_execution_mode,
+        );
+        results.append(&mut import_results);
+        if let Some(error) = import_error {
             return (results, Some(error));
         }
+        runtime
+            .module_manager
+            .record_import_dependency(module_id, config_import.module_id);
     }
     (results, None)
 }
 
-fn run_repository_exported_file_target(
+fn config_import_execution_mode(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    import_target: ImportTarget,
+    config_import: &ConfigImport,
+    inherited_mode: ExecutionMode,
+) -> ExecutionMode {
+    if inherited_mode == ExecutionMode::Trusted || runtime.strict_mode || !config_import.trusted {
+        return inherited_mode;
+    }
+    if !project_target_is_loaded(runtime, import_target) {
+        let name = runtime
+            .module_manager
+            .canonical_name_for_target(import_target)
+            .unwrap_or("project import")
+            .to_string();
+        runtime.record_trusted_import(
+            "trust_project_import",
+            name,
+            config_import.line_file.clone(),
+        );
+    }
+    runtime
+        .module_manager
+        .record_import_dependency(owner_module_id, config_import.module_id);
+    ExecutionMode::Trusted
+}
+
+fn project_target_execution_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    file_id: FileId,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let execution_mode = runtime.current_execution_mode();
-    run_repository_exported_file_target_with_mode(runtime, module_id, file_id, execution_mode)
+    target: ImportTarget,
+    inherited_mode: ExecutionMode,
+) -> ExecutionMode {
+    if inherited_mode == ExecutionMode::Trusted || runtime.strict_mode {
+        return inherited_mode;
+    }
+    let trusted_line = runtime
+        .module_manager
+        .module(module_id)
+        .and_then(|module| module.trusted_run_targets.get(&target))
+        .cloned();
+    let Some(line_file) = trusted_line else {
+        return ExecutionMode::Verified;
+    };
+    if !project_target_is_loaded(runtime, target) {
+        let name = runtime
+            .module_manager
+            .canonical_name_for_target(target)
+            .unwrap_or("project entry")
+            .to_string();
+        runtime.record_trusted_import("trust_project_export", name, line_file);
+    }
+    ExecutionMode::Trusted
+}
+
+fn project_target_is_loaded(runtime: &Runtime, target: ImportTarget) -> bool {
+    match target {
+        ImportTarget::File { module_id, file_id } => runtime
+            .module_manager
+            .module(module_id)
+            .and_then(|module| module.file(file_id))
+            .is_some_and(|file| file.status == FileStatus::Loaded),
+        ImportTarget::Module(module_id) => runtime
+            .module_manager
+            .module(module_id)
+            .is_some_and(|module| module.status == ModuleStatus::Loaded),
+    }
 }
 
 fn run_repository_exported_file_target_with_mode(
@@ -553,7 +569,7 @@ fn run_repository_exported_file_target_with_mode(
         return (
             vec![],
             Some(repository_target_error(
-                "cyclic local import while running project file",
+                "cyclic project entry execution while running a project file",
             )),
         );
     }
@@ -634,41 +650,52 @@ fn repository_target_error(message: &str) -> RuntimeError {
     .into()
 }
 
-fn import_stmt_error(import_stmt: &ImportStmt, message: String) -> RuntimeError {
-    let stmt: Stmt = import_stmt.clone().into();
-    short_exec_error(stmt, message, None, vec![])
-}
-
 #[cfg(test)]
 mod path_import_tests {
     use super::*;
 
     #[test]
-    fn path_imports_do_not_resolve_as_modules() {
-        for source in [
-            "import \"./Demo\" as Demo",
-            "trust import \"./Demo\" as Demo",
-        ] {
-            let mut runtime = Runtime::new_with_builtin_code();
+    fn fresh_runtime_has_no_preloaded_source_modules() {
+        let runtime = Runtime::new();
+
+        assert!(runtime.module_manager.modules.is_empty());
+        assert!(runtime.module_manager.module_by_name.is_empty());
+    }
+
+    #[test]
+    fn non_isolated_source_imports_require_the_terminal_boundary() {
+        for source in ["import \"./Demo\" as Demo", "import std basics"] {
+            let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("repl");
 
             let (_, runtime_error) = run_source_code(source, &mut runtime);
 
-            assert!(runtime_error.is_some(), "path import should fail");
+            let runtime_error = runtime_error.expect("non-isolated import should fail");
+            assert!(format!("{runtime_error:?}").contains("only available in an isolated REPL"));
             assert!(runtime.module_manager.module_by_name.is_empty());
         }
     }
 
     #[test]
-    fn standard_library_imports_are_rejected() {
-        let mut runtime = Runtime::new_with_builtin_code();
+    fn trust_import_remains_removed() {
+        let mut runtime = Runtime::new();
+        runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("repl");
 
-        let (_, runtime_error) = run_source_code("import ZMod", &mut runtime);
+        let (_, runtime_error) = run_source_code("trust import std basics", &mut runtime);
 
-        let runtime_error = runtime_error.expect("standard-library import should fail");
-        assert!(format!("{:?}", runtime_error)
-            .contains("Litex no longer provides standard-library imports"));
+        let runtime_error = runtime_error.expect("trust import should fail");
+        assert!(format!("{runtime_error:?}").contains("trust import has been removed"));
         assert!(runtime.module_manager.module_by_name.is_empty());
+    }
+
+    #[test]
+    fn strict_mode_rejects_user_trust() {
+        let mut runtime = Runtime::new();
+        runtime.strict_mode = true;
+        runtime.new_file_path_new_env_new_name_scope("repl");
+
+        let (_, trust_error) = run_source_code("trust 1 = 1", &mut runtime);
+        assert!(trust_error.is_some(), "strict mode must reject user trust");
     }
 }

@@ -36,6 +36,14 @@ pub enum ExportEntry {
     Module { name: String, module_id: ModuleId },
 }
 
+#[derive(Clone)]
+pub struct ConfigImport {
+    pub name: String,
+    pub module_id: ModuleId,
+    pub line_file: LineFile,
+    pub trusted: bool,
+}
+
 impl ExportEntry {
     pub fn target(&self, owner_module: ModuleId) -> ImportTarget {
         match self {
@@ -54,7 +62,6 @@ pub struct FileRunner {
     pub source_path: String,
     pub canonical_name: String,
     pub environment: Box<Environment>,
-    pub local_imports: HashMap<String, ImportTarget>,
     pub imported_modules: Vec<ModuleId>,
     pub status: FileStatus,
     pub execution_mode: ExecutionMode,
@@ -68,7 +75,6 @@ impl FileRunner {
             source_path,
             canonical_name,
             environment: Box::new(Environment::new_empty_env()),
-            local_imports: HashMap::new(),
             imported_modules: vec![],
             status: FileStatus::Unloaded,
             execution_mode: ExecutionMode::Verified,
@@ -83,11 +89,15 @@ pub struct ModuleRunner {
     pub module_name: String,
     pub module_root_path: String,
     pub main_file_path: String,
+    pub hierarchy: ProjectHierarchy,
+    pub parent_module_id: Option<ModuleId>,
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
+    pub flattened_export_file: Option<FileId>,
     pub exports: HashMap<String, ExportEntry>,
-    pub main_local_imports: HashMap<String, ImportTarget>,
     pub run_targets: Vec<ImportTarget>,
+    pub trusted_run_targets: HashMap<ImportTarget, LineFile>,
+    pub config_imports: Vec<ConfigImport>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
@@ -100,6 +110,8 @@ impl ModuleRunner {
         module_name: String,
         module_root_path: String,
         main_file_path: String,
+        hierarchy: ProjectHierarchy,
+        parent_module_id: Option<ModuleId>,
         status: ModuleStatus,
     ) -> Self {
         ModuleRunner {
@@ -107,11 +119,15 @@ impl ModuleRunner {
             module_name,
             module_root_path,
             main_file_path,
+            hierarchy,
+            parent_module_id,
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
+            flattened_export_file: None,
             exports: HashMap::new(),
-            main_local_imports: HashMap::new(),
             run_targets: vec![],
+            trusted_run_targets: HashMap::new(),
+            config_imports: vec![],
             imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,
@@ -144,17 +160,6 @@ impl ModuleRunner {
     pub fn record_import(&mut self, module_id: ModuleId) {
         if !self.imports.contains(&module_id) {
             self.imports.push(module_id);
-        }
-    }
-
-    pub fn local_import_target(&self, layer: ExecutionLayer, name: &str) -> Option<ImportTarget> {
-        match layer {
-            ExecutionLayer::Main => self.main_local_imports.get(name).copied(),
-            ExecutionLayer::File(file_id) => self
-                .file(file_id)
-                .and_then(|file| file.local_imports.get(name))
-                .copied(),
-            ExecutionLayer::Builtin => None,
         }
     }
 }

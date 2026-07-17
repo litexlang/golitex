@@ -27,11 +27,11 @@ pub(crate) use verify_builtin_rules::{
     general_cart_member_fn_set, general_cart_member_pointwise_fact,
 };
 mod verify_arg_satisfy_param_def;
+mod verify_fn_membership_by_definition;
 mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
-mod verify_restrict_by_def;
 mod verify_state;
 mod verify_well_defined_in_local_env;
 

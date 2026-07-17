@@ -126,9 +126,13 @@ impl Runtime {
                 ParamObjType::Identifier,
             )
         } else {
+            // `verify_process` has already proved each right-hand side is in
+            // its declared type. That proof is a witness of nonemptiness, so
+            // requiring a separate prior nonempty fact would reject a first
+            // concrete object of a newly defined structure.
             self.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
-                true,
+                false,
                 ParamObjType::Identifier,
             )
         }

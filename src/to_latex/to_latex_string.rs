@@ -538,11 +538,11 @@ impl OneSideInfinityIntervalObj {
     }
 }
 
-impl Count {
+impl FiniteSetSize {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\operatorname{{{}}}\left( {}\right)",
-            COUNT,
+            FINITE_SET_SIZE,
             self.set.to_latex_string()
         )
     }
@@ -554,17 +554,6 @@ impl FnRange {
             r"\operatorname{{{}}}\left( {}\right)",
             FN_RANGE,
             self.function.to_latex_string()
-        )
-    }
-}
-
-impl FnRangeOn {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\left( {}, {} \right)",
-            FN_RANGE_ON,
-            self.function.to_latex_string(),
-            self.set.to_latex_string()
         )
     }
 }
@@ -783,18 +772,6 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\, {} \operatorname{{{}}} {}",
-            EVAL,
-            self.lhs.to_latex_string(),
-            FROM,
-            self.rhs.to_latex_string()
-        )
-    }
-}
-
 impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
         let head = if self.is_not_exist() {
@@ -875,6 +852,7 @@ impl FnObj {
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::DefStructField(p) => latex_local_ident(&p.name),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::ObjAtIndex(v) => v.to_latex_string(),
@@ -1456,6 +1434,16 @@ impl Mod {
     }
 }
 
+impl IntegerQuotient {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{integer\_quotient}}\left({}, {}\right)",
+            self.dividend.to_latex_string(),
+            self.divisor.to_latex_string(),
+        )
+    }
+}
+
 impl Mul {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1599,17 +1587,6 @@ impl NotNormalAtomicFact {
             .collect::<Vec<_>>()
             .join(", ");
         format!(r"\neg \left( \$ {}\left( {}\right) \right)", pred, args)
-    }
-}
-
-impl NotRestrictFact {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\neg \left( {} \mathrel{{\$}} \mathrm{{{}}}\, {} \right)",
-            self.obj.to_latex_string(),
-            RESTRICTS_TO,
-            self.obj_cannot_restrict_to_fn_set.to_latex_string()
-        )
     }
 }
 
@@ -1760,17 +1737,6 @@ impl Range {
             RANGE,
             self.start.to_latex_string(),
             self.end.to_latex_string()
-        )
-    }
-}
-
-impl RestrictFact {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"{} \mathrel{{\$}} \mathrm{{{}}}\, {}",
-            self.obj.to_latex_string(),
-            RESTRICTS_TO,
-            self.obj_can_restrict_to_fn_set.to_latex_string()
         )
     }
 }
@@ -1945,24 +1911,6 @@ impl WitnessNonemptySet {
     }
 }
 
-impl ImportGlobalModuleStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\ {}",
-            IMPORT,
-            latex_local_ident(&self.mod_name)
-        )
-    }
-}
-
-impl ImportStmt {
-    pub fn to_latex_string(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(s) => s.to_latex_string(),
-        }
-    }
-}
-
 impl StandardSet {
     pub fn to_latex_string(&self) -> String {
         match self {
@@ -2015,8 +1963,6 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(x) => x.to_latex_string(),
             AtomicFact::SubsetFact(x) => x.to_latex_string(),
             AtomicFact::SupersetFact(x) => x.to_latex_string(),
-            AtomicFact::RestrictFact(x) => x.to_latex_string(),
-            AtomicFact::NotRestrictFact(x) => x.to_latex_string(),
             AtomicFact::NotNormalAtomicFact(x) => x.to_latex_string(),
             AtomicFact::NotEqualFact(x) => x.to_latex_string(),
             AtomicFact::NotLessFact(x) => x.to_latex_string(),
@@ -2058,6 +2004,7 @@ impl Obj {
             Obj::Mul(x) => x.to_latex_string(),
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
+            Obj::IntegerQuotient(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sqrt(x) => x.to_latex_string(),
@@ -2081,9 +2028,8 @@ impl Obj {
             Obj::Proj(x) => x.to_latex_string(),
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
-            Obj::Count(x) => x.to_latex_string(),
+            Obj::FiniteSetSize(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
-            Obj::FnRangeOn(x) => x.to_latex_string(),
             Obj::Replacement(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
             Obj::SumOfFiniteSet(x) => x.to_latex_string(),
@@ -2177,16 +2123,10 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::ImportStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::TrustImportStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::Command(CommandStmt::LocalImportStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
+            Stmt::Command(CommandStmt::ImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::EvalByStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::StopStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Witness(WitnessStmt::WitnessExistFact(x)) => x.to_latex_string(),
@@ -2194,6 +2134,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByCasesStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByContraStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByInducStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByForStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByExtensionStmt(x)) => x.to_latex_string(),

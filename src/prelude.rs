@@ -5,7 +5,6 @@
 //! `use crate::prelude::*;` so implementation files can focus on kernel logic
 //! instead of long import lists.
 
-pub use crate::builtin_code::builtin_code;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
@@ -78,19 +77,31 @@ pub use crate::fact::NotIsTupleFact;
 pub use crate::fact::NotLessEqualFact;
 pub use crate::fact::NotLessFact;
 pub use crate::fact::NotNormalAtomicFact;
-pub use crate::fact::NotRestrictFact;
 pub use crate::fact::NotSubsetFact;
 pub use crate::fact::NotSupersetFact;
 pub use crate::fact::OrAndChainAtomicFact;
 pub use crate::fact::OrFact;
-pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::graph::{
-    render_graph_from_stmt_results, run_graph_for_code, run_graph_for_code_strict,
-    run_graph_for_code_strict_with_language, run_graph_for_code_with_language, run_graph_for_file,
-    run_graph_for_file_with_strict, run_graph_for_file_with_strict_and_language,
+    render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
+    render_graph_from_stmt_results, run_definition_graph_for_code,
+    run_definition_graph_for_code_strict, run_definition_graph_for_code_strict_with_language,
+    run_definition_graph_for_code_with_language, run_definition_graph_for_file,
+    run_definition_graph_for_file_with_strict,
+    run_definition_graph_for_file_with_strict_and_language,
+    run_definition_graph_for_file_with_strict_language_and_isolation,
+    run_definition_graph_for_repo, run_definition_graph_for_repo_with_strict,
+    run_definition_graph_for_repo_with_strict_and_language, run_fact_graph_for_code,
+    run_fact_graph_for_code_strict, run_fact_graph_for_code_strict_with_language,
+    run_fact_graph_for_code_with_language, run_fact_graph_for_file,
+    run_fact_graph_for_file_with_strict, run_fact_graph_for_file_with_strict_and_language,
+    run_fact_graph_for_file_with_strict_language_and_isolation, run_fact_graph_for_repo,
+    run_fact_graph_for_repo_with_strict, run_fact_graph_for_repo_with_strict_and_language,
+    run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
+    run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
+    run_graph_for_file_with_strict_and_language,
     run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
@@ -99,9 +110,11 @@ pub use crate::infer::{
     StoreFactOutput,
 };
 pub use crate::module_manager::{
-    discover_repository, discover_repository_for_file, parse_project_config, ExportEntry, FileId,
-    FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus,
-    ProjectConfig, ProjectExport, ProjectRunPath, RepositoryFileTarget, BUILTIN_CODE_PATH,
+    discover_isolated_module_import, discover_isolated_std_import, discover_repository,
+    discover_repository_for_file, parse_project_config, resolve_std_root, ConfigImport,
+    ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager,
+    ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
+    ProjectStdImport, RepositoryFileTarget,
 };
 pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
@@ -116,18 +129,18 @@ pub use crate::obj::Cart;
 pub use crate::obj::CartDim;
 pub use crate::obj::CartIndexFreeParamObj;
 pub use crate::obj::ClosedRange;
-pub use crate::obj::Count;
 pub use crate::obj::Cup;
 pub use crate::obj::DefAlgoFreeParamObj;
 pub use crate::obj::DefHeaderFreeParamObj;
+pub use crate::obj::DefStructFieldFreeParamObj;
 pub use crate::obj::Div;
 pub use crate::obj::ExistFreeParamObj;
 pub use crate::obj::FiniteSeqListObj;
 pub use crate::obj::FiniteSeqSet;
+pub use crate::obj::FiniteSetSize;
 pub use crate::obj::FnObj;
 pub use crate::obj::FnObjHead;
 pub use crate::obj::FnRange;
-pub use crate::obj::FnRangeOn;
 pub use crate::obj::FnSet;
 pub use crate::obj::FnSetBody;
 pub use crate::obj::FnSetFreeParamObj;
@@ -137,6 +150,7 @@ pub use crate::obj::GeneralCart;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
 pub use crate::obj::InstantiatedTemplateObj;
+pub use crate::obj::IntegerQuotient;
 pub use crate::obj::Intersect;
 pub use crate::obj::IntervalObj;
 pub use crate::obj::IntervalObjStruct;
@@ -189,9 +203,9 @@ pub use crate::obj::{
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_run_summary_json, display_run_summary_json_with_runtime, display_runtime_error_json,
-    display_stmt_exec_result_json, render_run_source_code_output, run_latex_repl, run_repl,
-    run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language,
+    display_stmt_exec_result_json, render_run_source_code_output, run_file_with_project_context,
+    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repl_with_detail_output,
+    run_repl_with_detail_output_and_strict, run_repl_with_detail_output_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language_and_isolation, run_repository_with_output,
     run_repository_with_output_style, run_session_with_output_style_and_strict_and_language,
@@ -289,6 +303,7 @@ pub use crate::stmt::by_stmt::ByCasesStmt;
 pub use crate::stmt::by_stmt::ByContraStmt;
 pub use crate::stmt::by_stmt::ByEnumerateFiniteSetStmt;
 pub use crate::stmt::by_stmt::ByExtensionStmt;
+pub use crate::stmt::by_stmt::ByFiniteSetInducStmt;
 pub use crate::stmt::by_stmt::ByForExpansion;
 pub use crate::stmt::by_stmt::ByForStmt;
 pub use crate::stmt::by_stmt::ByInducStmt;
@@ -337,11 +352,9 @@ pub use crate::stmt::parameter_def::Set;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
-pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
+pub use crate::stmt::tooling_stmt::ImportModuleStmt;
+pub use crate::stmt::tooling_stmt::ImportStdStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
-pub use crate::stmt::tooling_stmt::LocalImportStmt;
-pub use crate::stmt::tooling_stmt::TrustImportStmt;
-pub use crate::stmt::tooling_stmt::TrustLocalImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
@@ -361,7 +374,6 @@ pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
-pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
 pub use crate::stmt::StopStrategyStmt;
@@ -377,7 +389,6 @@ pub use crate::common::defaults::default_line_file;
 pub use crate::common::defaults::is_default_line_file;
 pub use crate::common::defaults::LineFile;
 pub use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
-pub use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 pub use crate::common::helper::add_four_spaces_at_beginning;
 pub use crate::common::helper::brace_vec_colon_vec_to_string;
 pub use crate::common::helper::braced_string;
@@ -423,7 +434,6 @@ pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;
 pub use crate::common::keywords::CONTRA;
-pub use crate::common::keywords::COUNT;
 pub use crate::common::keywords::CUP;
 pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
@@ -441,12 +451,12 @@ pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FINITE_SET_PRODUCT;
+pub use crate::common::keywords::FINITE_SET_SIZE;
 pub use crate::common::keywords::FINITE_SET_SUM;
 pub use crate::common::keywords::FN_EQ;
 pub use crate::common::keywords::FN_EQ_IN;
 pub use crate::common::keywords::FN_LOWER_CASE;
 pub use crate::common::keywords::FN_RANGE;
-pub use crate::common::keywords::FN_RANGE_ON;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FORALL_BANG;
@@ -461,6 +471,7 @@ pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INJECTIVE;
+pub use crate::common::keywords::INTEGER_QUOTIENT;
 pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::INTERVAL_LITERAL_PREFIX;
 pub use crate::common::keywords::IS_CART;
@@ -509,7 +520,6 @@ pub use crate::common::keywords::RANGE;
 pub use crate::common::keywords::REFLEXIVE_PROP;
 pub use crate::common::keywords::REGULARITY_AXIOM;
 pub use crate::common::keywords::REPLACEMENT;
-pub use crate::common::keywords::RESTRICTS_TO;
 pub use crate::common::keywords::RIGHT_ARROW;
 pub use crate::common::keywords::RIGHT_BRACE;
 pub use crate::common::keywords::RIGHT_BRACKET;
@@ -524,6 +534,7 @@ pub use crate::common::keywords::SET_MINUS;
 pub use crate::common::keywords::SKETCH;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
+pub use crate::common::keywords::STD;
 pub use crate::common::keywords::STOP;
 pub use crate::common::keywords::STRATEGY;
 pub use crate::common::keywords::STRONG_INDUC;

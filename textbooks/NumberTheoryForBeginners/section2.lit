@@ -1,0 +1,1035 @@
+# Number Theory for Beginners, Section II.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
+# problem: Formalize Euclidean division, the subgroup theorem for Z, gcd via
+# linear combinations, and the Section II exercises.
+# proof_idea: Reuse Section I's divisibility and least-element theorems.  Prove
+# Euclidean division and the mZ classification of subtraction-closed sets,
+# then define binary gcd through divisibility plus Bezout.  Elementary
+# consequences of the gcd definition are checked directly.
+# litex_code: This file runs Section I first and then adds Section II.
+# comments: The binary-gcd existence, divisor, and Bezout interfaces are
+# checked in this file. The kernel Euclidean quotient object supplies the
+# quotient-remainder witness without a source-level helper.
+
+"""
+Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
+a = dq + r with 0 <= r < d.  Equivalently, dq is the largest multiple of d
+not exceeding a.
+"""
+
+prop euclidean_division_Z(a, d, q, r Z):
+    d > 0
+    a = d * q + r
+    0 <= r < d
+
+prop is_largest_multiple_leq_Z(a, d, q Z):
+    d > 0
+    d * q <= a
+    forall z Z:
+        d * z <= a
+        =>:
+            d * z <= d * q
+
+prop has_unique_euclidean_division_Z(a Z, d N_pos):
+    exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    forall q, r, q1, r1 Z:
+        $euclidean_division_Z(a, d, q, r)
+        $euclidean_division_Z(a, d, q1, r1)
+        =>:
+            q = q1
+            r = r1
+
+# The first-class Euclidean quotient is the unique integer q characterized by
+# `a = d * q + a % d`. Its defining equation is a kernel rule, so the source
+# proof can choose that q directly without a local trusted interface.
+thm euclidean_division_exists:
+    ? forall a Z, d N_pos:
+        exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    witness exist q, r Z st {$euclidean_division_Z(a, d, q, r)} from integer_quotient(a, d), a % d:
+        d > 0
+        a = d * integer_quotient(a, d) + a % d
+        0 <= a % d < d
+        $euclidean_division_Z(a, d, integer_quotient(a, d), a % d)
+
+thm euclidean_division_remainder_is_mod:
+    ? forall a Z, d N_pos, q, r Z:
+        $euclidean_division_Z(a, d, q, r)
+        =>:
+            a % d = r
+    d > 0
+    a = d * q + r
+    0 <= r < d
+    have rN N = r
+    rN = r
+    rN < d
+    a = d * q + rN
+    witness exist z Z st {a = d * z + rN} from q:
+        a = d * q + rN
+    a % d = rN
+    a % d = r
+
+thm euclidean_division_unique:
+    ? forall a Z, d N_pos, q, r, q1, r1 Z:
+        $euclidean_division_Z(a, d, q, r)
+        $euclidean_division_Z(a, d, q1, r1)
+        =>:
+            q = q1
+            r = r1
+    by thm euclidean_division_remainder_is_mod(a, d, q, r)
+    by thm euclidean_division_remainder_is_mod(a, d, q1, r1)
+    r = a % d = r1
+    r = r1
+    a = d * q + r
+    a = d * q1 + r1
+    d * q + r = d * q1 + r
+    d * q = (d * q + r) - r = (d * q1 + r) - r = d * q1
+    q = d * q / d = d * q1 / d = q1
+
+thm lemma_II_euclidean_division:
+    ? forall a Z, d N_pos:
+        $has_unique_euclidean_division_Z(a, d)
+    by thm euclidean_division_exists(a, d)
+    claim:
+        ? forall q, r, q1, r1 Z:
+            $euclidean_division_Z(a, d, q, r)
+            $euclidean_division_Z(a, d, q1, r1)
+            =>:
+                q = q1
+                r = r1
+        by thm euclidean_division_unique(a, d, q, r, q1, r1)
+        q = q1
+        r = r1
+    $has_unique_euclidean_division_Z(a, d)
+
+# The largest-multiple phrasing follows from the same remainder construction.
+thm remainder_bounds_multiple:
+    ? forall d N_pos, q, r, z Z:
+        0 <= r < d
+        d * z <= d * q + r
+        =>:
+            d * z <= d * q
+    by contra:
+        ? d * z <= d * q
+        d * z > d * q
+        d * z - d * q > 0
+        d * z - d * q = d * (z - q)
+        d * (z - q) > 0
+        by contra:
+            ? z - q > 0
+            z - q <= 0
+            d * (z - q) <= 0
+            impossible d * (z - q) > 0
+        z - q >= 1
+        d * (z - q) >= d * 1
+        d * z - d * q >= d * 1
+        d * 1 = d
+        d * z - d * q >= d
+        d * z <= d * q + r
+        d * z - d * q <= (d * q + r) - d * q
+        (d * q + r) - d * q = r
+        d * z - d * q <= r
+        d <= r
+        impossible d <= r
+
+thm largest_multiple_exists:
+    ? forall a Z, d N_pos:
+        exist q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+    by thm euclidean_division_exists(a, d)
+    obtain q, r from exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
+    d > 0
+    a = d * q + r
+    0 <= r < d
+    d * q <= d * q + r
+    d * q <= a
+    claim:
+        ? forall z Z:
+            d * z <= a
+            =>:
+                d * z <= d * q
+        a = d * q + r
+        d * z <= d * q + r
+        by thm remainder_bounds_multiple(d, q, r, z)
+    witness exist q1 Z st {$is_largest_multiple_leq_Z(a, d, q1)} from q:
+        d > 0
+        d * q <= a
+        forall z Z:
+            d * z <= a
+            =>:
+                d * z <= d * q
+        $is_largest_multiple_leq_Z(a, d, q)
+
+thm largest_multiple_unique:
+    ? forall a Z, d N_pos, q1, q2 Z:
+        $is_largest_multiple_leq_Z(a, d, q1)
+        $is_largest_multiple_leq_Z(a, d, q2)
+        =>:
+            q1 = q2
+    d * q1 <= a
+    d * q2 <= a
+    d * q1 <= d * q2
+    d * q2 <= d * q1
+    d * q1 = d * q2
+    q1 = d * q1 / d = d * q2 / d = q2
+
+thm lemma_II_largest_multiple:
+    ? forall a Z, d N_pos:
+        exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+    by thm largest_multiple_exists(a, d)
+    forall q1, q2 Z:
+        $is_largest_multiple_leq_Z(a, d, q1)
+        $is_largest_multiple_leq_Z(a, d, q2)
+        =>:
+            d * q1 <= a
+            d * q2 <= a
+            d * q1 <= d * q2
+            d * q2 <= d * q1
+            d * q1 = d * q2
+            q1 = d * q1 / d = d * q2 / d = q2
+    exist! q Z st {$is_largest_multiple_leq_Z(a, d, q)}
+
+"""
+Theorem II.1. A nonempty set of integers closed under subtraction is exactly
+mZ for a unique m >= 0.
+"""
+
+# Subtraction closure is the only residual condition: `M power_set(Z)` already
+# gives the integer carrier for M and for every x, y in M.
+prop closed_under_subtraction(M power_set(Z)):
+    forall x, y M:
+        x - y $in M
+
+# The notation mZ is a set-valued construction, not a relation between a set
+# and an integer. Its members are exactly the integer multiples of m.
+have fn mZ(m N) power_set(Z) = {x Z: $section1::divides_Z(m, x)}
+
+# Keep the historical relation exported for later sections, but make it only
+# the equality to the actual mZ value instead of restating its membership law.
+prop is_integer_multiple_set(M power_set(Z), m N):
+    M = mZ(m)
+
+# Separate the positive part of M so the least-element theorem from Section I
+# can choose the generator when it exists.
+have fn positive_elements(M power_set(Z)) power_set(Z) = {x Z: x $in M and x > 0}
+
+thm zero_in_subtraction_closed_set:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        =>:
+            0 $in M
+    have a M
+    a - a $in M
+    0 = a - a
+    0 $in M
+
+thm neg_in_subtraction_closed_set:
+    ? forall M power_set(Z), x M:
+        $closed_under_subtraction(M)
+        =>:
+            -x $in M
+    x - x $in M
+    (x - x) - x $in M
+    -x = (x - x) - x
+    -x $in M
+
+thm add_in_subtraction_closed_set:
+    ? forall M power_set(Z), x, y M:
+        $closed_under_subtraction(M)
+        =>:
+            x + y $in M
+    by thm neg_in_subtraction_closed_set(M, y)
+    -y $in M
+    x - (-y) $in M
+    x + y = x - (-y)
+    x + y $in M
+
+prop is_nonnegative_multiple_in_subtraction_closed_set(M power_set(Z), m, k Z):
+    m $in M
+    k >= 0
+    k * m $in M
+
+thm natural_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, n N:
+        $closed_under_subtraction(M)
+        =>:
+            $is_nonnegative_multiple_in_subtraction_closed_set(M, m, n)
+    claim:
+        ? forall k Z:
+            k >= 0
+            =>:
+                $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k)
+        by induc k from 0:
+            ? $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k)
+            ? from k = 0:
+                m - m $in M
+                0 = m - m
+                0 $in M
+                0 * m = 0
+                k >= 0
+                k * m $in M
+            ? induc:
+                k * m $in M
+                by thm add_in_subtraction_closed_set(M, k * m, m)
+                k * m + m $in M
+                (k + 1) * m = k * m + m
+                k + 1 >= 0
+                (k + 1) * m $in M
+    $is_nonnegative_multiple_in_subtraction_closed_set(M, m, n)
+
+thm nonnegative_integer_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, k Z:
+        $closed_under_subtraction(M)
+        k >= 0
+        =>:
+            k * m $in M
+    have kN N = k
+    kN = k
+    by thm natural_multiple_in_subtraction_closed_set(M, m, kN)
+    $is_nonnegative_multiple_in_subtraction_closed_set(M, m, kN)
+    kN * m $in M
+    k * m = kN * m
+    k * m $in M
+
+thm integer_multiple_in_subtraction_closed_set:
+    ? forall M power_set(Z), m M, k Z:
+        $closed_under_subtraction(M)
+        =>:
+            k * m $in M
+    k >= 0 or k < 0
+    by cases:
+        ? k * m $in M
+        case k >= 0:
+            by thm nonnegative_integer_multiple_in_subtraction_closed_set(M, m, k)
+            k * m $in M
+        case k < 0:
+            -k >= 0
+            by thm nonnegative_integer_multiple_in_subtraction_closed_set(M, m, -k)
+            (-k) * m $in M
+            by thm neg_in_subtraction_closed_set(M, (-k) * m)
+            -((-k) * m) $in M
+            k * m = -((-k) * m)
+            k * m $in M
+
+thm zero_subtraction_closed_set:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        not $is_nonempty_set(positive_elements(M))
+        =>:
+            M = mZ(0)
+    by extension M = mZ(0):
+        claim:
+            ? forall x M:
+                x $in mZ(0)
+            have z Z = x
+            z = x
+            z $in M
+            z > 0 or z <= 0
+            by cases:
+                ? x $in mZ(0)
+                case z > 0:
+                    witness $is_nonempty_set(positive_elements(M)) from z:
+                        z $in positive_elements(M)
+                    impossible not $is_nonempty_set(positive_elements(M))
+                case z <= 0:
+                    z = 0 or z < 0
+                    by cases:
+                        ? x $in mZ(0)
+                        case z = 0:
+                            witness exist k Z st {x = 0 * k} from 0:
+                                x = z = 0 = 0 * 0
+                            $section1::divides_Z(0, x)
+                            x $in mZ(0)
+                        case z < 0:
+                            by thm neg_in_subtraction_closed_set(M, z)
+                            -z $in M
+                            witness $is_nonempty_set(positive_elements(M)) from -z:
+                                -z $in positive_elements(M)
+                            impossible not $is_nonempty_set(positive_elements(M))
+        forall x M:
+            x $in mZ(0)
+        claim:
+            ? forall x mZ(0):
+                x $in M
+            obtain k from exist k Z st {x = 0 * k}
+            x = 0 * k = 0
+            by thm zero_in_subtraction_closed_set(M)
+            0 $in M
+            x $in M
+        forall x mZ(0):
+            x $in M
+
+thm positive_mZ_generator_unique:
+    ? forall m N_pos, n N:
+        mZ(m) = mZ(n)
+        =>:
+            m = n
+    witness exist k Z st {m = m * k} from 1:
+        m = m * 1
+    $section1::divides_Z(m, m)
+    m $in mZ(m)
+    m $in mZ(n)
+    obtain a from exist a Z st {m = n * a}
+    m = n * a
+    n = 0 or n > 0
+    by cases:
+        ? m = n
+        case n = 0:
+            m = n * a = 0 * a = 0
+            impossible m > 0
+        case n > 0:
+            witness exist k Z st {n = n * k} from 1:
+                n = n * 1
+            $section1::divides_Z(n, n)
+            n $in mZ(n)
+            n $in mZ(m)
+            obtain b from exist b Z st {n = m * b}
+            n = m * b
+            by contra:
+                ? a > 0
+                a <= 0
+                n * a <= 0
+                m = n * a <= 0
+                impossible m > 0
+            a >= 1
+            m = n * a >= n * 1 = n
+            by contra:
+                ? b > 0
+                b <= 0
+                m * b <= 0
+                n = m * b <= 0
+                impossible n > 0
+            b >= 1
+            n = m * b >= m * 1 = m
+            m = n
+
+thm zero_mZ_generator_unique:
+    ? forall n N:
+        mZ(n) = mZ(0)
+        =>:
+            n = 0
+    witness exist k Z st {n = n * k} from 1:
+        n = n * 1
+    $section1::divides_Z(n, n)
+    n $in mZ(n)
+    n $in mZ(0)
+    obtain k from exist k Z st {n = 0 * k}
+    n = 0 * k = 0
+
+thm positive_subtraction_closed_set_has_mZ:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        $is_nonempty_set(positive_elements(M))
+        =>:
+            exist m N_pos st {M = mZ(m)}
+    claim:
+        ? $section1::is_positive_integer_set(positive_elements(M))
+        positive_elements(M) $subset Z
+        forall x positive_elements(M):
+            x $in Z
+            x > 0
+        $section1::is_positive_integer_set(positive_elements(M))
+    by thm section1::positive_integer_set_has_least_element(positive_elements(M))
+    exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
+    obtain m from exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
+    m $in positive_elements(M)
+    m $in M
+    m > 0
+    have mN N_pos = m
+    mN = m
+    witness exist m1 N_pos st {M = mZ(m1)} from mN:
+        by extension M = mZ(mN):
+            claim:
+                ? forall x M:
+                    x $in mZ(mN)
+                have z Z = x
+                z = x
+                by thm euclidean_division_exists(z, mN)
+                obtain q, r from exist q, r Z st {$euclidean_division_Z(z, mN, q, r)}
+                mN > 0
+                z = mN * q + r
+                0 <= r < mN
+                mN $in M
+                by thm integer_multiple_in_subtraction_closed_set(M, mN, q)
+                q * mN $in M
+                mN * q = q * mN
+                mN * q $in M
+                z - (mN * q) $in M
+                r = z - (mN * q)
+                r $in M
+                r = 0 or r > 0
+                by cases:
+                    ? x $in mZ(mN)
+                    case r = 0:
+                        witness exist k Z st {x = mN * k} from q:
+                            x = z = mN * q
+                        $section1::divides_Z(mN, x)
+                        x $in mZ(mN)
+                    case r > 0:
+                        r $in positive_elements(M)
+                        m <= r
+                        mN = m <= r
+                        impossible r < mN
+            forall x M:
+                x $in mZ(mN)
+            claim:
+                ? forall x mZ(mN):
+                    x $in M
+                obtain q from exist q Z st {x = mN * q}
+                mN $in M
+                by thm integer_multiple_in_subtraction_closed_set(M, mN, q)
+                q * mN $in M
+                x = mN * q = q * mN
+                x $in M
+            forall x mZ(mN):
+                x $in M
+
+thm theorem_II_1_subgroups_of_Z:
+    ? forall M power_set(Z):
+        $is_nonempty_set(M)
+        $closed_under_subtraction(M)
+        =>:
+            exist! m N st {M = mZ(m)}
+    $is_nonempty_set(positive_elements(M)) or not $is_nonempty_set(positive_elements(M))
+    by cases:
+        ? exist! m N st {M = mZ(m)}
+        case $is_nonempty_set(positive_elements(M)):
+            by thm positive_subtraction_closed_set_has_mZ(M)
+            obtain m from exist m N_pos st {M = mZ(m)}
+            witness exist m1 N st {M = mZ(m1)} from m:
+                M = mZ(m)
+            claim:
+                ? forall m1, m2 N:
+                    M = mZ(m1)
+                    M = mZ(m2)
+                    =>:
+                        m1 = m2
+                mZ(m) = M = mZ(m1)
+                by thm positive_mZ_generator_unique(m, m1)
+                m = m1
+                m = m2
+                m1 = m = m2
+            forall m1, m2 N:
+                M = mZ(m1)
+                M = mZ(m2)
+                =>:
+                    m1 = m2
+            exist! m N st {M = mZ(m)}
+        case not $is_nonempty_set(positive_elements(M)):
+            by thm zero_subtraction_closed_set(M)
+            M = mZ(0)
+            witness exist m N st {M = mZ(m)} from 0:
+                M = mZ(0)
+            claim:
+                ? forall m1, m2 N:
+                    M = mZ(m1)
+                    M = mZ(m2)
+                    =>:
+                        m1 = m2
+                mZ(m1) = M = mZ(0)
+                by thm zero_mZ_generator_unique(m1)
+                m1 = 0
+                mZ(m2) = M = mZ(0)
+                by thm zero_mZ_generator_unique(m2)
+                m2 = 0
+                m1 = m2
+            forall m1, m2 N:
+                M = mZ(m1)
+                M = mZ(m2)
+                =>:
+                    m1 = m2
+            exist! m N st {M = mZ(m)}
+
+"""
+Corollary 1. The set of all integral linear combinations of finitely many
+integers is mZ for a unique m >= 0.
+"""
+
+# A finite subset carrier records both the integer ambient set and finiteness.
+template<S set>:
+    have finite_subsets set = {A power_set(S): $is_finite_set(A)}
+
+# An integer linear combination chooses one integer coefficient for every
+# generator and sums the coefficient-generator products.
+prop is_integer_linear_combination(A \finite_subsets<Z>, x Z):
+    exist c fn(a A) Z st {x = finite_set_sum(A, fn(a A) Z {c(a) * a})}
+
+# The corollary's "set of all integral linear combinations" is a reusable
+# set-valued function, so later statements can write integer_linear_span(A).
+have fn integer_linear_span(A \finite_subsets<Z>) power_set(Z) = {x Z: $is_integer_linear_combination(A, x)}
+
+thm integer_linear_span_is_nonempty:
+    ? forall A \finite_subsets<Z>:
+        $is_nonempty_set(integer_linear_span(A))
+    witness $is_nonempty_set(integer_linear_span(A)) from 0:
+        have c fn(a A) Z = fn(a A) Z {0}
+        forall a A:
+            c(a) = 0
+        witness exist c1 fn(a A) Z st {0 = finite_set_sum(A, fn(a A) Z {c1(a) * a})} from c:
+            finite_set_sum(A, fn(a A) Z {c(a) * a}) = finite_set_sum(A, fn(a A) Z {0 * a}) = finite_set_sum(A, fn(a A) Z {0}) = finite_set_size(A) * 0 = 0
+        $is_integer_linear_combination(A, 0)
+    $is_nonempty_set(integer_linear_span(A))
+
+thm integer_linear_span_subtraction_closed:
+    ? forall A \finite_subsets<Z>, x, y integer_linear_span(A):
+        x - y $in integer_linear_span(A)
+    obtain c from exist c fn(a A) Z st {x = finite_set_sum(A, fn(a A) Z {c(a) * a})}
+    obtain d from exist d fn(a A) Z st {y = finite_set_sum(A, fn(a A) Z {d(a) * a})}
+    have e fn(a A) Z = fn(a A) Z {c(a) - d(a)}
+    forall a A:
+        e(a) = c(a) - d(a)
+    witness exist e1 fn(a A) Z st {x - y = finite_set_sum(A, fn(a A) Z {e1(a) * a})} from e:
+        finite_set_sum(A, fn(a A) Z {e(a) * a}) = finite_set_sum(A, fn(a A) Z {(c(a) - d(a)) * a})
+        finite_set_sum(A, fn(a A) Z {(c(a) - d(a)) * a}) = finite_set_sum(A, fn(a A) Z {c(a) * a - d(a) * a})
+        finite_set_sum(A, fn(a A) Z {c(a) * a - d(a) * a}) = finite_set_sum(A, fn(a A) Z {c(a) * a + (-1) * (d(a) * a)})
+        finite_set_sum(A, fn(a A) Z {c(a) * a + (-1) * (d(a) * a)}) = finite_set_sum(A, fn(a A) Z {c(a) * a}) + finite_set_sum(A, fn(a A) Z {(-1) * (d(a) * a)})
+        finite_set_sum(A, fn(a A) Z {(-1) * (d(a) * a)}) = (-1) * finite_set_sum(A, fn(a A) Z {d(a) * a})
+        x - y = finite_set_sum(A, fn(a A) Z {c(a) * a}) - finite_set_sum(A, fn(a A) Z {d(a) * a}) = finite_set_sum(A, fn(a A) Z {c(a) * a}) + (-1) * finite_set_sum(A, fn(a A) Z {d(a) * a}) = finite_set_sum(A, fn(a A) Z {e(a) * a})
+    $is_integer_linear_combination(A, x - y)
+    x - y $in integer_linear_span(A)
+
+thm integer_linear_span_is_closed_under_subtraction:
+    ? forall A \finite_subsets<Z>:
+        $closed_under_subtraction(integer_linear_span(A))
+    claim:
+        ? forall x, y integer_linear_span(A):
+            x - y $in integer_linear_span(A)
+        by thm integer_linear_span_subtraction_closed(A, x, y)
+        x - y $in integer_linear_span(A)
+    forall x, y integer_linear_span(A):
+        x - y $in integer_linear_span(A)
+    $closed_under_subtraction(integer_linear_span(A))
+
+thm corollary_II_1_integer_linear_span_is_mZ:
+    ? forall A \finite_subsets<Z>:
+        exist! m N st {integer_linear_span(A) = mZ(m)}
+    by thm integer_linear_span_is_nonempty(A)
+    by thm integer_linear_span_is_closed_under_subtraction(A)
+    by thm theorem_II_1_subgroups_of_Z(integer_linear_span(A))
+    exist! m N st {integer_linear_span(A) = mZ(m)}
+
+"""
+Binary bridge.  For two generators it is clearer to expose the finite sum as
+the usual two-coefficient expression.  This avoids making the gcd existence
+statement depend on a separate enumeration theorem for finite sets.
+"""
+
+prop is_binary_integer_linear_combination(a, b, x Z):
+    exist u, v Z st {x = a * u + b * v}
+
+have fn binary_integer_span(a, b Z) power_set(Z) = {x Z: $is_binary_integer_linear_combination(a, b, x)}
+
+thm binary_integer_span_is_nonempty:
+    ? forall a, b Z:
+        $is_nonempty_set(binary_integer_span(a, b))
+    witness $is_nonempty_set(binary_integer_span(a, b)) from 0:
+        witness exist u, v Z st {0 = a * u + b * v} from 0, 0:
+            0 = a * 0 + b * 0
+        $is_binary_integer_linear_combination(a, b, 0)
+    $is_nonempty_set(binary_integer_span(a, b))
+
+thm binary_integer_span_subtraction_closed:
+    ? forall a, b, x, y Z:
+        x $in binary_integer_span(a, b)
+        y $in binary_integer_span(a, b)
+        =>:
+            x - y $in binary_integer_span(a, b)
+    obtain u, v from exist u, v Z st {x = a * u + b * v}
+    obtain s, t from exist s, t Z st {y = a * s + b * t}
+    witness exist p, q Z st {x - y = a * p + b * q} from u - s, v - t:
+        x - y = (a * u + b * v) - (a * s + b * t) = a * (u - s) + b * (v - t)
+    $is_binary_integer_linear_combination(a, b, x - y)
+    x - y $in binary_integer_span(a, b)
+
+thm binary_integer_span_is_mZ:
+    ? forall a, b Z:
+        exist! d N st {binary_integer_span(a, b) = mZ(d)}
+    by thm binary_integer_span_is_nonempty(a, b)
+    claim:
+        ? $closed_under_subtraction(binary_integer_span(a, b))
+        claim:
+            ? forall x, y binary_integer_span(a, b):
+                x - y $in binary_integer_span(a, b)
+            by thm binary_integer_span_subtraction_closed(a, b, x, y)
+            x - y $in binary_integer_span(a, b)
+        forall x, y binary_integer_span(a, b):
+            x - y $in binary_integer_span(a, b)
+        $closed_under_subtraction(binary_integer_span(a, b))
+    by thm theorem_II_1_subgroups_of_Z(binary_integer_span(a, b))
+    exist! d N st {binary_integer_span(a, b) = mZ(d)}
+
+"""
+Corollary 2 and Definition. The integer d from Corollary 1 divides each of the
+given integers, every common divisor divides d, and d is called their gcd.
+"""
+
+# For later sections this file exposes the binary gcd.  The body records the
+# divisor characterization and Bezout representation used in Sections III-IV.
+
+prop is_gcd_Z(a, b Z, d N):
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
+    forall e Z:
+        e > 0
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
+        =>:
+            $section1::divides_Z(e, d)
+    exist x, y Z st {d = a * x + b * y}
+
+thm binary_span_eq_mZ_of_gcd:
+    ? forall a, b Z, d N:
+        $is_gcd_Z(a, b, d)
+        =>:
+            binary_integer_span(a, b) = mZ(d)
+    by extension binary_integer_span(a, b) = mZ(d):
+        claim:
+            ? forall x binary_integer_span(a, b):
+                x $in mZ(d)
+            obtain u, v from exist u, v Z st {x = a * u + b * v}
+            obtain p from exist p Z st {a = d * p}
+            obtain q from exist q Z st {b = d * q}
+            witness exist k Z st {x = d * k} from u * p + v * q:
+                x = a * u + b * v = d * p * u + d * q * v = d * (u * p + v * q)
+            $section1::divides_Z(d, x)
+            x $in mZ(d)
+        forall x binary_integer_span(a, b):
+            x $in mZ(d)
+        claim:
+            ? forall x mZ(d):
+                x $in binary_integer_span(a, b)
+            obtain k from exist k Z st {x = d * k}
+            obtain u, v from exist u, v Z st {d = a * u + b * v}
+            witness exist p, q Z st {x = a * p + b * q} from u * k, v * k:
+                x = d * k = (a * u + b * v) * k = a * (u * k) + b * (v * k)
+            $is_binary_integer_linear_combination(a, b, x)
+            x $in binary_integer_span(a, b)
+        forall x mZ(d):
+            x $in binary_integer_span(a, b)
+
+thm theorem_II_2_binary_gcd_exists:
+    ? forall a, b Z:
+        exist! d N st {$is_gcd_Z(a, b, d)}
+    by thm binary_integer_span_is_mZ(a, b)
+    obtain d from exist d N st {binary_integer_span(a, b) = mZ(d)}
+    claim:
+        ? $is_gcd_Z(a, b, d)
+        witness exist u, v Z st {a = a * u + b * v} from 1, 0:
+            a = a * 1 + b * 0
+        $is_binary_integer_linear_combination(a, b, a)
+        a $in binary_integer_span(a, b)
+        a $in mZ(d)
+        obtain p from exist p Z st {a = d * p}
+        witness exist u, v Z st {b = a * u + b * v} from 0, 1:
+            b = a * 0 + b * 1
+        $is_binary_integer_linear_combination(a, b, b)
+        b $in binary_integer_span(a, b)
+        b $in mZ(d)
+        obtain q from exist q Z st {b = d * q}
+        witness exist k Z st {d = d * k} from 1:
+            d = d * 1
+        $section1::divides_Z(d, d)
+        d $in mZ(d)
+        d $in binary_integer_span(a, b)
+        obtain x, y from exist x, y Z st {d = a * x + b * y}
+        claim:
+            ? forall e Z:
+                e > 0
+                $section1::divides_Z(e, a)
+                $section1::divides_Z(e, b)
+                =>:
+                    $section1::divides_Z(e, d)
+            obtain r from exist r Z st {a = e * r}
+            obtain s from exist s Z st {b = e * s}
+            witness exist t Z st {d = e * t} from r * x + s * y:
+                d = a * x + b * y = e * r * x + e * s * y = e * (r * x + s * y)
+            $section1::divides_Z(e, d)
+        $is_gcd_Z(a, b, d)
+    witness exist d1 N st {$is_gcd_Z(a, b, d1)} from d:
+        $is_gcd_Z(a, b, d)
+    claim:
+        ? forall d1, d2 N:
+            $is_gcd_Z(a, b, d1)
+            $is_gcd_Z(a, b, d2)
+            =>:
+                d1 = d2
+        by thm binary_span_eq_mZ_of_gcd(a, b, d1)
+        by thm binary_span_eq_mZ_of_gcd(a, b, d2)
+        mZ(d1) = binary_integer_span(a, b) = mZ(d2)
+        d1 = 0 or d1 > 0
+        by cases:
+            ? d1 = d2
+            case d1 = 0:
+                by thm zero_mZ_generator_unique(d2)
+                d2 = 0
+                d1 = d2
+            case d1 > 0:
+                by thm positive_mZ_generator_unique(d1, d2)
+                d1 = d2
+    forall d1, d2 N:
+        $is_gcd_Z(a, b, d1)
+        $is_gcd_Z(a, b, d2)
+        =>:
+            d1 = d2
+    exist! d N st {$is_gcd_Z(a, b, d)}
+
+have fn gcd_Z by exist!:
+    ? forall a, b Z:
+        exist! d N st {$is_gcd_Z(a, b, d)}
+
+thm gcd_Z_dvd_left:
+    ? forall a, b Z:
+        $section1::divides_Z(gcd_Z(a, b), a)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    $section1::divides_Z(gcd_Z(a, b), a)
+
+thm gcd_Z_dvd_right:
+    ? forall a, b Z:
+        $section1::divides_Z(gcd_Z(a, b), b)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    $section1::divides_Z(gcd_Z(a, b), b)
+
+thm gcd_Z_bezout:
+    ? forall a, b Z:
+        exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+
+"""
+Exercise II.1. Prove associativity of gcd for three integers:
+(a,b,c)=((a,b),c)=(a,(b,c)).
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise II.2. Consecutive Fibonacci numbers are relatively prime.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise II.3. A unimodular linear change of two integers preserves gcd.
+"""
+
+# The source's inverse-matrix argument gives mutual integer linear
+# combinations between the old and new pairs.  Such changes preserve the two
+# divisibility clauses and the Bezout clause of `is_gcd_Z`.
+thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
+    ? forall a, b, a1, b1 Z, d N, p, q, r, s, u, v, w, z Z:
+        $is_gcd_Z(a, b, d)
+        a1 = p * a + q * b
+        b1 = r * a + s * b
+        a = u * a1 + v * b1
+        b = w * a1 + z * b1
+        =>:
+            $is_gcd_Z(a1, b1, d)
+    $is_gcd_Z(a, b, d)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
+    obtain da from exist da Z st {a = d * da}
+    obtain db from exist db Z st {b = d * db}
+    witness exist da1 Z st {a1 = d * da1} from p * da + q * db:
+        a1 = p * a + q * b = p * (d * da) + q * (d * db) = d * (p * da + q * db)
+    $section1::divides_Z(d, a1)
+    witness exist db1 Z st {b1 = d * db1} from r * da + s * db:
+        b1 = r * a + s * b = r * (d * da) + s * (d * db) = d * (r * da + s * db)
+    $section1::divides_Z(d, b1)
+    claim:
+        ? forall e Z:
+            e > 0
+            $section1::divides_Z(e, a1)
+            $section1::divides_Z(e, b1)
+            =>:
+                $section1::divides_Z(e, d)
+        obtain ea1 from exist ea1 Z st {a1 = e * ea1}
+        obtain eb1 from exist eb1 Z st {b1 = e * eb1}
+        witness exist ea Z st {a = e * ea} from u * ea1 + v * eb1:
+            a = u * a1 + v * b1 = u * (e * ea1) + v * (e * eb1) = e * (u * ea1 + v * eb1)
+        $section1::divides_Z(e, a)
+        witness exist eb Z st {b = e * eb} from w * ea1 + z * eb1:
+            b = w * a1 + z * b1 = w * (e * ea1) + z * (e * eb1) = e * (w * ea1 + z * eb1)
+        $section1::divides_Z(e, b)
+        $section1::divides_Z(e, d)
+    obtain x, y from exist x, y Z st {d = a * x + b * y}
+    witness exist x1, y1 Z st {d = a1 * x1 + b1 * y1} from u * x + w * y, v * x + z * y:
+        d = a * x + b * y = (u * a1 + v * b1) * x + (w * a1 + z * b1) * y = a1 * (u * x + w * y) + b1 * (v * x + z * y)
+    $is_gcd_Z(a1, b1, d)
+
+thm exercise_II_3_unimodular_change_preserves_gcd:
+    ? forall p, q, r, s, a, b, a1, b1 Z:
+        p * s - q * r = 1 or p * s - q * r = -1
+        a1 = p * a + q * b
+        b1 = r * a + s * b
+        =>:
+            gcd_Z(a, b) = gcd_Z(a1, b1)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    by cases:
+        ? gcd_Z(a, b) = gcd_Z(a1, b1)
+        case p * s - q * r = 1:
+            s * a1 - q * b1 = s * (p * a + q * b) - q * (r * a + s * b) = (p * s - q * r) * a = 1 * a = a
+            a = s * a1 - q * b1
+            (-r) * a1 + p * b1 = (-r) * (p * a + q * b) + p * (r * a + s * b) = (p * s - q * r) * b = 1 * b = b
+            b = (-r) * a1 + p * b1
+            by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(a, b, a1, b1, gcd_Z(a, b), p, q, r, s, s, -q, -r, p)
+            $is_gcd_Z(a1, b1, gcd_Z(a, b))
+            gcd_Z(a1, b1) = gcd_Z(a, b)
+            gcd_Z(a, b) = gcd_Z(a1, b1)
+        case p * s - q * r = -1:
+            (-s) * a1 + q * b1 = (-s) * (p * a + q * b) + q * (r * a + s * b) = -(p * s - q * r) * a = -(-1) * a = a
+            a = (-s) * a1 + q * b1
+            r * a1 - p * b1 = r * (p * a + q * b) - p * (r * a + s * b) = -(p * s - q * r) * b = -(-1) * b = b
+            b = r * a1 - p * b1
+            by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(a, b, a1, b1, gcd_Z(a, b), p, q, r, s, -s, q, r, -p)
+            $is_gcd_Z(a1, b1, gcd_Z(a, b))
+            gcd_Z(a1, b1) = gcd_Z(a, b)
+            gcd_Z(a, b) = gcd_Z(a1, b1)
+
+"""
+Exercise II.4. The Euclidean algorithm terminates and its last nonzero
+remainder is gcd(a,b).
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise II.5. Every Euclidean-algorithm remainder is an integral linear
+combination ax+by.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
+and (1024,729).
+"""
+
+# Euclidean back-substitution gives 7=2*56-3*35, 3=-3*309+5*186, and
+# 1=-257*1024+361*729.  The same identities show that every common positive
+# divisor divides the displayed result.
+thm common_divisor_of_fifty_six_and_thirty_five_divides_seven:
+    ? forall e Z:
+        e > 0
+        $section1::divides_Z(e, 56)
+        $section1::divides_Z(e, 35)
+        =>:
+            $section1::divides_Z(e, 7)
+    by thm section1::divides_Z_linear_combination(e, 56, 35, 2, -3)
+    2 * 56 + (-3) * 35 = 7
+    $section1::divides_Z(e, 7)
+
+claim:
+    ? $is_gcd_Z(56, 35, 7)
+    witness exist x Z st {56 = 7 * x} from 8
+    $section1::divides_Z(7, 56)
+    witness exist x Z st {35 = 7 * x} from 5
+    $section1::divides_Z(7, 35)
+    witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
+    $is_gcd_Z(56, 35, 7)
+
+thm common_divisor_of_three_hundred_nine_and_one_hundred_eighty_six_divides_three:
+    ? forall e Z:
+        e > 0
+        $section1::divides_Z(e, 309)
+        $section1::divides_Z(e, 186)
+        =>:
+            $section1::divides_Z(e, 3)
+    by thm section1::divides_Z_linear_combination(e, 309, 186, -3, 5)
+    (-3) * 309 + 5 * 186 = 3
+    $section1::divides_Z(e, 3)
+
+claim:
+    ? $is_gcd_Z(309, 186, 3)
+    witness exist x Z st {309 = 3 * x} from 103
+    $section1::divides_Z(3, 309)
+    witness exist x Z st {186 = 3 * x} from 62
+    $section1::divides_Z(3, 186)
+    witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
+    $is_gcd_Z(309, 186, 3)
+
+thm common_divisor_of_one_thousand_twenty_four_and_seven_hundred_twenty_nine_divides_one:
+    ? forall e Z:
+        e > 0
+        $section1::divides_Z(e, 1024)
+        $section1::divides_Z(e, 729)
+        =>:
+            $section1::divides_Z(e, 1)
+    by thm section1::divides_Z_linear_combination(e, 1024, 729, -257, 361)
+    (-257) * 1024 + 361 * 729 = 1
+    $section1::divides_Z(e, 1)
+
+claim:
+    ? $is_gcd_Z(1024, 729, 1)
+    witness exist x Z st {1024 = 1 * x} from 1024
+    $section1::divides_Z(1, 1024)
+    witness exist x Z st {729 = 1 * x} from 729
+    $section1::divides_Z(1, 729)
+    witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
+    $is_gcd_Z(1024, 729, 1)
+
+gcd_Z(56, 35) = 7
+witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
+gcd_Z(309, 186) = 3
+witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
+gcd_Z(1024, 729) = 1
+witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
+
+"""
+Exercise II.7. Scaling all inputs by m scales the gcd by m.
+"""
+
+# Scale the two divisor witnesses and the Bezout identity.  Conversely, a
+# common divisor of `m*a` and `m*b` divides the scaled Bezout combination.
+thm exercise_II_7_scaling_gcd:
+    ? forall a, b Z, m N_pos:
+        gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
+    $is_gcd_Z(a, b, gcd_Z(a, b))
+    by thm gcd_Z_dvd_left(a, b)
+    obtain u from exist u Z st {a = gcd_Z(a, b) * u}
+    by thm gcd_Z_dvd_right(a, b)
+    obtain v from exist v Z st {b = gcd_Z(a, b) * v}
+    witness exist u1 Z st {m * a = (m * gcd_Z(a, b)) * u1} from u:
+        m * a = m * (gcd_Z(a, b) * u) = (m * gcd_Z(a, b)) * u
+    $section1::divides_Z(m * gcd_Z(a, b), m * a)
+    witness exist v1 Z st {m * b = (m * gcd_Z(a, b)) * v1} from v:
+        m * b = m * (gcd_Z(a, b) * v) = (m * gcd_Z(a, b)) * v
+    $section1::divides_Z(m * gcd_Z(a, b), m * b)
+    claim:
+        ? forall e Z:
+            e > 0
+            $section1::divides_Z(e, m * a)
+            $section1::divides_Z(e, m * b)
+            =>:
+                $section1::divides_Z(e, m * gcd_Z(a, b))
+        obtain r from exist r Z st {m * a = e * r}
+        obtain s from exist s Z st {m * b = e * s}
+        by thm gcd_Z_bezout(a, b)
+        obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+        witness exist t Z st {m * gcd_Z(a, b) = e * t} from r * x + s * y:
+            m * gcd_Z(a, b) = m * (a * x + b * y) = (m * a) * x + (m * b) * y = (e * r) * x + (e * s) * y = e * (r * x + s * y)
+        $section1::divides_Z(e, m * gcd_Z(a, b))
+    by thm gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
+    witness exist u1, v1 Z st {m * gcd_Z(a, b) = (m * a) * u1 + (m * b) * v1} from x, y:
+        m * gcd_Z(a, b) = m * (a * x + b * y) = (m * a) * x + (m * b) * y
+    $is_gcd_Z(m * a, m * b, m * gcd_Z(a, b))
+    gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
+
+"""
+Exercise II.8. Every rational number has a unique reduced integer numerator
+and positive denominator.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

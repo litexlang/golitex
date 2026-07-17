@@ -9,26 +9,25 @@ binary.
 litex [global options] [command]
 ```
 
-With no command, `litex` starts the interactive verifier REPL. If the current
-directory directly contains `litex.config`, it discovers that project without
-running its `[run]` plan. The persistent REPL environment can then load any
-root `[export]` on demand with `local import name`. Use `litex -isolated` to
-force the ordinary isolated REPL. Litex does not search parent directories for
-a project configuration.
+With no command, `litex` starts an isolated interactive verifier REPL. It does
+not discover `litex.config` in the current directory or search parent
+directories. This terminal is deliberately separate from the fixed module
+tree, so it may load modules interactively.
 
 The CLI has one primary command per invocation. Global options are removed
 before the primary command is parsed, so they may appear before or after the
 primary command. Prefer putting them before the command for readability:
 
 ```bash
-litex -detail -strict -f examples/tmp.lit
-litex -summarize -f examples/tmp.lit
+litex -detail -strict -isolated -f examples/tmp.lit
+litex -summarize -isolated -f examples/tmp.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
 Do not rely on extra positional tokens after a command's required values, except
-for the documented graph-output path after `litex -graph`. The current parser
-is command-oriented, not a general argument parser.
+for the documented graph-output path after `litex -graph` or `litex
+-factgraph`. The current parser is command-oriented, not a general argument
+parser.
 
 ## Global Options
 
@@ -37,7 +36,7 @@ is command-oriented, not a general argument parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `trust have`, and `axiom` statements after builtin initialization. This is useful for CI or benchmark runs where unsafe assumptions should fail. |
+| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Configured imports still load normally. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -79,7 +78,7 @@ Examples:
 
 ```bash
 litex -e "1 = 1"
-litex -f examples/tmp.lit
+litex -isolated -f examples/tmp.lit
 litex -r examples/08_module_repository
 ```
 
@@ -94,16 +93,37 @@ those flags. `-lang` also consumes the next token globally.
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start the interactive verifier REPL; use the current directory's `litex.config` when present, without running its `[run]` plan. |
-| `litex -isolated` | Start an isolated interactive REPL, ignoring the current directory's project configuration. |
+| `litex` | Start an isolated interactive verifier REPL. |
+| `litex -isolated` | Compatibility spelling for the same isolated interactive REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Run a file in its outermost registering `litex.config` project when one exists; otherwise run it as an isolated script. |
-| `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
-| `litex -r <project>` | Discover and validate `<project>/litex.config` recursively, then run its ordered `[run]` plan. |
+| `litex -f <file>` | Require `litex.config` in the direct parent, trace to the module root, and run the recursive `[export]` prefix through this file. It fails if that direct configuration is absent. |
+| `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
+| `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 
-Declare project files and child modules in `[export]` in `litex.config`,
-then bind them with `local import`; ordinary `import Name` names a declared
-root module.
+Declare local project files and child submodules in recursive ordered
+`[export]` entries. Only a `[hierarchy] module` declares non-standard packages
+in `[import]` or installed packages in `[import std]`. Files cite canonical
+names such as `Part2::chap3::theorem` or
+`basics::theorem`. Module source files cannot write
+source-level imports.
+
+The ordinary REPL, and the continued terminal after a successful isolated
+`-f`, may load further interfaces dynamically:
+
+<!-- litex:skip-test -->
+```litex
+import "../Algebra" as Algebra
+Algebra::implementation::some_fact
+
+import std basics
+basics::some_fact
+```
+
+The quoted target must be a folder whose `litex.config` declares
+`[hierarchy] module`. The import runs that module's declared imports and full
+ordered `[export]` tree. The terminal keeps the resulting environment, but the
+imported module's own source files remain non-isolated and therefore cannot
+write dynamic `import` statements.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -119,7 +139,7 @@ stack/runner warnings. It also includes `statement_type_counts`,
 statement text for editor-side cursor selection. Prefer:
 
 ```bash
-litex -summarize -f examples/tmp.lit
+litex -summarize -isolated -f examples/tmp.lit
 ```
 
 Ordinary verifier commands are designed for interactive inspection. Programs
@@ -133,7 +153,7 @@ code on verification failure.
 |---------|----------|
 | `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Discover the repository module graph, run its `[run]` plan, and return one wrapper JSON object. |
+| `litex -runner -r <repo>` | Discover the repository module graph, run its ordered `[export]` table, and return one wrapper JSON object. |
 
 The runner wrapper contains:
 
@@ -167,8 +187,9 @@ close
 ```
 
 `run` executes exactly one arbitrary, including multiline, source block in the
-same persistent Runtime. `artifacts` returns the accumulated summary and graph
-after successful blocks. The event values are `ready`, `block`, `artifacts`,
+same persistent Runtime. `artifacts` returns the accumulated summary, relation
+graph, and fact graph after successful blocks. The event values are `ready`,
+`block`, `artifacts`,
 `skipped`, and `protocol_error`; textual verifier output is returned in the
 JSON-string `trace` field so a client never has to parse terminal prompts.
 
@@ -178,7 +199,10 @@ JSON-string `trace` field so a client never has to parse terminal prompts.
 |---------|----------|
 | `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
 | `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its `[run]` plan, and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save one prop/function/fact relation graph JSON object. |
+| `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
+| `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
+| `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save a fact-only verification dependency graph. |
 
 The graph is an MVP concept map for direct Litex vocabulary references. It
 creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
@@ -192,6 +216,15 @@ If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
 quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
 artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 
+`-factgraph` is the preview proof-flow view. It deliberately omits `prop`,
+function, and object-definition nodes. Its nodes are ordinary facts, `claim`s,
+and `thm`s; its edges come from the verifier's actual cited facts, instantiated
+`forall` facts, checked requirements, and fact-level definition unfolding. The
+JSON includes a `longest_chain` field and a Mermaid flowchart. The main chain
+compresses automatic inferred facts into their surrounding edges, so a reader
+can follow one long, concrete chain from assumptions or trusted boundaries to a
+theorem without mixing it with the definition graph.
+
 ## LaTeX Commands
 
 | Command | Behavior |
@@ -199,7 +232,7 @@ artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 | `litex -latex` | Start the interactive LaTeX-output REPL. |
 | `litex -latex -e <code>` | Compile a source string to LaTeX. |
 | `litex -latex -f <file>` | Compile a file to LaTeX. |
-| `litex -latex -r <repo>` | Compile the repository `[run]` plan to LaTeX. |
+| `litex -latex -r <repo>` | Compile the repository ordered `[export]` table to LaTeX. |
 
 After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
 If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
@@ -220,21 +253,44 @@ Unknown commands print an error and the help message, then exit with code `2`.
 
 ## Project Modules
 
-Use `litex.config` to organize a multi-file project:
+Use `litex.config` to organize a folder tree:
 
-- list ordered bare paths in `[run]`, for example `./chap7.lit` or `./Algebra`;
-- declare every run target, files, and child modules in `[export]`, for example `chap7 = "./chap7.lit"`;
-- use `local import name` inside registered sources;
-- run the project plan with `litex -r <project>` or one registered chapter with `litex -f <file>`.
+- put `module` under `[hierarchy]` at an independently runnable/importable root;
+- put `submodule` under `[hierarchy]` in every exported child folder;
+- list every direct child file and folder exactly once, in mathematical order,
+  under `[export]`;
+- declare external module folders under `[import]` and installed packages under
+  `[import std]`, only in the top-level module;
+- cite earlier entries with their full folder/file aliases, such as
+  `Part2::chap7::name` or `basics::name`.
 
-Ordinary `import Name` loads a declared root module.
+A configured folder may contain only `litex.config` and the direct children
+listed in `[export]`. Exported folders must be submodules. Imported targets must
+be external module folders; imports cannot target files, submodules, or
+descendants of the importing module.
 
-For an explicitly trusted project dependency, write `trust import Name` or
-`trust local import name` in a registered `.lit` source. Litex still resolves
-the declared project target, reads it, parses it, and checks dependency cycles,
-but skips its well-definedness and proof processing and keeps only its
-environment effects. Trusted imports are rejected by `-strict`; their presence
-is recorded as a `trust_import` or `trust_local_import` dependency in the run.
+`-r` and `-f` share one recursive left-to-right order. Running a top-level
+module runs the whole tree. Running a submodule traces back to its module,
+executes every preceding entry, then executes the selected submodule in full.
+Running a registered file follows the same prefix and stops after that file.
+`litex -f` requires the file's direct parent to have `litex.config`; use
+`litex -isolated -f` for a standalone file.
+
+There is no `[requires]` or `[run]`. A `module` with exactly one `.lit` export
+may write `[module]` then `flatten = true`; its public interface omits that
+file alias. `std/basics` uses this form, so `[import std] basics` exposes
+`basics::name`. Source-level `import` is reserved for isolated runtimes; module
+source uses its manifest instead.
+
+Each `[import]` declaration creates a private module instance. Two aliases of
+one physical folder remain distinct, and imports internal to an imported module
+do not become public to its importer.
+
+For an explicitly trusted project entry, write
+`trust chap7 = "./chap7.lit"` in `[export]`. Ordinary runs skip its proof
+processing but preserve direct environment effects; `-strict` verifies it
+normally. For a trusted non-standard package, use the same `trust` prefix in
+`[import]`. Standard package declarations have no trust modifier.
 
 ## Reserved Helper Commands
 
@@ -263,7 +319,7 @@ litex -e "1 = 1"
 Run a file with fuller output:
 
 ```bash
-litex -detail -f examples/tmp.lit
+litex -detail -isolated -f examples/tmp.lit
 ```
 
 Run a project plan:
@@ -275,13 +331,19 @@ litex -r examples/08_module_repository
 Run a strict CI-style check:
 
 ```bash
-litex -strict -runner -f examples/tmp.lit
+litex -strict -runner -isolated -f examples/tmp.lit
 ```
 
 Generate a relation graph:
 
 ```bash
 litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
+```
+
+Generate a fact-only verification chain:
+
+```bash
+litex -factgraph -isolated -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
 ```
 
 Run with Chinese output labels:
@@ -293,5 +355,5 @@ litex -lang zh -runner -e "1 = 1"
 Compile a file to LaTeX:
 
 ```bash
-litex -latex -f examples/tmp.lit
+litex -latex -isolated -f examples/tmp.lit
 ```

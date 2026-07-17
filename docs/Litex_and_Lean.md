@@ -113,7 +113,7 @@ The main Litex model is:
 3. **Statements** are proof-script actions that define objects, assert facts, open local proofs, split cases, or provide witnesses.
 4. **Execution** grows the current verified context by storing accepted facts and running inference.
 5. **The proof process** checks each fact using well-definedness, builtin rules, known facts, and known `forall` facts.
-6. **The builtin mathematical background** contains many small relationships among basic mathematical concepts.
+6. **The explicit mathematical background** comes from imported standard packages and local modules; the checker separately supplies its builtin verification rules.
 
 Every factual statement has exactly one of three Litex outcomes: **true**,
 **unknown**, or **error**. `true` means the checker found a proof path, such as
@@ -285,8 +285,12 @@ ordinary Python with `litex -python`.
 
 ```litex
 have dt R_pos = 1 / 100
-have fn as algo euler_step(y, dy R) R = y + dt * dy
-have fn as algo twice_step(y, dy R) R = euler_step(euler_step(y, dy), dy)
+have fn euler_step(y, dy R) R = y + dt * dy
+have algo for euler_step(y, dy):
+    y + dt * dy
+have fn twice_step(y, dy R) R = euler_step(euler_step(y, dy), dy)
+have algo for twice_step(y, dy):
+    euler_step(euler_step(y, dy), dy)
 ```
 
 The current Python extractor emits code shaped like:
@@ -305,7 +309,7 @@ This is not only syntax translation. The intended workflow is to write the
 executable definition together with the mathematical facts and constraints it
 should satisfy, check the Litex source, and then extract the supported
 definitions. In the current v1 backend, extraction is deliberately narrow:
-numeric constants and `R`-parameter `have fn as algo` definitions become Python
+numeric constants and `R`-parameter `have algo for` implementations become Python
 `float` code. Domain-restricted mathematical functions such as
 `fn(x R: x > 0) R` are part of the verification language, while direct
 extraction for that shape is future backend work. See
@@ -582,6 +586,45 @@ or diagnostic improvements. Lean remains much stronger when the task depends on
 Mathlib, advanced abstractions, or production formalization; the point is that
 Litex can be a faster exploratory verification layer before a development
 settles into its final form.
+
+### Federated Mathematical Collaboration
+
+A mature shared library such as Mathlib is a major advantage of Lean. It gives
+many contributors common definitions, theorem interfaces, automation, and
+reviewed engineering conventions. Litex does not treat that kind of common
+vocabulary as a problem to eliminate.
+
+It explores a different collaboration boundary for source-facing mathematics.
+An author should be able to formalize a textbook chapter, paper, or local
+mathematical development using the definitions and proof route that make sense
+there, then expose a small public interface: named definitions, named theorems,
+and explicit trusted assumptions where proof debt remains. A later development
+can cite that interface without copying the whole source or forcing its local
+mathematics into one globally chosen presentation.
+
+```text
+source A definitions -> source A theorems -> named cite interface
+                                             |
+source B definitions -> bridge theorem ------+-> source B proof
+```
+
+Different definitions of the same mathematical object can therefore coexist.
+They become interoperable only through an explicit, checked bridge theorem;
+sharing a name is not enough. This preserves a source's natural argument while
+making the point of connection visible to readers and to the verifier.
+
+This is federation, not an absence of standards. Facts that become stable,
+fully checkable interfaces used by several independent source families belong
+in explicit namespace-qualified `std` packages. Source-specific supporting
+facts instead belong in a source-local cite package. The promotion criteria are
+documented in the [Reusable Mathematics Policy](Reusable_Mathematics_Policy.md).
+
+The guarantee is deliberately conditional and auditable: a citation is checked
+relative to the Litex version, the imported source, builtin rules, and every
+visible `trust` boundary in its proof path. That is not yet a claim that Litex
+has a complete decentralized package ecosystem. It is a design direction in
+which independently authored mathematical sources can be reused through small,
+inspectable, reproducibly checked interfaces.
 
 ### Message Output Explains Each Step
 
@@ -889,9 +932,9 @@ example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x �
 ```litex
 by contra:
     ? {1, 2, 3} != {1, 2}
-    count({1, 2, 3}) = 3
-    count({1, 2}) = 2
-    count({1, 2, 3}) = count({1, 2})
+    finite_set_size({1, 2, 3}) = 3
+    finite_set_size({1, 2}) = 2
+    finite_set_size({1, 2, 3}) = finite_set_size({1, 2})
     impossible 3 = 2
 ```
 
@@ -903,14 +946,14 @@ example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
   norm_num at hcard
 ```
 
-**What differs.** Litex follows the count contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
+**What differs.** Litex follows the finite-set-size contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
 
 ```litex
 by contra:
     ? {1, 2, 3} != {1, 2}
-    count({1, 2, 3}) = 3
-    count({1, 2}) = 2
-    count({1, 2, 3}) = count({1, 2})
+    finite_set_size({1, 2, 3}) = 3
+    finite_set_size({1, 2}) = 2
+    finite_set_size({1, 2, 3}) = finite_set_size({1, 2})
     impossible 3 = 2
 ```
 
@@ -1006,7 +1049,7 @@ Litex keeps objects and facts separate. A `prop` defines a predicate form. Apply
 This is not Litex:
 ```text
 forall P Prop:
-    ...
+    # proof body omitted
 ```
 
 **What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.
