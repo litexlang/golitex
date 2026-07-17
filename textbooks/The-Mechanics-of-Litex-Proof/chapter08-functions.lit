@@ -115,31 +115,26 @@ sketch:
 # After this, `f(x)` names the unique `y` related to `x`.
 
 sketch:
-    abstract_prop p(x, x2)
-    abstract_prop F(x, x2, y)
-    have A set
-    have B set
-    have C set
-
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall x A, x2 B:
-        $p(x, x2)
-        =>:
-            exist! y C st {$F(x, x2, y)}
-
-    have fn f_unique by exist!:
-        ? forall x A, x2 B:
-            $p(x, x2)
+    # A complete instance uses the unique output y = x + x2 over R.
+    # The witness proves existence, and the equality chain proves uniqueness.
+    claim:
+        ? forall x, x2 R:
+            exist! y R st {y = x + x2}
+        witness exist y R st {y = x + x2} from x + x2:
+            x + x2 = x + x2
+        forall y1, y2 R:
+            y1 = x + x2
+            y2 = x + x2
             =>:
-                exist! y C st {$F(x, x2, y)}
+                y1 = x + x2 = y2
+        exist! y R st {y = x + x2}
 
-    f_unique $in fn(x A, x2 B: $p(x, x2)) C
+    have fn f_sum by exist!:
+        ? forall x, x2 R:
+            exist! y R st {y = x + x2}
 
-    forall x A, x2 B:
-        $p(x, x2)
-        =>:
-            $F(x, x2, f_unique(x, x2))
+    forall x, x2 R:
+        f_sum(x, x2) = x + x2
 
 # That's the set theory definition of a function. In Litex, we can also use it to define a function.
 
@@ -948,14 +943,6 @@ sketch:
 # surjective.
 
 sketch:
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall S, T set, f fn(x S) T:
-        =>:
-            $bijective_fn(S, T, f)
-        <=>:
-            $exist_unique_preimage(S, T, f)
-
     prop has_inverse(S, T set, f fn(x S) T):
         exist g fn(y T) S st {$is_inverse(S, T, f, g)}
 
@@ -1054,9 +1041,7 @@ sketch:
         exist h fn(y T) S st {$is_inverse(S, T, f, h)}
         $has_inverse(S, T, f)
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall S, T set, f fn(x S) T:
+    forall S, T set, f fn(x S) T:
         =>:
             $bijective_fn(S, T, f)
         <=>:

@@ -1,0 +1,110 @@
+# Shared cited interfaces for The Mechanics of Litex Proof.
+#
+# This is the book's only proof-debt boundary. Each `trust` below names a
+# stable mathematical interface that is used by Chapter 7. They are candidates
+# for `std/basics`, not claims that the textbook has proved them.
+
+prop prime(p N_pos):
+    2 <= p
+    forall d N_pos:
+        2 <= d < p
+        =>:
+            p % d != 0
+
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}
+
+# The kernel does not yet provide a first-class gcd construction. The values
+# below make its intended object boundary explicit while preserving the exact
+# unique-existence obligation for future implementation.
+abstract_prop gcd_value(a, b, g)
+abstract_prop egcd_l_value(a, b, l)
+abstract_prop egcd_r_value(a, b, r)
+
+trust:
+    forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+    forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+    forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+have fn gcd by exist!:
+    ? forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+have fn egcd_l by exist!:
+    ? forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+have fn egcd_r by exist!:
+    ? forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+thm bezout_of_coprime:
+    ? forall a, d Z:
+        gcd(a, d) = 1
+        =>:
+            exist x Z, y Z st {1 = x * a + y * d}
+    trust exist x Z, y Z st {1 = x * a + y * d}
+
+thm gcd_bezout_identity:
+    ? forall a, b Z:
+        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+    trust egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+thm gcd_positive_for_prime:
+    ? forall a N, p N_pos:
+        $prime(p)
+        =>:
+            1 <= gcd(a, p)
+    trust 1 <= gcd(a, p)
+
+thm gcd_divides_left:
+    ? forall a N, p N_pos:
+        exist k Z st {a = gcd(a, p) * k}
+    trust exist k Z st {a = gcd(a, p) * k}
+
+thm gcd_divides_right:
+    ? forall a N, p N_pos:
+        exist k Z st {p = gcd(a, p) * k}
+    trust exist k Z st {p = gcd(a, p) * k}
+
+thm gcd_of_prime_is_one_or_prime:
+    ? forall a N, p N_pos:
+        $prime(p)
+        =>:
+            gcd(a, p) = 1 or gcd(a, p) = p
+    trust gcd(a, p) = 1 or gcd(a, p) = p
+
+thm common_divisor_le_gcd:
+    ? forall a, b, c N_pos:
+        a % c = 0
+        b % c = 0
+        =>:
+            c <= gcd(a, b)
+    trust c <= gcd(a, b)
+
+thm positive_rational_has_reduced_gcd_fraction:
+    ? forall a Q:
+        a > 0
+        =>:
+            exist p, q N_pos st {a = p / q, gcd(p, q) = 1}
+    trust exist p, q N_pos st {a = p / q, gcd(p, q) = 1}
+
+thm prime_divides_square:
+    ? forall a, k N_pos:
+        $prime(a)
+        k^2 % a = 0
+        =>:
+            k % a = 0
+    trust k % a = 0
+
+thm prime_two:
+    ? forall n N_pos:
+        n = 2
+        =>:
+            $prime(n)
+    trust $prime(n)
