@@ -1,0 +1,59 @@
+# Direct order semantics provided by the verifier, with no imported theory package.
+
+forall a, b, c R:
+    a <= b
+    b < c
+    =>:
+        a < c
+
+# Negative and nonpositive real terms remain negative or nonpositive under addition.
+forall a, b R:
+    a < 0
+    b <= 0
+    =>:
+        a + b < 0
+
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a + b <= 0
+
+forall a, b, c Z:
+    a <= b
+    b <= c
+    =>:
+        a <= c
+
+forall a, b R:
+    a <= max(a, b)
+    b <= max(a, b)
+    min(a, b) <= a
+    min(a, b) <= b
+
+forall a, b, c R:
+    a <= c
+    b <= c
+    =>:
+        max(a, b) <= c
+
+forall a, b, c R:
+    c <= a
+    c <= b
+    =>:
+        c <= min(a, b)
+
+forall a, b Z:
+    a < b
+    =>:
+        a + 1 <= b
+        a <= b - 1
+
+forall x, n Z:
+    x <= n or x >= n + 1
+
+forall x, n Z:
+    n <= x
+    x < n + 1
+    =>:
+        x = n

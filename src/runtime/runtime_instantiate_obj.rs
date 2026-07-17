@@ -33,6 +33,9 @@ impl Runtime {
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map, param_obj_type),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map, param_obj_type),
+            Obj::IntegerQuotient(inner) => {
+                self.inst_integer_quotient(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type),
@@ -68,9 +71,10 @@ impl Runtime {
             Obj::Proj(inner) => self.inst_proj(inner, param_to_arg_map, param_obj_type),
             Obj::TupleDim(inner) => self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type),
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
-            Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
+            Obj::FiniteSetSize(inner) => {
+                self.inst_finite_set_size(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
-            Obj::FnRangeOn(inner) => self.inst_fn_range_on(inner, param_to_arg_map, param_obj_type),
             Obj::Replacement(inner) => {
                 self.inst_replacement(inner, param_to_arg_map, param_obj_type)
             }
@@ -139,7 +143,9 @@ impl Runtime {
                 Ok(InstantiatedTemplateObj::new(template_obj.template_name.clone(), args).into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
-                if param_obj_type == ParamObjType::Forall {
+                if param_obj_type == ParamObjType::Forall
+                    || param_obj_type == ParamObjType::TheoremInstantiation
+                {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -291,13 +297,7 @@ impl Runtime {
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::Atom(AtomObj::TupleIndex(p)) => p.clone().into(),
             Obj::Atom(AtomObj::CartIndex(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::DefStructField(_)) => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(
-                        "struct field cannot be used as a function head".to_string(),
-                    ),
-                )));
-            }
+            Obj::Atom(AtomObj::DefStructField(x)) => FnObjHead::DefStructField(x.clone()),
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t),
             Obj::FnObj(x) => {
@@ -322,6 +322,30 @@ impl Runtime {
                 .into());
             }
         };
+
+        if param_obj_type == ParamObjType::TheoremInstantiation {
+            if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = &final_head {
+                let args: Vec<Obj> = merged_body
+                    .iter()
+                    .flat_map(|group| group.iter().map(|arg| (**arg).clone()))
+                    .collect();
+                let param_defs = &anonymous_fn.body.params_def_with_set;
+                if args.len() == ParamGroupWithSet::number_of_params(param_defs) {
+                    let param_to_arg_map =
+                        ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+                            param_defs, &args,
+                        );
+                    // A theorem application substitutes a function-valued parameter into a
+                    // theorem fact. Normalize a fully applied anonymous argument here so the
+                    // stored fact has the same beta-normal form as handwritten code.
+                    return self.inst_obj(
+                        anonymous_fn.equal_to.as_ref(),
+                        &param_to_arg_map,
+                        ParamObjType::FnSet,
+                    );
+                }
+            }
+        }
 
         Ok(FnObj::new(final_head, merged_body).into())
     }
@@ -449,6 +473,19 @@ impl Runtime {
         let instantiated_right_obj =
             self.inst_obj(&mod_obj.right, param_to_arg_map, param_obj_type)?;
         Ok(Mod::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_integer_quotient(
+        &self,
+        quotient: &IntegerQuotient,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(IntegerQuotient::new(
+            self.inst_obj(&quotient.dividend, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&quotient.divisor, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
     }
 
     pub fn inst_pow(
@@ -802,13 +839,18 @@ impl Runtime {
         Ok(Tuple::new(elements).into())
     }
 
-    pub fn inst_count(
+    pub fn inst_finite_set_size(
         &self,
-        count: &Count,
+        finite_set_size: &FiniteSetSize,
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?).into())
+        Ok(FiniteSetSize::new(self.inst_obj(
+            &finite_set_size.set,
+            param_to_arg_map,
+            param_obj_type,
+        )?)
+        .into())
     }
 
     pub fn inst_fn_range(
@@ -821,19 +863,6 @@ impl Runtime {
             FnRange::new(self.inst_obj(&fn_range.function, param_to_arg_map, param_obj_type)?)
                 .into(),
         )
-    }
-
-    pub fn inst_fn_range_on(
-        &self,
-        fn_range_on: &FnRangeOn,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(FnRangeOn::new(
-            self.inst_obj(&fn_range_on.function, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&fn_range_on.set, param_to_arg_map, param_obj_type)?,
-        )
-        .into())
     }
 
     pub fn inst_replacement(

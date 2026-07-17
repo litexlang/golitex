@@ -23,6 +23,8 @@ sketch:
 Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 """
 
+# In set theory, every object is a set. Since litex is based on set theory, every object is a set. So there is no difference between an object and a set here. prop `is_set` is used to prove something is a set. Since any object is a set, the prop `is_set` is always true.
+
 forall A set:
     $is_set(A)
 
@@ -51,6 +53,8 @@ element of A is an element of B and vice versa.
 
 # Set equality is extensional: both directions of membership imply equality.
 # Litex's `by extension` form proves the same principle for arbitrary sets.
+# The commutative property of equality, the transitive property of equality, and the reflexive property of equality are all builtin in Litex.
+
 claim:
     ? forall A, B set:
         forall x A:
@@ -126,7 +130,7 @@ Remark 3.1.8. The empty set is not the natural number 0, though its
 cardinality is 0.
 """
 
-count({}) = 0
+finite_set_size({}) = 0
 
 """
 Axiom 3.3 (Singleton sets and pair sets). If a and b are objects, then the
@@ -169,17 +173,17 @@ Examples 3.1.10. From the empty set one can build {}, {{}}, {{{}}}, and
 # This example continues Example 3.1.2: one set can be an element of another
 # set.  This sample chapter does not rebuild pure set coding; it keeps only the
 # nested-set intuition.  When cardinality is needed later, it uses `finite_set`
-# and `count`.
+# and `finite_set_size`.
 
 sketch:
-    count({}) = 0
+    finite_set_size({}) = 0
 
     claim:
         ? {} != {{}}
         by contra:
             ? {} != {{}}
             {} = {{}}
-            0 = count({}) = count({{}}) = 1
+            0 = finite_set_size({}) = finite_set_size({{}}) = 1
             impossible 0 = 1
 
     claim:
@@ -187,7 +191,7 @@ sketch:
         by contra:
             ? {} != {{{}}}
             {} = {{{}}}
-            0 = count({}) = count({{{}}}) = 1
+            0 = finite_set_size({}) = finite_set_size({{{}}}) = 1
             impossible 0 = 1
 
     claim:
@@ -195,7 +199,7 @@ sketch:
         by contra:
             ? {} != {{}, {{}}}
             {} = {{}, {{}}}
-            0 = count({}) = count({{}, {{}}}) = 2
+            0 = finite_set_size({}) = finite_set_size({{}, {{}}}) = 2
             impossible 0 = 2
 
     claim:
@@ -206,7 +210,7 @@ sketch:
             {} $in {{}}
             {} $in {{{}}}
             {} = {{}}
-            0 = count({}) = count({{}}) = 1
+            0 = finite_set_size({}) = finite_set_size({{}}) = 1
             impossible 0 = 1
 
     claim:
@@ -214,7 +218,7 @@ sketch:
         by contra:
             ? {{}} != {{}, {{}}}
             {{}} = {{}, {{}}}
-            1 = count({{}}) = count({{}, {{}}}) = 2
+            1 = finite_set_size({{}}) = finite_set_size({{}, {{}}}) = 2
             impossible 1 = 2
 
     claim:
@@ -222,7 +226,7 @@ sketch:
         by contra:
             ? {{{}}} != {{}, {{}}}
             {{{}}} = {{}, {{}}}
-            1 = count({{{}}}) = count({{}, {{}}}) = 2
+            1 = finite_set_size({{{}}}) = finite_set_size({{}, {{}}}) = 2
             impossible 1 = 2
 
 """
@@ -234,10 +238,22 @@ Axiom 3.4 (Pairwise union). x in A union B iff x in A or x in B.
 # right set.  The later `{1, 2} union {2, 3}` calculation is a concrete example
 # of this rule.
 
-forall A, B set, x set:
-    x $in union(A, B)
-    =>:
-        x $in A or x $in B
+# Background interface: membership in a union is membership in at least one
+# input set.  The current core handles union introduction directly, while this
+# elimination direction remains an explicit local interface.
+thm in_union_is_in_left_or_right:
+    ? forall x, A, B set:
+        x $in union(A, B)
+        =>:
+            x $in A or x $in B
+    x $in A or x $in B
+
+claim:
+    ? forall A, B set, x set:
+        x $in union(A, B)
+        =>:
+            x $in A or x $in B
+    by thm in_union_is_in_left_or_right(x, A, B)
 
 forall A, B set, x set:
     x $in A
@@ -249,12 +265,23 @@ forall A, B set, x set:
     =>:
         x $in union(A, B)
 
+# Background interface: a finite union is finite, and its cardinality is at
+# most the sum of the two cardinalities.  The counting proof is background to
+# this first set-theory example.
+thm finite_set_size_union_le_sum:
+    ? forall A, B finite_set:
+        $is_finite_set(union(A, B))
+        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    trust:
+        $is_finite_set(union(A, B))
+        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+
 sketch:
     1 $in union({1, 2}, {2, 3})
     2 $in union({1, 2}, {2, 3})
     3 $in union({1, 2}, {2, 3})
     $is_finite_set(union({1, 2}, {2, 3}))
-    count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
+    by thm finite_set_size_union_le_sum({1, 2}, {2, 3})
 
 """
 Example 3.1.11. {1, 2} union {2, 3} is {1, 2, 3}.
@@ -332,7 +359,7 @@ sketch:
             ? forall y {2, 3}:
                 y $in union({2}, {3})
 
-    count(union({2}, {3})) = count({2, 3}) = 2
+    finite_set_size(union({2}, {3})) = finite_set_size({2, 3}) = 2
     2 + 3 = 5
 
     claim:
@@ -664,13 +691,24 @@ addition depending on context; mathematical symbols remove that ambiguity.
 # prevents confusing a "boys and girls" union with a "single and male"
 # intersection.
 
+# Background interface: an intersection of finite sets is finite and cannot
+# have more elements than either input set.
+thm finite_set_size_intersect_le_left:
+    ? forall A, B finite_set:
+        $is_finite_set(intersect(A, B))
+        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    trust:
+        $is_finite_set(intersect(A, B))
+        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+
 sketch:
     2 $in intersect({1, 2, 4}, {2, 3, 4})
     4 $in intersect({1, 2, 4}, {2, 3, 4})
     $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
-    count(intersect({1, 2, 4}, {2, 3, 4})) <= count({1, 2, 4})
+    by thm finite_set_size_intersect_le_left({1, 2, 4}, {2, 3, 4})
     intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
-    count(intersect({1, 2, 4}, {2, 3, 4})) = count({2, 4}) = 2
+    finite_set_size(intersect({1, 2, 4}, {2, 3, 4})) = finite_set_size({2, 4}) = 2
+    not 1 $in {2, 4}
     not 1 $in intersect({1, 2, 4}, {2, 3, 4})
     intersect({1}, {2}) = {}
 
@@ -698,8 +736,19 @@ forall A, B set, x set:
     not x $in B
     =>:
         x $in set_minus(A, B)
+
+# Background interface: deleting elements from a finite set leaves a finite
+# set of no greater cardinality.
+thm finite_set_size_set_minus_le_left:
+    ? forall A finite_set, B set:
+        $is_finite_set(set_minus(A, B))
+        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+    trust:
+        $is_finite_set(set_minus(A, B))
+        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+
 $is_finite_set(set_minus({1, 2, 3}, {2}))
-count(set_minus({1, 2, 3}, {2})) <= count({1, 2, 3})
+by thm finite_set_size_set_minus_le_left({1, 2, 3}, {2})
 
 forall A, B set:
     intersect(A, B) = intersect(B, A)
@@ -824,12 +873,12 @@ sketch:
     projection_factor_on_three(1) = proj(C, 1) = {1, 2}
     projection_factor_on_three(2) = proj(C, 2) = {3, 4}
     projection_factor_on_three(3) = proj(C, 3) = {5, 6}
-    projection_factor_on_three(1) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    projection_factor_on_three(2) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    projection_factor_on_three(3) $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {1, 2} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {3, 4} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
-    {5, 6} $in fn_range_on(projection_factor_on_three, {1, 2, 3})
+    projection_factor_on_three(1) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(2) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(3) $in fn_range(projection_factor_on_three)
+    {1, 2} $in fn_range(projection_factor_on_three)
+    {3, 4} $in fn_range(projection_factor_on_three)
+    {5, 6} $in fn_range(projection_factor_on_three)
 
     1 $in {1, 2}
     3 $in {3, 4}
@@ -841,14 +890,14 @@ sketch:
         1 $in projection_factor_on_three(1)
     witness exist k {1, 2, 3} st {3 $in projection_factor_on_three(k)} from 2:
         3 $in projection_factor_on_three(2)
-    1 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    3 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    5 $in cup(fn_range_on(projection_factor_on_three, {1, 2, 3}))
-    fn_range_on(projection_factor_on_three, {1, 2, 3}) $subset {{1, 2}, {3, 4}, {5, 6}}
-    $is_finite_set(fn_range_on(projection_factor_on_three, {1, 2, 3}))
+    1 $in cup(fn_range(projection_factor_on_three))
+    3 $in cup(fn_range(projection_factor_on_three))
+    5 $in cup(fn_range(projection_factor_on_three))
+    fn_range(projection_factor_on_three) $subset {{1, 2}, {3, 4}, {5, 6}}
+    $is_finite_set(fn_range(projection_factor_on_three))
 
 # When the relation is already presented as a function, its image over a set is
-# simply `fn_range_on(f, A)`: the set of all values `f(x)` with `x` in `A`.
+# simply `fn_range(f)`: the set of all values `f(x)` in its declared domain.
 sketch:
     have fn plus_one_on_three(n {3, 5, 9}) {4, 6, 10} by cases:
         case n = 3: 4
@@ -859,11 +908,11 @@ sketch:
     plus_one_on_three(5) = 6
     plus_one_on_three(9) = 10
 
-    plus_one_on_three(3) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    plus_one_on_three(5) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    plus_one_on_three(9) $in fn_range_on(plus_one_on_three, {3, 5, 9})
-    fn_range_on(plus_one_on_three, {3, 5, 9}) $subset {4, 6, 10}
-    $is_finite_set(fn_range_on(plus_one_on_three, {3, 5, 9}))
+    plus_one_on_three(3) $in fn_range(plus_one_on_three)
+    plus_one_on_three(5) $in fn_range(plus_one_on_three)
+    plus_one_on_three(9) $in fn_range(plus_one_on_three)
+    fn_range(plus_one_on_three) $subset {4, 6, 10}
+    $is_finite_set(fn_range(plus_one_on_three))
 
     have fn constant1_on_three(n {3, 5, 9}) {1} by cases:
         case n = 3: 1
@@ -873,14 +922,14 @@ sketch:
     constant1_on_three(3) = 1
     constant1_on_three(5) = 1
     constant1_on_three(9) = 1
-    constant1_on_three(3) $in fn_range_on(constant1_on_three, {3, 5, 9})
-    1 $in fn_range_on(constant1_on_three, {3, 5, 9})
+    constant1_on_three(3) $in fn_range(constant1_on_three)
+    1 $in fn_range(constant1_on_three)
 
     claim:
-        ? forall y fn_range_on(constant1_on_three, {3, 5, 9}):
+        ? forall y fn_range(constant1_on_three):
             y $in {1}
-        y $in fn_range_on(constant1_on_three, {3, 5, 9})
-        have by preimage k from y $in fn_range_on(constant1_on_three, {3, 5, 9})
+        y $in fn_range(constant1_on_three)
+        have by preimage k from y $in fn_range(constant1_on_three)
         k $in {3, 5, 9}
         y = constant1_on_three(k)
         constant1_on_three(k) $in {1}
@@ -888,21 +937,21 @@ sketch:
         y = 1
         y $in {1}
 
-    fn_range_on(constant1_on_three, {3, 5, 9}) $subset {1}
+    fn_range(constant1_on_three) $subset {1}
 
     claim:
         ? forall y {1}:
-            y $in fn_range_on(constant1_on_three, {3, 5, 9})
+            y $in fn_range(constant1_on_three)
         y = 1
-        1 $in fn_range_on(constant1_on_three, {3, 5, 9})
-        y $in fn_range_on(constant1_on_three, {3, 5, 9})
+        1 $in fn_range(constant1_on_three)
+        y $in fn_range(constant1_on_three)
 
-    {1} $subset fn_range_on(constant1_on_three, {3, 5, 9})
+    {1} $subset fn_range(constant1_on_three)
 
     by extension:
-        ? fn_range_on(constant1_on_three, {3, 5, 9}) = {1}
+        ? fn_range(constant1_on_three) = {1}
 
-    count(fn_range_on(constant1_on_three, {3, 5, 9})) = count({1}) = 1
+    finite_set_size(fn_range(constant1_on_three)) = finite_set_size({1}) = 1
 
 """
 Axiom 3.7 (Infinity). There is a set N of natural numbers containing 0 and
@@ -1130,7 +1179,7 @@ sketch:
     rec_add_one(0) = 1
     rec_add_one(1) = rec_add_one(0) + 1 = 2
 
-    have fn as algo algo_square(x R) R = x^2
+    have fn algo_square(x R) R = x^2
 
     algo_square(3) = 9
 
@@ -1210,6 +1259,13 @@ sketch:
     have fn constant7_from_relation by exist!:
         ? forall x N:
             exist! y N st {y = 7}
+        witness exist y N st {y = 7} from 7:
+            7 $in N
+        forall y1, y2 N:
+            y1 = 7
+            y2 = 7
+            =>:
+                y1 = y2
         exist! y N st {y = 7}
 
     forall x N:
@@ -1251,7 +1307,7 @@ sketch:
 
     rec_add_one(0) = 1
 
-    have fn as algo algo_identity(x R) R = x
+    have fn algo_identity(x R) R = x
 
     algo_identity(3) = 3
 
@@ -1748,7 +1804,7 @@ Example 3.4.2. If f:N->N is f(x)=2x, then the forward image of {1,2,3} is
 # witnesses can all be enumerated.  `double_on_three` is the finite-domain
 # version of the global function `double_nat` restricted to `{1,2,3}`.  We first
 # unfold the section vocabulary `is_forward_image_of`, then give the direct
-# image statement `fn_range_on(double_on_three,{1,2,3}) = {2,4,6}`.
+# image statement `fn_range(double_on_three) = {2,4,6}`.
 
 sketch:
     have fn double_nat(n N) N = 2 * n
@@ -1802,48 +1858,48 @@ sketch:
     double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
-    double_on_three(1) $in fn_range_on(double_on_three, {1, 2, 3})
-    double_on_three(2) $in fn_range_on(double_on_three, {1, 2, 3})
-    double_on_three(3) $in fn_range_on(double_on_three, {1, 2, 3})
+    double_on_three(1) $in fn_range(double_on_three)
+    double_on_three(2) $in fn_range(double_on_three)
+    double_on_three(3) $in fn_range(double_on_three)
 
     claim:
-        ? forall y fn_range_on(double_on_three, {1, 2, 3}):
+        ? forall y fn_range(double_on_three):
             y $in {2, 4, 6}
-        y $in fn_range_on(double_on_three, {1, 2, 3})
-        have by preimage k from y $in fn_range_on(double_on_three, {1, 2, 3})
+        y $in fn_range(double_on_three)
+        have by preimage k from y $in fn_range(double_on_three)
         k $in {1, 2, 3}
         double_on_three(k) $in {2, 4, 6}
         y = double_on_three(k)
         y $in {2, 4, 6}
 
-    fn_range_on(double_on_three, {1, 2, 3}) $subset {2, 4, 6}
+    fn_range(double_on_three) $subset {2, 4, 6}
 
     claim:
         ? forall y {2, 4, 6}:
-            y $in fn_range_on(double_on_three, {1, 2, 3})
+            y $in fn_range(double_on_three)
         by cases:
-            ? y $in fn_range_on(double_on_three, {1, 2, 3})
+            ? y $in fn_range(double_on_three)
             case y = 2:
                 double_on_three(1) = 2
                 y = double_on_three(1)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
             case y = 4:
                 double_on_three(2) = 4
                 y = double_on_three(2)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
             case y = 6:
                 double_on_three(3) = 6
                 y = double_on_three(3)
-                y $in fn_range_on(double_on_three, {1, 2, 3})
+                y $in fn_range(double_on_three)
 
-    {2, 4, 6} $subset fn_range_on(double_on_three, {1, 2, 3})
+    {2, 4, 6} $subset fn_range(double_on_three)
 
     by extension:
-        ? fn_range_on(double_on_three, {1, 2, 3}) = {2, 4, 6}
+        ? fn_range(double_on_three) = {2, 4, 6}
 
-    count(fn_range_on(double_on_three, {1, 2, 3})) = count({2, 4, 6}) = 3
+    finite_set_size(fn_range(double_on_three)) = finite_set_size({2, 4, 6}) = 3
 
-    have by preimage builtin_k from double_on_three(1) $in fn_range_on(double_on_three, {1, 2, 3})
+    have by preimage builtin_k from double_on_three(1) $in fn_range(double_on_three)
     builtin_k $in {1, 2, 3}
 
 """
@@ -1901,56 +1957,56 @@ sketch:
                         square_on_example(2) = 4
         $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
 
-    square_on_example(-1) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(0) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(1) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-    square_on_example(2) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    square_on_example(-1) $in fn_range(square_on_example)
+    square_on_example(0) $in fn_range(square_on_example)
+    square_on_example(1) $in fn_range(square_on_example)
+    square_on_example(2) $in fn_range(square_on_example)
 
     claim:
-        ? forall y fn_range_on(square_on_example, {-1, 0, 1, 2}):
+        ? forall y fn_range(square_on_example):
             y $in {0, 1, 4}
-        y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
-        have by preimage z from y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+        y $in fn_range(square_on_example)
+        have by preimage z from y $in fn_range(square_on_example)
         z $in {-1, 0, 1, 2}
         square_on_example(z) $in {0, 1, 4}
         y = square_on_example(z)
         y $in {0, 1, 4}
 
-    fn_range_on(square_on_example, {-1, 0, 1, 2}) $subset {0, 1, 4}
+    fn_range(square_on_example) $subset {0, 1, 4}
 
     claim:
         ? forall y {0, 1, 4}:
-            y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+            y $in fn_range(square_on_example)
         by cases:
-            ? y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+            ? y $in fn_range(square_on_example)
             case y = 0:
                 square_on_example(0) = 0
                 y = square_on_example(0)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
             case y = 1:
                 square_on_example(-1) = 1
                 y = square_on_example(-1)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
             case y = 4:
                 square_on_example(2) = 4
                 y = square_on_example(2)
-                y $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+                y $in fn_range(square_on_example)
 
-    {0, 1, 4} $subset fn_range_on(square_on_example, {-1, 0, 1, 2})
+    {0, 1, 4} $subset fn_range(square_on_example)
 
     by extension:
-        ? fn_range_on(square_on_example, {-1, 0, 1, 2}) = {0, 1, 4}
+        ? fn_range(square_on_example) = {0, 1, 4}
 
-    count(fn_range_on(square_on_example, {-1, 0, 1, 2})) = count({0, 1, 4}) = 3
-    count({-1, 0, 1, 2}) = 4
+    finite_set_size(fn_range(square_on_example)) = finite_set_size({0, 1, 4}) = 3
+    finite_set_size({-1, 0, 1, 2}) = 4
     square_Z(-1) = 1
     square_Z(1) = 1
     -1 != 1
     square_Z(-2) = 4
     square_on_example(2) = 4
-    square_on_example(2) $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    square_on_example(2) $in fn_range(square_on_example)
     4 = square_on_example(2)
-    4 $in fn_range_on(square_on_example, {-1, 0, 1, 2})
+    4 $in fn_range(square_on_example)
     not -2 $in {-1, 0, 1, 2}
 
 """
@@ -2038,7 +2094,7 @@ sketch:
         by contra:
             ? {2} != {1, 2, 3}
             {2} = {1, 2, 3}
-            1 = count({2}) = count({1, 2, 3}) = 3
+            1 = finite_set_size({2}) = finite_set_size({1, 2, 3}) = 3
             impossible 1 = 3
 
 """
@@ -2184,7 +2240,8 @@ Example 3.4.8. For X={4,7} and Y={0,1}, there are four functions X -> Y.
 
 # Each function chooses independently where 4 and 7 go.  Thus the function
 # space has the four concrete maps 00, 01, 10, and 11. Proposition 3.6.14(f)
-# later explains the general count `count(Y^X) = count(Y)^count(X)`.
+# later explains the general finite-set-size formula
+# `finite_set_size(Y^X) = finite_set_size(Y)^finite_set_size(X)`.
 
 sketch:
     have fn bit_00(x {4, 7}) {0, 1} by cases:
@@ -2231,12 +2288,12 @@ sketch:
         =>:
             U $subset X
 """
-Remark 3.4.10. For a finite set X, the power set 2^X has 2^{count(X)}
+Remark 3.4.10. For a finite set X, the power set 2^X has 2^{finite_set_size(X)}
 elements; in particular a three-element set has eight subsets.
 """
 
 # The sketch lists all subsets of a three-element set and then checks the
-# expected count `2^3 = 8`.
+# expected finite-set size `2^3 = 8`.
 
 sketch:
     {} $in power_set({1, 2, 3})
@@ -2254,7 +2311,7 @@ sketch:
     {4, 7} $in power_set({4, 7})
 
     $is_finite_set(power_set({1, 2, 3}))
-    count(power_set({1, 2, 3})) = 2^count({1, 2, 3}) = 2^3 = 8
+    finite_set_size(power_set({1, 2, 3})) = 2^finite_set_size({1, 2, 3}) = 2^3 = 8
 
 
 
@@ -2536,6 +2593,15 @@ to an exercise.
 # products.  One-fold and zero-fold product conventions are discussed later as
 # finite-product notation, not as binary `cart`.
 
+# Background interface: a finite set with cardinality zero is empty.
+thm finite_set_size_zero_is_empty:
+    ? forall A finite_set:
+        finite_set_size(A) = 0
+        =>:
+            A = {}
+    not $is_nonempty_set(A)
+    A = {}
+
 sketch:
     claim:
         ? forall X, Y nonempty_set, x X, y Y:
@@ -2547,7 +2613,8 @@ sketch:
             p[2] $in Y
 
     cart_dim(cart({}, {1})) = 2
-    count(cart({}, {1})) = 0
+    finite_set_size(cart({}, {1})) = 0
+    by thm finite_set_size_zero_is_empty(cart({}, {1}))
     not $is_nonempty_set(cart({}, {1}))
 
 
@@ -2566,8 +2633,8 @@ sketch:
     cart_dim(cart({1, 2}, {3, 4, 5})) = 2
     proj(cart({1, 2}, {3, 4, 5}), 1) = {1, 2}
     proj(cart({1, 2}, {3, 4, 5}), 2) = {3, 4, 5}
-    count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5}) = 6
-    count(cart({3, 4, 5}, {1, 2})) = count({3, 4, 5}) * count({1, 2}) = 6
+    finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5}) = 6
+    finite_set_size(cart({3, 4, 5}, {1, 2})) = finite_set_size({3, 4, 5}) * finite_set_size({1, 2}) = 6
 
     claim:
         ? cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
@@ -2646,7 +2713,7 @@ product X1 x X2 x X3 contains triples, while the iterated binary products
 # These three product shapes are intentionally different: flat triples,
 # left-nested pairs, and right-nested pairs have different projections even
 # though each has eight elements.  Tao writes out all eight elements in each
-# case; below we record the eight membership facts, the common count, and the
+# case; below we record the eight membership facts, the common finite-set size, and the
 # different arities/projections.  The single displayed eight-element set
 # equality is left for a later finite-list-set lemma.
 
@@ -2664,7 +2731,7 @@ sketch:
             (b1, a2, b3) $in cart({a1, b1}, {a2, b2}, {a3, b3})
             (b1, b2, a3) $in cart({a1, b1}, {a2, b2}, {a3, b3})
             (b1, b2, b3) $in cart({a1, b1}, {a2, b2}, {a3, b3})
-            count(cart({a1, b1}, {a2, b2}, {a3, b3})) = 8
+            finite_set_size(cart({a1, b1}, {a2, b2}, {a3, b3})) = 8
 
     forall a1, b1, a2, b2, a3, b3 set:
         a1 != b1
@@ -2679,7 +2746,7 @@ sketch:
             ((b1, a2), b3) $in cart(cart({a1, b1}, {a2, b2}), {a3, b3})
             ((b1, b2), a3) $in cart(cart({a1, b1}, {a2, b2}), {a3, b3})
             ((b1, b2), b3) $in cart(cart({a1, b1}, {a2, b2}), {a3, b3})
-            count(cart(cart({a1, b1}, {a2, b2}), {a3, b3})) = 8
+            finite_set_size(cart(cart({a1, b1}, {a2, b2}), {a3, b3})) = 8
 
     forall a1, b1, a2, b2, a3, b3 set:
         a1 != b1
@@ -2694,7 +2761,7 @@ sketch:
             (b1, (a2, b3)) $in cart({a1, b1}, cart({a2, b2}, {a3, b3}))
             (b1, (b2, a3)) $in cart({a1, b1}, cart({a2, b2}, {a3, b3}))
             (b1, (b2, b3)) $in cart({a1, b1}, cart({a2, b2}, {a3, b3}))
-            count(cart({a1, b1}, cart({a2, b2}, {a3, b3}))) = 8
+            finite_set_size(cart({a1, b1}, cart({a2, b2}, {a3, b3}))) = 8
 
     forall a1, b1, a2, b2, a3, b3 set:
         a1 != b1
@@ -2832,8 +2899,8 @@ sketch:
         0 = 1
         impossible 0 = 1
 
-    count({0, 1, 2}) = count({3, 4, 5}) = 3
-    count({3, 4}) = 2
+    finite_set_size({0, 1, 2}) = finite_set_size({3, 4, 5}) = 3
+    finite_set_size({3, 4}) = 2
 
 """
 Remark 3.6.3. The natural numbers have equal cardinality with the even natural
@@ -2952,7 +3019,7 @@ standard n-element set.
 
 # Tao uses the standard set `{i in N : 1 <= i <= n}`.  This file uses
 # `range(0, n)` as an equivalent n-element model, while concrete examples still
-# compute size with `count(X)`.
+# compute size with `finite_set_size(X)`.
 
 prop has_cardinality(X set, n N):
     $has_equal_cardinality(X, range(0, n))
@@ -3023,8 +3090,8 @@ Example 3.6.7. Listed finite sets with distinct entries have the expected
 cardinality.
 """
 
-# For concrete finite sets, `count` gives the expected number of distinct
-# elements.
+# For concrete finite sets, `finite_set_size` gives the expected number of
+# distinct elements.
 
 sketch:
     forall a, b, c, d set:
@@ -3035,27 +3102,27 @@ sketch:
         b != d
         c != d
         =>:
-            count({a, b, c, d}) = 4
-            count({a}) = 1
+            finite_set_size({a, b, c, d}) = 4
+            finite_set_size({a}) = 1
 
 """
 Proposition 3.6.8. If a finite set has cardinality n and cardinality m, then
 n = m.
 """
 
-# The value `count(X)` is the unique finite cardinality of `X`: if two natural
+# The value `finite_set_size(X)` is the unique finite cardinality of `X`: if two natural
 # numbers are both equal to it, then they are equal.  The concrete
-# `{0,1,2}` versus `{3,4}` line shows the kind of count comparison promised in
-# Example 3.6.2.
+# `{0,1,2}` versus `{3,4}` line shows the finite-set-size comparison promised
+# in Example 3.6.2.
 
 sketch:
     forall X finite_set, n, m N:
-        count(X) = n
-        count(X) = m
+        finite_set_size(X) = n
+        finite_set_size(X) = m
         =>:
             n = m
 
-    count({0, 1, 2}) != count({3, 4})
+    finite_set_size({0, 1, 2}) != finite_set_size({3, 4})
 
 """
 Lemma 3.6.9. Removing one element from an n-element set leaves n-1 elements.
@@ -3068,7 +3135,7 @@ sketch:
     1 $in set_minus({1, 2, 3}, {2})
     3 $in set_minus({1, 2, 3}, {2})
     $is_finite_set(set_minus({1, 2, 3}, {2}))
-    count(set_minus({1, 2, 3}, {2})) <= count({1, 2, 3})
+    finite_set_size(set_minus({1, 2, 3}, {2})) <= finite_set_size({1, 2, 3})
 
 """
 Definition 3.6.10. A set has finite cardinality if it has cardinality n for
@@ -3076,7 +3143,7 @@ some natural number n; it has infinite cardinality otherwise.
 """
 
 # These predicates preserve Tao's bijection-based wording.  For concrete finite
-# sets, the shorter notation is `finite_set` plus `count`.
+# sets, the shorter notation is `finite_set` plus `finite_set_size`.
 
 prop has_finite_cardinality(X set):
     exist n N st {$has_cardinality(X, n)}
@@ -3090,26 +3157,26 @@ expected counts.
 """
 
 # These examples compute finite sizes directly.  The final claim records that
-# every finite set has a natural-number count.
+# every finite set has a natural-number `finite_set_size`.
 
 sketch:
     $is_finite_set({0, 1, 2})
-    count({0, 1, 2}) = 3
+    finite_set_size({0, 1, 2}) = 3
     $is_finite_set({3, 4})
-    count({3, 4}) = 2
+    finite_set_size({3, 4}) = 2
     $is_finite_set({})
-    count({}) = 0
-    count({1, 2, 3, 4}) = 4
-    count(range(0, 4)) = 4
-    count(closed_range(1, 4)) = 4
-    count(range(0, 4)) = count(closed_range(1, 4))
+    finite_set_size({}) = 0
+    finite_set_size({1, 2, 3, 4}) = 4
+    finite_set_size(range(0, 4)) = 4
+    finite_set_size(closed_range(1, 4)) = 4
+    finite_set_size(range(0, 4)) = finite_set_size(closed_range(1, 4))
 
     claim:
         ? forall X finite_set:
-            exist n N st {count(X) = n}
-        count(X) $in N
-        witness exist n N st {count(X) = n} from count(X):
-            count(X) = count(X)
+            exist n N st {finite_set_size(X) = n}
+        finite_set_size(X) $in N
+        witness exist n N st {finite_set_size(X) = n} from finite_set_size(X):
+            finite_set_size(X) = finite_set_size(X)
 
 """
 Theorem 3.6.12. The natural numbers are infinite.  Tao's proof shows that a finite list of all
@@ -3117,22 +3184,24 @@ natural numbers would have a maximum M, so M+1 would be missing.
 """
 
 # The contradiction can be phrased directly with counts: if `N` were finite,
-# then the interval `0...count(N)` would be a subset of `N` with
-# `count(N)+1` elements, impossible for a subset of a set of size `count(N)`.
+# then the interval `0...finite_set_size(N)` would be a subset of `N` with
+# `finite_set_size(N)+1` elements, impossible for a subset of a set of size `finite_set_size(N)`.
 
 sketch:
     by contra:
         ? not $is_finite_set(N)
         $is_finite_set(N)
 
-        forall x 0...count(N):
+        forall x 0...finite_set_size(N):
             x $in N
 
-        0...count(N) $subset N
+        0...finite_set_size(N) $subset N
 
-        count(N) + 1 = count(N) - 0 + 1 = count(0...count(N)) <= count(N)
+        by thm chap2::finite_set_size_subset_le(0...finite_set_size(N), N)
+        by thm chap2::finite_set_size_closed_range(0, finite_set_size(N))
+        finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
 
-        impossible count(N) + 1 <= count(N)
+        impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
     not $is_finite_set(N)
 
@@ -3155,39 +3224,57 @@ are finite with the expected cardinality bounds or formulas.
 """
 
 # The union, subset, and product parts can be shown directly with finite sets
-# and counts.  Exact image counts and function-space count formulas need their
-# own later lemmas.
+# and finite-set sizes.  Exact image sizes and function-space size formulas
+# need their own later lemmas.
+
+# Background interfaces: inclusion-exclusion for two finite sets and the
+# finiteness of a subset are used only to state these cardinality examples.
+thm finite_set_size_union:
+    ? forall A, B finite_set:
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    trust finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+
+thm subset_of_finite_set_is_finite:
+    ? forall A, B set:
+        $is_finite_set(B)
+        A $subset B
+        =>:
+            $is_finite_set(A)
+    trust $is_finite_set(A)
 
 sketch:
     claim:
         ? forall X, Y finite_set:
             $is_finite_set(union(X, Y))
-            count(union(X, Y)) <= count(X) + count(Y)
+            finite_set_size(union(X, Y)) <= finite_set_size(X) + finite_set_size(Y)
+        by thm finite_set_size_union_le_sum(X, Y)
 
     claim:
         ? forall X, Y finite_set:
             intersect(X, Y) = {}
             =>:
-                count(union(X, Y)) = count(X) + count(Y)
-        count(union(X, Y)) = count(X) + count(Y) - count(intersect(X, Y)) = count(X) + count(Y) - count({}) = count(X) + count(Y)
+                finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y)
+        by thm finite_set_size_union(X, Y)
+        finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size({}) = finite_set_size(X) + finite_set_size(Y)
 
     intersect({1, 2}, {3}) = {}
-    count(union({1, 2}, {3})) = count({1, 2}) + count({3}) = count({1, 2}) + 1 = 3
+    finite_set_size(union({1, 2}, {3})) = finite_set_size({1, 2}) + finite_set_size({3}) = finite_set_size({1, 2}) + 1 = 3
 
     claim:
         ? forall X finite_set, Y set:
             Y $subset X
             =>:
                 $is_finite_set(Y)
-                count(Y) <= count(X)
+                finite_set_size(Y) <= finite_set_size(X)
         by thm subset_of_finite_set_is_finite(Y, X)
+        by thm chap2::finite_set_size_subset_le(Y, X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2
         case n = 2: 4
         case n = 3: 6
 
-    $is_finite_set(fn_range_on(double_on_three, {1, 2, 3}))
+    $is_finite_set(fn_range(double_on_three))
 
     forall X, Y nonempty_set:
         $is_finite_set(X)
@@ -3198,9 +3285,9 @@ sketch:
         $is_finite_set(X)
         $is_finite_set(Y)
         =>:
-            count(cart(X, Y)) = count(X) * count(Y)
-    count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5}) = 6
-    count(cart({3, 4, 5}, {1, 2})) = count({3, 4, 5}) * count({1, 2}) = 6
+            finite_set_size(cart(X, Y)) = finite_set_size(X) * finite_set_size(Y)
+    finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5}) = 6
+    finite_set_size(cart({3, 4, 5}, {1, 2})) = finite_set_size({3, 4, 5}) * finite_set_size({1, 2}) = 6
 
 """
 Remark 3.6.15. The preceding finite-cardinality facts explain the usual
@@ -3213,4 +3300,4 @@ exponentiation.
 # three-element set has `2^3` subsets.
 
 sketch:
-    count(power_set({1, 2, 3})) = 2^count({1, 2, 3}) = 8
+    finite_set_size(power_set({1, 2, 3})) = 2^finite_set_size({1, 2, 3}) = 8

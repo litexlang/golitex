@@ -15,9 +15,8 @@ impl Runtime {
             .expect("an execution frame should always exist");
         let local_count = frame.local_environment_stack.len();
         match frame.layer {
-            ExecutionLayer::Builtin => local_count + 1,
-            ExecutionLayer::Main => local_count + 2,
-            ExecutionLayer::File(_) => local_count + 3,
+            ExecutionLayer::Main => local_count + 1,
+            ExecutionLayer::File(_) => local_count + 2,
         }
     }
 
@@ -32,25 +31,15 @@ impl Runtime {
         }
         let layer_index = index - local_count;
         match frame.layer {
-            ExecutionLayer::Builtin => {
-                if layer_index == 0 {
-                    Some(self.module_manager.builtin_environment.as_ref())
-                } else {
-                    None
-                }
-            }
             ExecutionLayer::Main => {
-                let module = self.module_manager.module(frame.module_id?)?;
+                let module = self.module_manager.module(frame.module_id)?;
                 if layer_index == 0 {
                     return Some(module.main_environment.as_ref());
-                }
-                if layer_index == 1 {
-                    return Some(self.module_manager.builtin_environment.as_ref());
                 }
                 None
             }
             ExecutionLayer::File(current_file_id) => {
-                let module = self.module_manager.module(frame.module_id?)?;
+                let module = self.module_manager.module(frame.module_id)?;
                 let current_file = module.file(current_file_id)?;
                 if layer_index == 0 {
                     return Some(current_file.environment.as_ref());
@@ -58,26 +47,9 @@ impl Runtime {
                 if layer_index == 1 {
                     return Some(module.main_environment.as_ref());
                 }
-                if layer_index == 2 {
-                    return Some(self.module_manager.builtin_environment.as_ref());
-                }
                 None
             }
         }
-    }
-
-    pub fn environment_is_builtin_by_top_index(&self, index: usize) -> bool {
-        self.environment_by_top_index(index)
-            .is_some_and(|environment| {
-                std::ptr::eq(
-                    environment,
-                    self.module_manager.builtin_environment.as_ref(),
-                )
-            })
-    }
-
-    pub fn builtin_environment(&self) -> &Environment {
-        self.module_manager.builtin_environment.as_ref()
     }
 
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
@@ -91,7 +63,6 @@ impl Runtime {
         false
     }
 
-    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restricts_to` targets.
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
@@ -102,44 +73,12 @@ impl Runtime {
         None
     }
 
-    /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
-    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restricts_to`) for well-defined/calls.
-    pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.as_ref() {
-                return Some(body.clone());
-            }
-            if let Some(restricts) = info.restrict_to.as_ref() {
-                if let Some((rb, _)) = restricts.last() {
-                    return Some(rb.clone());
-                }
-            }
-        }
-
-        None
-    }
-
     pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         self.get_object_in_fn_set(obj)
     }
 
-    pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
-        self.get_object_in_fn_set_or_restrict(obj)
-    }
-
-    pub fn get_cloned_object_in_fn_set_or_restrict_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.clone() {
-                return vec![body];
-            }
-            if let Some(restricts) = info.restrict_to.clone() {
-                return restricts
-                    .into_iter()
-                    .map(|(body, _)| body)
-                    .collect::<Vec<FnSetBody>>();
-            }
-        }
-        Vec::new()
+    pub fn get_cloned_object_in_fn_set_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
+        self.get_cloned_object_in_fn_set(obj).into_iter().collect()
     }
 
     pub fn get_fn_range_function_body(&self, function: &Obj) -> Option<FnSetBody> {
@@ -147,53 +86,6 @@ impl Runtime {
             Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
             _ => self.get_object_in_fn_set(function),
         }
-    }
-
-    pub fn get_fn_range_on_function_body(&self, function: &Obj) -> Option<FnSetBody> {
-        match function {
-            Obj::AnonymousFn(anonymous_fn) => Some(anonymous_fn.body.clone()),
-            _ => self.get_object_in_fn_set_or_restrict(function),
-        }
-    }
-
-    pub fn fn_range_on_target_fn_set(
-        &self,
-        fn_range_on: &FnRangeOn,
-        _line_file: LineFile,
-    ) -> Result<FnSet, RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "fn_range_on expects a function with a known function set, got {}",
-                    fn_range_on.function
-                )),
-            )));
-        };
-        if body.params_def_with_set.number_of_params() != 1 {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "fn_range_on expects a unary function, got {}",
-                    fn_range_on.function
-                )),
-            )));
-        }
-        let param = self.generate_random_unused_name();
-        FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![param],
-                fn_range_on.set.as_ref().clone(),
-            )],
-            vec![],
-            body.ret_set.as_ref().clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_cause(
-                    format!("failed to build restriction target for {}", fn_range_on),
-                    e,
-                ),
-            ))
-        })
     }
 
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
@@ -663,25 +555,29 @@ impl Runtime {
         if self.is_current_parse_module(module_name) {
             return vec![];
         }
-        let active_local_target = self.active_local_import(module_name);
-        let target = active_local_target.or_else(|| {
-            self.module_manager
-                .import_target_by_canonical_name(module_name)
-        });
+        let target = self
+            .module_manager
+            .import_target_by_canonical_name(module_name);
         match target {
             Some(ImportTarget::Module(module_id)) => {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
+                if let Some(file_id) = module.flattened_export_file {
+                    return module
+                        .file(file_id)
+                        .filter(|file| file.status == FileStatus::Loaded)
+                        .map(|file| vec![file.environment.as_ref()])
+                        .unwrap_or_default();
+                }
                 vec![module.main_environment.as_ref()]
             }
             Some(ImportTarget::File { module_id, file_id }) => {
-                if active_local_target.is_none() && !module_name.contains(MOD_SIGN) {
+                let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
-                }
-                self.module_manager
-                    .module(module_id)
-                    .and_then(|module| module.file(file_id))
+                };
+                module
+                    .file(file_id)
                     .filter(|file| file.status == FileStatus::Loaded)
                     .map(|file| vec![file.environment.as_ref()])
                     .unwrap_or_default()
@@ -697,18 +593,23 @@ impl Runtime {
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
         let frame = self.execution_stack.last()?;
-        let module = self.module_manager.module(frame.module_id?)?;
+        let module_id = frame.module_id;
+        let module = self.module_manager.module(module_id)?;
         match frame.layer {
-            ExecutionLayer::Builtin => None,
             ExecutionLayer::Main => {
                 (!module.module_name.is_empty()).then_some(module.module_name.as_str())
             }
-            ExecutionLayer::File(file_id) => module
-                .file(file_id)
-                .map(|file| file.canonical_name.as_str())
-                .or_else(|| {
-                    (!module.module_name.is_empty()).then_some(module.module_name.as_str())
-                }),
+            ExecutionLayer::File(file_id) => {
+                if module.flattened_export_file == Some(file_id) && !module.module_name.is_empty() {
+                    return Some(module.module_name.as_str());
+                }
+                module
+                    .file(file_id)
+                    .map(|file| file.canonical_name.as_str())
+                    .or_else(|| {
+                        (!module.module_name.is_empty()).then_some(module.module_name.as_str())
+                    })
+            }
         }
     }
 
@@ -841,6 +742,9 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Mul(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::IntegerQuotient(x) => {
+            collect_module_names_from_two(&x.dividend, &x.divisor, module_names)
+        }
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::Log(x) => collect_module_names_from_two(&x.base, &x.arg, module_names),
         Obj::Max(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
@@ -890,12 +794,8 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Cup(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::Cap(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
-        Obj::Count(x) => collect_module_names_from_obj(&x.set, module_names),
+        Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
-        Obj::FnRangeOn(x) => {
-            collect_module_names_from_obj(&x.function, module_names);
-            collect_module_names_from_obj(&x.set, module_names);
-        }
         Obj::Replacement(x) => {
             collect_module_name_from_atomic_name(&x.prop_name, module_names);
             collect_module_names_from_obj(&x.source_set, module_names);
@@ -1015,6 +915,7 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
+        | FnObjHead::DefStructField(_)
         | FnObjHead::Induc(_)
         | FnObjHead::DefAlgo(_)
         | FnObjHead::TupleIndex(_)

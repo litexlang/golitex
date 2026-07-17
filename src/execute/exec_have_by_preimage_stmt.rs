@@ -214,15 +214,9 @@ impl Runtime {
                     })?;
                 Ok((fn_range.function.as_ref().clone(), fn_body))
             }
-            Obj::FnRangeOn(fn_range_on) => {
-                let fn_set = self
-                    .fn_range_on_target_fn_set(fn_range_on, stmt.line_file.clone())
-                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-                Ok((fn_range_on.function.as_ref().clone(), fn_set.body.clone()))
-            }
             _ => Err(short_exec_error(
                 stmt.clone().into(),
-                "have by preimage expects `from z $in fn_range(f)`, `from z $in fn_range_on(f, S)`, or `from z $in replacement(P, A)`".to_string(),
+                "have by preimage expects `from z $in fn_range(f)` or `from z $in replacement(P, A)`".to_string(),
                 None,
                 vec![],
             )),

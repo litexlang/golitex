@@ -508,7 +508,7 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
-            Obj::Atom(AtomObj::DefStructField(_)) => return Ok(result),
+            Obj::Atom(AtomObj::DefStructField(p)) => (FnObjHead::DefStructField(p.clone()), vec![]),
             Obj::AnonymousFn(anon) => (
                 FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
                 vec![],
@@ -558,6 +558,36 @@ impl Runtime {
             let arg = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Sqrt::new(arg).into());
+        }
+        if tok == INTEGER_QUOTIENT {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let dividend = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            let divisor = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "integer_quotient expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(IntegerQuotient::new(dividend, divisor).into());
         }
         if tok == MAX {
             tb.skip()?;
@@ -747,7 +777,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -756,7 +786,7 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -764,7 +794,7 @@ impl Runtime {
             let right = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "disjoint_union expects 2 arguments".to_string(),
+                        "set_diff expects 2 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -1099,13 +1129,13 @@ impl Runtime {
             })?;
             return Ok(CartDim::new(value).into());
         }
-        if tok == COUNT {
+        if tok == FINITE_SET_SIZE {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "count expects 1 argument".to_string(),
+                        "finite_set_size expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -1114,12 +1144,12 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "count expects 1 argument".to_string(),
+                        "finite_set_size expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(Count::new(value).into());
+            return Ok(FiniteSetSize::new(value).into());
         }
         if tok == FN_RANGE {
             tb.skip()?;
@@ -1142,36 +1172,6 @@ impl Runtime {
                 ))
             })?;
             return Ok(FnRange::new(function).into());
-        }
-        if tok == FN_RANGE_ON {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let function = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let set = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "fn_range_on expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(FnRangeOn::new(function, set).into());
         }
         if tok == REPLACEMENT {
             tb.skip()?;
@@ -1584,37 +1584,49 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<AtomicName, RuntimeError> {
         let left = tb.advance()?;
-        validate_litex_name_for_parse(&left, tb.line_file.clone()).map_err(|e| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "replacement expects its first argument to be a prop name".to_string(),
-                tb.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        })?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             let mut parts = vec![left];
             while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
                 tb.skip()?;
                 let part = tb.advance()?;
-                validate_litex_name_for_parse(&part, tb.line_file.clone()).map_err(|e| {
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        "replacement expects its first argument to be a prop name".to_string(),
-                        tb.line_file.clone(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
                 parts.push(part);
             }
             let right = parts
                 .pop()
                 .expect("qualified name should have a local name");
+            for (index, part) in parts.iter().enumerate() {
+                validate_module_path_segment_for_parse(part, index == 0, tb.line_file.clone())
+                    .map_err(|e| {
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            "replacement expects its first argument to be a prop name".to_string(),
+                            tb.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+            }
+            validate_litex_name_for_parse(&right, tb.line_file.clone()).map_err(|e| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "replacement expects its first argument to be a prop name".to_string(),
+                    tb.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
         } else {
+            validate_litex_name_for_parse(&left, tb.line_file.clone()).map_err(|e| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "replacement expects its first argument to be a prop name".to_string(),
+                    tb.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
             Ok(self.qualify_bare_atomic_name_if_needed(left))
         }
     }
@@ -1858,25 +1870,27 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<AtomicName, RuntimeError> {
         let left = tb.advance()?;
-        validate_litex_name_for_parse(&left, tb.line_file.clone())?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             let mut parts = vec![left];
             while !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
                 tb.skip_token(MOD_SIGN)?;
                 let part = tb.advance()?;
-                validate_litex_name_for_parse(&part, tb.line_file.clone())?;
                 parts.push(part);
             }
             let right = parts
                 .pop()
                 .expect("qualified name should have a local name");
+            for (index, part) in parts.iter().enumerate() {
+                validate_module_path_segment_for_parse(part, index == 0, tb.line_file.clone())?;
+            }
+            validate_litex_name_for_parse(&right, tb.line_file.clone())?;
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
-        } else if let Some(module_name) = self.unique_active_local_import_member_namespace(&left) {
-            Ok(AtomicName::WithMod(module_name, left))
         } else if let Some(module_name) = self.current_parse_module_name() {
+            validate_litex_name_for_parse(&left, tb.line_file.clone())?;
             Ok(AtomicName::WithMod(module_name, left))
         } else {
+            validate_litex_name_for_parse(&left, tb.line_file.clone())?;
             Ok(AtomicName::WithoutMod(left))
         }
     }
@@ -1885,33 +1899,8 @@ impl Runtime {
         self.current_parse_namespace().map(str::to_string)
     }
 
-    fn name_is_in_builtin_identifier_layer(&self, name: &str) -> bool {
-        if is_builtin_identifier_name(name) {
-            return true;
-        }
-        self.builtin_environment()
-            .defined_identifiers
-            .contains_key(name)
-    }
-
-    fn name_is_in_builtin_prop_layer(&self, name: &str) -> bool {
-        if is_builtin_predicate(name) {
-            return true;
-        }
-        self.builtin_environment()
-            .defined_def_props
-            .contains_key(name)
-            || self
-                .builtin_environment()
-                .defined_abstract_props
-                .contains_key(name)
-    }
-
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
-        if let Some(module_name) = self.unique_active_local_import_member_namespace(&id.name) {
-            return IdentifierWithMod::new(module_name, id.name).into();
-        }
-        if self.name_is_in_builtin_identifier_layer(&id.name) {
+        if is_builtin_identifier_name(&id.name) {
             return id.into();
         }
         let Some(module_name) = self.current_parse_module_name() else {
@@ -1921,10 +1910,7 @@ impl Runtime {
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
-        if let Some(module_name) = self.unique_active_local_import_member_namespace(&name) {
-            return AtomicName::WithMod(module_name, name);
-        }
-        if self.name_is_in_builtin_prop_layer(&name) {
+        if is_builtin_predicate(&name) {
             return AtomicName::WithoutMod(name);
         }
         let Some(module_name) = self.current_parse_module_name() else {
@@ -2003,6 +1989,17 @@ fn validate_litex_name_for_parse(name: &str, line_file: LineFile) -> Result<(), 
     })
 }
 
+fn validate_module_path_segment_for_parse(
+    name: &str,
+    is_root_segment: bool,
+    line_file: LineFile,
+) -> Result<(), RuntimeError> {
+    if is_root_segment && name == STD {
+        return Ok(());
+    }
+    validate_litex_name_for_parse(name, line_file)
+}
+
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
 fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     match name {
@@ -2057,7 +2054,7 @@ mod module_qualification_parse_tests {
     }
 
     fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
-        if rt.current_layer() == ExecutionLayer::Builtin {
+        if rt.execution_stack.is_empty() {
             rt.new_file_path_new_env_new_name_scope("test.lit");
         }
         rt.current_module_mut().module_name = module_name.to_string();
@@ -2222,43 +2219,29 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
-    fn module_qualification_keeps_builtin_identifier_bare() {
-        let mut rt = Runtime::new_with_builtin_code();
+    fn module_qualification_qualifies_source_identifier() {
+        let mut rt = Runtime::new();
         set_test_module_name(&mut rt, "Nat");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
-        let Obj::Atom(AtomObj::Identifier(id)) = obj else {
-            panic!("expected bare builtin identifier");
+        let Obj::Atom(AtomObj::IdentifierWithMod(id)) = obj else {
+            panic!("expected module-qualified source identifier");
         };
+        assert_eq!(id.mod_name, "Nat");
         assert_eq!(id.name, "pi");
     }
 
     #[test]
-    fn module_qualification_keeps_builtin_layer_predicate_bare() {
+    fn module_qualification_keeps_finite_set_size_builtin_bare() {
         let mut rt = Runtime::new();
-        rt.module_manager
-            .builtin_environment
-            .defined_abstract_props
-            .insert(
-                "builtin_prop".to_string(),
-                DefAbstractPropStmt::new(
-                    "builtin_prop".to_string(),
-                    vec!["x".to_string()],
-                    default_line_file(),
-                ),
-            );
         set_test_module_name(&mut rt, "Nat");
 
-        let fact = parse_one_fact_line_with_runtime(&mut rt, "$builtin_prop(a)");
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "finite_set_size({1, 2})");
 
-        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(atomic_fact)) = fact else {
-            panic!("expected normal atomic fact");
+        let Obj::FiniteSetSize(_) = obj else {
+            panic!("expected finite_set_size builtin object");
         };
-        let AtomicName::WithoutMod(name) = &atomic_fact.predicate else {
-            panic!("expected bare builtin-layer predicate");
-        };
-        assert_eq!(name, "builtin_prop");
     }
 
     #[test]
@@ -2319,6 +2302,65 @@ mod module_qualification_parse_tests {
             panic!("expected struct object");
         };
         assert_with_mod(&struct_obj.name, "Other", "Struct");
+    }
+
+    #[test]
+    fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
+        let mut rt = Runtime::new();
+
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm basics::T(a)");
+        let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
+            panic!("expected by thm stmt");
+        };
+        assert_with_mod(&thm_stmt.name, "basics::implementation", "T");
+
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\basics::Template<2>");
+        let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
+            panic!("expected instantiated template object");
+        };
+        assert_with_mod(
+            &template_obj.template_name,
+            "basics::implementation",
+            "Template",
+        );
+
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&basics::Struct");
+        let Obj::StructObj(struct_obj) = struct_obj else {
+            panic!("expected struct object");
+        };
+        assert_with_mod(&struct_obj.name, "basics::implementation", "Struct");
+
+        let replacement_obj = parse_one_obj_line_with_runtime(&mut rt, "replacement(basics::P, A)");
+        let Obj::Replacement(replacement_obj) = replacement_obj else {
+            panic!("expected replacement object");
+        };
+        assert_with_mod(&replacement_obj.prop_name, "basics::implementation", "P");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "basics::value");
+        let Obj::Atom(AtomObj::IdentifierWithMod(obj)) = obj else {
+            panic!("expected module-qualified identifier");
+        };
+        assert_eq!(obj.mod_name, "basics::implementation");
+        assert_eq!(obj.name, "value");
+
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "$basics::P(a)");
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) = fact else {
+            panic!("expected normal atomic fact");
+        };
+        assert_with_mod(&fact.predicate, "basics::implementation", "P");
+
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks("by thm std(a)", Rc::from("test.lit"))
+            .expect("tokenize theorem reference");
+        assert_eq!(blocks.len(), 1);
+        assert!(rt.parse_stmt(&mut blocks[0]).is_err());
+
+        let mut blocks = tokenizer
+            .parse_blocks("by thm Other::std::T(a)", Rc::from("test.lit"))
+            .expect("tokenize nested module reference");
+        assert_eq!(blocks.len(), 1);
+        assert!(rt.parse_stmt(&mut blocks[0]).is_err());
     }
 
     #[test]

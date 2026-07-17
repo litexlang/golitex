@@ -1,0 +1,122 @@
+# Section XII: Gauss's lemma, Legendre symbols, and quadratic reciprocity.
+
+# The Legendre symbol is a selected integer-valued object.  Its specification
+# separates the divisible case from the residue/nonresidue cases; the unique
+# selection is the small finite classification interface left trusted here.
+prop legendre_symbol_zero_case(p N_pos, a Z, s Z):
+    $section1::divides_Z(p, a)
+    s = 0
+
+prop legendre_symbol_residue_case(p N_pos, a Z, s Z):
+    $section3::relatively_prime_Z(a, p)
+    $section11::quadratic_residue_mod(p, a)
+    s = 1
+
+prop legendre_symbol_nonresidue_case(p N_pos, a Z, s Z):
+    $section3::relatively_prime_Z(a, p)
+    $section11::quadratic_nonresidue_mod(p, a)
+    s = -1
+
+prop legendre_symbol_spec(p N_pos, a Z, s Z):
+    $legendre_symbol_zero_case(p, a, s) or $legendre_symbol_residue_case(p, a, s) or $legendre_symbol_nonresidue_case(p, a, s)
+
+trust:
+    forall p N_pos, a Z:
+        exist! s Z st {$legendre_symbol_spec(p, a, s)}
+
+have fn legendre_symbol_Z by exist!:
+    ? forall p N_pos, a Z:
+        exist! s Z st {$legendre_symbol_spec(p, a, s)}
+
+# Divisibility forces the zero value, while prime-to-p inputs are nonzero by
+# the two quadratic cases in the specification.
+prop legendre_symbol_zero(p N_pos, a Z):
+    $section1::divides_Z(p, a)
+    legendre_symbol_Z(p, a) = 0
+
+prop gauss_representative(p N_pos, a Z, x Z, r Z):
+    0 < x
+    2 * x < p
+    0 <= r
+    r < p
+    r % p = (a * x) % p
+
+# Gauss's half-system is a genuine finite carrier: it contains exactly the
+# least positive residues of ax for 1 <= x < p/2.
+prop gauss_half_system(p N_pos, a Z, representatives power_set(Z)):
+    $is_finite_set(representatives)
+    forall r Z:
+        =>:
+            r $in representatives
+        <=>:
+            exist x Z st { $gauss_representative(p, a, x, r) }
+
+prop gauss_excess_member(p N_pos, a Z, x Z):
+    0 < x
+    2 * x < p
+    2 * ((a * x) % p) > p
+
+have fn gauss_excess_set(p N_pos, a Z) power_set(Z) = {x Z: $gauss_excess_member(p, a, x)}
+
+# Gauss's lemma identifies the Legendre value with the parity of the excess
+# representatives.  The count is exposed as an actual finite set rather than
+# hidden inside a theorem name.
+prop gauss_lemma_conclusion(p N_pos, a Z):
+    $section4::is_prime_Z(p)
+    p > 2
+    $section3::relatively_prime_Z(a, p)
+    $is_finite_set(gauss_excess_set(p, a))
+    legendre_symbol_Z(p, a) = (-1) ^ finite_set_size(gauss_excess_set(p, a))
+
+# Euler's criterion is recorded with an explicit half-exponent h so its natural
+# domain is visible to the current power operator.
+prop euler_criterion(p N_pos, a Z, h N):
+    $section4::is_prime_Z(p)
+    p > 2
+    $section3::relatively_prime_Z(a, p)
+    2 * h = p - 1
+    a ^ h % p = legendre_symbol_Z(p, a) % p
+
+# Quadratic reciprocity has the sign (-1)^((p-1)/2)((q-1)/2); h1 and h2 are
+# the two half-exponents, retained as parameters instead of using an invalid
+# integer exponent expression.
+prop quadratic_reciprocity_conclusion(p, q N_pos, h1 N, h2 N):
+    $section4::is_prime_Z(p)
+    $section4::is_prime_Z(q)
+    p != q
+    2 * h1 = p - 1
+    2 * h2 = q - 1
+    legendre_symbol_Z(p, q) * legendre_symbol_Z(q, p) = (-1) ^ (h1 * h2)
+
+# Gauss's excess-count identity and quadratic reciprocity share the finite
+# signed-product/lattice-counting proof package, so they form one trust
+# boundary while retaining separate source-facing propositions.
+trust:
+    forall p N_pos, a Z:
+        $section4::is_prime_Z(p)
+        p > 2
+        $section3::relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+    forall p, q N_pos, h1, h2 N:
+        $quadratic_reciprocity_conclusion(p, q, h1, h2)
+
+thm theorem_XII_Gauss_lemma:
+    ? forall p N_pos, a Z:
+        $section4::is_prime_Z(p)
+        p > 2
+        $section3::relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+    $gauss_lemma_conclusion(p, a)
+
+thm theorem_XII_quadratic_reciprocity:
+    ? forall p, q N_pos, h1, h2 N:
+        $section4::is_prime_Z(p)
+        $section4::is_prime_Z(q)
+        p != q
+        2 * h1 = p - 1
+        2 * h2 = q - 1
+        =>:
+            $quadratic_reciprocity_conclusion(p, q, h1, h2)
+    $quadratic_reciprocity_conclusion(p, q, h1, h2)

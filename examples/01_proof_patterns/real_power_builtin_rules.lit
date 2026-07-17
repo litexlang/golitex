@@ -1,0 +1,11 @@
+# Real power laws checked directly by the verifier, with no imported theory package.
+
+forall a R_pos, b, c R:
+    a^(b+c) = a^b * a^c
+    (a^b)^c = a^(b*c)
+
+# A positivity hypothesis makes the same rule available in an nth-root calculation.
+forall x R, n N_pos:
+    x > 0
+    =>:
+        (x^(1 / n))^n = x^((1 / n) * n) = x^1 = x

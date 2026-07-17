@@ -2,8 +2,6 @@ use std::rc::Rc;
 
 pub type LineFile = (usize, Rc<str>); // (line number, file path)
 
-pub const FILE_INDEX_FOR_BUILTIN: usize = 0;
-
 pub const DEFAULT_MANGLED_FN_PARAM_PREFIX: &str = "__";
 
 pub fn default_line_file() -> LineFile {

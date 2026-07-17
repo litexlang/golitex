@@ -6,14 +6,32 @@ impl Runtime {
     // Example: `2 < a` (literal left) infers `0 < a` when the constant branch applies; `b < 0` pairs use the `<= 0` path on `b`.
     //
     // Additionally: comparing `x` with `0` on the **right** (`x < 0`, `x <= 0`, …) may infer the
-    // opposite sign on `(-1)*x` (e.g. `x < 0` => `(-1)*x >= 0`). We do **not** infer from `0 < x`
-    // (literal 0 on the left): that would require `x $in R` to store `(-1)*x < 0`, which often
-    // fails for scoped parameters. Verification builtins still prove such goals when needed.
+    // opposite sign on `(-1)*x` (e.g. `x < 0` => `(-1)*x >= 0`) when `x` is known real. We do **not**
+    // infer from `0 < x` (literal 0 on the left), and unknown carriers simply receive no flipped fact.
     // Skips operands already of the form `(-1)*u` so we do not chain `(-1)*((-1)*n)`.
     pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<InferResult, RuntimeError> {
+        let (left, right, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                (f.left.clone(), f.right.clone(), f.line_file.clone())
+            }
+            AtomicFact::GreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::LessEqualFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            AtomicFact::LessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
+            _ => return Ok(InferResult::new()),
+        };
+        if self
+            .verify_objects_are_known_reals(
+                &[&left, &right],
+                &line_file,
+                &VerifyState::new(0, true),
+            )?
+            .is_none()
+        {
+            return Ok(InferResult::new());
+        }
         let mut acc = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => self.infer_numeric_order_sign_greater_equal(f),
             AtomicFact::GreaterFact(f) => self.infer_numeric_order_sign_greater(f),
@@ -108,6 +126,28 @@ impl Runtime {
         else {
             return Ok(InferResult::new());
         };
+        let source_operand = match atomic_fact {
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => f.left.clone(),
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.right) => f.left.clone(),
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => f.left.clone(),
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                f.left.clone()
+            }
+            _ => return Ok(InferResult::new()),
+        };
+        let source_in_r: AtomicFact = InFact::new(
+            source_operand,
+            StandardSet::R.into(),
+            atomic_fact.line_file(),
+        )
+        .into();
+        let source_in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &source_in_r,
+            &VerifyState::new(0, true),
+        )?;
+        if !source_in_r_result.is_true() {
+            return Ok(InferResult::new());
+        }
         let fact_to_store: Fact = inferred_atomic.clone().into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);

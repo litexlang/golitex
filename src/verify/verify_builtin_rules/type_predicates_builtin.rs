@@ -29,6 +29,13 @@ impl Runtime {
             );
         }
 
+        if let Some(result) = self.try_verify_nonempty_finite_set_from_positive_finite_set_size(
+            is_nonempty_set_fact,
+            _verify_state,
+        )? {
+            return Ok(result);
+        }
+
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -476,6 +483,47 @@ impl Runtime {
         }
     }
 
+    // A finite set with at least one element is nonempty.
+    // Example: `$is_finite_set(S)`, `finite_set_size(S) >= 1` => `$is_nonempty_set(S)`.
+    fn try_verify_nonempty_finite_set_from_positive_finite_set_size(
+        &mut self,
+        is_nonempty_set_fact: &IsNonemptySetFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = is_nonempty_set_fact.line_file.clone();
+        let finite: AtomicFact =
+            IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
+        let finite_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&finite, verify_state)?;
+        if !finite_result.is_true() {
+            return Ok(None);
+        }
+
+        let finite_set_size_at_least_one: AtomicFact = GreaterEqualFact::new(
+            FiniteSetSize::new(is_nonempty_set_fact.set.clone()).into(),
+            Number::new("1".to_string()).into(),
+            line_file,
+        )
+        .into();
+        let finite_set_size_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                &finite_set_size_at_least_one,
+            )?;
+        if !finite_set_size_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                is_nonempty_set_fact.clone().into(),
+                InferResult::new(),
+                "nonempty_finite_set_from_positive_finite_set_size".to_string(),
+                vec![finite_result, finite_set_size_result],
+            )
+            .into(),
+        ))
+    }
+
     pub fn _verify_is_finite_set_fact_with_builtin_rules(
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
@@ -506,11 +554,20 @@ impl Runtime {
                 ))
                 .into(),
             ),
-            // The image of a finite domain under a function is finite.
-            // Example: from `$is_finite_set(1...3)`, prove `$is_finite_set(fn_range_on(a, 1...3))`.
-            Obj::FnRangeOn(fn_range_on) => {
+            // The image of a finite unary domain under a function is finite.
+            // Example: from `a fn(x 1...3) R`, prove `$is_finite_set(fn_range(a))`.
+            Obj::FnRange(fn_range) => {
+                let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
+                    return Ok((StmtUnknown::new()).into());
+                };
+                if body.params_def_with_set.number_of_params() != 1 {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                let Some(domain) = body.params_def_with_set.first() else {
+                    return Ok((StmtUnknown::new()).into());
+                };
                 let domain_finite: AtomicFact = IsFiniteSetFact::new(
-                    fn_range_on.set.as_ref().clone(),
+                    domain.set_obj().clone(),
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
@@ -522,7 +579,7 @@ impl Runtime {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             is_finite_set_fact.clone().into(),
-                            "fn_range_on_is_finite_set_when_domain_is_finite_set".to_string(),
+                            "fn_range_is_finite_set_when_domain_is_finite_set".to_string(),
                             vec![domain_result],
                         ))
                         .into(),
@@ -791,7 +848,7 @@ impl Runtime {
     pub fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
@@ -804,6 +861,26 @@ impl Runtime {
                     .into(),
                 );
             }
+        }
+        // A finite set of size zero has no member.
+        // Example: `finite_set_size(S) = 0` => `not $is_nonempty_set(S)`.
+        let finite_set_size: Obj = FiniteSetSize::new(not_is_nonempty_set_fact.set.clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let size_zero_result = self.verify_objs_are_equal_known_only(
+            &finite_set_size,
+            &zero,
+            not_is_nonempty_set_fact.line_file.clone(),
+        );
+        if size_zero_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_is_nonempty_set_fact.clone().into(),
+                    InferResult::new(),
+                    "finite_set_size_zero_is_not_nonempty".to_string(),
+                    vec![size_zero_result],
+                )
+                .into(),
+            );
         }
         // Empty set rule: `not $is_nonempty_set(S)` follows from known `S = {}`.
         // Example: after `S = {}`, prove `not $is_nonempty_set(S)`.
@@ -830,12 +907,35 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let lt_ok = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&lt)?;
+            let lt_ok =
+                self.verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?;
             if lt_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         not_is_nonempty_set_fact.clone().into(),
                         "closed_range_empty_when_end_lt_start".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+        if let Obj::Range(range) = &not_is_nonempty_set_fact.set {
+            // Integer half-open interval `{x in Z | lo <= x < hi}` is empty from a
+            // known `hi <= lo` fact. Example: `range(0, 0) = {}`.
+            let le: AtomicFact = LessEqualFact::new(
+                range.end.as_ref().clone(),
+                range.start.as_ref().clone(),
+                not_is_nonempty_set_fact.line_file.clone(),
+            )
+            .into();
+            let le_ok =
+                self.verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?;
+            if le_ok.is_true() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_is_nonempty_set_fact.clone().into(),
+                        "range_empty_when_end_le_start".to_string(),
                         Vec::new(),
                     ))
                     .into(),

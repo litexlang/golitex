@@ -2,7 +2,11 @@ thm empty_half_open_integer_interval_is_empty:
     ? forall:
         not $is_nonempty_set(range(0, 0))
         range(0, 0) = {}
-    not $is_nonempty_set(range(0, 0))
+    by contra:
+        ? not $is_nonempty_set(range(0, 0))
+        $is_nonempty_set(range(0, 0))
+        have x range(0, 0)
+        impossible x < 0
     range(0, 0) = {}
 
 thm reversed_symbolic_closed_integer_interval_is_empty:

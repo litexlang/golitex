@@ -3,9 +3,16 @@ mod module_runner;
 mod project_config;
 mod repository;
 
-pub use module_manager::{ModuleManager, BUILTIN_CODE_PATH};
+pub use module_manager::ModuleManager;
 pub use module_runner::{
-    ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleRunner, ModuleStatus,
+    ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId,
+    ModuleRunner, ModuleStatus,
 };
-pub use project_config::{parse_project_config, ProjectConfig, ProjectExport, ProjectRunPath};
-pub use repository::{discover_repository, discover_repository_for_file, RepositoryFileTarget};
+pub use project_config::{
+    parse_project_config, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
+    ProjectStdImport,
+};
+pub use repository::{
+    discover_isolated_module_import, discover_isolated_std_import, discover_repository,
+    discover_repository_for_file, resolve_std_root, RepositoryFileTarget,
+};

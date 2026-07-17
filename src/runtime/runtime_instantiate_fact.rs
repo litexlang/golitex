@@ -346,15 +346,6 @@ impl Runtime {
             AtomicFact::NotSupersetFact(fact) => AtomicFact::NotSupersetFact(
                 self.inst_not_superset_fact(fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            AtomicFact::RestrictFact(fact) => AtomicFact::RestrictFact(self.inst_restrict_fact(
-                fact,
-                param_to_arg_map,
-                to_inst_param_type,
-                inst_lf,
-            )?),
-            AtomicFact::NotRestrictFact(fact) => AtomicFact::NotRestrictFact(
-                self.inst_not_restrict_fact(fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
             AtomicFact::FnEqualInFact(fact) => AtomicFact::FnEqualInFact(FnEqualInFact::new(
                 self.inst_obj(&fact.left, param_to_arg_map, to_inst_param_type)?,
                 self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
@@ -985,41 +976,5 @@ impl Runtime {
             iff_facts,
             Self::line_file_after_inst(&forall_fact_with_iff.line_file, inst_lf),
         )?)
-    }
-
-    pub fn inst_restrict_fact(
-        &self,
-        restrict_fact: &RestrictFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
-        inst_lf: Option<&LineFile>,
-    ) -> Result<RestrictFact, RuntimeError> {
-        Ok(RestrictFact::new(
-            self.inst_obj(&restrict_fact.obj, param_to_arg_map, to_inst_param_type)?,
-            self.inst_obj(
-                &restrict_fact.obj_can_restrict_to_fn_set,
-                param_to_arg_map,
-                to_inst_param_type,
-            )?,
-            Self::line_file_after_inst(&restrict_fact.line_file, inst_lf),
-        ))
-    }
-
-    pub fn inst_not_restrict_fact(
-        &self,
-        not_restrict_fact: &NotRestrictFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
-        inst_lf: Option<&LineFile>,
-    ) -> Result<NotRestrictFact, RuntimeError> {
-        Ok(NotRestrictFact::new(
-            self.inst_obj(&not_restrict_fact.obj, param_to_arg_map, to_inst_param_type)?,
-            self.inst_obj(
-                &not_restrict_fact.obj_cannot_restrict_to_fn_set,
-                param_to_arg_map,
-                to_inst_param_type,
-            )?,
-            Self::line_file_after_inst(&not_restrict_fact.line_file, inst_lf),
-        ))
     }
 }

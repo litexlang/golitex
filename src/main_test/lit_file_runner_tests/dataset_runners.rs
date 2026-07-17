@@ -70,9 +70,9 @@ fn run_gsm8k_solutions_impl() {
         }
     }
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -91,7 +91,10 @@ fn run_gsm8k_solutions_impl() {
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
     println!("--- gsm8k timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         total_count, total_solution_duration_ms, run_wall_ms
@@ -251,9 +254,9 @@ fn run_math23k_solutions_impl() {
         jsonl_path
     );
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -271,7 +274,10 @@ fn run_math23k_solutions_impl() {
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
     println!("--- math23k-litex timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         total_count, total_solution_duration_ms, run_wall_ms
@@ -381,9 +387,9 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
     };
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
 
     let run_wall_start = Instant::now();
@@ -466,7 +472,10 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         .map(|(_, duration_ms)| *duration_ms)
         .sum();
     println!("--- {} timing (summary) ---", dataset_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  finished snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         total_count, total_duration_ms, run_wall_ms
@@ -505,9 +514,9 @@ fn run_metamathqa_litex_solutions_impl() {
         jsonl_path
     );
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -524,7 +533,10 @@ fn run_metamathqa_litex_solutions_impl() {
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
     println!("--- MetaMathQA-litex timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         total_count, total_solution_duration_ms, run_wall_ms
@@ -797,9 +809,9 @@ fn run_jsonl_debug_items(
         return;
     }
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     runtime.new_file_path_new_env_new_name_scope(items[0].path_for_runtime.as_str());
     runtime.detail_output = detail_output;
 
@@ -839,7 +851,10 @@ fn run_jsonl_debug_items(
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
     println!("--- {} debug timing (summary) ---", dataset_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  items: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         durations_ms.len(),

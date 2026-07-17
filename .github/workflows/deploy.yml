@@ -25,6 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify standard library source
+        run: |
+          test -f std/litex.config
+          test -f std/basics/litex.config
+          test -f std/basics/main.lit
+
       - name: Extract version from tag
         id: version
         run: |
@@ -106,6 +112,7 @@ jobs:
           PKG_DIR="package_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${PKG_DIR}"
           cp "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}" "${PKG_DIR}/litex"
+          cp -R std "${PKG_DIR}/std"
           chmod 755 "${PKG_DIR}/litex"
           tar -czf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${PKG_DIR}" .
 
@@ -122,6 +129,7 @@ jobs:
           $pkgDir = "package_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
           Copy-Item -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.exe" -Destination (Join-Path $pkgDir "litex.exe")
+          Copy-Item -Recurse -Path std -Destination $pkgDir
           Compress-Archive -Path (Join-Path $pkgDir "*") -DestinationPath "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -Force
 
       - name: Smoke test archive (linux amd64)
@@ -130,8 +138,9 @@ jobs:
           SMOKE_DIR="smoke_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${SMOKE_DIR}"
           tar -xzf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${SMOKE_DIR}"
-          OUTPUT=$("${SMOKE_DIR}/litex" -e '1 = 1')
-          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null; then
+          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_DIR}/smoke.lit"
+          OUTPUT=$(cd "${SMOKE_DIR}" && ./litex -runner -isolated -f smoke.lit)
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "proof by theorem"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -143,9 +152,11 @@ jobs:
           $smokeDir = "smoke_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
           Expand-Archive -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -DestinationPath $smokeDir -Force
-          $output = & (Join-Path $smokeDir "litex.exe") -e "1 = 1"
+          $smokeFile = Join-Path $smokeDir "smoke.lit"
+          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::nonempty_family_of_nonempty_sets_exists()"
+          $output = & (Join-Path $smokeDir "litex.exe") -runner -isolated -f $smokeFile
           $outputText = $output -join "`n"
-          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "equality fact"')) {
+          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "proof by theorem"')) {
               $outputText
               throw "archive smoke test failed"
           }
@@ -185,12 +196,14 @@ jobs:
           PKG_DIR="pkg_litex_${VERSION}_${{ matrix.deb_arch }}"
           mkdir -p "${PKG_DIR}/DEBIAN"
           mkdir -p "${PKG_DIR}/usr/local/bin"
+          mkdir -p "${PKG_DIR}/usr/share/litex"
 
           sed -e "s/{{VERSION}}/${VERSION}/" \
               -e "s/{{ARCH}}/${{ matrix.deb_arch }}/" \
               dist/deb/control.template > "${PKG_DIR}/DEBIAN/control"
 
           cp "litex_${VERSION}_linux_${{ matrix.arch }}" "${PKG_DIR}/usr/local/bin/litex"
+          cp -R std "${PKG_DIR}/usr/share/litex/std"
           chmod 755 "${PKG_DIR}/usr/local/bin/litex"
           dpkg-deb --build "${PKG_DIR}" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
 
@@ -198,8 +211,10 @@ jobs:
         if: matrix.arch == 'amd64'
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          OUTPUT=$(litex -e '1 = 1')
-          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "equality fact"' > /dev/null; then
+          SMOKE_FILE="$(mktemp)"
+          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_FILE}"
+          OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}")
+          if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "proof by theorem"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -235,7 +250,6 @@ jobs:
 
       - name: Init WiX
         run: cargo wix init --force
-        continue-on-error: true
 
       - name: Build .msi
         shell: bash
@@ -244,6 +258,25 @@ jobs:
           mkdir -p target/release
           cp "litex_${VERSION}_windows_amd64.exe" target/release/litex.exe
           cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
+
+      - name: Smoke test .msi
+        shell: pwsh
+        run: |
+          $msi = "litex_${env:VERSION}_amd64.msi"
+          $install = Start-Process msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart') -Wait -PassThru
+          if ($install.ExitCode -ne 0) {
+              throw "MSI installation failed with exit code $($install.ExitCode)"
+          }
+          $binary = Join-Path $env:ProgramFiles 'litex-lang\bin\litex.exe'
+          if (-not (Test-Path $binary)) {
+              throw "MSI did not install the Litex binary at $binary"
+          }
+          $output = & $binary -e "1 = 1"
+          $outputText = $output -join "`n"
+          if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "equality fact"')) {
+              $outputText
+              throw "MSI smoke test failed"
+          }
 
       - name: Upload .msi
         uses: actions/upload-artifact@v4
@@ -288,7 +321,10 @@ jobs:
           body: "Release of litex version ${{ env.VERSION }}"
           prerelease: ${{ needs.validate.outputs.prerelease == 'true' }}
           generate_release_notes: true
-          files: artifacts/*
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.zip
+            artifacts/*.deb
 
   # ─────────────────────────────────────────────
   # Job 6: Publish to crates.io
@@ -360,13 +396,14 @@ jobs:
 
             def install
               bin.install "litex"
+              (bin/"std").install Dir["std/*"]
             end
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "1 = 1\n"
-              output = shell_output("#{bin}/litex -f #{testpath}/test.lit")
-              assert_match '"type": "equality fact"', output
+              (testpath/"test.lit").write "import std basics\nby thm basics::nonempty_family_of_nonempty_sets_exists()\n"
+              output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
+              assert_match '"type": "proof by theorem"', output
               refute_match '"result": "error"', output
             end
           end

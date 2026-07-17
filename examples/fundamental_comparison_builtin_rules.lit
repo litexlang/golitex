@@ -1,0 +1,119 @@
+# Core real comparison facts verified by builtin rules, without builtin `trust` declarations.
+
+forall a, b R:
+    a <= b
+    =>:
+        a = b or a < b
+
+forall a, b R:
+    a >= b
+    =>:
+        a = b or a > b
+
+forall a, b R:
+    =>:
+        a <= b
+    <=>:
+        0 <= b - a
+
+forall a, b R:
+    =>:
+        a < b
+    <=>:
+        0 < b - a
+
+forall a, b R:
+    a <= b
+    =>:
+        a - b <= 0
+
+forall a, b R:
+    a - b <= 0
+    =>:
+        a <= b
+
+forall a, b R:
+    a < b
+    =>:
+        a - b < 0
+
+forall a, b R:
+    a - b < 0
+    =>:
+        a < b
+
+forall a R:
+    a != 0
+    =>:
+        0 < a * a
+        0 < a^2
+
+forall a, b R:
+    a * b = 0
+    =>:
+        a = 0 or b = 0
+
+forall a, b, c R:
+    0 < c
+    c * a <= b or a * c <= b
+    =>:
+        a <= b / c
+
+forall a, b, c R:
+    0 < c
+    a / c <= b
+    =>:
+        a <= b * c
+
+forall a, b R:
+    a = b or a < b or a > b
+    a = b or a > b or a < b
+    a < b or a = b or a > b
+    a > b or a = b or a < b
+    a < b or a >= b
+    a > b or a <= b
+    a <= b or a > b
+    a >= b or a < b
+    a <= b or a >= b
+    a >= b or a <= b
+
+# Real-line existential witnesses are verified directly by builtin rules.
+# The `have ...:` form introduces the witness and its comparison fact.
+have left_greater R:
+    left_greater > 100
+have left_less R:
+    left_less < 100
+have left_equal R:
+    left_equal = 100
+have left_distinct R:
+    left_distinct != 100
+have left_greater_equal R:
+    left_greater_equal >= 100
+have left_less_equal R:
+    left_less_equal <= 100
+
+have right_greater R:
+    100 > right_greater
+have right_less R:
+    100 < right_less
+have right_equal R:
+    100 = right_equal
+have right_distinct R:
+    100 != right_distinct
+have right_greater_equal R:
+    100 >= right_greater_equal
+have right_less_equal R:
+    100 <= right_less_equal
+
+exist a, b R st {a > b}
+exist a, b R st {a < b}
+exist a, b R st {a = b}
+exist a, b R st {a != b}
+exist a, b R st {a >= b}
+exist a, b R st {a <= b}
+exist a, b R st {b > a}
+exist a, b R st {b < a}
+exist a, b R st {b = a}
+exist a, b R st {b != a}
+exist a, b R st {b >= a}
+exist a, b R st {b <= a}

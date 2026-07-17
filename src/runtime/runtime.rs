@@ -32,45 +32,26 @@ pub struct Runtime {
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
+    pub isolated: bool,
     pub output_language: OutputLanguage,
-    pub loading_builtin_code: bool,
     pub trusted_import_summary: ProofTrustSummary,
 }
 
 impl Runtime {
     pub fn new() -> Self {
         Runtime {
-            module_manager: Box::new(ModuleManager::new(BUILTIN_CODE_PATH)),
-            execution_stack: vec![ExecutionFrame::new_builtin()],
+            module_manager: Box::new(ModuleManager::new()),
+            execution_stack: vec![],
             run_mode: RunMode::File,
             parsing_free_param_collection: FreeParamCollection::new(),
             parsing_local_binding_scope_depth: 0,
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,
+            isolated: false,
             output_language: OutputLanguage::English,
-            loading_builtin_code: false,
             trusted_import_summary: ProofTrustSummary::new(),
         }
-    }
-
-    // Same empty runtime as `new`, then runs builtin definitions; panics if that fails.
-    pub fn new_with_builtin_code() -> Self {
-        let mut runtime = Self::new();
-        runtime.loading_builtin_code = true;
-        let (stmt_results, runtime_error) =
-            crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-        if runtime_error.is_some() {
-            let (_, msg) = crate::pipeline::render_run_source_code_output(
-                &runtime,
-                &stmt_results,
-                &runtime_error,
-                true,
-            );
-            panic!("builtin code execution failed: {}", msg);
-        }
-        runtime.loading_builtin_code = false;
-        runtime
     }
 }
 
@@ -104,14 +85,14 @@ impl Runtime {
         self.execution_stack
             .last()
             .map(|frame| frame.source_path.clone())
-            .unwrap_or_else(|| Rc::from(BUILTIN_CODE_PATH))
+            .unwrap_or_else(|| Rc::from(""))
     }
 
     pub fn current_module_id(&self) -> ModuleId {
         self.execution_stack
             .last()
-            .and_then(|frame| frame.module_id)
-            .expect("current execution frame is not a module frame")
+            .map(|frame| frame.module_id)
+            .expect("current execution frame should exist")
     }
 
     pub fn current_module(&self) -> &ModuleRunner {
@@ -174,109 +155,30 @@ impl Runtime {
         ));
     }
 
-    pub fn activate_local_import(&mut self, name: String, target: ImportTarget) {
-        self.execution_stack
-            .last_mut()
-            .expect("an execution frame should always exist")
-            .active_local_imports
-            .insert(name, target);
-    }
-
-    pub fn active_local_import(&self, name: &str) -> Option<ImportTarget> {
-        self.execution_stack
-            .last()
-            .and_then(|frame| frame.active_local_imports.get(name))
-            .copied()
-    }
-
     pub fn canonical_module_name_for_parse(&self, name: &str) -> String {
-        let target = self
-            .active_local_import(name)
-            .or_else(|| self.module_manager.import_target_by_canonical_name(name));
-        target
-            .and_then(|target| self.module_manager.canonical_name_for_target(target))
-            .unwrap_or(name)
-            .to_string()
-    }
-
-    pub fn unique_active_local_import_member_namespace(&self, name: &str) -> Option<String> {
-        let current_has_name = self.iter_environments_from_top().any(|environment| {
-            environment.defined_identifiers.contains_key(name)
-                || environment.defined_def_props.contains_key(name)
-                || environment.defined_abstract_props.contains_key(name)
-                || environment.defined_algorithms.contains_key(name)
-                || environment.defined_structs.contains_key(name)
-                || environment.defined_templates.contains_key(name)
-                || environment.defined_thm_stmts.contains_key(name)
-                || environment.defined_strategy_stmts.contains_key(name)
-        });
-        if current_has_name {
-            return None;
-        }
-
-        let import_names = self
-            .execution_stack
-            .last()
-            .map(|frame| {
-                frame
-                    .active_local_imports
-                    .keys()
-                    .cloned()
-                    .collect::<Vec<String>>()
-            })
-            .unwrap_or_default();
-        let mut matching_namespaces = vec![];
-        for import_name in import_names {
-            let imported_has_name = self
-                .imported_module_environments(import_name.as_str())
-                .iter()
-                .any(|environment| {
-                    environment.defined_identifiers.contains_key(name)
-                        || environment.defined_def_props.contains_key(name)
-                        || environment.defined_abstract_props.contains_key(name)
-                        || environment.defined_algorithms.contains_key(name)
-                        || environment.defined_structs.contains_key(name)
-                        || environment.defined_templates.contains_key(name)
-                        || environment.defined_thm_stmts.contains_key(name)
-                        || environment.defined_strategy_stmts.contains_key(name)
-                });
-            if !imported_has_name {
-                continue;
-            }
-            let namespace = self.canonical_module_name_for_parse(import_name.as_str());
-            if !matching_namespaces.contains(&namespace) {
-                matching_namespaces.push(namespace);
-            }
-        }
-
-        if matching_namespaces.len() == 1 {
-            matching_namespaces.pop()
-        } else {
-            None
-        }
+        let Some(frame) = self.execution_stack.last() else {
+            return name.to_string();
+        };
+        self.module_manager
+            .canonical_name_for_reference(frame.module_id, name)
+            .unwrap_or_else(|| name.to_string())
     }
 
     pub fn pop_execution_frame(&mut self) {
         if self.execution_stack.len() <= 1 {
-            unreachable!("cannot pop the builtin execution frame")
+            unreachable!("cannot pop the root user execution frame")
         }
         self.execution_stack.pop();
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
         self.strict_mode
-            && self
-                .execution_stack
-                .last()
-                .and_then(|frame| frame.module_id)
+            && self.execution_stack.last().map(|frame| frame.module_id)
                 == self.module_manager.entry_module_id
     }
 
-    pub fn current_layer(&self) -> ExecutionLayer {
-        self.execution_stack
-            .last()
-            .map(|frame| frame.layer)
-            .expect("an execution frame should always exist")
+    pub(crate) fn has_active_execution_frame(&self) -> bool {
+        !self.execution_stack.is_empty()
     }
 
     pub fn current_execution_mode(&self) -> ExecutionMode {
@@ -295,7 +197,7 @@ impl Runtime {
             .add_dependency(kind, Some(name), line_file);
     }
 
-    fn current_execution_target(&self) -> (Option<ModuleId>, ExecutionLayer) {
+    fn current_execution_target(&self) -> (ModuleId, ExecutionLayer) {
         let frame = self
             .execution_stack
             .last()
@@ -404,32 +306,24 @@ impl Runtime {
     }
 
     /// Make the discovered repository's root module the persistent environment for an
-    /// interactive REPL without executing its `[run]` plan.
+    /// interactive REPL without executing its ordered `[export]` plan.
     pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
-        let root_exports = self.module_manager.root_exports.clone();
         let module_id = self.current_module_id();
-        let module = self
-            .module_manager
+        self.module_manager
             .module_mut(module_id)
             .expect("repository entry module should exist");
-        module.main_local_imports = root_exports;
         self.execution_stack
             .last_mut()
             .expect("repository REPL should have an execution frame")
             .source_path = Rc::from(source_label);
     }
 
-    /// Rebuild the module registry between independent runner items while reusing builtins.
+    /// Rebuild the module registry between independent runner items.
     #[cfg(test)]
     pub(crate) fn reset_for_isolated_runner_item(&mut self) {
         let path = self.current_file_path_rc().to_string();
-        let mut module_manager = Box::new(ModuleManager::new(path.as_str()));
-        std::mem::swap(
-            &mut module_manager.builtin_environment,
-            &mut self.module_manager.builtin_environment,
-        );
-        self.module_manager = module_manager;
-        self.execution_stack = vec![ExecutionFrame::new_builtin()];
+        self.module_manager = Box::new(ModuleManager::new());
+        self.execution_stack.clear();
         self.parsing_free_param_collection.clear();
         self.trusted_import_summary = ProofTrustSummary::new();
         self.new_file_path_new_env_new_name_scope(path.as_str());
@@ -453,15 +347,14 @@ impl Runtime {
 
         let (module_id, layer) = self.current_execution_target();
         match layer {
-            ExecutionLayer::Builtin => self.module_manager.builtin_environment.as_mut(),
             ExecutionLayer::Main => self
                 .module_manager
-                .module_mut(module_id.expect("main execution requires a module"))
+                .module_mut(module_id)
                 .map(|module| module.main_environment.as_mut())
                 .expect("current module should exist"),
             ExecutionLayer::File(file_id) => self
                 .module_manager
-                .module_mut(module_id.expect("file execution requires a module"))
+                .module_mut(module_id)
                 .and_then(|module| module.file_mut(file_id))
                 .map(|file| file.environment.as_mut())
                 .expect("current file environment should exist"),
@@ -492,46 +385,35 @@ impl Runtime {
     }
 
     /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
-    /// The builtin layer at index 0 is left unchanged.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
-        if self.has_user_env() {
-            if self
+        if self
+            .execution_stack
+            .last()
+            .is_some_and(|frame| !frame.local_environment_stack.is_empty())
+        {
+            if let Some(environment) = self
                 .execution_stack
-                .last()
-                .is_some_and(|frame| !frame.local_environment_stack.is_empty())
+                .last_mut()
+                .and_then(|frame| frame.local_environment_stack.last_mut())
             {
-                if let Some(environment) = self
-                    .execution_stack
-                    .last_mut()
-                    .and_then(|frame| frame.local_environment_stack.last_mut())
-                {
-                    **environment = Environment::new_empty_env();
-                }
-            } else {
-                let (module_id, layer) = self.current_execution_target();
-                let module_id = module_id.expect("user execution requires a module");
-                if let Some(module) = self.module_manager.module_mut(module_id) {
-                    match layer {
-                        ExecutionLayer::Builtin => {}
-                        ExecutionLayer::Main => {
-                            module.main_environment = Box::new(Environment::new_empty_env());
-                        }
-                        ExecutionLayer::File(file_id) => {
-                            if let Some(file) = module.file_mut(file_id) {
-                                file.environment = Box::new(Environment::new_empty_env());
-                            }
+                **environment = Environment::new_empty_env();
+            }
+        } else {
+            let (module_id, layer) = self.current_execution_target();
+            if let Some(module) = self.module_manager.module_mut(module_id) {
+                match layer {
+                    ExecutionLayer::Main => {
+                        module.main_environment = Box::new(Environment::new_empty_env());
+                    }
+                    ExecutionLayer::File(file_id) => {
+                        if let Some(file) = module.file_mut(file_id) {
+                            file.environment = Box::new(Environment::new_empty_env());
                         }
                     }
                 }
             }
         }
         self.parsing_free_param_collection.clear();
-    }
-
-    pub fn has_user_env(&self) -> bool {
-        self.execution_stack
-            .last()
-            .is_some_and(|frame| frame.layer != ExecutionLayer::Builtin)
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.

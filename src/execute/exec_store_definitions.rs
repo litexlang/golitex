@@ -35,7 +35,7 @@ impl Runtime {
         let name = def_algo_stmt.name.clone();
         let env = self.top_level_env();
         if env.defined_algorithms.contains_key(&name) {
-            return Err(name_already_used_error(&name, "algo"));
+            return Err(name_already_used_error(&name, "algorithm implementation"));
         }
         env.defined_algorithms.insert(name, def_algo_stmt.clone());
         Ok(())

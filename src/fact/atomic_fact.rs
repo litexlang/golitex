@@ -17,8 +17,6 @@ pub enum AtomicFact {
     IsTupleFact(IsTupleFact),
     SubsetFact(SubsetFact),
     SupersetFact(SupersetFact),
-    RestrictFact(RestrictFact),
-    NotRestrictFact(NotRestrictFact),
     NotNormalAtomicFact(NotNormalAtomicFact),
     NotEqualFact(NotEqualFact),
     NotLessFact(NotLessFact),
@@ -54,8 +52,6 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(_) => "tuple fact".to_string(),
             AtomicFact::SubsetFact(_) => "subset fact".to_string(),
             AtomicFact::SupersetFact(_) => "superset fact".to_string(),
-            AtomicFact::RestrictFact(_) => "restriction fact".to_string(),
-            AtomicFact::NotRestrictFact(_) => "negated restriction fact".to_string(),
             AtomicFact::NotNormalAtomicFact(_) => "negated prop fact".to_string(),
             AtomicFact::NotEqualFact(_) => "negated equality fact".to_string(),
             AtomicFact::NotLessFact(_)
@@ -126,20 +122,6 @@ impl fmt::Display for FnEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}({}, {})", FACT_PREFIX, FN_EQ, self.left, self.right)
     }
-}
-
-#[derive(Clone)]
-pub struct RestrictFact {
-    pub obj: Obj,
-    pub obj_can_restrict_to_fn_set: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct NotRestrictFact {
-    pub obj: Obj,
-    pub obj_cannot_restrict_to_fn_set: Obj,
-    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -605,8 +587,6 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotSubsetFact(x) => write!(f, "{}", x),
             AtomicFact::SupersetFact(x) => write!(f, "{}", x),
             AtomicFact::NotSupersetFact(x) => write!(f, "{}", x),
-            AtomicFact::RestrictFact(x) => write!(f, "{}", x),
-            AtomicFact::NotRestrictFact(x) => write!(f, "{}", x),
             AtomicFact::FnEqualInFact(x) => write!(f, "{}", x),
             AtomicFact::FnEqualFact(x) => write!(f, "{}", x),
         }
@@ -905,18 +885,6 @@ impl AtomicFact {
             AtomicFact::SupersetFact(x) => {
                 SupersetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
-            AtomicFact::RestrictFact(x) => RestrictFact::new(
-                r(x.obj, from, to),
-                r(x.obj_can_restrict_to_fn_set, from, to),
-                x.line_file,
-            )
-            .into(),
-            AtomicFact::NotRestrictFact(x) => NotRestrictFact::new(
-                r(x.obj, from, to),
-                r(x.obj_cannot_restrict_to_fn_set, from, to),
-                x.line_file,
-            )
-            .into(),
             AtomicFact::NotNormalAtomicFact(x) => NotNormalAtomicFact::new(
                 x.predicate,
                 x.body.into_iter().map(|o| r(o, from, to)).collect(),
@@ -1008,8 +976,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
             AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
             AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
-            AtomicFact::RestrictFact(_) => RESTRICTS_TO.to_string(),
-            AtomicFact::NotRestrictFact(_) => RESTRICTS_TO.to_string(),
             AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
             AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
         }
@@ -1031,7 +997,6 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(_) => true,
             AtomicFact::SubsetFact(_) => true,
             AtomicFact::SupersetFact(_) => true,
-            AtomicFact::RestrictFact(_) => true,
             AtomicFact::NotNormalAtomicFact(_) => false,
             AtomicFact::NotEqualFact(_) => false,
             AtomicFact::NotLessFact(_) => false,
@@ -1046,7 +1011,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => false,
             AtomicFact::NotSubsetFact(_) => false,
             AtomicFact::NotSupersetFact(_) => false,
-            AtomicFact::NotRestrictFact(_) => false,
             AtomicFact::FnEqualInFact(_) => true,
             AtomicFact::FnEqualFact(_) => true,
         }
@@ -1381,27 +1345,6 @@ impl AtomicFact {
                     Ok(NotSupersetFact::new(a0, a1, line_file).into())
                 }
             }
-            RESTRICTS_TO => {
-                if args.len() != 2 {
-                    let msg = format!(
-                        "{} requires 2 arguments, but got {}",
-                        RESTRICTS_TO,
-                        args.len()
-                    );
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                let mut args = args;
-                let a0 = args.remove(0);
-                let a1 = args.remove(0);
-                if is_true {
-                    Ok(RestrictFact::new(a0, a1, line_file).into())
-                } else {
-                    Ok(NotRestrictFact::new(a0, a1, line_file).into())
-                }
-            }
             FN_EQ_IN => {
                 if !is_true {
                     let msg = format!("{} does not support `not`", FN_EQ_IN);
@@ -1462,46 +1405,6 @@ impl AtomicFact {
     }
 }
 
-impl RestrictFact {
-    pub fn new(obj: Obj, obj_can_restrict_to_fn_set: Obj, line_file: LineFile) -> Self {
-        RestrictFact {
-            obj,
-            obj_can_restrict_to_fn_set,
-            line_file,
-        }
-    }
-}
-
-impl NotRestrictFact {
-    pub fn new(obj: Obj, obj_cannot_restrict_to_fn_set: Obj, line_file: LineFile) -> Self {
-        NotRestrictFact {
-            obj,
-            obj_cannot_restrict_to_fn_set,
-            line_file,
-        }
-    }
-}
-
-impl fmt::Display for RestrictFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{} {}",
-            self.obj, FACT_PREFIX, RESTRICTS_TO, self.obj_can_restrict_to_fn_set
-        )
-    }
-}
-
-impl fmt::Display for NotRestrictFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {} {}{} {}",
-            NOT, self.obj, FACT_PREFIX, RESTRICTS_TO, self.obj_cannot_restrict_to_fn_set
-        )
-    }
-}
-
 impl AtomicFact {
     pub fn make_reversed(&self) -> AtomicFact {
         match self {
@@ -1550,12 +1453,6 @@ impl AtomicFact {
             AtomicFact::SupersetFact(a) => {
                 NotSupersetFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::RestrictFact(a) => NotRestrictFact::new(
-                a.obj.clone(),
-                a.obj_can_restrict_to_fn_set.clone(),
-                a.line_file.clone(),
-            )
-            .into(),
             AtomicFact::NotEqualFact(a) => {
                 EqualFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()).into()
             }
@@ -1595,12 +1492,6 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => {
                 SupersetFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::NotRestrictFact(a) => RestrictFact::new(
-                a.obj.clone(),
-                a.obj_cannot_restrict_to_fn_set.clone(),
-                a.line_file.clone(),
-            )
-            .into(),
             AtomicFact::FnEqualInFact(a) => FnEqualInFact::new(
                 a.right.clone(),
                 a.left.clone(),
@@ -1905,30 +1796,6 @@ impl AtomicFact {
                     .0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::RestrictFact(inner) => RestrictFact::new(
-                inner
-                    .obj
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner
-                    .obj_can_restrict_to_fn_set
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::NotRestrictFact(inner) => NotRestrictFact::new(
-                inner
-                    .obj
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner
-                    .obj_cannot_restrict_to_fn_set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),

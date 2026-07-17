@@ -5,6 +5,7 @@ pub enum ByStmtResult {
     ByCasesStmt(NonFactualStmtSuccess),
     ByContraStmt(NonFactualStmtSuccess),
     ByEnumerateFiniteSetStmt(NonFactualStmtSuccess),
+    ByFiniteSetInducStmt(NonFactualStmtSuccess),
     ByInducStmt(NonFactualStmtSuccess),
     ByForStmt(NonFactualStmtSuccess),
     ByExtensionStmt(NonFactualStmtSuccess),
@@ -27,6 +28,9 @@ impl ByStmtResult {
             Stmt::By(ByStmt::ByContraStmt(_)) => ByStmtResult::ByContraStmt(success),
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(_)) => {
                 ByStmtResult::ByEnumerateFiniteSetStmt(success)
+            }
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(_)) => {
+                ByStmtResult::ByFiniteSetInducStmt(success)
             }
             Stmt::By(ByStmt::ByInducStmt(_)) => ByStmtResult::ByInducStmt(success),
             Stmt::By(ByStmt::ByForStmt(_)) => ByStmtResult::ByForStmt(success),
@@ -60,6 +64,7 @@ impl ByStmtResult {
             ByStmtResult::ByCasesStmt(success)
             | ByStmtResult::ByContraStmt(success)
             | ByStmtResult::ByEnumerateFiniteSetStmt(success)
+            | ByStmtResult::ByFiniteSetInducStmt(success)
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)
@@ -81,6 +86,7 @@ impl ByStmtResult {
             ByStmtResult::ByCasesStmt(success)
             | ByStmtResult::ByContraStmt(success)
             | ByStmtResult::ByEnumerateFiniteSetStmt(success)
+            | ByStmtResult::ByFiniteSetInducStmt(success)
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)
@@ -102,6 +108,7 @@ impl ByStmtResult {
             ByStmtResult::ByCasesStmt(success)
             | ByStmtResult::ByContraStmt(success)
             | ByStmtResult::ByEnumerateFiniteSetStmt(success)
+            | ByStmtResult::ByFiniteSetInducStmt(success)
             | ByStmtResult::ByInducStmt(success)
             | ByStmtResult::ByForStmt(success)
             | ByStmtResult::ByExtensionStmt(success)

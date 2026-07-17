@@ -605,6 +605,13 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::IntegerQuotient(x) => collect_cited_param_indices_from_two_objs(
+            &x.dividend,
+            &x.divisor,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Pow(x) => collect_cited_param_indices_from_two_objs(
             &x.base,
             &x.exponent,
@@ -800,7 +807,7 @@ fn collect_cited_param_indices_from_obj(
                 );
             }
         }
-        Obj::Count(x) => collect_cited_param_indices_from_obj(
+        Obj::FiniteSetSize(x) => collect_cited_param_indices_from_obj(
             &x.set,
             previous_param_indices,
             shadowed_names,
@@ -812,20 +819,6 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::FnRangeOn(x) => {
-            collect_cited_param_indices_from_obj(
-                &x.function,
-                previous_param_indices,
-                shadowed_names,
-                out,
-            );
-            collect_cited_param_indices_from_obj(
-                &x.set,
-                previous_param_indices,
-                shadowed_names,
-                out,
-            );
-        }
         Obj::Replacement(x) => collect_cited_param_indices_from_obj(
             &x.source_set,
             previous_param_indices,
@@ -1142,6 +1135,9 @@ fn collect_cited_param_indices_from_fn_head(
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         FnObjHead::FnSet(x) => {
+            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+        }
+        FnObjHead::DefStructField(x) => {
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         FnObjHead::AnonymousFnLiteral(x) => collect_cited_param_indices_from_anonymous_fn(

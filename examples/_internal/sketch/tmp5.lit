@@ -1,5 +1,5 @@
 # Nonempty finite sets have an index function.
-# Induction on count(s): base |s| = 1, then extend after removing min(s).
+# Induction on finite_set_size(s): base |s| = 1, then extend after removing min(s).
 
 prop injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
@@ -15,25 +15,25 @@ prop bijective_fn(S, T set, f fn(x S) T):
     $injective_fn(S, T, f)
     $surjective_fn(S, T, f)
 
-prop is_index_fn(S finite_set, index fn(x N_pos: x <= count(S)) S):
-    forall! y S => {exist i N_pos st {i <= count(S), y = index(i)}}
+prop is_index_fn(S finite_set, index fn(x N_pos: x <= finite_set_size(S)) S):
+    forall! y S => {exist i N_pos st {i <= finite_set_size(S), y = index(i)}}
 
 prop finite_set_size_has_index(n N_pos):
     forall s finite_set:
         $is_finite_set(s)
-        count(s) = n
+        finite_set_size(s) = n
         =>:
-            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+            exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
 
-thm nonempty_from_positive_count:
-    ? forall s finite_set:
-        count(s) >= 1
+# The induction prototype needs these finite-cardinality identities. They are
+# kept as local debt until finite-cardinality algebra has a dedicated design.
+trust:
+    forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    forall A finite_set:
+        finite_set_size(A) = 0
         =>:
-            $is_nonempty_set(s)
-    by contra $is_nonempty_set(s):
-        s = {}
-        count(s) = count({}) = 0
-        impossible count(s) >= 1
+            A = {}
 
 thm intersect_with_singleton:
     ? forall s set, a set:
@@ -54,97 +54,99 @@ thm intersect_with_singleton:
 thm remove_singleton_from_singleton_sized_set_is_empty:
     ? forall s finite_set, a set:
         $is_finite_set(s)
-        count(s) = 1
+        finite_set_size(s) = 1
         a $in s
         =>:
             set_minus(s, {a}) = {}
     by thm intersect_with_singleton(s, a)
     intersect(s, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = count(s) - count(intersect(s, {a})) = 1 - 1 = 0
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
     set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
     ? forall s finite_set:
         $is_finite_set(s)
-        count(s) = 1
+        finite_set_size(s) = 1
         =>:
-            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
-    count(s) >= 1
-    by thm nonempty_from_positive_count(s)
+            exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+    finite_set_size(s) >= 1
+    $is_nonempty_set(s)
     have a s
     a $in s
     by thm remove_singleton_from_singleton_sized_set_is_empty(s, a)
     set_minus(s, {a}) = {}
-    have fn idx(i N_pos: i <= count(s)) s = a
-    witness exist idx0 fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx0)} from idx:
-        claim forall! y s => {exist i N_pos st {i <= count(s), y = idx0(i)}}:
+    have fn idx(i N_pos: i <= finite_set_size(s)) s = a
+    witness exist idx0 fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
+        claim forall! y s => {exist i N_pos st {i <= finite_set_size(s), y = idx0(i)}}:
             by contra y = a:
                 y != a
+                not y $in {a}
                 y $in set_minus(s, {a})
                 witness $is_nonempty_set(set_minus(s, {a})) from y:
                     y $in set_minus(s, {a})
-                impossible set_minus(s, {a}) = {}
+                impossible $is_nonempty_set(set_minus(s, {a}))
             idx0(1) = idx(1) = a
-            witness exist i N_pos st {i <= count(s), y = idx0(i)} from 1:
-                1 <= count(s)
+            witness exist i N_pos st {i <= finite_set_size(s), y = idx0(i)} from 1:
+                1 <= finite_set_size(s)
                 y = idx0(1)
         $is_index_fn(s, idx0)
 
 thm index_function_step:
     ? forall n N_pos, s finite_set:
         $is_finite_set(s)
-        count(s) = n + 1
+        finite_set_size(s) = n + 1
         $finite_set_size_has_index(n)
         =>:
-            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+            exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
     n >= 1
     n + 1 >= 1
-    count(s) = n + 1 >= 1
-    by thm nonempty_from_positive_count(s)
+    finite_set_size(s) = n + 1 >= 1
+    $is_nonempty_set(s)
     have a s
     a $in s
     by thm intersect_with_singleton(s, a)
     intersect(s, {a}) = {a}
-    count({a}) = 1
+    finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = count(s) - count(intersect(s, {a})) = (n + 1) - 1 = n
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
-    count(set_minus(s, {a})) = n
-    exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
-    obtain prev from exist prev fn(x N_pos: x <= count(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
+    finite_set_size(set_minus(s, {a})) = n
+    exist prev fn(x N_pos: x <= finite_set_size(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
+    obtain prev from exist prev fn(x N_pos: x <= finite_set_size(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
     set_minus(s, {a}) $subset s
-    have fn idx(i N_pos: i <= count(s)) s by cases:
+    have fn idx(i N_pos: i <= finite_set_size(s)) s by cases:
         case i <= n: prev(i)
         case i = n + 1: a
     idx(1) = prev(1)
     prev(1) $in set_minus(s, {a})
     prev(1) $in s
     idx(1) $in s
-    witness exist idx0 fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx0)} from idx:
-        claim forall! y s => {exist i N_pos st {i <= count(s), y = idx0(i)}}:
+    witness exist idx0 fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
+        claim forall! y s => {exist i N_pos st {i <= finite_set_size(s), y = idx0(i)}}:
             y = a or y != a
             by cases:
-                ? exist i N_pos st {i <= count(s), y = idx0(i)}
+                ? exist i N_pos st {i <= finite_set_size(s), y = idx0(i)}
                 case y = a:
-                    n + 1 <= count(s)
+                    n + 1 <= finite_set_size(s)
                     idx0(n + 1) = idx(n + 1) = a
-                    witness exist i N_pos st {i <= count(s), y = idx0(i)} from n + 1:
-                        n + 1 <= count(s)
+                    witness exist i N_pos st {i <= finite_set_size(s), y = idx0(i)} from n + 1:
+                        n + 1 <= finite_set_size(s)
                         y = idx0(n + 1)
                 case y != a:
+                    not y $in {a}
                     y $in set_minus(s, {a})
-                    exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}
-                    obtain j from exist i N_pos st {i <= count(set_minus(s, {a})), y = prev(i)}
-                    j <= count(set_minus(s, {a}))
+                    exist i N_pos st {i <= finite_set_size(set_minus(s, {a})), y = prev(i)}
+                    obtain j from exist i N_pos st {i <= finite_set_size(set_minus(s, {a})), y = prev(i)}
+                    j <= finite_set_size(set_minus(s, {a}))
                     j <= n
                     n <= n + 1
-                    j <= n <= n + 1 = count(s)
+                    j <= n <= n + 1 = finite_set_size(s)
                     idx0(j) = idx(j) = prev(j)
-                    witness exist i N_pos st {i <= count(s), y = idx0(i)} from j:
-                        j <= count(s)
+                    witness exist i N_pos st {i <= finite_set_size(s), y = idx0(i)} from j:
+                        j <= finite_set_size(s)
                         y = idx0(j)
         $is_index_fn(s, idx0)
 
@@ -158,11 +160,11 @@ claim:
             claim:
                 ? forall s finite_set:
                     $is_finite_set(s)
-                    count(s) = 1
+                    finite_set_size(s) = 1
                     =>:
-                        exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                        exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_for_singleton(s)
-                exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
@@ -171,20 +173,20 @@ claim:
             claim:
                 ? forall s finite_set:
                     $is_finite_set(s)
-                    count(s) = n + 1
+                    finite_set_size(s) = n + 1
                     =>:
-                        exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                        exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_step(n, s)
-                exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
+                exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
             $finite_set_size_has_index(n + 1)
 
 claim:
     ? forall s finite_set:
-        count(s) >= 1
+        finite_set_size(s) >= 1
         =>:
-            exist idx fn(x N_pos: x <= count(s)) s st {$is_index_fn(s, idx)}
-    count(s) >= 1
-    count(s) $in N_pos
-    have n N_pos = count(s)
-    count(s) = n
+            exist idx fn(x N_pos: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+    finite_set_size(s) >= 1
+    finite_set_size(s) $in N_pos
+    have n N_pos = finite_set_size(s)
+    finite_set_size(s) = n
     $finite_set_size_has_index(n)

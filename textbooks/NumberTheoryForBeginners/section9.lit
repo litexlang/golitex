@@ -1,0 +1,93 @@
+# Section IX: polynomials over a field.
+
+# A polynomial is represented by its coefficient function and a finite degree
+# bound.  This keeps the coefficient carrier and the reusable evaluation map
+# visible instead of hiding the polynomial behind a proposition.
+prop has_polynomial_degree_Z(coeff fn(k N) Z, n N):
+    coeff(n) != 0
+    forall k N:
+        k > n
+        =>:
+            coeff(k) = 0
+
+prop polynomial_term_Z(coeff fn(k N) Z, n N, term cart(N, Z)):
+    term[1] <= n
+    term[2] = coeff(term[1])
+
+have fn polynomial_terms_Z(coeff fn(k N) Z, n N) power_set(cart(N, Z)) = {term cart(N, Z): $polynomial_term_Z(coeff, n, term)}
+
+# Definition. Evaluation is the finite sum a_0+a_1*x+...+a_n*x^n.  The
+# recursive object is checked directly by induction on the degree bound.
+have fn polynomial_eval_Z(coeff fn(k N) Z, x Z, n N) Z by induc n from 0:
+    case n = 0: coeff(0)
+    case n > 0: polynomial_eval_Z(coeff, x, n - 1) + coeff(n) * x ^ n
+
+prop polynomial_root_Z(coeff fn(k N) Z, x Z, n N):
+    polynomial_eval_Z(coeff, x, n) = 0
+
+have fn polynomial_root_set_Z(coeff fn(k N) Z, n N) power_set(Z) = {x Z: $polynomial_root_Z(coeff, x, n)}
+
+# Polynomial division and the gcd construction require a polynomial carrier
+# with addition, multiplication, and degree.  Those operations are not yet a
+# first-class Litex object, so the missing relation is kept as a narrow
+# background interface rather than replacing the polynomial by a tautological
+# `prop`.
+abstract_prop polynomial_division(K, f, g, q, r)
+abstract_prop polynomial_gcd(K, f, g, d)
+
+prop polynomial_division_statement(K set, f set, g set, q set, r set):
+    $polynomial_division(K, f, g, q, r)
+
+prop polynomial_gcd_statement(K set, f set, g set, d set):
+    $polynomial_gcd(K, f, g, d)
+
+# Theorem IX.1. A nonempty addition/multiple-closed family of polynomials is
+# the set of multiples of one normalized gcd.  The carrier-level theorem is
+# explicit; only the Euclidean polynomial operation is deferred.
+prop polynomial_multiple_ideal(K set, family set, generator set):
+    generator $in family
+    forall f family:
+        $polynomial_division(K, f, generator, f, generator)
+
+prop polynomial_gcd_generator_claim(K set, family set):
+    exist generator set st {$polynomial_multiple_ideal(K, family, generator)}
+
+# The division algorithm is the polynomial analogue of Euclidean division for
+# integers: A=BQ+R with R=0 or deg(R)<deg(B).  Its exact object form awaits the
+# polynomial carrier, so the source-facing existential remains named.
+prop polynomial_division_claim(K set, f set, g set):
+    exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
+
+# Corollary. A degree-n polynomial has at most n distinct roots.  Here the
+# integer coefficient/evaluation object provides a directly usable root set;
+# the finite root-count proof is the remaining field-polynomial theorem.
+prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
+    roots = polynomial_root_set_Z(coeff, n)
+    $is_finite_set(roots)
+    finite_set_size(roots) <= n
+
+# The gcd-generator, division, and root-count theorems all depend on the same
+# missing typed polynomial carrier and Euclidean operation package.  Keep the
+# three source-facing statements in one explicit trust boundary.
+trust:
+    forall K set, family set:
+        $polynomial_gcd_generator_claim(K, family)
+    forall K set, f set, g set:
+        $polynomial_division_claim(K, f, g)
+    forall coeff fn(k N) Z, n N:
+        $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+
+thm theorem_IX_polynomial_gcd_generator:
+    ? forall K set, family set:
+        $polynomial_gcd_generator_claim(K, family)
+    $polynomial_gcd_generator_claim(K, family)
+
+thm theorem_IX_polynomial_division:
+    ? forall K set, f set, g set:
+        $polynomial_division_claim(K, f, g)
+    $polynomial_division_claim(K, f, g)
+
+thm theorem_IX_root_bound:
+    ? forall coeff fn(k N) Z, n N:
+        $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+    $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))

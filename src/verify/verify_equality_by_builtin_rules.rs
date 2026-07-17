@@ -26,6 +26,9 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Mul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Div(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Mod(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::IntegerQuotient(b) => {
+            obj_expr_mentions_bare_id_on_two(b.dividend.as_ref(), b.divisor.as_ref(), id)
+        }
         Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
@@ -81,12 +84,8 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             .args
             .iter()
             .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
-        Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::FiniteSetSize(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
         Obj::FnRange(r) => obj_expr_mentions_bare_id(r.function.as_ref(), id),
-        Obj::FnRangeOn(r) => {
-            obj_expr_mentions_bare_id(r.function.as_ref(), id)
-                || obj_expr_mentions_bare_id(r.set.as_ref(), id)
-        }
         Obj::Replacement(r) => obj_expr_mentions_bare_id(r.source_set.as_ref(), id),
         Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
         Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
