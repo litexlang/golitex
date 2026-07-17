@@ -138,7 +138,8 @@ jobs:
           SMOKE_DIR="smoke_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${SMOKE_DIR}"
           tar -xzf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${SMOKE_DIR}"
-          OUTPUT=$(cd "${SMOKE_DIR}" && ./litex -runner -e $'import std basics\nby thm std::basics::nonempty_family_of_nonempty_sets_exists()')
+          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_DIR}/smoke.lit"
+          OUTPUT=$(cd "${SMOKE_DIR}" && ./litex -runner -isolated -f smoke.lit)
           if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "proof by theorem"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -151,7 +152,9 @@ jobs:
           $smokeDir = "smoke_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
           Expand-Archive -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -DestinationPath $smokeDir -Force
-          $output = & (Join-Path $smokeDir "litex.exe") -runner -e "import std basics`nby thm std::basics::nonempty_family_of_nonempty_sets_exists()"
+          $smokeFile = Join-Path $smokeDir "smoke.lit"
+          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::nonempty_family_of_nonempty_sets_exists()"
+          $output = & (Join-Path $smokeDir "litex.exe") -runner -isolated -f $smokeFile
           $outputText = $output -join "`n"
           if ($outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "proof by theorem"')) {
               $outputText
@@ -208,7 +211,9 @@ jobs:
         if: matrix.arch == 'amd64'
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          OUTPUT=$(litex -runner -e $'import std basics\nby thm std::basics::nonempty_family_of_nonempty_sets_exists()')
+          SMOKE_FILE="$(mktemp)"
+          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_FILE}"
+          OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}")
           if printf '%s\n' "${OUTPUT}" | grep -F '"result": "error"' > /dev/null || ! printf '%s\n' "${OUTPUT}" | grep -F '"type": "proof by theorem"' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -396,8 +401,8 @@ jobs:
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "import std basics\nby thm std::basics::nonempty_family_of_nonempty_sets_exists()\n"
-              output = shell_output("#{bin}/litex -f #{testpath}/test.lit")
+              (testpath/"test.lit").write "import std basics\nby thm basics::nonempty_family_of_nonempty_sets_exists()\n"
+              output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
               assert_match '"type": "proof by theorem"', output
               refute_match '"result": "error"', output
             end
