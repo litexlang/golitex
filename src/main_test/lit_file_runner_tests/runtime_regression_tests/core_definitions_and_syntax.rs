@@ -84,6 +84,48 @@ fn collect_rust_files_under_dir(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 #[test]
+fn reversed_literal_integer_ranges_are_well_defined_empty_sets() {
+    run_with_large_stack(
+        "reversed_literal_integer_ranges_are_well_defined_empty_sets",
+        || {
+            let source_code = r#"
+range(3, 2) = {}
+closed_range(3, 2) = {}
+finite_set_size(range(3, 2)) = 0
+finite_set_size(closed_range(3, 2)) = 0
+
+forall i range(3, 2):
+    1 = 0
+
+forall i closed_range(3, 2):
+    1 = 0
+
+by for forall! i range(3, 2) => {1 = 0}
+by for forall! i closed_range(3, 2) => {1 = 0}
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "reversed_literal_integer_ranges_are_well_defined_empty_sets",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "reversed literal integer ranges should be empty and well-defined:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("forall over empty parameter set"),
+                "reversed literal integer ranges should make forall vacuous:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn cup_membership_has_builtin_intro_and_elim() {
     run_with_large_stack("cup_membership_has_builtin_intro_and_elim", || {
         let source_code = r#"

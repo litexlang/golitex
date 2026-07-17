@@ -28,3 +28,8 @@ forall A, B set:
     B $subset union(A, B)
     set_minus(A, B) $subset A
     set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
+
+# Finite deletion cardinality is a builtin equality rule.
+
+forall A, B finite_set:
+    finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))

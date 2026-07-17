@@ -80,6 +80,21 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_integer_range_set_builder_equality(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_integer_range_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
@@ -198,6 +213,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_set_minus_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -655,6 +679,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_one_mod_equals_one_for_modulus_at_least_two(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
             left,
             right,
@@ -1054,6 +1087,102 @@ impl Runtime {
         None
     }
 
+    fn try_verify_finite_set_size_set_minus_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Removing a finite subset counts the original set minus its overlap with the removed set.
+        // Example: `finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T))`.
+        let Some((first_set, second_set)) = Self::finite_set_size_set_minus_shape(left, right)
+            .or_else(|| Self::finite_set_size_set_minus_shape(right, left))
+        else {
+            return Ok(None);
+        };
+
+        let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
+        let first_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&first_finite, verify_state)?;
+        if !first_result.is_true() {
+            return Ok(None);
+        }
+
+        let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file.clone()).into();
+        let second_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&second_finite, verify_state)?;
+        if !second_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "finite_set_size_set_minus".to_string(),
+                vec![first_result, second_result],
+            )
+            .into(),
+        ))
+    }
+
+    // Integer interval cardinalities are determined by their natural endpoints.
+    // Examples: `finite_set_size(closed_range(a, b)) = b - a + 1` and
+    // `finite_set_size(range(a, b)) = b - a` when `a <= b` and both endpoints are natural.
+    fn try_verify_finite_set_size_integer_range_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((start, end, closed)) = Self::finite_set_size_integer_range_shape(left, right)
+            .or_else(|| Self::finite_set_size_integer_range_shape(right, left))
+        else {
+            return Ok(None);
+        };
+
+        let start_in_n: AtomicFact =
+            InFact::new(start.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let start_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&start_in_n, verify_state)?;
+        if !start_result.is_true() {
+            return Ok(None);
+        }
+
+        let end_in_n: AtomicFact =
+            InFact::new(end.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let end_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&end_in_n, verify_state)?;
+        if !end_result.is_true() {
+            return Ok(None);
+        }
+
+        let endpoints_ordered: AtomicFact =
+            LessEqualFact::new(start, end, line_file.clone()).into();
+        let order_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &endpoints_ordered,
+            verify_state,
+        )?;
+        if !order_result.is_true() {
+            return Ok(None);
+        }
+
+        let rule = if closed {
+            "finite_set_size_closed_range"
+        } else {
+            "finite_set_size_range"
+        };
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                rule.to_string(),
+                vec![start_result, end_result, order_result],
+            )
+            .into(),
+        ))
+    }
+
     fn try_verify_power_set_finite_set_size_equality(
         &mut self,
         left: &Obj,
@@ -1277,6 +1406,66 @@ impl Runtime {
             return false;
         };
         verify_equality_by_they_are_the_same(&expected_product, product_side)
+    }
+
+    fn finite_set_size_set_minus_shape(
+        finite_set_size_side: &Obj,
+        subtraction_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::FiniteSetSize(set_minus_size) = finite_set_size_side else {
+            return None;
+        };
+        let Obj::SetMinus(set_minus) = set_minus_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::Sub(subtraction) = subtraction_side else {
+            return None;
+        };
+        let Obj::FiniteSetSize(first_size) = subtraction.left.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(intersection_size) = subtraction.right.as_ref() else {
+            return None;
+        };
+        let Obj::Intersect(intersection) = intersection_size.set.as_ref() else {
+            return None;
+        };
+
+        if verify_equality_by_they_are_the_same(&set_minus.left, &first_size.set)
+            && verify_equality_by_they_are_the_same(&set_minus.left, &intersection.left)
+            && verify_equality_by_they_are_the_same(&set_minus.right, &intersection.right)
+        {
+            Some((
+                set_minus.left.as_ref().clone(),
+                set_minus.right.as_ref().clone(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn finite_set_size_integer_range_shape(
+        finite_set_size_side: &Obj,
+        cardinality_side: &Obj,
+    ) -> Option<(Obj, Obj, bool)> {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_side else {
+            return None;
+        };
+        let (start, end, closed) = match finite_set_size.set.as_ref() {
+            Obj::ClosedRange(range) => (range.start.as_ref(), range.end.as_ref(), true),
+            Obj::Range(range) => (range.start.as_ref(), range.end.as_ref(), false),
+            _ => return None,
+        };
+        let difference: Obj = Sub::new(end.clone(), start.clone()).into();
+        let expected_cardinality: Obj = if closed {
+            Add::new(difference, Number::new("1".to_string()).into()).into()
+        } else {
+            difference
+        };
+        if !verify_equality_by_they_are_the_same(&expected_cardinality, cardinality_side) {
+            return None;
+        }
+        Some((start.clone(), end.clone(), closed))
     }
 
     fn power_set_finite_set_size_shape(finite_set_size_side: &Obj, pow_side: &Obj) -> Option<Obj> {
@@ -2278,6 +2467,72 @@ impl Runtime {
             verify_equality_by_they_are_the_same(&in_fact.element, &expected_element)
                 && verify_equality_by_they_are_the_same(&in_fact.set, &expected_set),
         )
+    }
+
+    // Integer ranges are the canonical sets of integer points between their endpoints.
+    // Examples: `closed_range(a, b) = {x Z: a <= x <= b}` and
+    // `range(a, b) = {x Z: a <= x < b}`.
+    fn try_verify_integer_range_set_builder_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (range_side, set_builder_side) in [(left, right), (right, left)] {
+            let (start, end, right_closed) = match range_side {
+                Obj::ClosedRange(range) => (range.start.as_ref(), range.end.as_ref(), true),
+                Obj::Range(range) => (range.start.as_ref(), range.end.as_ref(), false),
+                _ => continue,
+            };
+            let Obj::SetBuilder(set_builder) = set_builder_side else {
+                continue;
+            };
+            if !matches!(
+                set_builder.param_set.as_ref(),
+                Obj::StandardSet(StandardSet::Z)
+            ) || set_builder.facts.len() != 1
+            {
+                continue;
+            }
+            let ExistBodyFact::ChainFact(chain) = &set_builder.facts[0] else {
+                continue;
+            };
+            let Ok(chain_facts) = chain.facts() else {
+                continue;
+            };
+            let [AtomicFact::LessEqualFact(lower), upper] = chain_facts.as_slice() else {
+                continue;
+            };
+            let bound_param =
+                obj_for_bound_param_in_scope(set_builder.param.clone(), ParamObjType::SetBuilder);
+            let (upper_left_matches, upper_right_matches) = match (right_closed, upper) {
+                (true, AtomicFact::LessEqualFact(fact)) => (
+                    verify_equality_by_they_are_the_same(&fact.left, &bound_param),
+                    verify_equality_by_they_are_the_same(&fact.right, end),
+                ),
+                (false, AtomicFact::LessFact(fact)) => (
+                    verify_equality_by_they_are_the_same(&fact.left, &bound_param),
+                    verify_equality_by_they_are_the_same(&fact.right, end),
+                ),
+                _ => (false, false),
+            };
+            if !verify_equality_by_they_are_the_same(&lower.left, start)
+                || !verify_equality_by_they_are_the_same(&lower.right, &bound_param)
+                || !upper_left_matches
+                || !upper_right_matches
+            {
+                continue;
+            }
+            let rule = if right_closed {
+                "equality: closed_range is its integer set-builder definition"
+            } else {
+                "equality: range is its integer set-builder definition"
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left, right, line_file, rule,
+            )));
+        }
+        Ok(None)
     }
 
     // Sequence-shaped spaces are exactly their corresponding function spaces.

@@ -80,16 +80,6 @@ impl Runtime {
         Ok(())
     }
 
-    /// When both endpoints normalize to numbers, require a verifiable order (concrete intervals).
-    /// Skip for purely symbolic bounds (e.g. `closed_range(a, b)` under `forall a, b Z` in axioms).
-    pub(in crate::verify) fn range_endpoints_are_numeric_for_interval_order_check(
-        &self,
-        start: &Obj,
-        end: &Obj,
-    ) -> bool {
-        self.resolve_obj_to_number(start).is_some() && self.resolve_obj_to_number(end).is_some()
-    }
-
     pub(in crate::verify) fn verify_add_well_defined(
         &mut self,
         add: &Add,

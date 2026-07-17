@@ -1,0 +1,13 @@
+# Integer interval witnesses are builtin rules. The corresponding statements can
+# also be derived by induction over integer intervals.
+
+forall a, b R:
+    a < b
+    b - a > 1
+    =>:
+        exist c Z st {a < c < b}
+
+forall a, b R:
+    b - a >= 1
+    =>:
+        exist c Z st {a <= c <= b}

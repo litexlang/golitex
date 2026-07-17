@@ -641,17 +641,6 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                format!(
-                    "range: cannot verify {} <= {} (numeric half-open interval needs lower <= upper)",
-                    x.start, x.end
-                ),
-            )?;
-        }
         Ok(())
     }
 
@@ -664,17 +653,6 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
-            self.require_less_equal_verified(
-                &x.start,
-                &x.end,
-                verify_state,
-                format!(
-                    "closed_range: cannot verify {} <= {} (numeric closed interval needs lower <= upper)",
-                    x.start, x.end
-                ),
-            )?;
-        }
         Ok(())
     }
 }

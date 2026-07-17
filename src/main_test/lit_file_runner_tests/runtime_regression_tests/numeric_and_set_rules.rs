@@ -37,6 +37,60 @@ have r R:
 }
 
 #[test]
+fn integer_ranges_and_euclidean_remainders_have_canonical_builtin_rules() {
+    run_with_large_stack(
+        "integer_ranges_and_euclidean_remainders_have_canonical_builtin_rules",
+        || {
+            let source_code = r#"
+forall x Q:
+    exist p, q Z st {q > 0, x = p / q}
+
+forall a, b Z:
+    closed_range(a, b) = {x Z: a <= x <= b}
+
+forall a, b Z:
+    range(a, b) = {x Z: a <= x < b}
+
+forall a, b Z:
+    b != 0
+    a % b = 0
+    =>:
+        exist k Z st {a = k * b}
+
+forall k N_pos:
+    k >= 2
+    =>:
+        1 % k = 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "integer_ranges_and_euclidean_remainders_have_canonical_builtin_rules",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "integer range and remainder rules should be builtin:\n{run_output}"
+            );
+            for rule in [
+                "exist: rational representation with positive integer denominator",
+                "equality: closed_range is its integer set-builder definition",
+                "equality: range is its integer set-builder definition",
+                "exist: zero remainder gives an integer multiple of a nonzero modulus",
+                "equality: 1 % k = 1 for k >= 2",
+            ] {
+                assert!(
+                    run_output.contains(rule),
+                    "missing builtin provenance `{rule}`:\n{run_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness() {
     run_with_large_stack(
         "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",
@@ -1839,4 +1893,72 @@ integer_quotient(-7, 3) = -3
         "unexpected integer quotient domain error:\n{}",
         invalid_output
     );
+}
+
+#[test]
+fn finite_set_size_set_minus_is_a_builtin_rule() {
+    run_with_large_stack("finite_set_size_set_minus_is_a_builtin_rule", || {
+        let source_code = r#"
+forall s, t finite_set:
+    finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
+"#;
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("finite_set_size_set_minus_is_a_builtin_rule");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite-set deletion cardinality should be builtin:\n{run_output}"
+        );
+        assert!(
+            run_output.contains("finite set size set minus"),
+            "missing finite-set deletion builtin provenance:\n{run_output}"
+        );
+    });
+}
+
+#[test]
+fn finite_subset_and_integer_interval_cardinalities_are_builtin_rules() {
+    let source_code = r#"
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        $is_finite_set(A)
+
+forall A, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+
+forall a, b N:
+    a <= b
+    =>:
+        finite_set_size(closed_range(a, b)) = b - a + 1
+        finite_set_size(range(a, b)) = b - a
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_subset_and_integer_interval_cardinalities_are_builtin_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "finite subset and integer interval cardinalities should be builtin:\n{run_output}"
+    );
+    for rule in [
+        "finite set subset is finite",
+        "finite set size subset le",
+        "finite set size closed range",
+        "finite set size range",
+    ] {
+        assert!(
+            run_output.contains(rule),
+            "missing finite-set cardinality builtin provenance `{rule}`:\n{run_output}"
+        );
+    }
 }

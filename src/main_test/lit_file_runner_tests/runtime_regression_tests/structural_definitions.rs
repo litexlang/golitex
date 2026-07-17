@@ -289,6 +289,72 @@ forall epsilon R_pos:
 }
 
 #[test]
+fn sufficiently_wide_real_intervals_have_integer_witnesses_as_builtin_rules() {
+    let source_code = r#"
+forall a, b R:
+    a < b
+    b - a > 1
+    =>:
+        exist c Z st {a < c < b}
+
+forall a, b R:
+    b - a >= 1
+    =>:
+        exist c Z st {a <= c <= b}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "sufficiently_wide_real_intervals_have_integer_witnesses_as_builtin_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "wide real intervals should have integer witnesses:\n{}",
+        run_output
+    );
+    for rule in [
+        "exist: integer strictly inside a real interval wider than 1",
+        "exist: integer inside a real interval of length at least 1",
+    ] {
+        assert!(
+            run_output.contains(rule),
+            "missing integer interval builtin provenance `{}`:\n{}",
+            rule,
+            run_output
+        );
+    }
+
+    let mut short_interval_runtime = Runtime::new();
+    short_interval_runtime.new_file_path_new_env_new_name_scope(
+        "strict_real_interval_without_length_bound_has_no_integer_builtin_witness",
+    );
+    let (short_interval_results, short_interval_error) = run_source_code(
+        r#"
+forall a, b R:
+    a < b
+    =>:
+        exist c Z st {a < c < b}
+"#,
+        &mut short_interval_runtime,
+    );
+    let (short_interval_succeeded, short_interval_output) = render_run_source_code_output(
+        &short_interval_runtime,
+        &short_interval_results,
+        &short_interval_error,
+        false,
+    );
+    assert!(
+        !short_interval_succeeded,
+        "a real interval without a length bound must not get an integer witness:\n{}",
+        short_interval_output
+    );
+}
+
+#[test]
 fn finite_set_size_zero_is_not_nonempty_is_a_builtin_rule() {
     let source_code = r#"
 forall S finite_set:
